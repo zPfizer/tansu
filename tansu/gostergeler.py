@@ -11,6 +11,21 @@ def ema(seri: pd.Series, periyot: int) -> pd.Series:
     return seri.ewm(span=periyot, adjust=False).mean()
 
 
+def sma(seri: pd.Series, periyot: int) -> pd.Series:
+    return seri.rolling(periyot).mean()
+
+
+def atr(yuksek: pd.Series, dusuk: pd.Series, kapanis: pd.Series, n: int = 14) -> pd.Series:
+    """Wilder ATR: ilk değer ilk n gerçek aralığın ortalaması, sonra (önceki*(n-1) + TR)/n (TASARIM 5.5)."""
+    onceki = kapanis.shift(1)
+    tr = pd.concat([yuksek - dusuk, (yuksek - onceki).abs(), (dusuk - onceki).abs()], axis=1).max(axis=1)
+    tohum = tr.copy()
+    tohum.iloc[: n - 1] = float("nan")
+    if len(tr) >= n:
+        tohum.iloc[n - 1] = tr.iloc[:n].mean()
+    return tohum.ewm(alpha=1 / n, adjust=False).mean()
+
+
 def sikisma_orani(kapanis: pd.Series, periyotlar=SIKISMA_PERIYOTLAR) -> pd.Series:
     """(en büyük EMA - en küçük EMA) / en yavaş EMA (KRDMD sadakatiyle çözüldü: EMA200)."""
     emalar = pd.concat([ema(kapanis, p) for p in periyotlar], axis=1)

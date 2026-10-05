@@ -267,6 +267,10 @@ hatasından** ayırmak.
 - **Veri sonu:** veri bitince açık pozisyon son kapanıştan zorunlu çıkar. K1 ve K2 aynı kuralı
   uygular. (İ: 09-092)
 - **İşlem günlüğü:** her işlemde "planlanan risk" ve "gerçekleşen kayıp" yazılır. (İ: 08-030)
+  - Planlanan risk = adet × (giriş − stop). Gerçekleşen kayıp = adet × max(0, giriş − çıkış).
+  - Karantina çıkışı: fiyat son temiz AOF, tarih karantina günüdür. Çıkış gününde (AOF'ta) çıkılmış pozisyon
+    o günün kapanış sinyalini engellemez. Isınma: hissenin n. işlem günü dolduğunda (n = 500) sinyal serbesttir.
+  - (Bilet 08: belge bu noktalarda sessizdi; kod bu okumayı uygular.)
 - **Motor sınamaları** (kod yazılmadan önce, elle hesaplı) (İ: 07-085):
   - stopta çıkış
   - boşluklu stop
