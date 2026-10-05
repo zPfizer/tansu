@@ -220,3 +220,12 @@ def test_sektoru_alinamayan_ya_da_bos_sembol_indirmeyi_durdurmaz(tmp_path):
     kimlik = veri.indir(["CCOLA", "CCOLA2", "BOS"], tmp_path, k, simdi=SIMDI, borsapy=Borsapy(FAIZ, {}))
     a = veri.oku(kimlik, tmp_path)
     assert (a.sektor, a.bos) == ({"CCOLA": "GIDA"}, ("BOS",))
+
+
+def test_tarihsiz_ya_da_carpansiz_olay_kaydi_okumada_atilir(tmp_path):
+    # Gerçek ACSEL kayıtları: planlanmış temettü yer tutucusu, tarih 0001-01-01 (ms -62135596800000) ve
+    # çarpan 0,0; bir başkasında tarih geçerli ama çarpan 0,0. İkisi de düzeltme taşımaz.
+    bos = [{"SHT_KODU": "04", "SHHE_TARIH": -62135596800000, "SHHE_FIYAT_AYAR_OR": 0.0},
+           {"SHT_KODU": "04", "SHHE_TARIH": epoch(dt.date(2024, 8, 14)), "SHHE_FIYAT_AYAR_OR": 0.0}]
+    a = anlik(tmp_path, olay=CCOLA_OLAY + bos)
+    assert len(a.olaylar) == 3 and (a.olaylar["carpan"] > 0).all()

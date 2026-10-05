@@ -160,7 +160,8 @@ def oku(kimlik, kok) -> Anlik:
     ham = json.loads((klasor / "olaylar.json").read_text(encoding="utf-8"))
     olaylar = pd.DataFrame(
         [{"sembol": s, "tarih": _olay_tarihi(o["SHHE_TARIH"]), "kod": o["SHT_KODU"],
-          "carpan": float(o["SHHE_FIYAT_AYAR_OR"])} for s, liste in ham.items() for o in liste],
+          "carpan": float(o["SHHE_FIYAT_AYAR_OR"])} for s, liste in ham.items() for o in liste
+         if o["SHHE_TARIH"] > 0 and o["SHHE_FIYAT_AYAR_OR"] > 0],  # yer tutucu kayıt düzeltme taşımaz
         columns=["sembol", "tarih", "kod", "carpan"])
     faiz = pd.read_parquet(klasor / "faiz.parquet") if "faiz.parquet" in manifest["dosyalar"] else None
     sektor = (json.loads((klasor / "sektor.json").read_text(encoding="utf-8"))
