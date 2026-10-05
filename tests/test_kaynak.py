@@ -89,3 +89,29 @@ def test_uc_denemeden_sonra_vazgecer():
     with pytest.raises(kaynak.KaynakHatasi):
         k.fiyat("CCOLA", dt.date(2024, 8, 13), dt.date(2024, 8, 13))
     assert oturum.cagri == 4
+
+
+class SahteTcmb:
+    def history(self, tur):
+        assert tur == "policy"
+        return pd.DataFrame({"borrowing": [None, None], "lending": [50.0, 47.5]},
+                            index=pd.DatetimeIndex(["2024-03-22", "2024-12-27"], name="date"))
+
+
+class SahteKap:
+    def get_company_details(self, sembol):
+        return {"sector": "ULAŞTIRMA VE DEPOLAMA"} if sembol == "THYAO" else {}
+
+
+def test_borsapy_faiz_tarih_ve_faiz_sutunlarina_cevrilir():
+    f = kaynak.Borsapy(tcmb=SahteTcmb(), kap=SahteKap()).faiz()
+    assert list(f.columns) == ["tarih", "faiz"]
+    assert list(f["tarih"]) == [pd.Timestamp("2024-03-22"), pd.Timestamp("2024-12-27")]
+    assert list(f["faiz"]) == [50.0, 47.5]
+
+
+def test_borsapy_sektor_kap_alanini_dondurur_bos_yanit_hatadir():
+    b = kaynak.Borsapy(tcmb=SahteTcmb(), kap=SahteKap())
+    assert b.sektor("THYAO") == "ULAŞTIRMA VE DEPOLAMA"
+    with pytest.raises(kaynak.KaynakHatasi):
+        b.sektor("XXXXX")

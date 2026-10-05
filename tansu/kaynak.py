@@ -82,3 +82,26 @@ class IsYatirim:
             except (requests.ConnectionError, requests.Timeout, requests.HTTPError) as hata:
                 son_hata = hata
         raise KaynakHatasi(f"{url}: {len(bekle)} denemede alınamadı ({son_hata})")
+
+
+class Borsapy:
+    """Yalnız faiz (TCMB '1 Hafta Repo' sayfası) ve sektör (KAP şirket sayfası). TradingView'e dokunmaz:
+    borsapy kaynak kodundan doğrulandı (`_providers/tcmb_rates.py`, `_providers/kap.py`)."""
+
+    def __init__(self, tcmb=None, kap=None):
+        if tcmb is None or kap is None:  # sahte nesne verilmezse borsapy'yi geç yükle
+            import borsapy
+            from borsapy._providers.kap import get_kap_provider
+            tcmb, kap = tcmb or borsapy.TCMB(), kap or get_kap_provider()
+        self._tcmb, self._kap = tcmb, kap
+
+    def faiz(self) -> pd.DataFrame:
+        """Politika faizi, yalnız değişim günleri: tarih, faiz (yüzde)."""
+        h = self._tcmb.history("policy")
+        return pd.DataFrame({"tarih": pd.DatetimeIndex(h.index).normalize(), "faiz": h["lending"].astype(float).to_numpy()})
+
+    def sektor(self, sembol) -> str:
+        ad = self._kap.get_company_details(sembol).get("sector")
+        if not ad:  # borsapy ağ hatasında sessizce {} döndürür
+            raise KaynakHatasi(f"{sembol}: KAP sektörü alınamadı")
+        return ad

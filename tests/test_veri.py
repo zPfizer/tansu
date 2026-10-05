@@ -128,3 +128,78 @@ def test_anlik_goruntu_kimligi_tarihli_ve_olay_ham_json_saklanir(tmp_path):
     ham = json.loads((tmp_path / "ag" / kimlik / "olaylar.json").read_text(encoding="utf-8"))
     assert ham["CCOLA"] == CCOLA_OLAY
     assert not any(p.name.startswith("_") for p in (tmp_path / "ag").iterdir())
+
+
+class SahteBorsapy:
+    def __init__(self, faiz, sektor):
+        self._faiz, self._sektor = faiz, sektor
+
+    def faiz(self):
+        return pd.DataFrame({"tarih": pd.to_datetime([t for t, _ in self._faiz]), "faiz": [f for _, f in self._faiz]})
+
+    def sektor(self, sembol):
+        return self._sektor[sembol]
+
+
+FAIZ = [("2024-03-22", 50.0), ("2024-12-27", 47.5), ("2025-01-24", 45.0)]
+
+
+def anlik_borsapy(tmp_path, faiz=FAIZ, fiyat=CCOLA_FIYAT):
+    k = SahteKaynak({"CCOLA": fiyat}, {"CCOLA": CCOLA_OLAY})
+    b = SahteBorsapy(faiz, {"CCOLA": "GIDA"})
+    kimlik = veri.indir(["CCOLA"], tmp_path, k, simdi=SIMDI, borsapy=b)
+    return kimlik, veri.oku(kimlik, tmp_path)
+
+
+def test_faiz_ve_sektor_anlik_goruntuye_yazilir_ve_manifestte_hashlenir(tmp_path):
+    kimlik, a = anlik_borsapy(tmp_path)
+    manifest = json.loads((tmp_path / "ag" / kimlik / "manifest.json").read_text(encoding="utf-8"))
+    assert {"faiz.parquet", "sektor.json"} <= set(manifest["dosyalar"])
+    assert list(a.faiz["faiz"]) == [50.0, 47.5, 45.0]
+    assert a.sektor == {"CCOLA": "GIDA"}
+
+
+def test_okuma_canli_borsapyye_baglanmaz_bozuk_faiz_dosyasi_hata_verir(tmp_path):
+    kimlik, _ = anlik_borsapy(tmp_path)
+    dosya = tmp_path / "ag" / kimlik / "faiz.parquet"
+    dosya.write_bytes(dosya.read_bytes() + b"x")
+    with pytest.raises(veri.VeriHatasi):
+        veri.oku(kimlik, tmp_path)
+
+
+def test_faiz_gunluge_ileri_doldurulur_ve_bir_gun_gecikir(tmp_path):
+    # Değişim 22.03.2024'te %50 olur; ertesi gün (23.03) kullanılır, 22.03'te seri henüz yoktur.
+    # 27.12.2024'te %47,5 olur: 27.12 hâlâ eski %50'yi, 28.12 yeni %47,5'i kullanır.
+    _, a = anlik_borsapy(tmp_path)
+    s = a.faiz_gunluk(dt.date(2024, 3, 23), dt.date(2024, 12, 29))
+    assert s[pd.Timestamp("2024-03-23")] == 50.0
+    assert s[pd.Timestamp("2024-07-01")] == 50.0
+    assert s[pd.Timestamp("2024-12-27")] == 50.0
+    assert s[pd.Timestamp("2024-12-28")] == 47.5
+    assert len(s) == 282  # 23.03 – 29.12.2024 takvim günü: 9 + 30+31+30+31+31+30+31+30+29 → 282
+
+
+def test_faiz_serisi_baslangici_kapsamiyorsa_hata(tmp_path):
+    _, a = anlik_borsapy(tmp_path)
+    with pytest.raises(veri.VeriHatasi):  # 22.03'te önceki gün değeri yok
+        a.faiz_gunluk(dt.date(2024, 3, 22), dt.date(2024, 3, 25))
+
+
+def test_son_faiz_degisim_tarihi_kaydedilir(tmp_path):
+    _, a = anlik_borsapy(tmp_path)
+    assert a.faiz_son_degisim == pd.Timestamp("2025-01-24")
+
+
+def test_bos_faiz_serisi_sorunludur(tmp_path):
+    k = SahteKaynak({"CCOLA": CCOLA_FIYAT}, {"CCOLA": CCOLA_OLAY})
+    with pytest.raises(veri.VeriHatasi):
+        veri.indir(["CCOLA"], tmp_path, k, simdi=SIMDI, borsapy=SahteBorsapy([], {"CCOLA": "GIDA"}))
+    assert not (tmp_path / "ag").exists() or not list((tmp_path / "ag").iterdir())
+
+
+def test_takvim_xu100_kapanisi_olan_gunlerdir(tmp_path):
+    # 09.08'de xu100 NaN (kapanış yok), 12.08'de 0 → ikisi de takvimde yok. Kalan 4 gün.
+    f = [dict(s) for s in CCOLA_FIYAT]
+    f[1]["xu100"], f[2]["xu100"] = float("nan"), 0.0
+    _, a = anlik_borsapy(tmp_path, fiyat=f)
+    assert list(a.gunler) == [pd.Timestamp(t) for t in ("2024-08-08", "2024-08-13", "2024-08-14", "2024-08-15")]
