@@ -68,24 +68,34 @@ def adim(p: Pozisyon, m) -> Pozisyon:
     return p
 
 
-def islemler(mumlar: pd.DataFrame, sinyaller) -> tuple:
-    """Tek hissenin mumları (tarih indeksli) ve sinyal günlerinden (işlem listesi, düşen sinyal sayısı)."""
+def tara(mumlar: pd.DataFrame, sinyaller) -> tuple:
+    """Tek Adım döngüsü (`islemler` ve günlük kart ortak kullanır).
+
+    (iptal dışı kapanmış pozisyonlar, düşen sinyal sayısı, veri sonunda kapanmamış pozisyon ya da None,
+    son mumda kapanan pozisyon ya da None; iptal dahil)."""
     sinyaller = set(sinyaller)
-    kapali, dusen, p, son_karantina = [], 0, None, None
+    kapali, dusen, p, son_karantina, kapanan = [], 0, None, None, None
     for i, (tarih, satir) in enumerate(mumlar.iterrows()):
         m = {**satir.to_dict(), "tarih": tarih}
+        kapanan = None
         if p is not None:
             p = adim(p, m)
             if p.durum == "kapali":
                 dusen += p.neden == "iptal"
                 if p.neden != "iptal":
                     kapali.append(p)
-                p = None
+                kapanan, p = p, None
         if m["karantina"]:
             son_karantina = i
         engelli = son_karantina is not None and i - son_karantina < KARANTINA_GUN
         if p is None and tarih in sinyaller and not engelli:
             p = bekleyen(m["atr"], tarih)
+    return kapali, dusen, p, kapanan
+
+
+def islemler(mumlar: pd.DataFrame, sinyaller) -> tuple:
+    """Tek hissenin mumları (tarih indeksli) ve sinyal günlerinden (işlem listesi, düşen sinyal sayısı)."""
+    kapali, dusen, p, _ = tara(mumlar, sinyaller)
     if p is not None and p.durum == "bekliyor":
         dusen += 1  # sinyalden sonra veri yok
     elif p is not None:
@@ -98,7 +108,8 @@ class Zincir:
     """Bir hissenin sinyal konumlarından `islemler` ile aynı tabloyu kurar; tek işlem sonuçlarını önbelleğe alır (K1, TASARIM 5.7).
 
     Aynı hissede sinyal kümesi her tekrarda değişir; her (konum) sinyalinin tek başına sonucu aynıdır. Bir sinyal,
-    önceki işlem kapanana dek (kapandığı gün dahil) ve karantina penceresinde (250 satır) düşer."""
+    önceki işlem kapanana dek (kapandığı gün hariç: kapanış gününün sinyali alınır, `islemler` gibi) ve karantina
+    penceresinde (250 satır) düşer."""
 
     def __init__(self, mumlar: pd.DataFrame):
         self.mumlar = mumlar

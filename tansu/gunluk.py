@@ -32,7 +32,7 @@ def _isaretli(x) -> str:
 
 def _kanit(aile, tarih) -> str:
     """Ailenin kanıt satırı: son resmi `durum` satırındaki `kanit` alanından (TASARIM 6.5)."""
-    satirlar = [s for s in kayit._oku() if s["olay"] == "durum" and s["aile"] == aile and s["resmi"]]
+    satirlar = kayit.resmi_durumlar(aile)
     bas = satirlar[-1]
     for s in reversed(satirlar):
         if s["durum"] not in KARTLI:
@@ -49,23 +49,6 @@ def _kanit(aile, tarih) -> str:
             f"%95 aralık {aralik}) · kâğıt dönem {ay}/{KAGIT_AY} ay")
 
 
-def _son(m, sinyaller) -> tuple:
-    """`motor.islemler` ile aynı döngü (aynı Adım); (kapanmamış pozisyon, son çubukta kapanan pozisyon)."""
-    sinyaller, p, kapanan, son_karantina = set(sinyaller), None, None, None
-    for i, (tarih, satir) in enumerate(zip(m.index, m.to_dict("records"))):
-        satir["tarih"], kapanan = tarih, None
-        if p is not None:
-            p = motor.adim(p, satir)
-            if p.durum == "kapali":
-                kapanan, p = p, None
-        if satir["karantina"]:
-            son_karantina = i
-        engelli = son_karantina is not None and i - son_karantina < motor.KARANTINA_GUN
-        if p is None and tarih in sinyaller and not engelli:
-            p = motor.bekleyen(satir["atr"], tarih)
-    return p, kapanan
-
-
 def _durum(p) -> str:
     """AKTİF: bekleyen giriş ya da açık pozisyon. STOP: stop değdi. BOZULDU: SMA250 altı, karantina ya da iptal."""
     if p.durum == "kapali":
@@ -73,7 +56,7 @@ def _durum(p) -> str:
     return {"stop": "STOP", "sma250": "BOZULDU"}.get(p.bekleyen, "AKTİF")
 
 
-def _kart(anlik, s, m, p, tarih, atr_n, kanit) -> list:
+def _kart(anlik, s, m, p, kanit) -> list:
     f = anlik.fiyat[anlik.fiyat["sembol"] == s].set_index("tarih")
     sinyal = p.sinyal_tarih
     ref, oran = f.at[sinyal, "ham_kapanis"], f.at[sinyal, "ham_kapanis"] / f.at[sinyal, "kapanis"]
@@ -98,8 +81,8 @@ def _kartlar(anlik, tarih, p, atr_n) -> list:
     kanit, kartlar = _kanit(simulator.AILE, tarih), []
     for s in sorted(anlik.fiyat["sembol"].unique()):
         m = motor.mumlar(anlik, s, p, atr_n)
-        poz, kapanan = _son(m, aileler.sinyal(m.dropna(subset=["kapanis"]), p))
-        kartlar += [_kart(anlik, s, m, x, tarih, atr_n, kanit) for x in (poz, kapanan) if x is not None]
+        poz, kapanan = motor.tara(m, aileler.sinyal(m.dropna(subset=["kapanis"]), p))[2:]
+        kartlar += [_kart(anlik, s, m, x, kanit) for x in (poz, kapanan) if x is not None]
     return kartlar
 
 
