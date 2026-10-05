@@ -62,3 +62,11 @@ Veri kapıları (TASARIM 5.13) kalan bir indirmeyi anlık görüntü yapmaz.
   sahte karantina yaratırsa bilet 07'de ele alınır.
 - Süreç notu: kod, testten önce yazıldı (sıra ihlali); testler sonra eklendi ve kod bozularak (limit payı) kırmızıya çevrildi.
   Yuvarlama payı ise doğru sırayla: önce kırmızı test.
+- **05.10.2026, kaynak günü hatası (bilet 11 kararı).** Kural TASARIM 5.13'te: o gün satırı olan sembollerin ≥ %50'si
+  aynı gün karantinadaysa (en az 20 satırlı gün) o gün tüm semboller için eksik gün (NaN): karantina, zorunlu çıkış ve
+  dolum yok; `sorunlar` "kaynak günü hatası: YYYY-AA-GG" yazar (`Anlik.kaynak_gunleri`). Alt sınır 20 satır, tek
+  sembollü eski testlerin bozulmaması için eklendi. Test +2 (145 yeşil). Gerçek anlık görüntü 20261005-1949'da ≥ %50
+  olan 5 gün: 15.11.2010 (331/331), 21.12.2010 (336/336), 29.08.2011 (356/358), 26.01.2016 (365/416), 21.05.2026
+  (556/607). Yani 21.05.2026 tek gün değil. %10'un üstünde ama %50'nin altında kalan günler (kayıt için, kural
+  uygulanmaz): 25.11.2011, 2015'te 27.03, 31.03, 11.06, 03.08, 07.08, 07.10, 15.10, 26.10, 03.11, 30.04.2018,
+  22.04.2024, 10.10.2025, 02.03, 03.03, 23.03, 22.04 ve 16.09.2026 (128/625, %20,5).

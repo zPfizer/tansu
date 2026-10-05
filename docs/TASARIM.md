@@ -617,6 +617,13 @@ Getiri görülmeden yazılır; kural kaydına girer. (B-7, İ: 19-015)
   aralıkta belirsiz); fiyat alanları farklı tekrar ihlaldir. İstisna 2: İş Yatırım
   GARAN yanıtını 276 yerde sırasız verir (satır eksiksiz, tekrar yok; bilet 06'da görüldü); `kaynak` yanıtı
   tarihe göre sıralar, kapı sıralamadan sonraki seriye bakar.
+- **Kaynak günü hatası** (bilet 11 kararı): o gün satırı olan sembollerin en az yarısı aynı gün karantinadaysa
+  (en az 20 satırlı gün) bu hisse sorunu değil, kaynak sorunudur (21.05.2026: 556/607 sembol, yüksek = düşük =
+  kapanış, AOF aralığın dışında). O gün tüm semboller için eksik gün (NaN) olur: karantina yok, zorunlu çıkış yok,
+  dolum yok (dolum sonraki geçerli güne kayar; öbür eksik günler gibi). Sebep: tek bozuk kaynak günü bütün açık
+  pozisyonları oynatmamalı. Rapor ve `sorunlar` günü tarihle yazar ("kaynak günü hatası: YYYY-AA-GG"). Gün
+  karantina sayısına girmez. Alt sınır 20 satır: tek sembollü sentetik sınama günleri ve çok az sembollü
+  erken günler kaynak günü sayılmaz.
 - **Oran eşikleri:** karantina hisse-gün oranı > %1 ya da olay denetimi farkı olan gün oranı > %2 ise
   koşu "veri sorunlu" olur. Eşik değerleri değişmez.
   - **Payda ve pay yalnız evren üyesi hisse-günlerdir** (bilet 10 kararı): sınama yalnız evren üyelerinde işlem
