@@ -163,3 +163,18 @@ def test_fiyat_kaynak_sirasi_bozuksa_tarihe_gore_siralanir():
     f = k.fiyat("GARAN", dt.date(2024, 8, 13), dt.date(2024, 8, 14))
     assert list(f["tarih"]) == [pd.Timestamp("2024-08-13"), pd.Timestamp("2024-08-14")]
     assert list(f.index) == [0, 1]
+
+
+def test_json_olmayan_yanit_gecici_hata_sayilir_yeniden_denenir():
+    # Gerçek koşu (bilet 07): sunucu 200 ile boş/HTML gövde döndürdü; 900 sembollük indirme düştü.
+    class Bozuk(Yanit):
+        def json(self):
+            raise ValueError("Expecting value: line 1 column 1 (char 0)")
+
+    oturum = SahteOturum([Bozuk(200), Yanit(200, {"value": [HAM]})])
+    k = kaynak.IsYatirim(oturum=oturum, bekleme=0, deneme_bekleme=(0, 0, 0))
+    assert len(k.fiyat("CCOLA", dt.date(2024, 8, 13), dt.date(2024, 8, 13))) == 1
+    assert oturum.cagri == 2
+    uc = SahteOturum([Bozuk(200)] * 4)
+    with pytest.raises(kaynak.KaynakHatasi):
+        kaynak.IsYatirim(oturum=uc, bekleme=0, deneme_bekleme=(0, 0, 0)).fiyat("X", dt.date(2024, 8, 13), dt.date(2024, 8, 13))

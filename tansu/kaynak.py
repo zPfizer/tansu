@@ -82,7 +82,7 @@ class IsYatirim:
                     raise KaynakHatasi(f"{url}: HTTP {yanit.status_code}")
                 time.sleep(self.bekleme)
                 return yanit.json() if json_bekle else None
-            except (requests.ConnectionError, requests.Timeout, requests.HTTPError) as hata:
+            except (requests.ConnectionError, requests.Timeout, requests.HTTPError, ValueError) as hata:  # ValueError: JSON değil
                 son_hata = hata
         raise KaynakHatasi(f"{url}: {len(bekle)} denemede alınamadı ({son_hata})")
 
