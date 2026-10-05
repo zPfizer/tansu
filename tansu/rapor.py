@@ -53,8 +53,9 @@ def _cift(cift) -> list:
                         len(s["islemler"])) for m, s in d.items()]
     baslik = ["Masraf", "Son özkaynak TL", "Kural getirisi", "K2 getirisi", "50/50 tanısal getirisi", "Tutuş dönemi"]
     secim = cift["secim"]
-    yillik = [(y, len(secim[secim["yil"] == y]) or "işlem yok", yuzde(r["kural"]), yuzde(r["k2"]), yuzde(r["fazla"]),
-               yuzde(r["elli_elli"])) for y, r in m3["yillik"].iterrows()]
+    yillik = [(y, len(secim[secim["yil"] == y]) or ("işlem yok" if y in cift["islem_yok"] else "-"),
+               yuzde(r["kural"]), yuzde(r["k2"]), yuzde(r["fazla"]), yuzde(r["elli_elli"]))
+              for y, r in m3["yillik"].iterrows()]
     govde = [
         "<h2>Çift rotasyonu</h2>",
         "<p>Her yıl önceden yazılmış kuralla en fazla 5 çift seçilir; her pay Z ±2 ve ΔZ dönüşüyle iki hisse arasında "
