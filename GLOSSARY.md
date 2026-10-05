@@ -30,4 +30,4 @@ Sistemin dili. Kurallar Tansu'dan esinlenen yorumlardır; Tansu'nun kendi sistem
 | Kanıt | Bir ailenin geçmiş veride, masraflar dahil, karşılaştırmalı sınama sonucu. |
 | Rastgele kural | Ailenin ön şartlarını sağlayan günlerden rastgele seçilen girişler. Karşılaştırma için. |
 | Ayrılmış dönem | Kurallar yazılırken bakılmamış dönem: kural kaydından sonrası. |
-| Canlı / Deneme | Kabul ölçütünü geçen aile canlıdır; geçemeyen deneme kalır ve varsayılan olarak gösterilmez. |
+| Deneme / Kâğıt / Canlı | Bir ailenin durumu. Deneme: geçmiş sınamayı geçmedi, gösterilmez. Kâğıt: geçmiş sınamayı geçti, kart üretir, para konmadan izlenir. Canlı: kâğıt üstü dönemi de geçti. |

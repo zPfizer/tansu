@@ -1,8 +1,7 @@
 .venv/
-veri/
-rapor/
-gunluk/
-*.parquet
+/veri/
+/rapor/
+/gunluk/
 *.egg-info/
 __pycache__/
 *.pyc

@@ -7,7 +7,9 @@ Okuma kuralları:
 - **Birinci el:** Tansu'nun aracının görsel çıktısı (başlık, etiket, tablo, kod).
 - **İkinci el:** notlardaki Claude özeti ya da aktarılan tweet. Kural olarak tek başına kullanılmaz.
 - **NotebookLM:** Tansu'nun paylaştığı ama kendi aracından çıkmayan infografikler. Ayrı işaretlenir.
-- **YORUM:** kaynakta olmayan, bizim doldurduğumuz değer. Her YORUM, sınamada deneme sayısına girer.
+- **YORUM:** kaynakta olmayan, bizim doldurduğumuz değer. Bir YORUM'un sınamada denenen her değeri yeni
+  deneme sayılır. Sadakat kontrolünde denenen aday formüller deneme sayısına girmez, p üretmez; seçilen
+  formül kural kaydına girer (TASARIM 5.11, İ: 10-033, 04-090).
 
 ## 1. Ana bulgular
 
@@ -82,13 +84,16 @@ yapılır.
 
 1. **Çift rotasyonu** (birinci el: giriş eşiği, ΔZ tanımı, yön, zaman, ham fiyat)
    - Sapma: log(Y) − log(X), ortalama ve standart sapma son 60 günden (YORUM; Tansu'nun Z'si 40.560
-     aday formülle üretilemedi).
+     aday formülle üretilemedi). Sabit terim (α) yok; ortalama çıkarıldığı için Z aynıdır.
    - Z ≤ −2 ve ΔZ > 0 → ertesi gün Y'ye geç. Z ≥ +2 ve ΔZ < 0 → ertesi gün X'e geç. Tek günlük ΔZ
      yeterlidir (YORUM; Tansu'nun raporundaki tek örnek +0,30).
    - İlk sinyale kadar nakit; sonra hep bir hissede. Stop yok.
    - Çiftler önceden yazılmış kuralla seçilir (TASARIM 5.6).
    - K1 ön şartı: çift seçilmiş ve |Z| ≥ 2 olan günler.
-2. **EMA sıkışması kırılımı**
+   - Sağlamlık ızgarası (TASARIM 5.10, YORUM): Z penceresi {60; 120}, eşik {1,5; 2; 2,5}, seçim p'si
+     {0,01; 0,05; 0,10}. (İ: 04-089)
+2. **EMA sıkışması kırılımı** (Tansu'nun sayısal iddiası yok; bu ailenin getiri iddiası bizim
+   hipotezimizdir, İ: 10-002)
    - Oran: (en büyük EMA − en küçük EMA) / EMA200; EMA20/50/100/200, `ewm(adjust=False)` (birinci el,
      sadakatle çözüldü, §4).
    - Sıkışma dönemi: oranın ≤ %1,2 olduğu art arda en az 3 gün; oranın eşiği aştığı ilk gün dönemi
@@ -97,6 +102,8 @@ yapılır.
      üstüne çıkarsa ertesi gün. Dönem başına tek giriş. Stop ve çıkış: risk paketi. Hedef yok.
    - Not: Tansu'nun ICBCT "Pre Signal"i sıkışma sürerken çıkıyor; bizim tetik bitişten sonra (YORUM).
    - K1 ön şartı: sıkışma dönemi bitmiş ve 10 günlük pencere açık günler. Ek kol: sıkışmasız aynı kırılım.
+   - Sağlamlık ızgarası (TASARIM 5.10, YORUM): eşik {%1,0; %1,2; %1,5}, en az gün {2; 3; 5}, giriş
+     penceresi {5; 10; 20}. (İ: 06-072)
 
 AEFES kanal, AKFIS kurulumu ve AB=CD ikinci dalgadadır. Diğerleri dizinde kalır; kaynak çıktıkça yükselir.
 
@@ -130,8 +137,14 @@ Veri: Tansu `yfinance` kullanıyor, ama Yahoo ham kapanışı İş Yatırım ham
 ham seriyle yapılır.
 
 Kural:
-- Birden çok aday formül denenir; Tansu'nun rakamını en iyi üreten seçilir ve sonuç kaydedilir.
+- Tolerans, adaylar denenmeden önce yazılır. "Üretti" = Tansu'nun gösterdiği son hanenin yarısı içinde
+  (Z için ±0,0005). Gevşek bant (±0,05) yalnız tek aday kalırsa kullanılır. (İ: 04-002, 14-058)
+- Birden çok aday formül denenir; Tansu'nun rakamını en iyi üreten seçilir. Çift Z'si için aday
+  kümesine standart sapmanın ddof'u {0; 1} de girer. (İ: 19-028)
+- Rapor tarihi bilinmiyorsa (Z_t, Z_{t−1}) çifti bütün işlem günlerinde aranır; eşleşen günler yazılır.
+  (İ: 04-003)
 - Hiçbiri üretemezse YORUM olarak kalır ve raporda yazılır.
+- Sonuç `docs/sadakat.md`'ye yazılır; `python -m tansu sadakat` aynı rakamları yeniden üretir. (İ: 11-023)
 - Bu adım getiri sonuçlarına bakmaz.
 
 ## 5. Bilinen riskler
