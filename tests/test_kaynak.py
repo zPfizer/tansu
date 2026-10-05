@@ -178,3 +178,48 @@ def test_json_olmayan_yanit_gecici_hata_sayilir_yeniden_denenir():
     uc = SahteOturum([Bozuk(200)] * 4)
     with pytest.raises(kaynak.KaynakHatasi):
         kaynak.IsYatirim(oturum=uc, bekleme=0, deneme_bekleme=(0, 0, 0)).fiyat("X", dt.date(2024, 8, 13), dt.date(2024, 8, 13))
+
+
+class Sayfa:
+    def __init__(self, durum, metin=""):
+        self.status_code, self.text = durum, metin
+
+
+def _kap_liste(*cift):
+    # KAP Next.js verisinde tırnaklar ters bölüyle kaçırılmıştır; "GARAN, TGB" bir şirketin iki kodudur.
+    return "".join(f'\\"mkkMemberOid\\":\\"{oid}\\",\\"kapMemberTitle\\":\\"X\\",\\"relatedMemberTitle\\":\\"\\",'
+                   f'\\"stockCode\\":\\"{kod}\\"' for oid, kod in cift)
+
+
+def _kap_sayfa(sektor):
+    return f'<a href="/tr/Sektorler?sector=ABC">{sektor}</a>' if sektor else "<html>sektör yok</html>"
+
+
+class SahteKapOturum(SahteOturum):
+    def __init__(self, yanitlar):
+        super().__init__(yanitlar)
+        self.adresler = []
+
+    def get(self, url, params=None, json=None, timeout=None):
+        self.adresler.append(url)
+        return super().get(url)
+
+
+def test_kap_sektor_liste_bir_kez_sayfa_sembol_basina_user_agent_ve_bekleme():
+    oturum = SahteKapOturum([Sayfa(200, _kap_liste(("o1", "THYAO"), ("o2", "GARAN, TGB"))),
+                             Sayfa(200, _kap_sayfa("ULAŞTIRMA VE DEPOLAMA")), Sayfa(200, _kap_sayfa("BANKA"))])
+    k = kaynak.KapSektor(oturum=oturum, bekleme=0)
+    assert (k.sektor("THYAO"), k.sektor("TGB")) == ("ULAŞTIRMA VE DEPOLAMA", "BANKA")
+    assert oturum.headers["User-Agent"] == "tansu-kisisel/0.1"
+    assert [a.rsplit("/", 1)[-1] for a in oturum.adresler[1:]] == ["o1", "o2"] and len(oturum.adresler) == 3
+
+
+def test_kap_sektor_listede_olmayan_kod_none_http_hatasi_ve_bos_sayfa_hatadir():
+    oturum = SahteKapOturum([Sayfa(200, _kap_liste(("o1", "THYAO"))), Sayfa(403), Sayfa(200, _kap_sayfa(None))])
+    k = kaynak.KapSektor(oturum=oturum, bekleme=0)
+    assert k.sektor("KAPANMIS") is None
+    with pytest.raises(kaynak.KaynakHatasi):  # engel: 403
+        k.sektor("THYAO")
+    with pytest.raises(kaynak.KaynakHatasi):  # 200 ama sektör alanı yok: engel sayfası olabilir, sektörsüz diye yazılmaz
+        k.sektor("THYAO")
+    assert len(oturum.adresler) == 3

@@ -96,6 +96,7 @@ Her modülün dışarıya küçük bir yüzü var. İçi değişse de dışı de
 | `gostergeler` | fiyat → EMA, SMA, ATR, piyasa durumu | Vektörel; sınamada ve canlıda aynı kod. Kütüphane yok. |
 | `aileler` | hisse fiyatı → sinyal günleri | Tek hisse aileleri. |
 | `cift` | çift fiyatları → hangi hissede olunacağı | Kendi döngüsü. |
+| `ciftbolme` | seçim, Z geçişleri, çift bölmesi simülasyonu, VAKBN–GARAN | `cift` ve `simulator`'a dayanır (bilet 11); 5.6. |
 | `motor` | Adım: (pozisyon, bugünkü mum) → pozisyon; Motor: sinyaller → işlemler | Mum, ön hesaplı ATR ve SMA250 sütunları olan bir gün satırıdır. **Sınama ve canlı günlük aynı Adım'ı kullanır.** (A5, İ: 11-010) |
 | `simulator` | işlemler + bölme kuralı → sermaye eğrisi | Boştaki nakit faiz kazanır. (A2, B4) |
 | `istatistik` | fazla getiri → güven aralığı, p değeri, Holm | statsmodels yalnız `coint` ve Holm için. |
@@ -120,7 +121,7 @@ Her modülün dışarıya küçük bir yüzü var. İçi değişse de dışı de
 - Yakalanmayan istisna günlüğe yazılır, çıkış kodu 1 olur.
 
 **Bağımlılık yönü** tek yönlüdür, geri import yok (İ: 11-039):
-`kaynak` → `veri` → `evren`, `gostergeler` → `aileler`, `cift` → `motor` → `simulator` → `istatistik`
+`kaynak` → `veri` → `evren`, `gostergeler` → `aileler`, `cift` → `motor` → `simulator` → `ciftbolme` → `istatistik`
 → `kayit` → `rapor` → `__main__`.
 
 Takvim, fiyat günlerinden çıkar (İş Yatırım XU100 günleri). Maliyet tek bir sabittir.
@@ -141,6 +142,14 @@ yükseği/düşüğüne koşullu. Ölçütler kısa kendi kodumuzdur. (A3, M1, S
 - **XU100 kapanışı ve takvim:** İş Yatırım `HisseTekil`'in `END_DEGER` alanı (endeks kodu 01; XU100
   olduğu bilet 04'te doğrulandı). Yalnız kapanış.
 - **Sektör:** borsapy, KAP şirket sayfasından, sembol başına bir istek (TradingView değil); yılda bir okunur.
+  - **Toplu okuma** (`python -m tansu sektor-indir`, bilet 11; hedef evren üyeleridir, çift adayı yalnız onlardır).
+    Bilet 07'de KAP ilk 100 sembolden sonra boş döndü; neden HTTP 429'dur (yaklaşık 100 sayfa isteği sonra).
+    İstekler arası en az 1 sn, User-Agent `tansu-kisisel/0.1`; KAP şirket listesi bir kez, sembol
+    başına bir şirket sayfası. Art arda 5 hata olursa durur; tamamlananlar `onbellek/` klasöründe kalır ve
+    yeniden çalıştırınca tekrar istenmez. KAP listesinde olmayan (işlemi kapanmış) kod sektörsüz kalır.
+  - **Anlık görüntü değişmez.** Eksik sektörler tamamlanınca yeni bir anlık görüntü yazılır: fiyat, olay ve
+    faiz dosyaları aynen kopyalanır, `sektor.json` birleşir, manifest eski kimliği (`kaynak`) ve kapsamı
+    (`sektor_kapsam`: hedef, var, listede olmayan, alınamayan) tutar. Koşu yeni kimlikle yapılır.
 - **TradingView kaynaklı veri kullanılmaz.** Koşullar makineyle işlemeyi yasaklıyor.
 - **Kullanım koşulları** (bilet 01, `docs/arastirma/kullanim-kosullari-fiyat-adimi.md`):
   - İş Yatırım'ın robots.txt dosyası `/_layouts/` yolunu yasaklıyor. Kullanım sözleşmesi bulunamadı.
@@ -362,6 +371,42 @@ yıla taşınır. (Sorgu S6, İ: 08-083)
   yoktur; aynı sinyal ve masraf kuralını uygular. Kabul kararına girmez. AGROT–GARAN rotasyon değildir
   ve farklı sektördedir; listede yok. (İ: 04-029)
 
+**Çift bölmesi kuralları** (bilet 11; belge bu noktalarda sessizdi, kod bu okumayı uygular):
+- **Seçim ayrıntısı:** seçim günü `s` = yılın ilk işlem günü; evren o günün ayının evrenidir (5.2).
+  - Aday hisse: evren üyesi, sektörü bilinen ve son 252 işlem gününün (`s` dahil) hepsinde düzeltilmiş
+    kapanışı olan. Aday çift: aynı sektörden iki aday.
+  - Roller: Y = sembol sırasına göre ilk, X = ikinci (alfabetik).
+  - Eşbütünleşme: statsmodels `coint(log Y, log X)` (Engle–Granger, sabit terimli, gecikme AIC), son 252 gün,
+    düzeltilmiş kapanış. p < 0,05 olan çift kalır.
+  - β = aynı penceredeki log Y'nin log X'e OLS eğimi; β ≤ 0 elenir.
+  - Sıralama: p artan, eşitlikte (Y, X) sembol sırası. Açgözlü seçim: bir hisse en fazla bir çiftte, sektör
+    başına en fazla 2 çift, toplam en fazla 5.
+- **Sinyal:** her gün kapanışta Z ve ΔZ (`cift.z_skor`, log oran, 60 gün, ddof 1; KURALLAR §3). Z ≤ −2 ve
+  ΔZ > 0 ise hedef Y; Z ≥ +2 ve ΔZ < 0 ise hedef X. Başka günde sinyal yok. Düşünülen çiftler yalnız seçilmiş
+  çiftlerdir; seçim günü kapanışındaki sinyal ertesi gün işlenir.
+- **Geçiş:** hedef, tutulandan farklıysa ertesi günün AOF'unda eski bacak satılır, yeni bacak alınır; her
+  bacakta %0,3 masraf. Adet = tam lot, aşağı yuvarlanır; alış, sinyal gününü kapsayan 10 günlük medyan TL
+  hacmin %2'siyle sınırlanır (5.4); artan nakit çiftin payında kalır.
+- **Engeller** (geçiş yapılmaz, sinyal taşınmaz): iki bacaktan birinde o gün işlem yok (`islem` yanlış), tavan ya da
+  taban kilidi var. Karantina: bacaklardan birinde son 250 satırda karantina günü varsa çift girişsizdir (motor
+  kuralıyla aynı pencere); tutulan bacakta karantina günü olursa pozisyon son temiz AOF'ta karantina gününde
+  kapanır, pay nakde geçer, pencere dolana dek yeniden giriş olmaz.
+- **Kapanma:** bacak 5.2 kuralıyla kapanırsa (`evren.kapananlar`) tutulan bacak o gün 0 fiyatla kapanır; çift
+  yıl sonuna dek işlemsizdir (pay nakitte faiz kazanır).
+- **Paylar:** sermaye 5 eşit paya bölünür. İlk geçişten önceki pay nakittedir. Seçimden sonraki ilk işlem günü
+  (`s`'nin ertesi) AOF'unda düşen çiftlerin bacağı satılır; yeni çiftler ve boş paylar, o ana dek biriken serbest
+  nakdi eşit paylaşır. Yine seçilen çift işlemsiz sürer ve payı eşitlenmez (YORUM: belge iki cümlesini
+  birleştirir; eşitleme işlem ve masraf gerektirirdi). Yıl içinde dengeleme yok. Hiç çift seçilmeyen yıl
+  nakitte kalır ve "işlem yok" diye işaretlenir.
+- **Tutuş dönemi** (işlem): bir bacağın alımından satımına (geçiş, karantina, kapanma, yıl geçişi, veri sonu)
+  tutuş. Getiri masraflı, 5.6 simülatör formülüyle.
+- **K2:** aynı simülatör K2'si; maruziyet = çift bölmesinin hisse payı (kapanış değeri / özkaynak).
+- **Tanısal 50/50:** her yılın seçimden sonraki ilk işlem günü AOF'unda her payın yarısı Y'ye, yarısı X'e
+  alınır (tam lot, masraflı); yıl sonuna dek tutulur; ertesi yıl başında hepsi satılıp yeni çiftler alınır.
+  Seçilen çift yoksa nakittedir.
+- **VAKBN–GARAN:** Y = VAKBN, X = GARAN, tek pay, 1.000.000 TL, simülatör başlangıcından itibaren; aynı Z, geçiş,
+  engel ve masraf kuralı. Karşılaştırma: aynı çiftin 50/50 tutulması, başlangıçta bir kez.
+
 **Faiz:** boştaki nakit, bir gün gecikmeli politika faizini kazanır (takvim günü, /365). Rapor faiz
 serisinin kaynağını ve son değişim tarihini yazar; seri boşsa koşu SORUNLU olur. (B4, B-8, İ: 08-071)
 
@@ -369,9 +414,11 @@ serisinin kaynağını ve son değişim tarihini yazar; seri boşsa koşu SORUNL
 - **Başlangıç:** ilk gün = 2015-12-01'den sonraki ilk işlem günü (ya da veri daha geç başlıyorsa veri günü).
   Bu günden önceki sinyaller sayılmaz. Her işlem günü: önce faiz, sonra çıkışlar, sonra girişler, sonra
   kapanış değerlemesi.
-- **Evren süzgeci:** motor bütün sembollerde işlem üretir; simülatör, sinyal gününün ayının evreninde
-  (5.2) olmayan işlemi atar. Motor bu işlemleri pozisyon gibi saydığı için aynı hissede sonraki sinyal
-  gecikebilir (bilinen yaklaşıklık). Reddedilen işlemler için de aynıdır.
+- **Evren süzgeci** (bilet 11 düzeltmesi): motor yalnız simülatörün alabileceği sinyalleri görür: sinyal günü
+  simülatör başlangıcından sonra ve sinyal gününün ayının evreninde (5.2) olan sinyaller. Evren dışı sinyal
+  motorda pozisyon açmaz; böylece motor ve simülatör pozisyonları bire bir kalır ve aynı hissede sonraki
+  geçerli sinyal gecikmez. Simülatör aynı süzgeci yine uygular (güvence). Kalan yaklaşıklık: yer ya da
+  nakit yüzünden reddedilen sinyal motorda pozisyon gibi sayılır, aynı hissede sonraki sinyali geciktirebilir.
 - **Boyutlandırma özkaynağı:** sinyal günü kapanış özkaynağı (önceki işlem günü kapanışı). İlk gün için
   1.000.000 TL. Nakit sınırı giriş günündeki güncel nakittir (aynı gün çıkış nakdi dahil).
 - **Likidite:** sinyal gününü kapsayan son 10 işlem gününün (hacmi olmayan gün 0) medyan TL hacmi.

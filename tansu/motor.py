@@ -117,12 +117,20 @@ def mumlar(anlik, sembol: str, p: aileler.Parametre = aileler.Parametre(), atr_n
     return m
 
 
-def sinama(anlik, p: aileler.Parametre = aileler.Parametre(), atr_n: int = ATR_N) -> tuple:
-    """Anlık görüntünün bütün sembolleri için (işlem listesi, düşen sinyal sayısı)."""
+def sinama(anlik, p: aileler.Parametre = aileler.Parametre(), atr_n: int = ATR_N, uye=None) -> tuple:
+    """Anlık görüntünün sembolleri için (işlem listesi, düşen sinyal sayısı).
+
+    `uye`: (sembol, tarih) tablosu (`simulator.uyeler`); verilirse yalnız o hisse-günlerdeki sinyaller motora girer,
+    yani simülatörün alabileceği sinyaller (TASARIM 5.6 evren süzgeci)."""
     parcalar, dusen = [], 0
+    gunler = None if uye is None else uye.groupby("sembol")["tarih"].agg(pd.DatetimeIndex)
     for s in anlik.fiyat["sembol"].unique():
+        if gunler is not None and s not in gunler.index:
+            continue
         m = mumlar(anlik, s, p, atr_n)
         sig = aileler.sinyal(m.dropna(subset=["kapanis"]), p)
+        if gunler is not None:
+            sig = sig[sig.isin(gunler[s])]
         t, d = islemler(m, sig)
         if len(t):  # boş tablolar sütun türünü object'e bozar
             parcalar.append(t.assign(sembol=s))

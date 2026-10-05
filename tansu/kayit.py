@@ -11,12 +11,12 @@ import uuid
 from dataclasses import asdict
 from pathlib import Path
 
-from tansu import aileler, motor, rapor, simulator, veri
+from tansu import aileler, ciftbolme, motor, rapor, simulator, veri
 
 KAYIT_DIZINI = Path("kayit")  # testte conftest yönlendirir
 PAKET = Path(__file__).parent
 # Elle yazılmış, kural kaydına giren dosyalar. K1 kodu gelince eklenir (yeni deneme olur).
-KOD_DOSYALARI = ["aileler.py", "cift.py", "evren.py", "gostergeler.py", "motor.py", "simulator.py"]
+KOD_DOSYALARI = ["aileler.py", "cift.py", "ciftbolme.py", "evren.py", "gostergeler.py", "motor.py", "simulator.py"]
 HASH_DISI = ["__init__.py", "__main__.py", "kaynak.py", "kayit.py", "rapor.py", "sadakat.py", "veri.py"]
 # KURALLAR §3 madde 2 (YORUM): eşik, en az gün, giriş penceresi.
 IZGARA = {"esik": [0.010, 0.012, 0.015], "min_gun": [2, 3, 5], "pencere": [5, 10, 20]}
@@ -37,7 +37,7 @@ def _json(nesne) -> str:
 def _kural(p, atr_n) -> dict:
     kod = _ozet("".join(f"{ad}:{ast.dump(ast.parse((PAKET / ad).read_text(encoding='utf-8')))}\n"
                         for ad in sorted(KOD_DOSYALARI)))
-    param = {"aile": asdict(p), "atr_n": atr_n}
+    param = {"aile": asdict(p), "atr_n": atr_n, "cift": asdict(ciftbolme.Parametre())}
     param_hash, izgara_hash = _ozet(_json(param)), _ozet(_json(IZGARA))
     return {"kural_id": _ozet(kod + param_hash + izgara_hash)[:16], "kod_hash": kod, "param_hash": param_hash,
             "izgara_hash": izgara_hash, "param": param, "izgara": IZGARA}
@@ -106,15 +106,24 @@ def kosu(kimlik, kok, p=aileler.Parametre(), atr_n=motor.ATR_N, tur="deneme", re
           "param_hash": kural["param_hash"], "param": kural["param"], "anlik": kimlik,
           "manifest_sha256": manifest, "git_commit": commit, "tohum": tohum, "tekrar": tekrar,
           "ortam": _ortam(), "resmi": bool(resmi) and not kirli, "kirli": kirli})
-    islemler, dusen = motor.sinama(anlik, p, atr_n)
-    sim = simulator.calistir(anlik, islemler, dusen, bas)
-    html, csv = rapor.yaz(sim, {"kosu_id": kosu_id, "anlik": kimlik, "kod_hash": kural["kod_hash"]})
+    ilk = simulator.ilk_gun(anlik, bas)
+    evr = simulator.evrenler(anlik, ilk, anlik.gunler[-1])
+    islemler, dusen = motor.sinama(anlik, p, atr_n, simulator.uyeler(anlik, evr, ilk))
+    sim = simulator.calistir(anlik, islemler, dusen, bas, evr=evr)
+    cift = ciftbolme.calistir(anlik, evr, bas)
+    html, csv = rapor.yaz(sim, {"kosu_id": kosu_id, "anlik": kimlik, "kod_hash": kural["kod_hash"]}, cift)
     ozet = _ozet(islemler.to_csv(index=False) + f"|{dusen}|"
-                 + "|".join(s["islemler"].to_csv(index=False) for s in sim["masraf"].values()))
+                 + "|".join(s["islemler"].to_csv(index=False) for s in sim["masraf"].values())
+                 + "|" + "|".join(s["islemler"].to_csv(index=False) for k in ("masraf", "sabit")
+                                  for s in cift[k].values()))
     _yaz({**taban, "olay": "bitti", "tarih": _simdi(), "islem_sayisi": len(islemler), "dusen_sinyal": dusen,
           "ozet": ozet, "veri_sorunlari": sim["bilgi"]["sorunlar"],
           "masraf_sonuc": {str(m): {"son_ozkaynak": float(s["ozkaynak"].iloc[-1]), "son_k2": float(s["k2"].iloc[-1]),
                                     "islem": len(s["islemler"]), "reddedilen": s["reddedilen"]}
-                           for m, s in sim["masraf"].items()}})
-    return {"kosu_id": kosu_id, "ozet": ozet, "islemler": islemler, "dusen": dusen, "sim": sim, "rapor": html,
-            "csv": csv}
+                           for m, s in sim["masraf"].items()},
+          "cift_islem_yok": cift["islem_yok"],
+          "cift_sonuc": {k: {str(m): {"son_ozkaynak": float(s["ozkaynak"].iloc[-1]), "son_k2": float(s["k2"].iloc[-1]),
+                                      "son_elli_elli": float(s["elli_elli"].iloc[-1]), "islem": len(s["islemler"])}
+                             for m, s in cift[k].items()} for k in ("masraf", "sabit")}})
+    return {"kosu_id": kosu_id, "ozet": ozet, "islemler": islemler, "dusen": dusen, "sim": sim, "cift": cift,
+            "rapor": html, "csv": csv}

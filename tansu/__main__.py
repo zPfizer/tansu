@@ -6,7 +6,7 @@ import json
 import sys
 from pathlib import Path
 
-from tansu import evren, kayit, kaynak, sadakat, veri
+from tansu import evren, kayit, kaynak, sadakat, simulator, veri
 
 
 def _kimlik_bul(kok: Path) -> str:
@@ -30,6 +30,15 @@ def _evren_indir(kok: Path) -> str:
     return kimlik
 
 
+def _sektor_indir(kok: Path, kimlik: str) -> str:
+    """Eksik KAP sektörlerini yavaş ve devam edilebilir okur; hedef evren üyeleridir (TASARIM 4). Yeni kimlik ya da uyarı."""
+    anlik = veri.oku(kimlik, kok)
+    uye = sorted({s for liste in simulator.evrenler(anlik, simulator.BASLANGIC, anlik.gunler[-1]).values() for s in liste})
+    yeni, kapsam = veri.sektor_tamamla(kimlik, kok, kaynak.KapSektor(), uye)
+    ozet = f"hedef {kapsam['hedef']}, var {kapsam['var']}, listede yok {len(kapsam['listede_yok'])}, alınamayan {len(kapsam['alinamayan'])}"
+    return f"Yeni anlık görüntü {yeni}: {ozet}" if yeni else f"Art arda hata, durdu (yeniden çalıştır): {ozet}"
+
+
 def _en_yeni(kok: Path) -> str:
     klasorler = sorted(p.name for p in (kok / "ag").glob("2*"))
     if not klasorler:
@@ -39,7 +48,7 @@ def _en_yeni(kok: Path) -> str:
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="tansu")
-    ap.add_argument("komut", choices=["sadakat", "kayit", "sinama", "evren-indir"])
+    ap.add_argument("komut", choices=["sadakat", "kayit", "sinama", "evren-indir", "sektor-indir"])
     ap.add_argument("--kok", default="veri")
     ap.add_argument("--kimlik")
     ap.add_argument("--resmi", action="store_true")
@@ -48,6 +57,8 @@ def main(argv=None) -> int:
     try:
         if a.komut == "evren-indir":
             print(_evren_indir(kok))
+        elif a.komut == "sektor-indir":
+            print(_sektor_indir(kok, a.kimlik or _en_yeni(kok)))
         elif a.komut == "kayit":
             print("Kural kaydı yazıldı:", kayit.kayitla()["kural_id"])
         elif a.komut == "sinama":
@@ -56,6 +67,8 @@ def main(argv=None) -> int:
             b = s["sim"]["bilgi"]
             print("Veri kapıları (evren üyeleri):", "; ".join(b["sorunlar"]) or "temiz",
                   f"| kapanma (−%100): {b['kapanma']} | rapor: {s['rapor']}")
+            c = s["cift"]
+            print(f"Çift bölmesi: {len(c['secim'])} çift seçildi, {c['bilgi']['gecis']} tutuş dönemi, işlem yok yılları: {c['islem_yok'] or 'yok'}")
         else:
             kimlik = a.kimlik or _kimlik_bul(kok)
             print(sadakat.calistir(kimlik, kok, Path("docs") / "sadakat.md", kayit.KAYIT_DIZINI / "deneme.jsonl"))

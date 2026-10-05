@@ -12,6 +12,8 @@ Sistemin dili. Kurallar Tansu'dan esinlenen yorumlardır; Tansu'nun kendi sistem
 | Piyasa durumu | Endeksin o günkü durum etiketi. Sonuçları ayırmak için kullanılır; yeni girişi durdurmaz. |
 | Bölme | Bir ailenin kendi sermayesi ve boyutlama kuralı. Tek hisse bölmesi risk paketiyle, çift bölmesi sabit payla boyutlanır. |
 | Çift | Aynı sektörden, aralarında istatistiksel bağ olan iki hisse. Rotasyonda her an ikisinden biri tutulur. |
+| Tutuş dönemi | Çift bölmesinde bir bacağın alımından satımına (geçiş, karantina, kapanma, yıl geçişi, veri sonu) geçen süre. Bölmede "işlem" budur. |
+| 50/50 tanısal | Aynı çiftlerin yılın ilk işlem gününde bir kez yarı yarıya alınıp yıl sonuna dek tutulması. Yalnız bilgi; kabul kararına girmez. |
 | Sadakat kontrolü | Bir kuralın Tansu'nun kendi ekranındaki rakamları yeniden üretip üretmediğinin denetimi. Getiriye bakmaz. |
 | Kural kaydı | Kuralın, parametrelerinin ve kodunun parmak izi. Sonraki her değişiklik yeni denemedir. |
 | Aile | Bir kurulum türünün kuralı. Fiyattan sinyal günlerini çıkarır. |

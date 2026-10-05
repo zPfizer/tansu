@@ -2,6 +2,7 @@
 
 import io
 import json
+import re
 import time
 from pathlib import Path
 
@@ -130,6 +131,45 @@ class Onbellekli:
         o = self._kaynak.olaylar(sembol)
         yol.write_text(json.dumps(o, ensure_ascii=False), encoding="utf-8")
         return o
+
+
+class KapSektor:
+    """Toplu sektör okuma (TASARIM 4, bilet 11): KAP şirket listesi bir kez, sembol başına bir şirket sayfası.
+    İstekler arası `bekleme` sn, User-Agent `tansu-kisisel/0.1`. Düzenler borsapy 0.11.0 `_providers/kap.py`'den."""
+
+    LISTE_URL = "https://www.kap.org.tr/tr/bist-sirketler"
+    SAYFA_URL = "https://kap.org.tr/tr/sirket-bilgileri/ozet"
+    LISTE_DUZENI = (r'\\"mkkMemberOid\\":\\"([^\\"]+)\\",\\"kapMemberTitle\\":\\"[^\\"]+\\",'
+                    r'\\"relatedMemberTitle\\":\\"[^\\"]*\\",\\"stockCode\\":\\"([^\\"]+)\\"')
+    SEKTOR_DUZENI = r'href="/tr/Sektorler\?sector=[^"]*">([^<]+)</a>'
+
+    def __init__(self, oturum=None, bekleme=1.0, zaman_asimi=(5, 30)):
+        self.oturum = oturum or requests.Session()
+        self.oturum.headers["User-Agent"] = USER_AGENT
+        self.bekleme, self.zaman_asimi, self._oid = bekleme, zaman_asimi, None
+
+    def _al(self, url) -> str:
+        try:
+            yanit = self.oturum.get(url, timeout=self.zaman_asimi)
+        except requests.RequestException as hata:
+            raise KaynakHatasi(f"{url}: {hata}") from hata
+        time.sleep(self.bekleme)
+        if yanit.status_code != 200:
+            raise KaynakHatasi(f"{url}: HTTP {yanit.status_code}")
+        return yanit.text
+
+    def sektor(self, sembol):
+        """Sektör adı; KAP listesinde olmayan kod için None; engel, ağ hatası ya da sektörsüz sayfa için KaynakHatasi
+        (sayfa 200 ama sektör yoksa engel sayfası olabilir: sektörsüz diye yazılmaz)."""
+        if self._oid is None:
+            self._oid = {kod.strip(): oid for oid, kodlar in re.findall(self.LISTE_DUZENI, self._al(self.LISTE_URL))
+                         for kod in kodlar.split(",")}
+        if sembol not in self._oid:
+            return None
+        bulunan = re.search(self.SEKTOR_DUZENI, self._al(f"{self.SAYFA_URL}/{self._oid[sembol]}"))
+        if not bulunan:
+            raise KaynakHatasi(f"{sembol}: şirket sayfasında sektör yok")
+        return bulunan.group(1).strip()
 
 
 class Borsapy:

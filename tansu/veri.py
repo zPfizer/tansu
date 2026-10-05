@@ -174,6 +174,63 @@ def indir(semboller, kok, kaynak, simdi=None, bas=BASLANGIC, borsapy=None) -> st
     return kimlik
 
 
+def sektor_tamamla(kimlik, kok, kap, hedefler, simdi=None, art_arda=5) -> tuple:
+    """Eksik sektörleri `kap.sektor` ile okur; bitince yeni anlık görüntü yazar (eskisi değişmez, TASARIM 4).
+
+    Önbellek `onbellek/sektor-<kimlik>.jsonl` (sembol → ad ya da null = KAP listesinde yok). Art arda `art_arda` hatada
+    durur ve (None, kapsam) döndürür. Sonda (yeni kimlik, kapsam): hedef, var, listede_yok, alinamayan.
+    """
+    kok = Path(kok)
+    eski = oku(kimlik, kok)  # manifest doğrulanır
+    var = dict(eski.sektor or {})
+    onbellek = kok / "onbellek" / f"sektor-{kimlik}.jsonl"
+    onbellek.parent.mkdir(parents=True, exist_ok=True)
+    bilinen = {}
+    if onbellek.exists():
+        for satir in onbellek.read_text(encoding="utf-8").splitlines():
+            ad = json.loads(satir)
+            bilinen[ad["sembol"]] = ad["sektor"]
+    alinamayan, hata = [], 0
+    for s in hedefler:
+        if s in var or s in bilinen:
+            continue
+        try:
+            bilinen[s] = kap.sektor(s)
+        except KaynakHatasi:
+            alinamayan.append(s)
+            hata += 1
+            if hata >= art_arda:
+                break
+            continue
+        hata = 0
+        with onbellek.open("a", encoding="utf-8") as f:
+            f.write(json.dumps({"sembol": s, "sektor": bilinen[s]}, ensure_ascii=False) + "\n")
+    var.update({s: ad for s, ad in bilinen.items() if ad})
+    kapsam = {"hedef": len(hedefler), "var": sum(s in var for s in hedefler),
+              "listede_yok": [s for s in hedefler if s in bilinen and bilinen[s] is None],
+              "alinamayan": [s for s in hedefler if s not in var and s not in bilinen]}
+    if hata >= art_arda:
+        return None, kapsam
+    simdi = simdi or dt.datetime.now(ISTANBUL)
+    yeni = simdi.strftime("%Y%m%d-%H%M")
+    ag = kok / "ag"
+    hedef, gecici = ag / yeni, ag / f"_gecici-{yeni}"
+    if hedef.exists():
+        raise VeriHatasi(f"anlık görüntü zaten var: {yeni}")
+    shutil.rmtree(gecici, ignore_errors=True)
+    gecici.mkdir(parents=True)
+    manifest = json.loads((ag / kimlik / "manifest.json").read_text(encoding="utf-8"))
+    for ad in manifest["dosyalar"]:
+        if ad != "sektor.json":
+            shutil.copy2(ag / kimlik / ad, gecici / ad)
+    (gecici / "sektor.json").write_text(json.dumps(var, ensure_ascii=False), encoding="utf-8")
+    manifest.update(kimlik=yeni, kaynak=kimlik, sektor_kapsam=kapsam,
+                    dosyalar={p.name: _sha256(p) for p in sorted(gecici.iterdir())})
+    (gecici / "manifest.json").write_text(json.dumps(manifest, indent=1), encoding="utf-8")
+    os.replace(gecici, hedef)
+    return yeni, kapsam
+
+
 def oku(kimlik, kok) -> Anlik:
     """Manifesti doğrular; uyuşmazlık VeriHatasi'dır."""
     klasor = Path(kok) / "ag" / kimlik
