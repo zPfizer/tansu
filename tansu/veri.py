@@ -34,6 +34,10 @@ class VeriHatasi(Exception):
     pass
 
 
+class KaynakYok(VeriHatasi):
+    """Hiçbir sembol inmedi: kaynağa ulaşılamıyor (günlük koşuda VERİ YOK)."""
+
+
 @dataclass(frozen=True)
 class Anlik:
     kimlik: str
@@ -160,7 +164,7 @@ def indir(semboller, kok, kaynak, simdi=None, bas=BASLANGIC, borsapy=None) -> st
         _yapi_denetimi(s, f)
         fiyatlar.append(f)
     if not fiyatlar:
-        raise VeriHatasi("hiçbir sembol inmedi")
+        raise KaynakYok("hiçbir sembol inmedi")
     if borsapy:
         faiz = borsapy.faiz()
         if faiz.empty:

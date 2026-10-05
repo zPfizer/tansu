@@ -102,6 +102,7 @@ Her modülün dışarıya küçük bir yüzü var. İçi değişse de dışı de
 | `istatistik` | fazla getiri → güven aralığı, p değeri, Holm | statsmodels yalnız `coint` ve Holm için. |
 | `kayit` | kural kaydı, deneme günlüğü, kart günlüğü, durum kayıtları | Yalnız ekleme. Getiri gösteren tek yol `kosu()`'dur: kural kaydı yoksa ya da hash uyuşmazsa tek Türkçe satırla durur. (C-6, İ: 15-074) |
 | `rapor` | sonuçlar → HTML + CSV + `durum.txt` | Ayrıntı 6. bölümde. |
+| `gunluk` | `gunluk(tarih)`: günlük indirme, kapılar, kartlar, `durum.txt` | Bilet 14; 6. bölüm. `rapor`'dan sonra, `__main__`'dan önce. |
 | `__main__` | `python -m tansu gunluk \| sinama \| sadakat \| kayit` | Ayrıntı aşağıda. (İ: 16-001, 16-008, 14-084, 16-062) |
 
 **`veri` ayrıntısı** (İ: 01-094, 02-026, 11-044, 13-006, 13-011, 13-015):
@@ -700,6 +701,14 @@ Getiri görülmeden yazılır; kural kaydına girer. (B-7, İ: 19-015)
 2. **Veri** (m6, C-4, İ: 10-074, 18-071):
    - Tam indirme geçici klasöre yapılır. Kapılar geçerse yeni anlık görüntü olur; geçmezse kart
      üretilmez.
+   - (Bilet 14) "Tam" = her sembolün bütün geçmişi (2010'dan); indirilen semboller bugünün evreni (en çok sembollü
+     son tam anlık görüntüden; taban başka aydaysa tabanın son ayının evreni, YORUM) ve dünkü açık kartların
+     hisseleridir (~100). Sebep: bütün evren (716 sembol) bilet 07'de ~3 sa 10 dk sürdü; görev sınırı 1 saat. 100 sembol
+     ≈ 30 dk; istekler arası 1 sn bekleme aynen kalır. Günlük anlık görüntü `veri/gunluk/ag/` altına yazılır (tam
+     anlık görüntüler `veri/ag/`'da kalır; `sinama` onları kullanır), faiz ve sektör içermez (kart bunlara bakmaz;
+     KAP'a ~100 istek atılmaz). Tabanın aylık yenilenmesi (`evren-indir`) elle yapılır.
+   - (Bilet 14) Günlük koşunun veri kapıları, evren üyesi hisse-günlerde (5.13) hesaplanır; geçmişteki kaynak günü
+     hataları eksik gün olarak zaten işlenir, yalnız bugünün kaynak günü hatası kartı durdurur.
    - Koşu 18:15'ten önce başlarsa kart üretilmez (yarım çubuk riski).
    - Kaynak erişilemezse sınama eski anlık görüntülerle sürer; yalnız canlı kart durur.
    - Günlük anlık görüntüler 30 gün sonra silinir; deneme günlüğünde adı geçenler hiç silinmez.
@@ -716,7 +725,16 @@ Getiri görülmeden yazılır; kural kaydına girer. (B-7, İ: 19-015)
      sınırı TL; Kanıt; Kaynak.
    - **Referans:** sinyal günü kapanışı, ham TL olarak (düzeltilmiş seviye × ham/düzeltilmiş oranı).
    - **Stop:** "tahmini" etiketlidir (referans − 2 ATR). Gerçek stop, giriş dolunca Adım'da hesaplanır.
-   - **Durum:** AKTİF / STOP / BOZULDU.
+   - **Durum:** AKTİF / STOP / BOZULDU. (Bilet 14) AKTİF: giriş bekliyor ya da pozisyon açık. STOP: stop değdi
+     (çıkış bugün ya da kilitli taban yüzünden bekliyor). BOZULDU: kapanış SMA250 altı, karantina çıkışı ya da giriş
+     iptal. Kapanmış pozisyon kartı yalnız kapandığı günün CSV'sinde görünür.
+   - (Bilet 14) **Tarih** sinyal günüdür. **Kaynak** "İş Yatırım <anlık görüntü kimliği>". Büyüklük (Pozisyon %,
+     Adet, Fiili risk, Likidite sınırı) 1.000.000 TL kâğıt özkaynağıyla ve sinyal gününün tahmini stopuyla hesaplanır
+     (nakit sınırı yok; gerçek nakit bilinmez). Stop sütunu giriş dolunca Adım'ın gerçek stopunu gösterir, etiketsiz.
+     Stop hücresi "98,44 (tahmini)" biçimindedir. Çift ailesi Kâğıt olursa çift kartı henüz yazılmadı: koşu SORUNLU olur.
+   - (Bilet 14) **Kanıt satırı** son resmi `durum` satırının `kanit` alanından gelir (işlem sayısı, %0,3 masrafta
+     işlem başına fazla getiri, portföy fazla getirisinin yıllık blok bootstrap aralığı). Aralık sıfırı içeriyorsa
+     "ayırt edilemiyor". Kâğıt dönem = ilk Kâğıt `durum` satırından geçen gün // 30, ölçüt 6 için gereken 6 ay'a bölünerek yazılır.
    - **Kanıt satırı:** aralık birimi ve yöntemi yazılır. %95 aralık sıfırı içeriyorsa "ayırt edilemiyor"
      yazar; p, Holm p ve toplam deneme sayısı raporun "Ayrıntı" bölümündedir.
    - **Kanıt örneği** (Kâğıt aile): "Kâğıt · 148 işlem · rastgele kurala göre işlem başına fazla getiri
@@ -727,6 +745,12 @@ Getiri görülmeden yazılır; kural kaydına girer. (B-7, İ: 19-015)
    - İlk satır: `TAMAM` / `SORUNLU` / `VERİ YOK` / `BUGÜN ÇUBUK YOK` (tatil, çıkış 0).
    - Ardından: son başarılı koşu saati, anlık görüntü kimliği, son çubuk tarihi, sembol sayısı ve bir
      Türkçe eylem cümlesi.
+   - (Bilet 14) Satırlar: `Son başarılı koşu: YYYY-AA-GG SS:DD`, `Anlık görüntü:`, `Son çubuk:`, `Sembol sayısı:`,
+     `Eylem:`. Bilinmeyen değer "yok" yazılır. Başarısız koşu son başarılı koşu saatini önceki dosyadan korur. TAMAM ve
+     BUGÜN ÇUBUK YOK başarılı sayılır (çıkış 0); SORUNLU ve VERİ YOK çıkış 1 verir (Görev Zamanlayıcı yeniden dener).
+     "Çapraz kontrol yok" satırı yoktur: ikinci kaynak yok (bilet 01), TradingView yasak.
+     VERİ YOK: kaynağa ulaşılamadı ya da koşu 18:15'ten önce başladı. Kaynak yayını gecikirse BUGÜN ÇUBUK YOK ayırt
+     edilemez: tatil gibi sayılır ve o günün koşusu biter (bilinen sınır).
    - Levent yalnız buna bakar.
    - `durum.txt` ve CSV'ler geçici dosyaya yazılıp `os.replace` ile taşınır. CSV Excel'de açık olduğu
      için yazılamazsa durum SORUNLU olur: "CSV açık, kapatıp yeniden çalıştır".

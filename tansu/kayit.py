@@ -22,7 +22,7 @@ KOD_DOSYALARI = ["aileler.py", "cift.py", "ciftbolme.py", "evren.py", "gostergel
                  "simulator.py"]
 GELISTIRME, TAM_TABAN, TAM_CARPAN = 200, 1000, 200  # TASARIM 5.7: B = 200 geliştirmede, tamda max(1.000, 200·m)
 AILELER = (simulator.AILE, ciftbolme.AILE)
-HASH_DISI = ["__init__.py", "__main__.py", "kaynak.py", "kayit.py", "rapor.py", "sadakat.py", "veri.py"]
+HASH_DISI = ["__init__.py", "__main__.py", "gunluk.py", "kaynak.py", "kayit.py", "rapor.py", "sadakat.py", "veri.py"]
 # KURALLAR §3 madde 2 (YORUM): eşik, en az gün, giriş penceresi.
 IZGARA = {"esik": [0.010, 0.012, 0.015], "min_gun": [2, 3, 5], "pencere": [5, 10, 20]}
 
@@ -242,6 +242,8 @@ def kosu(kimlik, kok, p=aileler.Parametre(), atr_n=motor.ATR_N, tur="deneme", re
             _yaz({"tur": "durum", "olay": "durum", "tarih": _simdi(), "kosu_id": kosu_id, "kural_id": kural["kural_id"],
                   "aile": aile, "durum": k["durum"], "genel": k["genel"], "holm_p": k["holm"]["holm_p"],
                   "holm_m": k["holm"]["holm_m"], "varsayimsal": k["holm"]["varsayimsal"],
-                  "resmi": bool(resmi) and not kirli, "olcutler": [[r["no"], r["durum"]] for r in k["satirlar"]]})
+                  "resmi": bool(resmi) and not kirli, "olcutler": [[r["no"], r["durum"]] for r in k["satirlar"]],
+                  "kanit": _temiz({"islem": len((sim if aile == simulator.AILE else cift)["masraf"][0.003]["islemler"]),
+                                   "fazla": k["gercek"][0.003], "ci": k["ci"]})})  # kart kanıt satırı (TASARIM 6.5)
     return {"kosu_id": kosu_id, "ozet": ozet, "islemler": islemler, "dusen": dusen, "sim": sim, "cift": cift,
             "rapor": html, "csv": csv, "k1": k1, "kabul": kabul}
