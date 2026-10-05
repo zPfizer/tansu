@@ -238,7 +238,9 @@ hatasından** ayırmak.
     yönünde işler.
   - Göreli karşılaştırmalar (K1, K2) yorumlanır. Ama onlar da yanlılıktan tam arınmış değildir;
     yanlılığın yönü ölçülmedi.
-- **Gerçek BIST100** KAP duyurularından çıkarılınca kurallar onda da koşulur.
+- **Gerçek BIST100** KAP duyurularından çıkarılınca kurallar onda da koşulur. Duyurular yalnız değişiklik
+  listesidir; üyelik bugünkü listeden geriye yürütülür. Dönem içi değişiklikler eksik olduğundan 2016-07
+  öncesi kapsanmaz, sonrası da yaklaşıktır (bilet 16).
 
 ### 5.3 İşlem kuralları ve elle hesaplanmış örnekler
 - **Sinyal ve giriş:**
@@ -600,7 +602,10 @@ Getiri görülmeden yazılır; kural kaydına girer. (B-7, İ: 19-015)
 ## 8. Açık sorular
 1. İş Yatırım: kullanım sözleşmesi bulunamadı; robots.txt `/_layouts/`'u yasaklıyor (bilinen risk, 4).
    Hız sınırı ve günlük yayın saati bilinmiyor. KAP koşulları okunamadı.
-2. KAP endeks değişikliği duyuruları 2015–2016'yı kapsıyor mu?
+2. ~~KAP endeks değişikliği duyuruları 2015–2016'yı kapsıyor mu?~~ Cevap (bilet 16, 05.10.2026): hayır.
+   İlk BIST 100 dönemsel duyurusu 17.06.2016'dır (dönem 01.07.2016); 2015 ve 2016 ilk yarı KAP'ta yok.
+   Dönemsel duyurular 2016-07'den 2026-10'a 42 dönemi kapsar ama yalnız alınan/çıkarılan listesi verir;
+   dönem içi değişiklikler okunamadı. Dosya ve boşluklar: `docs/arastirma/bist100_kap_*.csv`.
 3. Tedbirli hisseler (brüt takas, tek fiyat) bedava veriyle ayırt edilebiliyor mu?
 4. İşlemi kapanan sembollerin tam listesi bulunabilir mi?
 5. 13.03.2020 öncesinde limit bütün paylarda ±%20 mi, bazı pazarlarda ±%15 mi (ikincil kaynak)? Limit
