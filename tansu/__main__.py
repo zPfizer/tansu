@@ -1,4 +1,4 @@
-"""Komut girişi: `python -m tansu sadakat [--kok veri] [--kimlik KIMLIK]` (TASARIM 3)."""
+"""Komut girişi: `python -m tansu sadakat | kayit | sinama | evren-indir [--kok veri] [--kimlik KIMLIK] [--resmi]` (TASARIM 3)."""
 
 import argparse
 import datetime as dt
@@ -6,7 +6,7 @@ import json
 import sys
 from pathlib import Path
 
-from tansu import evren, kaynak, sadakat, veri
+from tansu import evren, kayit, kaynak, sadakat, veri
 
 
 def _kimlik_bul(kok: Path) -> str:
@@ -30,18 +30,35 @@ def _evren_indir(kok: Path) -> str:
     return kimlik
 
 
+def _en_yeni(kok: Path) -> str:
+    klasorler = sorted(p.name for p in (kok / "ag").glob("2*"))
+    if not klasorler:
+        raise veri.VeriHatasi("anlık görüntü yok: önce veriyi indir")
+    return klasorler[-1]
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="tansu")
-    ap.add_argument("komut", choices=["sadakat", "evren-indir"])
+    ap.add_argument("komut", choices=["sadakat", "kayit", "sinama", "evren-indir"])
     ap.add_argument("--kok", default="veri")
     ap.add_argument("--kimlik")
+    ap.add_argument("--resmi", action="store_true")
     a = ap.parse_args(argv)
     kok = Path(a.kok)
-    if a.komut == "evren-indir":
-        print(_evren_indir(kok))
-        return 0
-    kimlik = a.kimlik or _kimlik_bul(kok)
-    print(sadakat.calistir(kimlik, kok, Path("docs") / "sadakat.md", Path("kayit") / "deneme.jsonl"))
+    try:
+        if a.komut == "evren-indir":
+            print(_evren_indir(kok))
+        elif a.komut == "kayit":
+            print("Kural kaydı yazıldı:", kayit.kayitla()["kural_id"])
+        elif a.komut == "sinama":
+            s = kayit.kosu(a.kimlik or _en_yeni(kok), kok, resmi=a.resmi)
+            print(f"Koşu {s['kosu_id']}: {len(s['islemler'])} işlem, {s['dusen']} düşen sinyal, özet {s['ozet'][:12]}")
+        else:
+            kimlik = a.kimlik or _kimlik_bul(kok)
+            print(sadakat.calistir(kimlik, kok, Path("docs") / "sadakat.md", kayit.KAYIT_DIZINI / "deneme.jsonl"))
+    except (kayit.KayitHatasi, veri.VeriHatasi) as e:
+        print(e, file=sys.stderr)
+        return 1
     return 0
 
 

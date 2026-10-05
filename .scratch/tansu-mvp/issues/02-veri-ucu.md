@@ -10,7 +10,7 @@ doğrulamasıyla açar. Bu, sistemin ilk uçtan uca dilimidir: ağdan diske, dis
 
 **Blocked by:** 01
 
-**Status:** done (kayit yönlendirmesi 09'a devredildi)
+**Status:** done
 
 - [x] `kaynak`:
   - İş Yatırım `HisseTekil` ve `GetSermayeArttirimlari` çağrılır.
@@ -34,7 +34,7 @@ doğrulamasıyla açar. Bu, sistemin ilk uçtan uca dilimidir: ağdan diske, dis
   - Bozuk manifest
 - [x] Gerçek ağla bir kez elle koşu yapılır: THYAO ve CCOLA anlık görüntüsü oluşur; çıktı commit
       mesajında yazılır.
-- [ ] `tests/conftest.py` ağı kapatır (yapıldı) ve `kayit/` yolunu `tmp_path`'e yönlendirir (09'a devredildi).
+- [x] `tests/conftest.py` ağı kapatır ve `kayit/` yolunu `tmp_path`'e yönlendirir (yönlendirme bilet 09'da yapıldı).
 
 ## Comments
 
