@@ -96,3 +96,8 @@ def test_kapanma_nedeni_biliniyorsa_son_fiyat():
     a = anlik({"A": dict(pd=1, hacim=1e6), "Z": dict(pd=1, hacim=1e6, son=6)})
     k = ev.kapananlar(a, nedeni_bilinen={"Z"}).set_index("sembol")
     assert pd.isna(k.loc["Z", "getiri"])  # NaN = son fiyat kullanılır
+
+
+def test_sembol_listesi_bugunku_paylar_ve_kapananlarin_birlesimi_tekrarsiz():
+    kapanan = pd.DataFrame({"kod": ["OLMK", "THYAO", "ROYAL"]})  # THYAO yeniden kotlanmış gibi iki listede
+    assert ev.tum_semboller(["THYAO", "AKBNK"], kapanan) == ["AKBNK", "OLMK", "ROYAL", "THYAO"]

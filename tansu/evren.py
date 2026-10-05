@@ -10,6 +10,11 @@ PENCERE = 60  # likidite medyanı ve durdurma eşiği, işlem günü
 COKLU_KOD = [("ISCTR", "ISATR", "ISBTR", "ISKUR")]
 
 
+def tum_semboller(bugun, kapanan) -> list:
+    """Bugünkü bütün paylar (borsapy) ve işlemi kapanmış kodlar (`kaynak.kapanan_kodlar`), tekrarsız."""
+    return sorted(set(bugun) | set(kapanan["kod"]))
+
+
 def evren(anlik, tarih, en_buyuk=100, elenen=0.20, coklu=COKLU_KOD) -> list:
     """`tarih`in ayında yeni giriş için taranabilecek hisseler, piyasa değerine göre büyükten küçüğe.
 
