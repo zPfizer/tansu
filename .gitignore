@@ -1,5 +1,9 @@
 .venv/
 veri/
+rapor/
+gunluk/
+*.parquet
+*.egg-info/
 __pycache__/
 *.pyc
 .pytest_cache/

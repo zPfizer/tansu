@@ -108,13 +108,12 @@ cevaplayıcısı istek sınırını aştı (~27/15). O getiri rakamı hiçbir ka
    değerler kodu görmemiş ayrı bir ajanın elle hesabı; testte sabitler literal; ağ `conftest` ile
    kapalı; bir "veriyi kes, geçmiş değişmesin" testi; hypothesis/coverage/CI yok; paket < 60 sn. (14)
 10. **Git:** `.gitignore`'a `rapor/`, `*.parquet`; izlenen ön deneme dosyaları `git rm --cached`;
-    `.gitattributes` `* text=auto eol=lf`. Yedek: haftalık `git bundle` + `veri/` kopyası harici diske
-    (Levent'in diski gerekir). (20)
+    `.gitattributes` `* text=auto eol=lf`. Yedek tutulmaz (Levent 05.10). (20)
 11. **Hız:** numba yok; saf döngü; bütçe 200 tekrar ≤ 5 dk. Yetmezse önce algoritma, sonra joblib. (19)
 
-## D. Levent'e kalan iki iş
-1. AGENTS.md'ye ajan kuralları (test kapısı, "testi gevşetme" yasağı, okuma sırası): yazma izni gerekir.
-2. Yedek için harici disk ya da OneDrive klasörü seçimi.
+## D. Levent'in kararları (05.10)
+1. AGENTS.md'ye ajan kuralları yazılır (izin verildi).
+2. Yedek tutulmaz.
 
 ## E. Açık kalanlar
 Vergi; İş Yatırım yayın saati ve hız sınırı; kapanmış sembollerin tam listesi (FINBN boş, VAKFN zaman
