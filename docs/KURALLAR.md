@@ -25,9 +25,9 @@ Hazırlık: **H** = birinci elden kodlanabilir, az YORUM · **K** = kısmen, ön
 ### Giriş aileleri
 | Kural | Dosya | Hazırlık | Birinci el olan | Eksik (YORUM) | Tansu'nun kanıtı |
 |---|---|---|---|---|---|
-| Çift rotasyonu (z-skor ±2, ΔZ dönüşü, T+1 açılış, hep yatırımda) | D | **H** | ±2, ΔZ = Z_t − Z_{t−1} (rakamla doğrulandı), yön, T+1, yalnız alış | sapma formülü, pencere (~60 gün tahmini), çift seçimi | VAKBN–GARAN +%52,9 (B&H +%20,9, MaxDD −%27,4); CIMSA–OYAKC +%49,2; bağı kopan çift ≈−%21 |
-| AB=CD + hedef merdiveni | C | **H** | D = C + r(B−A), r 1,0/1,27; BC ≤ AB; hedef D + {0,618; 1; 1,618}(A−D) (rakamla doğrulandı) | pivot ayarı, oran toleransı, stop | SMRTG 12 kalıp (7 hedef, 3 stop) +%305; ISKPL 5/5 +%610; tek hisse, masrafsız |
-| EMA sıkışması (KRDMD) | B | **K** | EMA20/50/100/200, tolerans %1,2, en az 3 gün, 130 mum | oran formülü, giriş tetiği, stop | Tek örnek (sıkışmadan sonra yükseliş) |
+| Çift rotasyonu (z-skor ±2, ΔZ dönüşü, T+1 açılış, hep yatırımda) | D | **K** | ±2, ΔZ tanımı = Z_t − Z_{t−1} (rakamla doğrulandı), yön, T+1, ham fiyat | sapma formülü (40.560 adayla bulunamadı), pencere, tek gün ΔZ yeterliliği, çift seçimi | VAKBN–GARAN +%52,9 (B&H +%20,9, MaxDD −%27,4); CIMSA–OYAKC +%49,2; bağı kopan çift ≈−%21 |
+| AB=CD + hedef merdiveni | C | **K** | D = C + r(B−A), r 1,0/1,27; BC ≤ AB; hedef D + {0,618; 1; 1,618}(A−D) (rakamla doğrulandı) | yön (SMRTG işlemleri aşağı yönlü), pivot ayarı, oran toleransı, stop | SMRTG 12 kalıp (7 hedef, 3 stop) +%305; ISKPL 5/5 +%610; tek hisse, masrafsız, C fiyatından giriş |
+| EMA sıkışması (KRDMD) | B | **H** | EMA20/50/100/200, tolerans %1,2, en az 3 gün; oran formülü sadakatle çözüldü (§4) | giriş tetiği | Tek örnek (sıkışmadan sonra yükseliş) |
 | Yükselen kanal alt bant teması (AEFES) | A | **K** | Lookback 120, 3/3 temas, Low-Bant %, Kapanış-Bant % | kanal çizim yöntemi, tolerans, stop/hedef | Tek örnek, sonuç yok |
 | Kırılım + range retest + FVG (AKFIS A+) | A, E | **K** | Sıra: konsolidasyon → kırılım → FVG → geri test → teyit → giriş; stop FVG altı; 3 hedef (~1/1,5/2R ölçüm) | kutu süresi, FVG ve geri test toleransı, puan | 2 seçilmiş olumlu örnek |
 | Gartley | C, E | **K** | AB/XA 0,618; BC/AB 0,382–0,886; D 0,786 XA; stop X | tolerans; D formülü tabloda ters; TP kaynakları çelişiyor | Yok |
@@ -72,38 +72,39 @@ Hazırlık: **H** = birinci elden kodlanabilir, az YORUM · **K** = kısmen, ön
 | Sıra | Aile | Neden | En önemli YORUM |
 |---|---|---|---|
 | 1 | Çift rotasyonu | 4 ölçütün hepsi; Tansu'nun en güçlü rakamları | sapma formülü ve pencere |
-| 2 | AB=CD | geometri ve hedef birinci el; Tansu'nun tek tablolu sınamaları | pivot ayarı, stop |
-| 3 | EMA sıkışması | parametreler birinci el | giriş tetiği |
+| 2 | EMA sıkışması | parametreler ve oran formülü birinci el | giriş tetiği |
+
+AB=CD ilk sürümden çıktı (Sorgu 3, TASARIM §3): Tansu'nun SMRTG işlemleri aşağı yönlü kalıplar ve C
+fiyatından giriş; bireysel yatırımcı BIST'te açığa satamaz. İkinci dalgada geometri sadakati yönsüz
+yapılır.
 
 **Ailelerin işlem kuralları (ilk sürüm):**
 
-1. **Çift rotasyonu** (birinci el: giriş, onay, yön, zaman)
-   - Sapma: log(Y) − β·log(X), β ve ortalama/std yuvarlanan pencerede (YORUM; sadakat kontrolüyle
-     belirlenecek: log oran ile β'lı kalıntı, pencere 60 ve 120 gün adayları).
-   - Z ≤ −2 ve ΔZ > 0 → ertesi açılışta Y'ye geç. Z ≥ +2 ve ΔZ < 0 → ertesi açılışta X'e geç.
+1. **Çift rotasyonu** (birinci el: giriş eşiği, ΔZ tanımı, yön, zaman, ham fiyat)
+   - Sapma: log(Y) − log(X), ortalama ve standart sapma son 60 günden (YORUM; Tansu'nun Z'si 40.560
+     aday formülle üretilemedi).
+   - Z ≤ −2 ve ΔZ > 0 → ertesi gün Y'ye geç. Z ≥ +2 ve ΔZ < 0 → ertesi gün X'e geç. Tek günlük ΔZ
+     yeterlidir (YORUM; Tansu'nun raporundaki tek örnek +0,30).
    - İlk sinyale kadar nakit; sonra hep bir hissede. Stop yok.
    - Çiftler önceden yazılmış kuralla seçilir (TASARIM 5.6).
-2. **AB=CD, C'den D'ye bacak** (Tansu'nun SMRTG/ISKPL sınamalarındaki işlem)
-   - Pivotlar teyit edilince A, B, C; BC ≤ AB; C, A'yı ihlal etmez.
-   - Giriş: C pivotu teyit edildiği günün ertesi işlem fiyatı (TASARIM 5.3, AOF); C fiyatından değil.
-     Hedef: D = C + r·(B − A), r = 1,0 (1,27 ayrı deneme). Stop: A seviyesi ("C'den sonra fiyat A'yı
-     geçerse kalıp ölür", ikinci el; SMRTG zararları −%12 ile −%25, 2 ATR'den geniş). Yalnız alış.
-     (Sorgu 2, S2-31, S2-34)
-   - Pivot ayarı: sadakat kontrolüyle (KRPLS, MARKA D değerleri) belirlenecek.
-3. **EMA sıkışması kırılımı**
-   - Sıkışma: EMA20/50/100/200 bandı ≤ %1,2, en az 3 gün (birinci el). Oran formülü sadakat kontrolüyle
-     (KRDMD: 17.12.2025–14.01.2026, ortalama %0,64).
-   - Giriş (YORUM): sıkışma bittikten sonraki 10 gün içinde kapanış, sıkışma dönemindeki en yüksek
-     fiyatın üstüne çıkarsa ertesi açılış. Stop ve çıkış: risk paketi. Hedef yok (Tansu vermedi).
-   - Sıklık kontrolü: 99 hissede 11 yılda 520 sıkışma dönemi (Yahoo verisi, kaba sayım).
+   - K1 ön şartı: çift seçilmiş ve |Z| ≥ 2 olan günler.
+2. **EMA sıkışması kırılımı**
+   - Oran: (en büyük EMA − en küçük EMA) / EMA200; EMA20/50/100/200, `ewm(adjust=False)` (birinci el,
+     sadakatle çözüldü, §4).
+   - Sıkışma dönemi: oranın ≤ %1,2 olduğu art arda en az 3 gün; oranın eşiği aştığı ilk gün dönemi
+     bitirir. Tansu'nun %1,2 ve 3 günü "örnekteki değer"dir.
+   - Giriş (YORUM): dönem bittikten sonraki 10 gün içinde kapanış, dönemdeki en yüksek gün yükseğinin
+     üstüne çıkarsa ertesi gün. Dönem başına tek giriş. Stop ve çıkış: risk paketi. Hedef yok.
+   - Not: Tansu'nun ICBCT "Pre Signal"i sıkışma sürerken çıkıyor; bizim tetik bitişten sonra (YORUM).
+   - K1 ön şartı: sıkışma dönemi bitmiş ve 10 günlük pencere açık günler. Ek kol: sıkışmasız aynı kırılım.
 
-AEFES kanal ve AKFIS kurulumu ikinci dalgadadır: iskeletleri birinci el, ama YORUM sayısı fazla.
-Diğerleri dizinde kalır; kaynak çıktıkça yükselir.
+AEFES kanal, AKFIS kurulumu ve AB=CD ikinci dalgadadır. Diğerleri dizinde kalır; kaynak çıktıkça yükselir.
 
-"Ertesi açılış" sınamada ertesi günün AOF'u olarak modellenir; kaynakta açılış yok (TASARIM 5.3).
+"Ertesi gün" sınamada ertesi günün AOF'u olarak modellenir; kaynakta açılış yok (TASARIM 5.3).
 
-**Risk paketi:** %1 risk, 2 ATR acil stop (AB=CD'de A seviyesi), SMA250 altı kapanışta çıkış (bütün aileler). Aileye özgü hedef
-yalnız Tansu verdiyse kullanılır (AB=CD merdiveni). Çift rotasyonunun kendi çıkışı vardır (karşı uçta geçiş).
+**Risk paketi:** %1 risk, 2 ATR acil stop, SMA250 altı kapanışta çıkış (EMA sıkışması; çift rotasyonu
+hariç, onun kendi çıkışı karşı uçta geçiştir). Pozisyon tavanı %10 (YORUM, bizim; çoğu işlemde %1
+riskten daha bağlayıcıdır).
 
 ## 4. Sadakat kontrolü (sınamadan önce)
 
@@ -112,17 +113,30 @@ serbesttir; bu performans değil, kuralın doğru okunduğunun kanıtıdır.
 
 | Aile | Tansu çıktısı | Yeniden üretilecek | Bu neyi çözer |
 |---|---|---|---|
-| Çift rotasyonu | VAKBN–GARAN raporu | son Z −3,108, önceki Z −3,404, 6 geçiş | sapma formülü ve pencere |
+| Çift rotasyonu | VAKBN–GARAN raporu | son Z −3,108, önceki Z −3,404, 6 geçiş; Beta 1,675, korelasyon 0,731, piyasada kalma %72,27; Mart–Mayıs 2025'te sinyal yok | sapma formülü ve pencere |
 | EMA sıkışması | KRDMD | sıkışma 17.12.2025–14.01.2026 (20 gün), ortalama oran %0,64 | oran formülü |
-| AB=CD | KRPLS, MARKA #13 | D = 11,29 / 10,05 / 70,25 | pivot ayarı |
+| AB=CD (ikinci dalga) | KRPLS, MARKA #13, SMRTG tablosu | D = 11,29 / 10,05 / 70,25; SMRTG hedef getirileri | pivot ayarı, yön |
 | Kanal (ikinci dalga) | AEFES 03.09.2026 | alt bant 17,76; temas 3/3; genişlik +%15,3 | kanal çizim yöntemi |
 
-Veri: Tansu'nun kodunda `yfinance` ve `.IS` görünüyor; bu kontrol Yahoo verisiyle yapılır.
-Kural: birden çok aday formül denenir; Tansu'nun rakamını en iyi üreten seçilir ve sonuç kaydedilir.
-Hiçbiri üretemezse YORUM olarak kalır ve raporda yazılır. Bu adım getiri sonuçlarına bakmaz.
+Sonuçlar (Sorgu 3, 05.10.2026):
+- **EMA sıkışması çözüldü:** (en büyük EMA − en küçük EMA) / EMA200, ham kapanıştan `ewm(adjust=False)`.
+  - Dönem ortalaması %0,638.
+  - 09.04.2026 EMA değerleri lejantla birebir.
+  - Grafik sonu ve Mart tepesi görselle ±0,3 içinde.
+- **Çift Z'si üretilemedi** (40.560 aday). Tansu'nun ham fiyat kullandığı doğrulandı (14.05.2025 ipucu
+  kutusu).
+
+Veri: Tansu `yfinance` kullanıyor, ama Yahoo ham kapanışı İş Yatırım ham serisiyle aynı. Kontrol İş Yatırım
+ham seriyle yapılır.
+
+Kural:
+- Birden çok aday formül denenir; Tansu'nun rakamını en iyi üreten seçilir ve sonuç kaydedilir.
+- Hiçbiri üretemezse YORUM olarak kalır ve raporda yazılır.
+- Bu adım getiri sonuçlarına bakmaz.
 
 ## 5. Bilinen riskler
 - Tansu'nun örnek çiftleri ve hisseleri sonuca bakılarak seçilmiş olabilir. Bu yüzden çift rotasyonu
   yalnız onun çiftlerinde değil, önceden yazılmış bir kuralla seçilen bütün çiftlerde sınanır
-  (aynı sektör, oluşum penceresinde eşbütünleşme). Onun çiftleri ayrıca gösterilir.
+  (aynı sektör, oluşum penceresinde eşbütünleşme). Onun çiftleri ayrıca gösterilir. AGROT–GARAN
+  rotasyon değildir (iki bacak + nakit) ve borsapy'ye göre farklı sektördedir.
 - NotebookLM infografikleri Tansu'nun kendi kuralı olmayabilir.
