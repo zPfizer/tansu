@@ -128,15 +128,20 @@ def test_duzeltilmis_seride_yuvarlama_farki_bozuk_sayilmaz(tmp_path):
     assert list(anlik(tmp_path, fiyat).gun_tablosu["karantina"]) == [False, False, True]
 
 
-@pytest.mark.parametrize("bozuk", ["tekrar", "sira", "nan"])
+def test_satirdaki_kismi_nan_bozuk_satirdir_indirmeyi_durdurmaz(tmp_path):
+    # Gerçek IZINV 13.11.2013: yüksek 634210 (saçma), AOF ve hacim NaN. Satır karantinaya girer.
+    bozuk = {**satir("2024-01-03", 100.0), "aof": np.nan, "hacim": np.nan, "ham_yuksek": 634210.0}
+    g = anlik(tmp_path, [satir("2024-01-02", 100.0), bozuk, satir("2024-01-04", 100.0)]).gun_tablosu
+    assert list(g["karantina"]) == [False, True, False]
+
+
+@pytest.mark.parametrize("bozuk", ["tekrar", "sira"])
 def test_yapisal_ihlal_indirmeyi_durdurur(tmp_path, bozuk):
     fiyat = [satir("2024-01-02", 100.0), satir("2024-01-03", 100.0), satir("2024-01-04", 100.0)]
     if bozuk == "tekrar":
-        fiyat[2]["tarih"] = fiyat[1]["tarih"]
-    elif bozuk == "sira":
-        fiyat[1], fiyat[2] = fiyat[2], fiyat[1]
+        fiyat[2] = satir("2024-01-03", 101.0)  # aynı gün, farklı alanlar (birebir aynı tekrar ihlal değil, 5.13)
     else:
-        fiyat[1]["ham_kapanis"] = np.nan
+        fiyat[1], fiyat[2] = fiyat[2], fiyat[1]
     with pytest.raises(veri.VeriHatasi):
         anlik(tmp_path, fiyat)
     assert not (tmp_path / "ag").exists() or not any((tmp_path / "ag").iterdir())
@@ -183,3 +188,46 @@ def test_eksik_indirme_bes_hisseden_fazlaysa_veri_sorunlu(tmp_path):
     alti = anlik(tmp_path / "b", hepsi, bozuk=[f"S{i}" for i in range(6)])
     assert (bes.inmeyen, bes.sorunlar) == (tuple(f"S{i}" for i in range(5)), [])
     assert alti.sorunlar == ["6 hisse inmedi"]
+
+
+def test_veri_donmeyen_sembol_bos_sayilir_inmeyen_degil(tmp_path):
+    # İş Yatırım şirket kodu için boş liste döner (pay değil ya da hiç işlem görmemiş): hata değil.
+    seri = [satir("2024-01-02", 100.0), satir("2024-01-03", 100.0)]
+    hepsi = {"A": seri, **{f"S{i}": [] for i in range(8)}}
+    a = anlik(tmp_path, hepsi)
+    assert (a.bos, a.inmeyen, a.sorunlar) == (tuple(f"S{i}" for i in range(8)), (), [])
+    assert list(a.fiyat["sembol"].unique()) == ["A"]
+
+
+def test_ham_fiyati_ve_hacmi_bos_satir_islem_yapilmamis_gundur_atilir(tmp_path):
+    # Gerçek BERDN 30.01.2012: ham alanların hepsi ve hacim NaN, düzeltilmiş alanlar dolu.
+    bos = {**satir("2024-01-03", 100.0), "ham_kapanis": np.nan, "ham_aof": np.nan, "ham_yuksek": np.nan,
+           "ham_dusuk": np.nan, "hacim": np.nan}
+    a = anlik(tmp_path, [satir("2024-01-02", 100.0), bos, satir("2024-01-04", 100.0)])
+    assert list(a.fiyat["tarih"]) == [pd.Timestamp("2024-01-02"), pd.Timestamp("2024-01-04")]
+
+
+def test_birebir_ayni_tekrar_satir_tek_sayilir_farkli_tekrar_ihlaldir(tmp_path):
+    # Gerçek BYDNR 23.08.2023: aynı satır iki kez geldi.
+    ayni = [satir("2024-01-02", 100.0), satir("2024-01-03", 100.0), satir("2024-01-03", 100.0)]
+    assert list(anlik(tmp_path / "a", ayni).fiyat["tarih"]) == [pd.Timestamp("2024-01-02"), pd.Timestamp("2024-01-03")]
+    farkli = [satir("2024-01-02", 100.0), satir("2024-01-03", 100.0), satir("2024-01-03", 101.0)]
+    with pytest.raises(veri.VeriHatasi):
+        anlik(tmp_path / "b", farkli)
+
+
+def test_hacmi_sifir_ve_ham_alanlari_nan_ya_da_sifir_satir_atilir(tmp_path):
+    # Gerçek ISATR 23.06.2010: ham kapanış NaN, diğer ham alanlar ve hacim 0.
+    bos = {**satir("2024-01-03", 100.0), "ham_kapanis": np.nan, "ham_aof": 0.0, "ham_yuksek": 0.0,
+           "ham_dusuk": 0.0, "hacim": 0.0}
+    a = anlik(tmp_path, [satir("2024-01-02", 100.0), bos, satir("2024-01-04", 100.0)])
+    assert list(a.fiyat["tarih"]) == [pd.Timestamp("2024-01-02"), pd.Timestamp("2024-01-04")]
+
+
+def test_yalniz_sermaye_farkli_tekrar_satir_tek_sayilir_ilki_kalir(tmp_path):
+    # Gerçek KUVVA 2020-07-20: fiyat alanları aynı, pd/sermaye farklı iki satır.
+    a = {**satir("2024-01-03", 100.0), "pd": 1.0, "sermaye": 10.0}
+    b = {**satir("2024-01-03", 100.0), "pd": 2.0, "sermaye": 20.0}
+    f = anlik(tmp_path, [satir("2024-01-02", 100.0), a, b]).fiyat
+    assert list(f["tarih"]) == [pd.Timestamp("2024-01-02"), pd.Timestamp("2024-01-03")]
+    assert f["pd"].iloc[1] == 1.0

@@ -16,7 +16,7 @@ from tansu import aileler, motor, veri
 KAYIT_DIZINI = Path("kayit")  # testte conftest yönlendirir
 PAKET = Path(__file__).parent
 # Elle yazılmış, kural kaydına giren dosyalar. simulator ve K1 kodu gelince eklenir (yeni deneme olur).
-KOD_DOSYALARI = ["aileler.py", "cift.py", "gostergeler.py", "motor.py"]
+KOD_DOSYALARI = ["aileler.py", "cift.py", "evren.py", "gostergeler.py", "motor.py"]
 HASH_DISI = ["__init__.py", "__main__.py", "kaynak.py", "kayit.py", "sadakat.py", "veri.py"]
 # KURALLAR §3 madde 2 (YORUM): eşik, en az gün, giriş penceresi.
 IZGARA = {"esik": [0.010, 0.012, 0.015], "min_gun": [2, 3, 5], "pencere": [5, 10, 20]}

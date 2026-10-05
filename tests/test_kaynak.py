@@ -117,9 +117,64 @@ def test_borsapy_sektor_kap_alanini_dondurur_bos_yanit_hatadir():
         b.sektor("XXXXX")
 
 
+def test_onbellekli_kaynak_tamamlanan_sembolu_yeniden_istemez(tmp_path):
+    class Say:
+        cagri = 0
+
+        def fiyat(self, sembol, bas, son):
+            self.cagri += 1
+            return pd.DataFrame({"tarih": pd.to_datetime(["2024-08-13"]), "ham_kapanis": [1.5]})
+
+        def olaylar(self, sembol):
+            self.cagri += 1
+            return [{"SHT_KODU": "02"}]
+
+    ilk = Say()
+    a = kaynak.Onbellekli(ilk, tmp_path)
+    f1, o1 = a.fiyat("THYAO", None, None), a.olaylar("THYAO")
+    assert ilk.cagri == 2
+    ikinci = Say()  # süreç yeniden başlar: yeni nesne, aynı klasör
+    b = kaynak.Onbellekli(ikinci, tmp_path)
+    assert b.fiyat("THYAO", None, None).equals(f1) and b.olaylar("THYAO") == o1
+    assert ikinci.cagri == 0
+
+
+def test_kapanan_tablo_yalniz_pay_kodlarini_2010_ve_sonrasini_alir():
+    # Borsa İstanbul IslemSirasiKapananSirketler.xls düzeni: 4 başlık satırı, sonra kod/ad/tarih/açıklama.
+    ham = pd.DataFrame([
+        ["İŞLEM SIRASI KAPANAN ŞİRKETLER", None, None, None],
+        ["COMPANIES WITH EQUITIES DELISTED PERMANENTLY", None, None, None],
+        ["PAY KODU", "PAY ADI", "KAPANMA TARİHİ", "AÇIKLAMA"],
+        ["CODE", "EQUITY NAME", "DELISTING DATE", "EXPLANATION"],
+        ["ROYAL.E", "ROYAL", pd.Timestamp("2026-04-17"), None],          # pay: .E sonekini at
+        ["ALBTS.F1", "FON", pd.Timestamp("2026-03-18"), None],           # fon: alma
+        ["OLMK.E", "MONDI", pd.Timestamp("2022-10-20"), "birleşmiştir"],
+        ["ESKI", "ESKI SIRKET", pd.Timestamp("2009-12-31"), None],       # 2010 öncesi: alma
+        ["TARIHSIZ", "TARIHSIZ SIRKET", pd.NaT, None],                   # tarihi yok: al (indirmede boş çıkabilir)
+    ])
+    t = kaynak.kapanan_tablo(ham)
+    assert list(t["kod"]) == ["ROYAL", "OLMK", "TARIHSIZ"]
+    assert list(t["aciklama"].fillna("")) == ["", "birleşmiştir", ""]
+
+
 def test_fiyat_kaynak_sirasi_bozuksa_tarihe_gore_siralanir():
     sonra, once = dict(HAM, HGDG_TARIH="14-08-2024"), dict(HAM, HGDG_TARIH="13-08-2024")
     k = kaynak.IsYatirim(oturum=SahteOturum([Yanit(200, {"value": [sonra, once]})]), bekleme=0)
     f = k.fiyat("GARAN", dt.date(2024, 8, 13), dt.date(2024, 8, 14))
     assert list(f["tarih"]) == [pd.Timestamp("2024-08-13"), pd.Timestamp("2024-08-14")]
     assert list(f.index) == [0, 1]
+
+
+def test_json_olmayan_yanit_gecici_hata_sayilir_yeniden_denenir():
+    # Gerçek koşu (bilet 07): sunucu 200 ile boş/HTML gövde döndürdü; 900 sembollük indirme düştü.
+    class Bozuk(Yanit):
+        def json(self):
+            raise ValueError("Expecting value: line 1 column 1 (char 0)")
+
+    oturum = SahteOturum([Bozuk(200), Yanit(200, {"value": [HAM]})])
+    k = kaynak.IsYatirim(oturum=oturum, bekleme=0, deneme_bekleme=(0, 0, 0))
+    assert len(k.fiyat("CCOLA", dt.date(2024, 8, 13), dt.date(2024, 8, 13))) == 1
+    assert oturum.cagri == 2
+    uc = SahteOturum([Bozuk(200)] * 4)
+    with pytest.raises(kaynak.KaynakHatasi):
+        kaynak.IsYatirim(oturum=uc, bekleme=0, deneme_bekleme=(0, 0, 0)).fiyat("X", dt.date(2024, 8, 13), dt.date(2024, 8, 13))
