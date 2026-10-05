@@ -125,7 +125,9 @@ Her modülün dışarıya küçük bir yüzü var. İçi değişse de dışı de
 
 **Bağımlılık yönü** tek yönlüdür, geri import yok (İ: 11-039):
 `kaynak` → `veri` → `evren`, `gostergeler` → `aileler`, `cift` → `motor` → `simulator` → `ciftbolme` → `istatistik`
-→ `saglamlik` → `kayit` → `rapor` → `gunluk`, `denetim` → `__main__`.
+→ `saglamlik` → `rapor` → `kayit` → `gunluk`, `denetim` → `__main__`.
+(`rapor` yalnız `simulator`'a dayanır; `kosu()` raporu aynı çağrıda yazar ve `rapor-<koşu>.html` adı koşu kimliğinden
+gelir, bu yüzden `kayit` `rapor`'dan sonra gelir. Önceki sıra `kayit` → `rapor` koda uymuyordu.)
 
 Takvim, fiyat günlerinden çıkar (İş Yatırım XU100 günleri). Maliyet tek bir sabittir.
 
@@ -544,9 +546,15 @@ Dolar bazı ilk sürümde yok.
 - **Kural kaydı** (M8, Sorgu S13, C-6, İ: 15-006, 15-016, 09-061):
   - **Ne zaman:** sadakat kontrolü bitince, ilk getiri koşusundan önce kayda geçer. Bundan sonrası
     yeni ayrılmış dönemdir. Sonraki her değişiklik yeni denemedir.
-  - **Hash kapsamı:** elle yazılmış kod dosyaları listesi (`KOD_DOSYALARI`: aileler, cift, gostergeler,
-    motor, simulator, K1 kodu ve sağlamlık ızgarası kodu), kural parametreleri ve ızgara tanımı (iki ailenin
-    ızgarası, `saglamlik.IZGARA`). Boru hattı denetimi (`denetim.py`) hash dışıdır.
+  - **Hash kapsamı:** elle yazılmış kod dosyaları listesi (`KOD_DOSYALARI`), kural parametreleri ve ızgara
+    tanımı (iki ailenin ızgarası, `saglamlik.IZGARA`).
+    - **Kural:** değişmesi işlemleri, dolumları, limit/kilit/karantinayı, evreni, p değerlerini ya da kabul kararını
+      değiştirebilecek her modül listededir. İndirme, rapor, günlük koşu, CLI, sadakat ve denetim kodu listede yoktur.
+    - **Liste:** aileler, cift, ciftbolme, evren, gostergeler, istatistik, kayit, motor, saglamlik, simulator, veri.
+    - **İki not:** `veri.py` indirmeyi de içerir ama kapı ve karantina mantığı (`Anlik.gun_tablosu`, `adim`) kuraldır;
+      dosya bölünmediği için bütünüyle listededir. `kayit.py` Holm, kabul girdisi ve K1 tekrar sayısını (B) hesaplar;
+      o da listededir (muhafazakâr: kayıt kodu değişince yeni kayıt gerekir).
+    - Boru hattı denetimi (`denetim.py`) hash dışıdır.
   - **Kod hash'i** kaynağın `ast.dump` sha256'sıdır; yorum ve boşluk değişmez.
   - **Hash dışı:** tekrar sayısı, tohum, blok uzunluğu, masraf senaryoları; günlükte ayrı alan olarak
     yazılır.
@@ -617,6 +625,9 @@ Parametreler ve ızgara önceden yazılır (`KURALLAR.md` §3). Kurallar:
     `deneme_sayisi` ve Holm bunları saymaz.
 - **Git:** `kayit/` izlenir (`deneme.jsonl`, `kartlar.jsonl`). Yalnız ekleme kuralının kanıtı git geçmişidir;
   `veri/` ve `rapor/` izlenmez. Kirli-ağaç denetimi `kayit/`'ı saymaz. (Bilet 09: `kayit/` kararı)
+- **Kirli ağaç:** `kosu(resmi=True)` kirli ağaçta tek Türkçe satırla durur, günlüğe satır yazılmaz (neden: resmi
+  koşu temiz bir `git_commit`'e bağlanır; kirli ağaçta sessizce resmi olmayan deneme yazmak niyeti gizler).
+  Geliştirme koşusu (`resmi=False`) kirli ağaçta yazılır, `kirli` bayrağıyla.
 - **Silme yasağı:** günlükte adı geçen anlık görüntü silinmez.
 - **Başlangıç denetimi:** koşu başında manifest yeniden hash'lenir; uyuşmazsa koşu durur.
 
@@ -684,7 +695,9 @@ Genel "Geçti" yalnız hepsi sağlanınca yazılır. (İ: 17-079)
 - (Bilet 13) **Komut:** `python -m tansu denetim [--n 200] [--tekrar 200]`. Sonuç `docs/denetim.md`, `rapor/denetim-*.html`
   ve günlükte (`tur=destek`, `olay=denetim`, `gecti` bayrağı, kod hash'i) yazılır. Yanlış kabul > %5 ise çıkış kodu 1'dir
   ve `kosu(resmi=True)` ilk resmi koşuyu bu kodun hash'iyle geçmiş bir denetim yoksa durdurur (başarısız denetim de
-  engeller). İlk resmi koşudan sonra denetim aranmaz.
+  engeller). Denetim, ilk resmi koşu tamamlanana dek aranır: tamamlanma, resmi koşunun `bitti` satırıdır. Yarıda kalan
+  resmi `basladi` m'ye sayılır (5.11) ama kapıyı açmaz (neden: yarıda kalan koşu hiçbir sonuç üretmedi, denetimsiz
+  ikinci deneme hakkı doğmaz). Tamamlanan ilk resmi koşudan sonra denetim aranmaz.
 - **Boş dünya** (`denetim.dunya`): 125 sentetik hisse, 2.000 iş günü (02.01.2012'den), 4 sektör; günlük getiri = piyasa
   payı·β + sektör payı + hisse payı, kalın kuyruklu (t(5), birim varyans), ±%7'ye kırpılmış (limit ve kilit olmaz).
   Hiçbir kural getiri öngörmez: sinyalden sonraki getiri bağımsızdır. Sentetik anlık görüntü gerçek `veri` kapılarından

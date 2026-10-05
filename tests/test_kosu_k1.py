@@ -159,6 +159,31 @@ def test_ilk_resmi_kosu_denetimsiz_ya_da_basarisiz_denetimle_yapilmaz(tmp_path, 
     kos(tmp_path, kimlik, resmi=True, tohum=2)  # sonraki resmi koşular denetim aramaz (ilk resmi koşu geçti)
 
 
+def test_yarida_kalan_resmi_basladi_denetim_kapisini_acmaz_tamamlanan_acar(tmp_path, monkeypatch):
+    # TASARIM 5.12: kapı resmi `bitti` satırına dek kapalı; yarıda kalan resmi `basladi` m'ye sayılır ama kapıyı açmaz.
+    kimlik = hazirla(tmp_path)
+    monkeypatch.setattr(kayit, "TAM_TABAN", 5)
+    monkeypatch.setattr(kayit, "TAM_CARPAN", 1)
+    kayit._yaz({"tur": "deneme", "olay": "basladi", "kosu_id": "yarida", "kural_id": "eski", "resmi": True})
+    with pytest.raises(kayit.KayitHatasi, match="denetim"):
+        kos(tmp_path, kimlik, resmi=True)
+    assert kayit.deneme_sayisi() == 1  # yarıda kalan koşu hâlâ deneme
+    deneme("eski", "ema_sikismasi", 0.5)  # tamamlanmış resmi koşu
+    kos(tmp_path, kimlik, resmi=True)  # kapı açıldı: denetim aranmaz
+
+
+def test_kirli_agacta_resmi_kosu_durur_gunluge_satir_yazmaz(tmp_path, monkeypatch):
+    # TASARIM 5.11 "Kirli ağaç".
+    kimlik = hazirla(tmp_path)
+    monkeypatch.setattr(kayit, "TAM_TABAN", 5)
+    monkeypatch.setattr(kayit, "TAM_CARPAN", 1)
+    kayit.denetim_yaz({"gecti": True}, P, ATR_N)
+    once = len(tum_satirlar())
+    with pytest.raises(kayit.KayitHatasi, match="kirli"):
+        kos(tmp_path, kimlik, resmi=True, git=KIRLI)
+    assert len(tum_satirlar()) == once
+
+
 def test_izgara_hucreleri_destek_olarak_yazilir_holm_m_ye_girmez_ve_olcut_5_e_baglanir(tmp_path):
     # KURALLAR §3 ızgarası: EMA 3·3·3 = 27, çift 2·3·3 = 18 hücre; her hücre bir `destek` satırı (TASARIM 5.10, 5.11).
     kimlik = hazirla(tmp_path)
