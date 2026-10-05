@@ -245,7 +245,8 @@ def _gunler(fiyat, olaylar, takvim):
             if c != 1:  # tablo tarihi bir işlem günü kayabilir (5.1): kapanışı en iyi tutan gün seçilir
                 adaylar = [j for j in (i, i - 1, i + 1) if 0 <= j < len(gunler)]
                 fark = {j: abs(oran_onceki[gunler[j]] / oran[gunler[j]] / c - 1) for j in adaylar}
-                i = min(adaylar, key=lambda j: np.inf if np.isnan(fark[j]) else fark[j])
+                if fark[i] > OLAY_TOLERANS:  # tablo günü oranı tutmuyorsa (NaN: bilinmiyor, kaydırma yok)
+                    i = min(adaylar, key=lambda j: np.inf if np.isnan(fark[j]) else fark[j])
             carpan[gunler[i]] *= c
     limit = pd.Series(np.where(f.index >= LIMIT_DEGISIM, 0.10, 0.20), index=f.index)
     ref = onceki * carpan
