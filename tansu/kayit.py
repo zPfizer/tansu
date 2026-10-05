@@ -18,12 +18,11 @@ from tansu import aileler, ciftbolme, istatistik, motor, rapor, saglamlik, simul
 KAYIT_DIZINI = Path("kayit")  # testte conftest yönlendirir
 PAKET = Path(__file__).parent
 # Elle yazılmış, kural kaydına giren dosyalar (K1 kodu `istatistik.py`, sağlamlık ızgarası `saglamlik.py`'dir).
-KOD_DOSYALARI = ["aileler.py", "cift.py", "ciftbolme.py", "evren.py", "gostergeler.py", "istatistik.py", "motor.py",
-                 "saglamlik.py", "simulator.py"]
+KOD_DOSYALARI = ["aileler.py", "cift.py", "ciftbolme.py", "evren.py", "gostergeler.py", "istatistik.py", "kayit.py",
+                 "motor.py", "saglamlik.py", "simulator.py", "veri.py"]  # kural TASARIM 5.11 "Hash kapsamı"
 GELISTIRME, TAM_TABAN, TAM_CARPAN = 200, 1000, 200  # TASARIM 5.7: B = 200 geliştirmede, tamda max(1.000, 200·m)
 AILELER = (simulator.AILE, ciftbolme.AILE)
-HASH_DISI = ["__init__.py", "__main__.py", "denetim.py", "gunluk.py", "kaynak.py", "kayit.py", "rapor.py", "sadakat.py",
-             "veri.py"]
+HASH_DISI = ["__init__.py", "__main__.py", "denetim.py", "gunluk.py", "kaynak.py", "rapor.py", "sadakat.py"]
 IZGARA = saglamlik.IZGARA  # KURALLAR §3 (YORUM): her ailenin önceden yazılmış ızgarası
 
 
@@ -139,8 +138,26 @@ def tekrar_sayisi(son, p=aileler.Parametre(), atr_n=motor.ATR_N) -> int:
 
 def durum_oku(aile) -> str:
     """Ailenin durumu: en son resmi `durum` satırı; yoksa Deneme (TASARIM 5.12)."""
-    resmi = [s["durum"] for s in _oku() if s["olay"] == "durum" and s["aile"] == aile and s["resmi"]]
-    return resmi[-1] if resmi else "Deneme"
+    resmi = resmi_durumlar(aile)
+    return resmi[-1]["durum"] if resmi else "Deneme"
+
+
+def resmi_durumlar(aile) -> list:
+    """Ailenin resmi `durum` satırları, günlük sırasıyla (TASARIM 5.11)."""
+    return [s for s in _oku() if s["olay"] == "durum" and s["aile"] == aile and s["resmi"]]
+
+
+def _resmi_bitti() -> bool:
+    """Tamamlanmış (resmi `bitti` satırı olan) bir `deneme` koşusu var mı? `bitti` satırı `resmi` taşımaz: `basladi`'dan bakılır."""
+    resmi = set()
+    for s in _oku():
+        if s["tur"] != "deneme":
+            continue
+        if s["olay"] == "basladi" and s.get("resmi"):
+            resmi.add(s["kosu_id"])
+        elif s["olay"] == "bitti" and s["kosu_id"] in resmi:
+            return True
+    return False
 
 
 def _temiz(x):
@@ -234,21 +251,22 @@ def kosu(kimlik, kok, p=aileler.Parametre(), atr_n=motor.ATR_N, tur="deneme", re
     if resmi and 0 < tekrar < tekrar_sayisi(True, p, atr_n):
         raise KayitHatasi(f"Resmi koşu tam tekrar ister: tekrar {tekrar} < {tekrar_sayisi(True, p, atr_n)}; "
                           "`sinama --son --resmi` kullan.")
-    if resmi and not denetim_gecti(kural["kod_hash"]) and not any(
-            s["olay"] == "basladi" and s["tur"] == "deneme" and s.get("resmi") for s in _oku()):
+    if resmi and not denetim_gecti(kural["kod_hash"]) and not _resmi_bitti():
         raise KayitHatasi("İlk resmi koşu yapılmaz: bu kodla geçen boru hattı denetimi yok (yanlış kabul ≤ %5 şartı); "
                           "`python -m tansu denetim` çalıştır (TASARIM 5.12).")
+    commit, kirli = git()
+    if resmi and kirli:
+        raise KayitHatasi("Resmi koşu kirli ağaçta yapılmaz: değişiklikleri commit'le ya da `--resmi`siz çalıştır (TASARIM 5.11).")
     anlik = veri.oku(kimlik, kok)  # manifesti yeniden hash'ler; uyuşmazsa VeriHatasi
     manifest = _ozet((Path(kok) / "ag" / kimlik / "manifest.json").read_bytes())
-    commit, kirli = git()
     kosu_id = f"{dt.datetime.now(dt.timezone.utc):%Y%m%dT%H%M%S}-{uuid.uuid4().hex[:6]}"
     taban = {"tur": tur, "kosu_id": kosu_id, "kural_id": kural["kural_id"]}
     _yaz({**taban, "olay": "basladi", "tarih": _simdi(), "kod_hash": kural["kod_hash"],
           "param_hash": kural["param_hash"], "param": kural["param"], "anlik": kimlik,
           "manifest_sha256": manifest, "git_commit": commit, "tohum": tohum, "tekrar": tekrar, "son": bool(son),
-          "ortam": _ortam(), "resmi": bool(resmi) and not kirli, "kirli": kirli})
+          "ortam": _ortam(), "resmi": bool(resmi), "kirli": kirli})
     h = hesapla(anlik, p, atr_n, bas, tekrar, tohum,
-                lambda ps: holm_hesapla(kural["kural_id"], ps, bool(resmi) and not kirli))
+                lambda ps: holm_hesapla(kural["kural_id"], ps, bool(resmi)))
     islemler, dusen, sim, cift, k1, kabul = (h[k] for k in ("islemler", "dusen", "sim", "cift", "k1", "kabul"))
     html, csv = rapor.yaz(sim, {"kosu_id": kosu_id, "anlik": kimlik, "kod_hash": kural["kod_hash"],
                                 "holm_tarih": _simdi()[:10]}, cift, kabul=kabul)
@@ -271,7 +289,7 @@ def kosu(kimlik, kok, p=aileler.Parametre(), atr_n=motor.ATR_N, tur="deneme", re
             _yaz({"tur": "durum", "olay": "durum", "tarih": _simdi(), "kosu_id": kosu_id, "kural_id": kural["kural_id"],
                   "aile": aile, "durum": k["durum"], "genel": k["genel"], "holm_p": k["holm"]["holm_p"],
                   "holm_m": k["holm"]["holm_m"], "varsayimsal": k["holm"]["varsayimsal"],
-                  "resmi": bool(resmi) and not kirli, "olcutler": [[r["no"], r["durum"]] for r in k["satirlar"]],
+                  "resmi": bool(resmi), "olcutler": [[r["no"], r["durum"]] for r in k["satirlar"]],
                   "kanit": _temiz({"islem": len((sim if aile == simulator.AILE else cift)["masraf"][0.003]["islemler"]),
                                    "fazla": k["gercek"][0.003], "ci": k["ci"]})})  # kart kanıt satırı (TASARIM 6.5)
     for aile, k in (kabul or {}).items():  # sağlamlık ızgarası hücreleri: destek, Holm m'ye girmez (TASARIM 5.10, 5.11)

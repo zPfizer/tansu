@@ -98,7 +98,7 @@ def test_temiz_agacta_resmi_kirli_agacta_resmi_degil(tmp_path):
     kayit.kayitla(P, ATR_N)
     kayit.denetim_yaz({"gecti": True}, P, ATR_N)  # ilk resmi koşu için geçen boru hattı denetimi şart (TASARIM 5.12)
     calistir(tmp_path, kimlik, resmi=True, git=TEMIZ)
-    calistir(tmp_path, kimlik, resmi=True, git=KIRLI)
+    calistir(tmp_path, kimlik, resmi=False, git=KIRLI)  # kirli ağaçta resmi istenirse koşu durur (TASARIM 5.11)
     calistir(tmp_path, kimlik, resmi=False, git=TEMIZ)
     b = [s for s in satirlar() if s["olay"] == "basladi"]
     assert [(s["resmi"], s["kirli"]) for s in b] == [(True, False), (False, True), (False, False)]
@@ -154,10 +154,21 @@ def test_gunluk_yalniz_eklenir_onceki_satirlar_degismez(tmp_path):
     assert sonra.startswith(once) and len(sonra) > len(once)
 
 
+def test_resmi_durumlar_yalniz_ailenin_resmi_durum_satirlarini_sirayla_verir(tmp_path):
+    for aile, durum, resmi in [("a", "Deneme", True), ("b", "Kâğıt", True), ("a", "Kâğıt", False), ("a", "Kâğıt", True)]:
+        kayit._yaz({"tur": "durum", "olay": "durum", "aile": aile, "durum": durum, "resmi": resmi})
+    kayit._yaz({"tur": "kayit", "olay": "kayit"})
+    assert [s["durum"] for s in kayit.resmi_durumlar("a")] == ["Deneme", "Kâğıt"]
+    assert kayit.resmi_durumlar("yok") == []
+
+
 def test_her_tansu_dosyasi_kod_listesinde_ya_da_hash_disinda():
     dosyalar = {p.name for p in Path(kayit.__file__).parent.glob("*.py")}
     assert dosyalar == set(kayit.KOD_DOSYALARI) | set(kayit.HASH_DISI)
     assert not set(kayit.KOD_DOSYALARI) & set(kayit.HASH_DISI)
+    # TASARIM 5.11 kuralı: işlem, dolum, kapı, evren, p ya da kabul kararını değiştirebilen her modül listede.
+    assert set(kayit.KOD_DOSYALARI) == {"aileler.py", "cift.py", "ciftbolme.py", "evren.py", "gostergeler.py",
+                                        "istatistik.py", "kayit.py", "motor.py", "saglamlik.py", "simulator.py", "veri.py"}
 
 
 def test_komutlar_kayit_ve_sinama(tmp_path, capsys):
