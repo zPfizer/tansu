@@ -6,8 +6,9 @@ import pandas as pd
 from tansu.veri import VeriHatasi
 
 PENCERE = 60  # likidite medyanı ve durdurma eşiği, işlem günü
-# Aynı şirketin birden çok kodu (elle yazılmış; İş Bankası: C, A, B grubu ve kurucu payı).
-COKLU_KOD = [("ISCTR", "ISATR", "ISBTR", "ISKUR")]
+# Aynı şirketin birden çok pay kodu (elle yazılmış). Kaynak: KAP şirket listesinde (borsapy 0.11.0 `companies`)
+# bir satırda birden çok kod olanlar, aracı kurum üye kodları (TGB, THL...) ayıklanarak: yalnız bu ikisi pay grubu.
+COKLU_KOD = [("ISCTR", "ISATR", "ISBTR", "ISKUR"), ("KRDMA", "KRDMB", "KRDMD")]
 
 
 def tum_semboller(bugun, kapanan) -> list:

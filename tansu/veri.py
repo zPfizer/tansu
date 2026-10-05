@@ -236,19 +236,11 @@ def _gunler(fiyat, olaylar, takvim):
     ok = islem & ~bozuk
     onceki = f["ham_kapanis"].where(ok).ffill().shift(1)
     carpan = pd.Series(1.0, index=f.index)
-    oran = (f["kapanis"] / f["ham_kapanis"]).where(ok)  # düzeltme oranı; sıçradığı gün gerçek olay günüdür
-    oran_onceki = oran.ffill().shift(1)
     gunler = f.index[islem.to_numpy()]
     for tarih, grup in olaylar.groupby("tarih"):
-        c = grup["carpan"].prod()
         i = gunler.searchsorted(tarih)  # olay gününe eşit ya da sonraki işlem günü
-        if i < len(gunler):
-            if c != 1:  # tablo tarihi bir işlem günü kayabilir (5.1): kapanışı en iyi tutan gün seçilir
-                adaylar = [j for j in (i, i - 1, i + 1) if 0 <= j < len(gunler)]
-                fark = {j: abs(oran_onceki[gunler[j]] / oran[gunler[j]] / c - 1) for j in adaylar}
-                if fark[i] > OLAY_TOLERANS:  # tablo günü oranı tutmuyorsa (NaN: bilinmiyor, kaydırma yok)
-                    i = min(adaylar, key=lambda j: np.inf if np.isnan(fark[j]) else fark[j])
-            carpan[gunler[i]] *= c
+        if i < len(gunler):  # ±1 gün kayma yok: tam evrende 0 fark (bilet 07), 5.1
+            carpan[gunler[i]] *= grup["carpan"].prod()
     limit = pd.Series(np.where(f.index >= LIMIT_DEGISIM, 0.10, 0.20), index=f.index)
     ref = onceki * carpan
     tavan, taban, kapanis = ref * (1 + limit), ref * (1 - limit), f["ham_kapanis"]

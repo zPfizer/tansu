@@ -199,18 +199,6 @@ def test_veri_donmeyen_sembol_bos_sayilir_inmeyen_degil(tmp_path):
     assert list(a.fiyat["sembol"].unique()) == ["A"]
 
 
-@pytest.mark.parametrize("olay_gunu", [dt.date(2024, 1, 2), dt.date(2024, 1, 3), dt.date(2024, 1, 4)])
-def test_olay_tablosu_bir_gun_kaysa_da_sahte_karantina_olmaz(tmp_path, olay_gunu):
-    # 2:1 bölünme (çarpan 0,5): ham kapanış 100 → 50, gerçek düzeltme günü 03.01. Tablo 02.01 (bir gün erken)
-    # ya da 04.01 (bir gün geç) yazsa da 50 / (100 × 0,5) = 1 → hiçbir gün limiti aşmaz.
-    olay = {"A": [{"SHT_KODU": "02", "SHHE_TARIH": epoch(olay_gunu), "SHHE_FIYAT_AYAR_OR": 0.5}]}
-    # Düzeltilmiş seri (HGDG) bölünmeyi 03.01'den önceki günlere uygular: 100 → 50.
-    yari = {"kapanis": 50.0, "aof": 50.0, "yuksek": 50.01, "dusuk": 49.99}
-    fiyat = [{**satir("2023-12-29", 100.0), **yari}, {**satir("2024-01-02", 100.0), **yari},
-             satir("2024-01-03", 50.0), satir("2024-01-04", 51.0)]
-    assert not anlik(tmp_path, fiyat, olay).gun_tablosu["karantina"].any()
-
-
 def test_ham_fiyati_ve_hacmi_bos_satir_islem_yapilmamis_gundur_atilir(tmp_path):
     # Gerçek BERDN 30.01.2012: ham alanların hepsi ve hacim NaN, düzeltilmiş alanlar dolu.
     bos = {**satir("2024-01-03", 100.0), "ham_kapanis": np.nan, "ham_aof": np.nan, "ham_yuksek": np.nan,
