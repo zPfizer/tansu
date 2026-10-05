@@ -36,6 +36,8 @@ Belge ile kod çelişirse ya da belge sessizse dur: belgeyi önce düzelt, gerek
   (`schtasks /create /xml` UTF-8 XML'i okuyamaz): `Register-ScheduledTask -TaskName TansuGunluk -Xml (Get-Content -Raw -Encoding utf8 kurulum\tansu-gunluk.xml)`.
   Tanım kapalı kurulur (`<Enabled>false</Enabled>`); ilk resmi koşudan sonra `schtasks /change /tn TansuGunluk /enable`
   (bilet 15). Kaldırma: `schtasks /delete /tn TansuGunluk /f`. Yollar bu makinedeki ana depoya (`C:\Users\levent\Desktop\TANSU`) bağlıdır.
+  Aylık taban aynı yolla: `kurulum/tansu-aylik.xml` (ayın son günü 20:45, `python -m tansu evren-indir`), görev adı `TansuAylik`,
+  kapalı kurulur, bilet 15'te `TansuGunluk` ile birlikte açılır.
 - **Kural parametresi:** yalnız TASARIM/KURALLAR değişikliğiyle ve yeni deneme olarak değişir.
 - **Bağımlılık:** yeni paket eklemeden önce TASARIM §4 ve stdlib'e bak. Eklenen paket `pyproject.toml`'a
   `==` ile yazılır.
