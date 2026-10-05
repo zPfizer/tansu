@@ -107,6 +107,7 @@ def test_kosu_k1_p_tabani_durum_satirlari_ve_kabul_tablosu(tmp_path):
     assert [(r["tur"], r["aile"], r["durum"], r["resmi"], r["varsayimsal"], r["holm_m"]) for r in (d1, d2)] == [
         ("durum", "ema_sikismasi", "Deneme", False, True, 2), ("durum", "cift_rotasyonu", "Deneme", False, True, 2)]
     assert kayit.durum_oku("ema_sikismasi") == "Deneme"
+    assert d1["kanit"]["islem"] == 2 and set(d1["kanit"]) == {"islem", "fazla", "ci"}  # kart kanıt satırı için (bilet 14)
 
 
 def test_kosu_rapor_kabul_tablosu_m_ve_holm_tarihi_yasakli_sozcuk_yok(tmp_path):

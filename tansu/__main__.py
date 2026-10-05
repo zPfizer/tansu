@@ -1,4 +1,4 @@
-"""Komut girişi: `python -m tansu sadakat | kayit | sinama | denetim | evren-indir [--kok veri] [--kimlik KIMLIK] [--resmi] [--son]` (TASARIM 3)."""
+"""Komut girişi: `python -m tansu sadakat | kayit | sinama | denetim | evren-indir | gunluk [tarih] [--kok veri] [--kimlik KIMLIK] [--resmi] [--son]` (TASARIM 3)."""
 
 import argparse
 import datetime as dt
@@ -6,7 +6,7 @@ import json
 import sys
 from pathlib import Path
 
-from tansu import denetim, evren, kayit, kaynak, sadakat, simulator, veri
+from tansu import denetim, evren, gunluk, kayit, kaynak, sadakat, simulator, veri
 
 
 def _kimlik_bul(kok: Path) -> str:
@@ -63,7 +63,8 @@ def _denetim(n, tekrar) -> int:
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="tansu")
-    ap.add_argument("komut", choices=["sadakat", "kayit", "sinama", "denetim", "evren-indir", "sektor-indir"])
+    ap.add_argument("komut", choices=["sadakat", "kayit", "sinama", "denetim", "evren-indir", "sektor-indir", "gunluk"])
+    ap.add_argument("tarih", nargs="?", help="yalnız gunluk: YYYY-AA-GG (varsayılan bugün)")
     ap.add_argument("--kok", default="veri")
     ap.add_argument("--kimlik")
     ap.add_argument("--resmi", action="store_true")
@@ -75,6 +76,8 @@ def main(argv=None) -> int:
     try:
         if a.komut == "denetim":
             return _denetim(a.n, a.tekrar)
+        if a.komut == "gunluk":
+            return gunluk.gunluk(a.tarih or dt.datetime.now(veri.ISTANBUL).date(), kok)
         if a.komut == "evren-indir":
             print(_evren_indir(kok))
         elif a.komut == "sektor-indir":
