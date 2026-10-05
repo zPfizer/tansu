@@ -37,10 +37,12 @@ class Anlik:
     kimlik: str
     fiyat: pd.DataFrame  # uzun biçim: sembol, tarih, ham_* ve düzeltilmiş sütunlar
     olaylar: pd.DataFrame  # sembol, tarih, kod, carpan
+    faiz: pd.DataFrame = None  # tarih, faiz (yüzde); yalnız değişim günleri
+    sektor: dict = None  # sembol → KAP sektörü
     inmeyen: tuple = ()  # indirilemeyen semboller
 
     @property
-    def gunler(self) -> pd.DataFrame:
+    def gun_tablosu(self) -> pd.DataFrame:
         """Sembol × takvim günü: islem, eksik, limit, tavan, taban, kilit_*, karantina (TASARIM 5.1)."""
         takvim = pd.DatetimeIndex(sorted(self.fiyat["tarih"].unique()))
         parcalar = [
@@ -53,13 +55,38 @@ class Anlik:
     def sorunlar(self) -> list:
         """Oran eşiklerini aşan kapılar (TASARIM 5.13); boş liste = veri temiz."""
         n, sonuc = len(self.fiyat), []
-        if self.gunler["karantina"].sum() / n > KARANTINA_ESIK:
+        if self.gun_tablosu["karantina"].sum() / n > KARANTINA_ESIK:
             sonuc.append("karantina oranı > %1")
         if len(self.olay_uyarilari) / n > DENETIM_ESIK:
             sonuc.append("olay denetimi farkı olan gün oranı > %2")
         if len(self.inmeyen) > INMEYEN_ESIK:
             sonuc.append(f"{len(self.inmeyen)} hisse inmedi")
         return sonuc
+
+    @property
+    def gunler(self) -> pd.DatetimeIndex:
+        """Takvim: XU100 kapanışı olan günler (TASARIM 4)."""
+        f = self.fiyat
+        return pd.DatetimeIndex(sorted(f.loc[f["xu100"] > 0, "tarih"].unique()))
+
+    @property
+    def faiz_son_degisim(self) -> pd.Timestamp:
+        return self.faiz["tarih"].max()
+
+    def faiz_gunluk(self, bas, son) -> pd.Series:
+        """Günlük (takvim günü) faiz: değişim günlerinden ileri doldurulur, bir gün gecikmeli (TASARIM 5.6).
+
+        Seri boşsa ya da istenen aralığın başını kapsamıyorsa VeriHatasi (koşu SORUNLU olur).
+        """
+        if self.faiz is None or self.faiz.empty:
+            raise VeriHatasi("faiz serisi boş")
+        degisim = self.faiz.set_index("tarih")["faiz"].sort_index()
+        gun = pd.date_range(degisim.index[0], pd.Timestamp(son))
+        gecikmeli = degisim.reindex(gun).ffill().shift(1)
+        s = gecikmeli.reindex(pd.date_range(pd.Timestamp(bas), pd.Timestamp(son)))
+        if s.isna().any():
+            raise VeriHatasi(f"faiz serisi {s.index[s.isna()][0].date()} gününü kapsamıyor")
+        return s
 
     @property
     def olay_uyarilari(self) -> pd.DataFrame:
@@ -70,8 +97,10 @@ class Anlik:
         return pd.concat(parcalar, ignore_index=True) if parcalar else pd.DataFrame()
 
 
-def indir(semboller, kok, kaynak, simdi=None, bas=BASLANGIC) -> str:
-    """Sembollerin fiyat ve olaylarını indirir, anlık görüntüyü yazar, kimliğini döndürür."""
+def indir(semboller, kok, kaynak, simdi=None, bas=BASLANGIC, borsapy=None) -> str:
+    """Sembollerin fiyat ve olaylarını indirir, anlık görüntüyü yazar, kimliğini döndürür.
+
+    `borsapy` verilirse faiz ve sektör tabloları da anlık görüntüye girer; boş faiz serisi hatadır."""
     simdi = simdi or dt.datetime.now(ISTANBUL)
     kimlik = simdi.strftime("%Y%m%d-%H%M")
     ag = Path(kok) / "ag"
@@ -90,8 +119,16 @@ def indir(semboller, kok, kaynak, simdi=None, bas=BASLANGIC) -> str:
         fiyatlar.append(f)
     if not fiyatlar:
         raise VeriHatasi("hiçbir sembol inmedi")
+    if borsapy:
+        faiz = borsapy.faiz()
+        if faiz.empty:
+            raise VeriHatasi("faiz serisi boş")
+        sektor = {s: borsapy.sektor(s) for s in semboller}
     shutil.rmtree(gecici, ignore_errors=True)
     gecici.mkdir(parents=True)
+    if borsapy:
+        faiz.to_parquet(gecici / "faiz.parquet", index=False)
+        (gecici / "sektor.json").write_text(json.dumps(sektor, ensure_ascii=False), encoding="utf-8")
     pd.concat(fiyatlar, ignore_index=True).to_parquet(gecici / "fiyat.parquet", index=False)
     (gecici / "olaylar.json").write_text(json.dumps(ham_olaylar, ensure_ascii=False), encoding="utf-8")
     manifest = {"kimlik": kimlik, "semboller": [s for s in semboller if s not in inmeyen], "inmeyen": inmeyen,
@@ -113,7 +150,11 @@ def oku(kimlik, kok) -> Anlik:
         [{"sembol": s, "tarih": _olay_tarihi(o["SHHE_TARIH"]), "kod": o["SHT_KODU"],
           "carpan": float(o["SHHE_FIYAT_AYAR_OR"])} for s, liste in ham.items() for o in liste],
         columns=["sembol", "tarih", "kod", "carpan"])
-    return Anlik(kimlik, pd.read_parquet(klasor / "fiyat.parquet"), olaylar, tuple(manifest.get("inmeyen", [])))
+    faiz = pd.read_parquet(klasor / "faiz.parquet") if "faiz.parquet" in manifest["dosyalar"] else None
+    sektor = (json.loads((klasor / "sektor.json").read_text(encoding="utf-8"))
+              if "sektor.json" in manifest["dosyalar"] else None)
+    return Anlik(kimlik, pd.read_parquet(klasor / "fiyat.parquet"), olaylar, faiz, sektor,
+                 tuple(manifest.get("inmeyen", [])))
 
 
 def _sha256(yol: Path) -> str:

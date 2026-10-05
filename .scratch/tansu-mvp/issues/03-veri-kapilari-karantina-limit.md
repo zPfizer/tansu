@@ -43,10 +43,10 @@ Veri kapıları (TASARIM 5.13) kalan bir indirmeyi anlık görüntü yapmaz.
 
 ## Comments
 
-- Arayüz: `Anlik.gunler` (islem, eksik, limit, tavan, taban, kilit_tavan/taban, kilit_*_duyarli, karantina),
+- Arayüz: `Anlik.gun_tablosu` (islem, eksik, limit, tavan, taban, kilit_tavan/taban, kilit_*_duyarli, karantina),
   `Anlik.sorunlar` (oran eşikleri; boş = temiz), `Anlik.inmeyen`, `veri.adim`. `indir` yapısal ihlalde
   `VeriHatasi` verir ve anlık görüntü yazmaz; kaynak hatası veren sembol `inmeyen` olur (manifestte).
-- Test 33 yeşil (bu bilet: 14 test, `tests/test_kapilar.py`).
+- Birleştirme: bilet 04 `Anlik.gunler` adını XU100 takvimi için almıştı; benimki `gun_tablosu` oldu. Test 42 yeşil (önce 33). (bu bilet: 14 test, `tests/test_kapilar.py`).
 - Gerçek anlık görüntü (`veri/ag/20261005-1436`, THYAO+CCOLA, 8.408 gün): karantina 12 gün (%0,14),
   hepsi gerçek bozuk satır (düşük = yüksek = 0; düzeltilmiş kapanış > yüksek). Kilit: THYAO 7 tavan / 5 taban,
   CCOLA 2 / 3; duyarlı sürüm 0 gün. Karantina oranı eşiğin altında.

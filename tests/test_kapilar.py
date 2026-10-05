@@ -48,7 +48,7 @@ def anlik(tmp_path, fiyatlar, olaylar=None, bozuk=()):
 
 
 def gun(a, tarih, sembol="A"):
-    g = a.gunler
+    g = a.gun_tablosu
     return g[(g["sembol"] == sembol) & (g["tarih"] == pd.Timestamp(tarih))].iloc[0]
 
 
@@ -116,7 +116,7 @@ def test_bozuk_satirlar_karantinaya_girer(tmp_path):
              satir("2024-01-04", 100.0, yuksek=99.0, ham_kapanis=100.0, ham_yuksek=100.01),
              satir("2024-01-05", 100.0, ham_kapanis=0.0, ham_aof=0.0, ham_yuksek=0.0, ham_dusuk=0.0),
              satir("2024-01-08", 100.0)]
-    g = anlik(tmp_path, fiyat).gunler.set_index("tarih")["karantina"]
+    g = anlik(tmp_path, fiyat).gun_tablosu.set_index("tarih")["karantina"]
     assert list(g) == [False, True, True, True, False]
 
 
@@ -125,7 +125,7 @@ def test_duzeltilmis_seride_yuvarlama_farki_bozuk_sayilmaz(tmp_path):
     # Kapanış 100,5 > yüksek 100: bağıl fark 5e-3 > 1e-4 → karantina.
     fiyat = [satir("2024-01-02", 100.0), {**satir("2024-01-03", 100.0, yuksek=100.0), "kapanis": 100.00001},
              {**satir("2024-01-04", 100.0, yuksek=100.0), "kapanis": 100.5}]
-    assert list(anlik(tmp_path, fiyat).gunler["karantina"]) == [False, False, True]
+    assert list(anlik(tmp_path, fiyat).gun_tablosu["karantina"]) == [False, False, True]
 
 
 @pytest.mark.parametrize("bozuk", ["tekrar", "sira", "nan"])

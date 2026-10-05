@@ -136,10 +136,11 @@ yükseği/düşüğüne koşullu. Ölçütler kısa kendi kodumuzdur. (A3, M1, S
   - **Açılış yok.** 2000'den veri var.
 - **Yahoo kullanılmaz.** (B-2)
 - **Şirket olayları:** İş Yatırım `GetSermayeArttirimlari`, bütün kodlarıyla. Tarih hak kullanım günüdür.
-- **Faiz:** borsapy TCMB politika faizi; 2015'ten tek seri. Yalnız değişim günlerini içerir. (B-8)
+- **Faiz:** borsapy TCMB politika faizi (TCMB "1 Hafta Repo" sayfası, TradingView değil); tek seri,
+  2010'dan. Yalnız değişim günlerini içerir. (B-8)
 - **XU100 kapanışı ve takvim:** İş Yatırım `HisseTekil`'in `END_DEGER` alanı (endeks kodu 01; XU100
-  olduğu bilet 02'de doğrulanır). Yalnız kapanış.
-- **Sektör:** borsapy (KAP kaynağı); yılda bir okunur.
+  olduğu bilet 04'te doğrulandı). Yalnız kapanış.
+- **Sektör:** borsapy, KAP şirket sayfasından, sembol başına bir istek (TradingView değil); yılda bir okunur.
 - **TradingView kaynaklı veri kullanılmaz.** Koşullar makineyle işlemeyi yasaklıyor.
 - **Kullanım koşulları** (bilet 01, `docs/arastirma/kullanim-kosullari-fiyat-adimi.md`):
   - İş Yatırım'ın robots.txt dosyası `/_layouts/` yolunu yasaklıyor. Kullanım sözleşmesi bulunamadı.
@@ -611,7 +612,10 @@ Getiri görülmeden yazılır; kural kaydına girer. (B-7, İ: 19-015)
 6. Sıkışma oranının paydası düşüş trendinde EMA200 mü en küçük EMA mı? KRDMD'de ikisi aynı.
 7. Bireysel yatırımcı için vergi.
 8. `HACIM` toptan ya da çapraz işlemleri içeriyor mu? İçeriyorsa medyan şişkin olabilir. (İ: 08-027)
-9. Faiz serisi bir haftalık repo mu? (İ: 08-071)
+9. ~~Faiz serisi bir haftalık repo mu?~~ Evet (bilet 04): TCMB "1 Hafta Repo" tablosu, 2010-05-20'den 57 değişim
+   günü. Sınır: 25.11.2016 – 01.06.2018 arası seri %8 sabit görünür; o dönemde fiili fonlamanın geç likidite
+   penceresinden (daha yüksek) yapıldığı bilinen bilgidir ama bu bilette doğrulanmadı. Doğruysa nakit faizi
+   o dönemde düşük kalır (muhafazakâr).
 10. Fiyat adımı tablosunun 2.500 TL üstü bandı ve 2015–2016'daki 100 TL altı bantlar (5.1) veride
     görülmedi.
 
