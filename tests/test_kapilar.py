@@ -132,7 +132,7 @@ def test_duzeltilmis_seride_yuvarlama_farki_bozuk_sayilmaz(tmp_path):
 def test_yapisal_ihlal_indirmeyi_durdurur(tmp_path, bozuk):
     fiyat = [satir("2024-01-02", 100.0), satir("2024-01-03", 100.0), satir("2024-01-04", 100.0)]
     if bozuk == "tekrar":
-        fiyat[2]["tarih"] = fiyat[1]["tarih"]
+        fiyat[2] = satir("2024-01-03", 101.0)  # aynı gün, farklı alanlar (birebir aynı tekrar ihlal değil, 5.13)
     elif bozuk == "sira":
         fiyat[1], fiyat[2] = fiyat[2], fiyat[1]
     else:
@@ -212,3 +212,12 @@ def test_ham_fiyati_ve_hacmi_bos_satir_islem_yapilmamis_gundur_atilir(tmp_path):
            "ham_dusuk": np.nan, "hacim": np.nan}
     a = anlik(tmp_path, [satir("2024-01-02", 100.0), bos, satir("2024-01-04", 100.0)])
     assert list(a.fiyat["tarih"]) == [pd.Timestamp("2024-01-02"), pd.Timestamp("2024-01-04")]
+
+
+def test_birebir_ayni_tekrar_satir_tek_sayilir_farkli_tekrar_ihlaldir(tmp_path):
+    # Gerçek BYDNR 23.08.2023: aynı satır iki kez geldi.
+    ayni = [satir("2024-01-02", 100.0), satir("2024-01-03", 100.0), satir("2024-01-03", 100.0)]
+    assert list(anlik(tmp_path / "a", ayni).fiyat["tarih"]) == [pd.Timestamp("2024-01-02"), pd.Timestamp("2024-01-03")]
+    farkli = [satir("2024-01-02", 100.0), satir("2024-01-03", 100.0), satir("2024-01-03", 101.0)]
+    with pytest.raises(veri.VeriHatasi):
+        anlik(tmp_path / "b", farkli)
