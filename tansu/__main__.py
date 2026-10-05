@@ -9,12 +9,12 @@ from tansu import kaynak, sadakat, veri
 
 
 def _kimlik_bul(kok: Path) -> str:
-    """KRDMD içeren en yeni anlık görüntü; yoksa indirir."""
+    """Üç sembolü de içeren en yeni anlık görüntü; yoksa indirir."""
     for klasor in sorted((kok / "ag").glob("2*"), reverse=True):
         manifest = json.loads((klasor / "manifest.json").read_text(encoding="utf-8"))
-        if sadakat.SEMBOL in manifest["semboller"]:
+        if set(sadakat.SEMBOLLER) <= set(manifest["semboller"]):
             return klasor.name
-    return veri.indir([sadakat.SEMBOL], kok, kaynak.IsYatirim())
+    return veri.indir(list(sadakat.SEMBOLLER), kok, kaynak.IsYatirim())
 
 
 def main(argv=None) -> int:

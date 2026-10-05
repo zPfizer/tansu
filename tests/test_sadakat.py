@@ -11,6 +11,7 @@ Dönem 2025-10-10 .. 2026-02-12, 90 gün (dizin 130..219), ortalama %0.
 import datetime as dt
 import json
 
+import numpy as np
 import pandas as pd
 
 from tansu import sadakat, veri
@@ -44,3 +45,12 @@ def test_komut_iki_kosuda_ayni_rakamlari_verir_ve_deneme_gunlugune_yazar(tmp_pat
     satirlar = [json.loads(s) for s in gunluk.read_text(encoding="utf-8").splitlines()]
     assert [s["tur"] for s in satirlar] == ["sadakat", "sadakat"]
     assert all(s["anlik"] == kimlik for s in satirlar)
+
+
+def test_cift_z_aramasi_tum_gunlerde_ve_adaylarda():
+    # Elle: X = 1, log Y = [0, 2, 4, 6]; pencere 3, ddof 1, log oran: Z_{t-1} = Z_t = 1 (tests/test_cift.py).
+    gunler = pd.bdate_range("2025-01-01", periods=4)
+    y = pd.Series(np.exp([0, 2, 4, 6]), index=gunler)
+    x = pd.Series([1.0] * 4, index=gunler)
+    sonuc = sadakat.cift_ara(y, x, hedef=(1.0, 1.0), tolerans=0.0005, pencereler=range(3, 4))
+    assert sonuc == [("log_oran", 3, 1, gunler[-1])]
