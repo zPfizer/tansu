@@ -84,7 +84,7 @@ yapılır.
 
 1. **Çift rotasyonu** (birinci el: giriş eşiği, ΔZ tanımı, yön, zaman, ham fiyat)
    - Sapma: log(Y) − log(X), ortalama ve standart sapma son 60 günden (YORUM; Tansu'nun Z'si 40.560
-     aday formülle üretilemedi). Sabit terim (α) yok; ortalama çıkarıldığı için Z aynıdır.
+     aday formülle üretilemedi; bilet 06 sadakati, §4, 1564 adayla yine üretemedi: YORUM kalır). Sabit terim (α) yok; ortalama çıkarıldığı için Z aynıdır.
    - Z ≤ −2 ve ΔZ > 0 → ertesi gün Y'ye geç. Z ≥ +2 ve ΔZ < 0 → ertesi gün X'e geç. Tek günlük ΔZ
      yeterlidir (YORUM; Tansu'nun raporundaki tek örnek +0,30).
    - İlk sinyale kadar nakit; sonra hep bir hissede. Stop yok.
@@ -130,8 +130,21 @@ Sonuçlar (Sorgu 3, 05.10.2026):
   - Dönem ortalaması %0,638.
   - 09.04.2026 EMA değerleri lejantla birebir.
   - Grafik sonu ve Mart tepesi görselle ±0,3 içinde.
+- **EMA sıkışması, bilet 05 ölçümü (İş Yatırım ham seri, `docs/sadakat.md`):** yukarıdaki "birebir" Yahoo
+  serisiyle ölçülmüştü; İş serisinde EMA200 sıkı toleransı geçmiyor. Karar: sonuç **gevşek bantla üretildi**.
+  - Dönemi, gün sayısını ve ortalamayı tam tutan tek aday "son 3 yıl" (son 2 yıl da tutuyor; ikisi aynı
+    sonucu veriyor).
+  - Bu adayda EMA20/50/100 sıkı toleransta; EMA200 28,4366 (Tansu 28,43), gevşek bantta (±0,05).
+  - Neden: EMA200 uzun belleklidir; Tansu'nun veri başlangıcı bilinmiyor. Oran formülü değişmez.
+  - Bütün geçmişle dönem bir gün erken başlıyor (21 gün, %0,665). Sınamada veri başlangıcı sabit
+    tutulur ve rapora yazılır (İ: 06-014).
 - **Çift Z'si üretilemedi** (40.560 aday). Tansu'nun ham fiyat kullandığı doğrulandı (14.05.2025 ipucu
   kutusu).
+- **Çift Z'si, bilet 06 ölçümü (İş Yatırım ham seri, `docs/sadakat.md`):** 1564 aday (log oran ve β'lı
+  kalıntı × pencere 10–400 × ddof {0; 1}), bütün işlem günleri. Sıkı toleransta (±0,0005) eşleşme yok.
+  Gevşek bantta (±0,05) 534 aday eşleşti: tek aday kalmadığı için gevşek bant kullanılmadı.
+  Sonuç: **üretilemedi; YORUM kalır** (log oran, 60 gün). Beta, korelasyon, piyasada kalma ve
+  Mart–Mayıs 2025 kontrolleri formül olmadığı için yapılmadı.
 
 Veri: Tansu `yfinance` kullanıyor, ama Yahoo ham kapanışı İş Yatırım ham serisiyle aynı. Kontrol İş Yatırım
 ham seriyle yapılır.

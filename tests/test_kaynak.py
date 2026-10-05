@@ -155,3 +155,11 @@ def test_kapanan_tablo_yalniz_pay_kodlarini_2010_ve_sonrasini_alir():
     t = kaynak.kapanan_tablo(ham)
     assert list(t["kod"]) == ["ROYAL", "OLMK", "TARIHSIZ"]
     assert list(t["aciklama"].fillna("")) == ["", "birleşmiştir", ""]
+
+
+def test_fiyat_kaynak_sirasi_bozuksa_tarihe_gore_siralanir():
+    sonra, once = dict(HAM, HGDG_TARIH="14-08-2024"), dict(HAM, HGDG_TARIH="13-08-2024")
+    k = kaynak.IsYatirim(oturum=SahteOturum([Yanit(200, {"value": [sonra, once]})]), bekleme=0)
+    f = k.fiyat("GARAN", dt.date(2024, 8, 13), dt.date(2024, 8, 14))
+    assert list(f["tarih"]) == [pd.Timestamp("2024-08-13"), pd.Timestamp("2024-08-14")]
+    assert list(f.index) == [0, 1]

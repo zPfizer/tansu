@@ -239,7 +239,9 @@ hatasından** ayırmak.
     yönünde işler.
   - Göreli karşılaştırmalar (K1, K2) yorumlanır. Ama onlar da yanlılıktan tam arınmış değildir;
     yanlılığın yönü ölçülmedi.
-- **Gerçek BIST100** KAP duyurularından çıkarılınca kurallar onda da koşulur.
+- **Gerçek BIST100** KAP duyurularından çıkarılınca kurallar onda da koşulur. Duyurular yalnız değişiklik
+  listesidir; üyelik bugünkü listeden geriye yürütülür. Dönem içi değişiklikler eksik olduğundan 2016-07
+  öncesi kapsanmaz, sonrası da yaklaşıktır (bilet 16).
 
 ### 5.3 İşlem kuralları ve elle hesaplanmış örnekler
 - **Sinyal ve giriş:**
@@ -267,6 +269,10 @@ hatasından** ayırmak.
 - **Veri sonu:** veri bitince açık pozisyon son kapanıştan zorunlu çıkar. K1 ve K2 aynı kuralı
   uygular. (İ: 09-092)
 - **İşlem günlüğü:** her işlemde "planlanan risk" ve "gerçekleşen kayıp" yazılır. (İ: 08-030)
+  - Planlanan risk = adet × (giriş − stop). Gerçekleşen kayıp = adet × max(0, giriş − çıkış).
+  - Karantina çıkışı: fiyat son temiz AOF, tarih karantina günüdür. Çıkış gününde (AOF'ta) çıkılmış pozisyon
+    o günün kapanış sinyalini engellemez. Isınma: hissenin n. işlem günü dolduğunda (n = 500) sinyal serbesttir.
+  - (Bilet 08: belge bu noktalarda sessizdi; kod bu okumayı uygular.)
 - **Motor sınamaları** (kod yazılmadan önce, elle hesaplı) (İ: 07-085):
   - stopta çıkış
   - boşluklu stop
@@ -524,7 +530,9 @@ Getiri görülmeden yazılır; kural kaydına girer. (B-7, İ: 19-015)
 - **Satır ihlali:** düşük ≤ AOF ≤ yüksek ve düşük ≤ kapanış ≤ yüksek sağlanmazsa karantina. Ham ya da
   düzeltilmiş fiyatı ≤ 0 olan satır da bozuktur. Düzeltilmiş seride bağıl 1e-4 yuvarlama payı tanınır
   (gerçek veride düzeltilmiş seri 4 ondalığa yuvarlı: 637 satırda en çok 4,5e-5 fark; gerçek ihlaller ≥ 1,5e-3).
-- **Yapısal ihlal:** bozuk sıra, tekrar eden gün ya da ortada NaN koşuyu durdurur.
+- **Yapısal ihlal:** bozuk sıra, tekrar eden gün ya da ortada NaN koşuyu durdurur. İstisna: İş Yatırım
+  GARAN yanıtını 276 yerde sırasız verir (satır eksiksiz, tekrar yok; bilet 06'da görüldü); `kaynak` yanıtı
+  tarihe göre sıralar, kapı sıralamadan sonraki seriye bakar.
 - **Oran eşikleri:** karantina hisse-gün oranı > %1 ya da olay denetimi farkı olan gün oranı > %2 ise
   koşu "veri sorunlu" olur.
 - **Eksik indirme:** 100 hisseden 5'ten fazlası inmezse koşu SORUNLU olur.
@@ -603,7 +611,10 @@ Getiri görülmeden yazılır; kural kaydına girer. (B-7, İ: 19-015)
 ## 8. Açık sorular
 1. İş Yatırım: kullanım sözleşmesi bulunamadı; robots.txt `/_layouts/`'u yasaklıyor (bilinen risk, 4).
    Hız sınırı ve günlük yayın saati bilinmiyor. KAP koşulları okunamadı.
-2. KAP endeks değişikliği duyuruları 2015–2016'yı kapsıyor mu?
+2. ~~KAP endeks değişikliği duyuruları 2015–2016'yı kapsıyor mu?~~ Cevap (bilet 16, 05.10.2026): hayır.
+   İlk BIST 100 dönemsel duyurusu 17.06.2016'dır (dönem 01.07.2016); 2015 ve 2016 ilk yarı KAP'ta yok.
+   Dönemsel duyurular 2016-07'den 2026-10'a 42 dönemi kapsar ama yalnız alınan/çıkarılan listesi verir;
+   dönem içi değişiklikler okunamadı. Dosya ve boşluklar: `docs/arastirma/bist100_kap_*.csv`.
 3. Tedbirli hisseler (brüt takas, tek fiyat) bedava veriyle ayırt edilebiliyor mu?
 4. İşlemi kapanan sembollerin tam listesi bulunabilir mi?
 5. 13.03.2020 öncesinde limit bütün paylarda ±%20 mi, bazı pazarlarda ±%15 mi (ikincil kaynak)? Limit
