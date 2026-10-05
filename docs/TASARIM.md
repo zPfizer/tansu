@@ -1,4 +1,6 @@
-# Tansu'dan esinlenen BIST sistemi: tasarım (taslak 3, 05.10.2026)
+# Tansu'dan esinlenen BIST sistemi: tasarım (taslak 4, 05.10.2026)
+
+Taslak 4: kendi kendine sorgu (grilling, 14 soru) sonucu 8 değişiklik işlendi; "Sorgu Sn" etiketleri.
 
 Bu belge koddan önce gelir. Kod bu belgeye uyar; belge değişmeden davranış değişmez.
 Terimler `GLOSSARY.md`'dedir.
@@ -19,6 +21,9 @@ sağlandı" der. (P1)
 
 Asıl görev: **bir kuralın işe yarayıp yaramadığını para koymadan önce dürüstçe göstermek.**
 
+Önce sadakat, sonra kâr: bir aile önce Tansu'nun gösterdiği haliyle sınanır. Tutmazsa değiştirilmiş
+hali yeni bir deneme sayılır ve deneme günlüğüne yazılır (5.11). (Sorgu S2)
+
 En olası sonuç, hiçbir kuralın kabul ölçütünü geçmemesidir. Bu bir başarısızlık değil, sistemin
 normal çıktısıdır: "Hiçbir aile geçmedi" ekranı birinci sınıf bir sonuçtur. Ölçüt sonuca bakılarak
 gevşetilmez; değişirse tarihli kayıt düşülür ve bütün ayrılmış dönemler sıfırlanır. (P3)
@@ -31,7 +36,7 @@ yorumumuzdur**; ekranda "Tansu'nun sistemi" diye sunulmaz. (P5)
 
 | İlke | Kaynaktaki karşılığı | Sistemde |
 |---|---|---|
-| Önce piyasanın havası | "Piyasanın Nabzı" raporu, XU100 setup puanı | Piyasa Nabzı |
+| Önce piyasanın havası | "Piyasanın Nabzı" raporu (NotebookLM), XU100 setup puanı (formülü yok) | Piyasa durumu etiketi; ilk sürümde kapı değil |
 | Önce yer, sonra teyit | "zone → kırılım → likidite → teyit" | Aile = yer + teyit |
 | Her fırsat bir kart, durum etiketiyle | `AKTİF / TAMAMLANDI / BOZULDU` | Kart |
 | Önce sermaye | %1 risk, adet = risk / 2ATR, acil stop | Risk |
@@ -41,7 +46,7 @@ yorumumuzdur**; ekranda "Tansu'nun sistemi" diye sunulmaz. (P5)
 
 ## 3. Kapsam (ilk sürüm)
 
-Var: günlük veri, BIST100, yalnız alış yönü, Piyasa Nabzı, 3 aile (`KURALLAR.md` §3: çift rotasyonu,
+Var: günlük veri, BIST100, yalnız alış yönü, piyasa durumu etiketi (yalnız raporlama), 3 aile (`KURALLAR.md` §3: çift rotasyonu,
 AB=CD, EMA sıkışması), Tansu'nun risk paketi (5.5), işlem motoru, portföy simülasyonu, istatistik,
 markdown rapor, CSV kart listesi.
 
@@ -58,15 +63,15 @@ Her modülün dışarıya küçük bir yüzü var. İçi değişse de dışı de
 
 | Modül | Girdi → çıktı | Not |
 |---|---|---|
-| Veri deposu | indirme → ham fiyat anlık görüntüsü (tarihli, değişmez) | Yahoo geçmişi sonradan değiştirir; her koşu hangi anlık görüntüyü kullandığını yazar. (B2) |
+| Veri deposu | indirme → ham fiyat anlık görüntüsü (tarihli, değişmez) | Kaynaklar geçmişi sonradan değiştirebilir; her koşu hangi anlık görüntüyü kullandığını yazar. (B2) |
 | Şirket olayları | sembol → bedelsiz, bölünme, bedelli, temettü tablosu | Fiyat düzeltmesi buradan yapılır, eşikle tahmin edilmez. (B1, A1) |
 | Takvim | tarih → işlem günü mü | BIST tatilleri, yarım günler. (A1) |
 | Evren | tarih → o gün taranabilecek hisseler | Bkz. 5.2. (A1) |
-| Piyasa Nabzı | endeks → günlük durum | Stratejinin parçasıdır; parametreleri de sınanır ve deneme sayısına girer. (M9) |
+| Piyasa durumu | endeks → günlük etiket | **Kapı değildir**, yeni girişi durdurmaz. Sonuçlar bu etikete göre ayrı raporlanır. Önceki "Nabız" kuralı bizimdi, Tansu'nun değil, ve 2023 sonrası tutmadı. (Sorgu S5, M9) |
 | Aile | hisse fiyatı → sinyal günleri | Kural. |
 | Adım | (pozisyon, bugünkü mum) → pozisyon | **Sınama ve canlı günlük aynı fonksiyonu kullanır.** Böylece ikisi ayrışamaz. (A5) |
 | Motor | aile + çıkış + fiyat → işlem listesi | Adım fonksiyonunu gün gün koşar. Belirleyici. (A2, A3) |
-| Simülatör | işlemler + risk kuralı → sermaye eğrisi | Boştaki nakit faiz kazanır. (A2, B4) |
+| Simülatör | işlemler + bölme kuralı → sermaye eğrisi | İki bölme türü (5.6). Boştaki nakit faiz kazanır. (A2, B4, Sorgu S3) |
 | İstatistik | sermaye eğrisi / fazla getiri → güven aralığı, p değeri | Canlı kâğıt üstü işlemde de aynısı kullanılır. (A2) |
 | Rapor | sonuçlar → markdown + CSV | |
 | Maliyet | işlem → masraf | Takılıp çıkarılabilir. (A1) |
@@ -140,17 +145,30 @@ hatasından** ayırmak.
 Tansu'nun risk paketi (`kurallar/E` K1–K3; kaynak Tansu'nun paylaştığı infografik):
 - Acil stop: giriş − 2 ATR; gün içinde dokunulursa çıkılır.
 - Gün sonu çıkış: kapanış SMA250 altına inerse ertesi açılışta.
-- Aileye özgü hedef yalnız Tansu verdiyse: AB=CD için D + {0,618; 1; 1,618}(A−D). Merdivenin hangi
-  basamağında ne kadar satılacağı kaynakta çelişkili; ilk sürümde tek hedef (1,0) kullanılır (YORUM).
-- Çift rotasyonu: stop yok; karşı uçta diğer hisseye geçilir (Tansu'nun sürümü).
+- Aileye özgü hedef yalnız Tansu verdiyse. AB=CD, Tansu'nun kendi sınamasındaki (SMRTG, ISKPL) gibi
+  **C'den D'ye bacak** olarak işlenir: C teyit edilince girilir, hedef D. (Sorgu S8)
+- Çift rotasyonu: stop yok; karşı uçta diğer hisseye geçilir (Tansu'nun sürümü). Risk paketi bu
+  bölmeye uygulanmaz. (Sorgu S3)
+- Aile giriş kuralları ve YORUM'ları `KURALLAR.md` §3'tedir.
 - ATR uzunluğu kaynakta yok: 14 (YORUM).
 05.10 ön denemesindeki "4 ATR hedef" ve "EMA50 altı çıkış" Tansu'da yoktu; kaldırıldı.
 İz süren stop ve kısmi kâr ikinci el kaynaklı; bir aile bu paketle kabul edildikten sonra denenir.
 
-### 5.6 Portföy
-- Sermaye 1.000.000 TL, işlem başına %1 risk, **tek pozisyon en fazla sermayenin %10'u**, en fazla 10
-  pozisyon, kaldıraç yok. (M12)
-- Aynı gün sinyal sayısı boş yeri aşarsa sıra kuralı önceden sabittir: en likit önce.
+### 5.6 Portföy ve bölmeler
+İlk sürümde her aile **kendi sermayesiyle ayrı** ölçülür; aileler sermaye paylaşmaz. Birleşik portföy,
+aileler kabul edildikten sonra kurulur. (Sorgu S6)
+
+İki bölme türü (Sorgu S3):
+- **Tek hisse bölmesi** (AB=CD, EMA sıkışması): sermaye 1.000.000 TL, işlem başına %1 risk, tek pozisyon
+  en fazla sermayenin %10'u, en fazla 10 pozisyon, kaldıraç yok. Aynı gün sinyal sayısı boş yeri
+  aşarsa en likit önce. (M12)
+- **Çift bölmesi** (çift rotasyonu): sermaye 1.000.000 TL, en fazla 5 aktif çift, eşit pay (YORUM;
+  Tansu tek çift kullandı). Her çift payı her an çiftin bir hissesindedir. (Sorgu S7)
+
+Çift seçimi önceden yazılır (Sorgu S4): her yıl başında, aynı sektördeki (borsapy) BIST100 hisseleri
+arasından önceki 252 günde eşbütünleşme p < 0,05 olan çiftler; p'ye göre en iyi 5. Sınamanın birimi
+bütün çift bölmesidir, tek tek çiftler değil. Tansu'nun çiftleri (VAKBN–GARAN, CIMSA–OYAKC,
+AGROT–GARAN) ayrıca gösterilir; kabul kararına girmez.
 - Boştaki nakit, o günün politika faizini kazanır (EVDS; 2015–2017 için politika faizi, sonrası
   TLREF). (B4, P4d)
 
@@ -162,10 +180,11 @@ Fazla getiri **tanımı** (B4):
 Karşılaştırma grupları:
 - **K1 Eşleştirilmiş rastgele kural** (B5): rastgele sinyaller, kuralın kendi ön şartlarını sağlayan
   günlerden seçilir (ör. trend ailesi için yalnız trendli günler). Sayılar hisse başına eşleştirilir.
-  İki tür: (a) aynı gün, başka hisse; (b) aynı hisse, aynı Nabız durumunda ±20 gün içinde başka gün.
+  İki tür: (a) aynı gün, başka hisse; (b) aynı hisse, aynı piyasa durumunda ±20 gün içinde başka gün.
+  Çift bölmesinde: aynı çiftlerde, aynı sayıda geçiş, rastgele günlerde. (Sorgu S12)
   En az 1.000 tekrar; p değeri buradan çıkar.
-- **K2 Aynı evrenin eşit ağırlıklı sepeti** (B3b), aynı temettü düzeltmesiyle. Ayrıca aynı Nabız
-  zamanlamasıyla tutulan sepet (K2b); fark Nabız'dan mı kuraldan mı geliyor ayrılsın. (M9)
+- **K2 Aynı evrenin eşit ağırlıklı sepeti** (B3b), aynı temettü düzeltmesiyle. Çift bölmesi için ayrıca
+  aynı çiftlerin 50/50 tutulması.
 - **K3 Faiz:** simülatörde boştaki nakit faiz kazandığı için portföy sonucu zaten faize karşı okunur.
 Dolar bazı ilk sürümde yok.
 
@@ -174,8 +193,11 @@ Dolar bazı ilk sürümde yok.
   bütünüyle geliştirme/doğrulama verisidir. (M8)
 - Doğrulama: genişleyen pencereyle yıllık ileri yürüme. 2015–2017 ile başlar, her yıl bir sonraki
   yıl sınanır. Her yılın sonucu ayrı yazılır. (M7)
-- **Yeni ayrılmış dönem = bugünden sonrası.** Kural, parametreleri ve kodunun parmak izi (hash)
-  bugün kayda geçer. En az 6 ay kâğıt üstünde canlı izlenir. "Canlı" olmak için bu dönem şarttır. (M8)
+- **Yeni ayrılmış dönem = kural kaydından sonrası.** Kural, parametreleri ve kodunun parmak izi (hash)
+  sadakat kontrolü bitince, ilk getiri koşusundan önce kayda geçer. Sonraki her değişiklik yeni
+  denemedir. (M8, Sorgu S13)
+- Kâğıt üstü canlı dönem: en az 6 ay **ve** en az 30 kapanmış işlem; işlem sayısı dolana kadar uzar.
+  Çift bölmesinde işlem sayısı yerine günlük fazla getiri serisi kullanılır. (Sorgu S11)
 
 ### 5.9 Şans payı
 - Güven aralığı, günlük portföy fazla getirisi üzerinde 20 günlük bloklarla yeniden örneklenerek
@@ -195,18 +217,17 @@ p değerleri, o ana kadarki bütün denemelerle Holm düzeltmesinden geçer. (M6
 ### 5.12 Kabul ölçütü (önceden yazılır)
 Bir aile **Canlı** olur, ancak hepsi sağlanırsa:
 1. İleri yürüme yıllarının birleşiminde K1'e göre fazla getiri pozitif, Holm düzeltmeli p < 0,05.
-2. K2 ve K2b'ye göre portföy fazla getirisi pozitif (nakit faiz dahil).
+2. K2'ye göre portföy fazla getirisi pozitif (nakit faiz dahil).
 3. Masraf %0,5'te de 1 ve 2 sağlanıyor.
 4. Yılların en az %60'ında fazla getiri pozitif; en iyi %5 işlem atılınca sonuç hâlâ pozitif. (M10)
 5. Örneklem şartı (5.9) ve sağlamlık şartı (5.10) sağlanıyor.
-6. Bugünden sonraki en az 6 aylık kâğıt üstü dönemde fazla getiri, doğrulamadaki etkinin en az
-   yarısı. (M7, M8)
+6. Kâğıt üstü canlı dönemde (5.8) fazla getiri, doğrulamadaki etkinin en az yarısı. (M7, M8)
 
 Portföy kuralı (aileden bağımsız): en büyük düşüş %25'i, düşüşte kalma süresi 12 ayı geçmez. (m5)
 
 ## 6. Günlük işleyiş (ilk sürüm)
 1. 19:30: veri güncellenir; tazelik ve kalite kontrolü. Sorun varsa kart üretilmez. (m6)
-2. Piyasa Nabzı.
+2. Piyasa durumu etiketi (yalnız bilgi).
 3. Canlı ailelerin sinyalleri kart listesine (CSV) yazılır. Deneme aileleri varsayılan olarak
    gösterilmez. (P1)
 4. Her kartta: hisse, aile, giriş bölgesi, stop, hedef, pozisyon değeri (sermayenin yüzdesi) ve
@@ -218,12 +239,14 @@ Portföy kuralı (aileden bağımsız): en büyük düşüş %25'i, düşüşte 
 1. Veri deposu: İş Yatırım ham + düzeltilmiş fiyat, şirket olayları tablosu, anlık görüntü; borsapy ile
    karşılaştırma. Yahoo'lu ön deneme kodu kaldırılır.
 2. **Sadakat kontrolü** (`KURALLAR.md` §4): Tansu'nun çıktılarındaki rakamları yeniden üret
-   (VAKBN–GARAN z-skoru, KRDMD sıkışması, KRPLS/MARKA D noktaları). Getiriye bakılmaz.
-3. Motor sınamaları (5.3) → vectorbt kararı → Adım + Motor.
-4. Simülatör + faiz + K2/K2b.
-5. K1 eşleştirilmiş rastgele kural + istatistik + deneme günlüğü.
-6. Üç aileyi koş; rapor.
-7. Kural kaydı ve hash; kâğıt üstü canlı izleme başlar.
+   (VAKBN–GARAN z-skoru, KRDMD sıkışması, KRPLS/MARKA D noktaları). Tansu'nun kodunda `yfinance` ve
+   `.IS` görünüyor; bu adımda **Yahoo verisi** kullanılır. Gerçek sınama İş Yatırım verisiyle. Getiriye
+   bakılmaz. (Sorgu S10)
+3. Kural kaydı ve hash (5.8).
+4. Motor sınamaları (5.3) → vectorbt kararı → Adım + Motor.
+5. Simülatör (iki bölme) + faiz + K2.
+6. K1 eşleştirilmiş rastgele kural + istatistik + deneme günlüğü.
+7. Üç aileyi koş; rapor. Kâğıt üstü canlı izleme başlar.
 8. Evren: KAP endeks değişikliklerinden geçmiş BIST100 listesi (paralel iş; hazır olana kadar 5.2'deki
    yanlılık uyarısı geçerli).
 
@@ -254,7 +277,7 @@ Portföy kuralı (aileden bağımsız): en büyük düşüş %25'i, düşüşte 
 | M6 | Çoklu deneme düzeltmesi yok | 5.11 |
 | M7 | Tek bölme | 5.8 |
 | M8 | Ayrılmış dönem yandı | 5.8, 5.12.6 |
-| M9 | Nabız stratejinin parçası | 4, 5.7 K2b |
+| M9 | Nabız stratejinin parçası | 4: Nabız kapı olmaktan çıktı (Sorgu S5) |
 | M10 | Rejim, birkaç işleme bağımlılık | 5.9, 5.12.4 |
 | M11, M12 | Likidite, pozisyon tavanı | 5.4, 5.6 |
 | A1–A6 | Eksik modüller, Adım paylaşımı, vectorbt | 4 |

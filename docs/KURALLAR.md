@@ -75,6 +75,27 @@ Hazırlık: **H** = birinci elden kodlanabilir, az YORUM · **K** = kısmen, ön
 | 2 | AB=CD | geometri ve hedef birinci el; Tansu'nun tek tablolu sınamaları | pivot ayarı, stop |
 | 3 | EMA sıkışması | parametreler birinci el | giriş tetiği |
 
+**Ailelerin işlem kuralları (ilk sürüm):**
+
+1. **Çift rotasyonu** (birinci el: giriş, onay, yön, zaman)
+   - Sapma: log(Y) − β·log(X), β ve ortalama/std yuvarlanan pencerede (YORUM; sadakat kontrolüyle
+     belirlenecek: log oran ile β'lı kalıntı, pencere 60 ve 120 gün adayları).
+   - Z ≤ −2 ve ΔZ > 0 → ertesi açılışta Y'ye geç. Z ≥ +2 ve ΔZ < 0 → ertesi açılışta X'e geç.
+   - İlk sinyale kadar nakit; sonra hep bir hissede. Stop yok.
+   - Çiftler önceden yazılmış kuralla seçilir (TASARIM 5.6).
+2. **AB=CD, C'den D'ye bacak** (Tansu'nun SMRTG/ISKPL sınamalarındaki işlem)
+   - Pivotlar teyit edilince A, B, C; BC ≤ AB; C, A'yı ihlal etmez.
+   - Giriş: C pivotu teyit edildiği günün ertesi açılışı. Hedef: D = C + r·(B − A), r = 1,0 (1,27 ayrı
+     deneme). Stop: risk paketi (giriş − 2 ATR) (YORUM; Tansu'nun stopu bilinmiyor, SMRTG zararları
+     −%12 ile −%25 arası).
+   - Pivot ayarı: sadakat kontrolüyle (KRPLS, MARKA D değerleri) belirlenecek.
+3. **EMA sıkışması kırılımı**
+   - Sıkışma: EMA20/50/100/200 bandı ≤ %1,2, en az 3 gün (birinci el). Oran formülü sadakat kontrolüyle
+     (KRDMD: 17.12.2025–14.01.2026, ortalama %0,64).
+   - Giriş (YORUM): sıkışma bittikten sonraki 10 gün içinde kapanış, sıkışma dönemindeki en yüksek
+     fiyatın üstüne çıkarsa ertesi açılış. Stop ve çıkış: risk paketi. Hedef yok (Tansu vermedi).
+   - Sıklık kontrolü: 99 hissede 11 yılda 520 sıkışma dönemi (Yahoo verisi, kaba sayım).
+
 AEFES kanal ve AKFIS kurulumu ikinci dalgadadır: iskeletleri birinci el, ama YORUM sayısı fazla.
 Diğerleri dizinde kalır; kaynak çıktıkça yükselir.
 
@@ -93,6 +114,7 @@ serbesttir; bu performans değil, kuralın doğru okunduğunun kanıtıdır.
 | AB=CD | KRPLS, MARKA #13 | D = 11,29 / 10,05 / 70,25 | pivot ayarı |
 | Kanal (ikinci dalga) | AEFES 03.09.2026 | alt bant 17,76; temas 3/3; genişlik +%15,3 | kanal çizim yöntemi |
 
+Veri: Tansu'nun kodunda `yfinance` ve `.IS` görünüyor; bu kontrol Yahoo verisiyle yapılır.
 Kural: birden çok aday formül denenir; Tansu'nun rakamını en iyi üreten seçilir ve sonuç kaydedilir.
 Hiçbiri üretemezse YORUM olarak kalır ve raporda yazılır. Bu adım getiri sonuçlarına bakmaz.
 
