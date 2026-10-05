@@ -33,62 +33,47 @@ def test_dunya_fiyat_iliskileri_ve_getiri_siniri():
     assert len(a.gunler) == 500 and a.faiz_gunluk(a.gunler[0], a.gunler[-1]).notna().all()
 
 
-def test_etki_kaydir_sinyalden_sonraki_2_ile_6_gunlere_yayilir_ve_ust_uste_biner():
-    # Tek sinyal j=2, etki 0,05 (günde 0,01): kayma günler 4..8'de 0,01 artar, sonra sabit.
-    np.testing.assert_allclose(denetim.etki_kaydir(10, [2], 0.05), [0, 0, 0, 0, .01, .02, .03, .04, .05, .05])
-    # İki sinyal j=2 ve j=3: ek = [0,0,0,0,.01,.02,.02,.02,.02,.01]; kümülatif toplam.
-    np.testing.assert_allclose(denetim.etki_kaydir(10, [2, 3], 0.05), [0, 0, 0, 0, .01, .03, .05, .07, .09, .10])
-    assert not denetim.etki_kaydir(10, [], 0.05).any()
-
-
 @pytest.mark.parametrize("aile", [simulator.AILE, ciftbolme.AILE])
-def test_etki_ekle_giris_gunune_dokunmaz_fiyat_iliskilerini_korur_ve_fiyati_yukari_iter(aile):
-    # EMA: 40 hisse boş dünyada sinyal var; çift: yıllık seçilen çiftin geçiş sinyali var. İlk değişen gün, sinyalden en erken
-    # 2 gün sonradır; fiyat oranı (etkili / etkisiz) hiçbir yerde 1'in altına düşmez (yalnız pozitif etki).
+def test_etki_ekle_yalniz_giris_gununun_aofunu_dusurur_fiyat_iliskilerini_korur(aile):
+    # Değişen tek şey AOF (ve düşüğü); kapanış, yüksek, hacim aynı. AOF yalnız etki/(1+etki) oranında ve en az bir hissede düşer.
     a = denetim.dunya(7, hisse=24, gun=1100)
     b = denetim.etki_ekle(a, aile, 0.05)
     f0, f1 = a.fiyat.set_index(["sembol", "tarih"]), b.fiyat.set_index(["sembol", "tarih"])
-    oran = (f1["kapanis"] / f0["kapanis"]).unstack(0)
-    assert (oran >= 1 - 1e-12).all().all() and (oran > 1 + 1e-12).any().any()
-    ilk = oran.apply(lambda s: s.index[(s > 1 + 1e-12).to_numpy()][0] if (s > 1 + 1e-12).any() else pd.NaT)
-    assert (ilk.dropna() >= a.gunler[2]).all()
+    for c in ("kapanis", "yuksek", "hacim", "ham_kapanis", "ham_yuksek", "pd"):
+        pd.testing.assert_series_equal(f0[c], f1[c])
+    oran = (f1["aof"] / f0["aof"]).to_numpy()
+    assert set(np.round(oran, 12)) == {1.0, round(1 / 1.05, 12)}
     f = b.fiyat
     assert ((f["dusuk"] <= f["aof"]) & (f["aof"] <= f["yuksek"]) & (f["dusuk"] <= f["kapanis"]) & (f["kapanis"] <= f["yuksek"])).all()
-    assert (f["ham_kapanis"] == f["kapanis"]).all()
+    assert ((f["ham_dusuk"] <= f["ham_aof"]) & (f["ham_aof"] <= f["ham_yuksek"])).all() and (f["ham_aof"] == f["aof"]).all()
 
 
-def test_etki_ekle_ema_tek_sinyalli_hissede_oran_elle_hesapla(tmp_path):
-    # Hissenin ilk (ve yalnız bu sinyalden etkilenen) günlerinde oran: j sinyal günü → j+2…j+6'da exp(0,01·k), sonra exp(0,05).
+def test_etki_ekle_ema_sinyali_izleyen_gunun_aofu_elle_hesapla():
+    # Her sinyal gününü (kapanış günü j) izleyen günün (j+1) AOF'u 1,05'e bölünür; başka hiçbir günün AOF'u değişmez.
     a = denetim.dunya(7, hisse=24, gun=1100)
     konum = pd.Series(np.arange(len(a.gunler)), index=a.gunler)
     b = denetim.etki_ekle(a, simulator.AILE, 0.05)
-    bulundu = 0
+    sinyalli = 0
     for s, f in a.fiyat.groupby("sembol"):
-        sig = aileler.sinyal(f.set_index("tarih")[["kapanis", "yuksek"]])
-        if len(sig) != 1:
-            continue
-        j = konum[sig[0]]
-        if j + 7 >= len(a.gunler):
-            continue
-        r = (b.fiyat[b.fiyat["sembol"] == s].set_index("tarih")["kapanis"] / f.set_index("tarih")["kapanis"]).to_numpy()
-        beklenen = np.exp(np.minimum(np.maximum(np.arange(len(r)) - (j + 1), 0), 5) * 0.01)
+        sig = konum.reindex(aileler.sinyal(f.set_index("tarih")[["kapanis", "yuksek"]])).to_numpy()
+        beklenen = np.ones(len(f))
+        beklenen[sig[sig + 1 < len(f)] + 1] = 1 / 1.05
+        r = (b.fiyat[b.fiyat["sembol"] == s].set_index("tarih")["aof"] / f.set_index("tarih")["aof"]).to_numpy()
         np.testing.assert_allclose(r, beklenen)
-        bulundu += 1
-    assert bulundu >= 1
+        sinyalli += len(sig) > 0
+    assert sinyalli >= 1  # sınama boş değil
 
 
 def kucuk(**kw):
-    return dict(n=1, n_etki=1, tekrar=3, isci=1, hisse=8, gun=700, **kw)
+    return dict(n=1, n_etki=1, tekrar=3, isci=1, hisse=8, gun=700, etkiler=(0.05,), **kw)
 
 
 def test_calistir_yapi_oranlar_ve_gecti_bayragi():
     s = denetim.calistir(**kucuk())
-    assert (s["n"], s["n_etki"], s["tekrar"], s["esik"]) == (1, 1, 3, 0.05)
+    assert (s["n"], s["n_etki"], s["tekrar"], s["esik"], s["etkiler"]) == (1, 1, 3, 0.05, [0.05])
     for aile in (simulator.AILE, ciftbolme.AILE):
-        for bolum in ("yanlis_kabul", "guc"):
-            for a in ("olcut_1_4", "kagit"):
-                d = s[bolum][aile][a]
-                assert d["n"] == 1 and d["adet"] in (0, 1) and d["oran"] == d["adet"]
+        for d in (*s["yanlis_kabul"][aile].values(), *s["guc"][aile][0.05].values()):
+            assert d["n"] == 1 and d["adet"] in (0, 1) and d["oran"] == d["adet"]
         assert s["yanlis_kabul"][aile]["kagit"]["adet"] <= s["yanlis_kabul"][aile]["olcut_1_4"]["adet"]  # Kâğıt alt küme
     assert s["gecti"] == all(s["yanlis_kabul"][a]["olcut_1_4"]["oran"] <= 0.05 for a in s["yanlis_kabul"])
 
@@ -101,16 +86,18 @@ def test_tekil_ayni_tohum_ayni_sonuc():
 def sonuc_ornek(gecti):
     d = lambda adet, n: {"n": n, "adet": adet, "oran": adet / n}  # noqa: E731
     yk = {a: {"olcut_1_4": d(1 if not gecti else 0, 20), "kagit": d(0, 20)} for a in (simulator.AILE, ciftbolme.AILE)}
-    return {"n": 20, "n_etki": 4, "tekrar": 200, "etki": 0.05, "hisse": 40, "gun": 2000, "yanlis_kabul": yk,
-            "guc": {a: {"olcut_1_4": d(3, 4), "kagit": d(1, 4)} for a in yk}, "esik": 0.05, "gecti": gecti}
+    guc = {0.05: {"olcut_1_4": d(3, 4), "kagit": d(1, 4)}, 0.1: {"olcut_1_4": d(4, 4), "kagit": d(2, 4)}}
+    return {"n": 20, "n_etki": 4, "tekrar": 200, "etkiler": [0.05, 0.1], "hisse": 125, "gun": 2000, "yanlis_kabul": yk,
+            "guc": {a: guc for a in yk}, "esik": 0.05, "gecti": gecti}
 
 
 def test_yaz_docs_ve_rapor_dosyalarini_yazar_yuzdeler_elle():
-    # 1/20 = %5,00; 0/20 = %0,00; güç 3/4 = %75,00 ve 1/4 = %25,00.
+    # 1/20 = %5,00; 0/20 = %0,00; güç %5 etkide 3/4 = %75,00 ve 1/4 = %25,00; %10 etkide 4/4 = %100,00 ve 2/4 = %50,00.
     md, html = denetim.yaz(sonuc_ornek(False))
     metin = md.read_text(encoding="utf-8")
-    assert "KALDI: ilk resmi koşu yapılmaz" in metin and "%5,00 (1/20)" in metin and "%75,00 (3/4)" in metin
-    assert "%25,00 (1/4)" in metin and "EMA sıkışması" in metin and "Çift rotasyonu" in metin
+    assert "KALDI: ilk resmi koşu yapılmaz" in metin and "%5,00 (1/20)" in metin
+    assert "Güç %5,00 (ölçüt 1–4 / Kâğıt) |" in metin and "%75,00 (3/4) / %25,00 (1/4)" in metin
+    assert "%100,00 (4/4) / %50,00 (2/4)" in metin and "EMA sıkışması" in metin and "Çift rotasyonu" in metin
     assert "GEÇTİ" in denetim.yaz(sonuc_ornek(True))[0].read_text(encoding="utf-8")
     assert "Boru hattı denetimi" in html.read_text(encoding="utf-8")
 

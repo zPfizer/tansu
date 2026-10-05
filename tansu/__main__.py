@@ -52,9 +52,9 @@ def _denetim(n, tekrar) -> int:
     yol, html = denetim.yaz(s)
     kayit.denetim_yaz(s)
     for aile, y in s["yanlis_kabul"].items():
-        g = s["guc"][aile]
-        print(f"{aile}: yanlış kabul {y['olcut_1_4']['adet']}/{y['olcut_1_4']['n']} (Kâğıt {y['kagit']['adet']}), "
-              f"güç {g['olcut_1_4']['adet']}/{g['olcut_1_4']['n']} (Kâğıt {g['kagit']['adet']})")
+        guc = "; ".join(f"etki {e:.0%}: {g['olcut_1_4']['adet']}/{g['olcut_1_4']['n']} (Kâğıt {g['kagit']['adet']})"
+                        for e, g in s["guc"][aile].items())
+        print(f"{aile}: yanlış kabul {y['olcut_1_4']['adet']}/{y['olcut_1_4']['n']} (Kâğıt {y['kagit']['adet']}), güç {guc}")
     print(f"Boru hattı denetimi {'geçti' if s['gecti'] else 'KALDI'}: {yol}, {html}")
     if not s["gecti"]:
         print("Yanlış kabul > %5: ilk resmi koşu yapılmaz (TASARIM 5.12).", file=sys.stderr)
@@ -69,7 +69,7 @@ def main(argv=None) -> int:
     ap.add_argument("--kimlik")
     ap.add_argument("--resmi", action="store_true")
     ap.add_argument("--son", action="store_true", help="tam K1 tekrarı: max(1.000, 200·m); yoksa geliştirme (200)")
-    ap.add_argument("--n", type=int, default=200, help="denetim: boş dünya tekrarı (etkili dünya n/5)")
+    ap.add_argument("--n", type=int, default=200, help="denetim: boş dünya tekrarı (her etki düzeyi ve aile için n/10)")
     ap.add_argument("--tekrar", type=int, default=denetim.TEKRAR, help="denetim: her tekrarda K1 tekrarı B")
     a = ap.parse_args(argv)
     kok = Path(a.kok)

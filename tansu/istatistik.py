@@ -51,7 +51,8 @@ class EmaK1:
                 for i in np.flatnonzero(maske):
                     self.havuz[tur][m.index[i]].append((s, int(i)))
             sig = aileler.sinyal(f, p)
-            gercek = [int(i) for i in m.index.get_indexer(sig[sig.isin(uye_gun[s])]) if uygun[i]]
+            # örtüşen iki sıkışma döneminin penceresi aynı güne sinyal verebilir: bir hisse bir günde tek sinyaldir
+            gercek = sorted({int(i) for i in m.index.get_indexer(sig[sig.isin(uye_gun[s])]) if uygun[i]})
             if gercek:
                 self.gercek[s] = gercek
             d = durum.reindex(m.index).fillna(False).to_numpy(bool)

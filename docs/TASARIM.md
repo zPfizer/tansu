@@ -675,25 +675,29 @@ Genel "Geçti" yalnız hepsi sağlanınca yazılır. (İ: 17-079)
 **Boru hattı denetimi:** ilk resmi koşudan önce bir kez yapılır (B-18):
 - Sentetik boş veriyle yanlış kabul oranı ≤ %5.
 - Enjekte edilmiş etkiyle güç ölçümü.
-- (Bilet 13) **Komut:** `python -m tansu denetim [--n 200] [--tekrar 1000]`. Sonuç `docs/denetim.md`, `rapor/denetim-*.html`
+- (Bilet 13) **Komut:** `python -m tansu denetim [--n 200] [--tekrar 200]`. Sonuç `docs/denetim.md`, `rapor/denetim-*.html`
   ve günlükte (`tur=destek`, `olay=denetim`, `gecti` bayrağı, kod hash'i) yazılır. Yanlış kabul > %5 ise çıkış kodu 1'dir
   ve `kosu(resmi=True)` ilk resmi koşuyu bu kodun hash'iyle geçmiş bir denetim yoksa durdurur (başarısız denetim de
   engeller). İlk resmi koşudan sonra denetim aranmaz.
-- **Boş dünya** (`denetim.dunya`): 40 sentetik hisse, 2.000 iş günü (02.01.2012'den), 4 sektör; günlük getiri = piyasa
+- **Boş dünya** (`denetim.dunya`): 125 sentetik hisse, 2.000 iş günü (02.01.2012'den), 4 sektör; günlük getiri = piyasa
   payı·β + sektör payı + hisse payı, kalın kuyruklu (t(5), birim varyans), ±%7'ye kırpılmış (limit ve kilit olmaz).
   Hiçbir kural getiri öngörmez: sinyalden sonraki getiri bağımsızdır. Sentetik anlık görüntü gerçek `veri` kapılarından
-  geçer (test: karantina, kilit, olay uyarısı yok), olay yok, faiz tablosu ve sektör var, evren aynı kuralla (40 hisseden
-  likidite eleğiyle 32). Simülasyon 02.12.2013'te başlar (ısınma 500 gün).
+  geçer (test: karantina, kilit, olay uyarısı yok), olay yok, faiz tablosu ve sektör var, evren aynı kuralla (125
+  hisseden likidite eleğiyle 100: gerçek koşudaki evren boyutu; 40 hisseli dünyada K1 (a) havuzu sinyal sayısına eşit
+  kalıp rastgelelik vermiyordu). Simülasyon 02.12.2013'te başlar (ısınma 500 gün).
 - **Yanlış kabul** = boş dünyada ölçüt 1–4 Geçti ve portföy kuralı reddetmedi (örneklem ve sağlamlık şartı aranmaz,
   yani Kâğıt'ın üst kümesi; sentetik dünya 100 işlem örneklemini dolduramayabilir ve o zaman Kâğıt oranı boş yere
   sıfır olurdu). Kâğıt oranı da raporlanır. Şart: her ailede oran ≤ %5, 200 tekrarda (seçilen tohumlar 0…199).
-  Her tekrar gerçek yoldan (`kayit.hesapla`: motor, simülatör, K1, ızgara, Holm, kabul) geçer; K1 B = 1.000 ve Holm
-  m = 2 (iki aile; resmi koşuda m ≥ 2, yani denetim en gevşek durumdur).
-- **Etkili dünya** (güç): boş dünyadan hesaplanan her kural sinyalinin ardından fiyata sabit log etki gömülür: giriş AOF'u
-  (sinyalden sonraki 1. gün) etkilenmez, etki 2.–6. günlere eşit yayılır, kalıcıdır (`denetim.etki_ekle`). EMA'da
-  sinyalin hissesine, çiftte sinyalin geçtiği bacağa gömülür. Varsayılan etki sinyal başına %5 (belge 14-048). Her aile
-  kendi etkisiyle n/5 = 40 dünyada koşar (tohumlar 1000…). Güç = aynı ölçüt (1–4) geçen oran; yalnız rapor, şart yok.
-  Etki çiftte yaklaşıktır: gömme sonrası seçim ve Z değişir.
+  Her tekrar gerçek yoldan (`kayit.hesapla`: motor, simülatör, K1, ızgara, Holm, kabul) geçer; K1 B = 200 (geliştirme
+  sayısı; p tabanı 1/201, Holm m = 2 için eşik 0,025'in altında, yani eşiği geçmek mümkündür; B artınca p dağılımı
+  değişmez, yalnız inceleşir) ve Holm m = 2 (iki aile; resmi koşuda m ≥ 2, yani denetim en gevşek durumdur).
+- **Etkili dünya** (güç): boş dünyadan hesaplanan her kural sinyalinde, sinyali izleyen günün (giriş günü) AOF'u
+  `1 + etki`'ye bölünür (`denetim.etki_ekle`); kapanış ve öteki günler aynıdır. EMA'da sinyalin hissesinde, çiftte
+  sinyalin geçtiği bacakta. Kural işlem başına yaklaşık `etki` kazanır, rastgele girişler (K1) kazanmaz. (Fiyatı kalıcı
+  kaydırmak denendi ve bırakıldı: sinyalden önceki günlerde giren rastgele işlem de aynı kazancı alıyor, K1 etkiyi
+  görmüyordu.) Etki düzeyleri %5 (belge 14-048) ve %10; her aile × etki düzeyi n/10 = 20 dünyada koşar (tohumlar 1000…).
+  Güç = aynı ölçüt (1–4) geçen oran; yalnız rapor, şart yok. Etki çiftte yaklaşıktır: AOF yeni seçimden ve Z'den bağımsız
+  kalır ama sinyaller boş dünyadan hesaplanır.
 - **Geleceği görmeme testi** (`tests/test_gelecek.py`, bilet 13): sentetik dünyada veri t'de kesilir (fiyat satırları
   ve faiz değişimleri t'den sonrası atılır); tam görüntünün t'ye kadarki çıktısı kesilmişle aynı olmalı. Tek parametrik
   test, bileşen × üç kesim günü. Kapsam: evren (ay başı seçimi), göstergeler (EMA, SMA, Wilder ATR, sıkışma oranı,

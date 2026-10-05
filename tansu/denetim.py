@@ -21,10 +21,9 @@ BASLANGIC = "2012-01-02"  # sentetik takvim; 500 günlük ısınma 2013-11'de bi
 BAS = "2013-12-02"  # sentetik dünyada simülasyon başlangıcı (gerçek koşu 2015-12-01)
 SEKTOR = 4  # sektör sayısı
 ESIK = 0.05  # yanlış kabul üst sınırı (TASARIM 5.12)
-TEKRAR = 1000  # her tekrarda K1 B: resmi koşunun taban değeri (m = 2 için max(1.000, 200·2) = 1.000)
-ETKI = 0.05  # sinyal başına gömülen etki (TASARIM: "her sinyalden sonra +%5")
-ETKI_GUN = 5  # etki sinyalden sonraki 2.–6. günlere yayılır: giriş AOF'u (1. gün) etkilenmez
-FIYAT = ["kapanis", "aof", "yuksek", "dusuk", "ham_kapanis", "ham_aof", "ham_yuksek", "ham_dusuk", "pd"]
+TEKRAR = 200  # her tekrarda K1 B (geliştirme sayısı; p tabanı 1/201 Holm m = 2 eşiği 0,025'in altında)
+ETKILER = (0.05, 0.10)  # her sinyalde kuralın dolum fiyatındaki avantaj (TASARIM: "her sinyalden sonra +%5")
+HISSE, GUN = 125, 2000  # 125 hisse, likidite eleğinden sonra gerçek koşudaki gibi 100'lük evren
 
 
 def dunya(tohum, hisse=40, gun=2000) -> veri.Anlik:
@@ -63,22 +62,16 @@ def dunya(tohum, hisse=40, gun=2000) -> veri.Anlik:
                       sektor={a: f"K{s}" for a, s in zip(adlar, sektor)})
 
 
-def etki_kaydir(n, konumlar, etki=ETKI) -> np.ndarray:
-    """Günlük log fiyat kayması (kümülatif): her sinyal konumu `j` için `j+2 … j+1+ETKI_GUN` günlerine `etki / ETKI_GUN` eklenir."""
-    ek = np.zeros(n)
-    for j in konumlar:
-        ek[j + 2: j + 2 + ETKI_GUN] += etki / ETKI_GUN
-    return np.cumsum(ek)
+def etki_ekle(anlik, aile, etki=ETKILER[0], bas=BAS) -> veri.Anlik:
+    """Kuralın her sinyalinde dolum fiyatına `etki` avantajı gömer (TASARIM 5.12: bilinen etki, pozitif kontrol).
 
-
-def etki_ekle(anlik, aile, etki=ETKI, bas=BAS) -> veri.Anlik:
-    """Kuralın her sinyalinden sonra fiyata `etki` (log) gömer (TASARIM 5.12: bilinen etki, pozitif kontrol).
-
-    Sinyaller boş dünyadan hesaplanır (EMA: `aileler.sinyal`; çift: yıllık seçim ve `ciftbolme.hedef`). Etki giriş AOF'undan
-    sonra, sinyal gününü izleyen 2.–6. günlere yayılır; EMA'da sinyalin hissesine, çiftte geçilen bacağa gömülür."""
+    Sinyaller boş dünyadan hesaplanır (EMA: `aileler.sinyal`; çift: yıllık seçim ve `ciftbolme.hedef`). Sinyali izleyen gün
+    (giriş günü) sinyalin hissesinin (çiftte geçilen bacağın) AOF'u `1 + etki`'ye bölünür; kapanış ve sonraki günler aynıdır.
+    Böylece kural işlem başına yaklaşık `etki` kazanır, rastgele girişler (K1) kazanmaz: kalıcı fiyat kayması olsaydı
+    sinyalden önceki günde giren rastgele işlem de aynı kazancı alırdı ve K1 etkiyi görmezdi."""
     gunler = anlik.gunler
     konum = pd.Series(np.arange(len(gunler)), index=gunler)
-    sinyal = {}  # sembol → sinyal günü konumları
+    sinyal = {}  # sembol → sinyal günü (kapanış) konumları
     if aile == simulator.AILE:
         for s, f in anlik.fiyat.groupby("sembol"):
             sinyal[s] = konum.reindex(aileler.sinyal(f.set_index("tarih")[["kapanis", "yuksek"]])).to_numpy()
@@ -93,12 +86,13 @@ def etki_ekle(anlik, aile, etki=ETKI, bas=BAS) -> veri.Anlik:
                     if hedef[j]:
                         sinyal.setdefault(y if hedef[j] > 0 else x, []).append(j)
     f = anlik.fiyat
-    kayma = {s: etki_kaydir(len(gunler), np.asarray(j, dtype=int), etki) for s, j in sinyal.items()}
-    carpan = np.ones(len(f))
-    for s, k in kayma.items():
-        satir = (f["sembol"] == s).to_numpy()
-        carpan[satir] = np.exp(k[konum.reindex(f.loc[satir, "tarih"]).to_numpy()])
-    return dataclasses.replace(anlik, fiyat=f.assign(**{c: f[c] * carpan for c in FIYAT}))
+    giris = {(s, gunler[j + 1]) for s, js in sinyal.items() for j in js if j + 1 < len(gunler)}
+    sec = pd.MultiIndex.from_arrays([f["sembol"], f["tarih"]]).isin(list(giris))
+    yeni = {}
+    for on in ("", "ham_"):
+        aof = np.where(sec, f[on + "aof"] / (1 + etki), f[on + "aof"])
+        yeni[on + "aof"], yeni[on + "dusuk"] = aof, np.minimum(f[on + "dusuk"], aof)  # düşük ≤ AOF korunur
+    return dataclasses.replace(anlik, fiyat=f.assign(**yeni))
 
 
 def _holm_iki(ps) -> dict:
@@ -107,7 +101,7 @@ def _holm_iki(ps) -> dict:
             for a, h in zip(ps, istatistik.holm(list(ps.values())))}
 
 
-def tekil(tohum, etkili=None, etki=ETKI, tekrar=200, hisse=40, gun=2000) -> dict:
+def tekil(tohum, etkili=None, etki=0.0, tekrar=TEKRAR, hisse=HISSE, gun=GUN) -> dict:
     """Bir sentetik dünyada boru hattını koşar; aile → {kagit, olcut_1_4, p, holm_p, genel, islem}.
 
     `etkili`: etkinin gömüleceği aile (None: boş dünya). `olcut_1_4`: ölçüt 1–4 Geçti ve portföy kuralı reddetmedi
@@ -124,7 +118,12 @@ def tekil(tohum, etkili=None, etki=ETKI, tekrar=200, hisse=40, gun=2000) -> dict
 
 
 def _is(arg) -> dict:
-    return tekil(*arg)
+    """İşçi girişi: tekrarlar zaten süreçlere bölünür, iç içe süreç havuzu (eşbütünleşme) kapatılır."""
+    eski, ciftbolme.POOL_ESIK = ciftbolme.POOL_ESIK, float("inf")
+    try:
+        return tekil(*arg)
+    finally:
+        ciftbolme.POOL_ESIK = eski
 
 
 def _oran(sonuclar, aile, anahtar) -> dict:
@@ -132,38 +131,44 @@ def _oran(sonuclar, aile, anahtar) -> dict:
     return {"n": len(s), "adet": int(sum(s)), "oran": float(np.mean(s)) if s else float("nan")}
 
 
-def calistir(n=200, tekrar=200, etki=ETKI, n_etki=None, isci=None, hisse=40, gun=2000) -> dict:
-    """Boş dünyada `n` tekrar (yanlış kabul) ve her ailenin etkisi gömülü dünyada `n_etki` tekrar (güç).
+def calistir(n=200, tekrar=TEKRAR, etkiler=ETKILER, n_etki=None, isci=None, hisse=HISSE, gun=GUN) -> dict:
+    """Boş dünyada `n` tekrar (yanlış kabul) ve her ailenin her etki düzeyinde etkisi gömülü dünyada `n_etki` tekrar (güç).
 
     Tohumlar sabittir (boş: 0 … n−1, etkili: 1000 …). Tekrarlar `isci` süreçte koşar (varsayılan işlemci sayısı; 1: tek süreç).
-    Geçti: her ailenin yanlış kabul oranı (`olcut_1_4`) ≤ %5."""
-    n_etki = n_etki or max(n // 5, 1)
-    isler = [(i, None, etki, tekrar, hisse, gun) for i in range(n)]
-    isler += [(1000 + i, aile, etki, tekrar, hisse, gun) for aile in kayit.AILELER for i in range(n_etki)]
+    Geçti: her ailenin yanlış kabul oranı (`olcut_1_4`) ≤ %5. `guc`: aile → etki → {ölçüt, oran}."""
+    n_etki = n_etki or max(n // 10, 1)
+    isler = [(i, None, 0.0, tekrar, hisse, gun) for i in range(n)]
+    gruplar = [(e, aile) for e in etkiler for aile in kayit.AILELER]
+    isler += [(1000 + i, aile, e, tekrar, hisse, gun) for e, aile in gruplar for i in range(n_etki)]
     if (isci or os.cpu_count()) > 1:
         with ProcessPoolExecutor(isci) as havuz:
             sonuc = list(havuz.map(_is, isler))
     else:
         sonuc = list(map(_is, isler))
-    bos, guc = sonuc[:n], {}
-    for k, aile in enumerate(kayit.AILELER):
-        guc[aile] = {a: _oran(sonuc[n + k * n_etki: n + (k + 1) * n_etki], aile, a) for a in ("olcut_1_4", "kagit")}
-    yanlis = {aile: {a: _oran(bos, aile, a) for a in ("olcut_1_4", "kagit")} for aile in kayit.AILELER}
-    return {"n": n, "n_etki": n_etki, "tekrar": tekrar, "etki": etki, "hisse": hisse, "gun": gun, "yanlis_kabul": yanlis,
-            "guc": guc, "esik": ESIK, "gecti": all(y["olcut_1_4"]["oran"] <= ESIK for y in yanlis.values())}
+    guc = {aile: {} for aile in kayit.AILELER}
+    for k, (e, aile) in enumerate(gruplar):
+        guc[aile][e] = {a: _oran(sonuc[n + k * n_etki: n + (k + 1) * n_etki], aile, a) for a in ("olcut_1_4", "kagit")}
+    yanlis = {aile: {a: _oran(sonuc[:n], aile, a) for a in ("olcut_1_4", "kagit")} for aile in kayit.AILELER}
+    return {"n": n, "n_etki": n_etki, "tekrar": tekrar, "etkiler": list(etkiler), "hisse": hisse, "gun": gun,
+            "yanlis_kabul": yanlis, "guc": guc, "esik": ESIK,
+            "gecti": all(y["olcut_1_4"]["oran"] <= ESIK for y in yanlis.values())}
 
 
 def yaz(sonuc, docs=None, rapor_dizini=None) -> tuple:
     """Sonucu `docs/denetim.md` ve `rapor/denetim-<zaman>.html` dosyalarına yazar; yolları döndürür."""
-    satirlar = [["Aile", "Yanlış kabul (ölçüt 1–4)", "Yanlış kabul (Kâğıt)", "Güç (ölçüt 1–4)", "Güç (Kâğıt)"]]
-    for aile in sonuc["yanlis_kabul"]:
-        y, g = sonuc["yanlis_kabul"][aile], sonuc["guc"][aile]
-        satirlar.append([rapor.AILE_ADI[aile], *(f"{rapor.yuzde(d[a]['oran'])} ({d[a]['adet']}/{d[a]['n']})"
-                                                 for d, a in ((y, "olcut_1_4"), (y, "kagit"), (g, "olcut_1_4"), (g, "kagit")))])
+    oz = lambda d: f"{rapor.yuzde(d['oran'])} ({d['adet']}/{d['n']})"  # noqa: E731
+    etkiler = sonuc["etkiler"]
+    satirlar = [["Aile", "Yanlış kabul (ölçüt 1–4)", "Yanlış kabul (Kâğıt)",
+                 *(f"Güç {rapor.yuzde(e)} (ölçüt 1–4 / Kâğıt)" for e in etkiler)]]
+    for aile, y in sonuc["yanlis_kabul"].items():
+        g = sonuc["guc"][aile]
+        satirlar.append([rapor.AILE_ADI[aile], oz(y["olcut_1_4"]), oz(y["kagit"]),
+                         *(f"{oz(g[e]['olcut_1_4'])} / {oz(g[e]['kagit'])}" for e in etkiler)])
     durum = "GEÇTİ" if sonuc["gecti"] else "KALDI: ilk resmi koşu yapılmaz"
-    giris = (f"Boş dünya {sonuc['n']} tekrar, etkili dünya (her ailenin kendi etkisi) {sonuc['n_etki']} tekrar; her tekrar "
-             f"{sonuc['hisse']} hisse × {sonuc['gun']} gün, K1 B = {sonuc['tekrar']}, Holm m = 2. Gömülü etki: sinyal başına "
-             f"{rapor.yuzde(sonuc['etki'])}. Şart: yanlış kabul ≤ {rapor.yuzde(sonuc['esik'])}. Sonuç: **{durum}**.")
+    giris = (f"Boş dünya {sonuc['n']} tekrar, etkili dünya (her ailenin kendi etkisi, her etki düzeyi) {sonuc['n_etki']} tekrar; "
+             f"her tekrar {sonuc['hisse']} hisse × {sonuc['gun']} gün, K1 B = {sonuc['tekrar']}, Holm m = 2. Gömülü etki: "
+             f"sinyal başına dolum avantajı {', '.join(rapor.yuzde(e) for e in etkiler)}. Şart: yanlış kabul ≤ "
+             f"{rapor.yuzde(sonuc['esik'])}. Sonuç: **{durum}**.")
     md = "\n".join(["# Boru hattı denetimi", "", "Komut: `python -m tansu denetim` (TASARIM 5.12). " + giris, "",
                     "| " + " | ".join(satirlar[0]) + " |", "|" + "---|" * len(satirlar[0]),
                     *("| " + " | ".join(s) + " |" for s in satirlar[1:]), "",
