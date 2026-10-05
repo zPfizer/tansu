@@ -29,7 +29,7 @@
 
 - `tansu/kayit.py`: `kayitla()` kural kaydını `deneme.jsonl`'e `tur=kayit` satırı olarak yazar; `kosu()` önce kaydı
   ve hash'i denetler, sonra manifesti, sonra `basladi` ve `bitti` yazar. Komutlar: `kayit`, `sinama [--resmi]`.
-- `KOD_DOSYALARI` şimdilik aileler, gostergeler, motor. `cift`, `simulator`, K1 kodu gelince listeye eklenir
+- `KOD_DOSYALARI` şimdilik aileler, cift, gostergeler, motor. `simulator`, K1 kodu gelince listeye eklenir
   (liste değişince kural_id değişir; yeni kayıt ve yeni deneme).
 - Açık (02): conftest `kayit.KAYIT_DIZINI`'ni `tmp_path`'e yönlendirir; yapıldı, 02'deki kutu işaretlendi.
 - Açık (08): düşen sinyal sayısı `kosu` dönüşünde (`dusen`) ve `bitti` satırında (`dusen_sinyal`).
