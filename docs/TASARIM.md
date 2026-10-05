@@ -90,7 +90,7 @@ Her modülün dışarıya küçük bir yüzü var. İçi değişse de dışı de
 
 | Modül | Girdi → çıktı | Not |
 |---|---|---|
-| `kaynak` | sembol, tarih aralığı → ham tablo | Ağa çıkan tek yer: İş Yatırım ve borsapy. Ham alan adları (`HG_*`, `HGDG_*`) tek bir sözlükle proje adlarına çevrilir. (C-8, İ: 18-075) |
+| `kaynak` | sembol, tarih aralığı → ham tablo | Ağa çıkan tek yer: İş Yatırım ve borsapy (yalnız faiz ve sektör). Ham alan adları (`HG_*`, `HGDG_*`) tek bir sözlükle proje adlarına çevrilir. (C-8, İ: 18-075) |
 | `veri` | indirme → anlık görüntü; olay tablosu; veri kapıları | Ayrıntı aşağıda. (B2, B-2, B-7) |
 | `evren` | tarih → o gün yeni giriş için taranabilecek hisseler | 5.2. |
 | `gostergeler` | fiyat → EMA, SMA, ATR, piyasa durumu | Vektörel; sınamada ve canlıda aynı kod. Kütüphane yok. |
@@ -107,7 +107,7 @@ Her modülün dışarıya küçük bir yüzü var. İçi değişse de dışı de
 - Anlık görüntü tek klasördür. İçinde:
   - fiyat (ham ve düzeltilmiş, uzun biçim, bütün semboller),
   - olay tablosunun ham JSON'u,
-  - borsapy tabloları (faiz, sektör, endeks günleri, getiriler),
+  - borsapy tabloları (faiz, sektör),
   - `manifest.json` (her dosyanın sha256'sı).
 - Veri sürümü, anlık görüntü kimliğidir.
 - Okuyucu anlık görüntüyü açarken manifesti doğrular; uyuşmazlık hatadır.
@@ -123,7 +123,7 @@ Her modülün dışarıya küçük bir yüzü var. İçi değişse de dışı de
 `kaynak` → `veri` → `evren`, `gostergeler` → `aileler`, `cift` → `motor` → `simulator` → `istatistik`
 → `kayit` → `rapor` → `__main__`.
 
-Takvim, fiyat günlerinden çıkar (XU100 günleri, borsapy). Maliyet tek bir sabittir.
+Takvim, fiyat günlerinden çıkar (İş Yatırım XU100 günleri). Maliyet tek bir sabittir.
 
 **Motor kendi Adım döngümüzdür; vectorbt kullanılmaz.** Dolum kuralları (5.3) AOF'a ve gün
 yükseği/düşüğüne koşullu. Ölçütler kısa kendi kodumuzdur. (A3, M1, S2-41, C-2)
@@ -137,8 +137,18 @@ yükseği/düşüğüne koşullu. Ölçütler kısa kendi kodumuzdur. (A3, M1, S
 - **Yahoo kullanılmaz.** (B-2)
 - **Şirket olayları:** İş Yatırım `GetSermayeArttirimlari`, bütün kodlarıyla. Tarih hak kullanım günüdür.
 - **Faiz:** borsapy TCMB politika faizi; 2015'ten tek seri. Yalnız değişim günlerini içerir. (B-8)
-- **Endeks günleri ve sektör:** borsapy.
-- **Kullanım koşulları:** okunmadı. İlk indirmeden önce okunur (7.2). Az sayıda istek, yerel önbellek.
+- **XU100 kapanışı ve takvim:** İş Yatırım `HisseTekil`'in `END_DEGER` alanı (endeks kodu 01; XU100
+  olduğu bilet 02'de doğrulanır). Yalnız kapanış.
+- **Sektör:** borsapy (KAP kaynağı); yılda bir okunur.
+- **TradingView kaynaklı veri kullanılmaz.** Koşullar makineyle işlemeyi yasaklıyor.
+- **Kullanım koşulları** (bilet 01, `docs/arastirma/kullanim-kosullari-fiyat-adimi.md`):
+  - İş Yatırım'ın robots.txt dosyası `/_layouts/` yolunu yasaklıyor. Kullanım sözleşmesi bulunamadı.
+  - Kişisel ve ticari olmayan kullanım sürer; ayak izi küçük tutulur:
+    - hisse başına günde bir istek
+    - istekler arası 1 sn
+    - açık User-Agent
+  - İş Yatırım engellerse ya da itiraz ederse indirme durur. Bu bilinen bir risktir.
+  - TCMB kişisel kullanıma izin veriyor. KAP koşulları belirsiz.
 
 ## 5. Sınama yöntemi
 
@@ -173,17 +183,19 @@ hatasından** ayırmak.
   - L = %20 (30.11.2015 – 12.03.2020), %10 (13.03.2020 sonrası). Önceki kapanış tabanı ±%10 döneminde
     veriyle doğrulandı.
   (İ: 01-024, 02-033, 07-060)
-- **Fiyat adımı:** BISTECH adım tablosu (YORUM, doğrulanmadı; 7.2'de veriyle doğrulanır):
+- **Fiyat adımı:** tarih bazlı tablo. 06.11.2023'te değişti; veriyle doğrulandı, bkz.
+  `docs/arastirma/kullanim-kosullari-fiyat-adimi.md`.
 
-  | Fiyat (TL) | Adım (TL) |
-  |---|---|
-  | < 20 | 0,01 |
-  | 20–50 | 0,02 |
-  | 50–100 | 0,05 |
-  | 100–250 | 0,10 |
-  | 250–500 | 0,25 |
-  | 500–1.000 | 0,50 |
-  | ≥ 1.000 | 1 |
+  | Fiyat (TL) | 06.11.2023 öncesi | 06.11.2023 ve sonrası |
+  |---|---|---|
+  | < 20 | 0,01 | 0,01 |
+  | 20–50 | 0,02 | 0,02 |
+  | 50–100 | 0,05 | 0,05 |
+  | 100–250 | 0,10 | 0,10 |
+  | 250–500 | 0,10 | 0,25 |
+  | 500–1.000 | 0,10 | 0,50 |
+  | 1.000–2.500 | 0,10 | 1,00 |
+  | ≥ 2.500 | 0,10 | 2,50 (doğrulanmadı) |
 
   Sınama vakası: KONTR 08.07.2026. (İ: 01-023, 02-056, 05-043)
 - **Karantina:**
@@ -196,12 +208,11 @@ hatasından** ayırmak.
   - Rapor karantinalı hisse × gün sayısını ve oranını yazar.
   (B1, İ: 02-094)
 - **Hacim:** `HACIM` TL'dir. Hacmi sıfır olan gün (durdurma) işlem günü değildir.
-- **İkinci kaynak** (P4, İ: 01-097, 02-008, 16-099, 18-009, 18-044):
-  - borsapy getirileriyle yalnız iki kaynakta ortak günler karşılaştırılır (T−1'e kadar; borsapy'nin
-    bugünkü yarım çubuğu girmez).
-  - Olay tablosunda kaydı olan günler karşılaştırmaya girmez.
-  - Farkı %0,5'i aşan günler ve tek kaynaklı gün sayısı listelenir.
-  - borsapy alınamazsa kontrol "yapılmadı" yazılır; kart durmaz.
+- **İkinci kaynak yok** (bilet 01 kararı):
+  - borsapy fiyatı TradingView'den gelir. TradingView koşulları, ekranda göstermeden makineyle işlemeyi
+    yasaklıyor.
+  - Veri doğruluğunu olay denetimi (`HGDG` iç tutarlılığı) ve veri kapıları (5.13) taşır.
+  - Bu bilinen bir zayıflıktır; P4 kısmen açık kalır.
 - **Bugünkü veri:** son çubuğun tarihi bugün değilse ya da veri kapısı (5.13) kalırsa o gün kart
   üretilmez. (m6)
 
@@ -511,8 +522,8 @@ Genel "Geçti" yalnız hepsi sağlanınca yazılır. (İ: 17-079)
 Getiri görülmeden yazılır; kural kaydına girer. (B-7, İ: 19-015)
 - **Satır ihlali:** düşük ≤ AOF ≤ yüksek ve düşük ≤ kapanış ≤ yüksek sağlanmazsa karantina.
 - **Yapısal ihlal:** bozuk sıra, tekrar eden gün ya da ortada NaN koşuyu durdurur.
-- **Oran eşikleri:** karantina hisse-gün oranı > %1 ya da ikinci kaynak uyuşmazlığı > %2 ise koşu
-  "veri sorunlu" olur.
+- **Oran eşikleri:** karantina hisse-gün oranı > %1 ya da olay denetimi farkı olan gün oranı > %2 ise
+  koşu "veri sorunlu" olur.
 - **Eksik indirme:** 100 hisseden 5'ten fazlası inmezse koşu SORUNLU olur.
 
 ## 6. Günlük işleyiş (ilk sürüm)
@@ -553,8 +564,8 @@ Getiri görülmeden yazılır; kural kaydına girer. (B-7, İ: 19-015)
    kart çıktısı `kayit/kartlar.jsonl`'e yalnız eklenir; kâğıt üstü dönem geriye dönük değişmez. (C-5)
 7. **`rapor/durum.txt`** (İ: 16-036, 16-070, 13-082, 17-048):
    - İlk satır: `TAMAM` / `SORUNLU` / `VERİ YOK` / `BUGÜN ÇUBUK YOK` (tatil, çıkış 0).
-   - Ardından: son başarılı koşu saati, anlık görüntü kimliği, son çubuk tarihi, sembol sayısı, varsa
-     "çapraz kontrol yok" ve bir Türkçe eylem cümlesi.
+   - Ardından: son başarılı koşu saati, anlık görüntü kimliği, son çubuk tarihi, sembol sayısı ve bir
+     Türkçe eylem cümlesi.
    - Levent yalnız buna bakar.
    - `durum.txt` ve CSV'ler geçici dosyaya yazılıp `os.replace` ile taşınır. CSV Excel'de açık olduğu
      için yazılamazsa durum SORUNLU olur: "CSV açık, kapatıp yeniden çalıştır".
@@ -573,10 +584,9 @@ Getiri görülmeden yazılır; kural kaydına girer. (B-7, İ: 19-015)
 
 1. **Temizlik:** tamamlandı (05.10).
 2. **Veri deposu:** `kaynak` + `veri`.
-   - Önce İş Yatırım ve borsapy kullanım koşulları okunur; 8.1 kapatılır. (İ: 10-086, 18-093)
-   - İş Yatırım ham ve düzeltilmiş fiyat, olay tablosu, olay denetimi.
-   - Fiyat adımı tablosunun doğrulanması.
-   - Veri kapıları, anlık görüntü, borsapy karşılaştırması.
+   - Kullanım koşulları ve fiyat adımı: tamamlandı (bilet 01, 05.10).
+   - İş Yatırım ham ve düzeltilmiş fiyat, XU100 kapanışı, olay tablosu, olay denetimi.
+   - Veri kapıları, anlık görüntü, borsapy faiz ve sektör tabloları.
 3. **Sadakat kontrolü** (`KURALLAR.md` §4): ham seriyle; getiriye bakılmaz. Sonuç `docs/sadakat.md`'ye
    yazılır.
 4. **Evren** (5.2) ve **göstergeler**.
@@ -588,16 +598,20 @@ Getiri görülmeden yazılır; kural kaydına girer. (B-7, İ: 19-015)
 10. **Gerçek BIST100** KAP endeks değişikliklerinden (paralel iş).
 
 ## 8. Açık sorular
-1. İş Yatırım ve borsapy kullanım koşulları, hız sınırları ve günlük yayın saati (7.2'de okunur).
+1. İş Yatırım: kullanım sözleşmesi bulunamadı; robots.txt `/_layouts/`'u yasaklıyor (bilinen risk, 4).
+   Hız sınırı ve günlük yayın saati bilinmiyor. KAP koşulları okunamadı.
 2. KAP endeks değişikliği duyuruları 2015–2016'yı kapsıyor mu?
 3. Tedbirli hisseler (brüt takas, tek fiyat) bedava veriyle ayırt edilebiliyor mu?
 4. İşlemi kapanan sembollerin tam listesi bulunabilir mi?
-5. ±%20 döneminde limit tabanı önceki kapanış mı? (±%10 döneminde doğrulandı.)
+5. 13.03.2020 öncesinde limit bütün paylarda ±%20 mi, bazı pazarlarda ±%15 mi (ikincil kaynak)? Limit
+   fiyatı adıma içe mi yuvarlanıyor? Bilet 03'te veriyle ölçülür. (±%10 döneminde taban = önceki
+   kapanış doğrulandı.)
 6. Sıkışma oranının paydası düşüş trendinde EMA200 mü en küçük EMA mı? KRDMD'de ikisi aynı.
 7. Bireysel yatırımcı için vergi.
 8. `HACIM` toptan ya da çapraz işlemleri içeriyor mu? İçeriyorsa medyan şişkin olabilir. (İ: 08-027)
 9. Faiz serisi bir haftalık repo mu? (İ: 08-071)
-10. Fiyat adımı tablosu (5.1) doğru mu?
+10. Fiyat adımı tablosunun 2.500 TL üstü bandı ve 2015–2016'daki 100 TL altı bantlar (5.1) veride
+    görülmedi.
 
 ---
 

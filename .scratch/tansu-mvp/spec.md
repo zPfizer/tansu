@@ -51,8 +51,8 @@ Windows bilgisayarında kendi kendine çalışan bir sistem. Sistem şunları ya
    so that I can trust the adjustment.
 5. As Levent, I want days with an unexplained price jump to be quarantined instead of patched, so that bad
    data never creates fake profits.
-6. As Levent, I want the system to compare every return against a second source (borsapy), so that data
-   errors are caught before they reach a card.
+6. (Withdrawn 05.10, ticket 01: TradingView's terms forbid machine use. Data accuracy rests on the
+   event audit and the data gates.)
 7. As Levent, I want the run to refuse to produce cards when the data fails its checks, so that I never act
    on broken data.
 8. As Levent, I want the system to know the price limit for every day (±20% before 13.03.2020, ±10% after),
@@ -165,8 +165,8 @@ Windows bilgisayarında kendi kendine çalışan bir sistem. Sistem şunları ya
 
 **Modüllerin yüzleri:**
 - `kaynak`: ağa çıkan tek modül.
-  - İş Yatırım `HisseTekil` ve `GetSermayeArttirimlari`, borsapy (faiz, sektör, endeks günleri,
-    karşılaştırma getirileri).
+  - İş Yatırım `HisseTekil` (XU100 `END_DEGER` dahil) ve `GetSermayeArttirimlari`; borsapy yalnız faiz ve
+    sektör için (bilet 01: TradingView kaynaklı veri yok).
   - Ham alan adları tek bir sözlükle proje adlarına çevrilir.
   - requests; istekler arası 1 sn; zaman aşımı (5, 120); ağ, 429 ve 5xx için 3 deneme.
 - `veri`: `indir(tarih) → anlık görüntü kimliği` ve `oku(kimlik) → fiyat, olaylar, faiz, sektör, günler`.
