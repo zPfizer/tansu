@@ -192,3 +192,13 @@ def test_veri_donmeyen_sembol_bos_sayilir_inmeyen_degil(tmp_path):
     a = anlik(tmp_path, hepsi)
     assert (a.bos, a.inmeyen, a.sorunlar) == (tuple(f"S{i}" for i in range(8)), (), [])
     assert list(a.fiyat["sembol"].unique()) == ["A"]
+
+
+@pytest.mark.parametrize("olay_gunu", [dt.date(2024, 1, 2), dt.date(2024, 1, 3), dt.date(2024, 1, 4)])
+def test_olay_tablosu_bir_gun_kaysa_da_sahte_karantina_olmaz(tmp_path, olay_gunu):
+    # 2:1 bölünme (çarpan 0,5): ham kapanış 100 → 50, gerçek düzeltme günü 03.01. Tablo 02.01 (bir gün erken)
+    # ya da 04.01 (bir gün geç) yazsa da 50 / (100 × 0,5) = 1 → hiçbir gün limiti aşmaz.
+    olay = {"A": [{"SHT_KODU": "02", "SHHE_TARIH": epoch(olay_gunu), "SHHE_FIYAT_AYAR_OR": 0.5}]}
+    fiyat = [satir("2023-12-29", 100.0), satir("2024-01-02", 100.0), satir("2024-01-03", 50.0),
+             satir("2024-01-04", 51.0)]
+    assert not anlik(tmp_path, fiyat, olay).gun_tablosu["karantina"].any()

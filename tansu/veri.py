@@ -236,9 +236,14 @@ def _gunler(fiyat, olaylar, takvim):
     carpan = pd.Series(1.0, index=f.index)
     gunler = f.index[islem.to_numpy()]
     for tarih, grup in olaylar.groupby("tarih"):
+        c = grup["carpan"].prod()
         i = gunler.searchsorted(tarih)  # olay gününe eşit ya da sonraki işlem günü
         if i < len(gunler):
-            carpan[gunler[i]] *= grup["carpan"].prod()
+            if c != 1:  # tablo tarihi bir işlem günü kayabilir (5.1): kapanışı en iyi tutan gün seçilir
+                adaylar = [j for j in (i, i - 1, i + 1) if 0 <= j < len(gunler)]
+                fark = {j: abs(f["ham_kapanis"][gunler[j]] /(onceki[gunler[j]] * c) - 1) for j in adaylar}
+                i = min(adaylar, key=lambda j: np.inf if np.isnan(fark[j]) else fark[j])
+            carpan[gunler[i]] *= c
     limit = pd.Series(np.where(f.index >= LIMIT_DEGISIM, 0.10, 0.20), index=f.index)
     ref = onceki * carpan
     tavan, taban, kapanis = ref * (1 + limit), ref * (1 - limit), f["ham_kapanis"]
