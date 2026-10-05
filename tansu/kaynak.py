@@ -50,7 +50,7 @@ class IsYatirim:
         f = pd.DataFrame(kayitlar)
         f = f[["HGDG_TARIH", *ALANLAR]].rename(columns={"HGDG_TARIH": "tarih", **ALANLAR})
         f["tarih"] = pd.to_datetime(f["tarih"], format="%d-%m-%Y")
-        return f
+        return f.sort_values("tarih", kind="stable").reset_index(drop=True)  # GARAN yanıtı sırasız (TASARIM 5.13)
 
     def olaylar(self, sembol) -> list:
         """Ham `GetSermayeArttirimlari` kayıtları, bütün kodlarıyla (süzme yok)."""
