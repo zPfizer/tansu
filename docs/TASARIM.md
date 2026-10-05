@@ -535,8 +535,9 @@ Getiri görülmeden yazılır; kural kaydına girer. (B-7, İ: 19-015)
   13.11.2013 yüksek 634210 / hacim NaN, bütün indirmeyi saatler sonra düşürüyordu; oran eşiği zaten
   korur). İstisna 1 (bilet 07, gerçek veri: BERDN 30.01.2012, ISATR 23.06.2010): ham fiyatların ve
   hacmin hepsi NaN ya da 0 olan satır işlem yapılmamış gündür; indirmede atılır (eksik gün, 5.1).
-  İstisna 1b (BYDNR 23.08.2023): bütün alanları aynı olan tekrar satır tek sayılır; alanları farklı
-  tekrar ihlaldir. İstisna 2: İş Yatırım
+  İstisna 1b (BYDNR 23.08.2023, KUVVA 2020–): fiyat ve hacim alanları aynı olan tekrar satır tek
+  sayılır, ilki kalır (KUVVA'da yalnız `PD` ve `SERMAYE` farklıydı: iki sermaye değeri; piyasa değeri o
+  aralıkta belirsiz); fiyat alanları farklı tekrar ihlaldir. İstisna 2: İş Yatırım
   GARAN yanıtını 276 yerde sırasız verir (satır eksiksiz, tekrar yok; bilet 06'da görüldü); `kaynak` yanıtı
   tarihe göre sıralar, kapı sıralamadan sonraki seriye bakar.
 - **Oran eşikleri:** karantina hisse-gün oranı > %1 ya da olay denetimi farkı olan gün oranı > %2 ise

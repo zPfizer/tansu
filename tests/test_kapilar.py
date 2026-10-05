@@ -234,3 +234,12 @@ def test_hacmi_sifir_ve_ham_alanlari_nan_ya_da_sifir_satir_atilir(tmp_path):
            "ham_dusuk": 0.0, "hacim": 0.0}
     a = anlik(tmp_path, [satir("2024-01-02", 100.0), bos, satir("2024-01-04", 100.0)])
     assert list(a.fiyat["tarih"]) == [pd.Timestamp("2024-01-02"), pd.Timestamp("2024-01-04")]
+
+
+def test_yalniz_sermaye_farkli_tekrar_satir_tek_sayilir_ilki_kalir(tmp_path):
+    # Gerçek KUVVA 2020-07-20: fiyat alanları aynı, pd/sermaye farklı iki satır.
+    a = {**satir("2024-01-03", 100.0), "pd": 1.0, "sermaye": 10.0}
+    b = {**satir("2024-01-03", 100.0), "pd": 2.0, "sermaye": 20.0}
+    f = anlik(tmp_path, [satir("2024-01-02", 100.0), a, b]).fiyat
+    assert list(f["tarih"]) == [pd.Timestamp("2024-01-02"), pd.Timestamp("2024-01-03")]
+    assert f["pd"].iloc[1] == 1.0
