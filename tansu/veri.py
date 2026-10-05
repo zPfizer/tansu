@@ -6,6 +6,7 @@ import json
 import os
 import shutil
 from dataclasses import dataclass
+from functools import cached_property
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -42,7 +43,7 @@ class Anlik:
     inmeyen: tuple = ()  # indirilemeyen semboller
     bos: tuple = ()  # kaynağın veri döndürmediği semboller (hata değil: pay olmayan kod, işlem görmemiş)
 
-    @property
+    @cached_property  # sinama sembol başına çağırır; bir kez hesaplanır
     def gun_tablosu(self) -> pd.DataFrame:
         """Sembol × takvim günü: islem, eksik, limit, tavan, taban, kilit_*, karantina (TASARIM 5.1)."""
         takvim = pd.DatetimeIndex(sorted(self.fiyat["tarih"].unique()))
@@ -52,19 +53,39 @@ class Anlik:
         ]
         return pd.concat(parcalar).rename_axis("tarih").reset_index()
 
-    @property
-    def sorunlar(self) -> list:
-        """Oran eşiklerini aşan kapılar (TASARIM 5.13); boş liste = veri temiz."""
-        n, sonuc = len(self.fiyat), []
-        if self.gun_tablosu["karantina"].sum() / n > KARANTINA_ESIK:
+    def oranlar(self, uye=None) -> tuple:
+        """(karantina oranı, olay denetimi farkı oranı, hisse-gün sayısı).
+
+        `uye`: (sembol, tarih) tablosu; verilirse yalnız o hisse-günler sayılır (TASARIM 5.13, evren üyeleri)."""
+        g = self.gun_tablosu
+        satirlar = {"hepsi": self.fiyat[["sembol", "tarih"]], "kar": g.loc[g["karantina"], ["sembol", "tarih"]],
+                    "olay": self.olay_uyarilari.reindex(columns=["sembol", "tarih"])}
+        if uye is not None:
+            satirlar = {k: v.merge(uye[["sembol", "tarih"]], on=["sembol", "tarih"]) for k, v in satirlar.items()}
+        n = len(satirlar["hepsi"])
+        return (len(satirlar["kar"]) / n, len(satirlar["olay"]) / n, n) if n else (0.0, 0.0, 0)
+
+    def _sorunlar(self, uye) -> list:
+        karantina, olay, _ = self.oranlar(uye)
+        sonuc = []
+        if karantina > KARANTINA_ESIK:
             sonuc.append("karantina oranı > %1")
-        if len(self.olay_uyarilari) / n > DENETIM_ESIK:
+        if olay > DENETIM_ESIK:
             sonuc.append("olay denetimi farkı olan gün oranı > %2")
         if len(self.inmeyen) > INMEYEN_ESIK:
             sonuc.append(f"{len(self.inmeyen)} hisse inmedi")
         return sonuc
 
     @property
+    def sorunlar(self) -> list:
+        """Oran eşiklerini aşan kapılar, bütün hisse-günlerde (TASARIM 5.13); boş liste = veri temiz."""
+        return self._sorunlar(None)
+
+    def sorunlar_uye(self, uye) -> list:
+        """Aynı kapılar yalnız evren üyesi hisse-günlerde: sınama kararı bunlarla verilir (TASARIM 5.13)."""
+        return self._sorunlar(uye)
+
+    @cached_property
     def gunler(self) -> pd.DatetimeIndex:
         """Takvim: XU100 kapanışı olan günler (TASARIM 4)."""
         f = self.fiyat
@@ -89,7 +110,7 @@ class Anlik:
             raise VeriHatasi(f"faiz serisi {s.index[s.isna()][0].date()} gününü kapsamıyor")
         return s
 
-    @property
+    @cached_property
     def olay_uyarilari(self) -> pd.DataFrame:
         parcalar = [
             _olay_denetimi(f, self.olaylar[self.olaylar["sembol"] == s]).assign(sembol=s)

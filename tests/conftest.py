@@ -2,7 +2,7 @@ import socket
 
 import pytest
 
-from tansu import kayit
+from tansu import kayit, rapor
 
 
 @pytest.fixture(autouse=True)
@@ -18,3 +18,9 @@ def ag_kapali(monkeypatch):
 def kayit_yonlendir(monkeypatch, tmp_path):
     """Gerçek `kayit/` dosyalarına yazılmaz (AGENTS test kapısı)."""
     monkeypatch.setattr(kayit, "KAYIT_DIZINI", tmp_path / "kayit")
+
+
+@pytest.fixture(autouse=True)
+def rapor_yonlendir(monkeypatch, tmp_path):
+    """Gerçek `rapor/` klasörüne yazılmaz."""
+    monkeypatch.setattr(rapor, "RAPOR_DIZINI", tmp_path / "rapor")

@@ -13,7 +13,7 @@ import pandas as pd
 import pytest
 
 from tansu import aileler, kayit, motor, veri
-from tests.test_veri import SahteKaynak, satir
+from tests.test_veri import SahteBorsapy, SahteKaynak, satir
 
 P = aileler.Parametre(periyotlar=(1, 2), esik=0.005, min_gun=3, pencere=3, isinma=4, sma_n=2)
 ATR_N = 2
@@ -31,7 +31,8 @@ def anlik_hazirla(tmp_path, son_kapanis=105.0, dakika=30):
         s.update(yuksek=y, ham_yuksek=y, dusuk=k - 0.5, ham_dusuk=k - 0.5)
         fiyat.append(s)
     return veri.indir(["XXXX"], tmp_path, SahteKaynak({"XXXX": fiyat}, {"XXXX": []}),
-                      simdi=dt.datetime(2026, 10, 5, 19, dakika))
+                      simdi=dt.datetime(2026, 10, 5, 19, dakika),
+                      borsapy=SahteBorsapy([("2025-01-01", 40.0)], {"XXXX": "X"}))  # simülatör faiz ister (bilet 10)
 
 
 def satirlar():

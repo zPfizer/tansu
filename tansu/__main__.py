@@ -53,6 +53,9 @@ def main(argv=None) -> int:
         elif a.komut == "sinama":
             s = kayit.kosu(a.kimlik or _en_yeni(kok), kok, resmi=a.resmi)
             print(f"Koşu {s['kosu_id']}: {len(s['islemler'])} işlem, {s['dusen']} düşen sinyal, özet {s['ozet'][:12]}")
+            b = s["sim"]["bilgi"]
+            print("Veri kapıları (evren üyeleri):", "; ".join(b["sorunlar"]) or "temiz",
+                  f"| kapanma (−%100): {b['kapanma']} | rapor: {s['rapor']}")
         else:
             kimlik = a.kimlik or _kimlik_bul(kok)
             print(sadakat.calistir(kimlik, kok, Path("docs") / "sadakat.md", kayit.KAYIT_DIZINI / "deneme.jsonl"))

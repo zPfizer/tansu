@@ -231,3 +231,18 @@ def test_yalniz_sermaye_farkli_tekrar_satir_tek_sayilir_ilki_kalir(tmp_path):
     f = anlik(tmp_path, [satir("2024-01-02", 100.0), a, b]).fiyat
     assert list(f["tarih"]) == [pd.Timestamp("2024-01-02"), pd.Timestamp("2024-01-03")]
     assert f["pd"].iloc[1] == 1.0
+
+
+def test_oran_kapilari_yalniz_evren_uyesi_hisse_gunlerinde_hesaplanir(tmp_path):
+    # A temiz 200 gün; B 200 günde 5 bozuk satır. Bütün satırlar: 5/400 = %1,25 > %1 → sorunlu.
+    # Yalnız A üye: 0/200 → temiz. Yalnız B üye: 5/200 = %2,5 → sorunlu. Eşik değerleri aynı kalır.
+    tarihler = pd.bdate_range("2024-01-02", periods=200)
+    b = [satir(t, 100.0) for t in tarihler]
+    for i in range(5):
+        b[10 + 30 * i] = satir(tarihler[10 + 30 * i], 100.0, ham_dusuk=101.0)
+    a = anlik(tmp_path, {"A": [satir(t, 100.0) for t in tarihler], "B": b})
+    uye = lambda s: pd.DataFrame({"sembol": s, "tarih": tarihler})  # noqa: E731
+    assert a.sorunlar == ["karantina oranı > %1"]
+    assert a.sorunlar_uye(uye("A")) == []
+    assert a.sorunlar_uye(uye("B")) == ["karantina oranı > %1"]
+    assert a.oranlar(uye("B"))[:2] == (0.025, 0.0)
