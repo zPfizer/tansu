@@ -136,10 +136,11 @@ yükseği/düşüğüne koşullu. Ölçütler kısa kendi kodumuzdur. (A3, M1, S
   - **Açılış yok.** 2000'den veri var.
 - **Yahoo kullanılmaz.** (B-2)
 - **Şirket olayları:** İş Yatırım `GetSermayeArttirimlari`, bütün kodlarıyla. Tarih hak kullanım günüdür.
-- **Faiz:** borsapy TCMB politika faizi; 2015'ten tek seri. Yalnız değişim günlerini içerir. (B-8)
+- **Faiz:** borsapy TCMB politika faizi (TCMB "1 Hafta Repo" sayfası, TradingView değil); tek seri,
+  2010'dan. Yalnız değişim günlerini içerir. (B-8)
 - **XU100 kapanışı ve takvim:** İş Yatırım `HisseTekil`'in `END_DEGER` alanı (endeks kodu 01; XU100
-  olduğu bilet 02'de doğrulanır). Yalnız kapanış.
-- **Sektör:** borsapy (KAP kaynağı); yılda bir okunur.
+  olduğu bilet 04'te doğrulandı). Yalnız kapanış.
+- **Sektör:** borsapy, KAP şirket sayfasından, sembol başına bir istek (TradingView değil); yılda bir okunur.
 - **TradingView kaynaklı veri kullanılmaz.** Koşullar makineyle işlemeyi yasaklıyor.
 - **Kullanım koşulları** (bilet 01, `docs/arastirma/kullanim-kosullari-fiyat-adimi.md`):
   - İş Yatırım'ın robots.txt dosyası `/_layouts/` yolunu yasaklıyor. Kullanım sözleşmesi bulunamadı.
@@ -268,6 +269,10 @@ hatasından** ayırmak.
 - **Veri sonu:** veri bitince açık pozisyon son kapanıştan zorunlu çıkar. K1 ve K2 aynı kuralı
   uygular. (İ: 09-092)
 - **İşlem günlüğü:** her işlemde "planlanan risk" ve "gerçekleşen kayıp" yazılır. (İ: 08-030)
+  - Planlanan risk = adet × (giriş − stop). Gerçekleşen kayıp = adet × max(0, giriş − çıkış).
+  - Karantina çıkışı: fiyat son temiz AOF, tarih karantina günüdür. Çıkış gününde (AOF'ta) çıkılmış pozisyon
+    o günün kapanış sinyalini engellemez. Isınma: hissenin n. işlem günü dolduğunda (n = 500) sinyal serbesttir.
+  - (Bilet 08: belge bu noktalarda sessizdi; kod bu okumayı uygular.)
 - **Motor sınamaları** (kod yazılmadan önce, elle hesaplı) (İ: 07-085):
   - stopta çıkış
   - boşluklu stop
@@ -522,7 +527,9 @@ Genel "Geçti" yalnız hepsi sağlanınca yazılır. (İ: 17-079)
 
 ### 5.13 Veri kapıları
 Getiri görülmeden yazılır; kural kaydına girer. (B-7, İ: 19-015)
-- **Satır ihlali:** düşük ≤ AOF ≤ yüksek ve düşük ≤ kapanış ≤ yüksek sağlanmazsa karantina.
+- **Satır ihlali:** düşük ≤ AOF ≤ yüksek ve düşük ≤ kapanış ≤ yüksek sağlanmazsa karantina. Ham ya da
+  düzeltilmiş fiyatı ≤ 0 olan satır da bozuktur. Düzeltilmiş seride bağıl 1e-4 yuvarlama payı tanınır
+  (gerçek veride düzeltilmiş seri 4 ondalığa yuvarlı: 637 satırda en çok 4,5e-5 fark; gerçek ihlaller ≥ 1,5e-3).
 - **Yapısal ihlal:** bozuk sıra, tekrar eden gün ya da ortada NaN koşuyu durdurur.
 - **Oran eşikleri:** karantina hisse-gün oranı > %1 ya da olay denetimi farkı olan gün oranı > %2 ise
   koşu "veri sorunlu" olur.
@@ -614,7 +621,10 @@ Getiri görülmeden yazılır; kural kaydına girer. (B-7, İ: 19-015)
 6. Sıkışma oranının paydası düşüş trendinde EMA200 mü en küçük EMA mı? KRDMD'de ikisi aynı.
 7. Bireysel yatırımcı için vergi.
 8. `HACIM` toptan ya da çapraz işlemleri içeriyor mu? İçeriyorsa medyan şişkin olabilir. (İ: 08-027)
-9. Faiz serisi bir haftalık repo mu? (İ: 08-071)
+9. ~~Faiz serisi bir haftalık repo mu?~~ Evet (bilet 04): TCMB "1 Hafta Repo" tablosu, 2010-05-20'den 57 değişim
+   günü. Sınır: 25.11.2016 – 01.06.2018 arası seri %8 sabit görünür; o dönemde fiili fonlamanın geç likidite
+   penceresinden (daha yüksek) yapıldığı bilinen bilgidir ama bu bilette doğrulanmadı. Doğruysa nakit faizi
+   o dönemde düşük kalır (muhafazakâr).
 10. Fiyat adımı tablosunun 2.500 TL üstü bandı ve 2015–2016'daki 100 TL altı bantlar (5.1) veride
     görülmedi.
 

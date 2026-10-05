@@ -130,6 +130,14 @@ Sonuçlar (Sorgu 3, 05.10.2026):
   - Dönem ortalaması %0,638.
   - 09.04.2026 EMA değerleri lejantla birebir.
   - Grafik sonu ve Mart tepesi görselle ±0,3 içinde.
+- **EMA sıkışması, bilet 05 ölçümü (İş Yatırım ham seri, `docs/sadakat.md`):** yukarıdaki "birebir" Yahoo
+  serisiyle ölçülmüştü; İş serisinde EMA200 sıkı toleransı geçmiyor. Karar: sonuç **gevşek bantla üretildi**.
+  - Dönemi, gün sayısını ve ortalamayı tam tutan tek aday "son 3 yıl" (son 2 yıl da tutuyor; ikisi aynı
+    sonucu veriyor).
+  - Bu adayda EMA20/50/100 sıkı toleransta; EMA200 28,4366 (Tansu 28,43), gevşek bantta (±0,05).
+  - Neden: EMA200 uzun belleklidir; Tansu'nun veri başlangıcı bilinmiyor. Oran formülü değişmez.
+  - Bütün geçmişle dönem bir gün erken başlıyor (21 gün, %0,665). Sınamada veri başlangıcı sabit
+    tutulur ve rapora yazılır (İ: 06-014).
 - **Çift Z'si üretilemedi** (40.560 aday). Tansu'nun ham fiyat kullandığı doğrulandı (14.05.2025 ipucu
   kutusu).
 
