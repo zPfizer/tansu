@@ -27,6 +27,7 @@ ADIM_ESKI = [0.01, 0.02, 0.05, 0.1, 0.1, 0.1, 0.1, 0.1]
 ADIM_YENI = [0.01, 0.02, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5]
 FIYAT_SUTUNLARI = ["ham_kapanis", "ham_aof", "ham_yuksek", "ham_dusuk", "kapanis", "aof", "yuksek", "dusuk", "hacim"]
 KARANTINA_ESIK, DENETIM_ESIK, INMEYEN_ESIK = 0.01, 0.02, 5  # TASARIM 5.13
+KAYNAK_GUNU_EN_AZ = 20  # TASARIM 5.13: kaynak günü hatası için en az satır
 
 
 class VeriHatasi(Exception):
@@ -51,7 +52,18 @@ class Anlik:
             _gunler(f, self.olaylar[self.olaylar["sembol"] == s], takvim).assign(sembol=s)
             for s, f in self.fiyat.groupby("sembol", sort=False)
         ]
-        return pd.concat(parcalar).rename_axis("tarih").reset_index()
+        g = pd.concat(parcalar).rename_axis("tarih").reset_index()
+        d = g[~g["eksik"]].groupby("tarih")["karantina"].agg(["sum", "size"])
+        kaynak = g["tarih"].isin(d.index[(d["size"] >= KAYNAK_GUNU_EN_AZ) & (d["sum"] * 2 >= d["size"])])
+        g.loc[kaynak, ["eksik", "karantina"]] = [True, False]  # TASARIM 5.13: kaynak günü hatası = eksik gün
+        g.loc[kaynak, ["islem", "kilit_tavan", "kilit_taban", "kilit_tavan_duyarli", "kilit_taban_duyarli"]] = False
+        return g
+
+    @cached_property
+    def kaynak_gunleri(self) -> list:
+        """Kaynak günü hatası olan günler (TASARIM 5.13): sembollerin hepsi eksik, gün takvimde var."""
+        e = self.gun_tablosu.groupby("tarih")["eksik"].all()
+        return list(e.index[e])
 
     def oranlar(self, uye=None) -> tuple:
         """(karantina oranı, olay denetimi farkı oranı, hisse-gün sayısı).
@@ -72,6 +84,7 @@ class Anlik:
             sonuc.append("karantina oranı > %1")
         if olay > DENETIM_ESIK:
             sonuc.append("olay denetimi farkı olan gün oranı > %2")
+        sonuc += [f"kaynak günü hatası: {t.date()}" for t in self.kaynak_gunleri]
         if len(self.inmeyen) > INMEYEN_ESIK:
             sonuc.append(f"{len(self.inmeyen)} hisse inmedi")
         return sonuc

@@ -159,6 +159,34 @@ def test_eksik_gun_nan_kalir_hacimsiz_gun_islem_gunu_degildir(tmp_path):
     assert gun(a, "2024-01-04", "B")["islem"]
 
 
+def kaynak_gunu_verisi(tmp_path, bozuk_sayisi):
+    # 20 sembol, 3 gün (02-04.01.2024); 03.01'de ilk `bozuk_sayisi` sembolün satırı bozuk (düşük 101 > AOF 100).
+    tarihler = ["2024-01-02", "2024-01-03", "2024-01-04"]
+    return anlik(tmp_path, {f"S{i}": [
+        satir(t, 100.0, ham_dusuk=101.0) if t == tarihler[1] and i < bozuk_sayisi else satir(t, 100.0)
+        for t in tarihler] for i in range(20)})
+
+
+def test_ayni_gun_yarisi_karantinadaysa_kaynak_gunu_hatasi_eksik_gundur(tmp_path):
+    # 20 satırdan 10'u bozuk = tam yarı (≥ %50): kaynak günü. 20 sembolün hepsi 03.01'de eksik, karantinasız,
+    # işlemsiz; bayrak yok. Gün tarihle sorunlar listesinde; kapı oranı 0/60 (karantina yok).
+    a = kaynak_gunu_verisi(tmp_path, 10)
+    g = a.gun_tablosu
+    d = g[g["tarih"] == pd.Timestamp("2024-01-03")]
+    assert len(d) == 20 and d["eksik"].all() and not d["karantina"].any() and not d["islem"].any()
+    assert not g[g["tarih"] != pd.Timestamp("2024-01-03")]["karantina"].any()
+    assert a.sorunlar == ["kaynak günü hatası: 2024-01-03"]
+
+
+def test_yariden_az_karantina_hisse_sorunudur_kaynak_gunu_degildir(tmp_path):
+    # 9/20 = %45 < %50: bu 9 hisse karantinada kalır, öbür 11 hisse eksik olmaz.
+    a = kaynak_gunu_verisi(tmp_path, 9)
+    g = a.gun_tablosu
+    d =g[g["tarih"] == pd.Timestamp("2024-01-03")]
+    assert (d["karantina"].sum(), d["eksik"].sum()) == (9, 0)
+    assert a.sorunlar == ["karantina oranı > %1"]  # 9/60 = %15
+
+
 def test_fiyat_adimi_tablosu_06_kasim_2023te_degisir():
     tarih = pd.to_datetime(["2023-11-03", "2023-11-06"])
     assert list(veri.adim(np.array([19.99, 300.0]), tarih)) == [0.01, 0.25]
