@@ -22,7 +22,8 @@ Veri kapıları (TASARIM 5.13) kalan bir indirmeyi anlık görüntü yapmaz.
   - Duyarlılık sürümü: düşük = yüksek, hacim > 0 ve fiyat limitte.
 - [ ] Karantina:
   - Limiti (+%0,5) aşan ve olayla açıklanmayan gün karantinaya alınır.
-  - Bozuk satır da karantinaya alınır (düşük ≤ AOF ≤ yüksek, düşük ≤ kapanış ≤ yüksek).
+  - Bozuk satır da karantinaya alınır (düşük ≤ AOF ≤ yüksek, düşük ≤ kapanış ≤ yüksek; ham ya da
+    düzeltilmiş fiyatı ≤ 0 olan satır da bozuktur, 02'nin olay denetimi bunları atlar).
   - Bilinmeyen olay kodu ya da çarpanı 1 olan kayıt istisna sayılmaz.
 - [ ] Eksik gün NaN kalır. Hacmi 0 olan gün işlem günü sayılmaz.
 - [ ] Yapısal ihlal (sıra bozuk, tekrar eden gün, ortada NaN) indirmeyi durdurur.
