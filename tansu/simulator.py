@@ -75,6 +75,13 @@ def _kural(t, days, gunler, g, C, Lq, masraf):
     cikis = {}
     for k, d in t["cikis_tarih"].items():
         cikis.setdefault(d, []).append(k)
+    # K1 bu işlevi tekrar tekrar çağırır: pandas skaler erişimi yerine sütunlar bir kez sözlüğe alınır (sonuç aynı).
+    sembol, gfiyat, cfiyat = (t[c].to_dict() for c in ("sembol", "giris_fiyat", "cikis_fiyat"))
+    adet0, risk0 = t["adet"].to_dict(), t["planlanan_risk"].to_dict()
+    satir = Lq.index.get_indexer(t["sinyal_tarih"])
+    if (satir < 0).any():
+        raise KeyError("sinyal günü likidite tablosunda yok")
+    lq = dict(zip(t.index, Lq.to_numpy()[satir, [Lq.columns.get_loc(s) for s in t["sembol"]]]))
     acik, alinan, reddedilen = {}, {}, 0
     nakit, ozk_onceki, ozk, pay = SERMAYE, SERMAYE, [], []
 
@@ -82,28 +89,25 @@ def _kural(t, days, gunler, g, C, Lq, masraf):
         nonlocal nakit
         for k in cikis.get(d, ()):
             if k in acik:
-                nakit += acik.pop(k) * t.at[k, "cikis_fiyat"] * (1 - masraf)
+                nakit += acik.pop(k) * cfiyat[k] * (1 - masraf)
 
     for i, d in enumerate(days):
         nakit *= 1 + g[i]
         cik(d)
-        adaylar = sorted(giris.get(d, ()), key=lambda k: (-Lq.at[t.at[k, "sinyal_tarih"], t.at[k, "sembol"]],
-                                                         t.at[k, "sembol"]))
+        adaylar = sorted(giris.get(d, ()), key=lambda k: (-lq[k], sembol[k]))
         for k in adaylar:
-            r = t.loc[k]
-            sinir = [RISK * ozk_onceki / (r.planlanan_risk / r.adet), TAVAN * ozk_onceki / r.giris_fiyat,
-                     LIKIDITE * Lq.at[r.sinyal_tarih, r.sembol] / r.giris_fiyat,
-                     nakit / (r.giris_fiyat * (1 + masraf))]
+            sinir = [RISK * ozk_onceki / (risk0[k] / adet0[k]), TAVAN * ozk_onceki / gfiyat[k],
+                     LIKIDITE * lq[k] / gfiyat[k], nakit / (gfiyat[k] * (1 + masraf))]
             adet = int(np.floor(min(sinir)))
             if len(acik) >= EN_FAZLA or adet < 1:
                 reddedilen += 1
                 continue
-            nakit -= adet * r.giris_fiyat * (1 + masraf)
+            nakit -= adet * gfiyat[k] * (1 + masraf)
             acik[k] = adet
-            alinan[k] = (adet, SINIRLAR[int(np.argmin(sinir))], adet * r.planlanan_risk / r.adet / ozk_onceki)
+            alinan[k] = (adet, SINIRLAR[int(np.argmin(sinir))], adet * risk0[k] / adet0[k] / ozk_onceki)
         cik(d)  # aynı gün girip çıkan (giriş günü stop) işlemler
-        fiyat = [Cn[pos[i], kol[t.at[k, "sembol"]]] for k in acik]
-        mv = sum(a * (p if np.isfinite(p) else t.at[k, "giris_fiyat"]) for (k, a), p in zip(acik.items(), fiyat))
+        fiyat = [Cn[pos[i], kol[sembol[k]]] for k in acik]
+        mv = sum(a * (p if np.isfinite(p) else gfiyat[k]) for (k, a), p in zip(acik.items(), fiyat))
         ozk_onceki = nakit + mv
         ozk.append(ozk_onceki)
         pay.append(mv / ozk_onceki)

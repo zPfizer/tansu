@@ -1,4 +1,4 @@
-"""Komut girişi: `python -m tansu sadakat | kayit | sinama | evren-indir [--kok veri] [--kimlik KIMLIK] [--resmi] [--son]` (TASARIM 3)."""
+"""Komut girişi: `python -m tansu sadakat | kayit | sinama | denetim | evren-indir [--kok veri] [--kimlik KIMLIK] [--resmi] [--son]` (TASARIM 3)."""
 
 import argparse
 import datetime as dt
@@ -6,7 +6,7 @@ import json
 import sys
 from pathlib import Path
 
-from tansu import evren, kayit, kaynak, sadakat, simulator, veri
+from tansu import denetim, evren, kayit, kaynak, sadakat, simulator, veri
 
 
 def _kimlik_bul(kok: Path) -> str:
@@ -46,16 +46,35 @@ def _en_yeni(kok: Path) -> str:
     return klasorler[-1]
 
 
+def _denetim(n, tekrar) -> int:
+    """Boru hattı denetimi (TASARIM 5.12): sonuç docs/denetim.md, rapor ve günlükte (`tur=destek`); yanlış kabul > %5 ise çıkış 1."""
+    s = denetim.calistir(n=n, tekrar=tekrar)
+    yol, html = denetim.yaz(s)
+    kayit.denetim_yaz(s)
+    for aile, y in s["yanlis_kabul"].items():
+        g = s["guc"][aile]
+        print(f"{aile}: yanlış kabul {y['olcut_1_4']['adet']}/{y['olcut_1_4']['n']} (Kâğıt {y['kagit']['adet']}), "
+              f"güç {g['olcut_1_4']['adet']}/{g['olcut_1_4']['n']} (Kâğıt {g['kagit']['adet']})")
+    print(f"Boru hattı denetimi {'geçti' if s['gecti'] else 'KALDI'}: {yol}, {html}")
+    if not s["gecti"]:
+        print("Yanlış kabul > %5: ilk resmi koşu yapılmaz (TASARIM 5.12).", file=sys.stderr)
+    return 0 if s["gecti"] else 1
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="tansu")
-    ap.add_argument("komut", choices=["sadakat", "kayit", "sinama", "evren-indir", "sektor-indir"])
+    ap.add_argument("komut", choices=["sadakat", "kayit", "sinama", "denetim", "evren-indir", "sektor-indir"])
     ap.add_argument("--kok", default="veri")
     ap.add_argument("--kimlik")
     ap.add_argument("--resmi", action="store_true")
     ap.add_argument("--son", action="store_true", help="tam K1 tekrarı: max(1.000, 200·m); yoksa geliştirme (200)")
+    ap.add_argument("--n", type=int, default=200, help="denetim: boş dünya tekrarı (etkili dünya n/5)")
+    ap.add_argument("--tekrar", type=int, default=denetim.TEKRAR, help="denetim: her tekrarda K1 tekrarı B")
     a = ap.parse_args(argv)
     kok = Path(a.kok)
     try:
+        if a.komut == "denetim":
+            return _denetim(a.n, a.tekrar)
         if a.komut == "evren-indir":
             print(_evren_indir(kok))
         elif a.komut == "sektor-indir":

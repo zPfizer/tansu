@@ -5,7 +5,9 @@ bayrakları ham seriden gelir (`veri.Anlik.gun_tablosu`). K2 ve faiz `simulator.
 """
 
 import itertools
-from dataclasses import dataclass
+from collections import Counter
+from concurrent.futures import ProcessPoolExecutor
+from dataclasses import dataclass, replace
 
 import numpy as np
 import pandas as pd
@@ -33,24 +35,30 @@ def secim_gunleri(gunler, ilk_konum) -> dict:
     return {int(y): int(s) for y, s in ilk.items() if s >= ilk_konum}
 
 
-def secim(Kc, uye, sektor, s, p=Parametre()) -> pd.DataFrame:
-    """`s` konumundaki kapanışta seçilen çiftler: sektor, y, x, p, beta. `Kc`: düzeltilmiş kapanış (gün × sembol)."""
+def adaylar(Kc, uye, sektor, s, p=Parametre()) -> list:
+    """`s` konumundaki kapanışta eşbütünleşme p < `p.p_esik` olan aynı sektör çiftleri: (p, y, x, sektor, beta), (p, y, x) sırasıyla.
+    Çift seçimi (`sec`) bu listenin önekidir: daha dar bir `p_esik` için eşbütünleşme yeniden hesaplanmaz."""
     pencere = Kc.iloc[max(0, s - p.secim_gun + 1): s + 1]
-    bos = pd.DataFrame(columns=["sektor", "y", "x", "p", "beta"])
     if len(pencere) < p.secim_gun:
-        return bos
-    adaylar = sorted(h for h in uye if h in sektor and h in pencere.columns and pencere[h].notna().all())
-    L = np.log(pencere[adaylar])
+        return []
+    aday = sorted(h for h in uye if h in sektor and h in pencere.columns and pencere[h].notna().all())
+    L = np.log(pencere[aday])
     aday_cift = []
-    for ad, grup in itertools.groupby(sorted(adaylar, key=lambda h: (sektor[h], h)), key=lambda h: sektor[h]):
+    for ad, grup in itertools.groupby(sorted(aday, key=lambda h: (sektor[h], h)), key=lambda h: sektor[h]):
         for y, x in itertools.combinations(sorted(grup), 2):  # Y = sembol sırasına göre ilk
             beta = L[y].cov(L[x]) / L[x].var()
             if beta > 0:
                 pv = coint(L[y].to_numpy(), L[x].to_numpy())[1]
                 if pv < p.p_esik:
                     aday_cift.append((pv, y, x, ad, beta))
+    return sorted(aday_cift, key=lambda c: c[:3])
+
+
+def sec(aday, p=Parametre()) -> pd.DataFrame:
+    """`adaylar` listesinden çift seçimi: sektor, y, x, p, beta; en küçük p önce, en fazla `p.en_fazla`, sektör başına `p.sektor_basina`."""
+    bos = pd.DataFrame(columns=["sektor", "y", "x", "p", "beta"])
     secilen, kullanilan, sektor_sayisi = [], set(), {}
-    for pv, y, x, ad, beta in sorted(aday_cift, key=lambda c: c[:3]):
+    for pv, y, x, ad, beta in (c for c in aday if c[0] < p.p_esik):
         if len(secilen) == p.en_fazla:
             break
         if {y, x} & kullanilan or sektor_sayisi.get(ad, 0) >= p.sektor_basina:
@@ -59,6 +67,11 @@ def secim(Kc, uye, sektor, s, p=Parametre()) -> pd.DataFrame:
         kullanilan |= {y, x}
         sektor_sayisi[ad] = sektor_sayisi.get(ad, 0) + 1
     return pd.DataFrame(secilen, columns=bos.columns)
+
+
+def secim(Kc, uye, sektor, s, p=Parametre()) -> pd.DataFrame:
+    """`s` konumundaki kapanışta seçilen çiftler: sektor, y, x, p, beta. `Kc`: düzeltilmiş kapanış (gün × sembol)."""
+    return sec(adaylar(Kc, uye, sektor, s, p), p)
 
 
 def hedef(Kc, y, x, p=Parametre()) -> np.ndarray:
@@ -177,8 +190,47 @@ def _sonuc(M, setler, slot_sayisi, m) -> dict:
             "elli_elli": elli, "yatirim": pd.Series(pay, index=days), "yillik": yillik}
 
 
-def hazirla(anlik, evr, bas=simulator.BASLANGIC, p=Parametre()) -> dict:
-    """Seçimler, fiyat matrisleri ve bayraklar (`M`); `calistir` ve K1 ortak kullanır."""
+POOL_ESIK = 3000  # yıllık eşbütünleşme sınamaları bu çift sayısından çoksa yıllar ayrı süreçlerde koşar (sonuç aynı)
+
+
+def _adaylar_yil(arg) -> list:
+    pencere, uye, sektor, p = arg
+    return adaylar(pencere, uye, sektor, len(pencere) - 1, p)
+
+
+def _adaylar_yillar(Kc, evr, gunler, yillar, sektor, p) -> dict:
+    """Yıl → (seçim günü konumu, `adaylar` listesi). Eşbütünleşme çift başına ~10 ms: gerçek veride yılda ~1.000 çift."""
+    isler = []
+    for yil, s in yillar.items():
+        uye = [h for h in evr.get(gunler[s].to_period("M"), []) if h in sektor and h in Kc.columns]
+        isler.append((Kc.iloc[max(0, s - p.secim_gun + 1): s + 1][uye], uye, sektor, p))
+    sayi = sum(k * (k - 1) // 2 for _, uye, sek, _ in isler for k in Counter(sek[h] for h in uye).values())
+    if sayi > POOL_ESIK:
+        with ProcessPoolExecutor() as havuz:
+            sonuc = list(havuz.map(_adaylar_yil, isler))
+    else:
+        sonuc = list(map(_adaylar_yil, isler))
+    return {yil: (s, a) for (yil, s), a in zip(yillar.items(), sonuc)}
+
+
+def setler_sec(h, p) -> tuple:
+    """(seçimler tablosu, yıl setleri): `hazirla` çıktısının aday listelerinden `p` kuralıyla çift seçimi (ızgara için)."""
+    satirlar, setler = [], []
+    for yil, (s, aday) in h["aday"].items():
+        c = sec(aday, p).assign(yil=yil)
+        satirlar.append(c)
+        if s + 1 < len(h["gunler"]):
+            setler.append({"bas": s + 1, "yil": yil, "ciftler": list(zip(c["y"], c["x"]))})
+    secimler = pd.concat(satirlar, ignore_index=True) if satirlar else pd.DataFrame(columns=["sektor", "y", "x", "p", "beta", "yil"])
+    return secimler[["yil", "sektor", "y", "x", "p", "beta"]], setler
+
+
+def hazirla(anlik, evr, bas=simulator.BASLANGIC, p=Parametre(), aday_esik=None) -> dict:
+    """Seçimler, fiyat matrisleri ve bayraklar (`M`); `calistir` ve K1 ortak kullanır.
+
+    `aday_esik`: eşbütünleşme adayları bu p eşiğine dek tutulur (varsayılan `p.p_esik`); sağlamlık ızgarası daha geniş
+    eşiği bir kez hesaplar, daha dar `p_esik` hücreleri `setler_sec` ile aynı adaylardan seçer. Matrisler geniş seçimin
+    sembollerini kapsar; bir çiftin sonucu başka sembollerden bağımsızdır."""
     gunler = anlik.gunler
     ilk = simulator.ilk_gun(anlik, bas)
     days = gunler[gunler >= ilk]
@@ -191,15 +243,11 @@ def hazirla(anlik, evr, bas=simulator.BASLANGIC, p=Parametre()) -> dict:
     f = anlik.fiyat[anlik.fiyat["sembol"].isin(uye | set(sabit))]
     Kc = f.pivot(index="tarih", columns="sembol", values="kapanis").reindex(gunler)
     yillar = secim_gunleri(gunler, ilk_konum)
-    satirlar, setler = [], []
-    for yil, s in yillar.items():
-        c = secim(Kc, evr.get(gunler[s].to_period("M"), []), sektor, s, p).assign(yil=yil)
-        satirlar.append(c)
-        if s + 1 < len(gunler):
-            setler.append({"bas": s + 1, "yil": yil, "ciftler": list(zip(c["y"], c["x"]))})
-    secimler = pd.concat(satirlar, ignore_index=True) if satirlar else pd.DataFrame(columns=["sektor", "y", "x", "p", "beta", "yil"])
-    secimler = secimler[["yil", "sektor", "y", "x", "p", "beta"]]
-    z = simulator.zemin(anlik, evr, days, set(secimler["y"]) | set(secimler["x"]) | set(sabit), kg)
+    genis = replace(p, p_esik=max(p.p_esik, aday_esik or 0.0))
+    h = {"aday": _adaylar_yillar(Kc, evr, gunler, yillar, sektor, genis), "gunler": gunler}
+    secimler, setler = setler_sec(h, p)
+    tum = setler_sec(h, genis)[0]
+    z = simulator.zemin(anlik, evr, days, set(tum["y"]) | set(tum["x"]) | set(sabit), kg)
     kol = {h: j for j, h in enumerate(z["C"].columns)}
     gt = anlik.gun_tablosu
     gt = gt[gt["sembol"].isin(kol)]
@@ -220,7 +268,7 @@ def hazirla(anlik, evr, bas=simulator.BASLANGIC, p=Parametre()) -> dict:
          "olu": {h: gunler.get_loc(gun) for h, (_, gun) in kg.items() if gun in gunler}}
     sabit_set = [{"bas": ilk_konum + 1, "yil": None, "ciftler": [sabit]}] if sabit else []
     return {"M": M, "setler": setler, "secim": secimler, "sabit": sabit, "sabit_set": sabit_set, "p": p, "Kc": Kc,
-            "gunler": gunler}
+            "gunler": gunler, "aday": h["aday"]}
 
 
 def calistir(anlik, evr, bas=simulator.BASLANGIC, p=Parametre(), masraflar=simulator.MASRAFLAR, h=None) -> dict:

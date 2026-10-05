@@ -13,18 +13,17 @@ from pathlib import Path
 
 import numpy as np
 
-from tansu import aileler, ciftbolme, istatistik, motor, rapor, simulator, veri
+from tansu import aileler, ciftbolme, istatistik, motor, rapor, saglamlik, simulator, veri
 
 KAYIT_DIZINI = Path("kayit")  # testte conftest yönlendirir
 PAKET = Path(__file__).parent
-# Elle yazılmış, kural kaydına giren dosyalar (K1 kodu `istatistik.py`'dir).
+# Elle yazılmış, kural kaydına giren dosyalar (K1 kodu `istatistik.py`, sağlamlık ızgarası `saglamlik.py`'dir).
 KOD_DOSYALARI = ["aileler.py", "cift.py", "ciftbolme.py", "evren.py", "gostergeler.py", "istatistik.py", "motor.py",
-                 "simulator.py"]
+                 "saglamlik.py", "simulator.py"]
 GELISTIRME, TAM_TABAN, TAM_CARPAN = 200, 1000, 200  # TASARIM 5.7: B = 200 geliştirmede, tamda max(1.000, 200·m)
 AILELER = (simulator.AILE, ciftbolme.AILE)
-HASH_DISI = ["__init__.py", "__main__.py", "kaynak.py", "kayit.py", "rapor.py", "sadakat.py", "veri.py"]
-# KURALLAR §3 madde 2 (YORUM): eşik, en az gün, giriş penceresi.
-IZGARA = {"esik": [0.010, 0.012, 0.015], "min_gun": [2, 3, 5], "pencere": [5, 10, 20]}
+HASH_DISI = ["__init__.py", "__main__.py", "denetim.py", "kaynak.py", "kayit.py", "rapor.py", "sadakat.py", "veri.py"]
+IZGARA = saglamlik.IZGARA  # KURALLAR §3 (YORUM): her ailenin önceden yazılmış ızgarası
 
 
 class KayitHatasi(Exception):
@@ -73,6 +72,13 @@ def kayitla(p=aileler.Parametre(), atr_n=motor.ATR_N) -> dict:
     return kural
 
 
+def denetim_yaz(sonuc, p=aileler.Parametre(), atr_n=motor.ATR_N) -> None:
+    """Boru hattı denetimi sonucunu (`gecti` bayrağı ve oranlar) bu kodun hash'iyle günlüğe yazar (`tur=destek`, Holm m'ye girmez)."""
+    kural = _kural(p, atr_n)
+    _yaz({"tur": "destek", "olay": "denetim", "tarih": _simdi(), "kod_hash": kural["kod_hash"],
+          "kural_id": kural["kural_id"], **_temiz(sonuc)})
+
+
 def deneme_sayisi() -> int:
     """Holm'un m'si: başlamış her `deneme` koşusu; `bitti` satırı aranmaz."""
     return sum(s["olay"] == "basladi" and s["tur"] == "deneme" for s in _oku())
@@ -114,6 +120,12 @@ def holm_hesapla(kural_id, ps, resmi) -> dict:
     return sonuc
 
 
+def denetim_gecti(kod_hash) -> bool:
+    """Bu kod hash'iyle yapılmış son boru hattı denetimi geçti mi (`tur=destek`, `olay=denetim`)? Yoksa yanlış (TASARIM 5.12)."""
+    satirlar = [s["gecti"] for s in _oku() if s["olay"] == "denetim" and s["kod_hash"] == kod_hash]
+    return bool(satirlar) and satirlar[-1]
+
+
 def tekrar_sayisi(son, p=aileler.Parametre(), atr_n=motor.ATR_N) -> int:
     """K1 tekrar sayısı B: geliştirmede 200; `--son`da max(1.000, 200·m), m = günlükteki ilk resmi p'ler + bu kuralın yeni p'leri."""
     if not son:
@@ -146,8 +158,8 @@ def _fazla(b, t):
     return t["getiri"].to_numpy() - simulator.sepet_getirisi(b, t["giris_tarih"], t["cikis_tarih"])
 
 
-def _kabul(b, sonuclar, bilgi, holm, k1, islem_yok, gun_sutun, tohum) -> dict:
-    """Bir ailenin kabul tablosu ve güven aralığı; `sonuclar`: masraf → {islemler, ozkaynak, k2, yillik}."""
+def _kabul(b, sonuclar, bilgi, holm, k1, islem_yok, gun_sutun, tohum, sag) -> dict:
+    """Bir ailenin kabul tablosu ve güven aralığı; `sonuclar`: masraf → {islemler, ozkaynak, k2, yillik}; `sag`: ızgara hücreleri."""
     t = sonuclar[0.003]["islemler"]
     gunluk = {m: s["ozkaynak"].pct_change().iloc[1:] - s["k2"].pct_change().iloc[1:] for m, s in sonuclar.items()}
     g = gunluk[0.003].to_numpy()
@@ -159,10 +171,10 @@ def _kabul(b, sonuclar, bilgi, holm, k1, islem_yok, gun_sutun, tohum) -> dict:
              "p": holm["holm_p"], "portfoy": {m: float(x.mean()) for m, x in gunluk.items()},
              "yillik": sonuclar[0.003]["yillik"]["fazla"], "bas": bilgi["basla"], "bitis": bilgi["bitis"],
              "islem_yok": islem_yok, "islem_fazla": _fazla(b, t), "islem": len(t), "gun": int(t[gun_sutun].nunique()),
-             "mde": mde, "islem_yil": len(t) / yil, "ozkaynak": sonuclar[0.005]["ozkaynak"], "saglamlik": None}
+             "mde": mde, "islem_yil": len(t) / yil, "ozkaynak": sonuclar[0.005]["ozkaynak"], "saglamlik": saglamlik.oran(sag)}
     sonuc = istatistik.kabul(girdi)
     sonuc.update(ci=istatistik.blok_aralik(g, istatistik.blok_uzunlugu(tutma), tohum=tohum) if len(g) else (float("nan"),) * 2,
-                 mde=mde, gercek=girdi["fazla"], holm=holm, k1=k1)
+                 mde=mde, gercek=girdi["fazla"], holm=holm, k1=k1, izgara=sag)
     return sonuc
 
 
@@ -181,6 +193,32 @@ def _ortam() -> dict:
             "lock_sha256": _ozet(lock.read_bytes()) if lock.exists() else None}
 
 
+def hesapla(anlik, p, atr_n, bas, tekrar, tohum, holm_fn) -> dict:
+    """Günlüksüz çekirdek: motor, simülatör, çift bölmesi, K1, sağlamlık ızgarası ve kabul tablosu (`kosu` ve boru hattı denetimi).
+
+    `holm_fn`: {aile: p} → {aile: holm_hesapla çıktısı}. `tekrar` 0 ise K1, ızgara ve kabul yoktur (None)."""
+    ilk = simulator.ilk_gun(anlik, bas)
+    evr = simulator.evrenler(anlik, ilk, anlik.gunler[-1])
+    uye = simulator.uyeler(anlik, evr, ilk)
+    islemler, dusen = motor.sinama(anlik, p, atr_n, uye)
+    sim = simulator.calistir(anlik, islemler, dusen, bas, evr=evr)
+    h = ciftbolme.hazirla(anlik, evr, bas, aday_esik=max(IZGARA[ciftbolme.AILE]["p_esik"]))
+    cift = ciftbolme.calistir(anlik, evr, bas, h=h)
+    k1 = kabul = None
+    if tekrar:  # K1 p'si, sağlamlık, Holm ve kabul tablosu (TASARIM 5.7, 5.10, 5.11, 5.12)
+        b = simulator.k1_baglam(anlik, evr, bas)
+        k1 = {simulator.AILE: istatistik.ema_k1(anlik, b, p, atr_n, uye, tekrar, tohum),
+              ciftbolme.AILE: istatistik.cift_k1(h, b, tekrar, tohum)}
+        sag = {simulator.AILE: saglamlik.ema(anlik, b, p, atr_n, uye),
+               ciftbolme.AILE: saglamlik.cift(anlik, evr, b, bas, h["p"], h=h)}
+        holm = holm_fn({a: k["p"] for a, k in k1.items()})
+        kabul = {simulator.AILE: _kabul(b, sim["masraf"], sim["bilgi"], holm[simulator.AILE], k1[simulator.AILE], [],
+                                        "sinyal_tarih", tohum, sag[simulator.AILE]),
+                 ciftbolme.AILE: _kabul(b, cift["masraf"], sim["bilgi"], holm[ciftbolme.AILE], k1[ciftbolme.AILE],
+                                        cift["islem_yok"], "giris_tarih", tohum, sag[ciftbolme.AILE])}
+    return {"islemler": islemler, "dusen": dusen, "sim": sim, "cift": cift, "k1": k1, "kabul": kabul}
+
+
 def kosu(kimlik, kok, p=aileler.Parametre(), atr_n=motor.ATR_N, tur="deneme", resmi=False, tohum=0,
          tekrar=0, git=_git, bas=simulator.BASLANGIC, son=False) -> dict:
     """Kural kaydını denetler, manifesti yeniden hash'ler, `basladi` ve `bitti` satırlarını yazar.
@@ -195,6 +233,10 @@ def kosu(kimlik, kok, p=aileler.Parametre(), atr_n=motor.ATR_N, tur="deneme", re
     if resmi and 0 < tekrar < tekrar_sayisi(True, p, atr_n):
         raise KayitHatasi(f"Resmi koşu tam tekrar ister: tekrar {tekrar} < {tekrar_sayisi(True, p, atr_n)}; "
                           "`sinama --son --resmi` kullan.")
+    if resmi and not denetim_gecti(kural["kod_hash"]) and not any(
+            s["olay"] == "basladi" and s["tur"] == "deneme" and s.get("resmi") for s in _oku()):
+        raise KayitHatasi("İlk resmi koşu yapılmaz: bu kodla geçen boru hattı denetimi yok (yanlış kabul ≤ %5 şartı); "
+                          "`python -m tansu denetim` çalıştır (TASARIM 5.12).")
     anlik = veri.oku(kimlik, kok)  # manifesti yeniden hash'ler; uyuşmazsa VeriHatasi
     manifest = _ozet((Path(kok) / "ag" / kimlik / "manifest.json").read_bytes())
     commit, kirli = git()
@@ -204,23 +246,9 @@ def kosu(kimlik, kok, p=aileler.Parametre(), atr_n=motor.ATR_N, tur="deneme", re
           "param_hash": kural["param_hash"], "param": kural["param"], "anlik": kimlik,
           "manifest_sha256": manifest, "git_commit": commit, "tohum": tohum, "tekrar": tekrar, "son": bool(son),
           "ortam": _ortam(), "resmi": bool(resmi) and not kirli, "kirli": kirli})
-    ilk = simulator.ilk_gun(anlik, bas)
-    evr = simulator.evrenler(anlik, ilk, anlik.gunler[-1])
-    uye = simulator.uyeler(anlik, evr, ilk)
-    islemler, dusen = motor.sinama(anlik, p, atr_n, uye)
-    sim = simulator.calistir(anlik, islemler, dusen, bas, evr=evr)
-    h = ciftbolme.hazirla(anlik, evr, bas)
-    cift = ciftbolme.calistir(anlik, evr, bas, h=h)
-    k1 = kabul = holm = None
-    if tekrar:  # K1 p'si, Holm ve kabul tablosu (TASARIM 5.7, 5.11, 5.12)
-        b = simulator.k1_baglam(anlik, evr, bas)
-        k1 = {simulator.AILE: istatistik.ema_k1(anlik, b, p, atr_n, uye, tekrar, tohum),
-              ciftbolme.AILE: istatistik.cift_k1(h, b, tekrar, tohum)}
-        holm = holm_hesapla(kural["kural_id"], {a: k["p"] for a, k in k1.items()}, bool(resmi) and not kirli)
-        kabul = {simulator.AILE: _kabul(b, sim["masraf"], sim["bilgi"], holm[simulator.AILE], k1[simulator.AILE], [],
-                                        "sinyal_tarih", tohum),
-                 ciftbolme.AILE: _kabul(b, cift["masraf"], sim["bilgi"], holm[ciftbolme.AILE], k1[ciftbolme.AILE],
-                                        cift["islem_yok"], "giris_tarih", tohum)}
+    h = hesapla(anlik, p, atr_n, bas, tekrar, tohum,
+                lambda ps: holm_hesapla(kural["kural_id"], ps, bool(resmi) and not kirli))
+    islemler, dusen, sim, cift, k1, kabul = (h[k] for k in ("islemler", "dusen", "sim", "cift", "k1", "kabul"))
     html, csv = rapor.yaz(sim, {"kosu_id": kosu_id, "anlik": kimlik, "kod_hash": kural["kod_hash"],
                                 "holm_tarih": _simdi()[:10]}, cift, kabul=kabul)
     ozet = _ozet(islemler.to_csv(index=False) + f"|{dusen}|"
@@ -243,5 +271,9 @@ def kosu(kimlik, kok, p=aileler.Parametre(), atr_n=motor.ATR_N, tur="deneme", re
                   "aile": aile, "durum": k["durum"], "genel": k["genel"], "holm_p": k["holm"]["holm_p"],
                   "holm_m": k["holm"]["holm_m"], "varsayimsal": k["holm"]["varsayimsal"],
                   "resmi": bool(resmi) and not kirli, "olcutler": [[r["no"], r["durum"]] for r in k["satirlar"]]})
+    for aile, k in (kabul or {}).items():  # sağlamlık ızgarası hücreleri: destek, Holm m'ye girmez (TASARIM 5.10, 5.11)
+        for c in k["izgara"]:
+            _yaz({"tur": "destek", "olay": "hucre", "tarih": _simdi(), "kosu_id": kosu_id, "kural_id": kural["kural_id"],
+                  "aile": aile, **_temiz(c)})
     return {"kosu_id": kosu_id, "ozet": ozet, "islemler": islemler, "dusen": dusen, "sim": sim, "cift": cift,
             "rapor": html, "csv": csv, "k1": k1, "kabul": kabul}

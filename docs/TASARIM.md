@@ -100,9 +100,11 @@ Her modülün dışarıya küçük bir yüzü var. İçi değişse de dışı de
 | `motor` | Adım: (pozisyon, bugünkü mum) → pozisyon; Motor: sinyaller → işlemler | Mum, ön hesaplı ATR ve SMA250 sütunları olan bir gün satırıdır. **Sınama ve canlı günlük aynı Adım'ı kullanır.** (A5, İ: 11-010) |
 | `simulator` | işlemler + bölme kuralı → sermaye eğrisi | Boştaki nakit faiz kazanır. (A2, B4) |
 | `istatistik` | fazla getiri → güven aralığı, p değeri, Holm | statsmodels yalnız `coint` ve Holm için. |
+| `saglamlik` | ızgara hücreleri → pozitif hücre oranı | Önceden yazılmış ızgara (KURALLAR §3); her hücre K1'e göre ortalama fazla getiri. 5.10. (bilet 13) |
 | `kayit` | kural kaydı, deneme günlüğü, kart günlüğü, durum kayıtları | Yalnız ekleme. Getiri gösteren tek yol `kosu()`'dur: kural kaydı yoksa ya da hash uyuşmazsa tek Türkçe satırla durur. (C-6, İ: 15-074) |
 | `rapor` | sonuçlar → HTML + CSV + `durum.txt` | Ayrıntı 6. bölümde. |
-| `__main__` | `python -m tansu gunluk \| sinama \| sadakat \| kayit` | Ayrıntı aşağıda. (İ: 16-001, 16-008, 14-084, 16-062) |
+| `denetim` | sentetik boş ve etkili dünya → yanlış kabul, güç | Boru hattı denetimi (5.12). Hash dışı: kuralı değil sınamanın doğruluğunu ölçer; sonucu günlükte kod hash'iyle durur. (bilet 13) |
+| `__main__` | `python -m tansu gunluk \| sinama \| sadakat \| kayit \| denetim` | Ayrıntı aşağıda. (İ: 16-001, 16-008, 14-084, 16-062) |
 
 **`veri` ayrıntısı** (İ: 01-094, 02-026, 11-044, 13-006, 13-011, 13-015):
 - Anlık görüntü tek klasördür. İçinde:
@@ -122,7 +124,7 @@ Her modülün dışarıya küçük bir yüzü var. İçi değişse de dışı de
 
 **Bağımlılık yönü** tek yönlüdür, geri import yok (İ: 11-039):
 `kaynak` → `veri` → `evren`, `gostergeler` → `aileler`, `cift` → `motor` → `simulator` → `ciftbolme` → `istatistik`
-→ `kayit` → `rapor` → `__main__`.
+→ `saglamlik` → `kayit` → `rapor` → `denetim` → `__main__`.
 
 Takvim, fiyat günlerinden çıkar (İş Yatırım XU100 günleri). Maliyet tek bir sabittir.
 
@@ -480,7 +482,11 @@ serisinin kaynağını ve son değişim tarihini yazar; seri boşsa koşu SORUNL
   (XU100 > SMA50), kendisi dışında bir hisse düzeyi uygun gün çekilir: kapanış ≥ SMA250, ısınma tamam, evren
   üyesi, karantina penceresi dışı (sıkışma penceresi şartı aranmaz). Gerekçe: sıkışma penceresi şartıyla gerçek
   veride (TCELL 29.08.2019) komşu gün bulunmadı ve koşu durdu; (b) zamanlamayı aynı hissenin yakın günleriyle
-  ölçer, pencere şartı (a) ve ek kolda zaten aranır. Havuz boşsa (a ve ek kol için) `K1Hatasi`. (b)'de komşusu
+  ölçer, pencere şartı (a) ve ek kolda zaten aranır. Havuz yetmezse (a için) `K1Hatasi`; ek kolda (yalnız rapor,
+  aile p'sine girmez) havuzu sinyal sayısından küçük gün havuz kadar çeker ve eksik sinyal sayısı `ek_eksik`
+  olarak günlüğe yazılır (bilet 13, gerçek veri: 21.09.2026'da 100 üyeden hiçbiri önceki 20 günün yükseğinin
+  üstünde kapatmadı, koşu `K1Hatasi` ile duruyordu; rapor kolu kabul kararını durdurmasın, ama sessizce de
+  kırpılmasın). (b)'de komşusu
   olmayan tek tek sinyaller (ULKER 19.03.2021 gerçek veride bu durumdaydı) o türün çekiminden düşer; sayısı
   `komsusuz` olarak günlüğe yazılır, hiçbir sinyalin komşusu yoksa `K1Hatasi`. Gerekçe: tek sinyalin eksikliği
   tüm koşuyu durdurmasın, ama sessizce de kırpılmasın.
@@ -532,7 +538,8 @@ Dolar bazı ilk sürümde yok.
   - **Ne zaman:** sadakat kontrolü bitince, ilk getiri koşusundan önce kayda geçer. Bundan sonrası
     yeni ayrılmış dönemdir. Sonraki her değişiklik yeni denemedir.
   - **Hash kapsamı:** elle yazılmış kod dosyaları listesi (`KOD_DOSYALARI`: aileler, cift, gostergeler,
-    motor, simulator ve K1 kodu), kural parametreleri ve ızgara tanımı.
+    motor, simulator, K1 kodu ve sağlamlık ızgarası kodu), kural parametreleri ve ızgara tanımı (iki ailenin
+    ızgarası, `saglamlik.IZGARA`). Boru hattı denetimi (`denetim.py`) hash dışıdır.
   - **Kod hash'i** kaynağın `ast.dump` sha256'sıdır; yorum ve boşluk değişmez.
   - **Hash dışı:** tekrar sayısı, tohum, blok uzunluğu, masraf senaryoları; günlükte ayrı alan olarak
     yazılır.
@@ -569,6 +576,14 @@ Parametreler ve ızgara önceden yazılır (`KURALLAR.md` §3). Kurallar:
 - **Sağlamlık şartı:** pozitif hücre oranı ≥ %60. (İ: 04-089, karar.md)
 - Bu oran bir olasılık değildir; hücreler birbirine bağımlıdır. (İ: 05-096)
 - Izgara hücreleri ve masraf senaryoları Holm'daki deneme sayısına girmez. (m3, İ: 09-056)
+- (Bilet 13) **Uygulama:** her koşu (K1'li) iki ailenin ızgarasını da koşar. Hücre sonucu: işlem başına ortalama
+  fazla getiri (işlem getirisi %0,3 masraflı − sepet getirisi, 5.7 aynı tanım), gerçek sinyallerle, K1 tekrarı yok.
+  İşlemi olmayan hücrenin fazla getirisi NaN'dir ve pozitif sayılmaz. Oran = pozitif hücre / bütün hücre; ölçüt 5'in
+  sağlamlık değeridir (5.12). Hücreler `tur=destek`, `olay=hucre` satırı olarak günlüğe yazılır (5.11). Izgara:
+  - EMA: eşik × en az gün × giriş penceresi (3·3·3 = 27); mum tablosu ve ısınma, SMA250, ATR sabit.
+  - Çift: Z penceresi × Z eşiği × seçim p'si (2·3·3 = 18). Eşbütünleşme p'leri yılda bir, en geniş eşik (0,10) için
+    hesaplanır; dar eşikli hücre aynı p'lerin önekinden seçer (her eşikle ayrı hesaplamayla aynı seçim, test); Z penceresi ve eşiği yalnız
+    hedef günleri değiştirir. Seçim yılı, çift sayısı ve sektör sınırı ana kuralla aynıdır.
 
 ### 5.11 Çoklu deneme düzeltmesi ve deneme günlüğü
 
@@ -589,6 +604,10 @@ Parametreler ve ızgara önceden yazılır (`KURALLAR.md` §3). Kurallar:
   - `kayit`, `deneme`, `destek` (ızgara, yeniden üretim, sınama), `sadakat`.
   - `duzeltme`: hedef koşu ve yeni değer yazılır; asıl satır değişmez.
   - Holm yalnız `deneme` satırlarını sayar.
+  - (Bilet 13) `destek` satırları ve alanları: `olay=hucre` (her sağlamlık hücresi: `kosu_id`, `kural_id`, `aile`,
+    `hucre` parametreleri, `islem`, `fazla`, `pozitif`; K1'li her koşu 27 + 18 satır yazar) ve `olay=denetim` (boru
+    hattı denetimi: `kod_hash`, `kural_id`, yanlış kabul ve güç oranları, `gecti`). `basladi` satırı olmadığından
+    `deneme_sayisi` ve Holm bunları saymaz.
 - **Git:** `kayit/` izlenir (`deneme.jsonl`, `kartlar.jsonl`). Yalnız ekleme kuralının kanıtı git geçmişidir;
   `veri/` ve `rapor/` izlenmez. Kirli-ağaç denetimi `kayit/`'ı saymaz. (Bilet 09: `kayit/` kararı)
 - **Silme yasağı:** günlükte adı geçen anlık görüntü silinmez.
@@ -634,7 +653,8 @@ büyükse sonuç "geçmedi" değil "ölçülemedi"dir. (B-17)
   Ölçüt 3: %0,5'te aynı iki şart (K1 fazla getirisi ve portföy fazla getirisi pozitif, Holm p < 0,05).
   Ölçüt 4: tamamlanmış yılların (ilk ve son yarım yıl çıkar; çift bölmesinde "işlem yok" yılı da çıkar) %60'ında
   yıllık fazla getiri (%0,3) pozitif ve işlem fazla getirileri sıralanıp üstten ⌈0,05·n⌉ işlem atılınca ortalama > 0.
-  Ölçüt 5: örneklem şartı ve sağlamlık oranı ≥ %60 (ızgara bilet 13'tedir; sağlamlık verilmediyse "Ölçülemedi").
+  Ölçüt 5: örneklem şartı ve sağlamlık oranı ≥ %60 (pozitif ızgara hücresi oranı, 5.10; örneklem dolmadıysa
+  ızgara sonucu ne olursa olsun "Ölçülemedi"; oran koşuda hep hesaplanır ve raporlanır).
   Ölçüt 6: kâğıt dönemi başlamadan "Ölçülemedi".
 - Genel: portföy kuralı reddederse "Geçmedi"; değilse örneklem ya da MDE şartı sağlanmıyorsa "Ölçülemedi";
   değilse bir ölçüt "Geçmedi" ise "Geçmedi"; bir ölçüt "Ölçülemedi" ise "Ölçülemedi"; yoksa "Geçti".
@@ -654,6 +674,30 @@ Genel "Geçti" yalnız hepsi sağlanınca yazılır. (İ: 17-079)
 **Boru hattı denetimi:** ilk resmi koşudan önce bir kez yapılır (B-18):
 - Sentetik boş veriyle yanlış kabul oranı ≤ %5.
 - Enjekte edilmiş etkiyle güç ölçümü.
+- (Bilet 13) **Komut:** `python -m tansu denetim [--n 200] [--tekrar 1000]`. Sonuç `docs/denetim.md`, `rapor/denetim-*.html`
+  ve günlükte (`tur=destek`, `olay=denetim`, `gecti` bayrağı, kod hash'i) yazılır. Yanlış kabul > %5 ise çıkış kodu 1'dir
+  ve `kosu(resmi=True)` ilk resmi koşuyu bu kodun hash'iyle geçmiş bir denetim yoksa durdurur (başarısız denetim de
+  engeller). İlk resmi koşudan sonra denetim aranmaz.
+- **Boş dünya** (`denetim.dunya`): 40 sentetik hisse, 2.000 iş günü (02.01.2012'den), 4 sektör; günlük getiri = piyasa
+  payı·β + sektör payı + hisse payı, kalın kuyruklu (t(5), birim varyans), ±%7'ye kırpılmış (limit ve kilit olmaz).
+  Hiçbir kural getiri öngörmez: sinyalden sonraki getiri bağımsızdır. Sentetik anlık görüntü gerçek `veri` kapılarından
+  geçer (test: karantina, kilit, olay uyarısı yok), olay yok, faiz tablosu ve sektör var, evren aynı kuralla (40 hisseden
+  likidite eleğiyle 32). Simülasyon 02.12.2013'te başlar (ısınma 500 gün).
+- **Yanlış kabul** = boş dünyada ölçüt 1–4 Geçti ve portföy kuralı reddetmedi (örneklem ve sağlamlık şartı aranmaz,
+  yani Kâğıt'ın üst kümesi; sentetik dünya 100 işlem örneklemini dolduramayabilir ve o zaman Kâğıt oranı boş yere
+  sıfır olurdu). Kâğıt oranı da raporlanır. Şart: her ailede oran ≤ %5, 200 tekrarda (seçilen tohumlar 0…199).
+  Her tekrar gerçek yoldan (`kayit.hesapla`: motor, simülatör, K1, ızgara, Holm, kabul) geçer; K1 B = 1.000 ve Holm
+  m = 2 (iki aile; resmi koşuda m ≥ 2, yani denetim en gevşek durumdur).
+- **Etkili dünya** (güç): boş dünyadan hesaplanan her kural sinyalinin ardından fiyata sabit log etki gömülür: giriş AOF'u
+  (sinyalden sonraki 1. gün) etkilenmez, etki 2.–6. günlere eşit yayılır, kalıcıdır (`denetim.etki_ekle`). EMA'da
+  sinyalin hissesine, çiftte sinyalin geçtiği bacağa gömülür. Varsayılan etki sinyal başına %5 (belge 14-048). Her aile
+  kendi etkisiyle n/5 = 40 dünyada koşar (tohumlar 1000…). Güç = aynı ölçüt (1–4) geçen oran; yalnız rapor, şart yok.
+  Etki çiftte yaklaşıktır: gömme sonrası seçim ve Z değişir.
+- **Geleceği görmeme testi** (`tests/test_gelecek.py`, bilet 13): sentetik dünyada veri t'de kesilir (fiyat satırları
+  ve faiz değişimleri t'den sonrası atılır); tam görüntünün t'ye kadarki çıktısı kesilmişle aynı olmalı. Tek parametrik
+  test, bileşen × üç kesim günü. Kapsam: evren (ay başı seçimi), göstergeler (EMA, SMA, Wilder ATR, sıkışma oranı,
+  piyasa durumu), EMA sinyali ve ön şart dizileri, çift Z ve hedef günleri, yıllık çift seçimi, likidite medyanı,
+  faiz hizalaması (gecelik getiri dizisi) ve K2 sepeti.
 
 ### 5.13 Veri kapıları
 Getiri görülmeden yazılır; kural kaydına girer. (B-7, İ: 19-015)

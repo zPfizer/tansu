@@ -35,4 +35,7 @@ Sistemin dili. Kurallar Tansu'dan esinlenen yorumlardır; Tansu'nun kendi sistem
 | K2 | Aynı evrenin eşit ağırlıklı sepeti; kuralın yatırımdaki payı kadar tutulur, kalanı faiz kazanır. |
 | Holm | Çoklu deneme düzeltmesi. Her (kural, aile) çiftinin ilk resmi p'si girer; geliştirme koşuları girmez. |
 | Ayrılmış dönem | Kurallar yazılırken bakılmamış dönem: kural kaydından sonrası. |
+| Sağlamlık ızgarası | Ailenin önceden yazılmış parametre hücreleri. Hepsi birlikte koşar; en iyisi seçilmez. Pozitif hücre: ortalama fazla getiri > 0, %0,3 masrafla. Şart: pozitif hücre oranı ≥ %60. |
+| Boru hattı denetimi | Sınama düzeneğinin kendi denetimi: sentetik boş veride yanlış kabul ≤ %5, gömülü etkide güç. İlk resmi koşudan önce geçmiş olmalı. |
+| Yanlış kabul | Hiçbir kuralın getiri öngörmediği boş veride ailenin ölçütlerinden geçmesi. |
 | Deneme / Kâğıt / Canlı | Bir ailenin durumu. Deneme: geçmiş sınamayı geçmedi, gösterilmez. Kâğıt: geçmiş sınamayı geçti, kart üretir, para konmadan izlenir. Canlı: kâğıt üstü dönemi de geçti. |

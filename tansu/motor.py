@@ -126,8 +126,8 @@ class Zincir:
             self.onbellek[i] = sonuc or (None, None)
         return self.onbellek[i]
 
-    def calistir(self, konumlar) -> tuple:
-        """(işlem tablosu, düşen sinyal sayısı); `islemler(mumlar, sinyaller)` ile aynı."""
+    def kapali(self, konumlar) -> tuple:
+        """(kapanmış pozisyonlar, düşen sinyal sayısı): tablo kurmadan; K1 çok hissenin pozisyonlarını tek tabloda toplar."""
         kapali, dusen, blok = [], 0, 0
         for i in sorted(set(konumlar)):
             if i < blok or self.engelli[i]:
@@ -139,6 +139,11 @@ class Zincir:
             else:
                 kapali.append(p)
                 blok = len(self.satirlar) + 1 if j is None else j
+        return kapali, dusen
+
+    def calistir(self, konumlar) -> tuple:
+        """(işlem tablosu, düşen sinyal sayısı); `islemler(mumlar, sinyaller)` ile aynı."""
+        kapali, dusen = self.kapali(konumlar)
         return _tablo(kapali), dusen
 
 
@@ -153,7 +158,17 @@ def _tablo(pozisyonlar) -> pd.DataFrame:
 
 
 def mumlar(anlik, sembol: str, p: aileler.Parametre = aileler.Parametre(), atr_n: int = ATR_N) -> pd.DataFrame:
-    """Bir sembolün mum tablosu: düzeltilmiş fiyat + gösterge + ham seriden kilit/karantina (gun_tablosu)."""
+    """Bir sembolün mum tablosu: düzeltilmiş fiyat + gösterge + ham seriden kilit/karantina (gun_tablosu).
+
+    Tablo anlık görüntü başına bir kez kurulur (motor, K1 ve ızgara aynı tabloyu okur; değiştirilmez)."""
+    onbellek = anlik.__dict__.setdefault("_mumlar", {})
+    anahtar = (sembol, p.sma_n, atr_n)
+    if anahtar not in onbellek:
+        onbellek[anahtar] = _mumlar_kur(anlik, sembol, p, atr_n)
+    return onbellek[anahtar]
+
+
+def _mumlar_kur(anlik, sembol, p, atr_n) -> pd.DataFrame:
     f = anlik.fiyat[anlik.fiyat["sembol"] == sembol].sort_values("tarih").set_index("tarih")
     g = anlik.gun_tablosu
     g = g[g["sembol"] == sembol].set_index("tarih")
@@ -179,7 +194,7 @@ def sinama(anlik, p: aileler.Parametre = aileler.Parametre(), atr_n: int = ATR_N
         sig = aileler.sinyal(m.dropna(subset=["kapanis"]), p)
         if gunler is not None:
             sig = sig[sig.isin(gunler[s])]
-        t, d = islemler(m, sig)
+        t, d = Zincir(m).calistir(m.index.get_indexer(sig))  # `islemler` ile bire bir (test), ama tek geçişte hızlı
         if len(t):  # boş tablolar sütun türünü object'e bozar
             parcalar.append(t.assign(sembol=s))
         dusen += d

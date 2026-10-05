@@ -2,7 +2,7 @@ import socket
 
 import pytest
 
-from tansu import kayit, rapor
+from tansu import denetim, kayit, rapor
 
 
 @pytest.fixture(autouse=True)
@@ -24,3 +24,9 @@ def kayit_yonlendir(monkeypatch, tmp_path):
 def rapor_yonlendir(monkeypatch, tmp_path):
     """Gerçek `rapor/` klasörüne yazılmaz."""
     monkeypatch.setattr(rapor, "RAPOR_DIZINI", tmp_path / "rapor")
+
+
+@pytest.fixture(autouse=True)
+def docs_yonlendir(monkeypatch, tmp_path):
+    """Gerçek `docs/denetim.md` dosyasına yazılmaz."""
+    monkeypatch.setattr(denetim, "DOCS", tmp_path / "docs")
