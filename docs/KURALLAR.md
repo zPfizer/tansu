@@ -84,7 +84,7 @@ yapılır.
 
 1. **Çift rotasyonu** (birinci el: giriş eşiği, ΔZ tanımı, yön, zaman, ham fiyat)
    - Sapma: log(Y) − log(X), ortalama ve standart sapma son 60 günden (YORUM; Tansu'nun Z'si 40.560
-     aday formülle üretilemedi). Sabit terim (α) yok; ortalama çıkarıldığı için Z aynıdır.
+     aday formülle üretilemedi; bilet 06 sadakati, §4, 1564 adayla yine üretemedi: YORUM kalır). Sabit terim (α) yok; ortalama çıkarıldığı için Z aynıdır.
    - Z ≤ −2 ve ΔZ > 0 → ertesi gün Y'ye geç. Z ≥ +2 ve ΔZ < 0 → ertesi gün X'e geç. Tek günlük ΔZ
      yeterlidir (YORUM; Tansu'nun raporundaki tek örnek +0,30).
    - İlk sinyale kadar nakit; sonra hep bir hissede. Stop yok.
@@ -140,6 +140,11 @@ Sonuçlar (Sorgu 3, 05.10.2026):
     tutulur ve rapora yazılır (İ: 06-014).
 - **Çift Z'si üretilemedi** (40.560 aday). Tansu'nun ham fiyat kullandığı doğrulandı (14.05.2025 ipucu
   kutusu).
+- **Çift Z'si, bilet 06 ölçümü (İş Yatırım ham seri, `docs/sadakat.md`):** 1564 aday (log oran ve β'lı
+  kalıntı × pencere 10–400 × ddof {0; 1}), bütün işlem günleri. Sıkı toleransta (±0,0005) eşleşme yok.
+  Gevşek bantta (±0,05) 534 aday eşleşti: tek aday kalmadığı için gevşek bant kullanılmadı.
+  Sonuç: **üretilemedi; YORUM kalır** (log oran, 60 gün). Beta, korelasyon, piyasada kalma ve
+  Mart–Mayıs 2025 kontrolleri formül olmadığı için yapılmadı.
 
 Veri: Tansu `yfinance` kullanıyor, ama Yahoo ham kapanışı İş Yatırım ham serisiyle aynı. Kontrol İş Yatırım
 ham seriyle yapılır.

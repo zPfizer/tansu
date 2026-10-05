@@ -530,7 +530,9 @@ Getiri görülmeden yazılır; kural kaydına girer. (B-7, İ: 19-015)
 - **Satır ihlali:** düşük ≤ AOF ≤ yüksek ve düşük ≤ kapanış ≤ yüksek sağlanmazsa karantina. Ham ya da
   düzeltilmiş fiyatı ≤ 0 olan satır da bozuktur. Düzeltilmiş seride bağıl 1e-4 yuvarlama payı tanınır
   (gerçek veride düzeltilmiş seri 4 ondalığa yuvarlı: 637 satırda en çok 4,5e-5 fark; gerçek ihlaller ≥ 1,5e-3).
-- **Yapısal ihlal:** bozuk sıra, tekrar eden gün ya da ortada NaN koşuyu durdurur.
+- **Yapısal ihlal:** bozuk sıra, tekrar eden gün ya da ortada NaN koşuyu durdurur. İstisna: İş Yatırım
+  GARAN yanıtını 276 yerde sırasız verir (satır eksiksiz, tekrar yok; bilet 06'da görüldü); `kaynak` yanıtı
+  tarihe göre sıralar, kapı sıralamadan sonraki seriye bakar.
 - **Oran eşikleri:** karantina hisse-gün oranı > %1 ya da olay denetimi farkı olan gün oranı > %2 ise
   koşu "veri sorunlu" olur.
 - **Eksik indirme:** 100 hisseden 5'ten fazlası inmezse koşu SORUNLU olur.
