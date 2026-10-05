@@ -67,7 +67,12 @@ Görev ana depodaki (`C:\Users\levent\Desktop\TANSU`) kodu çalıştırır; bu d
 **Açık işler:**
 - Çift ailesi Kâğıt olursa çift kartı yok (koşu SORUNLU olur ve söyler). Ticket 15 ilk resmi koşuda hangi ailenin Kâğıt olduğunu görünce gerekirse ayrı bilet.
 - Kaynak yayını gecikirse "BUGÜN ÇUBUK YOK" tatilden ayırt edilemez ve o günün koşusu biter (TASARIM 6.7'de yazılı sınır).
-- Taban (tam anlık görüntü) aylık yenilenmeden evren eski kalır (yaklaşık 3 sa, elle). Bilet 15 öncesi karar: aylık otomatik yenileme istenir mi?
+- ~~Taban aylık yenilenmeden evren eski kalır.~~ **Kapandı (orkestratör kararı):** `TansuAylik` görevi (`kurulum/tansu-aylik.xml`),
+  ayın son günü 20:45, `python -m tansu evren-indir`, en çok 6 sa, hata olursa 15 dk arayla 4 deneme (aynı gün önbellekten devam eder).
+  Kuruldu, durum **Disabled** doğrulandı (`Export-ScheduledTask`: `<Day>Last</Day>`). Bilet 15 iki görevi birlikte açar.
+  Sınır: tam indirmede KAP sektörü yine ~100 istekte kesilebilir; günlük koşu sektör kullanmaz, `sektor-indir` gerekirse elle.
+- Ölçüm denetimi (orkestratör): `TANSU-dev/gunluk-olcum/rapor/durum.txt` TAMAM, 99 sembol, `veri/gunluk/ag/20261005-2042` manifesti doğrulandı.
+  `Anlik.sorunlar` (2010'dan bütün satırlar) karantina > %1 der; `gunluk` kapısı sınama dönemi satırlarını sayar (bilet 10 kararı), TAMAM doğru.
 - Kâğıt dönem sayacı ilk Kâğıt `durum` satırından gün // 30; ölçüt 6'nın 30 işlem şartı kartta gösterilmez.
 - `gunluk` döngüsü `motor.islemler` ile aynı 12 satırı yineler (Adım ortak; `islemler` kapanmamış pozisyonu döndürmediği için). Bilet 13'ün hız işi motoru değiştirirse birleştirilebilir.
 - Gate'te başarısız günlük anlık görüntü diskte kalır (30 gün sonra silinir).
