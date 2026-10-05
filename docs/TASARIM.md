@@ -502,6 +502,12 @@ serisinin kaynağını ve son değişim tarihini yazar; seri boşsa koşu SORUNL
   Aynı kilit, karantina ve masraf kuralları işler; engellenen sinyal sayıyı azaltabilir.
 - **Tekrar sayısı m'si:** B = max(1.000, 200·m); m = günlükteki ilk resmi p sayısı (kural kimliği × aile) + bu
   koşunun yeni p'leri. `--son` bu B'yi koşar; `--son` olmadan 200. Resmi koşu B'si bu değerin altındaysa durur.
+- **Süre** (bilet 13, `python -m tansu sinama`, gerçek veri 20261005-1949, 32 çekirdekli geliştirme makinesi; bütçe
+  200 tekrar için ≤ 5 dk): hızlandırmadan önce B = 200 7 dk 0 sn (ızgarasız). Sonra, ızgaralar dahil: B = 200 **2 dk 52 sn
+  ve 3 dk 03 sn**; B = 1.000 (m = 2, resmi büyüklükte, `resmi:false`) **6 dk 48 sn ve 6 dk 50 sn** (iki ölçüm). Neden hızlandı:
+  `motor.sinama` tek işlem önbellekli `Zincir` ile (78 → 16 sn), mum tablosu anlık görüntü başına bir kez, K1 simülatörü pandas
+  skaler erişimi yerine sözlükle, K1 işlem tablosu hisse başına değil tek parça, eşbütünleşme yıllara paralel (süreç havuzu) ve
+  ızgara için bir kez hesaplanır. İstatistik ve B değişmedi; aynı tohumda aynı p ve aynı özet (üç koşu).
 
 **K2. Aynı evrenin eşit ağırlıklı sepeti, maruziyet eşleşmeli** (B3b, B-13):
 - **Kuruluş:** sepet ay başında evrenle eşit ağırlıklı kurulur, AOF'tan AOF'a. Ay başı evren değişimi ve
