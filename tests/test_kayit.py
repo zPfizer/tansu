@@ -168,4 +168,19 @@ def test_komutlar_kayit_ve_sinama(tmp_path, capsys):
     assert main(["kayit"]) == 0
     # Varsayılan parametreyle 8 günlük seride işlem yok; komut yine de başlar ve biter.
     assert main(["sinama", "--kok", kok, "--kimlik", kimlik]) == 0
-    assert [s["olay"] for s in satirlar()] == ["kayit", "basladi", "bitti"]
+    # Bilet 12: koşu sonunda her aile için bir `durum` satırı da yazılır (K1, Holm, kabul).
+    assert [s["olay"] for s in satirlar()] == ["kayit", "basladi", "bitti", "durum", "durum"]
+    assert satirlar()[1]["tekrar"] == 200 and satirlar()[2]["tekrar"] == 200 and not satirlar()[2]["son"]
+
+
+def test_sinama_son_tam_tekrari_calistirir_ve_gunluge_yazar(tmp_path, monkeypatch, capsys):
+    # Tam B = max(taban, çarpan · m); m = 2 (iki yeni aile). Taban 7, çarpan 1 -> 7; geliştirmede 200.
+    from tansu.__main__ import main
+    monkeypatch.setattr(kayit, "TAM_TABAN", 7)
+    monkeypatch.setattr(kayit, "TAM_CARPAN", 1)
+    kimlik = anlik_hazirla(tmp_path)
+    assert main(["kayit"]) == 0
+    assert main(["sinama", "--kok", str(tmp_path), "--kimlik", kimlik, "--son"]) == 0
+    _, basladi, bitti, _, _ = satirlar()
+    assert (basladi["tekrar"], basladi["son"], bitti["tekrar"], bitti["son"]) == (7, True, 7, True)
+    assert "K1 ema_sikismasi: p" in capsys.readouterr().out

@@ -94,6 +94,54 @@ def islemler(mumlar: pd.DataFrame, sinyaller) -> tuple:
     return _tablo(kapali), dusen
 
 
+class Zincir:
+    """Bir hissenin sinyal konumlarından `islemler` ile aynı tabloyu kurar; tek işlem sonuçlarını önbelleğe alır (K1, TASARIM 5.7).
+
+    Aynı hissede sinyal kümesi her tekrarda değişir; her (konum) sinyalinin tek başına sonucu aynıdır. Bir sinyal,
+    önceki işlem kapanana dek (kapandığı gün dahil) ve karantina penceresinde (250 satır) düşer."""
+
+    def __init__(self, mumlar: pd.DataFrame):
+        self.mumlar = mumlar
+        self.satirlar = [{**s, "tarih": t} for t, s in zip(mumlar.index, mumlar.to_dict("records"))]
+        kar = mumlar["karantina"].to_numpy(dtype=bool)
+        son = pd.Series(range(len(kar))).where(kar).ffill().to_numpy()
+        self.engelli = (range(len(kar)) - son) < KARANTINA_GUN  # NaN (karantina yok) -> yanlış
+        gecerli = mumlar["kapanis"].dropna()
+        self.son = (gecerli.index[-1], gecerli.iloc[-1]) if len(gecerli) else None
+        self.onbellek = {}
+
+    def tek(self, i: int) -> tuple:
+        """(kapalı pozisyon ya da None, kapanış konumu ya da None). None kapanış konumu: pozisyon veri sonuna dek açık
+        ya da sinyalden sonra veri yok (`dusen`: p None)."""
+        if i not in self.onbellek:
+            p = bekleyen(self.satirlar[i]["atr"], self.satirlar[i]["tarih"])
+            sonuc = None
+            for j in range(i + 1, len(self.satirlar)):
+                p = adim(p, self.satirlar[j])
+                if p.durum == "kapali":
+                    sonuc = (p, j)
+                    break
+            if sonuc is None and p.durum == "acik":
+                sonuc = (_kapat(p, self.son[0], self.son[1], "veri_sonu"), None)
+            self.onbellek[i] = sonuc or (None, None)
+        return self.onbellek[i]
+
+    def calistir(self, konumlar) -> tuple:
+        """(işlem tablosu, düşen sinyal sayısı); `islemler(mumlar, sinyaller)` ile aynı."""
+        kapali, dusen, blok = [], 0, 0
+        for i in sorted(set(konumlar)):
+            if i < blok or self.engelli[i]:
+                continue
+            p, j = self.tek(i)
+            if p is None or p.neden == "iptal":
+                dusen += 1
+                blok = len(self.satirlar) if p is None else j
+            else:
+                kapali.append(p)
+                blok = len(self.satirlar) + 1 if j is None else j
+        return _tablo(kapali), dusen
+
+
 def _tablo(pozisyonlar) -> pd.DataFrame:
     return pd.DataFrame([{
         "sinyal_tarih": p.sinyal_tarih, "giris_tarih": p.giris_tarih, "giris_fiyat": p.giris_fiyat, "cikis_tarih": p.cikis_tarih,

@@ -468,6 +468,34 @@ serisinin kaynağını ve son değişim tarihini yazar; seri boşsa koşu SORUNL
   - Aile p'si iki türün büyüğüdür.
   (B-15, İ: 19-069)
 
+**K1 uygulama kuralları** (bilet 12; belge bu noktalarda sessizdi, kod bu okumayı uygular):
+- **Fazla getiri (işlem):** işlem getirisi (masraflı) − sepet getirisi. Sepet getirisi K2 sepet endeksinin
+  önceki-kapanış değerlerinin oranıdır: `S[çıkış−1] / S[giriş−1] − 1` (kapanıştan kapanışa bir gün gecikmeli;
+  AOF'tan AOF'a yaklaşıklığı. Gerçek ve rastgele işlemde aynı tanım, bu yüzden karşılaştırma tutarlı).
+  İstatistik bu farkın işlem başına ortalamasıdır.
+- **Ön şartlı gün (EMA):** o hissede sıkışma dönemi bitmiş, giriş penceresi (10 gün) açık, kapanış ≥ SMA250,
+  ısınma tamam, hisse o ayın evreninde, karantina penceresinde değil. Gerçek sinyal günleri bu kümenin parçasıdır.
+- **Tür (a):** her sinyal gününde gerçek sinyal sayısı kadar hisse, o günün ön şartlı havuzundan yerine koymadan
+  çekilir. **Tür (b):** her gerçek sinyal için aynı hissenin ±20 satırı içinde, o günle aynı piyasa durumunda
+  (XU100 > SMA50), kendisi dışında bir hisse düzeyi uygun gün çekilir: kapanış ≥ SMA250, ısınma tamam, evren
+  üyesi, karantina penceresi dışı (sıkışma penceresi şartı aranmaz). Gerekçe: sıkışma penceresi şartıyla gerçek
+  veride (TCELL 29.08.2019) komşu gün bulunmadı ve koşu durdu; (b) zamanlamayı aynı hissenin yakın günleriyle
+  ölçer, pencere şartı (a) ve ek kolda zaten aranır. Havuz boşsa (a ve ek kol için) `K1Hatasi`. (b)'de komşusu
+  olmayan tek tek sinyaller (ULKER 19.03.2021 gerçek veride bu durumdaydı) o türün çekiminden düşer; sayısı
+  `komsusuz` olarak günlüğe yazılır, hiçbir sinyalin komşusu yoksa `K1Hatasi`. Gerekçe: tek sinyalin eksikliği
+  tüm koşuyu durdurmasın, ama sessizce de kırpılmasın.
+- **Ek kol (sıkışmasız kırılım):** gün başına gerçek sinyal sayısı kadar hisse, o günün şu havuzundan çekilir:
+  kapanış önceki 20 günün en yüksek yükseğinin üstünde (20: YORUM; KRDMD örnek sıkışması 20 gündü), sıkışma
+  penceresinde değil, SMA250, ısınma, evren ve karantina şartları aynı. Yalnız rapor; aile p'sine girmez.
+- **Rastgele işlem:** aynı Adım ve aynı simülatörden geçer: hisse başına sinyaller sırayla işlenir, açık ya da
+  bekleyen pozisyonun varken gelen sinyal düşer (5.3). K1 bu zinciri tek işlem sonuçlarını önbelleğe alarak
+  kurar; gerçek sinyallerle `motor.islemler` ile aynı tabloyu verir (test).
+- **Çift:** her seçilmiş çift için gerçek tutuş sayısı kadar sinyal günü, çiftin etkin olduğu günlerden |Z| ≥ eşik
+  olanlardan çekilir; ilk sinyal günü ve yönü gerçeğe eşit, sonrakiler sırayla öteki bacağı hedefler.
+  Aynı kilit, karantina ve masraf kuralları işler; engellenen sinyal sayıyı azaltabilir.
+- **Tekrar sayısı m'si:** B = max(1.000, 200·m); m = günlükteki ilk resmi p sayısı (kural kimliği × aile) + bu
+  koşunun yeni p'leri. `--son` bu B'yi koşar; `--son` olmadan 200. Resmi koşu B'si bu değerin altındaysa durur.
+
 **K2. Aynı evrenin eşit ağırlıklı sepeti, maruziyet eşleşmeli** (B3b, B-13):
 - **Kuruluş:** sepet ay başında evrenle eşit ağırlıklı kurulur, AOF'tan AOF'a. Ay başı evren değişimi ve
   dengeleme %0,3 masraf öder. Sepette kapanan hisse 5.2 kuralıyla işlenir. (İ: 03-065, 03-066, 08-048,
@@ -527,6 +555,10 @@ Dolar bazı ilk sürümde yok.
   - Tek hisse: en az 100 işlem **ve** en az 60 farklı sinyal günü.
   - Çift bölmesi: en az 100 geçiş **ve** 60 farklı geçiş günü.
   - Saptanabilecek en küçük etki günlük portföy serisinden hesaplanır ve raporda yazılır.
+  - (Bilet 12) Güven aralığı: günlük fazla getirinin (kural − K2, %0,3) yıllıklandırılmış ortalaması (×252) üzerinde
+    hareketli blok bootstrap, 1.000 tekrar, sabit tohum. Saptanabilir en küçük etki (yıllık, puan) =
+    (1,645 + 0,842) · sd(günlük fazla) / √gün · 252 (tek yönlü %5, güç %80). Masrafla karşılaştırma işlem
+    başınadır: MDE / yıllık işlem sayısı, %0,5 masrafın gidiş-dönüşünden (%1,0) büyükse "ölçülemedi" (5.12).
 - **Ek gösterimler:** ortalamanın yanında medyan ve en iyi %5 işlem atılmış sonuç (işlemler sıralanır,
   üstten ⌈0,05·n⌉ işlem atılır). (m2, M10, İ: 19-070)
 
@@ -567,6 +599,14 @@ Parametreler ve ızgara önceden yazılır (`KURALLAR.md` §3). Kurallar:
 - Geliştirme koşuları `resmi:false` yazılır ve m'yi şişirmez.
 - Kabul kararı, kabul anındaki m ile donar; sonradan artan m eski kararı geri almaz.
 - Rapor başlığı m'yi ve Holm hesap tarihini yazar; Holm rapor üretilirken yeniden hesaplanır.
+- (Bilet 12) Birim: bir koşu iki aileyi sınar; Holm'a (kural kimliği, aile) çifti başına tek p girer, yani resmi
+  koşu m'ye 2 ekler. Aynı çift yeniden koşulursa ilk resmi p kalır. Geliştirme koşusunun Holm p'si varsayımsaldır
+  (bu p listeye eklenmiş gibi hesaplanır, günlüğe sayılmaz). Kâğıt'a geçen ailenin Holm p'si ve m'si `durum`
+  satırında donar; sonraki koşular onu yeniden kullanır.
+- (Bilet 12) `durum` satırı (`tur=durum`): her koşu sonunda aile başına bir yalnız-ekleme satırı; alanlar: aile,
+  kural kimliği, koşu, durum (Deneme / Kâğıt), `holm_p`, `holm_m`, `resmi`, ölçüt durumları. Aile durumu en son
+  `resmi=true` satırdır; yoksa Deneme. `bitti` satırı K1 sonuçlarını (`k1`: ham p'ler, gerçek istatistik masraf
+  düzeyi başına, tekrar sayısı) taşır.
 - Aynı tohum ve aynı anlık görüntüyle iki koşu aynı özeti verir (tek test).
 
 ### 5.12 Kabul ölçütü (önceden yazılır)
@@ -587,6 +627,19 @@ Parametreler ve ızgara önceden yazılır (`KURALLAR.md` §3). Kurallar:
 
 **Ölçülemedi:** örneklem dolmazsa ya da saptanabilir en küçük etki %0,5 masrafın gidiş-dönüş tutarından
 büyükse sonuç "geçmedi" değil "ölçülemedi"dir. (B-17)
+
+**Ölçütlerin uygulanışı** (bilet 12; belge bu noktalarda sessizdi):
+- Ölçüt 1: %0,3'te K1 işlem başına fazla getiri > 0 ve Holm p < 0,05 (p %0,5'te hesaplanır, 5.7).
+  Ölçüt 2: %0,3'te günlük portföy fazla getirisi (kural − K2) ortalaması > 0.
+  Ölçüt 3: %0,5'te aynı iki şart (K1 fazla getirisi ve portföy fazla getirisi pozitif, Holm p < 0,05).
+  Ölçüt 4: tamamlanmış yılların (ilk ve son yarım yıl çıkar; çift bölmesinde "işlem yok" yılı da çıkar) %60'ında
+  yıllık fazla getiri (%0,3) pozitif ve işlem fazla getirileri sıralanıp üstten ⌈0,05·n⌉ işlem atılınca ortalama > 0.
+  Ölçüt 5: örneklem şartı ve sağlamlık oranı ≥ %60 (ızgara bilet 13'tedir; sağlamlık verilmediyse "Ölçülemedi").
+  Ölçüt 6: kâğıt dönemi başlamadan "Ölçülemedi".
+- Genel: portföy kuralı reddederse "Geçmedi"; değilse örneklem ya da MDE şartı sağlanmıyorsa "Ölçülemedi";
+  değilse bir ölçüt "Geçmedi" ise "Geçmedi"; bir ölçüt "Ölçülemedi" ise "Ölçülemedi"; yoksa "Geçti".
+  Durum Kâğıt'tır ancak ve yalnız ölçüt 1–5 Geçti ve portföy kuralı reddetmediyse.
+- Portföy kuralı %0,5 masraflı ve faizli özkaynak eğrisinde: en büyük düşüş > %25 ya da düşüşte kalma > 12 ay.
 
 **Rapor tablosu:** rapor her aile için 6 ölçütün geçti/kaldı durumunu ve değerini tablo olarak verir.
 Genel "Geçti" yalnız hepsi sağlanınca yazılır. (İ: 17-079)

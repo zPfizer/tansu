@@ -117,6 +117,31 @@ def test_motor_senaryosu(ad):
     assert (islemler["adet"] == 1).all()
 
 
+@pytest.mark.parametrize("ad", SENARYO)
+def test_zincir_islemler_ile_ayni_tabloyu_verir(ad):
+    # K1 zinciri (tek işlem önbelleği + açık/bekleyen pozisyon bloğu) gerçek motorla bire bir aynıdır.
+    sinyaller, atr, satirlar, _, _ = SENARYO[ad]
+    m = _mumlar(satirlar, atr)
+    beklenen, beklenen_dusen = motor.islemler(m, GUNLER[sinyaller])
+    z = motor.Zincir(m)
+    for _ in range(2):  # ikinci çağrı önbellekten
+        tablo, dusen = z.calistir(sinyaller)
+        pd.testing.assert_frame_equal(tablo, beklenen, check_dtype=False)
+        assert dusen == beklenen_dusen
+
+
+def test_zincir_karantina_penceresindeki_sinyal_engelli_ve_ayni_gun_yeniden_giris():
+    # d3 karantina: d5 sinyali engelli (işlem yok, düşen yok). Ayrı veri: d1 giriş, d2 stop (düşük 95 <= 96) ->
+    # pozisyon d2'de kapanır; d2 sinyali aynı gün serbest, d3 girişi AOF 100 (d3 düşük 99 > stop 96) veri sonu d3 kapanış 100.
+    karantinali = [r(*STD)] * 3 + [r(500, 500, 1, 300, karantina=True)] + [r(*STD)] * 3
+    tablo, dusen = motor.Zincir(_mumlar(karantinali, 2)).calistir([5])
+    assert (len(tablo), dusen) == (0, 0)
+    tablo, dusen = motor.Zincir(_mumlar([r(*STD), r(*STD), r(97, 98, 95, 96), r(*STD)], 2)).calistir([0, 2])
+    assert [(t.sinyal_tarih, t.giris_tarih, t.cikis_tarih, t.neden) for t in tablo.itertuples()] == [
+        (GUNLER[0], GUNLER[1], GUNLER[2], "stop"), (GUNLER[2], GUNLER[3], GUNLER[3], "veri_sonu")]
+    assert dusen == 0
+
+
 def test_adim_saf_girdiyi_degistirmez():
     p = motor.bekleyen(atr=2.0)
     m = {"tarih": GUNLER[1], **r(100, 101, 99, 100), "islem": True, "karantina": False,

@@ -15,6 +15,11 @@ def sma(seri: pd.Series, periyot: int) -> pd.Series:
     return seri.rolling(periyot).mean()
 
 
+def piyasa_durumu(xu100: pd.Series, n: int = 50) -> pd.Series:
+    """Piyasa durumu: XU100 kapanış > SMA(n) (YORUM, TASARIM 6.3). SMA yoksa yanlış."""
+    return xu100 > sma(xu100, n)
+
+
 def atr(yuksek: pd.Series, dusuk: pd.Series, kapanis: pd.Series, n: int = 14) -> pd.Series:
     """Wilder ATR: ilk değer ilk n gerçek aralığın ortalaması, sonra (önceki*(n-1) + TR)/n (TASARIM 5.5)."""
     onceki = kapanis.shift(1)

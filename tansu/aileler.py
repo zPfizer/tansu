@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 
+import numpy as np
 import pandas as pd
 
 from tansu import gostergeler
@@ -15,6 +16,35 @@ class Parametre:
     pencere: int = 10  # YORUM: dönem bittikten sonra giriş penceresi (gün)
     isinma: int = 500  # TASARIM 5.1: hissenin ilk gününden bu kadar işlem günü dolmadan sinyal yok
     sma_n: int = 250
+
+
+KIRILIM_GUN = 20  # YORUM (KURALLAR §3): sıkışmasız kırılım kolunda önceki gün sayısı
+
+
+def pencere_gunleri(f: pd.DataFrame, p: Parametre = Parametre()) -> np.ndarray:
+    """Sıkışma dönemi bitmiş, giriş penceresi açık günler (bool, `f` sırasında)."""
+    oran = gostergeler.sikisma_orani(f["kapanis"], p.periyotlar)
+    acik = np.zeros(len(f), dtype=bool)
+    for d in gostergeler.sikisma_donemleri(oran, p.esik, p.min_gun):
+        bit = f.index.get_loc(d["bit"])
+        acik[bit + 1: bit + 1 + p.pencere] = True
+    return acik
+
+
+def uygun_gunler(f, p) -> np.ndarray:
+    """Kapanış ≥ SMA250 (NaN ise yanlış) ve ısınma tamam."""
+    return (f["kapanis"] >= gostergeler.sma(f["kapanis"], p.sma_n)).to_numpy() & (np.arange(len(f)) + 1 >= p.isinma)
+
+
+def on_sart(f: pd.DataFrame, p: Parametre = Parametre()) -> np.ndarray:
+    """K1 ön şartlı günler (KURALLAR §3 madde 2): pencere açık, SMA250 üstü, ısınma tamam. Gerçek sinyal günleri bunun parçasıdır."""
+    return pencere_gunleri(f, p) & uygun_gunler(f, p)
+
+
+def sikismasiz_kirilim(f: pd.DataFrame, p: Parametre = Parametre(), gun: int = KIRILIM_GUN) -> np.ndarray:
+    """K1 ek kolu: kapanış önceki `gun` günün en yüksek yükseğinin üstünde, sıkışma penceresinde değil."""
+    onceki = f["yuksek"].shift(1).rolling(gun).max()
+    return (f["kapanis"] > onceki).to_numpy() & uygun_gunler(f, p) & ~pencere_gunleri(f, p)
 
 
 def sinyal(f: pd.DataFrame, p: Parametre = Parametre()) -> pd.DatetimeIndex:

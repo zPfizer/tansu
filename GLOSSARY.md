@@ -31,5 +31,8 @@ Sistemin dili. Kurallar Tansu'dan esinlenen yorumlardır; Tansu'nun kendi sistem
 | Ölçülemedi | Örneklemin, masraftan büyük bir etkiyi bile ayırt edemediği sonuç. "Geçmedi"den ayrıdır. |
 | Kanıt | Bir ailenin geçmiş veride, masraflar dahil, karşılaştırmalı sınama sonucu. |
 | Rastgele kural | Ailenin ön şartlarını sağlayan günlerden rastgele seçilen girişler. Karşılaştırma için. |
+| K1 | Rastgele kuralla karşılaştırma: aynı simülatörden geçen, ön şartlı günlerden çekilmiş rastgele girişler. p = (1 + k) / (1 + B). |
+| K2 | Aynı evrenin eşit ağırlıklı sepeti; kuralın yatırımdaki payı kadar tutulur, kalanı faiz kazanır. |
+| Holm | Çoklu deneme düzeltmesi. Her (kural, aile) çiftinin ilk resmi p'si girer; geliştirme koşuları girmez. |
 | Ayrılmış dönem | Kurallar yazılırken bakılmamış dönem: kural kaydından sonrası. |
 | Deneme / Kâğıt / Canlı | Bir ailenin durumu. Deneme: geçmiş sınamayı geçmedi, gösterilmez. Kâğıt: geçmiş sınamayı geçti, kart üretir, para konmadan izlenir. Canlı: kâğıt üstü dönemi de geçti. |

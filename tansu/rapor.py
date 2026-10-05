@@ -77,6 +77,41 @@ def _cift(cift) -> list:
     return govde
 
 
+AILE_ADI = {"ema_sikismasi": "EMA sıkışması", "cift_rotasyonu": "Çift rotasyonu"}
+
+
+def _deger(x, birim) -> str:
+    if x is None or x != x:
+        return "-"
+    return {"yuzde": yuzde, "p": lambda v: f"{v:.4f}".replace(".", ","), "sayi": lambda v: str(int(v))}[birim](x)
+
+
+def _kabul(kabul, bilgi) -> list:
+    """Kabul tablosu: aile başına 6 ölçüt (TASARIM 5.12), Holm m ve tarihi, K1 p'leri, güven aralığı, saptanabilir etki."""
+    m = max(k["holm"]["holm_m"] for k in kabul.values())
+    varsayim = any(k["holm"]["varsayimsal"] for k in kabul.values())
+    govde = ["<h2>Kabul tablosu</h2>",
+             f"<p>Holm m = {m}, Holm tarihi {_kac(bilgi['holm_tarih'])}"
+             + (" (geliştirme koşusu: p resmi değildir, Holm varsayımsaldır)" if varsayim else "") + ".</p>"]
+    for aile, k in kabul.items():
+        satirlar = [(s["no"], s["ad"], s["durum"], "; ".join(f"{e}: {_deger(v, b)}" for e, v, b in s["ham"]))
+                    for s in k["satirlar"]]
+        k1, (alt, ust) = k["k1"], k["ci"]
+        p_satir = f"K1 p: a (aynı gün) {_deger(k1.get('p_a'), 'p')}, b (aynı hisse) {_deger(k1.get('p_b'), 'p')}" \
+            if "p_a" in k1 else "K1 p (aynı çiftlerde rastgele günler)"
+        govde += [f"<h3>{_kac(AILE_ADI[aile])}: {_kac(k['genel'])} (durum: {_kac(k['durum'])})</h3>",
+                  _tablo(["Ölçüt", "Açıklama", "Durum", "Değer"], satirlar),
+                  f"<p>{_kac(p_satir)}; aile p = {_deger(k1['p'], 'p')}"
+                  + (f"; ek kol (sıkışmasız) {_deger(k1['p_ek'], 'p')}" if "p_ek" in k1 else "")
+                  + f"; B = {k1['tekrar']}; Holm p {_deger(k['holm']['holm_p'], 'p')}.</p>",
+                  f"<p>Güven aralığı (günlük fazla getirinin yıllıklandırılmış ortalaması, blok bootstrap %95): "
+                  f"{_deger(alt, 'yuzde')} ile {_deger(ust, 'yuzde')}. Aralık yalnız rapordur. "
+                  f"Saptanabilir en küçük etki (yıllık): {_deger(k['mde'], 'yuzde')}; işlem başına {_deger(k['mde_islem'], 'yuzde')}.</p>"]
+        if k["ret"]:
+            govde.append(f"<p>Portföy kuralı reddetti: en büyük düşüş {_deger(k['dusus'][0], 'yuzde')}, düşüşte kalma {k['dusus'][1]} gün.</p>")
+    return govde
+
+
 def _cift_uyarilari(cift) -> list:
     b = cift["bilgi"]
     return [f"Çift bölmesi %0,3: {b['gecis']} tutuş dönemi, {b['gecis_gun']} farklı giriş günü (örneklem şartı: en az 100 ve 60).",
@@ -108,8 +143,9 @@ def _uyarilar(sim, bilgi) -> list:
     ]
 
 
-def yaz(sim, bilgi, cift=None, dizin=None) -> tuple:
-    """`bilgi`: kosu_id, anlik, kod_hash. (html yolu, csv yolu) döndürür; `cift` verilirse çift bölümü ve CSV'si eklenir."""
+def yaz(sim, bilgi, cift=None, dizin=None, kabul=None) -> tuple:
+    """`bilgi`: kosu_id, anlik, kod_hash (K1 varsa holm_tarih). (html yolu, csv yolu) döndürür; `cift` verilirse çift
+    bölümü ve CSV'si, `kabul` verilirse kabul tablosu eklenir."""
     dizin = Path(dizin or RAPOR_DIZINI)
     dizin.mkdir(parents=True, exist_ok=True)
     m3, b = sim["masraf"][0.003], sim["bilgi"]
@@ -130,9 +166,11 @@ def yaz(sim, bilgi, cift=None, dizin=None) -> tuple:
         _tablo(["Masraf", "Son özkaynak TL", "Kural getirisi", "K2 getirisi", "İşlem", "Reddedilen"], sonuc),
         _egri(m3),
         "<h2>Yıllık fazla getiri</h2>",
-        "<p>Fazla getiri = yıllık kural getirisi − yıllık K2 getirisi (yüzde puan). Henüz p değeri yoktur.</p>",
+        "<p>Fazla getiri = yıllık kural getirisi − yıllık K2 getirisi (yüzde puan). "
+        + ("p değerleri kabul tablosundadır." if kabul else "Henüz p değeri yoktur.") + "</p>",
         _tablo(["Yıl", "Kural %0,3", "K2", "Fazla %0,1", "Fazla %0,3", "Fazla %0,5"], yillik),
         *(_cift(cift) if cift else []),
+        *(_kabul(kabul, bilgi) if kabul else []),
         "<h2>Uyarılar</h2>",
         "<ul>" + "".join(f"<li>{_kac(u)}</li>" for u in _uyarilar(sim, bilgi) + (_cift_uyarilari(cift) if cift else [])) + "</ul>",
     ]

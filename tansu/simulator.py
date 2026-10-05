@@ -180,6 +180,50 @@ def ilk_gun(anlik, bas=BASLANGIC):
     return gunler[gunler >= pd.Timestamp(bas)][0]
 
 
+def _suzgec(islemler, evr, ilk, kg) -> tuple:
+    """(işlem tablosu, kapanma sayısı): evren süzgeci ve kapanan hisse (TASARIM 5.2, 5.6). Gerçek koşu ve K1 aynı yolu kullanır."""
+    islemler = islemler.astype({a: "datetime64[ns]" for a in ("sinyal_tarih", "giris_tarih", "cikis_tarih")})
+    t = islemler.loc[islemler["sinyal_tarih"] >= ilk].copy()
+    ay = t["sinyal_tarih"].dt.to_period("M")
+    t = t.loc[np.array([s in evr.get(a, ()) for s, a in zip(t["sembol"], ay)], dtype=bool)].reset_index(drop=True)
+    sayi = 0
+    for k, r in t.iterrows():  # kapanan hisse (TASARIM 5.2): açık pozisyon kapanma gününde 0 fiyatla kapanır
+        if r.sembol in kg:
+            son, gun = kg[r.sembol]
+            if r.giris_tarih <= gun and (r.cikis_tarih > son or r.neden == "veri_sonu"):
+                t.loc[k, ["cikis_tarih", "cikis_fiyat", "neden"]] = [gun, 0.0, "kapanma"]
+                sayi += 1
+    return t, sayi
+
+
+def k1_baglam(anlik, evr, bas=BASLANGIC) -> dict:
+    """K1 tekrarlarının ortak girdisi: fiyat matrisleri, faiz ve K2 sepeti bir kez hesaplanır (TASARIM 5.7)."""
+    gunler = anlik.gunler
+    ilk = ilk_gun(anlik, bas)
+    days = gunler[gunler >= ilk]  # kapanma günleri de takvimdedir
+    kap = evren_modulu.kapananlar(anlik)
+    kg = dict(zip(kap["sembol"], zip(kap["son_islem"], kap["kapanma_gunu"])))
+    z = zemin(anlik, evr, days, set(), kg)
+    onceki = np.concatenate([[1.0], z["sepet"].to_numpy()[:-1]])
+    return {"gunler": gunler, "ilk": ilk, "days": days, "kg": kg, "z": z, "evr": evr,
+            "sepet_onceki": pd.Series(onceki, index=days)}
+
+
+def sepet_getirisi(b, giris, cikis) -> np.ndarray:
+    """Sepet getirisi: K2 sepet endeksinin önceki-kapanış değerleri oranı (TASARIM 5.7 "K1 uygulama kuralları")."""
+    so = b["sepet_onceki"]
+    return so.reindex(pd.DatetimeIndex(cikis)).to_numpy() / so.reindex(pd.DatetimeIndex(giris)).to_numpy() - 1
+
+
+def k1_islemler(islemler, b, masraf) -> pd.DataFrame:
+    """Motor işlemlerinden simülatörün alacağı işlemler (`_alinanlar` sütunları) ve sepete göre `fazla` getiri."""
+    t, _ = _suzgec(islemler, b["evr"], b["ilk"], b["kg"])
+    z = b["z"]
+    alinan = _kural(t, b["days"], b["gunler"], z["g"], z["C"], z["Lq"], masraf)[0] if len(t) else {}
+    s = _alinanlar(t, alinan, masraf) if alinan else _alinanlar(t.iloc[:0], {}, masraf)
+    return s.assign(fazla=s["getiri"] - sepet_getirisi(b, s["giris_tarih"], s["cikis_tarih"]) if len(s) else [])
+
+
 def calistir(anlik, islemler, dusen=0, bas=BASLANGIC, masraflar=MASRAFLAR, evr=None) -> dict:
     """Motor işlemlerinden her masraf düzeyi için sermaye eğrisi ve K2; `{"masraf": {m: ...}, "bilgi": {...}}`.
 
@@ -198,23 +242,10 @@ def calistir(anlik, islemler, dusen=0, bas=BASLANGIC, masraflar=MASRAFLAR, evr=N
              "olay_uyari_uye": len(olay_tablo),
              "olay_uyari_bos_tablo": int(olay_tablo["sembol"].isin(bos_tablo).sum()),
              "faiz_son_degisim": anlik.faiz_son_degisim}
-    # evren süzgeci: sinyal gününün ayının evreninde olmayan işlem atılır
-    islemler = islemler.astype({a: "datetime64[ns]" for a in ("sinyal_tarih", "giris_tarih", "cikis_tarih")})
-    t = islemler.loc[islemler["sinyal_tarih"] >= ilk].copy()
-    ay = t["sinyal_tarih"].dt.to_period("M")
-    t = t.loc[np.array([s in evr.get(a, ()) for s, a in zip(t["sembol"], ay)], dtype=bool)].reset_index(drop=True)
-    # kapanan hisse (TASARIM 5.2): açık pozisyon kapanma gününde 0 fiyatla kapanır
     kap = evren_modulu.kapananlar(anlik)
     bilgi["kapananlar"] = len(kap)
     kg = dict(zip(kap["sembol"], zip(kap["son_islem"], kap["kapanma_gunu"])))
-    sayi = 0
-    for k, r in t.iterrows():
-        if r.sembol in kg:
-            son, gun = kg[r.sembol]
-            if r.giris_tarih <= gun and (r.cikis_tarih > son or r.neden == "veri_sonu"):
-                t.loc[k, ["cikis_tarih", "cikis_fiyat", "neden"]] = [gun, 0.0, "kapanma"]
-                sayi += 1
-    bilgi["kapanma"] = sayi
+    t, bilgi["kapanma"] = _suzgec(islemler, evr, ilk, kg)
     days = pd.DatetimeIndex(sorted({*days, *t["giris_tarih"], *t["cikis_tarih"]}))
     z = zemin(anlik, evr, days, set(t["sembol"]), kg)
     C, Lq, g, rb, sepet = z["C"], z["Lq"], z["g"], z["rb"], z["sepet"]

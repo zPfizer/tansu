@@ -177,11 +177,8 @@ def _sonuc(M, setler, slot_sayisi, m) -> dict:
             "elli_elli": elli, "yatirim": pd.Series(pay, index=days), "yillik": yillik}
 
 
-def calistir(anlik, evr, bas=simulator.BASLANGIC, p=Parametre(), masraflar=simulator.MASRAFLAR) -> dict:
-    """Çift bölmesi ve VAKBN–GARAN sabit çifti, her masraf düzeyi için.
-
-    Döner: secim (yıl, sektor, y, x, p, beta), islem_yok (çift seçilmeyen yıllar), masraf {m: sonuç}, sabit {m: sonuç}
-    (sabit çiftin sembolleri yoksa boş), bilgi."""
+def hazirla(anlik, evr, bas=simulator.BASLANGIC, p=Parametre()) -> dict:
+    """Seçimler, fiyat matrisleri ve bayraklar (`M`); `calistir` ve K1 ortak kullanır."""
     gunler = anlik.gunler
     ilk = simulator.ilk_gun(anlik, bas)
     days = gunler[gunler >= ilk]
@@ -222,6 +219,17 @@ def calistir(anlik, evr, bas=simulator.BASLANGIC, p=Parametre(), masraflar=simul
          "SA": z["A"].where(bayrak["I"] & ~bayrak["Kar"]).ffill().to_numpy(), "hedef": hedef_,
          "olu": {h: gunler.get_loc(gun) for h, (_, gun) in kg.items() if gun in gunler}}
     sabit_set = [{"bas": ilk_konum + 1, "yil": None, "ciftler": [sabit]}] if sabit else []
+    return {"M": M, "setler": setler, "secim": secimler, "sabit": sabit, "sabit_set": sabit_set, "p": p, "Kc": Kc,
+            "gunler": gunler}
+
+
+def calistir(anlik, evr, bas=simulator.BASLANGIC, p=Parametre(), masraflar=simulator.MASRAFLAR, h=None) -> dict:
+    """Çift bölmesi ve VAKBN–GARAN sabit çifti, her masraf düzeyi için.
+
+    Döner: secim (yıl, sektor, y, x, p, beta), islem_yok (çift seçilmeyen yıllar), masraf {m: sonuç}, sabit {m: sonuç}
+    (sabit çiftin sembolleri yoksa boş), bilgi. `h`: `hazirla` çıktısı (K1 ile paylaşmak için)."""
+    h = h or hazirla(anlik, evr, bas, p)
+    M, setler, secimler, sabit, sabit_set = (h[k] for k in ("M", "setler", "secim", "sabit", "sabit_set"))
     sonuc = {"masraf": {m: _sonuc(M, setler, p.en_fazla, m) for m in masraflar},
              "sabit": {m: _sonuc(M, sabit_set, 1, m) for m in masraflar} if sabit else {}}
     islemler = sonuc["masraf"][0.003]["islemler"]
