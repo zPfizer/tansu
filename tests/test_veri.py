@@ -11,6 +11,7 @@ import pandas as pd
 import pytest
 
 from tansu import veri
+from tansu.kaynak import KaynakHatasi
 
 # Olay tarihi: SHHE_TARIH, ms epoch, İstanbul gece yarısı (UTC 21:00, önceki gün).
 def epoch(gun):
@@ -203,3 +204,19 @@ def test_takvim_xu100_kapanisi_olan_gunlerdir(tmp_path):
     f[1]["xu100"], f[2]["xu100"] = float("nan"), 0.0
     _, a = anlik_borsapy(tmp_path, fiyat=f)
     assert list(a.gunler) == [pd.Timestamp(t) for t in ("2024-08-08", "2024-08-13", "2024-08-14", "2024-08-15")]
+
+
+def test_sektoru_alinamayan_ya_da_bos_sembol_indirmeyi_durdurmaz(tmp_path):
+    # Evren ölçeğinde bazı kodlar için KAP sektörü yoktur; sektör yalnız inen hisseler için sorulur.
+    class Borsapy(SahteBorsapy):
+        def sektor(self, sembol):
+            if sembol == "CCOLA2":
+                raise KaynakHatasi(sembol)
+            assert sembol != "BOS", "boş sembol için sektör sorulmaz"
+            return "GIDA"
+
+    k = SahteKaynak({"CCOLA": CCOLA_FIYAT, "CCOLA2": CCOLA_FIYAT, "BOS": []},
+                    {"CCOLA": CCOLA_OLAY, "CCOLA2": CCOLA_OLAY, "BOS": []})
+    kimlik = veri.indir(["CCOLA", "CCOLA2", "BOS"], tmp_path, k, simdi=SIMDI, borsapy=Borsapy(FAIZ, {}))
+    a = veri.oku(kimlik, tmp_path)
+    assert (a.sektor, a.bos) == ({"CCOLA": "GIDA"}, ("BOS",))

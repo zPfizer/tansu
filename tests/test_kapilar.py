@@ -183,3 +183,12 @@ def test_eksik_indirme_bes_hisseden_fazlaysa_veri_sorunlu(tmp_path):
     alti = anlik(tmp_path / "b", hepsi, bozuk=[f"S{i}" for i in range(6)])
     assert (bes.inmeyen, bes.sorunlar) == (tuple(f"S{i}" for i in range(5)), [])
     assert alti.sorunlar == ["6 hisse inmedi"]
+
+
+def test_veri_donmeyen_sembol_bos_sayilir_inmeyen_degil(tmp_path):
+    # İş Yatırım şirket kodu için boş liste döner (pay değil ya da hiç işlem görmemiş): hata değil.
+    seri = [satir("2024-01-02", 100.0), satir("2024-01-03", 100.0)]
+    hepsi = {"A": seri, **{f"S{i}": [] for i in range(8)}}
+    a = anlik(tmp_path, hepsi)
+    assert (a.bos, a.inmeyen, a.sorunlar) == (tuple(f"S{i}" for i in range(8)), (), [])
+    assert list(a.fiyat["sembol"].unique()) == ["A"]

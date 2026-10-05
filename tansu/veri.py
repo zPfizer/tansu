@@ -40,6 +40,7 @@ class Anlik:
     faiz: pd.DataFrame = None  # tarih, faiz (yüzde); yalnız değişim günleri
     sektor: dict = None  # sembol → KAP sektörü
     inmeyen: tuple = ()  # indirilemeyen semboller
+    bos: tuple = ()  # kaynağın veri döndürmediği semboller (hata değil: pay olmayan kod, işlem görmemiş)
 
     @property
     def gun_tablosu(self) -> pd.DataFrame:
@@ -107,13 +108,17 @@ def indir(semboller, kok, kaynak, simdi=None, bas=BASLANGIC, borsapy=None) -> st
     hedef, gecici = ag / kimlik, ag / f"_gecici-{kimlik}"
     if hedef.exists():
         raise VeriHatasi(f"anlık görüntü zaten var: {kimlik}")
-    fiyatlar, ham_olaylar, inmeyen = [], {}, []
+    fiyatlar, ham_olaylar, inmeyen, bos = [], {}, [], []
     for s in semboller:
         try:
             f, ham_olaylar[s] = kaynak.fiyat(s, bas, simdi.date()).assign(sembol=s), kaynak.olaylar(s)
         except KaynakHatasi:
             ham_olaylar.pop(s, None)
             inmeyen.append(s)
+            continue
+        if f.empty:
+            del ham_olaylar[s]
+            bos.append(s)
             continue
         _yapi_denetimi(s, f)
         fiyatlar.append(f)
@@ -123,7 +128,13 @@ def indir(semboller, kok, kaynak, simdi=None, bas=BASLANGIC, borsapy=None) -> st
         faiz = borsapy.faiz()
         if faiz.empty:
             raise VeriHatasi("faiz serisi boş")
-        sektor = {s: borsapy.sektor(s) for s in semboller}
+        sektor = {}
+        for f in fiyatlar:
+            s = f["sembol"].iloc[0]
+            try:
+                sektor[s] = borsapy.sektor(s)
+            except KaynakHatasi:  # sektörü olmayan hisse çifte girmez (TASARIM 5.2); indirme durmaz
+                pass
     shutil.rmtree(gecici, ignore_errors=True)
     gecici.mkdir(parents=True)
     if borsapy:
@@ -131,7 +142,8 @@ def indir(semboller, kok, kaynak, simdi=None, bas=BASLANGIC, borsapy=None) -> st
         (gecici / "sektor.json").write_text(json.dumps(sektor, ensure_ascii=False), encoding="utf-8")
     pd.concat(fiyatlar, ignore_index=True).to_parquet(gecici / "fiyat.parquet", index=False)
     (gecici / "olaylar.json").write_text(json.dumps(ham_olaylar, ensure_ascii=False), encoding="utf-8")
-    manifest = {"kimlik": kimlik, "semboller": [s for s in semboller if s not in inmeyen], "inmeyen": inmeyen,
+    manifest = {"kimlik": kimlik, "semboller": [s for s in semboller if s not in inmeyen + bos], "inmeyen": inmeyen,
+                "bos": bos,
                 "dosyalar": {p.name: _sha256(p) for p in sorted(gecici.iterdir())}}
     (gecici / "manifest.json").write_text(json.dumps(manifest, indent=1), encoding="utf-8")
     os.replace(gecici, hedef)
@@ -154,7 +166,7 @@ def oku(kimlik, kok) -> Anlik:
     sektor = (json.loads((klasor / "sektor.json").read_text(encoding="utf-8"))
               if "sektor.json" in manifest["dosyalar"] else None)
     return Anlik(kimlik, pd.read_parquet(klasor / "fiyat.parquet"), olaylar, faiz, sektor,
-                 tuple(manifest.get("inmeyen", [])))
+                 tuple(manifest.get("inmeyen", [])), tuple(manifest.get("bos", [])))
 
 
 def _sha256(yol: Path) -> str:

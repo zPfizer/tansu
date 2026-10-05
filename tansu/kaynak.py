@@ -1,7 +1,9 @@
 """Ağa çıkan tek modül: İş Yatırım (TASARIM 4; kullanım kararı `docs/arastirma/kullanim-kosullari-fiyat-adimi.md`)."""
 
+import io
 import json
 import time
+from pathlib import Path
 
 import pandas as pd
 import requests
@@ -10,7 +12,8 @@ KOK = "https://www.isyatirim.com.tr"
 FIYAT_URL = KOK + "/_layouts/15/Isyatirim.Website/Common/Data.aspx/HisseTekil"
 OLAY_URL = KOK + "/_layouts/15/IsYatirim.Website/StockInfo/CompanyInfoAjax.aspx/GetSermayeArttirimlari"
 CEREZ_URL = KOK + "/tr-tr/analiz/hisse/Sayfalar/sirket-karti.aspx"
-USER_AGENT = "tansu-kisisel/0.1"
+KAPANAN_URL = "https://www.borsaistanbul.com/datum/IslemSirasiKapananSirketler.xls"
+USER_AGENT ="tansu-kisisel/0.1"
 
 # İş Yatırım alanı → proje adı. ham_* düzeltmesiz (HG), diğerleri düzeltilmiş (HGDG).
 ALANLAR = {
@@ -82,6 +85,51 @@ class IsYatirim:
             except (requests.ConnectionError, requests.Timeout, requests.HTTPError) as hata:
                 son_hata = hata
         raise KaynakHatasi(f"{url}: {len(bekle)} denemede alınamadı ({son_hata})")
+
+
+def kapanan_tablo(ham) -> pd.DataFrame:
+    """Borsa İstanbul "İşlem Sırası Kapanan Şirketler" tablosundan pay kodları: kod, ad, tarih, aciklama.
+
+    Fon ve diğer türler (`.F1` vb.) ve 2010 öncesi kapananlar atılır; tarihsiz satır kalır."""
+    t = ham.iloc[4:, :4].set_axis(["kod", "ad", "tarih", "aciklama"], axis=1)
+    t = t[t["kod"].astype(str).str.fullmatch(r"[A-Z0-9]+(\.E)?")].copy()
+    t["kod"] = t["kod"].str.removesuffix(".E")
+    t["tarih"] = pd.to_datetime(t["tarih"])
+    return t[~(t["tarih"] < "2010-01-01")].reset_index(drop=True)
+
+
+def kapanan_kodlar(oturum=None) -> pd.DataFrame:
+    """İşlemi kapanmış pay kodları (Borsa İstanbul, birincil kaynak; `Data/DataFilePaths` listesinde)."""
+    oturum = oturum or requests.Session()
+    yanit = oturum.get(KAPANAN_URL, timeout=(5, 120), headers={"User-Agent": USER_AGENT})
+    if yanit.status_code != 200:
+        raise KaynakHatasi(f"{KAPANAN_URL}: HTTP {yanit.status_code}")
+    return kapanan_tablo(pd.read_excel(io.BytesIO(yanit.content), header=None))  # .xls için xlrd
+
+
+class Onbellekli:
+    """Sembol başına yanıtı klasöre yazar. Saatler süren evren indirmesi yarıda kesilirse yeniden başlayınca
+    tamamlanan semboller tekrar istenmez. Hata yazılmaz; yalnız başarılı yanıt saklanır."""
+
+    def __init__(self, kaynak, klasor):
+        self._kaynak, self._klasor = kaynak, Path(klasor)
+        self._klasor.mkdir(parents=True, exist_ok=True)
+
+    def fiyat(self, sembol, bas, son) -> pd.DataFrame:
+        yol = self._klasor / f"{sembol}.fiyat.parquet"
+        if yol.exists():
+            return pd.read_parquet(yol)
+        f = self._kaynak.fiyat(sembol, bas, son)
+        f.to_parquet(yol, index=False)
+        return f
+
+    def olaylar(self, sembol) -> list:
+        yol = self._klasor / f"{sembol}.olaylar.json"
+        if yol.exists():
+            return json.loads(yol.read_text(encoding="utf-8"))
+        o = self._kaynak.olaylar(sembol)
+        yol.write_text(json.dumps(o, ensure_ascii=False), encoding="utf-8")
+        return o
 
 
 class Borsapy:
