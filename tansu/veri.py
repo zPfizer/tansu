@@ -220,8 +220,6 @@ def _yapi_denetimi(sembol, f):
         raise VeriHatasi(f"{sembol}: tarih sırası bozuk")
     if f["tarih"].duplicated().any():
         raise VeriHatasi(f"{sembol}: tekrar eden gün")
-    if f[FIYAT_SUTUNLARI].isna().any().any():
-        raise VeriHatasi(f"{sembol}: ortada NaN")
 
 
 def _gunler(fiyat, olaylar, takvim):

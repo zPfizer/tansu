@@ -530,11 +530,13 @@ Getiri görülmeden yazılır; kural kaydına girer. (B-7, İ: 19-015)
 - **Satır ihlali:** düşük ≤ AOF ≤ yüksek ve düşük ≤ kapanış ≤ yüksek sağlanmazsa karantina. Ham ya da
   düzeltilmiş fiyatı ≤ 0 olan satır da bozuktur. Düzeltilmiş seride bağıl 1e-4 yuvarlama payı tanınır
   (gerçek veride düzeltilmiş seri 4 ondalığa yuvarlı: 637 satırda en çok 4,5e-5 fark; gerçek ihlaller ≥ 1,5e-3).
-- **Yapısal ihlal:** bozuk sıra, tekrar eden gün ya da ortada NaN koşuyu durdurur. İstisna 1 (bilet 07,
-  gerçek veri: BERDN 30.01.2012, ISATR 23.06.2010): ham fiyatların ve hacmin hepsi NaN ya da 0 olan
-  satır işlem yapılmamış gündür;
-  indirmede atılır (eksik gün, 5.1). Kısmi NaN yine ihlaldir. İstisna 1b (bilet 07, BYDNR 23.08.2023): bütün alanları aynı olan tekrar
-  satır tek sayılır; alanları farklı tekrar ihlaldir. İstisna 2: İş Yatırım
+- **Yapısal ihlal:** bozuk sıra ya da tekrar eden gün koşuyu durdurur. Satır içindeki NaN durdurmaz:
+  kısmi NaN'li satır bozuk satırdır, karantinaya girer (bilet 07, ~900 sembolde tek satır, örn. IZINV
+  13.11.2013 yüksek 634210 / hacim NaN, bütün indirmeyi saatler sonra düşürüyordu; oran eşiği zaten
+  korur). İstisna 1 (bilet 07, gerçek veri: BERDN 30.01.2012, ISATR 23.06.2010): ham fiyatların ve
+  hacmin hepsi NaN ya da 0 olan satır işlem yapılmamış gündür; indirmede atılır (eksik gün, 5.1).
+  İstisna 1b (BYDNR 23.08.2023): bütün alanları aynı olan tekrar satır tek sayılır; alanları farklı
+  tekrar ihlaldir. İstisna 2: İş Yatırım
   GARAN yanıtını 276 yerde sırasız verir (satır eksiksiz, tekrar yok; bilet 06'da görüldü); `kaynak` yanıtı
   tarihe göre sıralar, kapı sıralamadan sonraki seriye bakar.
 - **Oran eşikleri:** karantina hisse-gün oranı > %1 ya da olay denetimi farkı olan gün oranı > %2 ise

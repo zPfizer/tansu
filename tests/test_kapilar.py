@@ -128,15 +128,20 @@ def test_duzeltilmis_seride_yuvarlama_farki_bozuk_sayilmaz(tmp_path):
     assert list(anlik(tmp_path, fiyat).gun_tablosu["karantina"]) == [False, False, True]
 
 
-@pytest.mark.parametrize("bozuk", ["tekrar", "sira", "nan"])
+def test_satirdaki_kismi_nan_bozuk_satirdir_indirmeyi_durdurmaz(tmp_path):
+    # Gerçek IZINV 13.11.2013: yüksek 634210 (saçma), AOF ve hacim NaN. Satır karantinaya girer.
+    bozuk = {**satir("2024-01-03", 100.0), "aof": np.nan, "hacim": np.nan, "ham_yuksek": 634210.0}
+    g = anlik(tmp_path, [satir("2024-01-02", 100.0), bozuk, satir("2024-01-04", 100.0)]).gun_tablosu
+    assert list(g["karantina"]) == [False, True, False]
+
+
+@pytest.mark.parametrize("bozuk", ["tekrar", "sira"])
 def test_yapisal_ihlal_indirmeyi_durdurur(tmp_path, bozuk):
     fiyat = [satir("2024-01-02", 100.0), satir("2024-01-03", 100.0), satir("2024-01-04", 100.0)]
     if bozuk == "tekrar":
         fiyat[2] = satir("2024-01-03", 101.0)  # aynı gün, farklı alanlar (birebir aynı tekrar ihlal değil, 5.13)
-    elif bozuk == "sira":
-        fiyat[1], fiyat[2] = fiyat[2], fiyat[1]
     else:
-        fiyat[1]["ham_kapanis"] = np.nan
+        fiyat[1], fiyat[2] = fiyat[2], fiyat[1]
     with pytest.raises(veri.VeriHatasi):
         anlik(tmp_path, fiyat)
     assert not (tmp_path / "ag").exists() or not any((tmp_path / "ag").iterdir())
