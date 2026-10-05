@@ -204,3 +204,11 @@ def test_olay_tablosu_bir_gun_kaysa_da_sahte_karantina_olmaz(tmp_path, olay_gunu
     fiyat = [{**satir("2023-12-29", 100.0), **yari}, {**satir("2024-01-02", 100.0), **yari},
              satir("2024-01-03", 50.0), satir("2024-01-04", 51.0)]
     assert not anlik(tmp_path, fiyat, olay).gun_tablosu["karantina"].any()
+
+
+def test_ham_fiyati_ve_hacmi_bos_satir_islem_yapilmamis_gundur_atilir(tmp_path):
+    # Gerçek BERDN 30.01.2012: ham alanların hepsi ve hacim NaN, düzeltilmiş alanlar dolu.
+    bos = {**satir("2024-01-03", 100.0), "ham_kapanis": np.nan, "ham_aof": np.nan, "ham_yuksek": np.nan,
+           "ham_dusuk": np.nan, "hacim": np.nan}
+    a = anlik(tmp_path, [satir("2024-01-02", 100.0), bos, satir("2024-01-04", 100.0)])
+    assert list(a.fiyat["tarih"]) == [pd.Timestamp("2024-01-02"), pd.Timestamp("2024-01-04")]
