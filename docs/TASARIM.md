@@ -480,6 +480,8 @@ Parametreler ve ızgara önceden yazılır (`KURALLAR.md` §3). Kurallar:
   - `kayit`, `deneme`, `destek` (ızgara, yeniden üretim, sınama), `sadakat`.
   - `duzeltme`: hedef koşu ve yeni değer yazılır; asıl satır değişmez.
   - Holm yalnız `deneme` satırlarını sayar.
+- **Git:** `kayit/` izlenir (`deneme.jsonl`, `kartlar.jsonl`). Yalnız ekleme kuralının kanıtı git geçmişidir;
+  `veri/` ve `rapor/` izlenmez. Kirli-ağaç denetimi `kayit/`'ı saymaz. (Bilet 09: `kayit/` kararı)
 - **Silme yasağı:** günlükte adı geçen anlık görüntü silinmez.
 - **Başlangıç denetimi:** koşu başında manifest yeniden hash'lenir; uyuşmazsa koşu durur.
 
