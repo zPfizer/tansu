@@ -152,6 +152,7 @@ def test_sinama_anlik_goruntuden_sinyal_ve_islem():
     islemler, dusen = motor.sinama(anlik, p, atr_n=2)
     assert dusen == 0 and len(islemler) == 1
     t = islemler.iloc[0]
-    assert (t.sembol, t.giris_tarih, t.cikis_tarih, t.neden) == ("XXXX", GUNLER[6], GUNLER[7], "veri_sonu")
+    assert (t.sembol, t.sinyal_tarih, t.giris_tarih, t.cikis_tarih, t.neden) == (
+        "XXXX", GUNLER[5], GUNLER[6], GUNLER[7], "veri_sonu")
     assert (t.giris_fiyat, t.cikis_fiyat, t.gerceklesen_kayip) == (104.0, 105.0, 0.0)
     assert t.planlanan_risk == pytest.approx(4.5625, abs=1e-9)

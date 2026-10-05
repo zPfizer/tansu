@@ -365,6 +365,27 @@ yıla taşınır. (Sorgu S6, İ: 08-083)
 **Faiz:** boştaki nakit, bir gün gecikmeli politika faizini kazanır (takvim günü, /365). Rapor faiz
 serisinin kaynağını ve son değişim tarihini yazar; seri boşsa koşu SORUNLU olur. (B4, B-8, İ: 08-071)
 
+**Simülatör kuralları** (bilet 10; belge bu noktalarda sessizdi, kod bu okumayı uygular):
+- **Başlangıç:** ilk gün = 2015-12-01'den sonraki ilk işlem günü (ya da veri daha geç başlıyorsa veri günü).
+  Bu günden önceki sinyaller sayılmaz. Her işlem günü: önce faiz, sonra çıkışlar, sonra girişler, sonra
+  kapanış değerlemesi.
+- **Evren süzgeci:** motor bütün sembollerde işlem üretir; simülatör, sinyal gününün ayının evreninde
+  (5.2) olmayan işlemi atar. Motor bu işlemleri pozisyon gibi saydığı için aynı hissede sonraki sinyal
+  gecikebilir (bilinen yaklaşıklık). Reddedilen işlemler için de aynıdır.
+- **Boyutlandırma özkaynağı:** sinyal günü kapanış özkaynağı (önceki işlem günü kapanışı). İlk gün için
+  1.000.000 TL. Nakit sınırı giriş günündeki güncel nakittir (aynı gün çıkış nakdi dahil).
+- **Likidite:** sinyal gününü kapsayan son 10 işlem gününün (hacmi olmayan gün 0) medyan TL hacmi.
+- **Bağlayıcı sınır:** dört sınırdan en küçüğü; eşitlikte sıra: risk, tavan, likidite, nakit.
+  Rapor, alınan işlemler içinde her sınırın bağlama oranını yazar.
+- **Reddedilen:** 10 pozisyon dolu olduğu için ya da adedi 0'a yuvarlandığı için girilemeyen sinyal.
+- **Masraf:** girişte tutar × (1 + m), çıkışta tutar × (1 − m). İşlem getirisi = çıkış (1 − m) / giriş (1 + m) − 1.
+- **Faiz:** her takvim gecesi, nakdin üzerine o gecenin (bir gün gecikmeli, 5.6) yıllık oranının /365'i basit
+  eklenir; hafta sonu üç gece sayılır. Gece, işlem gününün kapanışından sonraki ilk geceden başlar.
+- **Özkaynak:** nakit + açık pozisyonların düzeltilmiş kapanışla değeri (kapanışı olmayan gün son kapanış).
+- **Kapanan hisse (5.2):** kapanma günü (`evren.kapananlar`) açık olan pozisyon o gün 0 fiyatla
+  kapanır (−%100, neden `kapanma`). Kapanma nedeni listesi henüz bağlı değildir (bilet 07); her kapanma
+  −%100 sayılır. Rapor bu işlemlerin sayısını yazar.
+
 ### 5.7 Karşılaştırma (asıl soru)
 
 **Fazla getiri tanımı** (B4):
@@ -406,6 +427,13 @@ serisinin kaynağını ve son değişim tarihini yazar; seri boşsa koşu SORUNL
   09-019, 09-020)
 - **Maruziyet:** sepetin yatırımdaki payı her gün kuralın o günkü yatırımdaki payına eşitlenir; kalanı
   aynı faizi kazanır. Bu eşitleme masrafsızdır (YORUM).
+  - Kuralın "o günkü payı" = o günün kapanışındaki pozisyon değeri / özkaynak.
+  - Sepet getirisi içinde: ay başı ilk işlem günü eski sepet AOF'a taşınır, AOF'ta eşit ağırlıklı yeni
+    sepete dengelenir (masraf = %0,3 × Σ|yeni ağırlık − eski ağırlık|), sonra kapanışa taşınır. Ayın
+    öteki günleri kapanıştan kapanışa, dengelemesiz. İlk kuruluş da masraf öder.
+  - Sepette kapanma günü olan hisse o gün 0 olur (−%100); ağırlığı sonraki ay başına kadar nakde dönmez.
+  - K2 her masraf düzeyinde sepet masrafı %0,3 kalır; maruziyet o düzeydeki kuraldan gelir.
+  - Fazla getiri (rapor): yıllık kural getirisi − yıllık K2 getirisi (yüzde puan).
 - **Çift bölmesi:**
   - Kabul, evren sepetiyle (K2) verilir.
   - Aynı çiftlerin 50/50 tutulması yalnız tanısaldır: yılın ilk işlem gününde bir kez alınır, yıl sonuna
@@ -543,7 +571,13 @@ Getiri görülmeden yazılır; kural kaydına girer. (B-7, İ: 19-015)
   GARAN yanıtını 276 yerde sırasız verir (satır eksiksiz, tekrar yok; bilet 06'da görüldü); `kaynak` yanıtı
   tarihe göre sıralar, kapı sıralamadan sonraki seriye bakar.
 - **Oran eşikleri:** karantina hisse-gün oranı > %1 ya da olay denetimi farkı olan gün oranı > %2 ise
-  koşu "veri sorunlu" olur.
+  koşu "veri sorunlu" olur. Eşik değerleri değişmez.
+  - **Payda ve pay yalnız evren üyesi hisse-günlerdir** (bilet 10 kararı): sınama yalnız evren üyelerinde işlem
+    açar (5.2). Evren dışı illikit kodların bozuk satırları (tüm evrende karantina %3,00; ilk 20 sembolde
+    %42) sınamayı etkilemez, ama oranı şişirip kapıyı hep tetikler. Üye hisse-günü: hissenin, o ayın
+    evreninde (5.2) bulunduğu ayın fiyat satırları (sınama başlangıcından itibaren).
+  - Tüm evren oranları `Anlik.sorunlar` ile hâlâ hesaplanabilir; kapı kararı üye oranlarıyla verilir.
+  - Kapı tetiklenirse koşu yine yazılır; rapor "SORUNLU" der ve iki oranı yazar. Eşik gevşetilmez.
 - **Eksik indirme:** 100 hisseden 5'ten fazlası inmezse koşu SORUNLU olur.
 
 ## 6. Günlük işleyiş (ilk sürüm)
@@ -590,7 +624,7 @@ Getiri görülmeden yazılır; kural kaydına girer. (B-7, İ: 19-015)
    - `durum.txt` ve CSV'ler geçici dosyaya yazılıp `os.replace` ile taşınır. CSV Excel'de açık olduğu
      için yazılamazsa durum SORUNLU olur: "CSV açık, kapatıp yeniden çalıştır".
 8. **Rapor** (İ: 17-006, 17-007, 17-074, 17-077, 17-084):
-   - Dosya adı `rapor/rapor-YYYYMMDD-HHMM.html`; üstüne yazılmaz.
+   - Dosya adı `rapor/rapor-<koşu>.html` (koşu kimliği tarih ve saatle başlar; üstüne yazılmaz).
    - Başlıkta koşu kimliği, anlık görüntü, kod hash'i, m ve Holm tarihi.
    - Kabul tablosu (5.12).
    - Tek bir "Uyarılar" bölümü: karantina, bulunamayan semboller, tavan ve likidite bağlama oranları,

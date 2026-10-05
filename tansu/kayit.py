@@ -11,13 +11,13 @@ import uuid
 from dataclasses import asdict
 from pathlib import Path
 
-from tansu import aileler, motor, veri
+from tansu import aileler, motor, rapor, simulator, veri
 
 KAYIT_DIZINI = Path("kayit")  # testte conftest yönlendirir
 PAKET = Path(__file__).parent
-# Elle yazılmış, kural kaydına giren dosyalar. simulator ve K1 kodu gelince eklenir (yeni deneme olur).
-KOD_DOSYALARI = ["aileler.py", "cift.py", "evren.py", "gostergeler.py", "motor.py"]
-HASH_DISI = ["__init__.py", "__main__.py", "kaynak.py", "kayit.py", "sadakat.py", "veri.py"]
+# Elle yazılmış, kural kaydına giren dosyalar. K1 kodu gelince eklenir (yeni deneme olur).
+KOD_DOSYALARI = ["aileler.py", "cift.py", "evren.py", "gostergeler.py", "motor.py", "simulator.py"]
+HASH_DISI = ["__init__.py", "__main__.py", "kaynak.py", "kayit.py", "rapor.py", "sadakat.py", "veri.py"]
 # KURALLAR §3 madde 2 (YORUM): eşik, en az gün, giriş penceresi.
 IZGARA = {"esik": [0.010, 0.012, 0.015], "min_gun": [2, 3, 5], "pencere": [5, 10, 20]}
 
@@ -89,7 +89,7 @@ def _ortam() -> dict:
 
 
 def kosu(kimlik, kok, p=aileler.Parametre(), atr_n=motor.ATR_N, tur="deneme", resmi=False, tohum=0,
-         tekrar=0, git=_git) -> dict:
+         tekrar=0, git=_git, bas=simulator.BASLANGIC) -> dict:
     """Kural kaydını denetler, manifesti yeniden hash'ler, `basladi` ve `bitti` satırlarını yazar."""
     kural = _kural(p, atr_n)
     kayitlar = [s for s in _oku() if s["olay"] == "kayit"]
@@ -107,7 +107,14 @@ def kosu(kimlik, kok, p=aileler.Parametre(), atr_n=motor.ATR_N, tur="deneme", re
           "manifest_sha256": manifest, "git_commit": commit, "tohum": tohum, "tekrar": tekrar,
           "ortam": _ortam(), "resmi": bool(resmi) and not kirli, "kirli": kirli})
     islemler, dusen = motor.sinama(anlik, p, atr_n)
-    ozet = _ozet(islemler.to_csv(index=False) + f"|{dusen}")
+    sim = simulator.calistir(anlik, islemler, dusen, bas)
+    html, csv = rapor.yaz(sim, {"kosu_id": kosu_id, "anlik": kimlik, "kod_hash": kural["kod_hash"]})
+    ozet = _ozet(islemler.to_csv(index=False) + f"|{dusen}|"
+                 + "|".join(s["islemler"].to_csv(index=False) for s in sim["masraf"].values()))
     _yaz({**taban, "olay": "bitti", "tarih": _simdi(), "islem_sayisi": len(islemler), "dusen_sinyal": dusen,
-          "ozet": ozet})
-    return {"kosu_id": kosu_id, "ozet": ozet, "islemler": islemler, "dusen": dusen}
+          "ozet": ozet, "veri_sorunlari": sim["bilgi"]["sorunlar"],
+          "masraf_sonuc": {str(m): {"son_ozkaynak": float(s["ozkaynak"].iloc[-1]), "son_k2": float(s["k2"].iloc[-1]),
+                                    "islem": len(s["islemler"]), "reddedilen": s["reddedilen"]}
+                           for m, s in sim["masraf"].items()}})
+    return {"kosu_id": kosu_id, "ozet": ozet, "islemler": islemler, "dusen": dusen, "sim": sim, "rapor": html,
+            "csv": csv}

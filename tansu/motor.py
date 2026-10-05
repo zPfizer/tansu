@@ -19,6 +19,7 @@ ATR_N = 14
 class Pozisyon:
     durum: str  # bekliyor | acik | kapali
     atr: float = 0.0  # sinyal günü ATR
+    sinyal_tarih: object = None  # simülatör evren ve likidite için sinyal gününe bakar
     adet: int = 1  # boyutlandırma bilet 10'dadır
     giris_tarih: object = None
     giris_fiyat: float = None
@@ -30,9 +31,9 @@ class Pozisyon:
     neden: str = None  # kapalıysa: stop | sma250 | karantina | veri_sonu | iptal
 
 
-def bekleyen(atr: float) -> Pozisyon:
+def bekleyen(atr: float, sinyal_tarih=None) -> Pozisyon:
     """Sinyal günü kapanışında oluşan, ertesi gün girecek pozisyon."""
-    return Pozisyon("bekliyor", atr=atr)
+    return Pozisyon("bekliyor", atr=atr, sinyal_tarih=sinyal_tarih)
 
 
 def _kapat(p, tarih, fiyat, neden):
@@ -84,7 +85,7 @@ def islemler(mumlar: pd.DataFrame, sinyaller) -> tuple:
             son_karantina = i
         engelli = son_karantina is not None and i - son_karantina < KARANTINA_GUN
         if p is None and tarih in sinyaller and not engelli:
-            p = bekleyen(m["atr"])
+            p = bekleyen(m["atr"], tarih)
     if p is not None and p.durum == "bekliyor":
         dusen += 1  # sinyalden sonra veri yok
     elif p is not None:
@@ -95,11 +96,11 @@ def islemler(mumlar: pd.DataFrame, sinyaller) -> tuple:
 
 def _tablo(pozisyonlar) -> pd.DataFrame:
     return pd.DataFrame([{
-        "giris_tarih": p.giris_tarih, "giris_fiyat": p.giris_fiyat, "cikis_tarih": p.cikis_tarih,
+        "sinyal_tarih": p.sinyal_tarih, "giris_tarih": p.giris_tarih, "giris_fiyat": p.giris_fiyat, "cikis_tarih": p.cikis_tarih,
         "cikis_fiyat": p.cikis_fiyat, "neden": p.neden, "adet": p.adet,
         "planlanan_risk": p.adet * (p.giris_fiyat - p.stop),
         "gerceklesen_kayip": p.adet * max(0.0, p.giris_fiyat - p.cikis_fiyat)} for p in pozisyonlar],
-        columns=["giris_tarih", "giris_fiyat", "cikis_tarih", "cikis_fiyat", "neden", "adet",
+        columns=["sinyal_tarih", "giris_tarih", "giris_fiyat", "cikis_tarih", "cikis_fiyat", "neden", "adet",
                  "planlanan_risk", "gerceklesen_kayip"])
 
 
@@ -123,6 +124,7 @@ def sinama(anlik, p: aileler.Parametre = aileler.Parametre(), atr_n: int = ATR_N
         m = mumlar(anlik, s, p, atr_n)
         sig = aileler.sinyal(m.dropna(subset=["kapanis"]), p)
         t, d = islemler(m, sig)
-        parcalar.append(t.assign(sembol=s))
+        if len(t):  # boş tablolar sütun türünü object'e bozar
+            parcalar.append(t.assign(sembol=s))
         dusen += d
-    return pd.concat(parcalar, ignore_index=True), dusen
+    return (pd.concat(parcalar, ignore_index=True) if parcalar else _tablo([]).assign(sembol=[])), dusen
