@@ -36,7 +36,7 @@ Bu dilimde boyutlandırma ve portföy yoktur. İşlem başına sonuç üretilir.
 ## Comments
 
 - Yüzler: `gostergeler.sma/atr`, `aileler.sinyal(f, Parametre)`, `motor.adim(pozisyon, mum)`, `motor.islemler(mumlar, sinyaller)`
-  → (işlem tablosu, düşen sinyal sayısı), `motor.sinama(anlik, parametre)` (bütün semboller). Test 75 yeşil (önce 66... bu bilet +17 senaryo/birim).
+  → (işlem tablosu, düşen sinyal sayısı), `motor.sinama(anlik, parametre)` (bütün semboller). Test 75 yeşil (önce 47; bu bilet +28).
 - 14 motor durumu + veri sonu + eksik gün (üç ek) 20 senaryo; beklenenleri kod görmemiş ayrı ajan elle hesapladı,
   özet `tests/test_motor.py` yorumunda. Ajan belirsizlik bildirmedi. Uçtan uca `sinama` testini ve gösterge/aileler
   örneklerini ben elle hesapladım (ajan değil).
