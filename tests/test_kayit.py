@@ -38,7 +38,7 @@ def anlik_hazirla(tmp_path, son_kapanis=105.0, dakika=30):
 
 def satirlar():
     yol = kayit.KAYIT_DIZINI / "deneme.jsonl"
-    return [json.loads(s) for s in yol.read_text(encoding="utf-8").splitlines()]
+    return [s for s in map(json.loads, yol.read_text(encoding="utf-8").splitlines()) if s["tur"] != "destek"]  # destek: bilet 13
 
 
 def calistir(tmp_path, kimlik, **kw):
@@ -96,6 +96,7 @@ def test_kosu_basladi_ve_bitti_satiri_yazar_ve_islemi_dondurur(tmp_path):
 def test_temiz_agacta_resmi_kirli_agacta_resmi_degil(tmp_path):
     kimlik = anlik_hazirla(tmp_path)
     kayit.kayitla(P, ATR_N)
+    kayit.denetim_yaz({"gecti": True}, P, ATR_N)  # ilk resmi koşu için geçen boru hattı denetimi şart (TASARIM 5.12)
     calistir(tmp_path, kimlik, resmi=True, git=TEMIZ)
     calistir(tmp_path, kimlik, resmi=True, git=KIRLI)
     calistir(tmp_path, kimlik, resmi=False, git=TEMIZ)

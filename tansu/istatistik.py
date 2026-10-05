@@ -51,7 +51,8 @@ class EmaK1:
                 for i in np.flatnonzero(maske):
                     self.havuz[tur][m.index[i]].append((s, int(i)))
             sig = aileler.sinyal(f, p)
-            gercek = [int(i) for i in m.index.get_indexer(sig[sig.isin(uye_gun[s])]) if uygun[i]]
+            # örtüşen iki sıkışma döneminin penceresi aynı güne sinyal verebilir: bir hisse bir günde tek sinyaldir
+            gercek = sorted({int(i) for i in m.index.get_indexer(sig[sig.isin(uye_gun[s])]) if uygun[i]})
             if gercek:
                 self.gercek[s] = gercek
             d = durum.reindex(m.index).fillna(False).to_numpy(bool)
@@ -66,10 +67,14 @@ class EmaK1:
         if self.sayi and not self.komsu:
             raise K1Hatasi(f"tür (b): hiçbir sinyalin ±{K1_PENCERE} gün içinde aynı piyasa durumunda başka uygun günü yok "
                            f"(örn. {self.komsusuz[0][0]} {self.komsusuz[0][1]})")
+        self.ek_eksik = 0  # ek kol raporluktur: havuzu yetmeyen sinyal çekimden düşer ve sayılır (TASARIM 5.7)
         for tur in ("a", "ek"):
             for gun, n in self.sayi.items():
-                if len(self.havuz[tur].get(gun, ())) < n:
-                    raise K1Hatasi(f"{gun.date()}: {n} sinyal için ön şartlı havuz {len(self.havuz[tur].get(gun, ()))} hisse ({tur})")
+                yok = n - len(self.havuz[tur].get(gun, ()))
+                if yok > 0 and tur == "a":
+                    raise K1Hatasi(f"{gun.date()}: {n} sinyal için ön şartlı havuz {n - yok} hisse ({tur})")
+                if yok > 0:
+                    self.ek_eksik += yok
 
     def cek(self, tur, rng) -> dict:
         """Rastgele sinyaller: {sembol: konumlar}. `a` ve `ek`: gün başına gerçek sinyal sayısı kadar, havuzdan yerine koymadan;
@@ -81,19 +86,19 @@ class EmaK1:
         else:
             for gun, n in sorted(self.sayi.items()):
                 havuz = self.havuz[tur][gun]
-                for k in rng.choice(len(havuz), n, replace=False):
+                for k in rng.choice(len(havuz), min(n, len(havuz)), replace=False):
                     sec[havuz[k][0]].append(havuz[k][1])
         return {s: sorted(v) for s, v in sorted(sec.items())}
 
     def tablo(self, secim) -> tuple:
         """(işlem tablosu, düşen sinyal sayısı): `motor.sinama` ile aynı sütunlar."""
-        parcalar, dusen = [], 0
+        kapali, sembol, dusen = [], [], 0
         for s in sorted(secim):
-            t, d = self.zincir[s].calistir(secim[s])
-            if len(t):
-                parcalar.append(t.assign(sembol=s))
+            k, d = self.zincir[s].kapali(secim[s])
+            kapali += k
+            sembol += [s] * len(k)
             dusen += d
-        return (pd.concat(parcalar, ignore_index=True) if parcalar else motor._tablo([]).assign(sembol=[])), dusen
+        return motor._tablo(kapali).assign(sembol=sembol), dusen  # tek tablo: hisse başına DataFrame kurmak yavaştı
 
 
 def ema_k1(anlik, b, p, atr_n, uye, tekrar, tohum=0, masraf=K1_MASRAF, kirilim=None) -> dict:
@@ -107,7 +112,14 @@ def ema_k1(anlik, b, p, atr_n, uye, tekrar, tohum=0, masraf=K1_MASRAF, kirilim=N
         p_tur[tur] = p_deger(gercek, [istatistik(k.cek(tur, rng)) for _ in range(tekrar)])
     return {"gercek": gercek, "p_a": p_tur["a"], "p_b": p_tur["b"], "p_ek": p_tur["ek"],
             "p": max(p_tur["a"], p_tur["b"]), "tekrar": tekrar, "sinyal": sum(len(v) for v in k.gercek.values()),
-            "komsusuz": len(k.komsusuz)}
+            "komsusuz": len(k.komsusuz), "ek_eksik": k.ek_eksik}
+
+
+def cift_tablo(islemler, b) -> pd.DataFrame:
+    """Çift tutuş dönemleri (`ciftbolme._rotasyon`) ve sepete göre `fazla` getiri."""
+    t = pd.DataFrame(islemler, columns=CiftK1.SUTUN)
+    fazla = t["getiri"] - simulator.sepet_getirisi(b, t["giris_tarih"], t["cikis_tarih"]) if len(t) else []
+    return t.assign(fazla=fazla)
 
 
 class CiftK1:
@@ -137,9 +149,7 @@ class CiftK1:
             self.cift[(y, x)] = (len(g), s0, 1 if ilk["sembol"] == y else -1, uygun)
 
     def _tablo(self, islemler) -> pd.DataFrame:
-        t = pd.DataFrame(islemler, columns=self.SUTUN)
-        fazla = t["getiri"] - simulator.sepet_getirisi(self.b, t["giris_tarih"], t["cikis_tarih"]) if len(t) else []
-        return t.assign(fazla=fazla)
+        return cift_tablo(islemler, self.b)
 
     def cek(self, rng) -> dict:
         """(y, x) -> hedef dizisi (+1 Y, −1 X, 0 sinyal yok); ilk sinyal gerçeğin aynısı, sonrakiler sırayla öteki bacak."""

@@ -40,9 +40,14 @@ def kos(tmp_path, kimlik, **kw):
     return kayit.kosu(kimlik, tmp_path, p=P, atr_n=ATR_N, bas=BAS, **kw)
 
 
-def satirlar():
+def tum_satirlar():
     yol = kayit.KAYIT_DIZINI / "deneme.jsonl"
     return [json.loads(s) for s in yol.read_text(encoding="utf-8").splitlines()]
+
+
+def satirlar():
+    """`tur=destek` (ızgara hücreleri, denetim) satırları hariç: bunlar Holm'a ve koşu satırı dizisine girmez (TASARIM 5.11)."""
+    return [s for s in tum_satirlar() if s["tur"] != "destek"]
 
 
 def deneme(kural, aile, p, resmi=True, kosu_id=None):
@@ -126,6 +131,7 @@ def test_resmi_kosu_tam_tekrardan_azsa_durur_ve_resmi_p_holm_a_girer(tmp_path, m
     assert [r["olay"] for r in satirlar()] == ["kayit"]  # hiçbir koşu satırı yazılmadı
     monkeypatch.setattr(kayit, "TAM_TABAN", 5)
     monkeypatch.setattr(kayit, "TAM_CARPAN", 1)
+    kayit.denetim_yaz({"gecti": True}, P, ATR_N)  # ilk resmi koşu için geçen denetim şart
     s = kos(tmp_path, kimlik, resmi=True)
     assert [r["holm_m"] for r in (satirlar()[-2], satirlar()[-1])] == [2, 2]
     assert not satirlar()[-1]["varsayimsal"] and satirlar()[-1]["resmi"]
@@ -134,6 +140,39 @@ def test_resmi_kosu_tam_tekrardan_azsa_durur_ve_resmi_p_holm_a_girer(tmp_path, m
     assert [r["holm_m"] for r in satirlar()[-2:]] == [2, 2]
     assert [r["holm_p"] for r in satirlar()[-2:]] == [r["holm_p"] for r in satirlar()[-6:-4]]
     assert s["k1"]["ema_sikismasi"]["p"] >= 1 / 6
+
+
+def test_ilk_resmi_kosu_denetimsiz_ya_da_basarisiz_denetimle_yapilmaz(tmp_path, monkeypatch):
+    # TASARIM 5.12: boru hattı denetimi ilk resmi koşudan önce geçmiş olmalı (bu kodun hash'iyle). Başarısız denetim de engeller.
+    kimlik = hazirla(tmp_path)
+    monkeypatch.setattr(kayit, "TAM_TABAN", 5)
+    monkeypatch.setattr(kayit, "TAM_CARPAN", 1)
+    with pytest.raises(kayit.KayitHatasi, match="denetim"):
+        kos(tmp_path, kimlik, resmi=True)
+    kayit.denetim_yaz({"gecti": False}, P, ATR_N)
+    with pytest.raises(kayit.KayitHatasi, match="denetim"):
+        kos(tmp_path, kimlik, resmi=True)
+    assert [r["olay"] for r in tum_satirlar()] == ["kayit", "denetim"]  # hiçbir koşu satırı yazılmadı
+    kayit.denetim_yaz({"gecti": True}, P, ATR_N)
+    kos(tmp_path, kimlik, resmi=True)  # geçer
+    assert [r["olay"] for r in satirlar()][-4:] == ["basladi", "bitti", "durum", "durum"]
+    kos(tmp_path, kimlik, resmi=True, tohum=2)  # sonraki resmi koşular denetim aramaz (ilk resmi koşu geçti)
+
+
+def test_izgara_hucreleri_destek_olarak_yazilir_holm_m_ye_girmez_ve_olcut_5_e_baglanir(tmp_path):
+    # KURALLAR §3 ızgarası: EMA 3·3·3 = 27, çift 2·3·3 = 18 hücre; her hücre bir `destek` satırı (TASARIM 5.10, 5.11).
+    kimlik = hazirla(tmp_path)
+    s = kos(tmp_path, kimlik)
+    d = [r for r in tum_satirlar() if r["tur"] == "destek"]
+    assert [(r["olay"], r["kosu_id"]) for r in d] == [("hucre", s["kosu_id"])] * 45
+    assert [r["aile"] for r in d] == ["ema_sikismasi"] * 27 + ["cift_rotasyonu"] * 18
+    assert {"esik", "min_gun", "pencere"} == set(d[0]["hucre"]) and {"z_pencere", "z_esik", "p_esik"} == set(d[-1]["hucre"])
+    assert all(r["pozitif"] == (r["fazla"] is not None and r["fazla"] > 0) for r in d)
+    assert kayit.deneme_sayisi() == 1  # destek satırları m'ye girmez
+    for aile, n in (("ema_sikismasi", 27), ("cift_rotasyonu", 18)):
+        ham = s["kabul"][aile]["satirlar"][4]["ham"]  # ölçüt 5: İşlem, Farklı gün, Sağlamlık
+        poz = sum(r["pozitif"] for r in d if r["aile"] == aile)
+        assert ham[2][0] == "Sağlamlık" and ham[2][1] == pytest.approx(poz / n)
 
 
 def test_kagit_durumu_donar_ve_durum_oku_son_resmi_satiri_okur():

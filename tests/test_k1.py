@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from tansu import cift, ciftbolme, istatistik, motor, simulator, veri
+from tansu import aileler, cift, ciftbolme, istatistik, motor, simulator, veri
 from tests.test_ciftbolme import SektorBorsapy, dummy, kur_yil_gecisi, seri
 from tests.test_simulator import ATR_N, BAS, P, duz, mum, sinyalli
 from tests.test_veri import SahteBorsapy, SahteKaynak
@@ -68,6 +68,30 @@ def test_ema_k1_ek_kol_sikismasiz_kirilim_havuzu(tmp_path):
     # T1 ve T2 her gün (i >= 3) önceki 3 günün yükseğini aşar ve pencere dışıdır; gün 5'te iki sinyal -> ikisi de çekilir.
     _, _, k = ema_kur(tmp_path)
     assert k.cek("ek", np.random.default_rng(0)) == {"T1": [5], "T2": [5]}
+
+
+def test_ema_k1_ayni_hissenin_ayni_gune_iki_sinyali_tek_sayilir(tmp_path, monkeypatch):
+    # Örtüşen iki sıkışma döneminin giriş penceresi aynı güne sinyal verebilir (`aileler.sinyal` aynı tarihi iki kez döner).
+    # Bir hisse bir günde tek sinyaldir: gerçek sinyal listesi, gün başına sinyal sayısı ve (a) havuzu buna göre kurulur.
+    asil = aileler.sinyal
+    monkeypatch.setattr(aileler, "sinyal", lambda f, p: asil(f, p).append(asil(f, p)))
+    _, _, k = ema_kur(tmp_path)  # tekrarlı sinyalle (a) havuzu yetmiyor diye K1Hatasi atılmamalı
+    assert k.gercek == {"S1": [5], "S2": [5]} and sum(k.sayi.values()) == 2
+
+
+def test_ema_k1_ek_kol_havuzu_yetmezse_havuz_kadar_ceker_ve_eksigi_sayar(tmp_path):
+    # Gün 5'te iki gerçek sinyal (S1, S2); sıkışmasız kırılım havuzu yalnız T1 (D2 düz, kırılım yok; D1 likidite eleğinde).
+    # Ek kol raporluk: koşu durmaz, T1 çekilir, 2 − 1 = 1 eksik sinyal sayılır. (a) havuzu gerçek hisseler: eksik yok.
+    seriler = {"S1": sinyalli(), "S2": sinyalli(), "T1": trend(), "D1": duz(1e3), "D2": duz(1e9)}
+    anlik = anlik_hazirla(tmp_path, seriler)
+    ilk = simulator.ilk_gun(anlik, BAS)
+    evr = simulator.evrenler(anlik, ilk, anlik.gunler[-1])
+    uye = simulator.uyeler(anlik, evr, ilk)
+    k = istatistik.EmaK1(anlik, P, ATR_N, uye, kirilim=3)
+    assert k.cek("ek", np.random.default_rng(0)) == {"T1": [5]}
+    assert k.ek_eksik == 1
+    b = simulator.k1_baglam(anlik, evr, BAS)
+    assert istatistik.ema_k1(anlik, b, P, ATR_N, uye, tekrar=3, kirilim=3)["ek_eksik"] == 1
 
 
 def test_ema_k1_p_alt_siniri_ayni_tohum_ayni_sonuc_ve_a_turu_birdir(tmp_path):
