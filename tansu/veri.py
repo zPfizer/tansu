@@ -116,9 +116,9 @@ def indir(semboller, kok, kaynak, simdi=None, bas=BASLANGIC, borsapy=None) -> st
             ham_olaylar.pop(s, None)
             inmeyen.append(s)
             continue
-        if not f.empty:  # ham alanları hep NaN olan satır işlem yapılmamış gündür; aynı tekrar satır tek sayılır
+        if not f.empty:  # hacmi ve ham alanları NaN/0 olan satır işlem yapılmamış gündür; aynı tekrar satır tek sayılır
             f = f.drop_duplicates()
-            f = f[~f[[*FIYAT_SUTUNLARI[:4], "hacim"]].isna().all(axis=1)]
+            f = f[~(f[[*FIYAT_SUTUNLARI[:4], "hacim"]].fillna(0) == 0).all(axis=1)]
         if f.empty:
             del ham_olaylar[s]
             bos.append(s)

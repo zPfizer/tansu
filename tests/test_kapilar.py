@@ -221,3 +221,11 @@ def test_birebir_ayni_tekrar_satir_tek_sayilir_farkli_tekrar_ihlaldir(tmp_path):
     farkli = [satir("2024-01-02", 100.0), satir("2024-01-03", 100.0), satir("2024-01-03", 101.0)]
     with pytest.raises(veri.VeriHatasi):
         anlik(tmp_path / "b", farkli)
+
+
+def test_hacmi_sifir_ve_ham_alanlari_nan_ya_da_sifir_satir_atilir(tmp_path):
+    # Gerçek ISATR 23.06.2010: ham kapanış NaN, diğer ham alanlar ve hacim 0.
+    bos = {**satir("2024-01-03", 100.0), "ham_kapanis": np.nan, "ham_aof": 0.0, "ham_yuksek": 0.0,
+           "ham_dusuk": 0.0, "hacim": 0.0}
+    a = anlik(tmp_path, [satir("2024-01-02", 100.0), bos, satir("2024-01-04", 100.0)])
+    assert list(a.fiyat["tarih"]) == [pd.Timestamp("2024-01-02"), pd.Timestamp("2024-01-04")]
