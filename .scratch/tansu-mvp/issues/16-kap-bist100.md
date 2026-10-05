@@ -6,20 +6,44 @@ de koşulur ve ara evrenle (07) karşılaştırılır.
 
 **Blocked by:** 01
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] Kaynak birincil olarak okunur ve kapsamı yazılır. TASARIM 8.2'deki açık soru (2015–2016 kapsanıyor mu)
       cevaplanır.
 - [x] Liste tarih bazlıdır. Her değişiklik için kaynak duyuru bağlantısı tutulur. Eksik dönemler açıkça
       işaretlenir.
 - [x] Bugünkü listeyle (borsapy) son tarihte birebir eşleşmesi sınanır. (Kısmen: bkz. Comments.)
-- [ ] 07'nin ara evreniyle örtüşme oranı yıllara göre raporlanır. (07 bekleniyor)
+- [x] 07'nin ara evreniyle örtüşme oranı yıllara göre raporlanır. (Bkz. Comments, "07 ile örtüşme".)
 - [x] Bu bilet sınama sonucuna bakmaz. Evren değişirse kural kaydı açısından yeni deneme olur; bu iş 15'ten
       sonra ayrı yapılır.
 
 ## Comments
 
-Durum: `ready-for-agent` kalır; yalnız "07 ile örtüşme" kutusu açık (07 bekleniyor).
+Durum: `done`. Son kutu (07 ile örtüşme) aşağıda kapandı.
+
+**07 ile örtüşme.** A = KAP'tan geriye yürütülen BIST100 üyeliği, B = `evren.evren(anlik, ay)` (tam evren anlık
+görüntüsü `veri/ag/20261005-1726`, varsayılan parametreler). Her ayın ilk işlem gününde |A∩B|/|A|; yıl
+ortalaması. 2016-07 → 2026-10, 124 ay. Kod kaydedilmedi (tek seferlik `python -c`); getiri/sınama sonucuna
+bakılmadı.
+
+| Yıl | Ay | Ort. üye sayısı (A) | Örtüşme |
+|---|---|---|---|
+| 2016 (Tem–Ara) | 6 | 105,0 | %68,9 |
+| 2017 | 12 | 105,8 | %66,1 |
+| 2018 | 12 | 104,3 | %63,6 |
+| 2019 | 12 | 103,8 | %67,2 |
+| 2020 | 12 | 102,0 | %73,7 |
+| 2021 | 12 | 102,0 | %72,6 |
+| 2022 | 12 | 101,3 | %74,1 |
+| 2023 | 12 | 101,0 | %72,4 |
+| 2024 | 12 | 101,0 | %73,2 |
+| 2025 | 12 | 100,0 | %72,4 |
+| 2026 (Oca–Eki) | 10 | 100,0 | %67,2 |
+
+Tüm aylar ortalaması %70,2. Okuma: ara evren (piyasa değerine göre ilk 100, likidite elekli) KAP BIST100'ün
+yıllara göre %64–74'ünü kapsar; fark kaynağı ayrıştırılmadı (BIST100 free-float piyasa
+değeri ve ad hoc değişiklikler, ara evren ham piyasa değeri kullanır). |A| 2016–2019'da 100'ün üstüne
+sapıyor (bkz. Boşluklar), bu yıllar daha az güvenilir. Evren değişirse bu tablo yeniden hesaplanmalıdır.
 
 **Kaynak.** KAP, Borsa İstanbul A.Ş. bildirimleri (`/tr/api/disclosure/members/byCriteria`, 2014–2026
 tarandı). Dönemsel duyurular "BIST Pay Endeksleri" konusunda; ek PDF'te BIST 100 için alınacak, çıkarılacak
