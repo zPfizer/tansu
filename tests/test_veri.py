@@ -229,3 +229,64 @@ def test_tarihsiz_ya_da_carpansiz_olay_kaydi_okumada_atilir(tmp_path):
            {"SHT_KODU": "04", "SHHE_TARIH": epoch(dt.date(2024, 8, 14)), "SHHE_FIYAT_AYAR_OR": 0.0}]
     a = anlik(tmp_path, olay=CCOLA_OLAY + bos)
     assert len(a.olaylar) == 3 and (a.olaylar["carpan"] > 0).all()
+
+
+class SahteKapSektor:
+    """`kaynak.KapSektor` yüzü: ad | None (listede yok) | KaynakHatasi."""
+
+    def __init__(self, sonuc):
+        self.sonuc, self.sorulan = sonuc, []
+
+    def sektor(self, sembol):
+        self.sorulan.append(sembol)
+        s = self.sonuc[sembol]
+        if s == "HATA":
+            raise KaynakHatasi(sembol)
+        return s
+
+
+class _YalnizA(SahteBorsapy):
+    def __init__(self):
+        super().__init__(FAIZ, {})
+
+    def sektor(self, sembol):
+        if sembol != "A":
+            raise KaynakHatasi(sembol)  # KAP ilk sembolden sonra boş döndü (bilet 07)
+        return "ESKI"
+
+
+def _sektor_anlik(tmp_path, semboller=("A", "B", "C", "D")):
+    k = SahteKaynak({s: CCOLA_FIYAT for s in semboller}, {s: CCOLA_OLAY for s in semboller})
+    return veri.indir(list(semboller), tmp_path, k, simdi=SIMDI, borsapy=_YalnizA())
+
+
+def test_sektor_tamamla_yeni_anlik_goruntu_yazar_eskisi_degismez(tmp_path):
+    # A zaten var (korunur, sorulmaz). B, C sektör alır; D KAP listesinde yok (None) → sektörsüz, kapsamda yazılır.
+    eski = _sektor_anlik(tmp_path)
+    manifest_eski = (tmp_path / "ag" / eski / "manifest.json").read_bytes()
+    kap = SahteKapSektor({"B": "BANKA", "C": "GIDA", "D": None})
+    yeni, rapor = veri.sektor_tamamla(eski, tmp_path, kap, ["D", "C", "B", "A"], simdi=dt.datetime(2026, 10, 5, 20, 0))
+    assert yeni == "20261005-2000" and kap.sorulan == ["D", "C", "B"]
+    assert (tmp_path / "ag" / eski / "manifest.json").read_bytes() == manifest_eski
+    a = veri.oku(yeni, tmp_path)  # manifest doğrulanır
+    assert a.sektor == {"A": "ESKI", "B": "BANKA", "C": "GIDA"}
+    assert len(a.fiyat) == 4 * len(CCOLA_FIYAT) and len(a.olaylar) == 4 * 3
+    m = json.loads((tmp_path / "ag" / yeni / "manifest.json").read_text(encoding="utf-8"))
+    assert m["kaynak"] == eski
+    assert m["sektor_kapsam"] == {"hedef": 4, "var": 3, "listede_yok": ["D"], "alinamayan": []}
+    assert rapor == m["sektor_kapsam"]
+
+
+def test_sektor_tamamla_art_arda_bes_hatada_durur_tamamlananlar_tekrar_istenmez(tmp_path):
+    eski = _sektor_anlik(tmp_path, tuple("ABCDEFGH"))
+    hedef = list("BCDEFGH")
+    kap = SahteKapSektor({"B": "BANKA", "C": "HATA", "D": "HATA", "E": "HATA", "F": "HATA", "G": "HATA"})
+    yeni, _ = veri.sektor_tamamla(eski, tmp_path, kap, hedef, simdi=dt.datetime(2026, 10, 5, 20, 0))
+    assert yeni is None and kap.sorulan == list("BCDEFG")  # beşinci art arda hatada durur
+    assert [a.name for a in (tmp_path / "ag").iterdir()] == [eski]  # yarım anlık görüntü yazılmaz
+    kap2 = SahteKapSektor({"C": "GIDA", "D": "GIDA", "E": "GIDA", "F": "GIDA", "G": "HATA", "H": "HAVA"})
+    yeni, rapor = veri.sektor_tamamla(eski, tmp_path, kap2, hedef, simdi=dt.datetime(2026, 10, 5, 20, 1))
+    assert kap2.sorulan == list("CDEFGH")  # B önbellekten
+    assert veri.oku(yeni, tmp_path).sektor == {"A": "ESKI", "B": "BANKA", "C": "GIDA", "D": "GIDA", "E": "GIDA",
+                                                "F": "GIDA", "H": "HAVA"}
+    assert rapor["alinamayan"] == ["G"] and rapor["var"] == 6 and rapor["hedef"] == 7

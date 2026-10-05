@@ -22,7 +22,8 @@ KIRLI = lambda: ("abc123", True)  # noqa: E731
 
 
 def anlik_hazirla(tmp_path, son_kapanis=105.0, dakika=30):
-    gunler = pd.bdate_range("2026-03-02", periods=8)
+    # İlk gün Şubat'ın son günü: Mart evreni ona dayanır, sinyal günü (gün 5) evrendedir (TASARIM 5.6 evren süzgeci, bilet 11).
+    gunler = pd.bdate_range("2026-02-27", periods=8)
     kap = [100.0] * 5 + [103.0, 104.0, son_kapanis]
     yuk = [100.5, 100.5, 101, 100.5, 100.5, 103.5, 104.5, 105.5]
     fiyat = []

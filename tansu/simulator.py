@@ -134,11 +134,7 @@ def _yillik(ozk, k2) -> pd.DataFrame:
 
 def _paketle(t, days, g, rb, sepet, kural, masraf) -> dict:
     alinan, ozk, pay, reddedilen = kural
-    k2, e = [], SERMAYE
-    for p, r, gece in zip(pay, rb, g):
-        e *= 1 + p * r + (1 - p) * gece
-        k2.append(e)
-    ozk, k2 = pd.Series(ozk, index=days), pd.Series(k2, index=days)
+    ozk, k2 = pd.Series(ozk, index=days), pd.Series(k2_egri(pay, rb, g), index=days)
     islem = _alinanlar(t, alinan, masraf)
     return {"islemler": islem, "ozkaynak": ozk, "k2": k2, "sepet": sepet, "yatirim": pd.Series(pay, index=days),
             "yillik": _yillik(ozk, k2), "reddedilen": reddedilen,
@@ -148,12 +144,50 @@ def _paketle(t, days, g, rb, sepet, kural, masraf) -> dict:
             "karantina_cikisi": int((islem["neden"] == "karantina").sum())}
 
 
-def calistir(anlik, islemler, dusen=0, bas=BASLANGIC, masraflar=MASRAFLAR) -> dict:
-    """Motor işlemlerinden her masraf düzeyi için sermaye eğrisi ve K2; `{"masraf": {m: ...}, "bilgi": {...}}`."""
+def zemin(anlik, evr, days, ekstra, kg) -> dict:
+    """İki bölmenin ortak girdisi: fiyat matrisleri, günlük faiz ve K2 sepeti (`days` üzerinde; `kg`: kapanan hisseler)."""
     gunler = anlik.gunler
-    ilk = gunler[gunler >= pd.Timestamp(bas)][0]
+    kapanma = {}
+    for s, (_, gun) in kg.items():
+        kapanma.setdefault(gun, []).append(s)
+    semboller = sorted({s for liste in evr.values() for s in liste} | set(ekstra))
+    f = anlik.fiyat[anlik.fiyat["sembol"].isin(semboller)]
+    kolon = lambda alan: f.pivot(index="tarih", columns="sembol", values=alan).reindex(  # noqa: E731
+        index=gunler, columns=semboller)
+    C, A = kolon("kapanis").ffill(), kolon("aof")
+    Lq = kolon("hacim").fillna(0).rolling(LIKIDITE_GUN, min_periods=1).median()
+    kapanma = {d: [s for s in l if s in C.columns] for d, l in kapanma.items()}
+    # faiz: her gece, önceki işlem gününden bu güne (TASARIM 5.6)
+    oran = anlik.faiz_gunluk(days[0], days[-1]) / 36500
+    onceki = oran.cumsum().shift(1, fill_value=0.0)
+    g = np.concatenate([[0.0], (onceki.reindex(days[1:]).to_numpy() - onceki.reindex(days[:-1]).to_numpy())])
+    sepet = _sepet(gunler, days, evr, kapanma, C, A)
+    rb = sepet.to_numpy() / np.concatenate([[1.0], sepet.to_numpy()[:-1]]) - 1
+    return {"C": C, "A": A, "Lq": Lq, "g": g, "sepet": sepet, "rb": rb, "kapanma": kapanma}
+
+
+def k2_egri(pay, rb, g, baslangic=SERMAYE) -> np.ndarray:
+    """K2 özkaynağı: her gün sepet getirisi hisse payı kadar, kalanı gecelik faiz (TASARIM 5.7)."""
+    k2, e = [], baslangic
+    for p, r, gece in zip(pay, rb, g):
+        e *= 1 + p * r + (1 - p) * gece
+        k2.append(e)
+    return np.array(k2)
+
+
+def ilk_gun(anlik, bas=BASLANGIC):
+    gunler = anlik.gunler
+    return gunler[gunler >= pd.Timestamp(bas)][0]
+
+
+def calistir(anlik, islemler, dusen=0, bas=BASLANGIC, masraflar=MASRAFLAR, evr=None) -> dict:
+    """Motor işlemlerinden her masraf düzeyi için sermaye eğrisi ve K2; `{"masraf": {m: ...}, "bilgi": {...}}`.
+
+    `evr`: `evrenler` çıktısı; verilmezse hesaplanır (kosu motora vermek için bir kez hesaplayıp geçirir)."""
+    gunler = anlik.gunler
+    ilk = ilk_gun(anlik, bas)
     days = gunler[gunler >= ilk]
-    evr = evrenler(anlik, ilk, days[-1])
+    evr = evr or evrenler(anlik, ilk, days[-1])
     uye = uyeler(anlik, evr, ilk)
     bos_tablo = set(anlik.fiyat["sembol"]) - set(anlik.olaylar["sembol"])
     olay_tablo = anlik.olay_uyarilari.reindex(columns=["sembol", "tarih"]).merge(uye, on=["sembol", "tarih"])
@@ -182,23 +216,8 @@ def calistir(anlik, islemler, dusen=0, bas=BASLANGIC, masraflar=MASRAFLAR) -> di
                 sayi += 1
     bilgi["kapanma"] = sayi
     days = pd.DatetimeIndex(sorted({*days, *t["giris_tarih"], *t["cikis_tarih"]}))
-    kapanma = {}
-    for s, (_, gun) in kg.items():
-        kapanma.setdefault(gun, []).append(s)
-    # fiyat matrisleri
-    semboller = sorted({s for liste in evr.values() for s in liste} | set(t["sembol"]))
-    f = anlik.fiyat[anlik.fiyat["sembol"].isin(semboller)]
-    kolon = lambda alan: f.pivot(index="tarih", columns="sembol", values=alan).reindex(  # noqa: E731
-        index=gunler, columns=semboller)
-    C, A = kolon("kapanis").ffill(), kolon("aof")
-    Lq = kolon("hacim").fillna(0).rolling(LIKIDITE_GUN, min_periods=1).median()
-    kapanma = {d: [s for s in l if s in C.columns] for d, l in kapanma.items()}
-    # faiz: her gece, önceki işlem gününden bu güne (TASARIM 5.6)
-    oran = anlik.faiz_gunluk(days[0], days[-1]) / 36500
-    onceki = oran.cumsum().shift(1, fill_value=0.0)
-    g = np.concatenate([[0.0], (onceki.reindex(days[1:]).to_numpy() - onceki.reindex(days[:-1]).to_numpy())])
-    sepet = _sepet(gunler, days, evr, kapanma, C, A)
-    rb = sepet.to_numpy() / np.concatenate([[1.0], sepet.to_numpy()[:-1]]) - 1
+    z = zemin(anlik, evr, days, set(t["sembol"]), kg)
+    C, Lq, g, rb, sepet = z["C"], z["Lq"], z["g"], z["rb"], z["sepet"]
     sonuc = {}
     for m in masraflar:
         sonuc[m] = _paketle(t, days, g, rb, sepet, _kural(t, days, gunler, g, C, Lq, m), m)

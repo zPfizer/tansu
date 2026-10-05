@@ -156,3 +156,24 @@ def test_sinama_anlik_goruntuden_sinyal_ve_islem():
         "XXXX", GUNLER[5], GUNLER[6], GUNLER[7], "veri_sonu")
     assert (t.giris_fiyat, t.cikis_fiyat, t.gerceklesen_kayip) == (104.0, 105.0, 0.0)
     assert t.planlanan_risk == pytest.approx(4.5625, abs=1e-9)
+
+
+def test_sinama_evren_disi_sinyal_pozisyon_acmaz_sonraki_gecerli_sinyal_gecikmez(monkeypatch):
+    # Bilet 11 düzeltmesi (TASARIM 5.6 evren süzgeci). Aynı seri; iki sinyal: 28.01 (üye değil) ve 02.02 (üye).
+    # Süzgeçsiz motor 28.01 sinyaliyle 29.01'de pozisyon açar (stop 100 - 2*1,25 = 97,5 dokunmaz) ve 02.02 sinyali
+    # açık pozisyon yüzünden düşerdi. Süzgeçle yalnız 02.02 sinyali kalır: giriş 03.02 AOF 104, çıkış 04.02 veri sonu 105.
+    from tansu.veri import Anlik
+    gun = pd.bdate_range("2026-01-26", periods=8)
+    kap = [100.0] * 5 + [103.0, 104.0, 105.0]
+    f = pd.DataFrame({"sembol": "XXXX", "tarih": gun, "yuksek": [k + 0.5 for k in kap], "dusuk": [k - 0.5 for k in kap],
+                      "kapanis": kap, "aof": kap, "hacim": 1e6})
+    for s in ("kapanis", "aof", "yuksek", "dusuk"):
+        f["ham_" + s] = f[s]
+    anlik = Anlik("t", f, pd.DataFrame(columns=["sembol", "tarih", "kod", "carpan"]))
+    monkeypatch.setattr(aileler, "sinyal", lambda m, p: pd.DatetimeIndex([gun[2], gun[5]]))
+    uye = pd.DataFrame({"sembol": "XXXX", "tarih": gun[5:]})
+    islemler, dusen = motor.sinama(anlik, aileler.Parametre(sma_n=2), atr_n=2, uye=uye)
+    assert dusen == 0 and len(islemler) == 1
+    t = islemler.iloc[0]
+    assert (t.sinyal_tarih, t.giris_tarih, t.giris_fiyat, t.cikis_tarih, t.cikis_fiyat) == (
+        gun[5], gun[6], 104.0, gun[7], 105.0)
