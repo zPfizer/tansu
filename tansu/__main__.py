@@ -1,4 +1,4 @@
-"""Komut girişi: `python -m tansu sadakat | kayit | sinama | evren-indir [--kok veri] [--kimlik KIMLIK] [--resmi]` (TASARIM 3)."""
+"""Komut girişi: `python -m tansu sadakat | kayit | sinama | evren-indir [--kok veri] [--kimlik KIMLIK] [--resmi] [--son]` (TASARIM 3)."""
 
 import argparse
 import datetime as dt
@@ -52,6 +52,7 @@ def main(argv=None) -> int:
     ap.add_argument("--kok", default="veri")
     ap.add_argument("--kimlik")
     ap.add_argument("--resmi", action="store_true")
+    ap.add_argument("--son", action="store_true", help="tam K1 tekrarı: max(1.000, 200·m); yoksa geliştirme (200)")
     a = ap.parse_args(argv)
     kok = Path(a.kok)
     try:
@@ -62,8 +63,12 @@ def main(argv=None) -> int:
         elif a.komut == "kayit":
             print("Kural kaydı yazıldı:", kayit.kayitla()["kural_id"])
         elif a.komut == "sinama":
-            s = kayit.kosu(a.kimlik or _en_yeni(kok), kok, resmi=a.resmi)
+            s = kayit.kosu(a.kimlik or _en_yeni(kok), kok, resmi=a.resmi, tekrar=kayit.tekrar_sayisi(a.son), son=a.son)
             print(f"Koşu {s['kosu_id']}: {len(s['islemler'])} işlem, {s['dusen']} düşen sinyal, özet {s['ozet'][:12]}")
+            for aile, k in s["kabul"].items():
+                print(f"K1 {aile}: p {k['k1']['p']:.4f} (B {k['k1']['tekrar']}), Holm p {k['holm']['holm_p']:.4f} "
+                      f"(m {k['holm']['holm_m']}{', varsayımsal' if k['holm']['varsayimsal'] else ''}), "
+                      f"sonuç {k['genel']}, durum {k['durum']}")
             b = s["sim"]["bilgi"]
             print("Veri kapıları (evren üyeleri):", "; ".join(b["sorunlar"]) or "temiz",
                   f"| kapanma (−%100): {b['kapanma']} | rapor: {s['rapor']}")

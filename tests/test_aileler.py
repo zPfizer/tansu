@@ -2,7 +2,7 @@
 
 import pandas as pd
 
-from tansu.aileler import Parametre, sinyal
+from tansu.aileler import Parametre, on_sart, pencere_gunleri, sikismasiz_kirilim, sinyal
 
 
 def _fiyat(kapanis, yuksek=None):
@@ -46,3 +46,24 @@ def test_kapanis_sma_altindaysa_sinyal_yok():
     ortak = dict(periyotlar=(1, 2), esik=0.005, min_gun=3, pencere=3, isinma=4)
     assert list(sinyal(f, Parametre(sma_n=2, **ortak))) == [f.index[11]]
     assert list(sinyal(f, Parametre(sma_n=12, **ortak))) == []
+
+
+def test_on_sart_pencere_gunleri_ve_sikismasiz_kirilim():
+    # Aynı veri (ilk test): pencere gün 5, 6, 7; hepsi SMA(2) üstünde. Isınma 6: gün 5'te dolu -> hepsi ön şartlı.
+    # Isınma 7: gün 5'te yalnız 6 gün var -> gün 6, 7. Sıkışmasız kırılım: üç günün üçü de pencere içinde -> yok.
+    yuksek = [100.5, 100.5, 101, 100.5, 100.5, 103.5, 104.5, 105.5]
+    f = _fiyat([100, 100, 100, 100, 100, 103, 104, 105], yuksek)
+    ortak = dict(periyotlar=(1, 2), esik=0.005, min_gun=3, pencere=3, sma_n=2)
+    assert list(on_sart(f, Parametre(isinma=6, **ortak))) == [False] * 5 + [True] * 3
+    assert list(on_sart(f, Parametre(isinma=7, **ortak))) == [False] * 6 + [True] * 2
+    assert not sikismasiz_kirilim(f, Parametre(isinma=6, **ortak), 3).any()
+
+
+def test_sikismasiz_kirilim_onceki_l_gunun_yuksegini_asan_pencere_disi_gun():
+    # Kapanış [100,103,106,109,112,115], yüksek = kapanış + 0,5: EMA2 gecikmesi 1,5 -> oran > 0,005, sıkışma dönemi yok.
+    # Gün i >= 3: kapanış > önceki 3 günün en yüksek yükseği (örn. gün 3: 109 > 106,5). Isınma 4 -> gün 3, 4, 5; isinma 5 -> 4, 5.
+    f = _fiyat([100, 103, 106, 109, 112, 115])
+    ortak = dict(periyotlar=(1, 2), esik=0.005, min_gun=3, pencere=3, sma_n=2)
+    assert not pencere_gunleri(f, Parametre(isinma=4, **ortak)).any()
+    assert list(sikismasiz_kirilim(f, Parametre(isinma=4, **ortak), 3)) == [False] * 3 + [True] * 3
+    assert list(sikismasiz_kirilim(f, Parametre(isinma=5, **ortak), 3)) == [False] * 4 + [True] * 2

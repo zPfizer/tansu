@@ -48,3 +48,9 @@ def test_atr_wilder_ilk_deger_ilk_n_tr_ortalamasi():
                           pd.Series([11.0, 12, 13, 11, 14]), 3)
     assert atr.isna().tolist() == [True, True, False, False, False]
     assert atr.iloc[2:].tolist() == pytest.approx([2.0, 7 / 3, 26 / 9], abs=1e-12)
+
+
+def test_piyasa_durumu_kapanis_sma_ustunde_mi():
+    # SMA(2): [nan, 1,5, 2,5, 2,5, 1,5]; 2 > 1,5 evet; 3 > 2,5 evet; 2 > 2,5 hayır; 1 > 1,5 hayır; ilk gün SMA yok -> hayır.
+    from tansu.gostergeler import piyasa_durumu
+    assert list(piyasa_durumu(pd.Series([1.0, 2.0, 3.0, 2.0, 1.0]), 2)) == [False, True, True, False, False]
