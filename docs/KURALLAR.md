@@ -85,9 +85,10 @@ Hazırlık: **H** = birinci elden kodlanabilir, az YORUM · **K** = kısmen, ön
    - Çiftler önceden yazılmış kuralla seçilir (TASARIM 5.6).
 2. **AB=CD, C'den D'ye bacak** (Tansu'nun SMRTG/ISKPL sınamalarındaki işlem)
    - Pivotlar teyit edilince A, B, C; BC ≤ AB; C, A'yı ihlal etmez.
-   - Giriş: C pivotu teyit edildiği günün ertesi açılışı. Hedef: D = C + r·(B − A), r = 1,0 (1,27 ayrı
-     deneme). Stop: risk paketi (giriş − 2 ATR) (YORUM; Tansu'nun stopu bilinmiyor, SMRTG zararları
-     −%12 ile −%25 arası).
+   - Giriş: C pivotu teyit edildiği günün ertesi işlem fiyatı (TASARIM 5.3, AOF); C fiyatından değil.
+     Hedef: D = C + r·(B − A), r = 1,0 (1,27 ayrı deneme). Stop: A seviyesi ("C'den sonra fiyat A'yı
+     geçerse kalıp ölür", ikinci el; SMRTG zararları −%12 ile −%25, 2 ATR'den geniş). Yalnız alış.
+     (Sorgu 2, S2-31, S2-34)
    - Pivot ayarı: sadakat kontrolüyle (KRPLS, MARKA D değerleri) belirlenecek.
 3. **EMA sıkışması kırılımı**
    - Sıkışma: EMA20/50/100/200 bandı ≤ %1,2, en az 3 gün (birinci el). Oran formülü sadakat kontrolüyle
@@ -99,7 +100,9 @@ Hazırlık: **H** = birinci elden kodlanabilir, az YORUM · **K** = kısmen, ön
 AEFES kanal ve AKFIS kurulumu ikinci dalgadadır: iskeletleri birinci el, ama YORUM sayısı fazla.
 Diğerleri dizinde kalır; kaynak çıktıkça yükselir.
 
-**Risk paketi:** %1 risk, 2 ATR acil stop, SMA250 altı kapanışta çıkış (bütün aileler). Aileye özgü hedef
+"Ertesi açılış" sınamada ertesi günün AOF'u olarak modellenir; kaynakta açılış yok (TASARIM 5.3).
+
+**Risk paketi:** %1 risk, 2 ATR acil stop (AB=CD'de A seviyesi), SMA250 altı kapanışta çıkış (bütün aileler). Aileye özgü hedef
 yalnız Tansu verdiyse kullanılır (AB=CD merdiveni). Çift rotasyonunun kendi çıkışı vardır (karşı uçta geçiş).
 
 ## 4. Sadakat kontrolü (sınamadan önce)

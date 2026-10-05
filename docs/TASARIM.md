@@ -1,6 +1,8 @@
-# Tansu'dan esinlenen BIST sistemi: tasarım (taslak 4, 05.10.2026)
+# Tansu'dan esinlenen BIST sistemi: tasarım (taslak 5, 05.10.2026)
 
 Taslak 4: kendi kendine sorgu (grilling, 14 soru) sonucu 8 değişiklik işlendi; "Sorgu Sn" etiketleri.
+Taslak 5: ikinci sorgu (52 soru, `docs/sorgu/sorgu-2.md`); "S2-n" etiketleri. En büyük değişiklik: İş
+Yatırım verisinde açılış fiyatı yok, işlemler ağırlıklı ortalama fiyattan (AOF) modellenir.
 
 Bu belge koddan önce gelir. Kod bu belgeye uyar; belge değişmeden davranış değişmez.
 Terimler `GLOSSARY.md`'dedir.
@@ -48,9 +50,10 @@ yorumumuzdur**; ekranda "Tansu'nun sistemi" diye sunulmaz. (P5)
 
 Var: günlük veri, BIST100, yalnız alış yönü, piyasa durumu etiketi (yalnız raporlama), 3 aile (`KURALLAR.md` §3: çift rotasyonu,
 AB=CD, EMA sıkışması), Tansu'nun risk paketi (5.5), işlem motoru, portföy simülasyonu, istatistik,
-markdown rapor, CSV kart listesi.
+markdown rapor, CSV kart listesi, tek sayfalık Streamlit "Kanıt" ekranı (raporu ve piyasa durumunu
+okur; kart ekranı bir aile kabul edilince). (S2-3)
 
-Yok, ilk aile kabul edilene kadar bekler (gereksiz katman): Streamlit paneli, Telegram, DuckDB,
+Yok, ilk aile kabul edilene kadar bekler (gereksiz katman): Streamlit kart paneli, Telegram, DuckDB,
 iz süren stop ve kısmi kâr (Ç2), süre çıkışı (Ç3), dolar bazı karşılaştırma, Corwin–Schultz.
 Kanıtı olmayan kurallar için panel kurmak erkendir. (Kesilecekler 1–6)
 
@@ -82,16 +85,15 @@ Kaynaklar ve kütüphaneler (`docs/arastirma/veri-kaynaklari.md`):
 - **Yahoo kullanılmaz.** BIST şirket olaylarını yanlış günde ve yanlış oranla gösteriyor (ör. CCOLA
   bölünmesi gerçekte 13.08.2024, Yahoo'da 01.08.2024). 05.10 ön denemesi Yahoo ile yapıldı.
 - **Şirket olayları:** İş Yatırım `GetSermayeArttirimlari`, bütün kodlarıyla (borsapy 78 kodunu atıyor).
-- **Evren:** bugünkü liste (borsapy) + KAP "Dönemsel Endeks Değişiklikleri" duyurularından geriye doğru.
+- **Evren:** ara çözüm, İş Yatırım piyasa değeri (`PD`) ile nokta-zamanlı en büyük 100 (5.2). Sonra KAP
+  "Dönemsel Endeks Değişiklikleri" duyurularından geriye doğru gerçek BIST100. (S2-19)
 - **Faiz:** TCMB politika faizi (borsapy, toplantı günlerinde basamak). TLREF yalnız 2018 sonrası.
 - **Göstergeler ve istatistik:** pandas-ta-classic, statsmodels, numpy, quantstats.
 Kullanım koşulları ve hız sınırları bulunamadı; az sayıda istek, yerel önbellek.
 
-**vectorbt kararı:** vectorbt'nin dolum kuralları (boşluklu stop, aynı gün stop ve hedef, stopun
-neye göre hesaplandığı) belgelerde açık değil. Önce 5.3'teki elle hesaplanmış örneklerle sınanır.
-Hepsini doğru geçerse motor olarak kalır. Geçemezse motor, Adım fonksiyonu üzerine kurulan kısa
-ve açık bir döngü olur. Adım fonksiyonu canlı günlük için zaten gerekli olduğundan, bu yeni bir
-katman değildir. (A3, M1)
+**vectorbt kararı: motor olarak kullanılmaz.** Dolum kuralları (5.3) AOF'a ve gün yükseği/düşüğüne
+koşullu; vectorbt bunu yapamaz. Motor, Adım fonksiyonu üzerine kısa ve açık bir döngüdür. Adım canlı
+günlük için zaten gerekli; yeni katman değildir. Ölçütler quantstats'tan. (A3, M1, S2-41)
 
 ## 5. Sınama yöntemi
 
@@ -110,12 +112,19 @@ hatasından** ayırmak.
   %0,5'i aşan günler listelenir. Örneklem yetmez. (P4)
 - Fiyat seviyesi gerektiren her şey (likidite TL tutarı, tavan/taban kontrolü) düzeltmesiz fiyatla
   hesaplanır. (B2)
+- Göstergeler ve getiriler düzeltilmiş fiyattan; aksi halde bedelsiz günü sahte kırılım olur. (S2-13)
+- Kaynakta açılış fiyatı yok: kapanış, yüksek, düşük, ağırlıklı ortalama (AOF), hacim, piyasa değeri.
+  `HACIM`ın birimi (lot mu TL mi) ilk veri işinde fiyat × lot ile çözülür. (S2-7, S2-14)
 - Bugünkü veri: son çubuğun tarihi bugün değilse ya da hacim olağandışıysa o gün kart üretilmez. (m6)
 
 ### 5.2 Evren ve hayatta kalan yanlılığı
 - **Bedava, tarih bazlı BIST100 üyelik verisi yok.** Bugünkü listeyi geçmişe uygulamak sonuçları
-  iyimser yapar. Batan hisseler Yahoo'da da yok; "bugün işlem gören en likit 100" bu yanlılığı
-  gidermez. (B3)
+  iyimser yapar. "Bugün işlem gören en likit 100" bu yanlılığı gidermez. (B3)
+- İş Yatırım işlem sırası kapanmış hisseleri de veriyor (ASYAB, 25.07.2016'ya kadar). Ara evren: her
+  ay başında, o gün işlem gören ve 60 günlük medyan TL işlem tutarı şartını sağlayan hisselerden
+  piyasa değeri en büyük 100. Kapanmış sembollerin listesi borsapy + KAP'tan; bulunamayanlar raporda
+  yazılır. (S2-11, S2-19, S2-20)
+- Sektör bugünkü sınıflamadan alınır; geçmişteki değişiklikler bilinen küçük yanlılıktır. (S2-21)
 - Sonuç: **mutlak getiriler üst sınırdır, karar için kullanılmaz.** Yalnız aynı evren içindeki göreli
   karşılaştırmalar (kural ile rastgele kural, kural ile aynı evrenin eşit ağırlıklı sepeti)
   yorumlanır. (B3, B3b)
@@ -123,14 +132,17 @@ hatasından** ayırmak.
   BIST30 elle çıkarılır; kurallar bu sabit listede de koşulur ve sonuçlar karşılaştırılır.
 
 ### 5.3 İşlem kuralları ve elle hesaplanmış örnekler
-- Sinyal günün kapanışında; giriş ertesi açılışta. Stop ve hedef **giriş fiyatından** ve sinyal günü
-  ATR'sinden hesaplanır. (M2, C10)
+- Sinyal günün kapanışında; işlem ertesi günün **ağırlıklı ortalama fiyatından (AOF)**. Kaynakta açılış
+  yok; bireysel yatırımcı gün içinde işlem yapar. Stop ve hedef **giriş fiyatından** ve sinyal günü
+  ATR'sinden hesaplanır. (M2, C10, S2-7)
 - Giriş günü de stop ve hedef kontrol edilir.
 - Aynı gün hem stop hem hedef değerse: **stop önce** (kötümser). Bu işlemlerin oranı raporda yazılır;
   iyimser varsayımla fark ayrıca gösterilir. (M1)
-- Stop boşlukla geçilirse çıkış açılış fiyatından.
-- Tavan açılışta giriş yok. Taban kilitli günde çıkış yapılamaz; çıkış ertesi günün açılışına
-  kayar. (M4)
+- Stop dolumu: gün düşüğü ≤ stop ise stop fiyatından; gün yükseği de stopun altındaysa (bütün gün
+  stopun altında, boşluk) AOF'tan. (S2-8)
+- Kilitli tavanda (düşük = yüksek = tavan) giriş yok. Kilitli tabanda (düşük = yüksek = taban) çıkış
+  yapılamaz; ertesi güne kayar. (M4, S2-9, S2-10)
+- Tansu'nun "T+1 açılış" kuralı sadakat kontrolünde Yahoo açılışıyla ayrıca üretilir. (S2-7)
 - Bir hissede pozisyon açıkken gelen yeni sinyal yeni işlem açmaz ve sayıma girmez; rastgele
   karşılaştırmada da aynı kural geçerlidir. (C9, B5d)
 - Her kural için motor sınamaları (kod yazılmadan önce): hedefte çıkış, stopta çıkış, boşluklu stop,
@@ -147,6 +159,8 @@ Tansu'nun risk paketi (`kurallar/E` K1–K3; kaynak Tansu'nun paylaştığı inf
 - Gün sonu çıkış: kapanış SMA250 altına inerse ertesi açılışta.
 - Aileye özgü hedef yalnız Tansu verdiyse. AB=CD, Tansu'nun kendi sınamasındaki (SMRTG, ISKPL) gibi
   **C'den D'ye bacak** olarak işlenir: C teyit edilince girilir, hedef D. (Sorgu S8)
+  AB=CD stopu A seviyesidir, 2 ATR değil: "C'den sonra fiyat A'yı geçerse kalıp ölür" (ikinci el);
+  SMRTG zararları (−%12 ile −%25) yapısal stopla uyumlu. (S2-34)
 - Çift rotasyonu: stop yok; karşı uçta diğer hisseye geçilir (Tansu'nun sürümü). Risk paketi bu
   bölmeye uygulanmaz. (Sorgu S3)
 - Aile giriş kuralları ve YORUM'ları `KURALLAR.md` §3'tedir.
@@ -169,6 +183,8 @@ aileler kabul edildikten sonra kurulur. (Sorgu S6)
 arasından önceki 252 günde eşbütünleşme p < 0,05 olan çiftler; p'ye göre en iyi 5. Sınamanın birimi
 bütün çift bölmesidir, tek tek çiftler değil. Tansu'nun çiftleri (VAKBN–GARAN, CIMSA–OYAKC,
 AGROT–GARAN) ayrıca gösterilir; kabul kararına girmez.
+Bir hisse en fazla bir çiftte olur; çakışmada p'si en iyi çift kalır. Yıllık seçimde düşen çiftin
+pozisyonu kapanır, payı yeni çifte geçer; yine seçilen çift işlemsiz devam eder. (S2-25, S2-26, S2-27)
 - Boştaki nakit, o günün politika faizini kazanır (EVDS; 2015–2017 için politika faizi, sonrası
   TLREF). (B4, P4d)
 
@@ -182,7 +198,8 @@ Karşılaştırma grupları:
   günlerden seçilir (ör. trend ailesi için yalnız trendli günler). Sayılar hisse başına eşleştirilir.
   İki tür: (a) aynı gün, başka hisse; (b) aynı hisse, aynı piyasa durumunda ±20 gün içinde başka gün.
   Çift bölmesinde: aynı çiftlerde, aynı sayıda geçiş, rastgele günlerde. (Sorgu S12)
-  En az 1.000 tekrar; p değeri buradan çıkar.
+  Geliştirmede 200, son raporda en az 1.000 tekrar; p değeri buradan çıkar. Pozisyon sınırı ve sıra
+  kuralı rastgele kurala da uygulanır. (S2-42, S2-44)
 - **K2 Aynı evrenin eşit ağırlıklı sepeti** (B3b), aynı temettü düzeltmesiyle. Çift bölmesi için ayrıca
   aynı çiftlerin 50/50 tutulması.
 - **K3 Faiz:** simülatörde boştaki nakit faiz kazandığı için portföy sonucu zaten faize karşı okunur.
@@ -230,8 +247,8 @@ Portföy kuralı (aileden bağımsız): en büyük düşüş %25'i, düşüşte 
 2. Piyasa durumu etiketi (yalnız bilgi).
 3. Canlı ailelerin sinyalleri kart listesine (CSV) yazılır. Deneme aileleri varsayılan olarak
    gösterilmez. (P1)
-4. Her kartta: hisse, aile, giriş bölgesi, stop, hedef, pozisyon değeri (sermayenin yüzdesi) ve
-   ailenin kanıt satırı. Örnek: "112 işlem, rastgele kurala göre fazla getiri −%0,2 ± %1,1:
+4. Her kartta: hisse, aile, giriş bölgesi, stop, hedef, pozisyon değeri (sermayenin yüzdesi ve
+   1.000.000 TL için adet) ve ailenin kanıt satırı. (S2-2) Örnek: "112 işlem, rastgele kurala göre fazla getiri −%0,2 ± %1,1:
    ayırt edilemiyor". (P1, P2)
 5. Açık kartlar Adım fonksiyonuyla güncellenir: AKTİF / STOP / HEDEF / BOZULDU. (Kesilecek 6)
 
@@ -243,7 +260,7 @@ Portföy kuralı (aileden bağımsız): en büyük düşüş %25'i, düşüşte 
    `.IS` görünüyor; bu adımda **Yahoo verisi** kullanılır. Gerçek sınama İş Yatırım verisiyle. Getiriye
    bakılmaz. (Sorgu S10)
 3. Kural kaydı ve hash (5.8).
-4. Motor sınamaları (5.3) → vectorbt kararı → Adım + Motor.
+4. Motor sınamaları (5.3) → Adım + Motor (kendi döngümüz).
 5. Simülatör (iki bölme) + faiz + K2.
 6. K1 eşleştirilmiş rastgele kural + istatistik + deneme günlüğü.
 7. Üç aileyi koş; rapor. Kâğıt üstü canlı izleme başlar.
@@ -257,6 +274,10 @@ Portföy kuralı (aileden bağımsız): en büyük düşüş %25'i, düşüşte 
 4. Tedbirli hisseler (brüt takas, tek fiyat) bedava veriyle ayırt edilebiliyor mu? Edilemiyorsa
    bilinen yanlılık olarak yazılır.
 5. Sadakat kontrolünde Tansu'nun rakamları üretilemezse ilgili parça YORUM kalır.
+6. Bireysel yatırımcı için hisse kazancı ve temettü vergisi doğrulanmadı; %0,5 masraf senaryosu bir
+   kısmını karşılar. (S2-6)
+7. İş Yatırım günlük veriyi saat kaçta yayınlıyor? 19:30 tazelik kontrolü yakalar. (S2-16)
+8. İşlem sırası kapanmış bütün sembollerin listesi tam bulunabilir mi? (S2-20)
 
 ---
 
