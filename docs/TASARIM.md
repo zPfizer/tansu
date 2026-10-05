@@ -1,4 +1,4 @@
-# Tansu'dan esinlenen BIST sistemi: tasarım (taslak 2, 05.10.2026)
+# Tansu'dan esinlenen BIST sistemi: tasarım (taslak 3, 05.10.2026)
 
 Bu belge koddan önce gelir. Kod bu belgeye uyar; belge değişmeden davranış değişmez.
 Terimler `GLOSSARY.md`'dedir.
@@ -41,8 +41,9 @@ yorumumuzdur**; ekranda "Tansu'nun sistemi" diye sunulmaz. (P5)
 
 ## 3. Kapsam (ilk sürüm)
 
-Var: günlük veri, BIST100, yalnız alış yönü, Piyasa Nabzı, 2 aile, tek çıkış kuralı (Ç1), işlem
-motoru, portföy simülasyonu, istatistik, markdown rapor, CSV kart listesi.
+Var: günlük veri, BIST100, yalnız alış yönü, Piyasa Nabzı, 3 aile (`KURALLAR.md` §3: çift rotasyonu,
+AB=CD, EMA sıkışması), Tansu'nun risk paketi (5.5), işlem motoru, portföy simülasyonu, istatistik,
+markdown rapor, CSV kart listesi.
 
 Yok, ilk aile kabul edilene kadar bekler (gereksiz katman): Streamlit paneli, Telegram, DuckDB,
 iz süren stop ve kısmi kâr (Ç2), süre çıkışı (Ç3), dolar bazı karşılaştırma, Corwin–Schultz.
@@ -70,8 +71,16 @@ Her modülün dışarıya küçük bir yüzü var. İçi değişse de dışı de
 | Rapor | sonuçlar → markdown + CSV | |
 | Maliyet | işlem → masraf | Takılıp çıkarılabilir. (A1) |
 
-Kütüphaneler: yfinance (ham fiyat), borsapy (endeks listesi, şirket olayları — araştırılacak),
-pandas-ta-classic (göstergeler), statsmodels ve numpy (istatistik), quantstats (rapor ölçütleri).
+Kaynaklar ve kütüphaneler (`docs/arastirma/veri-kaynaklari.md`):
+- **Fiyat:** İş Yatırım `HisseTekil` (anahtarsız; ham `HG_*` ve bedelsiz/bedelli/temettü düzeltmeli
+  `HGDG_*`). Çapraz kontrol: borsapy (TradingView; bölünme düzeltmeli, temettüsüz).
+- **Yahoo kullanılmaz.** BIST şirket olaylarını yanlış günde ve yanlış oranla gösteriyor (ör. CCOLA
+  bölünmesi gerçekte 13.08.2024, Yahoo'da 01.08.2024). 05.10 ön denemesi Yahoo ile yapıldı.
+- **Şirket olayları:** İş Yatırım `GetSermayeArttirimlari`, bütün kodlarıyla (borsapy 78 kodunu atıyor).
+- **Evren:** bugünkü liste (borsapy) + KAP "Dönemsel Endeks Değişiklikleri" duyurularından geriye doğru.
+- **Faiz:** TCMB politika faizi (borsapy, toplantı günlerinde basamak). TLREF yalnız 2018 sonrası.
+- **Göstergeler ve istatistik:** pandas-ta-classic, statsmodels, numpy, quantstats.
+Kullanım koşulları ve hız sınırları bulunamadı; az sayıda istek, yerel önbellek.
 
 **vectorbt kararı:** vectorbt'nin dolum kuralları (boşluklu stop, aynı gün stop ve hedef, stopun
 neye göre hesaplandığı) belgelerde açık değil. Önce 5.3'teki elle hesaplanmış örneklerle sınanır.
@@ -85,9 +94,11 @@ Amaç: bir kuralın sonucunu **şanstan, piyasanın genel yükselişinden, enfla
 hatasından** ayırmak.
 
 ### 5.1 Veri
-- Ham fiyat indirilir (düzeltmesiz). Şirket olayları tablosu ayrıca kurulur; düzeltme kodda bir kez
-  uygulanır. Sonuç Yahoo'nun düzeltilmiş fiyatıyla karşılaştırılır. (B1, B2)
-- Açıklanamayan sıçrama: kapanıştan kapanışa %10,5'i aşan ve şirket olayıyla açıklanmayan her gün
+- Ham fiyat indirilir. Şirket olayları tablosundaki düzeltme katsayısı (`SHHE_FIYAT_AYAR_OR`) kodda bir
+  kez uygulanır. Sonuç İş Yatırım'ın düzeltilmiş fiyatıyla (`HGDG`) karşılaştırılır; fark varsa o gün
+  listelenir. (B1, B2)
+- Fiyat limiti zamana bağlıdır: 30.11.2015 – 12.03.2020 arası ±%20, 13.03.2020 sonrası ±%10.
+- Açıklanamayan sıçrama: kapanıştan kapanışa o günkü limiti (+%0,5) aşan ve şirket olayıyla açıklanmayan her gün
   **karantinaya** girer. O hisse o pencerede sınamadan çıkar; fiyat yamanmaz. (B1)
   Örnek: ECILC ve RYSAS, 12.03.2020.
 - İkinci kaynakla tam karşılaştırma: bütün hisse × gün getirileri borsapy ile karşılaştırılır; farkı
@@ -126,8 +137,15 @@ hatasından** ayırmak.
 - Likidite: pozisyon, son 10 günün medyan TL işlem tutarının %2'sini geçemez. (M11)
 
 ### 5.5 Çıkış
-Ç1: 2 ATR stop, 4 ATR hedef; kapanış EMA50 altına inerse ertesi açılışta çık. İlk sürümde tek çıkış
-budur. Ç2 ve Ç3 bir aile Ç1 ile kabul edildikten sonra denenir; her biri deneme sayısını artırır.
+Tansu'nun risk paketi (`kurallar/E` K1–K3; kaynak Tansu'nun paylaştığı infografik):
+- Acil stop: giriş − 2 ATR; gün içinde dokunulursa çıkılır.
+- Gün sonu çıkış: kapanış SMA250 altına inerse ertesi açılışta.
+- Aileye özgü hedef yalnız Tansu verdiyse: AB=CD için D + {0,618; 1; 1,618}(A−D). Merdivenin hangi
+  basamağında ne kadar satılacağı kaynakta çelişkili; ilk sürümde tek hedef (1,0) kullanılır (YORUM).
+- Çift rotasyonu: stop yok; karşı uçta diğer hisseye geçilir (Tansu'nun sürümü).
+- ATR uzunluğu kaynakta yok: 14 (YORUM).
+05.10 ön denemesindeki "4 ATR hedef" ve "EMA50 altı çıkış" Tansu'da yoktu; kaldırıldı.
+İz süren stop ve kısmi kâr ikinci el kaynaklı; bir aile bu paketle kabul edildikten sonra denenir.
 
 ### 5.6 Portföy
 - Sermaye 1.000.000 TL, işlem başına %1 risk, **tek pozisyon en fazla sermayenin %10'u**, en fazla 10
@@ -197,23 +215,25 @@ Portföy kuralı (aileden bağımsız): en büyük düşüş %25'i, düşüşte 
 5. Açık kartlar Adım fonksiyonuyla güncellenir: AKTİF / STOP / HEDEF / BOZULDU. (Kesilecek 6)
 
 ## 7. Uygulama sırası
-1. Ön denemenin yanlış etiketlerini düzelt (GLOSSARY, rapor başlığı).
-2. Veri deposu: ham indirme, anlık görüntü, borsapy ile tam karşılaştırma. Şirket olayları kaynağını
-   araştır (borsapy, İş Yatırım, KAP).
+1. Veri deposu: İş Yatırım ham + düzeltilmiş fiyat, şirket olayları tablosu, anlık görüntü; borsapy ile
+   karşılaştırma. Yahoo'lu ön deneme kodu kaldırılır.
+2. **Sadakat kontrolü** (`KURALLAR.md` §4): Tansu'nun çıktılarındaki rakamları yeniden üret
+   (VAKBN–GARAN z-skoru, KRDMD sıkışması, KRPLS/MARKA D noktaları). Getiriye bakılmaz.
 3. Motor sınamaları (5.3) → vectorbt kararı → Adım + Motor.
 4. Simülatör + faiz + K2/K2b.
 5. K1 eşleştirilmiş rastgele kural + istatistik + deneme günlüğü.
-6. İki aileyi bu düzenle yeniden koş; rapor.
+6. Üç aileyi koş; rapor.
 7. Kural kaydı ve hash; kâğıt üstü canlı izleme başlar.
+8. Evren: KAP endeks değişikliklerinden geçmiş BIST100 listesi (paralel iş; hazır olana kadar 5.2'deki
+   yanlılık uyarısı geçerli).
 
 ## 8. Açık sorular
-1. borsapy ya da İş Yatırım şirket olaylarını (bedelsiz oranı, tarih) veriyor mu? Vermiyorsa KAP'tan
-   elle tablo mu çıkarılır?
-2. 2015 BIST30 listesi Borsa İstanbul duyurularından çıkarılabiliyor mu?
-3. BIST günlük fiyat limiti 2015–2026 arasında hep %10 muydu? (M4)
+1. İş Yatırım ve TradingView kullanım koşulları ve hız sınırları bilinmiyor.
+2. Temettü kayıtlarındaki tarih hak kullanım günü mü, ödeme günü mü?
+3. KAP endeks değişikliği duyuruları 2015–2016'yı kapsıyor mu?
 4. Tedbirli hisseler (brüt takas, tek fiyat) bedava veriyle ayırt edilebiliyor mu? Edilemiyorsa
    bilinen yanlılık olarak yazılır.
-5. Kuralların Tansu'ya sadakati doğrulanamaz.
+5. Sadakat kontrolünde Tansu'nun rakamları üretilemezse ilgili parça YORUM kalır.
 
 ---
 
