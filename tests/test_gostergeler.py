@@ -29,3 +29,22 @@ def test_sikisma_donemleri_en_az_3_gun_ve_esik_dahil():
     d = donemler[0]
     assert (d["bas"], d["bit"], d["gun"]) == (pd.Timestamp("2026-01-06"), pd.Timestamp("2026-01-08"), 3)
     assert d["ortalama"] == pytest.approx(0.011, abs=1e-12)
+
+
+def test_sma_hareketli_ortalama():
+    # n=3, [1; 2; 3; 4; 6]: ilk iki değer NaN; (1+2+3)/3=2; (2+3+4)/3=3; (3+4+6)/3=13/3.
+    sonuc = gostergeler.sma(pd.Series([1.0, 2.0, 3.0, 4.0, 6.0]), 3)
+    assert sonuc.isna().tolist() == [True, True, False, False, False]
+    assert sonuc.iloc[2:].tolist() == pytest.approx([2.0, 3.0, 13 / 3], abs=1e-12)
+
+
+def test_atr_wilder_ilk_deger_ilk_n_tr_ortalamasi():
+    # n=3. yüksek [12;13;14;12;15], düşük [10;11;12;10;11], kapanış [11;12;13;11;14].
+    # TR0 = 12-10 = 2 (önceki kapanış yok). TR1 = max(2; |13-11|; |11-11|) = 2.
+    # TR2 = max(2; |14-12|; |12-12|) = 2. TR3 = max(2; |12-13|=1; |10-13|=3) = 3.
+    # TR4 = max(4; |15-11|=4; |11-11|=0) = 4.
+    # ATR2 = (2+2+2)/3 = 2 (ilk değer). ATR3 = (2*2+3)/3 = 7/3. ATR4 = (7/3*2+4)/3 = 26/9.
+    atr = gostergeler.atr(pd.Series([12.0, 13, 14, 12, 15]), pd.Series([10.0, 11, 12, 10, 11]),
+                          pd.Series([11.0, 12, 13, 11, 14]), 3)
+    assert atr.isna().tolist() == [True, True, False, False, False]
+    assert atr.iloc[2:].tolist() == pytest.approx([2.0, 7 / 3, 26 / 9], abs=1e-12)
