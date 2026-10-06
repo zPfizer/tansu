@@ -463,6 +463,13 @@ H4 (standart tanım): R004, R006, R007 (isim eşlemesi; tarayıcı eşiği ayrı
 
 Toplam: 10 soru (H1 satırı 5; 8–10 R245–R263 tweet metinlerinden, 74 satırlık incelemenin dışında).
 
+07.10 not taraması (beyin Ham bölümleri, görseller, defter ve ham dosyaları; Sentez kanıt sayılmadı): 10 sorunun hiçbirinin
+cevabı notlarda yok. Nedenler: R049 ve R136 görsellerinde seri ve gösterge adları silinmiş ("xxxx", beyaz boya); R116
+görselinin başlığı kırpılmış ("Swing=15 sol-only | MinGap=15" okunuyor, osilatör adı yok); R125'te Tansu "parametrelerin
+detaylarını verip stratejimi anlatamam" der, görselde tolerans yok (EMA 30/50/100/200, R127'de 20/50/100/200); R137
+eşiği "istediğim filtreyi yapabileceğim bir excel" ile kullanıcıya bırakır; R234'te girdi hacim ve RSI, hedef değişken
+yok; BOM yalnız R263'te geçer, tanımsız; R246 ve R249'da çıkış/hedef/stop yazılı değil. Sorular açık kalır.
+
 ## H5 için en önemli 10 yorum kararı
 
 1. Fincan-kulp tespiti (R114): dip, sol ağız ve sağ ağız nasıl seçilir; kulp en fazla kaç % geri çekilir. Tansu'nun GUBRF örneğine uyan: sol ağız = dipten önceki en yüksek pivot (300,75); kulp tabanı görselde %61,8 ile %78,6 arasında.
