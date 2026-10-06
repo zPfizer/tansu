@@ -457,7 +457,11 @@ H4 (standart tanım): R004, R006, R007 (isim eşlemesi; tarayıcı eşiği ayrı
 6. R137: YSA momentum çıktısında "pozitif eğim" eşiği nedir? (Not: "satılık değil, strateji anlatılmaz" dedi; cevap beklenmez.)
 7. R234: "Temel model" hangi girdiyle ve hangi hedef değişkenle öğreniyor? (Aynı not: cevap beklenmez.)
 
-Toplam: 7 soru (H1 satırı 5).
+8. R263 (06.10 tweet metninden): BOM sinyali nedir ve "şartlar da müsait" derken hangi şartlardır?
+9. R246 (06.10 tweet metninden): "80-100 haftalık yatay" nasıl ölçülür (bant genişliği, eğim) ve çıkış nerede?
+10. R249 (06.10): Three Drives'ta hedef ve stop nerede? (Tasarım: hedef C, geçersizlik 1,618 uzantısı; hedef YORUM.)
+
+Toplam: 10 soru (H1 satırı 5; 8–10 R245–R263 tweet metinlerinden, 74 satırlık incelemenin dışında).
 
 ## H5 için en önemli 10 yorum kararı
 

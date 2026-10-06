@@ -243,3 +243,121 @@ Yeni yanlış atıf: bulmadım. Yeni çelişki: N2 ve N3 dışında bulmadım.
 ## Kısa sonuç
 
 KABUL. Önce N2, N4 düzeltilsin ve izlenebilirlik yeniden üretilsin. S3 çift seçim kuralı (N1) resmi sınavdan önce yazılmalı.
+
+## Tur 3 (sürüm 5.2, R245–R263 tweet metinleri)
+
+Okuma anı: 06.10.2026. Okunan: `ham-yapistirmalar-3.md` (tamamı), `defter-4.md` R245–R263, `tasarim-8.md` sürüm 5.2 (tamamı), `izlenebilirlik.md` (R245–R263 satırları, Tablo 1–3), `kural-yok-inceleme.md` diff. Görseller açılmadı (beyin klasörü bu denetimde yok); görsel etiketi olan alıntılar doğrulanamadı.
+
+### a) Alıntı sadakati
+
+Yöntem: `python` ile tüm tırnaklı parçalar (defter-4 R245–R263: 187 parça; tasarim-8 R245–R263 satırları: 38 parça) ham metne karşı tarandı. Boşluk, satır sonu ve tırnak biçimi normalleştirildi. "..." ve " / " ile bölünen parçalar ayrı sınandı.
+
+- Metin alıntılarının hepsi birebir bulundu, aşağıdaki istisnalar dışında. Kimlik ve UTC saatleri 19 kayıtta da ham dosyayla tutuyor (R260 iki id de doğru).
+- **DÜŞÜK A1.** `defter-4.md` R263 (satır 608) ve `kural-yok-inceleme.md` madde 8: `"şartlar müsait"`. Ham metin: "şartlar da müsait". Tırnak içinde eksik alıntı. Birebir yaz.
+- **DÜŞÜK A2.** `tasarim-8.md` satır 325: `"trend dönüşü teyit edilmemiş"`. Ham metin: "kısa vadeli trend dönüşü henüz teyit edilmiş sayılmaz". Özet, tırnakla verilmiş. Birebir yaz ya da tırnağı kaldır.
+- **DÜŞÜK A3.** Başka kayıtlardan taşınan tırnaklar (R256 satırında "herşey kurallara dayalı" = R210; R260 satırında R202; R262 satırında "şarttır" = R228) bu dosyada yok; bilerek çapraz atıf. Kabul.
+- **Doğrulanamadı (görsel).** Görsel etiketleri (AEFES, DOAS ölçek sayıları, VAKBN–GARAN rapor sayıları, AKFIS başlığı, XU100 "GEÇİŞ / BEARISH CHoCH", "Kırılım ... (Temas:3)") ham dosyada yalnız dosya adı olarak var. Defter "görselden (beyin okuması)" diye işaretlemiş; doğru işaret. Sayıların görselle eşleşmesi ayrı bir el kontrolü ister. DOAS iç tutarlılığı doğru: 209,10 − 1,272·39 = 159,49.
+
+### b) Yazar kodu
+
+- R257, R258, R262 için M makul. Üçünde birinci şahıs cümlesi yok; R262 makale biçimli ("Hayati Rolün Nedir?" yazım hatası), R257 LLM biçimli ("BEKLE ve TEYİT ARA"), R258 aracın panel sayılarını ve "SETUP 35/100" skorunu metne yansıtıyor. M, en temkinli seçim. R258 için "G (araç metni)" de savunulur; fark sonucu değiştirmez, çünkü M satırları resmi kurala girmiyor (R258 yalnız WMA21 ölçüm adayı, R262 yalnız Engle-Granger seçimi, ikisi de başka T kaydıyla destekli).
+- **DÜŞÜK B1.** R249 T sayıldı. Gerekçe var: "Benim açımdan", "görürüz", "trade ederiz". Ama metin uzun, ders biçimli ve R249'un geometrisi resmi kurala giriyor. Tasarım atfı (T) bu yüzden kendi sözleriyle bağlı; `tasarim-8.md`'de "T (Tansu hesabında, birinci şahıs cümleleri var; ders biçimli)" notu eklenirse R234 ile aynı kuralı izler.
+- R251 G ve üst tweet T: doğru. R259, R263, R255, R256, R260, R261 T: doğru (birinci şahıs var).
+
+### c) Kapsam
+
+- `defter-4.md` R245–R263 fikir maddeleri 73. `izlenebilirlik.md` R245–R263 satırları 73. Kayıt başına sayılar birebir eşit (R260: 8/8, R249: 7/7, R252: 6/6, R248: 1/1). Eksik ya da fazla satır yok.
+- Satır içeriği örneklendi: rol ve yer sütunları tasarım-8 ile uyumlu. Bulunan sorun yok. R250 "kelebeklerrrrr" satırı "resmi sınav" yazılı; metinde kural yok, ama R003 ile aynı kural (Kelebek tarayıcısına bağlı). Kabul.
+- **DÜŞÜK C1.** `izlenebilirlik.md` satır 1 başlığı "(sürüm 5.1)"; gövde 5.2. Satır 780 sütun açıklaması hâlâ "kilit: kanıt" diyor; sütun kalktı.
+
+### d) Tablo 1 sayıları
+
+`python` ile 751 satırın hepsi okundu (7 sütun, 751 satır; R245–R263 = 73). Rol × durum hücreleri yeniden sayıldı.
+
+- Tablo 1'in 15 rol satırı ve toplamları tutuyor: 175 / 193 / 130 / 53 (+2 BAĞSIZ) / 1 / 81 / 5 / 42 / 69 = 751. "Veri" kilidi sütunu 55 satır; tabloda 53 + BAĞSIZ 2 (iki R227 satırı) olarak ayrılmış. Tutarlı.
+- Yeni 73 satırın dağılımı metindeki gibi: resmi 18, ölçüm 20, kural 7, açığa satış 2, ilke 11, bilgi 15. 697 − 19 + 73 = 751 doğru. Tablo 2 sayıları Tablo 1 toplamlarıyla aynı.
+- Bulgu yok.
+
+### e) Tasarım kararları
+
+**Three Drives (H içinde).** Ölçütle (Tansu'dan gelen geometri, geçersizlik, sadakat hedefi) karşılaştırma:
+
+| Ölçüt | Gartley | Three Drives | Fincan-kulp F | K |
+|---|---|---|---|---|
+| Tansu'dan geometri | Yok (standart oran, YORUM) | Var (0,618/0,786, 1,272/1,618, AB=CD, zaman örneği) | Var (görsel + hedef) | Yalnız dört aşamalı sıra |
+| Geçersizlik | G R012 "Stop (X)" | T metninden türetilmiş (1,618 aşımı) | YORUM | YORUM |
+| Sadakat hedefi | Çok | Yok | GUBRF | AKFIS (yalnız tarih ve sıra) |
+
+Sonuç: Three Drives, Gartley'den daha iyi kaynaklı geometriye sahip. Sadakat hedefi eksik; tasarım bunu açıkça yazıyor ("Sadakat hedefi yok"). Resmi alma kararı savunulur.
+
+- **ORTA E1. Three Drives yönetimi H'nin limit kuralına uymuyor.** 4.4 "Limit dolumu (H ve E)" diyor. Three Drives girişi limit değil, reaksiyon teyidinden sonraki AOF. 4.3 "Tepki" tanımı girişe göre ("kapanış girişin üstünde ve girişten en az 1 ATR yukarıda"); Three Drives'ta giriş tepkinin kendisi, tanım döngüsel. Düzelt: 4.4'te "Three Drives ve K: ertesi AOF girişi, limit yok"; 4.3'e "Three Drives: tepki = Drive 3 dibinden en az 1 ATR yukarı kapanış (YORUM)" ekle.
+- **DÜŞÜK E2. Geçersizlik atfı kısmen YORUM.** T yalnız "1,618 extension seviyesini aşabilir ve formasyon başarısız olabilir" der. "Kapanış" koşulu, ölçümün C'den yapılması ve bunun stop sayılması YORUM. Tasarımda T tırnağından hemen sonra YORUM işareti yok. İşaretle. 3.2 madde 4'te Three Drives için Gartley'deki gibi bir R/R örneği (C hedefi, 1,272 ve 1,618'de oran) yok; ekle.
+- **DÜŞÜK E3. Kelebek kuralı yok.** 5.1 DOAS Kelebek'i H sadakat hedefi yapıyor. 3.2 H yalnız "Kelebek ayrı tarayıcı; oranlar standart tanım, YORUM" diyor; AB=CD, Gartley, Three Drives bloklarında Kelebek bloğu yok. "Kelebek ayrı tarayıcı" cümlesi "Beş tarayıcı" sayısıyla da çelişebilir (H içinde mi, ayrı mı?). Bir blok yaz (D = XA 1,272; geçersizlik X) ve "H içinde alt tip" de.
+
+**K (kırılım → FVG → retest → teyit).**
+
+- Tansu'dan gelen: dört aşamalı sıra (T R254, "Bu yapıları arayın" talimat vurgusu), "Dikkat edelim bu yapıya" (T R253), AKFIS araç başlığı (G R253). Tansu'dan gelmeyen ve YORUM yazılanlar: konsolidasyon (10 mum, 3 ATR), retest (10 mum), teyit tanımı, geçersizlik, hedef. Hepsi YORUM etiketli. Uydurulmuş T atfı yok.
+- **ORTA E4. R246 ile K arasındaki fark gerekçesiz.** §8 R246'yı "yataylık, dip, çıkış tanımı yok" diye ölçümde tutuyor. K'nin de her sayısal tanımı YORUM. Fark şu olmalı: K'de Tansu'nun sıra kuralı (R254) ve araç çıktısı (AKFIS) var; R246'da tarama paylaşılmadı. Bu cümle §8'de yok; ekle. R246'nın ölçümde kalması bu gerekçeyle savunulur ("Tansu'ya sor" listede, `kural-yok-inceleme.md` 9).
+- **ORTA E5. §8 iki satırı çelişiyor.** Satır "Kanal alt bandı, düşen direnç kırılımı + retest" hâlâ "ayrı tarayıcı yerine teyit kolu" diyor. Yeni satır K'yi "resmi biçim" yapıyor. Eski satıra "K hariç" notu ekle.
+- **DÜŞÜK E6. Talep bölgesi kapısı gevşetildi.** K'de "eski direnç desteğe dönünce bölge sağlanmış sayılır (YORUM)". Bu, "bölgesiz formasyon yok" ilkesini (T R009, R080) K için yumuşatıyor. Gerekçe kabul edilebilir; ölçüm kolu olarak "bölge şartlı / şartsız" iki kol ekle.
+- K sadakat hedefi zayıf (fiyat etiketi yok; tarih ve sıra). Tasarım bunu yazıyor. Kabul.
+
+**Bakış ileri riski.**
+
+- **ORTA E7. §3.2 madde 5 güncellenmedi.** Liste pivot, FVG, talep bölgesi, haftalık mum ve "doldurulmamış" durumunu sayıyor. Three Drives'ın Drive 3 pivotu (sağında k mum kapanınca bilinir; Drive 3 tepe/dip aynı barda görülemez) ve K'nin konsolidasyon tepesi, retest penceresi ve teyit mumu yok. Giriş "reaksiyon teyidinden sonra" yazıldığı için risk fiilen küçük, ama kural yazılı değil. Ekle ve `test_gelecek.py` kapsamına Three Drives ile K'yi yaz.
+
+**S3 / G R251.**
+
+- **ORTA E8. "Gösterir" fazla güçlü.** §3.3 satır 231–232: Z −3,40 → −3,11 geçişi "ΔZ dönüşünün giriş şartı olduğunu gösterir". Rapor tek örnek verir; giriş kuralı ve formül yok (defter-4 R251: "giriş/çıkış kuralı ve formül yok"). "Uyumludur" yaz. Ayrıca 5.1 S3 hedefi Z −3,108 sayısını sınar; Z'nin pencere ve hedge oranı bilinmiyor (Beta 1,675 raporda var, formül yok). Sadakat ölçütü yön ve tarih olsun; Z sayısı için tolerans YORUM olarak yazılsın.
+- "Aktif Hisse VAKBN", "T+1 Open" gibi etiketler görselden okuma; doğrulanmadı. §3.3 bunu "kaynak iddiası, bağımsız ölçülmedi" diye işaretliyor. Doğru.
+
+**Diğer.**
+
+- **DÜŞÜK E9. 4.5 Corwin–Schultz.** "Pencere 21 gün" görsel etiketinden. Tweet metni 2 günlük ve 5 günlük ölçümden söz eder. Pencere 21 gün YORUM kalsın; 2 ve 5 gün kolları ölçüm adayı olsun.
+- Skewness (3.1): eşikler −0,50 / 0 / +0,50 / +1,00, 63 gün, log getiri, "dağılım filtresi" birebir T R260. "Değişim penceresi 21 gün" YORUM etiketli. Uydurma yok.
+- Aday günlüğü (§6, R255): alanlar ham metinle eşleşiyor.
+
+### f) "Beş tarayıcı" ve m
+
+- H, E, S, F, K = 5. §3.2 satır 115 ("Beş tarayıcı"), 199 ("m'yi 4 fazla artırır (1 yerine 5)") ve 202–203 ("beş tarayıcıdan birinin") tutarlı. m = 5 (S1, S2, S3 + 2 eski çift), B = 1.000: tutarlı. S2 tek hipotez olduğu için K ve F m'yi artırmaz: §8 doğru.
+- **DÜŞÜK F1. Kalıntı.** `tasarim-8.md` satır 29: "Araçların başlıklarında üç tarayıcı görünüyor", altında artık dört madde var (K eklendi). "dört" yap. Başka "dört tarayıcı" kalıntısı yok (`tasarim-8.md`, `izlenebilirlik.md`, `kural-yok-inceleme.md` tarandı). Satır 19'daki "dört hat" tarayıcı sayısı değil; doğru.
+- `denetim-tasarim-8.md` Tur 1'deki "Üç tarayıcı" cümleleri tarihsel kayıt; değiştirilmedi.
+
+### Hüküm: KOŞULLU KABUL
+
+Alıntı sadakati yüksek, sayılar doğru, kapsam tam. YÜKSEK bulgu yok. Koşullar ORTA bulguların kapanması.
+
+Düzeltme listesi:
+
+1. (E1) 4.4 ve 4.3: Three Drives ve K girişi limit değil, ertesi AOF; Three Drives tepki tanımı yaz.
+2. (E7) §3.2 madde 5: Three Drives Drive 3 pivotu ve K aşamaları için bakış ileri kuralı yaz; `test_gelecek.py` kapsamına ekle.
+3. (E8) §3.3: "gösterir" → "uyumludur"; 5.1 S3 hedefini yön ve tarihe indir, Z sayısı için tolerans YORUM.
+4. (E5) §8 "Kanal alt bandı ... retest" satırına "K hariç" notu ekle.
+5. (E4) §8'e R246 ile K farkı için tek cümle ekle (sıra kuralı ve araç çıktısı var / tarama paylaşılmadı).
+6. (E3) 3.2 H: Kelebek bloğu yaz; "ayrı tarayıcı" cümlesini "H alt tipi" yap.
+7. (E2) Three Drives geçersizliğinde "kapanış" ve "stop sayılması" için YORUM işareti; R/R örneği ekle.
+8. (A1, A2) Üç eksik alıntıyı birebir yap: `defter-4.md` R263, `kural-yok-inceleme.md` madde 8, `tasarim-8.md` satır 325.
+9. (F1) `tasarim-8.md` satır 29 "üç tarayıcı" → "dört".
+10. (C1) `izlenebilirlik.md` başlık "5.1" → "5.2"; satır 780 "kilit: kanıt" ifadesini sil.
+11. (E6, E9, B1) İsteğe bağlı: K için bölgeli/bölgesiz ölçüm kolu; Corwin–Schultz 2 ve 5 gün kolu; R249 için ders biçimli not.
+
+Sınırlar: görsel etiketleri ve görsel sayıları doğrulanmadı. Tweet metinlerinin API'den doğruluğu denetlenmedi (kaynak kabul edildi).
+
+### Tur 3 kapanış
+
+Yöntem: `tasarim-8.md`, `defter-4.md`, `kural-yok-inceleme.md`, `izlenebilirlik.md` ilgili satırları okundu. Düzeltilen üç alıntı elle ham metinle karşılaştırıldı; tam python taraması yeniden yapılmadı.
+
+1. (E1) Kapandı. 4.4: "Three Drives, S, F ve K limit kullanmaz: giriş ertesi AOF". 4.3: Three Drives tepki tanımı Drive 3 dibine göre, YORUM işaretli.
+2. (E7) Kapandı. 3.2 madde 5: Drive 3 pivotu ve K aşamaları yazıldı; `test_gelecek.py` kapsamına eklendi.
+3. (E8) Kapandı. §3.3 "uyumludur"; 5.1 S3 ölçütü yön ve tarih; Z sayısı ±0,5 toleransla bilgi (YORUM).
+4. (E5) Kısmen kapandı (DÜŞÜK kalan). Ayrım sonraki satıra yazıldı (FVG'li sıra K'dedir). Eski satır ("ayrı tarayıcı yerine teyit kolu") değişmedi. Ona "FVG'li hal K'dedir" notu eklenirse çelişki tamamen kalkar.
+5. (E4) Kapandı. R246 satırında "K ile fark" cümlesi var.
+6. (E3) Kapandı. H başlığı "AB=CD, Gartley, Kelebek, Three Drives; tek H tarayıcısı". Kelebek bloğu var (B 0,786, D = XA 1,272, DOAS değerleri tutuyor). Beş tarayıcı sayısı bozulmadı.
+7. (E2) Kapandı. Geçersizlikte "kapanış" ve "stop sayılması" YORUM işaretli. R/R örneği doğru: ödül 1,272·L − e, risk 0,346·L + e; e = 0,1·L için 1,172/0,446 ≈ 2,6.
+8. (A1, A2) Kapandı. `defter-4.md` R263 ve `kural-yok-inceleme.md` madde 8 "şartlar da müsait". `tasarim-8.md` satır 334 ham metinle birebir.
+9. (F1) Kapandı. Satır 29 "dört tarayıcı". Başka kalıntı yok.
+10. (C1) Kapandı. İzlenebilirlik başlık ve gövde 5.2. "kilit: kanıt" yalnız satır 803'te, tarihsel notta; lejant temiz.
+
+Yeni sorun: yok. Not: Kelebek geçersizliği "XA 1,618" araç etiketinden ("max risk"); YORUM işaretli, kabul.
+
+Hüküm: KABUL. Kalan tek DÜŞÜK (madde 4) kabulü engellemez.

@@ -1,6 +1,6 @@
-# İzlenebilirlik tablosu: defter-1..4 fikirleri ve tasarım-8 (sürüm 5.1), iki eksenli
+# İzlenebilirlik tablosu: defter-1..4 fikirleri ve tasarım-8 (sürüm 5.2), iki eksenli
 
-Kaynak: defter-1..4.md (denetim düzeltmeleri işlenmiş hali) ve tasarim-8.md (sürüm 5.1, 06.10.2026). Tasarım değiştirilmedi. 697 satırın her biri sürüm 5.1'e göre bağlıdır.
+Kaynak: defter-1..4.md (denetim düzeltmeleri işlenmiş hali) ve tasarim-8.md (sürüm 5.2, 06.10.2026). 751 satırın her biri sürüm 5.2'ye göre bağlıdır (R245–R263 tweet metinleri kaynaktan çekildi, `ham-yapistirmalar-3.md`).
 
 ## Neden iki eksen (Levent 06.10 itirazı)
 
@@ -15,11 +15,11 @@ Okuma kuralları:
 - Her satır bir defter fikir satırıdır (madde). Strateji içeriği olmayan kayıtlar tek satırdır.
 - "Yer" sütunu tasarım-8 bölüm numarasıdır. "8:" sonrası, 8. bölüm tablosundaki satırın adıdır (adlar kısaltıldı). "(kavram)" = tasarım o R numarasını anmıyor, ama aynı kavramı başka bir R ile ya da aynı cümleyle bağlıyor. Bağ uydurulmadı. "İlke: tasarımın kuralı" satırlarında yer sütunu, ilkenin uygulandığı tasarım yerini gösterir (TASARIM = docs/TASARIM.md, taslak 7). Bulunamayan ilkelerde yer sütununda "ilke: tasarımda karşılığı yok" yazar.
 - Rol, defterdeki aşama etiketinden başlar: tarama-evren → evren-likidite, momentum-seçim → seçim-momentum, teyit-tetik → teyit, hedef-çıkış ve stop-geçersizlik → çıkış, temel-değerleme → değerleme-temel, ölçüm-ilkesi → ölçüm-yöntemi. Diğer aşamalar aynı adla kalır (bölge, formasyon, giriş, boyut-risk, rejim, portföy).
-- Rol geçersiz kılmaları: (1) "felsefe" ve "diğer" satırları tek tek ilke ya da araç-öğrenme olarak ayrıldı. İlke = sistemin nasıl kurulacağını söyler (duygusuz, kural, backtest, sermaye koruma, tepe-dip avlamama, likit hisse). Araç-öğrenme = kitap, Python dersi, motivasyon, benzetme, rakip yöntem anlatımı. (2) Sektör rotasyonu satırları seçim-momentum oldu. (3) Backtest, duygusuz ve benzeri satırlar ("ölçüm-ilkesi" ya da başka aşamalı) ilke oldu. (4) Makro, Gordon, CAPM ve ders satırları araç-öğrenme, "Ürün hedefi" satırları ürün-hedefi oldu. (5) R245–R263 yalnız bağlantıdır; içerik doğrulanamadı ve rol listesinde "bilinmiyor" yok. Bu 19 satır araç-öğrenme sayıldı. (6) Gartley/Kelebek tarayıcı satırları formasyon, "yeni tarama kodumuz" (R192) satırı bölge oldu; değerleme ile ilgili ölçüm-ilkesi satırları değerleme-temel oldu.
+- Rol geçersiz kılmaları: (1) "felsefe" ve "diğer" satırları tek tek ilke ya da araç-öğrenme olarak ayrıldı. İlke = sistemin nasıl kurulacağını söyler (duygusuz, kural, backtest, sermaye koruma, tepe-dip avlamama, likit hisse). Araç-öğrenme = kitap, Python dersi, motivasyon, benzetme, rakip yöntem anlatımı. (2) Sektör rotasyonu satırları seçim-momentum oldu. (3) Backtest, duygusuz ve benzeri satırlar ("ölçüm-ilkesi" ya da başka aşamalı) ilke oldu. (4) Makro, Gordon, CAPM ve ders satırları araç-öğrenme, "Ürün hedefi" satırları ürün-hedefi oldu. (5) R245–R263: 06.10'da tweet metinleri kaynaktan çekildi; satırlar defter-4'ün yeni fikir maddeleridir (önceki 19 "yalnız bağlantı" satırı kalktı). "çift" aşamalı R262 satırları ölçüm-yöntemi (R228 gibi), giriş ya da portföy oldu. (6) Gartley/Kelebek tarayıcı satırları formasyon, "yeni tarama kodumuz" (R192) satırı bölge oldu; değerleme ile ilgili ölçüm-ilkesi satırları değerleme-temel oldu.
 - Durum ve kilit, tasarim-8 §2 (veri gerçeği) ve §8 (resmi olmayanlar ve neden) sütunlarından alındı. Eski "resmi" → resmi sınav; "ölçüm" → ölçüm kolu; "ikinci dalga" → bilanço verisi (değerleme, DCF, bilanço filtreleri, DEA, TOPSIS, konveks rotasyon, hibrit alarm) ya da Tansu kural vermedi (klasik formasyonlar, fincan-kulp, gizli pozitif uyumsuzluk, bant kuyruğu); "dışarıda" → §8'in nedenine göre veri kilidi, açılış, açığa satış, kural/formül yok ya da işlem kuralı değil; "kapsam dışı" ve "strateji değil" → kanıt yok, bilgi ya da ilke.
 - Kural vermedi kilidine giren ve §8'in nedeni tam örtüşmeyen satırlar: RSI 30 ve diğer gösterge satırları (§8: "Tansu'nun ana sistemi değil"), Mum ve gösterge yorumları (HIKKAKE dahil; yalnız inverted hammer açılış kilidine girdi). Bu eşleme yorumdur.
 - Bir satırda iki bileşen varsa baskın bileşen yazıldı; ikinci bileşen yer sütunundadır. R154 hem "DCF altyapısı" hem "Ürün hedefi" satırında anılır; "tek tuş" cümlesi için ürün hedefi esas alındı. Tasarımda R156 APO iki yerde anılır; "Bant kuyruğu" satırı esas alındı.
-- Yazar kodları: T, M, G, G-dış, A, T/M (karışık), bağlantı.
+- Yazar kodları: T, M, G, G-dış, A, T/M (karışık), T+G (metin ve araç görseli).
 
 | R | aşama | fikir | yazar | yer | rol (A) | durum ve kilit (B) |
 |---|---|---|---|---|---|---|
@@ -701,50 +701,106 @@ Okuma kuralları:
 | R243 | giriş | "Boşluğun Dolmasını Bekleyip Başlangıç Yönünde İşlem Yapma" | T/M | 3.2 E ölçüm kolları (dolmuş FVG sonrası giriş, M R243); 9 madde 3 | giriş | ölçüm kolu |
 | R243 | bölge | "FVG'yi avlamanın en kolay yolu ise büyük mumları incelemektir." | T/M | tasarımda yok (R243 büyük mum cümlesi) | bölge | kilit: Tansu kural/formül vermedi |
 | R244 | bölge | "Medyanı şöyle bir kanal gibi kullanın arkadaşlar." | T+G | 8: Medyan temelli çalışma, medyan kanal (T R244) | bölge | ölçüm kolu |
-| R245 | — | yalnız bağlantı (2096582181170598078) | bağlantı | 8: R245–R263 | araç-öğrenme | kilit: kanıt yok (yalnız bağlantı) |
-| R246 | — | yalnız bağlantı (2096580811080261784) | bağlantı | 8: R245–R263 | araç-öğrenme | kilit: kanıt yok (yalnız bağlantı) |
-| R247 | — | yalnız bağlantı (2096577500612624410) | bağlantı | 8: R245–R263 | araç-öğrenme | kilit: kanıt yok (yalnız bağlantı) |
-| R248 | — | yalnız bağlantı (2096576027791131079) | bağlantı | 8: R245–R263 | araç-öğrenme | kilit: kanıt yok (yalnız bağlantı) |
-| R249 | — | yalnız bağlantı (2096510322190201208) | bağlantı | 8: R245–R263 | araç-öğrenme | kilit: kanıt yok (yalnız bağlantı) |
-| R250 | — | yalnız bağlantı (2096505383955079277) | bağlantı | 8: R245–R263 | araç-öğrenme | kilit: kanıt yok (yalnız bağlantı) |
-| R251 | — | yalnız bağlantı (2096358189696520213) | bağlantı | 8: R245–R263 | araç-öğrenme | kilit: kanıt yok (yalnız bağlantı) |
-| R252 | — | yalnız bağlantı (2096145981062475910) | bağlantı | 8: R245–R263 | araç-öğrenme | kilit: kanıt yok (yalnız bağlantı) |
-| R253 | — | yalnız bağlantı (2095523694881697974) | bağlantı | 8: R245–R263 | araç-öğrenme | kilit: kanıt yok (yalnız bağlantı) |
-| R254 | — | yalnız bağlantı (2095218573631279414) | bağlantı | 8: R245–R263 | araç-öğrenme | kilit: kanıt yok (yalnız bağlantı) |
-| R255 | — | yalnız bağlantı (2095213493133713664) | bağlantı | 8: R245–R263 | araç-öğrenme | kilit: kanıt yok (yalnız bağlantı) |
-| R256 | — | yalnız bağlantı (2095201144544846208) | bağlantı | 8: R245–R263 | araç-öğrenme | kilit: kanıt yok (yalnız bağlantı) |
-| R257 | — | yalnız bağlantı (2095196517577461974) | bağlantı | 8: R245–R263 | araç-öğrenme | kilit: kanıt yok (yalnız bağlantı) |
-| R258 | — | yalnız bağlantı (2094850165920403866) | bağlantı | 8: R245–R263 | araç-öğrenme | kilit: kanıt yok (yalnız bağlantı) |
-| R259 | — | yalnız bağlantı (2094486927328059452) | bağlantı | 8: R245–R263 | araç-öğrenme | kilit: kanıt yok (yalnız bağlantı) |
-| R260 | — | yalnız bağlantı (2094148699769241961 ve 2094148704089587805) | bağlantı | 8: R245–R263 | araç-öğrenme | kilit: kanıt yok (yalnız bağlantı) |
-| R261 | — | yalnız bağlantı (2094128312729624792) | bağlantı | 8: R245–R263 | araç-öğrenme | kilit: kanıt yok (yalnız bağlantı) |
-| R262 | — | yalnız bağlantı (2093658795700338821) | bağlantı | 8: R245–R263 | araç-öğrenme | kilit: kanıt yok (yalnız bağlantı) |
-| R263 | — | yalnız bağlantı (2093647837162553475) | bağlantı | 8: R245–R263 | araç-öğrenme | kilit: kanıt yok (yalnız bağlantı) |
+| R245 | diğer | "Hadi şunu vereyim / Ne kadar çok rt o kadar çok formasyon:)" | T | 8: Ahengin uyumu / arbitraj başlığı / RT satırı | araç-öğrenme | bilgi: işlem kuralı değil |
+| R245 | bölge | AEFES kanal alt bant teması, "Lookback: 120 ... Üst/Alt temas: 3/3" (görsel) | G | 8: Kanal alt bandı teması (G R245) | bölge | ölçüm kolu |
+| R246 | tarama-evren/giriş | "Aslında en temiz strateji bulacaksın 80-100 haftalık yatay giden bir hisse dibinde oturup bekleyeceksin." | T | 8: 80–100 haftalık yatay hisse (T R246) | evren-likidite | ölçüm kolu |
+| R246 | tarama-evren | "Yazalım o zaman taramasını:)" | T | 8: 80–100 haftalık yatay hisse (tarama paylaşılmadı) | araç-öğrenme | bilgi: işlem kuralı değil |
+| R247 | teyit-tetik | "Güzer retest var" (kırılım + retest görseli) | T+G | 8: Kanal alt bandı teması, düşen üst sınır kırılımı ve retest (T R247); 3.2 K (kavram) | teyit | ölçüm kolu |
+| R247 | felsefe | "Gider mi gitmez mi artık orası tahtacıya kalmış" | T | felsefe notu | araç-öğrenme | bilgi: işlem kuralı değil |
+| R248 | — | "Canlanın:)" + düşen üst sınırı aşan yeşil kırılım mumu (görsel) | T+G | 8: Kanal alt bandı teması, düşen üst sınır kırılımı (G R248) | teyit | ölçüm kolu |
+| R249 | formasyon | "Three Drives Pattern ... art arda üç kez yeni bir ekstrem nokta ... düşen piyasada ise üç adet giderek düşen dip" | T+G | 3.2 H (Three Drives, T R249) | formasyon | resmi sınav |
+| R249 | bölge | "A ... ve ... C düzeltmesi ... yüzde 61,8 veya yüzde 78,6 ... 1,272 veya 1,618 Fibonacci extension" | T | 3.2 H (Three Drives oranları, T R249) | formasyon | resmi sınav |
+| R249 | formasyon | "A noktasından Drive 2'ye ... ile C noktasından Drive 3'e ... birbirine yakın büyüklükte olmalıdır." | T | 3.2 H (Three Drives fiyat simetrisi) | formasyon | resmi sınav |
+| R249 | formasyon | "Biri 10 bar, diğeri 11-12 bar sürüyorsa yapı oldukça dengelidir. ... 8 bar, diğeri 30 bar ... bozulur." | T | 3.2 H (Three Drives zaman simetrisi, oran ≤ 1,5 YORUM) | formasyon | resmi sınav |
+| R249 | formasyon | "Hareketleri zorlayarak bir formasyon yaratmaya çalışıyorsanız büyük ihtimalle ortada gerçek bir Three Drives yoktur." | T | 3.2 H (Three Drives: oran ve simetri şartları birlikte) | ilke | ilke: tasarımın kuralı |
+| R249 | teyit-tetik | "Drive 3 oluştu diye doğrudan ters yönde işlem açmak doğru değildir. ... reaksiyon verip vermediğini izlemek gerekir." | T | 3.2 H (Three Drives girişi reaksiyon teyidinde; geçersizlik 1,618 uzantısı) | teyit | resmi sınav |
+| R249 | felsefe | "Önce fiyatın gerçekten üç drive oluşturduğunu görürüz. Sonra Fibonacci ilişkilerini ... fiyatın bize gösterdiği yapıyı trade ederiz." | T | 3.2 H (Three Drives kontrol sırası) | ilke | ilke: tasarımın kuralı |
+| R250 | formasyon | "kelebeklerrrrr #doas" | T | 3.2 H (Kelebek) | formasyon | resmi sınav |
+| R250 | bölge | DOAS kelebek: A 209,10, X 170,10, "1.272 (D hedefi): 159.49; D: 159.40 [TAMAMLANDI]" (görsel) | G | 5.1 H sadakat (DOAS, G R250) | bölge | resmi sınav |
+| R251 | portföy | "Arbitraj hisselerini bu başlıkta paylaşıyorum." (üst tweet) | T | 8: Ahengin uyumu / arbitraj başlığı / RT satırı | araç-öğrenme | bilgi: işlem kuralı değil |
+| R251 | ölçüm-ilkesi | "RELATIVE VALUE ROTATION \| VAKBN <-> GARAN ... YENI AL SINYALI ... Z donusu +0.30 ... Cointegration p 0.048" (rapor) | G | 3.3 (long-only rotasyon ve ΔZ kanıtı, G R251); 5.1 S3 sadakat | portföy | resmi sınav |
+| R251 | rejim | normalize fiyat, Z, rolling korelasyon/beta panelleri, "Pair Quality", "Half-Life" (görsel) | G | 3.3 (yalnız Z ve kointegrasyon; Pair Quality ve Half-Life formülü yok) | ölçüm-yöntemi | kilit: Tansu kural/formül vermedi |
+| R252 | ölçüm-ilkesi | "Corwin-Schultz ... sadece günlük High ve Low fiyatlarını kullanarak ... spread'ini tahmin etmeye çalışır." | T+G | 4.5 (Corwin–Schultz, T R252, 21 gün G R252) | ölçüm-yöntemi | ölçüm kolu |
+| R252 | ölçüm-ilkesi | "Spread düşük, Sigma düşük ... Spread yüksek, Sigma yüksek: ... En riskli yapı." | T | 4.5 (dört sınıf kesimi) | rejim | ölçüm kolu |
+| R252 | felsefe | "işlem kalitesi ve likidite risk radarı olarak ... tek başına al-sat göstergesi olarak değil." | T | 4.5 (Corwin–Schultz yalnız ölçüm katmanında) | ilke | ilke: tasarımın kuralı |
+| R252 | teyit-tetik | "fiyat yükselirken Spread düşüyorsa ... daha sağlıklı ... Spread de yükseliyorsa ... daha kırılgan" | T | 4.5 (teyit kesimi) | teyit | ölçüm kolu |
+| R252 | rejim | "XU100'de güncel Spread yüzde 2,15 ... Tarihsel ortalama ise yaklaşık yüzde 1,09." | T | 4.5 (o güne özgü okuma) | rejim | bilgi: işlem kuralı değil |
+| R252 | teyit-tetik | "Spread yeniden tarihsel ortalamasına doğru gerilerse ... rahatlama"; "düşük Sigma, risk azaldı anlamına gelmez." | T | 4.5 (yüksek/düşük = kendi geçmiş ortalamasına göre) | teyit | ölçüm kolu |
+| R253 | formasyon/teyit-tetik | "Breakout-->FVG-->Retest-->Confirmation / Bu yapıları arayın" (alıntı) + AKFIS "A+ SETUP" (görsel) | T+G | 3.2 K; 5.1 K sadakat (AKFIS, G R253) | formasyon | resmi sınav |
+| R253 | diğer | "Dikkat edelim bu yapıya" | T | 3.2 K (atıf) | araç-öğrenme | bilgi: işlem kuralı değil |
+| R254 | formasyon/teyit-tetik | "Breakout-->FVG-->Retest-->Confirmation / Bu yapıları arayın" | T+G | 3.2 K (T R254) | formasyon | resmi sınav |
+| R255 | ölçüm-ilkesi | "Backtest yapın. ... sonraki 1, 3 ve 5 günde ne olmuş bakın." | T | 6 (aday günlüğü 1/3/5 gün, T R255) | ilke | ilke: tasarımın kuralı |
+| R255 | ölçüm-ilkesi | "Hangi aday tipi para kazandırıyor? ... Yoksa retest beklemek bizi fazla mı geciktiriyor?" | T | 6 (aday tipi karşılaştırması, ölçüm başlığı); 3.2 tarayıcı başına sonuç | ölçüm-yöntemi | ölçüm kolu |
+| R255 | teyit-tetik | "Market Structure ve fiyat davranışı ana motor olsun RSI, MACD, WaveTrend, RS gibi unsurlar yardımcı teyit olsun." | T | 3.2 (resmi akış yapı + bölge + formasyon; göstergeler ölçüm kesimi) | ilke | ilke: tasarımın kuralı |
+| R255 | boyut-risk | "Pozisyon büyüklüğünü stop mesafesine göre hesaplayın." | T | 4.4 (boyut: risk / (giriş − geçersizlik)) | boyut-risk | resmi sınav |
+| R255 | ölçüm-ilkesi | "İşlem günlüğü oluşturun. Aday tarihi → giriş → neden girdik → invalidation → TP → sonuç → maksimum olumlu/olumsuz hareket." | T | 6 (aday günlüğü, MFE/MAE) | ilke | ilke: tasarımın kuralı |
+| R255 | felsefe | "Bir gösterge veya filtre sonuçlara katkı sağlamıyorsa sırf teknik görünmek için sistemde tutmayın." | T | 4.5 ve 5.2 (kapılı/kapısız kollar) | ilke | ilke: tasarımın kuralı |
+| R256 | felsefe | "benim ilk sorduğum soru "hangi indikatör AL diyor?" değildir. Asla ama asla bu hatayı yapmam" | T | 1; 3.2 (akış göstergeyle başlamaz) | ilke | ilke: tasarımın kuralı |
+| R256 | rejim | "İlk sorum şudur: Fiyat şu anda hangi yapının içinde ... bölgeyi, kırılımları, likidite hareketlerini ve 4 saatlik teyidi" | T | 1; 3.2 akış (yapı → bölge → kırılım; 4 saatlik teyit gün içi veri ister, 2) | rejim | resmi sınav |
+| R256 | ölçüm-ilkesi | "Şablonu aynı zamanda koşullar ve sonuçlar ile koda da döktüm ... kod da aynı sonuçları veriyor" | T | 1; 5.1 (sadakat: kod Tansu'nun manuel sonucunu bulmalı) | ilke | ilke: tasarımın kuralı |
+| R257 | rejim | ""BEKLE ve TEYİT ARA" konumundadır. ... dip tahmini yapmaya çalışmak yerine" | M+G | 8: XU100 günlük yorumları (M R257) | rejim | bilgi: işlem kuralı değil |
+| R257 | teyit-tetik | "fiyatın yaklaşık 14.722 seviyesinin üzerine çıkması ve burada kalıcılık göstermesi gerekiyor" | M | 8: XU100 günlük yorumları (o güne özgü seviye) | teyit | bilgi: işlem kuralı değil |
+| R257 | bölge | "ilk önemli sınav 14.740–14.876 bölgesi ... 13.000 civarı ... savunma alanlarından biri" | M | 8: XU100 günlük yorumları (o güne özgü seviye) | bölge | bilgi: işlem kuralı değil |
+| R257 | boyut-risk | "nakit esnekliği korunmalı ve yeni pozisyonlar ancak ... gücünü açık biçimde göstermesinden sonra artırılmalıdır" | M | 8: XU100 günlük yorumları (oran yok) | boyut-risk | kilit: Tansu kural/formül vermedi |
+| R257 | rejim | "düşüşe katılan şirket sayısının yükselişe katılanlardan belirgin biçimde fazla" | M | 4.5 (piyasa genişliği NH-NL) (kavram) | rejim | ölçüm kolu |
+| R258 | rejim | "fiyat 14226.96, WMA21 14443.45 seviyesinin altında ve WMA aşağı eğimli" | M+G | 4.5 (XU100 WMA21, M R258) | rejim | ölçüm kolu |
+| R258 | momentum-seçim | "MACD histogramı negatif ... RSI 45.0 ... WaveTrend kısa vadede zayıf" | M | 8: XU100 günlük yorumları (eşik yok) | seçim-momentum | kilit: Tansu kural/formül vermedi |
+| R258 | teyit-tetik | "İlk anlamlı olumlu gelişme WMA21'in (14443.45) geri alınması, ardından 14722.02 ... tepenin kırılması" | M | 4.5 (XU100 WMA21 kolu) (kavram) | teyit | ölçüm kolu |
+| R258 | bölge | "en yakın demand bölgesi 13633.00-13659.74"; "14230.73-14301.92 aktif Bearish FVG" | M | 8: XU100 günlük yorumları (o güne özgü seviye) | bölge | bilgi: işlem kuralı değil |
+| R258 | stop-geçersizlik | "14140.43 altına kalıcı geçiş, en yakın Bullish FVG desteğinin kaybedildiğini gösterir." | M | 8: XU100 günlük yorumları (o güne özgü seviye) | çıkış | bilgi: işlem kuralı değil |
+| R258 | rejim | "Güçlü yükselen yapısal trend (7 temas) ... kırılmış"; "Teknik uyum skoru 35/100" | M+G | 8: XU100 günlük yorumları (puan formülü yok) | rejim | kilit: Tansu kural/formül vermedi |
+| R259 | bölge | "DEMAND / TOPLAMA" kutusu ve alt paneller (görsel) | G | 4.1 (talep bölgesi) (kavram); 8: Ahengin uyumu satırı | bölge | bilgi: işlem kuralı değil |
+| R259 | teyit-tetik | "Ahengin uyumu" | T | 8: Ahengin uyumu satırı (tanım yok) | teyit | kilit: Tansu kural/formül vermedi |
+| R259 | diğer | "Şunu biraz geliştirmenin önemine inandım şu an." | T | 8: Ahengin uyumu satırı | araç-öğrenme | bilgi: işlem kuralı değil |
+| R260 | ölçüm-ilkesi | "Ben skewness'i tek başına AL/SAT sinyali olarak kullanmam. ... dağılım filtresi olarak kullanırım." | T | 3.1 ölçüm (rolling skewness filtresi, T R260) | ölçüm-yöntemi | ölçüm kolu |
+| R260 | momentum-seçim | "Momentum pozitif + Rolling Skewness pozitif ise ... olumlu bir kombinasyondur." | T | 3.1 ölçüm (skew > 0 kesimi) | seçim-momentum | ölçüm kolu |
+| R260 | ölçüm-ilkesi | "log getirilerini ... 63 günlük Rolling Skewness ... Cornish-Fisher Skewness/Kurtosis düzeltilmiş VaR" | T+G | 3.1 ölçüm (63 gün, log getiri); VaR 8: CWENE skewness satırı | ölçüm-yöntemi | ölçüm kolu |
+| R260 | rejim | "Skew < -0.50: Tail-risk negatif, dikkat. ... Skew > +1.00: Çok güçlü pozitif asimetri" | T | 3.1 ölçüm (eşikler −0,50 / 0 / +0,50) | rejim | ölçüm kolu |
+| R260 | teyit-tetik | "Fiyat yükseliyor + momentum pozitif + skewness sıfırın üzerinde yükseliyor ise ... olumlu bir konfluens." | T | 3.1 ölçüm (skew > 0 kesimi) | teyit | ölçüm kolu |
+| R260 | teyit-tetik | "Skewness +0.50 üzerine çıkarken fiyat da teknik dirençlerini kırmaya başlarsa ... benim ilgilendiğim konfluens" | T | 3.1 ölçüm (> +0,50 kesimi) | teyit | ölçüm kolu |
+| R260 | rejim | "Skewness'in yönü kadar değişimi de değerlidir. Mesela -1.0 → -0.5 → 0 → +0.3 → +0.6" | T | 3.1 ölçüm (skew değişimi kesimi, 21 gün YORUM) | rejim | ölçüm kolu |
+| R260 | felsefe | "Pozitif skewness = fiyat kesin yükselecek demek değildir. Skewness trend ölçmez." | T | 8: CWENE skewness satırı | araç-öğrenme | bilgi: işlem kuralı değil |
+| R261 | formasyon/bölge | "33.10 → 48.30 Dalga 1, ardından 35 civarında 2? ... 32.5–36 bandındaki güçlü demand bölgesine denk" | T+G | 3.2 E; 5.1 E sadakat (CWENE, T R261) | formasyon | resmi sınav |
+| R261 | teyit-tetik | "Son güçlü yeşil mum da bu bölgeden alıcı geldiğini gösteriyor." | T | 3.2 E (giriş FVG/bölge limiti; "güçlü" tanımsız) | teyit | kilit: Tansu kural/formül vermedi |
+| R261 | stop-geçersizlik | "33.10 altı: mevcut bullish Elliott sayımı iptal." | T | 3.2 E (geçersizlik Point 0) | çıkış | resmi sınav |
+| R261 | giriş | "Agresif yatırımcı 35–36 demand bölgesinin korunmasını fırsat ... muhafazakâr yatırımcı ise önce 40–41.5'in kırılmasını bekler." | T | 3.2 E ölçüm kolları (muhafazakâr giriş, FVG yerine talep bölgesi) | giriş | ölçüm kolu |
+| R261 | hedef-çıkış | "40–41.5: ilk ciddi kısa vadeli direnç"; "48.30 üzeri kapanış ... Dalga 3 senaryosu ... güçlenir" | T | 3.2 adım 4 (E hedefi Point 1) | çıkış | resmi sınav |
+| R261 | felsefe | "Elliott'taki 2? noktası ile Demand bölgesinin aynı yere denk gelmesi bence önemli bir konfluens." | T | 3.2 akış (bölge zorunlu + tarayıcı) | ilke | ilke: tasarımın kuralı |
+| R262 | çift | "kointegrasyon ... stratejinin üzerine inşa edildiği zorunlu bir temel" | M | 3.3 (kapı: rolling eşbütünleşme) | ölçüm-yöntemi | resmi sınav |
+| R262 | çift | "korelasyon ile kointegrasyonu birbirine karıştırmaktır ... fiyat farkı zamanla sonsuza dek açılabilir" | M | 3.3 (seçim korelasyonla değil p ile) | ölçüm-yöntemi | resmi sınav |
+| R262 | giriş/çift | "pahalı olan varlık açığa satılır (short), ucuz olan varlık alınır (long)" | M | 3.3 (long-only; kısa bacak yok) | giriş | kilit: açığa satış (BIST) |
+| R262 | ölçüm-ilkesi | "Johansen veya Engle-Granger gibi kointegrasyon testleri" | M | 3.3 (Engle-Granger) | ölçüm-yöntemi | resmi sınav |
+| R262 | rejim | "Piyasa Riskinin İzole Edilmesi (Market Neutrality)" | M | 3.3 (long-only rotasyon bu ilkeyi taşımaz) | portföy | kilit: açığa satış (BIST) |
+| R262 | felsefe | "Bu ispat olmadan uygulanan herhangi bir ikili işlem stratejisi ... yüksek riskli bir yön tahminine dönüşür." | M | 3.3 (kapı) | ilke | ilke: tasarımın kuralı |
+| R263 | teyit-tetik | "BOM sinyalinin geldiği yerde şartlar da müsait ise çok etkili olabileceğine dair ilk kanıtlar gelmeye başladı" | T+G | 8: BOM sinyali (T R263; Tansu'ya sorulacak) | teyit | kilit: Tansu kural/formül vermedi |
+| R263 | diğer | "2 tavan üst üste vermiş tabi hala geliştirilmeye açık bir sistem. Çalışıyoruz bakalım" | T | 8: BOM sinyali | araç-öğrenme | bilgi: işlem kuralı değil |
 
 ## Tablo 1: rol × durum çapraz tablosu
 
-Sütun başlıkları B değerlerinin kısaltmasıdır: kilit: bilanço = kilit: bilanço verisi; kilit: veri = kilit: VIX-opsiyon-gün içi-emir defteri verisi; kilit: kural = kilit: Tansu kural/formül vermedi; kilit: kanıt = kilit: kanıt yok (yalnız bağlantı); ilke = ilke: tasarımın kuralı; bilgi = bilgi: işlem kuralı değil.
+Sütun başlıkları B değerlerinin kısaltmasıdır: kilit: bilanço = kilit: bilanço verisi; kilit: veri = kilit: VIX-opsiyon-gün içi-emir defteri verisi; kilit: kural = kilit: Tansu kural/formül vermedi; ilke = ilke: tasarımın kuralı; bilgi = bilgi: işlem kuralı değil.
 
-| rol | resmi sınav | ölçüm kolu | kilit: bilanço | kilit: veri | kilit: açılış | kilit: kural | kilit: açığa satış | kilit: kanıt | ilke | bilgi | BAĞSIZ | toplam |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| seçim-momentum | 5 | 18 | 9 | 0 | 0 | 3 | 0 | 0 | 0 | 0 | 0 | 35 |
-| evren-likidite | 8 | 7 | 1 | 6 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 22 |
-| bölge | 27 | 28 | 0 | 6 | 0 | 5 | 0 | 0 | 0 | 1 | 0 | 67 |
-| formasyon | 31 | 15 | 0 | 0 | 0 | 9 | 1 | 0 | 0 | 0 | 0 | 56 |
-| teyit | 8 | 32 | 4 | 13 | 1 | 14 | 0 | 0 | 0 | 0 | 0 | 72 |
-| giriş | 12 | 8 | 0 | 6 | 0 | 9 | 1 | 0 | 0 | 1 | 0 | 37 |
-| çıkış | 34 | 11 | 1 | 8 | 0 | 6 | 0 | 0 | 0 | 0 | 0 | 60 |
-| boyut-risk | 8 | 5 | 2 | 0 | 0 | 5 | 0 | 0 | 0 | 2 | 0 | 22 |
-| rejim | 6 | 23 | 1 | 12 | 0 | 14 | 0 | 0 | 0 | 0 | 0 | 56 |
-| değerleme-temel | 0 | 0 | 105 | 0 | 0 | 2 | 0 | 0 | 0 | 0 | 0 | 107 |
-| portföy | 2 | 17 | 6 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 25 |
-| ölçüm-yöntemi | 12 | 7 | 0 | 2 | 0 | 5 | 0 | 0 | 0 | 2 | 2 | 30 |
-| ilke | 4 | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 33 | 0 | 0 | 38 |
-| araç-öğrenme | 0 | 0 | 1 | 0 | 0 | 2 | 0 | 19 | 0 | 41 | 0 | 63 |
-| ürün-hedefi | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 7 | 0 | 7 |
-| **toplam** | **157** | **172** | **130** | **53** | **1** | **74** | **2** | **19** | **33** | **54** | **2** | **697** |
+| rol | resmi sınav | ölçüm kolu | kilit: bilanço | kilit: veri | kilit: açılış | kilit: kural | kilit: açığa satış | ilke | bilgi | BAĞSIZ | toplam |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| seçim-momentum | 5 | 19 | 9 | 0 | 0 | 4 | 0 | 0 | 0 | 0 | 37 |
+| evren-likidite | 8 | 8 | 1 | 6 | 0 | 0 | 0 | 0 | 0 | 0 | 23 |
+| bölge | 28 | 29 | 0 | 6 | 0 | 5 | 0 | 0 | 4 | 0 | 72 |
+| formasyon | 39 | 15 | 0 | 0 | 0 | 9 | 1 | 0 | 0 | 0 | 64 |
+| teyit | 9 | 39 | 4 | 13 | 1 | 17 | 0 | 0 | 1 | 0 | 84 |
+| giriş | 12 | 9 | 0 | 6 | 0 | 9 | 2 | 0 | 1 | 0 | 39 |
+| çıkış | 36 | 11 | 1 | 8 | 0 | 6 | 0 | 0 | 1 | 0 | 63 |
+| boyut-risk | 9 | 5 | 2 | 0 | 0 | 6 | 0 | 0 | 2 | 0 | 24 |
+| rejim | 7 | 28 | 1 | 12 | 0 | 15 | 0 | 0 | 2 | 0 | 65 |
+| değerleme-temel | 0 | 0 | 105 | 0 | 0 | 2 | 0 | 0 | 0 | 0 | 107 |
+| portföy | 3 | 17 | 6 | 0 | 0 | 0 | 1 | 0 | 0 | 0 | 27 |
+| ölçüm-yöntemi | 15 | 11 | 0 | 2 | 0 | 6 | 0 | 0 | 2 | 2 | 38 |
+| ilke | 4 | 2 | 0 | 0 | 0 | 0 | 1 | 42 | 0 | 0 | 49 |
+| araç-öğrenme | 0 | 0 | 1 | 0 | 0 | 2 | 0 | 0 | 49 | 0 | 52 |
+| ürün-hedefi | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 7 | 0 | 7 |
+| **toplam** | **175** | **193** | **130** | **53** | **1** | **81** | **5** | **42** | **69** | **2** | **751** |
 
-Doğrulama: 157 + 172 + 130 + 53 + 1 + 74 + 2 + 19 + 33 + 54 + 2 = 697. Sayılar bu dosyadaki satırlardan hesaplandı.
+Doğrulama: 175 + 193 + 130 + 53 + 1 + 81 + 5 + 42 + 69 + 2 = 751. Sayılar bu dosyadaki satırlardan hesaplandı (06.10, sürüm 5.2).
+
+Sürüm 5.1 tablosuyla fark: R245–R263'ün 19 "kanıt yok" satırı, tweet metinleri kaynaktan çekilince 73 fikir satırı oldu (697 − 19 + 73 = 751); "kilit: kanıt" sütunu kalktı. Yeni satırların durumu: resmi 18, ölçüm 20, kural vermedi 7, açığa satış 2, ilke 11, bilgi 15. Eski tablo dosyadaki satırlarla üç hücrede uyuşmuyordu (ölçüm kolu 172 yazılıydı, satır 173; ilke 33 yazılıydı, satır 31; açığa satış 2 yazılıydı, satır 3); yeni tablo satırlardan sayıldı.
 
 Eski sürümle fark: eski "dışarıda" 106, "kapsam dışı" 36, "strateji değil" 65 ve "ikinci dalga" 154 satır, bu tabloda kilit, ilke ya da bilgi satırı olarak durur. Hiçbiri atılmış sayılmaz.
 
@@ -752,16 +808,15 @@ Eski sürümle fark: eski "dışarıda" 106, "kapsam dışı" 36, "strateji değ
 
 | durum ve kilit | satır | kilidi açan iş |
 |---|---|---|
-| resmi sınav | 157 | Kilit yok. Tasarımın resmi koluna (S1, S2, S3, 6 rapor, 5.1 sadakat) girdi; sınav sonucu bekleniyor. |
-| ölçüm kolu | 172 | Kilit yok. Ölçüm kolunda sınanır; kol hiç resmi olmaz (tasarim-8 5.2). Resmi yapmak için ayrı karar ve Holm m artışı gerekir. |
+| resmi sınav | 175 | Kilit yok. Tasarımın resmi koluna (S1, S2, S3, 6 rapor, 5.1 sadakat) girdi; sınav sonucu bekleniyor. |
+| ölçüm kolu | 193 | Kilit yok. Ölçüm kolunda sınanır; kol hiç resmi olmaz (tasarim-8 5.2). Resmi yapmak için ayrı karar ve Holm m artışı gerekir. |
 | kilit: bilanço verisi | 130 | İş Yatırım mali tablo kaynağı (tasarim-8 §8 ilk satır, §9 madde 4). Kaynak henüz doğrulanmadı (denetim D3). Veri gelince ilk sınanacak filtreler: R059, R060. |
 | kilit: VIX-opsiyon-gün içi-emir defteri verisi | 53 | Bu veri tasarım-8 §2 tablosunda "Yok" sütunundadır (VIX, opsiyon IV, gün içi veri, emir defteri, kümülatif delta). Açan iş: bu veriyi sağlayacak bir kaynak bulmak. Kaynak şimdilik yok. |
 | kilit: açılış fiyatı | 1 | Açılış fiyatı içeren veri kaynağı (tasarim-8 §2: açılış yok). O zamana kadar AOF vekili kullanılır; mum gövdesi tam kurulamaz. |
-| kilit: Tansu kural/formül vermedi | 74 | Tansu'ya sorulabilir (kural, eşik, pencere, formül). Ya da yorum tarayıcısı: standart tanımla, sadakat hedefi olmadan, ikinci dalgada eklenir (tasarim-8 §8 Klasik formasyonlar). Yorum tarayıcısı tümüyle bizim tanımımız olur. |
-| kilit: açığa satış (BIST) | 2 | BIST'te açığa satış sınanamaz (tasarim-8 3.3: long-only). Açan iş: kısa pozisyonu sınayacak bir kapsam kararı ve masraf kuralı. Şimdilik yok. |
-| kilit: kanıt yok (yalnız bağlantı) | 19 | Levent tweet metinlerini yapıştırırsa ham olur (tasarim-8 §8 R245–R263). Konuları zaten 3. ve 4. bölümde (harmonik, kanal, kırılım+retest, çift, spread). |
-| ilke: tasarımın kuralı | 33 | Kilit yok. İlke tasarımın kendisidir; yer sütunu uygulandığı yeri gösterir. 3 satırın karşılığı yok (Tablo 3). |
-| bilgi: işlem kuralı değil | 54 | Kilit yok. Fikir işlem kuralı değildir (kitap, Python dersi, ürün hedefi, makro not, araştırma fikri). Sistemi öğrenme ve ürün tarafından besler. |
+| kilit: Tansu kural/formül vermedi | 81 | Tansu'ya sorulabilir (kural, eşik, pencere, formül). Ya da yorum tarayıcısı: standart tanımla, sadakat hedefi olmadan, ikinci dalgada eklenir (tasarim-8 §8 Klasik formasyonlar). Yorum tarayıcısı tümüyle bizim tanımımız olur. |
+| kilit: açığa satış (BIST) | 5 | BIST'te açığa satış sınanamaz (tasarim-8 3.3: long-only). Açan iş: kısa pozisyonu sınayacak bir kapsam kararı ve masraf kuralı. Şimdilik yok. |
+| ilke: tasarımın kuralı | 42 | Kilit yok. İlke tasarımın kendisidir; yer sütunu uygulandığı yeri gösterir. 3 satırın karşılığı yok (Tablo 3). |
+| bilgi: işlem kuralı değil | 69 | Kilit yok. Fikir işlem kuralı değildir (kitap, Python dersi, ürün hedefi, makro not, araştırma fikri). Sistemi öğrenme ve ürün tarafından besler. |
 | BAĞSIZ (kilit listesinde yok) | 2 | Açık pozisyon (COT) verisi: tasarim-8 §2 bu veriyi anmaz. Veri kaynağı bulunursa kilit türü eklenir. Aşağıdaki BAĞSIZ listesine bakın. |
 
 ## Tablo 3: "ilke: tasarımda karşılığı yok" satırlarının tam listesi (3 satır)

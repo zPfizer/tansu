@@ -3,7 +3,8 @@
 Not (P5): buradaki her hat bizim yorumumuzdur; "Tansu'nun sistemi" Tansu'nun koduyla aynı demek değildir. Tansu'nun
 kodu elimizde yok; elimizde paylaşımları var.
 
-Durum: öneri, **sürüm 5.1** (06.10.2026; bağımsız denetim `denetim-tasarim-8.md` koşullu kabul, bulgular işlendi). Sürüm 4 (git `ed09d17`) Levent'in eleştirisiyle geçersiz: ilk dalga Tansu'nun
+Durum: öneri, **sürüm 5.2** (06.10.2026; 5.1 bağımsız denetimde kabul. 5.2: R245–R263'ün tweet metinleri kaynaktan
+çekildi, `ham-yapistirmalar-3.md`; S2'ye Three Drives (H) ve K tarayıcısı, S3'e G R251 kanıtı, yeni sadakat hedefleri). Sürüm 4 (git `ed09d17`) Levent'in eleştirisiyle geçersiz: ilk dalga Tansu'nun
 güçlü fikirlerini dışarıda bırakmıştı. Kök neden (five-whys): okuma eski ilke listesini doğrulamak için yapılmıştı ve
 modül seçimi "sayısı var mı" ölçütüyle yapılmıştı. Sürüm 5 yalnız kayıt kayıt defterden kurulur
 (`defter-1..4.md`, 263/263 kayıt, görseller açık). Defterdeki her strateji fikri `izlenebilirlik.md`'de bu belgenin bir
@@ -21,14 +22,21 @@ Tansu'nun "sistemim", "kodum", "taramalarımız" dediği dört hat var (dördün
    aşama: YSA momentum ve pozitif eğim → fiyat ve sinyal eğimi → teknik onay (ADX, CMF, çekiç/sabah yıldızı) →
    Markowitz → Max Sharpe (T R137, "Bu sistem satılık değil").
    Momentumun BIST'te çalıştığını kendisi test etti: 500+ hisse, 2015'ten bugüne, 12 aylık getiri, 10 dilim, aylık
-   yenileme, eşit ağırlık (T R120). Listeye rolling alpha ve rolling skewness uyguluyor (T R202).
+   yenileme, eşit ağırlık (T R120). Listeye rolling alpha ve rolling skewness uyguluyor (T R202); skewness'i "tek
+   başına AL/SAT sinyali olarak kullanmam ... dağılım filtresi olarak kullanırım", 63 gün, eşik +0,50 (T R260).
 2. **Kurulum tarayıcıları.** Her formasyon ayrı tarayıcı: "Gartley taramasını ayrı yapın butterfly taramasını ayrı yapın"
    (T R011). Sonuç tek tabloda: Hisse, Tip, Sistem, Durum, Reaksiyon, D Hedefi, Giriş, Stop (X) (G R012). Araçların
-   başlıklarında üç tarayıcı görünüyor:
+   başlıklarında dört tarayıcı görünüyor:
    - "Düşen Direnci Kıran + Talep + Fibo + ABCD" (G R075, R087), Gartley/Kelebek/AB=CD (G R008, R012, R013, R014, R017).
    - "FVG TEMAS | BULLISH | ELLIOTT WAVE 2 (Fibo: %64.3)" (G R199, R241); "Hafta başında verdiğimiz listede idi. %8
      getiri" (T R204).
    - "EMA Sıkışması | Tolerans %1.2 | Min 3 gün" (G R127); talep bölgesinde EMA 5-8-13 (T R198 "Ben 5-8-13 kullandım").
+   - "Breakout + Range Retest + RSI Divergence | A+ SETUP | AL TETİKLENDİ" (G R253 AKFIS); "Breakout-->FVG-->Retest-->
+     Confirmation / Bu yapıları arayın" (T R254).
+   Ayrıca fincan-kulp "kendi tarama sistemimin yakaladığı" (T/M R114) ve Three Drives, oranları ve simetrisiyle
+   ("Benim açımdan Three Drives'ı değerli yapan şey tam olarak budur", T R249).
+   Analiz sırası: "İlk sorum şudur: Fiyat şu anda hangi yapının içinde ve alıcı mı satıcı mı kontrolü ele geçirmeye
+   çalışıyor?" ... "Şablonu aynı zamanda koşullar ve sonuçlar ile koda da döktüm" (T R256).
    Formasyon bölgesiz kullanılmaz: "D noktasına bakın, talep toplama bölgesine bakın, hissenin tepkilerine bakın. Doğru kod
    böyle yazılır." (T R080); "gözü kapalı ABCD'ye nasıl güveneceksin kanalı okumadan" (T R085); "İşte bu yapıların
    peşindeyiz." (T R081); "confluence alanları o kadar kıymetli ki ... taratmak lazım" (T R055).
@@ -87,8 +95,9 @@ testidir (T R120: "Ben de bunu BIST'te test etmek istedim"); kuralı tam olan te
 - Stop yok (Tansu'nun testinde yok). SMA250 giriş kapısı uygulanmaz (S1 bir sıralama kuralıdır; YORUM).
 - K2: evrenin eşit ağırlıklı sepeti (zaten var). K1: aynı ay, evrenden rastgele 10 hisse (B tekrar).
 - Ölçüm kolları: Tansu'nun 5 dilimli çeyreklik hali (T R022 Mom5); Clenow eğim × R² (T R176, kodundaki
-  `(1+slope)**252` aynen ve `exp(slope)**252` ayrı); rolling alpha ve rolling skewness filtresi (T R202; pencere verilmedi, 63 gün
-  YORUM); eğim kapısı: fiyat eğimi > 0 ve sinyal eğimi > 0 (T R137, R105); teknik onay: ADX > eşik ve CMF > 0
+  `(1+slope)**252` aynen ve `exp(slope)**252` ayrı); rolling alpha ve rolling skewness filtresi (T R202; pencere 63 gün ve
+  eşikler T R260: skew > 0 "yapıcı", > +0,50 "belirgin pozitif sağ kuyruk", < −0,50 "dikkat"; ayrıca skew değişimi
+  "-1.0 → -0.5 → 0 → +0.3 → +0.6" kesimi, değişim penceresi 21 gün YORUM; log getiri, T R260); eğim kapısı: fiyat eğimi > 0 ve sinyal eğimi > 0 (T R137, R105); teknik onay: ADX > eşik ve CMF > 0
   (T R137 3. aşama; ADX ve CMF açılışsız hesaplanır, eşik YORUM; çekiç/sabah yıldızı AOF vekiliyle); Max Sharpe ile 3–10 hisse
   (T/M R110, T R137, R181); şok freni ve fiyat+volatilite rejimi (bkz. 4.5); fiili dolaşım < %30 (T R083) ve
   > %30 kesimleri; sektör lideri filtresi 30/60/90 gün, |30g getiri| > %50 anomali hariç (G R032, R033); endekse göre
@@ -103,16 +112,30 @@ testidir (T R120: "Ben de bunu BIST'te test etmek istedim"); kuralı tam olan te
    SMA250'yi giriş bileşeni örneği olarak anar, T R212 "bu 200SMA 200EMA 250EMA' da olabilir, stratejinize kalmış").
 2. **Talep bölgesi** (4.1): kurulumun giriş seviyesi geçerli (kırılmamış) bir talep bölgesinin içindedir. Zorunlu
    (T R009, R080, R081, R085). Ölçümde bölgesiz kol da koşulur (Tansu'nun cümlesini sınamak için).
-3. **Dört tarayıcı**, ayrı kod (T R011), tek sonuç tablosu (G R012):
-   - **H — Harmonik:** AB=CD ve Gartley; Kelebek ayrı tarayıcı (T R011; oranlar standart tanım, YORUM: Tansu oran
+3. **Beş tarayıcı**, ayrı kod (T R011), tek sonuç tablosu (G R012):
+   - **H — Harmonik:** AB=CD, Gartley, Kelebek, Three Drives; her alt tip ayrı kod, tek H tarayıcısı (T R011; oranlar standart tanım, YORUM: Tansu oran
      vermedi). Giriş D'de limit (G R012 LUKSK "Giriş = D Hedefi", G R014 "Giriş (D)", G/M R222 "Buy Limit").
      - AB=CD: kapı T R019 (BC ≤ AB, BC = 1,00 olabilir, D B'yi aşar; giriş öncesi C'den sonra A geçilirse kurulum
        bozulur). BC/AB alt sınırı 0,382 (M R080); üst sınır 1,00 (T R019). M R080'in "0,382–0,618" aralığı T R019 ile
        çelişir; T esastır. D = C − 1,0·(A−B) (CD = AB, G R079, R081, R084; R085, R087'deki 1,27 ölçüm kolu, YORUM).
        Giriş sonrası geçersizlik: kapanış CD = 1,272·AB seviyesinin altında (M R080 oran listesinin bir sonraki
        değeri, YORUM; Tansu AB=CD için giriş sonrası stop vermedi).
+     - Kelebek (H alt tipi; T R003, R004, R011; G R250 DOAS): B = XA 0,786, D = XA 1,272 uzantısı (G R250 "1.272
+       (D hedefi): 159.49; D: 159.40 [TAMAMLANDI]"), tolerans Gartley'deki gibi (YORUM). Geçersizlik XA 1,618 (G R250
+       "1.618 (max risk): 146.00"; kapanışla sınanması YORUM). B oranı standart tanım (YORUM).
      - Gartley (araç tablosu G/M R222): B = XA 0,618, C = AB 0,382–0,886, D = XA 0,786, tolerans %3–5. Geçersizlik X
        (G R012 "Stop (X)", G R014 "Bk Stop (X)"); R222 görselindeki X − 2 ATR ölçüm kolu.
+     - Three Drives (T R249, 06.10 tweet metninden): alış yönünde üç giderek düşen dip (Drive 1, 2, 3; T "düşen
+       piyasada ise üç adet giderek düşen dip"). A ve C düzeltmeleri önceki drive'ın 0,618–0,786'sını geri alır;
+       Drive 2 ve Drive 3, önceki düzeltmenin 1,272–1,618 uzantısında biter (T "yaklaşık"; tolerans YORUM, Gartley'deki
+       %3–5). Fiyat simetrisi: |A→Drive 2| ile |C→Drive 3| yakın; zaman simetrisi: iki bacağın bar sayısı oranı
+       ≤ 1,5 (T: 10'a karşı 11–12 dengeli, 8'e karşı 30 bozuk; 1,5 eşiği YORUM). Giriş Drive 3'te değil, reaksiyon
+       teyidinde (T "Drive 3 oluştu diye doğrudan ters yönde işlem açmak doğru değildir"): 4.3 tepki tanımı sağlanınca
+       ertesi AOF. Geçersizlik: C'den ölçülen 1,618 uzantısı (T "1,618 extension seviyesini aşabilir ve formasyon
+       başarısız olabilir"); bunun kapanışla sınanması ve stop sayılması YORUM. Drive 3 zaten 1,618'in altındaysa
+       geçersizlik Drive 3 dibi altı kapanıştır (YORUM). Hedef: C (son düzeltme tepesi; YORUM, Tansu hedef vermedi).
+       Örnek: C bacağı L, Drive 3 = C − 1,272·L, giriş Drive 3 + 1 ATR (e) ise ödül 1,272·L − e, risk 0,346·L + e;
+       e = 0,1·L için oran 1,17/0,45 ≈ 2,6 (kapıyı geçer). Sadakat hedefi yok (Tansu'nun örneği sembolsüz, satış yönlü).
      H ölçüm kolları: C'den alım, D'de satış (T R018 "C noktasından alım yapılsa idi D satış karları"; sürüm 4'ün resmi
      kolu; giriş C'nin pivot olarak doğrulandığı günün ertesi AOF'u); X–B trend çizgisi kırılımı girişi (T R013, G R008); Lindsay Trident hedefi D = (B·C)/A ve B kırılımı teyidi
      (T R090, alış yönlü paragraf; satış yönlü kural açığa satış olduğu için yok); hedef merdiveni TP1–TP4 = D +
@@ -128,7 +151,9 @@ testidir (T R120: "Ben de bunu BIST'te test etmek istedim"); kuralı tam olan te
      düzeltmenin önceki yükselen dibin (HL) üstünde kalması kesimi (M R242); dalga 4 geri alımı 0,24/0,38/0,50 (T/M R205:
      "Unutmuyoruz" T, kural metni M biçimli);
      FVG güç sınıfı, 1. mum yükseği ile 3. mum düşüğü arası boşluğun ATR'ye oranı (G R050 Strongest…Weakest); dolmuş FVG
-     sonrası giriş (M R243).
+     sonrası giriş (M R243); FVG yerine talep bölgesi (T R261 CWENE: Dalga 2 ∩ 32,5–36 demand, "bence önemli bir
+     konfluens"; M/T R241 "FVG ... veya Talep Bölgesi"); muhafazakâr giriş: ilk direncin kırılımı (T R261 "Daha
+     muhafazakâr yatırımcı ise önce 40–41.5'in kırılmasını bekler").
    - **S — Talep bölgesinde EMA sıkışması** (M R198 kural; T R198 "5-8-13"; G R127 KRDMD çapası): bölge içinde
      sıkışma oranı = (en büyük EMA − en küçük EMA) / kapanış, EMA 5/8/13 ile, en az 3 gün tolerans altında. Oran formülü
      taslak 7'deki gibidir (YORUM; Tansu formül vermedi, T R127 "sıkışma rasyosu sizin tecrübenize kalmış"). Tolerans %1,2
@@ -146,12 +171,25 @@ testidir (T R120: "Ben de bunu BIST'te test etmek istedim"); kuralı tam olan te
      Geçersizlik: kulp dibinin altında kapanış (YORUM; Tansu'nun 1:2,27 oranı hiçbir basit giriş/stop çiftiyle
      çıkmıyor, `kural-yok-inceleme.md` 24). Bölge kapısı: kulp dibi geçerli bir talep bölgesinin içinde (YORUM, R080
      ilkesi); bölgesiz hal ölçüm kolu. Sadakat hedefi: GUBRF sinyal 2025-10-24.
+   - **K — Kırılım → FVG → retest → teyit** (T R254 "Breakout-->FVG-->Retest-->Confirmation / Bu yapıları arayın";
+     T R253 "Dikkat edelim bu yapıya"; G R253 AKFIS "Breakout + Range Retest ... A+ SETUP | AL TETİKLENDİ"):
+     konsolidasyon = en az 10 mum, (en yüksek − en düşük) ≤ 3 ATR (YORUM); kırılım = kapanış konsolidasyon tepesinin
+     üstünde (4.2); kırılım mumları içinde yükseliş FVG'si (4.2); retest = sonraki 10 mum içinde gün düşüğü
+     konsolidasyon tepesine ya da FVG'ye değer, kapanış konsolidasyon tepesinin altına inmez (YORUM); teyit = retest
+     sonrası ilk kapanış retest mumunun yükseğinin üstünde (YORUM; Tansu tanım vermedi). Giriş teyit ertesi AOF.
+     Geçersizlik: kapanış FVG alt kenarının altında (YORUM). Hedef: ilk arz bölgesi (S ile aynı). Talep bölgesi
+     kapısı burada eski direncin (konsolidasyon tepesi) desteğe dönmesiyle sağlanmış sayılır (YORUM; G R253 "RANGE
+     HIGH RETEST"). Sadakat hedefi: AKFIS, AL tetiği 2026-09-03 ve öncesi (G R253; görselde fiyat etiketi yok,
+     yalnız tarih ve sıra sınanır). Ölçüm: RSI uyumsuzluğu kesimi (G R253 başlığı "RSI Divergence").
 4. **Ödül/risk kapısı:** risk = giriş − geçersizlik; ödül/risk < 1,5 ise girilmez (M R222; aynı eşiği T R234 kendi
    lojistik modeli için "Kritik Kural" diye yazar). Ödül:
    - H: ana hedef TP2 (Gartley D + 0,618·(A−D), G/M R222 "Kalan Pozisyonu Kapat"; AB=CD D + 0,618·(C−D), M/G R203
      "Ana Hedef"). YORUM: R222 ödülü TP1 diye yazar. Ama TP1 = D + 0,382·(A−D) ve stop X ile her Gartley'de oran
      0,382·0,786/0,214 ≈ 1,40'tır; harfiyen okumada hiçbir Gartley 1,5'i geçmez. Harfiyen hal ölçüm kolu.
-   - E: Point 1 (M R199 "Hedef 1").
+     Three Drives: C (YORUM).
+   - E: Point 1 (M R199 "Hedef 1"; T R261 CWENE'de de Dalga 1 tepesi 48,30 "Asıl mücadele").
+   - F: kırılma + (kırılma − dip) (T/M R114).
+   - K: ilk arz bölgesi (YORUM).
    - S: ilk arz bölgesi ya da ilk düşüş FVG'si (M R198; T/M R192 "yeni tarama kodumuz": demand giriş, bearish FVG ilk
      hedef, supply).
    Ölçümde 2 ve 3 eşikleri (M R230).
@@ -160,13 +198,15 @@ testidir (T R120: "Ben de bunu BIST'te test etmek istedim"); kuralı tam olan te
 5. **Bakış ileri yok:** pivot ancak sağındaki k mum kapanınca bilinir; FVG 3. mum kapanınca; talep bölgesi leg-out
    koşulu sağlandığı mum kapanınca; haftalık mum, pivot ve bölge yalnız hafta kapandıktan sonra (haftanın son işlem
    günü kapanışı) kullanılır ve o haftanın günlerine geri yazılmaz; FVG "doldurulmamış" durumu yalnız o güne kadarki
-   mumlarla. `test_gelecek.py`'ye girer.
+   mumlarla. Three Drives: Drive 3 dibi ancak sağındaki k mum kapanınca pivot olur; tepki o günden sonra aranır. K:
+   her aşama (konsolidasyon, kırılım, FVG, retest, teyit) yalnız kendi mumu kapanınca bilinir; teyit günü sinyal
+   günüdür. `test_gelecek.py`'ye girer (Three Drives ve K dahil).
 
 **Neden tek hipotez:** Tansu tarayıcıları ayrı yazar ama aynı listede, aynı yönetimle sunar (G R012; T R204 "verdiğimiz
-listede"). Dört tarayıcıyı ayrı resmi kol yapmak m'yi 3 fazla artırır (1 yerine 4) ve her birinin işlem sayısını düşürür. Tarayıcı başına
+listede"). Beş tarayıcıyı ayrı resmi kol yapmak m'yi 4 fazla artırır (1 yerine 5) ve her birinin işlem sayısını düşürür. Tarayıcı başına
 sonuç ölçüm kolunda raporlanır (kabul kararına girmez).
 
-**K1 (S2):** ön şart = momentum kapısı + SMA250 + fiyat geçerli bir talep bölgesinin içinde. Kural = ön şart + dört
+**K1 (S2):** ön şart = momentum kapısı + SMA250 + fiyat geçerli bir talep bölgesinin içinde. Kural = ön şart + beş
 tarayıcıdan birinin kurulumu + ödül/risk kapısı. Soru: "Tansu'nun formasyonları, bölgede rastgele bir günden iyi mi?"
 Rastgele girişe sinyalin yüzde stop ve yüzde hedef mesafesi taşınır; çıkış zinciri aynı. Tür (a) ve (b) taslak 7 gibi.
 
@@ -193,6 +233,13 @@ raporda "ilk deneme geçmedi" yazılır:
   an zararı keser").
 - Long-only: Tansu'nun uzun-kısa işlemi (M/T R099 "AGROT SAT, GARAN AL") burada ucuz bacağı tutan rotasyondur; bu
   arbitraj değil, göreli değer işlemidir. İlk denemenin geçmemesinin nedeni bu olabilir; sınanamaz (açığa satış yok).
+  Tansu'nun kendi aracı da long-only rotasyon yapar (G R251 "RELATIVE VALUE ROTATION | VAKBN <-> GARAN": "Aktif Hisse
+  VAKBN", "Piyasada Kalma +72.27%", "YENI AL SINYALI | VAKBN AL | Y goreli ucuz, Z donusu +0.30", işlem "T+1 Open";
+  Son Z −3,108, önceki Z −3,404, "Cointegration p 0.048"). Bu, "ucuz bacağı tutan rotasyon" yorumunu Tansu'nun araç
+  çıktısıyla destekler; ΔZ dönüşü giriş şartı (Z −3,40 → −3,11 ve "Z donusu +0.30" etiketi) bu çıktıyla uyumludur. Raporun kendi sayıları
+  (toplam +%52,86, 50/50 al-tut +%20,88, en büyük düşüş −%27,44, 6 geçiş) kaynak iddiasıdır, bağımsız ölçülmedi.
+  Piyasada kalma %72 olduğu için araç zaman zaman nakitte durur; çıkış kuralı rapordan okunmaz (YORUM: mevcut Z 0,5
+  çıkışı kalır). Kointegrasyon testleri: "Johansen veya Engle-Granger" (M R262); burada Engle-Granger.
 - Boyut: tüm bölme sermayesi (M/T R099 "tüm bakiyesiyle"; TASARIM 5.6 çift bölmesi).
 - Tansu'nun ilkesi "Borsada "yönü" bilmek zorunda değilsiniz" (M/T R101) piyasa yönünden bağımsız (uzun-kısa) işlem
   ister; long-only rotasyon bu ilkeyi taşımaz, yalnız yaklaşır (kilit: açığa satış).
@@ -247,13 +294,15 @@ AKTİF ──(fiyat D'ye değdi)──> TAMAMLANDI ──(tepki)──> TEPKİ_V
 ```
 İşlem sonucu ayrı alandır: açık / hedef / geçersizlik / acil stop / SMA250 / iptal. Tepki: kapanış girişin üstünde ve
 girişten en az 1 ATR yukarıda (YORUM). 20 bar penceresi (G R013) ölçümde ayrı parametredir. E ve S tarayıcılarında
-"D" yerine giriş seviyesi okunur.
+"D" yerine giriş seviyesi okunur. Three Drives'ta giriş tepkiden sonra gelir; bu yüzden tepki Drive 3 dibine göre
+tanımlanır: kapanış Drive 3 dibinin en az 1 ATR üstünde ve önceki günün yükseğinin üstünde (YORUM; Tansu "reaksiyon"u
+tanımlamadı).
 
 ### 4.4 Yönetim (S2 resmi kol)
 
 - **Limit dolumu** (H ve E): gün düşüğü ≤ limit − 1 fiyat adımı; dolum fiyatı limit; aynı gün dolum ve stop ise stop;
   taban kilidinde dolmaz; 10 işlem gününde dolmazsa iptal (10 gün YORUM). (Sürüm 4'te ölçümdeydi; şimdi resmi
-  koldadır, hash içi.)
+  koldadır, hash içi.) Three Drives, S, F ve K limit kullanmaz: giriş sinyal gününün ertesi AOF'udur.
 - **Boyut:** %1 risk, adet = risk / (giriş − geçersizlik); %10 tavan, %2 likidite, en çok 10 pozisyon (T R211, R212;
   %1 örnektir, YORUM). Geçersizlik mesafesi 2 ATR'den büyükse acil stop 2 ATR'dir ve boyut ona göre hesaplanır
   (YORUM: Tansu adedi 2 ATR'ye böler, G-dış R212; burada küçük olan mesafe kullanılır).
@@ -277,7 +326,13 @@ girişten en az 1 ATR yukarıda (YORUM). 20 bar penceresi (G R013) ölçümde ay
   önceden yazılır).
 - Fiyat + volatilite birlikte artış → defansif boyut (T R092, R089, R093; Tansu'nun "mavi çizgi" formülü yok: 21 gün
   getiri ile 21 gün gerçekleşen volatilite değişiminin ikisi de pozitifse, YORUM).
-- Corwin–Schultz spread ve sigma: ikisi yüksekse uzak dur (T/M R119; yüksek/düşük ile hesaplanır).
+- Corwin–Schultz spread ve sigma: ikisi yüksekse uzak dur (T/M R119; T R252 "Spread yüksek, Sigma yüksek: ... En
+  riskli yapı"; yüksek/düşük ile hesaplanır; pencere 21 gün, G R252 "21 Gunluk"). T R252'nin dört sınıfı ayrı kesim:
+  yüksek/düşük = spread'in kendi geçmiş ortalamasının üstü/altı (YORUM; Tansu "tarihsel ortalama" ile karşılaştırır).
+  Teyit kesimi: fiyat yükselirken spread düşüyorsa sağlıklı, yükseliyorsa kırılgan (T R252). Tansu bunu "işlem kalitesi
+  ve likidite risk radarı" diye kullanır, "tek başına al-sat göstergesi olarak değil" (T R252).
+- XU100 WMA21: kapanış WMA21 altında ve WMA21 eğimi negatifse "kısa vadeli trend dönüşü henüz teyit edilmiş sayılmaz" (M R258; yazar M, 4.5'in
+  trend yönü kolu için ortalama adayı).
 - Fiyat ve hacim konumu 252 gün: sol üst köşe (fiyat ≤ 20, hacim ≥ 80) dip adayı (T/G R227).
 - Piyasa genişliği: evrende 20 ve 65 günlük yeni yüksek − yeni düşük (NH-NL) (M R118; evrenden hesaplanır).
 - Trend yönü: XU100 kapanışı ortalamanın üstü/altı (T R131 "Trend is your friend"; ortalama YORUM) ve XU100 ile
@@ -295,7 +350,13 @@ değil. Hedefler (defterden):
 - H: ISKPL 5 C tarihi (G R018), SMRTG 10 kapanmış kalıp tarihi (G R017), LUKSK D 86,95 / X 73,00 (G R012),
   SOKE D 12,53 = XA 0,786 (G R012), SAYAS X≈20,6 A≈145 B≈68 C≈122 D≈47 (G R014), KAPLM (G R013), DGATE D 49,66
   (G R008), KRPLS üç D (G R008).
-- E: BRYAT Fibo %64,3 (G R199), ALKA düzeltme −%39,3 (G R241), ENJSA dalga 4 %54 (G R193).
+  DOAS Kelebek: A 209,10, X 170,10, D 159,40 = XA 1,272 uzantısı 159,49, "TAMAMLANDI" (G R250; tweet 2026-09-06).
+- E: BRYAT Fibo %64,3 (G R199), ALKA düzeltme −%39,3 (G R241), ENJSA dalga 4 %54 (G R193), CWENE Point 0 33,10,
+  Point 1 48,30, Dalga 2 ≈ 35 ve talep bölgesi 32,5–36 (T R261; 2026-08-30).
+- K: AKFIS AL tetiği 2026-09-03 ve öncesi (G R253).
+- S3: VAKBN–GARAN "YENI AL SINYALI | VAKBN AL" (G R251; 2026-09-05 son gün): ölçüt yön (VAKBN alınır) ve tarih.
+  Z değerleri (−3,108; önceki −3,404) Tansu'nun Z formülü ve penceresi bilinmediği için ±0,5 toleransla bilgi
+  olarak karşılaştırılır (YORUM).
 - S: KRDMD 17.12.2025 → 14.01.2026, 20 gün, ort. %0,64 (G R127).
 - Bölge: FROTO demand 74,75–76,70 teyit 2026-08-14, DOAS 165,59–173,00, TTKOM 49,05–51,30 (G R041, R042, R043).
 Ayar adayları önceden yazılır; plasebo (rastgele tarih) karşılaştırması yapılır. Sonuç yalnız etiketi belirler.
@@ -321,14 +382,18 @@ Geçersizlik; tarayıcı başına sonuçlar "ölçüm" başlığında. Başarıs
 çalışmaz", R087 "Her zaman çalışmaz"). Kazanma oranı tek ölçüt değildir; net kâr / en büyük düşüş yazılır (M R140,
 T R234). Ayrıca kapanış getirisi yanında dönem içi en yüksek getiri (DEY) yazılır (T R074, G R120 tablosu); sermaye
 eğrisinin sakinliği: yıllık volatilite ve en büyük düşüş kural ile K2 yan yana (T/M R115, M/T R138: gövde M, son
-cümle T). Akşam kartı o gün durum değiştiren kurulumları yazar; dil "kural sağlandı".
+cümle T). Aday günlüğü (T R255 "Backtest yapın ... sonraki 1, 3 ve 5 günde ne olmuş bakın"; "İşlem günlüğü
+oluşturun. Aday tarihi → giriş → neden girdik → invalidation → TP → sonuç → maksimum olumlu/olumsuz hareket"): her
+aday için tarayıcı, 1/3/5 gün getirisi, giriş, geçersizlik, hedef, sonuç, MFE ve MAE yazılır; aday tipi başına
+karşılaştırma ölçüm başlığındadır (T R255 "Hangi aday tipi para kazandırıyor?"). Akşam kartı o gün durum değiştiren
+kurulumları yazar; dil "kural sağlandı".
 
 ## 7. Uygulama sırası (öneri; biletler ayrıca)
 
 1. Yapı taşları: pivot, Fibonacci, FVG, talep bölgesi (günlük + haftalık); `test_gelecek.py` genişler.
 2. Sadakat koşuları (5.1), getirisiz. Sonuç Levent'e gösterilir.
 3. S1 (en basit; sadakat gerektirmez, kural tam).
-4. S2 tarayıcıları H, E, S; ortak yönetim (4.4); sayım koşusu.
+4. S2 tarayıcıları H (Three Drives dahil), E, S, F, K; ortak yönetim (4.4); sayım koşusu.
 5. Ölçüm yolu (`olcum.py`) ve rejim kolları.
 6. K1 tanımları, AILELER, `KOD_DOSYALARI`, rapor.
 7. Boru hattı denetimi; kayıt; resmi koşu (Levent'e sorulur); ölçüm.
@@ -353,7 +418,7 @@ cümle T). Akşam kartı o gün durum değiştiren kurulumları yazar; dil "kura
 | Mum formasyonları: engulfing (G R023), tweezer (T R025), gravestone (T R130), çekiç/sabah yıldızı (T R137), advance block (M R042) | Ölçüm, AOF'lu yaklaşık | Açılış yok. |
 | Gizli pozitif uyumsuzluk (T/M R116, T R117, T R136) | Ölçüm (06.10) | Görselde parametre var: "Swing=15 sol-only, MinGap=15" (G R116, R117). Osilatör kimliği gizli ("pek bilinen birşey değil", T R136, Tansu'ya sorulacak); ölçümde RSI(14) ile (YORUM), fiyat yükselen dip + osilatör alçalan dip. |
 | Fincan-kulp (T/M R114) | Resmi (S2 F tarayıcısı, 06.10) | Önceki gerekçe yanlıştı: hedef tabanı kırılma çizgisidir (sol ağız), 300,75 + (300,75 − 212,20) = 389,30 birebir tutar (`kural-yok-inceleme.md` 22–23). S2 tek hipotez olduğu için m artmaz. |
-| Kanal alt bandı, düşen direnç kırılımı + retest (T R004, R085, G R075, R087, T R194, M R195) | Ölçüm (S2'de kanal ve kırılım teyidi kolu) | Tansu bunları formasyonun bağlamı olarak kullanıyor (R085); ayrı tarayıcı yerine teyit kolu. |
+| Kanal alt bandı, düşen direnç kırılımı + retest (T R004, R085, G R075, R087, T R194, M R195) | Ölçüm (S2'de kanal ve kırılım teyidi kolu) | Tansu bunları formasyonun bağlamı olarak kullanıyor (R085); ayrı tarayıcı yerine teyit kolu. FVG'li kırılım-retest-teyit hali ayrı K tarayıcısıdır (3.2, T R254). |
 | X–B trend çizgisi kırılımı (T R013, G R008) | Ölçüm (H tarayıcısında ikinci giriş) | Tansu "trade yapmanın bir yolu da" diyor; yön kısa tarafta açığa satış. |
 | Hacim teyidi: geniş gövde/hacim anomalisi (T R238), OBV (G-dış R196), "Hacimli kırılım" (M R124) | Ölçüm (teyit kolu) | Eşik yok; açılış yok (gövde). |
 | Fiili dolaşım < %30 (T R083, R035, R036) | Ölçüm (S1, S2 kesimi) | Veri var; Tansu eşik dışında kural vermedi. |
@@ -374,7 +439,12 @@ cümle T). Akşam kartı o gün durum değiştiren kurulumları yazar; dil "kura
 | Trailing stop'a geçiş için risk/ödül hedefi (M R233) | Dışarıda | Sayı verilmemiş; S2 iz süren modu T R224/R239 ile tanımlı (4.4). |
 | Ürün hedefi: tek tuş, LLM/NLP ile faaliyet raporundan veri (T R065), Excel çıktıları (R154, R163), infografik akış (R056) | Kapsam dışı | Ürün hedefi, strateji kuralı değil. TANSU'nun sinyal sistemi kapsamı dışında. |
 | Makro, Gordon, ROC, CAPM, kur Monte Carlo, yöntem notları (R045, R052, M R162, R173, R177, R200, M R231) | Kapsam dışı | Strateji değil; ders ya da kurumsal çalışma. |
-| R245–R263 (19 kayıt; ör. Three Drives R249, 80–100 hafta yatay R246, DOAS kelebek R250) | Kanıt sayılmaz | Hamda yalnız tweet bağlantısı var; beyin notlarındaki içerik yapay zekâ Sentez katmanıdır, Tansu'nun metni doğrulanamadı. Konuları zaten 3. ve 4. bölümde (harmonik, kanal, kırılım+retest, çift, spread). Levent tweet metinlerini yapıştırırsa ham olur. |
+| 80–100 haftalık yatay hisse, dipte bekleme (T R246 "Aslında en temiz strateji bulacaksın 80-100 haftalık yatay giden bir hisse dibinde oturup bekleyeceksin.") | Ölçüm (06.10) | Tansu'nun "en temiz strateji" dediği fikir; ama yataylık, dip ve çıkış tanımı yok ("Yazalım o zaman taramasını" der, tarama paylaşılmadı). Ölçüm tanımı (YORUM): haftalık kapanışlarla son 80 ve 100 haftada (en yüksek − en düşük) / ortalama ≤ %60 ve doğrusal eğim |yıllık| ≤ %10; giriş kapanış bandın alt %20'sinde; çıkış bandın üst %20'si ya da kapanış bant dibinin %5 altı. Tansu'ya sorulacak: yataylık ölçüsü ve çıkış. Kural gelirse S2'ye tarayıcı olarak girer (m artmaz). K ile fark: K'de Tansu aşama sırasını verdi (T R254) ve araç çıktısı ile sadakat hedefi var (G R253 AKFIS); R246'da tarama paylaşılmadı, hedef de yok. |
+| Kanal alt bandı teması (G R245 AEFES: "Lookback: 120 ... Üst/Alt temas: 3/3"), düşen üst sınır kırılımı ve retest (T R247 "Güzer retest var", G R248 kırılım mumu) | Ölçüm (kanal ve kırılım teyidi kolu) | Yukarıdaki kanal satırına ek: lookback 120 bar ve üst/alt en az 3 temas G R245'ten. FVG'li kırılım-retest-teyit sırası bu satırın dışındadır: o K tarayıcısıdır (3.2, resmi). Bu satırda kalan: kanal teması ve FVG'siz kırılım-retest. |
+| BOM sinyali (T R263 "BOM sinyalinin geldiği yerde şartlar da müsait ise çok etkili olabileceğine dair ilk kanıtlar gelmeye başladı") | Dışarıda (kural gizli) | BOM'un tanımı ve "şartlar" yok; Tansu "hala geliştirilmeye açık bir sistem" der. Tansu'ya sorulacaklar listesine girer (`kural-yok-inceleme.md` H1). |
+| CWENE skewness örneği ve Cornish-Fisher VaR (T R260) | Ölçüm (S1 skewness kolu, 3.1) ve bilgi | VaR güven düzeyi verilmedi; boyut kuralına bağlanmadı. |
+| XU100 günlük yorumları: seviyeler, "BEKLE ve TEYİT ARA", nakit esnekliği, katılım zayıflığı (M R257, M R258) | Bilgi; WMA21 ölçüm (4.5) | Yazar M; o güne özgü seviye listesi işlem kuralı değil. Genişlik kolu 4.5 NH-NL'de. |
+| "Ahengin uyumu" demand/toplama ve panel uyumu (T R259), arbitraj başlığı (T R251 üst tweet), RT karşılığı formasyon (T R245) | Bilgi | Metinde kural yok; görsel etiketi 4.1 talep bölgesiyle aynı tema. |
 | Felsefe ve ölçüm ilkeleri (R099, R109, R111, R140, R157, R171, R172, R210, …) | Tasarımın kendisi | Kural koda dökülür, duygusuz, backtest zorunlu: TASARIM'ın ilkeleri. |
 
 ## 9. Açık sorular (Claude'un önerisiyle)

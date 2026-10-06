@@ -424,124 +424,196 @@ Aşama etiketleri: rejim, tarama-evren, momentum-seçim, bölge, formasyon, teyi
 - Örnek ve sonuç: yok; görselde sayı yok.
 - Tansu'nun vurgusu: "Biraz üzerinde düşünelim" — fikir aşamasında.
 
-### R245 · 2026-09-06 12:58 · yalnız bağlantı
-- Yazar: bağlantı (The_Tansu_ tweeti, 2096582181170598078).
-- Hamda yalnız bağlantı; beyin notu içeriği yapay zekâ Sentez katmanı, kanıt sayılmaz.
-- Fikirler: strateji içeriği yok: yalnız bağlantı (tweet metni yapıştırılmadı; beyin başlığı "AEFES Yükselen Kanal Alt Bant Teması ve Tepki" — kayıtta kendisi yok).
-- Örnek ve sonuç: yok. Tansu'nun vurgusu: yok.
+### R245 · 2026-09-06 12:58 · AEFES yükselen kanal alt bant teması (tweet metni kaynaktan)
+- Yazar: T (kısa) + G (AEFES kanal tarama grafiği, Tansu'nun araç görseli). Tweet 2026-09-06 12:51 UTC, id 2096582181170598078. Metin ve görsel `ham-yapistirmalar-3.md` içinde (api.fxtwitter.com, 06.10.2026).
+- Fikirler:
+  - [diğer] "Hadi şunu vereyim / Ne kadar çok rt o kadar çok formasyon:)" — RT karşılığı formasyon paylaşma vaadi; strateji kuralı yok — yalnız fikir
+  - [bölge] Görselden (araç etiketi): "AEFES — YÜKSELEN KANAL — ALT BANT TEMAS ... ALT BANT TEMAS + TEPKİ"; "Lookback: 120 | Temas: 2026-09-03 | Alt bant: 17.76 | Low: 17.92 | Low-Bant: +0.92% | Kapanış-Bant: +2.56% | Üst/Alt temas: 3/3 | Genişlik değişimi: +15.3%" — 120 bar; temas toleransı yok — yalnız fikir (araç çıktısı; metinde kural yok)
+- Örnek ve sonuç: AEFES (hashtag). Görselde alt banta temas sonrası yeşil mumlar; sonraki sonuç yok.
+- Tansu'nun vurgusu: "Ne kadar çok rt o kadar çok formasyon:)" — paylaşım isteği; strateji vurgusu yok.
 
-### R246 · 2026-09-06 13:02 · yalnız bağlantı
-- Yazar: bağlantı (2096580811080261784).
-- Hamda yalnız bağlantı; beyin notu içeriği yapay zekâ Sentez katmanı, kanıt sayılmaz.
-- Fikirler: yalnız bağlantı (beyin başlığı: "80–100 Hafta Yatay Hisse ve Bant Dibinde Bekleme Fikri" — kayıtta metin yok).
-- Örnek ve sonuç: yok. Tansu'nun vurgusu: yok.
+### R246 · 2026-09-06 13:02 · 80–100 haftalık yatay hisse, dipte bekleme (tweet metni kaynaktan)
+- Yazar: T. Tweet 2026-09-06 12:46 UTC, id 2096580811080261784. Görsel yok.
+- Fikirler:
+  - [tarama-evren/giriş] "Aslında en temiz strateji bulacaksın 80-100 haftalık yatay giden bir hisse dibinde oturup bekleyeceksin." — 80–100 hafta yatay; dipte bekleme; yataylık eğimi, dip mesafesi, çıkış tanımsız — çekirdek belli
+  - [tarama-evren] "Yazalım o zaman taramasını:)" — tarama yazma niyeti; kod/sonuç yok — yalnız fikir
+- Örnek ve sonuç: yok.
+- Tansu'nun vurgusu: "en temiz strateji" — kendi değerlendirmesi, yüksek; "Yazalım o zaman taramasını" — çağrı.
 
-### R247 · 2026-09-06 13:03 · yalnız bağlantı
-- Yazar: bağlantı (2096577500612624410).
-- Hamda yalnız bağlantı; beyin notu içeriği yapay zekâ Sentez katmanı, kanıt sayılmaz.
-- Fikirler: yalnız bağlantı (beyin başlığı: "Düşen Üst Sınır Kırılımı ve Retest").
-- Örnek ve sonuç: yok. Tansu'nun vurgusu: yok.
+### R247 · 2026-09-06 13:03 · Düşen üst sınır kırılımı ve retest (tweet metni kaynaktan)
+- Yazar: T (kısa) + G (sembolsüz grafik). Tweet 2026-09-06 12:33 UTC, id 2096577500612624410.
+- Fikirler:
+  - [teyit-tetik] "Güzer retest var" — kırılım sonrası geri sınama olumlu bulunuyor; görselden (beyin okuması): düşen kırmızı üst sınırın üzerine çıkış, çizgiye geri çekilme, KIRILIM ve RETEST etiketleri — yalnız fikir
+  - [felsefe] "Gider mi gitmez mi artık orası tahtacıya kalmış" — sonuç belirsiz, piyasa katılımcısına bağlı — yalnız fikir
+- Örnek ve sonuç: sembol belirtilmemiş; sonuç yok.
+- Tansu'nun vurgusu: "Şunu bir arakadaşa hediye edeyim" — örneği paylaşıyor; "Güzer retest var" — olumlu.
 
-### R248 · 2026-09-06 13:05 · yalnız bağlantı
-- Yazar: bağlantı (2096576027791131079).
-- Hamda yalnız bağlantı; beyin notu içeriği yapay zekâ Sentez katmanı, kanıt sayılmaz.
-- Fikirler: yalnız bağlantı (beyin başlığı: "Düşen Üst Sınırda Yeşil Kırılım Mumu").
-- Örnek ve sonuç: yok. Tansu'nun vurgusu: yok.
+### R248 · 2026-09-06 13:05 · Düşen üst sınırda yeşil kırılım mumu (tweet metni kaynaktan)
+- Yazar: T (tek kelime) + G (sembolsüz grafik). Tweet 2026-09-06 12:27 UTC, id 2096576027791131079.
+- Fikirler: strateji kuralı yok. Metin yalnız "Canlanın:)". Görselden (beyin okuması): düşen kırmızı üst çizgiyi aşan uzun yeşil mum, KIRILIM etiketi — yalnız fikir (görsel etiketi, metinde kural yok).
+- Örnek ve sonuç: sembol belirtilmemiş; sonuç yok.
+- Tansu'nun vurgusu: "Canlanın:)" — izleyiciye çağrı; anlamı kayıtta açıklanmamış.
 
-### R249 · 2026-09-06 13:22 · yalnız bağlantı
-- Yazar: bağlantı (2096510322190201208).
-- Hamda yalnız bağlantı; beyin notu içeriği yapay zekâ Sentez katmanı, kanıt sayılmaz.
-- Fikirler: yalnız bağlantı (beyin başlığı: "Three Drives — Üç İtiş Fibonacci Fiyat ve Zaman Simetrisi").
-- Örnek ve sonuç: yok. Tansu'nun vurgusu: yok.
+### R249 · 2026-09-06 13:22 · Three Drives — Fibonacci, fiyat ve zaman simetrisi (tweet metni kaynaktan)
+- Yazar: T (uzun anlatı; "Benim açımdan", "Önce ... görürüz", "trade ederiz" birinci şahıs) + G (Three Drives grafiği). Tweet 2026-09-06 08:06 UTC, id 2096510322190201208.
+- Fikirler:
+  - [formasyon] "Three Drives Pattern, yani Üç İtiş Formasyonu, fiyatın trend yönünde art arda üç kez yeni bir ekstrem nokta üretmesiyle oluşan bir dönüş yapısıdır. Yükselen piyasada üç adet giderek yükselen tepe, düşen piyasada ise üç adet giderek düşen dip görülür." — çekirdek belli
+  - [bölge] "Drive 1 sonrasındaki A düzeltmesi ve Drive 2 sonrasındaki C düzeltmesi ideal olarak önceki hareketin yaklaşık yüzde 61,8 veya yüzde 78,6’sını geri almalıdır. Ardından Drive 2 ve Drive 3’ün, önceki düzeltme hareketlerinin yaklaşık 1,272 veya 1,618 Fibonacci extension seviyelerinde tamamlanması beklenir." — geri alma 0.618 / 0.786; uzantı 1.272 / 1.618 (yaklaşık) — kural tam
+  - [formasyon] "A noktasından Drive 2’ye kadar gerçekleşen hareket ile C noktasından Drive 3’e kadar gerçekleşen hareket birbirine yakın büyüklükte olmalıdır." (AB=CD fiyat simetrisi) — sayısal tolerans yok — çekirdek belli
+  - [formasyon] "A’dan Drive 2’ye kadar geçen süre ile C’den Drive 3’e kadar geçen sürenin birbirine yakın olması beklenir. Biri 10 bar, diğeri 11-12 bar sürüyorsa yapı oldukça dengelidir. Fakat biri 8 bar, diğeri 30 bar sürüyorsa formasyonun görsel ve zamansal dengesi bozulur. Zaman sürelerinin mutlaka birebir aynı olması da gerekmez; Fibonacci zaman oranlarına yakınlık da kabul edilebilir." — 10 bara karşı 11–12 dengeli; 8 bara karşı 30 bozuk — çekirdek belli
+  - [formasyon] "Three Drives grafiğe baktığınızda doğal görünmelidir. Hareketleri zorlayarak bir formasyon yaratmaya çalışıyorsanız büyük ihtimalle ortada gerçek bir Three Drives yoktur." (görsel simetri) — yalnız fikir
+  - [teyit-tetik] "Drive 3 oluştu diye doğrudan ters yönde işlem açmak doğru değildir. Three Drives bize kesin dönüş değil, dönüş ihtimalinin yoğunlaştığı bir bölge verir. Özellikle trend çok güçlüyse fiyat 1,618 extension seviyesini aşabilir ve formasyon başarısız olabilir. Bu nedenle Drive 3 sonrasında fiyatın gerçekten reaksiyon verip vermediğini izlemek gerekir." — reaksiyon teyidi şart; reaksiyon tanımı yok — çekirdek belli
+  - [felsefe] "Önce fiyatın gerçekten üç drive oluşturduğunu görürüz. Sonra Fibonacci ilişkilerini kontrol ederiz. Ardından fiyat ve zaman simetrisine bakarız. Bütün yapı aynı şeyi söylüyorsa Drive 3 bölgesini yakından takip ederiz. Formasyonu fiyatın üzerine zorla oturtmayız fiyatın bize gösterdiği yapıyı trade ederiz." — dört adım sırası — çekirdek belli
+- Örnek ve sonuç: sembol yok. Görselden: X, Drive 1, A, Drive 2, C, Drive 3 etiketli satış yönlü örnek (üç yükselen tepe), üçüncü tepeden sonra düşüş mumları; fiyat ve oran sayısı yok. Giriş, stop, hedef Ham'da yok.
+- Tansu'nun vurgusu: "Benim açımdan Three Drives’ı değerli yapan şey tam olarak budur."; "Burada önemli olan bu hareketlerin rastgele oluşmamasıdır." — yüksek.
 
-### R250 · 2026-09-06 13:24 · yalnız bağlantı
-- Yazar: bağlantı (2096505383955079277).
-- Hamda yalnız bağlantı; beyin notu içeriği yapay zekâ Sentez katmanı, kanıt sayılmaz.
-- Fikirler: yalnız bağlantı (beyin başlığı: "DOAS Kelebek — D Noktası Tamamlanma ve Tepki Adayı").
-- Örnek ve sonuç: yok. Tansu'nun vurgusu: yok.
+### R250 · 2026-09-06 13:24 · DOAS kelebek (tweet metni kaynaktan)
+- Yazar: T (tek ünlem) + G (DOAS harmonik kelebek grafiği, Tansu'nun araç görseli). Tweet 2026-09-06 07:46 UTC, id 2096505383955079277.
+- Fikirler:
+  - [formasyon] "kelebeklerrrrr #doas" — kelebek (Butterfly) harmonik formasyonu; metinde kural yok — yalnız fikir
+  - [bölge] Görselden (araç etiketi): "0.0 (A): 209.10; 0.236: 199.90; 0.382: 194.20; 0.500: 189.60; 0.618: 185.00; 0.786: 178.45; 1.0 (X): 170.10; 1.272 (D hedefi): 159.49; D: 159.40 [TAMAMLANDI]; 1.618 (max risk): 146.00" — D = XA'nın 1.272 uzantısı; giriş/çıkış kuralı yok — yalnız fikir (R203, R221, R222 harmonik D ile aynı tema; bu görselde stop/hedef tanımı yok)
+- Örnek ve sonuç: DOAS; D noktası 159,40 tamamlandı etiketi, son mum yeşil; sonraki sonuç yok.
+- Tansu'nun vurgusu: "kelebeklerrrrr" — ünlem, düşük.
 
-### R251 · 2026-09-06 13:26 · yalnız bağlantı
-- Yazar: bağlantı (2096358189696520213).
-- Hamda yalnız bağlantı; beyin notu içeriği yapay zekâ Sentez katmanı, kanıt sayılmaz.
-- Fikirler: yalnız bağlantı (beyin başlığı: "VAKBN–GARAN Göreli Değer Rotasyonu").
-- Örnek ve sonuç: yok. Tansu'nun vurgusu: yok.
+### R251 · 2026-09-06 13:26 · VAKBN–GARAN göreli değer rotasyonu raporu (tweet metni kaynaktan)
+- Yazar: G (iki araç görseli: rapor tablosu ve grafik). Tweetin kendi metni boş. Tweet 2026-09-05 22:01 UTC, id 2096358189696520213; The_Tansu_ hesabının kendi üst tweetine yanıt. Üst tweet (id 2096357339926311405, 2026-09-05 21:58 UTC) T: "Arbitraj hisselerini bu başlıkta paylaşıyorum. Toplanın :)".
+- Fikirler:
+  - [portföy] "Arbitraj hisselerini bu başlıkta paylaşıyorum." (üst tweet) — arbitraj hisseleri bir başlıkta (thread) toplanıyor — yalnız fikir
+  - [ölçüm-ilkesi] Görselden (rapor): "RELATIVE VALUE ROTATION | VAKBN <-> GARAN"; "SON GUN: YENI AL SINYALI | VAKBN AL | Y goreli ucuz, Z donusu +0.30"; Baslangic Sermayesi 100,000.00 TL; Guncel Portfoy 152,862.86; Net K/Z 52,862.86; Toplam Getiri +52.86%; 50/50 Buy&Hold +20.88%; Benchmark Farki +31.99%; Max Drawdown -27.44%; Sharpe 0.929; Sortino 1.338; CAGR +28.93%; Gecis Sayisi 6; Toplam Maliyet 2,054.78 TL; Piyasada Kalma +72.27%; Aktif Hisse VAKBN; Son Z -3.108; Onceki Z -3.404; Rolling Corr 0.731; Beta 1.675; Beta CV 0.277; Cointegration p 0.048 CURRENT; Pair Quality 55.600 /100; Pair Health GUCLU; Half-Life boş — rapor sayıları; giriş/çıkış kuralı ve formül yok — yalnız fikir
+  - [rejim] Görselden (beyin okuması): ikinci görsel normalize fiyatlar, strateji portföyü, Z skoru, T+1 Open işlem etiketleri, rolling korelasyon/beta panelleri; GARAN X, VAKBN Y — yalnız fikir
+- Örnek ve sonuç: VAKBN–GARAN; sonuç = raporun backtest sayıları (kaynak iddiası, bağımsız doğrulanmadı). Aynı temalar R228, R262 (kointegrasyon) ile.
+- Tansu'nun vurgusu: "Toplanın :)" — davet; yorum cümlesi yok.
 
-### R252 · 2026-09-06 13:29 · yalnız bağlantı
-- Yazar: bağlantı (2096145981062475910).
-- Hamda yalnız bağlantı; beyin notu içeriği yapay zekâ Sentez katmanı, kanıt sayılmaz.
-- Fikirler: yalnız bağlantı (beyin başlığı: "XU100 Corwin–Schultz — Spread Tahmini ve Düşük Sigma Sınırı").
-- Örnek ve sonuç: yok. Tansu'nun vurgusu: yok.
+### R252 · 2026-09-06 13:29 · XU100 Corwin–Schultz spread ve sigma (tweet metni kaynaktan)
+- Yazar: T (uzun anlatı; "Bizim açımızdan", "Ben bu modeli ... kullanmak daha faydalidir") + G (XU100 fiyat, spread, sigma paneli). Tweet 2026-09-05 07:58 UTC, id 2096145981062475910. Not: `/status` uç noktası metni 272 karakterde kesti; tam metin `/2/thread` uç noktasından alındı (5266 karakter).
+- Fikirler:
+  - [ölçüm-ilkesi] "Corwin-Schultz, tahtanın gerçek emir defterini görmeden sadece günlük High ve Low fiyatlarını kullanarak hissenin yaklaşık alış-satış makasını, yani spread'ini tahmin etmeye çalışır." — yalnız fikir (tanım)
+  - [ölçüm-ilkesi] "Spread düşük, Sigma düşük: Likidite iyi, piyasa sakin. En rahat yapı." ; "Spread düşük, Sigma yüksek: Tahta likit ama fiyat savaşı sert. Güçlü hareket olabilir." ; "Spread yüksek, Sigma düşük: Fiyat sakin görünür ama tahta incelmiş olabilir. Gizli likidite riski vardır." ; "Spread yüksek, Sigma yüksek: Hem likidite bozuk hem hareket sert. En riskli yapı." — 2x2 sınıf; eşik yok — çekirdek belli
+  - [felsefe] "Corwin-Schultz hisse yükselecek mi düşecek mi demez. Sadece Hareketin kalitesini anlatır." ; "Ben bu modeli yatırımcı açısından daha çok bir işlem kalitesi ve likidite risk radarı olarak kullanmak daha faydalidir, tek başına al-sat göstergesi olarak değil." — çekirdek belli
+  - [teyit-tetik] "Örneğin fiyat yükselirken Spread düşüyorsa, yükseliş likidite bozulmadan gerçekleşiyor demektir ve bu daha sağlıklı bir yapıdır. Ama fiyat yükselirken Spread de yükseliyorsa, fiyat yukarı gidiyor olsa bile hareket daha kırılgan olabilir." — çekirdek belli
+  - [rejim] "XU100'de güncel Spread yüzde 2,15 seviyesinde. Tarihsel ortalama ise yaklaşık yüzde 1,09." ; "Son iki günlük harekete baktığımızda Spread hızla yükselirken Sigma düşüyor." ; "XU100 son 20 işlem gününde yaklaşık yüzde 1,45 yükselmiş durumda." — 2,15 / 1,09 / 1,45 (5 Eylül tarihli durum) — çekirdek belli
+  - [teyit-tetik] "Spread yeniden tarihsel ortalamasına doğru gerilerse, piyasanın likidite tarafında rahatlama başladığını söylemek daha mümkün olur." ; "Dolayısıyla düşük Sigma, risk azaldı anlamına gelmez." — çekirdek belli
+- Örnek ve sonuç: XU100. Görselden: "Corwin-Schultz Bid-Ask Spread 21 Gunluk" paneli; referans kutusu Ortalama 1.088%, Medyan 0.454%, P75 1.899%, P90 3.028%; sigma paneli. Sonuç yok.
+- Tansu'nun vurgusu: "Bizim açımızdan en kritik nokta şudur."; "Şu anda asıl izlenmesi gereken gösterge Spread." — yüksek.
 
-### R253 · 2026-09-06 13:31 · yalnız bağlantı
-- Yazar: bağlantı (2095523694881697974).
-- Hamda yalnız bağlantı; beyin notu içeriği yapay zekâ Sentez katmanı, kanıt sayılmaz.
-- Fikirler: yalnız bağlantı (beyin başlığı: "AKFIS Kırılım FVG Retest ve Teyit").
-- Örnek ve sonuç: yok. Tansu'nun vurgusu: yok.
+### R253 · 2026-09-06 13:31 · AKFIS kırılım, FVG, retest ve teyit (tweet metni kaynaktan)
+- Yazar: T (kısa) + alıntılanan T tweeti (R254) + G (AKFIS grafiği). Tweet 2026-09-03 14:45 UTC, id 2095523694881697974.
+- Fikirler:
+  - [formasyon/teyit-tetik] "Breakout-->FVG-->Retest-->Confirmation / Bu yapıları arayın" (alıntılanan 2 Eylül tweeti) — dört aşamalı sıra; FVG/retest/teyit tanımı ve tolerans yok — çekirdek belli
+  - [diğer] "Dikkat edelim bu yapıya" — alıntıya dikkat çağrısı — yalnız fikir
+- Örnek ve sonuç: AKFIS (yalnız görselden; metinde sembol yok). Görselden: "AKFIS | Breakout + Range Retest + RSI Divergence | A+ SETUP | AL TETİKLENDİ | Sınıf: A+ | Skor: 100/100"; KONSOLİDASYON, BREAKOUT, BULLISH FVG + CONFLUENCE, RANGE HIGH RETEST, CONFIRMATION etiketleri; ENTRY, STOP, TP1, TP2, TP3 çizgileri (fiyat etiketi yok); onaydan sonra yükseliş mumları. Sonuç sayısı yok. Alıntı görseli sembolsüz aynı sıra.
+- Tansu'nun vurgusu: "Dikkat edelim bu yapıya" — yüksek.
 
-### R254 · 2026-09-06 13:33 · yalnız bağlantı (notu yok)
-- Yazar: bağlantı (2095218573631279414).
-- Hamda yalnız bağlantı; beyin notu içeriği yapay zekâ Sentez katmanı, kanıt sayılmaz.
-- Fikirler: yalnız bağlantı; beyin notu da yok.
-- Örnek ve sonuç: yok. Tansu'nun vurgusu: yok.
+### R254 · 2026-09-06 13:33 · Breakout → FVG → Retest → Confirmation (tweet metni kaynaktan)
+- Yazar: T (iki satır) + G (sembolsüz şema grafiği). Tweet 2026-09-02 18:33 UTC, id 2095218573631279414. R253'ün alıntıladığı tweet; görsel aynı dosya (aynı SHA-256).
+- Fikirler:
+  - [formasyon/teyit-tetik] "Breakout-->FVG-->Retest-->Confirmation / Bu yapıları arayın" — dört aşamalı sıra; tanım ve tolerans yok — çekirdek belli
+- Örnek ve sonuç: sembolsüz örnek şema; görselde konsolidasyon, breakout, bullish FVG, retest, confirmation, AL etiketleri ve sonrasında yükseliş (beyin notu okuması). Sonuç sayısı yok.
+- Tansu'nun vurgusu: "Bu yapıları arayın" — talimat, yüksek.
 
-### R255 · 2026-09-06 13:34 · yalnız bağlantı
-- Yazar: bağlantı (2095213493133713664).
-- Hamda yalnız bağlantı; beyin notu içeriği yapay zekâ Sentez katmanı, kanıt sayılmaz.
-- Fikirler: yalnız bağlantı (beyin başlığı: "Backtest ile Giriş Kurallarını Sadeleştirme ve İşlem Günlüğü").
-- Örnek ve sonuç: yok. Tansu'nun vurgusu: yok.
+### R255 · 2026-09-06 13:34 · Backtest, giriş sadeliği, risk ve işlem günlüğü (tweet metni kaynaktan)
+- Yazar: T (öğüt listesi, "Not alın lazım olur."). Tweet 2026-09-02 18:13 UTC, id 2095213493133713664. Görsel yok.
+- Fikirler:
+  - [ölçüm-ilkesi] "Backtest yapın. Örneğin 26 Ağustos'ta hangi hisseleri aday seçtiniz sonraki 1, 3 ve 5 günde ne olmuş bakın. Böylece kurallarınızı gözünüzle doğrulayın." — adaylardan sonra 1, 3, 5 gün — kural tam
+  - [ölçüm-ilkesi] "Hangi aday tipi para kazandırıyor? Örneğin Daily iyi + 4H bullish CHoCH + RS güçlü + Demand/FVG desteği olanlar mı? Yoksa retest beklemek bizi fazla mı geciktiriyor? Bunu veriden çıkarın." — aday tipi karşılaştırma — çekirdek belli
+  - [teyit-tetik] "Giriş sistemini sadeleştirin. Her göstergenin aynı anda yeşil olması gerekmeyebilir. Market Structure ve fiyat davranışı ana motor olsun RSI, MACD, WaveTrend, RS gibi unsurlar yardımcı teyit olsun." — ana motor: market structure + fiyat davranışı; RSI/MACD/WaveTrend/RS yardımcı — çekirdek belli
+  - [boyut-risk] "Risk yönetimini sistemin merkezine koyun. Bir setup ne kadar güzel olursa olsun tek işlemde büyük sermaye riske etmeyin. Pozisyon büyüklüğünü stop mesafesine göre hesaplayın." — risk yüzdesi yok — çekirdek belli
+  - [ölçüm-ilkesi] "İşlem günlüğü oluşturun. Aday tarihi → giriş → neden girdik → invalidation → TP → sonuç → maksimum olumlu/olumsuz hareket. Birkaç ay sonra kendi gerçek istatistiğiniz olsun." — alan listesi — kural tam
+  - [felsefe] "Sadece gerçekten çalışan yapıları tutun sistemde. Bir gösterge veya filtre sonuçlara katkı sağlamıyorsa sırf teknik görünmek için sistemde tutmayın." — çekirdek belli
+- Örnek ve sonuç: yok; "26 Ağustos" yalnız örnek tarih; sayı yok.
+- Tansu'nun vurgusu: "Not alın lazım olur."; "Risk yönetimini sistemin merkezine koyun." — yüksek.
 
-### R256 · 2026-09-06 13:36 · yalnız bağlantı (notu yok)
-- Yazar: bağlantı (2095201144544846208).
-- Hamda yalnız bağlantı; beyin notu içeriği yapay zekâ Sentez katmanı, kanıt sayılmaz.
-- Fikirler: yalnız bağlantı; beyin notu da yok.
-- Örnek ve sonuç: yok. Tansu'nun vurgusu: yok.
+### R256 · 2026-09-06 13:36 · Yapı öncelikli analiz şablonu ve kod karşılığı (tweet metni kaynaktan)
+- Yazar: T (birinci şahıs). Tweet 2026-09-02 17:24 UTC, id 2095201144544846208. Görsel yok.
+- Fikirler:
+  - [felsefe] "Bir hisseyi incelerken benim ilk sorduğum soru “hangi indikatör AL diyor?” değildir. Asla ama asla bu hatayı yapmam" — çekirdek belli
+  - [rejim] "İlk sorum şudur: Fiyat şu anda hangi yapının içinde ve alıcı mı satıcı mı kontrolü ele geçirmeye çalışıyor?" ; "Bundan sonra fiyatın bulunduğu bölgeyi, kırılımları, likidite hareketlerini ve 4 saatlik teyidi incelerim." — sıra: yapı ve kontrol → bölge → kırılım → likidite → 4 saatlik teyit; eşik yok — çekirdek belli
+  - [ölçüm-ilkesi] "Kendime bir analiz şablonu hazırladım, tıpkı bir iş prosedürü gibi, manuel analizlerde o şablonu izliyorum. Şablonu aynı zamanda koşullar ve sonuçlar ile koda da döktüm ve hangi koşulda hagi sonucun çıkabileceğinin açıklamalarını da yazdım, kod da aynı sonuçları veriyor ama makine dilinde. İnanılmaz kolaylık." — şablon + koşul-sonuç kuralları + kod; şablon paylaşılmadı — çekirdek belli
+- Örnek ve sonuç: yok.
+- Tansu'nun vurgusu: "Asla ama asla bu hatayı yapmam"; "İnanılmaz kolaylık." — kendi sistemini tarif ediyor, yüksek (R210 "herşey kurallara dayalı" ile aynı çizgi).
 
-### R257 · 2026-09-06 13:36 · yalnız bağlantı
-- Yazar: bağlantı (2095196517577461974).
-- Hamda yalnız bağlantı; beyin notu içeriği yapay zekâ Sentez katmanı, kanıt sayılmaz.
-- Fikirler: yalnız bağlantı (beyin başlığı: "XU100 2 Eylül — Bekle ve Teyit Ara Senaryosu").
-- Örnek ve sonuç: yok. Tansu'nun vurgusu: yok.
+### R257 · 2026-09-06 13:36 · XU100 2 Eylül: BEKLE ve TEYİT ARA (tweet metni kaynaktan)
+- Yazar: M (uzun, LLM biçimli piyasa yorumu, birinci şahıs yok; Tansu hesabında yayınlanmış; "#xu100") + G (iki XU100 grafiği). Tweet 2026-09-02 17:05 UTC, id 2095196517577461974.
+- Fikirler:
+  - [rejim] "Sonuç olarak mevcut piyasa yapısı “AL” konumundan çok “BEKLE ve TEYİT ARA” konumundadır. Şu aşamada dip tahmini yapmaya çalışmak yerine, piyasanın yukarı yönlü iradesini göstermesi beklenmelidir." — çekirdek belli
+  - [teyit-tetik] "piyasanın gerçekten yön değiştirdiğini kabul etmek için fiyatın yaklaşık 14.722 seviyesinin üzerine çıkması ve burada kalıcılık göstermesi gerekiyor." ; "14.876–15.000 bölgesinin aşılması ise yükseliş senaryosunu çok daha güvenilir hale getirecektir." — 14.722; 14.876–15.000; kalıcılık süresi yok — kural tam (seviye)
+  - [bölge] "ilk önemli sınav 14.740–14.876 bölgesi olacaktır. Bu alan aşılabilirse sırasıyla 14.868–14.992 ve ardından 15.133–15.205 bölgeleri gündeme gelebilir." ; "13.739 civarının altına doğru bir geri çekilme, mevcut toparlanma ihtimalini ciddi biçimde zayıflatacaktır. Daha aşağıda 13.000 civarı piyasanın önemli savunma alanlarından biri" — çekirdek belli
+  - [boyut-risk] "Risk almak için acele edilmemeli, nakit esnekliği korunmalı ve yeni pozisyonlar ancak fiyatın yukarı yönlü gücünü açık biçimde göstermesinden sonra artırılmalıdır." — nakit/pozisyon oranı yok — çekirdek belli
+  - [rejim] "Asıl problem, yükselişe katılımın zayıf olması. Kısa vadede geniş hisse grubuna bakıldığında düşüşe katılan şirket sayısının yükselişe katılanlardan belirgin biçimde fazla olduğu görülüyor." — piyasa genişliği; sayı yok — yalnız fikir
+- Örnek ve sonuç: XU100 2 Eylül. Görselden (beyin okuması): günlük başlık 14.050,56, "GEÇİŞ / BULLISH CHoCH SEVİYESİ KAYBEDİLDİ", SETUP 7/100; dört saatlik 14.054,50, "GEÇİŞ / BEARISH CHoCH AKTİF", SETUP 13/100. Sonuç yok.
+- Tansu'nun vurgusu: "Ana mesaj ise piyasada büyük panik yok ancak güven de henüz oluşmuş değil." — metin M biçimli; Tansu'nun kendi vurgusu belirsiz.
 
-### R258 · 2026-09-06 13:39 · yalnız bağlantı
-- Yazar: bağlantı (2094850165920403866).
-- Hamda yalnız bağlantı; beyin notu içeriği yapay zekâ Sentez katmanı, kanıt sayılmaz.
-- Fikirler: yalnız bağlantı (beyin başlığı: "XU100 1 Eylül — WMA Altı ve Dört Saatlik Zayıf Yapı").
-- Örnek ve sonuç: yok. Tansu'nun vurgusu: yok.
+### R258 · 2026-09-06 13:39 · XU100 1 Eylül: WMA21 altı, teknik uyum 35/100 (tweet metni kaynaktan)
+- Yazar: M (kısa araç/LLM biçimli teknik özet, birinci şahıs yok; "#XU100") + G (iki XU100 grafiği). Tweet 2026-09-01 18:09 UTC, id 2094850165920403866.
+- Fikirler:
+  - [rejim] "fiyat 14226.96, WMA21 14443.45 seviyesinin altında ve WMA aşağı eğimli. Bu nedenle kısa vadeli trend dönüşü henüz teyit edilmiş sayılmaz." — WMA21 — kural tam
+  - [momentum-seçim] "Satış momentumu hâlâ güçlü MACD histogramı negatif tarafta zayıflama göstermiyor. RSI 45.0 nötr bölgede. WaveTrend kısa vadede zayıf / negatif eğilim gösteriyor." — RSI 45.0 — çekirdek belli
+  - [teyit-tetik] "İlk anlamlı olumlu gelişme WMA21'in (14443.45) geri alınması, ardından 14722.02 seviyesindeki son kısa vadeli tepenin kırılması olur." — iki adım sırası — kural tam
+  - [bölge] "Fiyatın altında en yakın demand bölgesi 13633.00-13659.74." ; "14230.73-14301.92 aktif Bearish FVG ilk direnç / likidite alanı" — çekirdek belli
+  - [stop-geçersizlik] "14140.43 altına kalıcı geçiş, en yakın Bullish FVG desteğinin kaybedildiğini gösterir." — 14140.43; kalıcılık tanımı yok — kural tam (seviye)
+  - [rejim] "Güçlü yükselen yapısal trend (7 temas) 2026-08-31 tarihinde yakın zamanda kapanışla kırılmış." ; "Teknik uyum skoru 35/100 ve durum ZAYIF." — 7 temas; 35/100 (puan formülü yok) — yalnız fikir
+- Örnek ve sonuç: XU100 1 Eylül. Görselden (beyin okuması): günlük başlık 14.229,01 "GEÇİŞ / BULLISH CHoCH" SETUP 45/100; dört saatlik 14.226,96 "GEÇİŞ / BEARISH CHoCH" SETUP 35/100. Sonuç yok. Ertesi gün R257 aynı 14.722 eşiğini kullanıyor.
+- Tansu'nun vurgusu: yok (birinci şahıs cümlesi yok); durum etiketi "ZAYIF".
 
-### R259 · 2026-09-06 13:41 · yalnız bağlantı
-- Yazar: bağlantı (2094486927328059452).
-- Hamda yalnız bağlantı; beyin notu içeriği yapay zekâ Sentez katmanı, kanıt sayılmaz.
-- Fikirler: yalnız bağlantı (beyin başlığı: "Ahengin Uyumu — Demand Bölgesi ve Gösterge Görünümü").
-- Örnek ve sonuç: yok. Tansu'nun vurgusu: yok.
+### R259 · 2026-09-06 13:41 · Ahengin uyumu: demand/toplama bölgesi (tweet metni kaynaktan)
+- Yazar: T (iki satır) + G (sembolsüz grafik, Tansu'nun araç görseli). Tweet 2026-08-31 18:06 UTC, id 2094486927328059452.
+- Fikirler:
+  - [bölge] Görselden: düşüş sonrası "DEMAND / TOPLAMA" kutusu; fiyat kutuda yatay gidip yukarı çıkıyor; mor hareketli ortalama, uzun yatay yeşil destek çizgisi; altta MACD benzeri, RSI benzeri (iki yatay sınır çizgili) ve WaveTrend benzeri paneller — kutunun çizim kuralı yok — yalnız fikir (görsel etiketi)
+  - [teyit-tetik] "Ahengin uyumu" — fiyat bölgesi ile alt panellerin aynı yönü göstermesi (konfluans) olarak okunabilir; metinde tanım yok — yalnız fikir (YORUM)
+  - [araç-öğrenme] "Şunu biraz geliştirmenin önemine inandım şu an." — aracı geliştirme niyeti — yalnız fikir
+- Örnek ve sonuç: sembol yok; görselde bölgeden çıkış sonrası yükseliş. Sonuç sayısı yok.
+- Tansu'nun vurgusu: "önemine inandım" — orta.
 
-### R260 · 2026-09-06 13:43 · yalnız bağlantı (iki bağlantı)
-- Yazar: bağlantı (2094148699769241961 ve 2094148704089587805).
-- Hamda yalnız bağlantı; beyin notu içeriği yapay zekâ Sentez katmanı, kanıt sayılmaz.
-- Fikirler: yalnız bağlantı (beyin başlığı: "CWENE — 63 Günlük Skewness Gaussian ve Kuyruk Riski"; R202 ile aynı rolling skewness teması — metin kayıtta yok).
-- Örnek ve sonuç: yok. Tansu'nun vurgusu: yok.
+### R260 · 2026-09-06 13:43 · CWENE 63 günlük rolling skewness, Gaussian ve kuyruk riski (tweet metni kaynaktan, iki tweet)
+- Yazar: T (uzun anlatı, birinci şahıs: "Ben skewness'i ... kullanmam", "Kodumuz bunu doğrudan yapıyor", "Ben takip sisteminde bunu kabaca şöyle yorumlardım") + G (CWENE panel görseli: dağılım, 63 günlük rolling skewness, fiyat). Tweet 1 2026-08-30 19:42:12 UTC, id 2094148699769241961; tweet 2 (yanıt) 19:42:13 UTC, id 2094148704089587805.
+- Fikirler:
+  - [ölçüm-ilkesi] "Ben skewness'i tek başına AL/SAT sinyali olarak kullanmam. Volatilite, momentum, kurtosis ve tail-risk ile birlikte dağılım filtresi olarak kullanırım." — çekirdek belli
+  - [momentum-seçim] "Momentum pozitif + Rolling Skewness pozitif ise hareket yalnızca yükselmiyor, dağılımın sağ kuyruğu da büyüyor olabilir. Bu trend stratejileri açısından olumlu bir kombinasyondur." ; "Momentum pozitif ama Skewness çok negatif ise fiyat yükselmesine rağmen dağılımın içinde sert aşağı hareket riski bulunuyor olabilir." — "çok negatif" eşiği aşağıdaki sınıflardan — çekirdek belli
+  - [ölçüm-ilkesi] "Kodumuz bunu doğrudan yapıyor. Hissenin log getirilerini hesaplıyor, Gaussian dağılımla karşılaştırıyor, skewness ve kurtosis ölçüyor, 63 günlük Rolling Skewness çıkarıyor ve klasik Gaussian VaR ile Cornish-Fisher Skewness/Kurtosis düzeltilmiş VaR hesaplıyor." — log getiri, 63 gün, Cornish-Fisher VaR — kural tam (hesap); VaR güven düzeyi yok
+  - [rejim] "Skew < -0.50: Tail-risk negatif, dikkat. / -0.50 < Skew < 0: Hafif negatif dağılım. / 0 < Skew < +0.50: Hafif pozitif, yapıcı. / Skew > +0.50: Belirgin pozitif sağ kuyruk. / Skew > +1.00: Çok güçlü pozitif asimetri; fakat aynı zamanda birkaç büyük pozitif günün istatistiği bozup bozmadığını ayrıca kontrol etmek gerekir." — beş sınıf, eşikler −0.50 / 0 / +0.50 / +1.00 — kural tam ("kabaca" der)
+  - [teyit-tetik] "Fiyat yükseliyor + momentum pozitif + skewness sıfırın üzerinde yükseliyor ise yükselişin içinde pozitif kuyruk davranışı oluşuyor olabilir. Bu benim için olumlu bir konfluens." ; "Fiyat yükseliyor fakat skewness hızla negatife dönüyorsa, ... negatif tail-risk oluşmaya başladığını düşünürüm." — "hızla" tanımsız — çekirdek belli
+  - [teyit-tetik] "Skewness +0.50 üzerine çıkarken fiyat da teknik dirençlerini kırmaya başlarsa iki farklı dünyadan aynı sinyali almış oluruz. ... İşte quant olarak benim ilgilendiğim konfluens bu olur." — +0.50 eşiği + direnç kırılımı; direnç tanımı yok — çekirdek belli
+  - [rejim] "Bir de çok kritik bir nokta: Skewness'in yönü kadar değişimi de değerlidir. Mesela -1.0 → -0.5 → 0 → +0.3 → +0.6 şeklindeki bir dönüş, sadece “skewness bugün +0.6” bilgisinden çoğu zaman daha anlamlıdır." — skewness değişimi (eğim); pencere yok — çekirdek belli
+  - [felsefe] "Pozitif skewness = fiyat kesin yükselecek demek değildir. Skewness trend ölçmez." — yalnız fikir
+- Örnek ve sonuç: CWENE. Metin: 2024 ikinci yarısı–2025 başı skew ~+1; 2025 baharı ~−1 ("Bu çok önemli bir rejim değişimidir"); 2025 yazı sıfır üstü, ardından fiyat 13–15 dipten 40 üstüne. Bugün skew ~+0.2/+0.3: "Bu benim için NEGATİF DEĞİL, olumlu. Ama +0.50'nin üzerinde değil". Görsel metinle uyumlu (skew paneli ±0.50 noktalı çizgiler; 2025 baharı ~−1; son ~+0.3). Kaynak iddiası; bağımsız ölçülmedi.
+- Tansu'nun vurgusu: "Ortadaki grafik benim için asıl önemli bölüm"; "Bir de çok kritik bir nokta"; "Alın kullanın bunu." — yüksek. R202 ("Rolling alpha Rolling skewness ... Momentum listelerimize uyguluyoruz") ile aynı çizgi; R260 eşikleri verir.
 
-### R261 · 2026-09-06 13:45 · yalnız bağlantı
-- Yazar: bağlantı (2094128312729624792).
-- Hamda yalnız bağlantı; beyin notu içeriği yapay zekâ Sentez katmanı, kanıt sayılmaz.
-- Fikirler: yalnız bağlantı (beyin başlığı: "CWENE — Olası Dalga 2 ve Demand Örtüşmesi").
-- Örnek ve sonuç: yok. Tansu'nun vurgusu: yok.
+### R261 · 2026-09-06 13:45 · CWENE olası Dalga 2 ve demand örtüşmesi (tweet metni kaynaktan)
+- Yazar: T (birinci şahıs: "Ben yatırımcı olarak seviyeleri şöyle okurum", "benim gözümde") + G (iki görsel: Elliott 0–1–2? sayımı; demand/supply, kırılım çizgileri, hacim profili). Tweet 2026-08-30 18:21 UTC, id 2094128312729624792.
+- Fikirler:
+  - [formasyon/bölge] "Elliott tarafında 33.10 → 48.30 Dalga 1, ardından 35 civarında 2? var. Demand & Supply grafiği de tam bu 35 civarının 32.5–36 bandındaki güçlü demand bölgesine denk geldiğini gösteriyor. Yani Elliott'un “2. dalga dibi olabilir” dediği yer, bağımsız olarak arz-talep açısından da mantıklı bir destek bölgesi." — Dalga 2 dibi ∩ demand bölgesi — çekirdek belli
+  - [teyit-tetik] "Son güçlü yeşil mum da bu bölgeden alıcı geldiğini gösteriyor." — bölgeden güçlü yeşil mum; "güçlü" tanımsız — çekirdek belli
+  - [stop-geçersizlik] "33.10 altı: mevcut bullish Elliott sayımı iptal." ; "33.10'u yapısal risk seviyesi kabul eder." — geçersizlik = Dalga 1 başlangıcı (Point 0) — kural tam (R199/R242 stop = Point 0 ile aynı)
+  - [giriş] "Agresif yatırımcı 35–36 demand bölgesinin korunmasını fırsat olarak görebilir ve 33.10'u yapısal risk seviyesi kabul eder. Daha muhafazakâr yatırımcı ise önce 40–41.5'in kırılmasını bekler." — iki giriş: bölgede (agresif) / ilk direnç kırılımı (muhafazakâr) — çekirdek belli
+  - [hedef-çıkış] "40–41.5: ilk ciddi kısa vadeli direnç." ; "44–48.5: güçlü supply bölgesi. Asıl mücadele burada." ; "48.30 üzeri kapanış: Elliott açısından Dalga 1 tepesi geri alınmış olur ve Dalga 3 senaryosu çok ciddi şekilde güçlenir." — dirençler supply bölgelerinden — çekirdek belli
+  - [felsefe] "En önemli nokta şu Elliott'taki 2? noktası ile Demand bölgesinin aynı yere denk gelmesi bence önemli bir konfluens. Bu nedenle 35 civarındaki dip artık tek başına bir Elliott pivotundan daha anlamlı. Ancak 48.30 kırılmadan “Dalga 3 başladı” demek için hâlâ erken." — çekirdek belli
+- Örnek ve sonuç: CWENE 30.08. Görsel 1: 0, 1, 2? etiketli sayım. Görsel 2: mavi demand kutusu (Mayıs–Ağustos), sarı supply kutusu, "Kırılım 2026-07-21 (Temas:...)", "Kırılım 2026-08-05 (Temas:3)" etiketli düşen çizgiler, HH/HL etiketleri, hacim profili. Sonuç yok (R260 aynı gün skewness okuması).
+- Tansu'nun vurgusu: "En önemli nokta şu ... bence önemli bir konfluens." — yüksek. R199/R204/R241/R242 (Wave 2 + FVG/talep) ile aynı çizgi.
 
-### R262 · 2026-09-06 13:47 · yalnız bağlantı
-- Yazar: bağlantı (2093658795700338821).
-- Hamda yalnız bağlantı; beyin notu içeriği yapay zekâ Sentez katmanı, kanıt sayılmaz.
-- Fikirler: yalnız bağlantı (beyin başlığı: "Kointegrasyon ve İkili İşlem — Korelasyon Ayrımı ve Garanti Sınırı"; R228 ile aynı tema — metin kayıtta yok).
-- Örnek ve sonuç: yok. Tansu'nun vurgusu: yok.
+### R262 · 2026-09-06 13:47 · Arbitrajda kointegrasyonun rolü (tweet metni kaynaktan)
+- Yazar: M (uzun, makale biçimli, birinci şahıs yok; Tansu hesabında yayınlanmış). Tweet 2026-08-29 11:15 UTC, id 2093658795700338821. Görsel yok.
+- Fikirler:
+  - [çift] "Bu noktada "kointegrasyon" (eşbütünleşme), sadece faydalı bir gösterge değil, stratejinin üzerine inşa edildiği zorunlu bir temel olarak öne çıkar." — çekirdek belli (R228 "şarttır, şarttır. şarttır." ile aynı)
+  - [çift] "Yatırımcıların sıklıkla düştüğü en büyük hata, korelasyon ile kointegrasyonu birbirine karıştırmaktır. ... İki hisse senedi yüksek korelasyona sahip olsa bile, aralarındaki fiyat farkı zamanla sonsuza dek açılabilir." — çekirdek belli
+  - [giriş/çift] "Spread tarihsel ortalamasından standart sapmalarla uzaklaştığında, pahalı olan varlık açığa satılır (short), ucuz olan varlık alınır (long)." — Z eşiği yok; açığa satış BIST'te kilit — çekirdek belli
+  - [ölçüm-ilkesi] "Johansen veya Engle-Granger gibi kointegrasyon testleri kullanılarak varlıklar arasındaki ilişkinin yapısal ve uzun vadeli olup olmadığı doğrulanır." — test adı var; pencere ve p eşiği yok — çekirdek belli
+  - [rejim] "Piyasa Riskinin İzole Edilmesi (Market Neutrality): Kointegre varlıklardan oluşan bir portföy, piyasanın genel yönünden bağımsız hale gelir." — long/short ister — yalnız fikir
+  - [felsefe] "Bu ispat olmadan uygulanan herhangi bir ikili işlem stratejisi, istatistiksel bir arbitraj olmaktan çıkıp, sıradan ve yüksek riskli bir yön tahminine dönüşür." — çekirdek belli
+- Örnek ve sonuç: "Banka A ve Banka B" (soyut). Sonuç yok.
+- Tansu'nun vurgusu: metin M biçimli; kendi vurgusu belirsiz. Tema R228 ve R251 (VAKBN–GARAN rapor: "Cointegration p 0.048") ile tutarlı.
 
-### R263 · 2026-09-06 13:49 · yalnız bağlantı
-- Yazar: bağlantı (2093647837162553475).
-- Hamda yalnız bağlantı; beyin notu içeriği yapay zekâ Sentez katmanı, kanıt sayılmaz.
-- Fikirler: yalnız bağlantı (beyin başlığı: "BOM Sinyali — İki Tavan Kaynak İddiası").
-- Örnek ve sonuç: yok. Tansu'nun vurgusu: yok.
+### R263 · 2026-09-06 13:49 · BOM sinyali, iki tavan (tweet metni kaynaktan)
+- Yazar: T (iki satır) + G (sembolsüz grafik: BOM etiketi, kırmızı kutu, CHoCH, kırılım çizgileri, hacim profili, hacim ve osilatör panelleri). Tweet 2026-08-29 10:31 UTC, id 2093647837162553475.
+- Fikirler:
+  - [teyit-tetik] "BOM sinyalinin geldiği yerde şartlar da müsait ise çok etkili olabileceğine dair ilk kanıtlar gelmeye başladı" — BOM sinyali + "şartlar da müsait"; BOM'un ve şartların tanımı kayıtta yok — Tansu kural vermedi
+  - [araç-öğrenme] "2 tavan üst üste vermiş tabi hala geliştirilmeye açık bir sistem. Çalışıyoruz bakalım" — sistem geliştirme aşamasında — yalnız fikir
+- Örnek ve sonuç: sembol yok. Görselden: Temmuz 2026 başında "BOM" etiketi (siyah üçgen) ve kırmızı kutu; yakınında "Kırılım 2026-06-18 (Temas:7)" yükselen destek; ardından iki büyük yeşil mum (metindeki "2 tavan"), gri kutu; Ağustos'ta CHoCH ve sarı supply kutusuna çıkış; Ağustos başında ikinci "Kırılım 2026-07-24 (Temas:4)" ve mavi bölge. Tek örnek; kaynak iddiası.
+- Tansu'nun vurgusu: "çok etkili olabileceğine dair ilk kanıtlar" ama "hala geliştirilmeye açık" — orta, temkinli.
 
 ---
 
 ## Kapsam
-Okunan kayıt: 65/65; atlanan: yok. (R199–R244 = 46 içerikli kayıt; R245–R263 = 19 bağlantı kaydı, bunların R254 ve R256 notsuz.) Açılan görsel: R199, R200, R203, R204, R207–R210, R212–R217, R219, R221–R222, R224, R226–R227 (R244 ve R234/R235/R241/R242 için dosyadaki "Okuma" açıklamaları kullanıldı, görsel dosyaları beyinde yok). R224 görselindeki küçük sayılar okunamadı.
+Okunan kayıt: 65/65; atlanan: yok. (R199–R244 = 46 içerikli kayıt; R245–R263 = 19 bağlantı kaydı. 06.10.2026: bu 19 kaydın tweet metni ve görseli kaynaktan çekildi, `ham-yapistirmalar-3.md`; fikirler o metinden yazıldı.) Açılan görsel: R199, R200, R203, R204, R207–R210, R212–R217, R219, R221–R222, R224, R226–R227 (R244 ve R234/R235/R241/R242 için dosyadaki "Okuma" açıklamaları kullanıldı, görsel dosyaları beyinde yok). R224 görselindeki küçük sayılar okunamadı.
 
 ## Tansu'nun kendi sistemini tarif ettiği en önemli 10 cümle
 1. R210: "herşey kurallara dayalı. Duyguya yer yok. Sistem ne derse o."
@@ -568,8 +640,10 @@ Okunan kayıt: 65/65; atlanan: yok. (R199–R244 = 46 içerikli kayıt; R245–R
 - Risk/ödül minimumu: R222 (>= 1.5 veya 2), R230 (1:2 / 1:3), R234 (1:1.5).
 - Pozisyon boyutu volatiliteyle küçülür / %1 risk: R211, R212 (R215 zayıf para yönetimi).
 - Likidite/derinlik önceliği: R201, R225, R232 (sabit TL hacim eşiği: 20 gün, 10 milyon TL, alt %25).
-- Kointegrasyon, korelasyon değil: R228, R262 (bağlantı).
-- Rolling skewness / alpha: R202, R260 (bağlantı, 63 gün).
+- Kointegrasyon, korelasyon değil: R228, R262 (Johansen/Engle-Granger), R251 (rapor "Cointegration p 0.048").
+- Rolling skewness / alpha: R202, R260 (63 gün; eşikler −0.50 / 0 / +0.50 / +1.00; skew değişimi; momentum + skew konfluansı).
+- Kırılım → FVG → retest → teyit sırası: R253, R254, R247 (retest), R248 (kırılım mumu).
+- Elliott Dalga 2 ∩ demand konfluansı: R261 (stop = Dalga 1 başlangıcı, R199/R242 ile aynı); Three Drives R249 (fiyat ve zaman simetrisi, reaksiyon teyidi).
 - BIST 100 + VIX checklist: R209, R210 (çıkış fiyat grafiğine göre, SMA 20 + Heikin Ashi, 4 göstergeden 2'si).
 - Python/kod ve veri egemenliği, kural-tabanlı sistem: R210, R213, R218, R223, R234 (R222 "Algoritmik Tarama mantığı").
 - Hacim + fiyat konumu ile kapitülasyon / toplama: R226, R227, R237, R235 (birikim–dağıtım evreleri), R238.
@@ -583,7 +657,7 @@ Okunan kayıt: 65/65; atlanan: yok. (R199–R244 = 46 içerikli kayıt; R245–R
 Kaynak: denetim-defter.md; her bulgu ham-yapistirmalar-2.md ile karşılaştırıldı.
 
 - Başlık: yazar kodları açıklaması ve UTC açıklaması eklendi; "Alıntılar birebir" cümlesi yumuşatıldı; başlık+gövde birleştirmesi notu eklendi.
-- R245–R263 (YÜKSEK-1): her kayda "Hamda yalnız bağlantı; beyin notu içeriği yapay zekâ Sentez katmanı, kanıt sayılmaz." satırı eklendi. Beyin notlarının içeriği deftere kural olarak alınmadı. Bu bir hata düzeltmesi değil, kapsam notudur.
+- R245–R263 (YÜKSEK-1): her kayda "Hamda yalnız bağlantı; beyin notu içeriği yapay zekâ Sentez katmanı, kanıt sayılmaz." satırı eklendi. Beyin notlarının içeriği deftere kural olarak alınmadı. Bu bir hata düzeltmesi değil, kapsam notudur. 06.10.2026: bu satır geçersiz; 19 kaydın tweet metni kaynaktan çekildi (`ham-yapistirmalar-3.md`) ve kayıtlar yeniden yazıldı.
 - R234 (YÜKSEK-2): üç atlanan cümle birebir eklendi ("Trendli piyasalada çok iyi ...", "Sistem daha seçici ve muhafazakar hale geldi ...", "Hacim ve RSI filtrelerinin eklenmesiyle ... %55.00 oldu").
 - R234 (etiket): bulgu reddedildi, kayıt değişmedi. Sebep: ham kayıt Tansu hesabının tek tweetidir ve birinci şahıs cümleleri taşır; LLM biçimli cümleleri ayırmak için dayanak yok. "T (metin)" korundu; karışık olma ihtimali R234 satırında not edildi.
 - R226: OBI aralığı görselden düzeltildi (yaklaşık -40% ile +60%; iki büyük yeşil bar) ve "KAPİTÜLASYON" etiketi eklendi (okunuş yaklaşık).
