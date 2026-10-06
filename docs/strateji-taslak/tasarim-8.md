@@ -103,7 +103,7 @@ testidir (T R120: "Ben de bunu BIST'te test etmek istedim"); kuralı tam olan te
    SMA250'yi giriş bileşeni örneği olarak anar, T R212 "bu 200SMA 200EMA 250EMA' da olabilir, stratejinize kalmış").
 2. **Talep bölgesi** (4.1): kurulumun giriş seviyesi geçerli (kırılmamış) bir talep bölgesinin içindedir. Zorunlu
    (T R009, R080, R081, R085). Ölçümde bölgesiz kol da koşulur (Tansu'nun cümlesini sınamak için).
-3. **Üç tarayıcı**, ayrı kod (T R011), tek sonuç tablosu (G R012):
+3. **Dört tarayıcı**, ayrı kod (T R011), tek sonuç tablosu (G R012):
    - **H — Harmonik:** AB=CD ve Gartley; Kelebek ayrı tarayıcı (T R011; oranlar standart tanım, YORUM: Tansu oran
      vermedi). Giriş D'de limit (G R012 LUKSK "Giriş = D Hedefi", G R014 "Giriş (D)", G/M R222 "Buy Limit").
      - AB=CD: kapı T R019 (BC ≤ AB, BC = 1,00 olabilir, D B'yi aşar; giriş öncesi C'den sonra A geçilirse kurulum
@@ -138,6 +138,14 @@ testidir (T R120: "Ben de bunu BIST'te test etmek istedim"); kuralı tam olan te
      sıkışması (G R127 KRDMD, G R125 ICBCT EMA30/50/100/200); kırılım sonrası boğa dizilimi EMA5 > EMA8 > EMA13 teyidi
      (M R124, T R214, G R167, M R128); retest girişi (M R198, T R194); sıkışma süresi ile kırılım şiddeti raporu (T R082
      "konoslidasyon ne kadar uzarsa kırılım o denli şiddetli"; T R077 rehavet; T R086 breakout).
+   - **F — Fincan-kulp** (T/M R114 "kendi tarama sistemimin yakaladığı"; G R114 GUBRF görseli): sol ağız = dipten
+     önceki en yüksek pivot (GUBRF 300,75), dip (212,20), sağ ağız = dipten sonraki ilk pivot tepe (317,00); kulp, sağ
+     ağızdan (sağ ağız − dip) aralığının %50–%78,6'sı kadar geri çekilir (metin %50–61,8 der, görselde kulp tabanı
+     ≈ %70; aralık YORUM). Sinyal: kulptan sonra kapanış sol ağız çizgisinin üstünde ("KIRILMA 300.75", G R114); giriş
+     ertesi AOF. Hedef = kırılma + (kırılma − dip) (GUBRF: 300,75 + 88,55 = 389,30, Tansu'nun hedefiyle birebir).
+     Geçersizlik: kulp dibinin altında kapanış (YORUM; Tansu'nun 1:2,27 oranı hiçbir basit giriş/stop çiftiyle
+     çıkmıyor, `kural-yok-inceleme.md` 24). Bölge kapısı: kulp dibi geçerli bir talep bölgesinin içinde (YORUM, R080
+     ilkesi); bölgesiz hal ölçüm kolu. Sadakat hedefi: GUBRF sinyal 2025-10-24.
 4. **Ödül/risk kapısı:** risk = giriş − geçersizlik; ödül/risk < 1,5 ise girilmez (M R222; aynı eşiği T R234 kendi
    lojistik modeli için "Kritik Kural" diye yazar). Ödül:
    - H: ana hedef TP2 (Gartley D + 0,618·(A−D), G/M R222 "Kalan Pozisyonu Kapat"; AB=CD D + 0,618·(C−D), M/G R203
@@ -155,10 +163,10 @@ testidir (T R120: "Ben de bunu BIST'te test etmek istedim"); kuralı tam olan te
    mumlarla. `test_gelecek.py`'ye girer.
 
 **Neden tek hipotez:** Tansu tarayıcıları ayrı yazar ama aynı listede, aynı yönetimle sunar (G R012; T R204 "verdiğimiz
-listede"). Üç tarayıcıyı ayrı resmi kol yapmak m'yi 2 fazla artırır (1 yerine 3) ve her birinin işlem sayısını düşürür. Tarayıcı başına
+listede"). Dört tarayıcıyı ayrı resmi kol yapmak m'yi 3 fazla artırır (1 yerine 4) ve her birinin işlem sayısını düşürür. Tarayıcı başına
 sonuç ölçüm kolunda raporlanır (kabul kararına girmez).
 
-**K1 (S2):** ön şart = momentum kapısı + SMA250 + fiyat geçerli bir talep bölgesinin içinde. Kural = ön şart + üç
+**K1 (S2):** ön şart = momentum kapısı + SMA250 + fiyat geçerli bir talep bölgesinin içinde. Kural = ön şart + dört
 tarayıcıdan birinin kurulumu + ödül/risk kapısı. Soru: "Tansu'nun formasyonları, bölgede rastgele bir günden iyi mi?"
 Rastgele girişe sinyalin yüzde stop ve yüzde hedef mesafesi taşınır; çıkış zinciri aynı. Tür (a) ve (b) taslak 7 gibi.
 
@@ -335,7 +343,7 @@ cümle T). Akşam kartı o gün durum değiştiren kurulumları yazar; dil "kura
 | Bilanço kalite filtreleri: maddi duran varlık artışı → fiyat (T R059), dönen varlık/KVB < 1 → bedelli riski (T R060), özkaynak artışı (T R057), borç büyümesi vs ciro (M R134, T R135), nakit/piyasa değeri (M R010), HBK U dönüşü (T R133), Merton DD/EDF (T R061), regresyonla olması gereken değer / beklenen F/K (T R058, R066), skor kartı ve sekmeler (T/G R067), proje cirosu bugünkü değeri (T R069), işletme kriterleri (M R046, M R240), Dupont (T R002) | İkinci dalga (değerlemeyle) | Bilanço verisi. R059 "Göz ardı etmeyin" ve R060 kural tam: veri gelince ilk sınanacak filtreler. |
 | Konveks rotasyon (T/M R229) | İkinci dalga | 2. adım tarihsel F/K ister (bilanço); 1. adım makro döngü kuralsız. |
 | Klasik formasyonlar: takoz, TOBO, OBO, bayrak, flama (T R004, R006, R007), ikili dip (M R236), OBO kuralı (G-dış R219) | İkinci dalga tarayıcı | Tansu "uygulamanın ilk algoritmaları" listesinde sayıyor (R004) ama kural vermedi; R219 dış kaynak. Long-only: OBO yalnız çıkış uyarısı olur. S2'ye tarayıcı eklemek m'yi artırmaz, ama kuralsız tarayıcı tümüyle bizim tanımımız olur; ikinci dalgada standart tanımla "yorum" tarayıcısı olarak, sadakat hedefi olmadan eklenir. |
-| Bant kuyruğu tepki alımı: −2/−3 SE (T R053), ±1/2 SD bantları (M R187), mean reversion APO (T R156) | İkinci dalga tarayıcı | Tansu "tepki alımı fırsatı" diyor ama giriş/çıkış ve pencere yok; R187 IV ister (gerçekleşen volatilite vekili YORUM). |
+| Bant kuyruğu tepki alımı: −2/−3 SE (T R053), ±1/2 SD bantları (M R187) | İkinci dalga tarayıcı | Tansu "tepki alımı fırsatı" diyor ama giriş/çıkış ve pencere yok; R187 IV ister (gerçekleşen volatilite vekili YORUM). |
 | Momentum × faaliyet nakit akışı 5×5 (T R022), TOPSIS (T R145, R179), DEA/Convex Hull (T R175, R178), PD/DD+ROE (M R144) | İkinci dalga | Bilanço verisi. |
 | Volatilite harvesti (T R030), rebalancing (T R078), Markowitz + volatilite trading (T/M R110) | Ölçüm (S1 portföy katmanı) | Varlık çifti ve oran verilmedi; Tansu'nun kendi rebalancing örneği pasifin gerisinde (G R078: %26,76 / %27,81). |
 | VRP, implied move, IV kesişimi (T R028, R029, M R031) | Dışarıda | Opsiyon IV yok (BIST hisse opsiyonu verisi yok). |
@@ -343,14 +351,15 @@ cümle T). Akşam kartı o gün durum değiştiren kurulumları yazar; dil "kura
 | BIST100 + VIX beş adım (G-dış R209, T/M R210) | Dışarıda | VIX ve açılış (Heikin Ashi) yok. |
 | Kapitülasyon üçlüsü (T/M R226) | Ölçüm, iki koşulla | OBI emir defteri ister; istatistiksel sapma ve fiyat-hacim konumu kurulabilir. |
 | Mum formasyonları: engulfing (G R023), tweezer (T R025), gravestone (T R130), çekiç/sabah yıldızı (T R137), advance block (M R042) | Ölçüm, AOF'lu yaklaşık | Açılış yok. |
-| Gizli pozitif uyumsuzluk (T/M R116, T R117, T R136) | İkinci dalga tarayıcı | Osilatör kimliği gizli ("pek bilinen birşey değil", R136); sabit osilatörle yazılırsa yorum olur. |
-| Fincan-kulp (T/M R114, "kendi tarama sistemimin yakaladığı") | İkinci dalga tarayıcı | S2 tek hipotez olduğu için tarayıcı eklemek m'yi artırmaz; engel kuraldır. Fincan biçimi ve kulp dedektörü tek örnekten (GUBRF) çıkarılamıyor; hedef tabanı çelişkili: 389,30 − fincan derinliği 104,80 = 284,50, kırılma çizgisi 300,75 değil. Sadakat hedefi olarak GUBRF 2025-10-24 kırılımı saklanır. |
+| Gizli pozitif uyumsuzluk (T/M R116, T R117, T R136) | Ölçüm (06.10) | Görselde parametre var: "Swing=15 sol-only, MinGap=15" (G R116, R117). Osilatör kimliği gizli ("pek bilinen birşey değil", T R136, Tansu'ya sorulacak); ölçümde RSI(14) ile (YORUM), fiyat yükselen dip + osilatör alçalan dip. |
+| Fincan-kulp (T/M R114) | Resmi (S2 F tarayıcısı, 06.10) | Önceki gerekçe yanlıştı: hedef tabanı kırılma çizgisidir (sol ağız), 300,75 + (300,75 − 212,20) = 389,30 birebir tutar (`kural-yok-inceleme.md` 22–23). S2 tek hipotez olduğu için m artmaz. |
 | Kanal alt bandı, düşen direnç kırılımı + retest (T R004, R085, G R075, R087, T R194, M R195) | Ölçüm (S2'de kanal ve kırılım teyidi kolu) | Tansu bunları formasyonun bağlamı olarak kullanıyor (R085); ayrı tarayıcı yerine teyit kolu. |
 | X–B trend çizgisi kırılımı (T R013, G R008) | Ölçüm (H tarayıcısında ikinci giriş) | Tansu "trade yapmanın bir yolu da" diyor; yön kısa tarafta açığa satış. |
 | Hacim teyidi: geniş gövde/hacim anomalisi (T R238), OBV (G-dış R196), "Hacimli kırılım" (M R124) | Ölçüm (teyit kolu) | Eşik yok; açılış yok (gövde). |
 | Fiili dolaşım < %30 (T R083, R035, R036) | Ölçüm (S1, S2 kesimi) | Veri var; Tansu eşik dışında kural vermedi. |
 | Mevsimsellik ≥ %70 ay (M R183) | Ölçüm (rejim) | Yazar M; Tansu "Biraz düşünelim". |
-| RSI 30 (M R233), Williams %R 30 dk (M R170), APO (T R156), A/D–EMA3 (M/T R138, T R139), HalfTrend (T R148), ML lojistik (T R234) | Dışarıda (ilk dalga) | Tansu'nun ana sistemi değil ("İndikatör cart curt hikaye", T R145); R139'da operatör eksik; R170 gün içi; R234 "henüz yazdığım". |
+| A/D–EMA3 (M/T R138, T R139): AD > Ref(EMA(AD,3),1) ise pozisyon, değilse nakit; APO = EMA10 − EMA40 ortalamaya dönüş (T R156, görselden "Fast10DayEMA", "Slow40DayEMA") | Ölçüm (06.10) | Kural görsel ve öbür kayıttan tamamlandı (`kural-yok-inceleme.md`): giriş operatörü R138 görselinden, OPT1 = 3 (T R139); çıkış operatörü yazılı değil (tersi, YORUM). Tansu'nun ISCTR sonucu: %19,1 / B&H %10,8 (G R138). APO eşiği Tansu'da yok (±10 dış kaynak, YORUM). Tansu'nun ana sistemi sayılmaz ("can sıkıntısından yazdım", R156), bu yüzden resmi değil. |
+| RSI 30 (M R233), Williams %R 30 dk (M R170), HalfTrend (T R148), ML lojistik (T R234) | Dışarıda (ilk dalga) | Tansu'nun ana sistemi değil ("İndikatör cart curt hikaye", T R145); R170 gün içi; R148 eşik yok; R234 "henüz yazdığım". |
 | Elliott dalga 4 (T R205), 5+3 ve Fibonacci günleri (G-dış R207) | Ölçüm (E tarayıcısında dalga 4 kolu) | R205 kuralı tam; R207 dış kaynak. |
 | Çoklu aralık Fibonacci kümeleri (G-dış R217), confluence ilkesi (T R040, G-dış R208) | Ölçüm (bölge kalitesi) | Bağımsızlık ölçüsü yok; aynı fiyat serisinden türer. |
 | Medyan temelli çalışma (T R001), medyan kanal (T R244) | Ölçüm (S2 bölge alternatifi) | Pencere ve kural yok. |
