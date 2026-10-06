@@ -470,6 +470,21 @@ detaylarını verip stratejimi anlatamam" der, görselde tolerans yok (EMA 30/50
 eşiği "istediğim filtreyi yapabileceğim bir excel" ile kullanıcıya bırakır; R234'te girdi hacim ve RSI, hedef değişken
 yok; BOM yalnız R263'te geçer, tanımsız; R246 ve R249'da çıkış/hedef/stop yazılı değil. Sorular açık kalır.
 
+07.10 X taraması (`api.fxtwitter.com` arama, `from:The_Tansu_`; metinler `ham-yapistirmalar-3.md` Ek X1–X7):
+- 5 (R136 osilatör): adı yine yok. Kısmi cevap: "günlük bakıyorum genelde 2 seneye kadar geriye bakıyorum" (X5);
+  "Genellikle 10 ile 30 bar arası mesafeler en sağlıklı sinyali verir. 70+ bar sonra gelen bir dönüş, artık bir
+  "uyumsuzluk" trade'inden ziyade ... yeni bir trendin başlangıcı" (X4). TMPOL görseli R116 ile aynı, başlık kırpık.
+- 6 (R137 eğim eşiği): kısmi. "Eğer eğim negatiften pozitife dönüyorsa, momentum yukarı yönlü ivme kazanmaya başlamış
+  demektir." (X6): eşik işaret değişimidir (0); YSA çıktısının eşiği yine yok.
+- 8 (BOM): kısmi. "noktanin gerçekten swing lowpivot olduğundan emin olmak için X bar kadar öteleyerek kodladım" (X1):
+  BOM bir swing dip pivotudur, sağında X bar ister. Görselde BOM, talep bölgesi başındaki "D-HL" ve bir swing dipte;
+  IDGYO'da Elliott C dibinden sonra "BOM sinyalim de teyit vermişti" (X3). Tam kural ve "şartlar" yine yok.
+- 9 (R246): kısmi. 2025 yatay kanal taraması: "kanalın alt bandına yaklaşıldığında hisse almak, üst banda
+  yaklaşıldığında ise satmaktır"; hacimli kırılımda kırılım yönü; "mutlaka stop seviyeleri belirlemek ve hacimle teyit
+  almaktır" (X7). Çıkış = üst bant. Yataylık ölçüsü yine yok.
+- 1, 2, 3, 4, 7, 10: X'te yeni bilgi bulunamadı (arama: xxxx, pre signal, sıkışma, lojistik, temel model, three drives,
+  conversation_id). Not: arama dizini konuşma yanıtlarının yalnız bir kısmını döndürür; bulunamadı "yok" demek değildir.
+
 ## H5 için en önemli 10 yorum kararı
 
 1. Fincan-kulp tespiti (R114): dip, sol ağız ve sağ ağız nasıl seçilir; kulp en fazla kaç % geri çekilir. Tansu'nun GUBRF örneğine uyan: sol ağız = dipten önceki en yüksek pivot (300,75); kulp tabanı görselde %61,8 ile %78,6 arasında.

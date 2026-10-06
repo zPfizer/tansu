@@ -469,3 +469,74 @@ Görseller: yok.
 
 Görseller:
 - G1: https://pbs.twimg.com/media/HQ4hgE1WoAEcNtb.jpg?name=orig · SHA-256 `544f3a0f11aecff0d8fc848808571baa75c823a855a40bfbc2191c2b48b48460` · `assets/kaynak-bom-iki-tavan-2093647837162553475/01-bom-sinyal.jpg`
+
+## Ek: Tansu'ya sorulacak sorular için X'te bulunan gönderiler (07.10.2026 çekildi)
+
+Bu gönderiler Levent'in yapıştırdığı R kayıtları değildir; `kural-yok-inceleme.md` H1 sorularının cevabını aramak için
+`api.fxtwitter.com/2/search?q=from:The_Tansu_ <kelime>` ile bulundu, metin `api.fxtwitter.com` `text` alanından birebir.
+
+### X1 · 2026-08-28 22:28 UTC · id 2093465820932235288 (BOM; görsel 1)
+
+> BOM sinyali prensipte güzel iş yapıyor. backtest modülünde noktanin gerçekten swing lowpivot olduğundan emin olmak için X bar kadar öteleyerek kodladım. Hafta sonu buna detaylı bakacağım, güzel işler çıkarsa paylaşırım.
+
+Görsel: https://pbs.twimg.com/media/HQ15kR4WIAATE29.png?name=orig — "BOM" etiketi iki yerde: mavi talep bölgesinin
+başında "D-HL" etiketinin altında ve Ağustos başında bir swing dipte (kırmızı okla gösterilmiş); ardından yükseliş.
+Lejantta "HVN (Yüksek Hacim Düğümü)" ve "Gaussian Fit" okunuyor.
+
+### X2 · 2026-08-29 15:36 UTC · id 2093724529172365619 (BOM; görsel 1)
+
+> #IDGYO bence buna bakmak lazım 
+> hazır BOM da gelmiş
+
+### X3 · 2026-08-30 10:24 UTC · id 2094008240824635656 (BOM; görsel 1)
+
+> Yeni dipler gelmedi bana kalırsa C teyit oldu zaten BOM sinyalim de teyit vermişti.
+> Dikkatle izleyelim bu hafta
+> #IDGYO
+
+Görsel: https://pbs.twimg.com/media/HQ9pQSgXgAA9HdY.png?name=orig — "IDGYO | ELLIOTT 0-1-2-3-4-5-A-B-C", "C Tarihi:
+21.08.2026", "C/0-5: %110.4"; C dibinden sonraki mumlar kırmızı kutuda.
+
+### X4 · 2026-04-21 18:52 UTC · id 2046663429478330488 (uyumsuzluk mesafesi; @190735zi'ye yanıt)
+
+Soru (190735zi): "@The_Tansu_ Abi peki sorayim. Ben de uyumsuzluklari cok seviyorum kullanmayi ama şunu sormak istiyorum mesela uyumsuzluk şu isaretledigim alan icinde cok uzun zamanda beklenir mi ? Taa 5 gun 70 mum oncesindeki dibe gore aranir mi yoksa grafik artik degisti mi deriz"
+
+> Uyumsuzluğun asıl gücü, birbirine yakın "komşu" dipler veya tepeler arasındaki momentum farkından gelir. Mesafe uzadıkça piyasanın hafızası" zayıflar araya yeni haberler, yeni oyuncular ve yeni bir fiyat döngüsü girer.
+> Zaten spread ve sigmalar bunu gösterecektir. Bu konuyu az önce anlattım. Genellikle 10 ile 30 bar arası mesafeler en sağlıklı sinyali verir. 70+ bar sonra gelen bir dönüş, artık bir "uyumsuzluk" trade’inden ziyade, tamamen yeni bir trendin başlangıcı veya genel bir yapı değişimidir. Yani grafik artık başka bir hikaye anlatmaya başlamıştır diyebiliriz.
+
+### X5 · 2026-04-13 20:46 UTC · id 2043792925209817159 (uyumsuzluk zaman dilimi; @Pinescriptt'e yanıt, R136 konuşması)
+
+Soru (Pinescriptt): "@The_Tansu_ Uyumsuzluk ararken hangi zaman diliminde ve max kaç bar geriye dönük kontrol sağlıyorsunuz?"
+
+> @Pinescriptt günlük bakıyorum genelde 2 seneye kadar geriye bakıyorum göz ile de graifkleri inceliyorum
+
+### X6 · 2026-04-26 09:45 UTC · id 2048337565493645759 (eğim; görsel yok)
+
+> Bana sistem ile ilgili gelen sorulara verdiğim cevaplar hep aynı
+> 
+> Arkadaşlar ortalama kullanıyor iseniz eğimlere dikkt edeceksiniz. Momentum trader iseniz sinyal eğiminize dikkat edeceksiniz
+> 
+> Momentum Değerden Önce Döner
+> 
+> Finansal piyasalarda çoğu yatırımcı Golden Cross gibi sinyalleri beklerken aslında hareketin çoktan başladığını ve maliyetin yükseldiğini fark etmez. Teknik analizin en temel ama en güçlü kurallarından biri şudur: Momentum (Hız), değerden (Fiyat veya Gösterge) önce döner.
+> 
+> Neden Eğim?
+> Bir hareketli ortalamanın kesişmesini beklemek, iki nesnenin çarpışmasını beklemek gibidir. Oysa bu nesnelerin birbirine doğru yöneldiğini anlamak için eğimlerine bakmak yeterlidir.
+> 
+> Matematiksel bir perspektifle; bir ortalamanın eğimi onun birinci türevidir. Eğer eğim negatiften pozitife dönüyorsa, momentum yukarı yönlü ivme kazanmaya başlamış demektir. Kesişim bir onay  iken, eğimin yön değiştirmesi bir erken uyarı sinyalidir.
+> 
+> Eğim Takibinin Avantajları
+> Erken Teşhis: Fiyat dip çalışmasını bitirip yukarı döndüğünde, önce kısa vadeli ortalamanın eğimi pozitife döner. Bu, trendin başladığına dair ilk somut işarettir.
+> 
+> Maliyet Avantajı: Kesişim gerçekleştiğinde fiyat genellikle %5-%10 primlenmiş olur. Eğimleri takip ederek, "kesişim taramalarına" düşmeden önce trene binmiş olursunuz.
+> 
+> Trend Doğrulaması: Eğer uzun vadeli ortalamanın da eğimi pozitife dönmüşse, bu artık geçici bir tepki değil, orta vadeli bir ivme işaretidir.
+
+### X7 · 2025-07-07 05:03 UTC · id 1942087033247166573 (yatay kanal taraması; görsel 1)
+
+> 5 aydır grupta bizlerle olan bir arkadaşım için hazırladığım kodun bir bölümü yatay tarama içeriyor. Bu taramayı daha da derinleştirip bir ralli taraması haline getireceğim. Şu anda haftalık tarama kodu bitti.
+> Arkadaşımın eklememi istediği bazı filtreler var onlar ilave edilecek.
+> 
+> Yatay kanal taraması ile yapılabilecek stratejiler aslında oldukça pratiktir ve özellikle yönsüz, trendin olmadığı piyasalar için idealdir. Öncelikle fiyatın uzun süre belirli bir aralıkta gidip gelmesi, yatırımcıya hem alım hem satım fırsatları verir. En çok uygulanan yöntemlerden biri kanalın alt bandına yaklaşıldığında hisse almak, üst banda yaklaşıldığında ise satmaktır. Böylece yatırımcı kanalın sınırlarını destek ve direnç olarak kullanır. Eğer fiyat bu sınırları hacimli bir şekilde kırarsa, yatırımcılar genellikle kırılan yönde pozisyon alır çünkü yatay kanalın ardından gelen hareketler genelde daha güçlü olur. Bunun dışında kırılım gerçekleşir gibi yapıp tekrar kanal içine dönerse, buna da fake breakout denir ve bu durumda tersi yönde işlem açmak sıkça tercih edilir.
+> 
+> Kanal içinde fiyat hareketleri genellikle sıkıcı olsa da, böyle dönemlerde ortalama dönüşü stratejileri de uygulanabilir. Yani fiyat kanalın dışına sarktığında tekrar ortalamaya döneceğini varsayarak pozisyon açılır. Özellikle işlem hacmi ve takas analizleri ile kanalın hangi tarafının kırılmaya daha yakın olduğu da öngörülebilir. Kısacası, yatay kanal tespit edilen hisselerde hem kısa vadeli al-sat işlemleri hem de olası güçlü kırılım hareketleri için uygun zemin oluşmuş olur. En önemli konu, işlemleri yaparken mutlaka stop seviyeleri belirlemek ve hacimle teyit almaktır. Yatay kanal dönemlerinde sabırlı olan yatırımcılar için fırsatlar genellikle kanalın sona erdiği yerde çıkar.
