@@ -6,7 +6,7 @@ ve kâğıt üstü dönem saati işler. Levent sonucu tek sayfada okur.
 
 **Blocked by:** 13, 14
 
-**Status:** done (gece koşusu kutusu hariç)
+**Status:** done
 
 - [x] Ön şartlar sağlanır:
   - sadakat sonuçları `docs/sadakat.md`'de
@@ -16,8 +16,10 @@ ve kâğıt üstü dönem saati işler. Levent sonucu tek sayfada okur.
 - [x] `sinama --son` koşar. Rapor ve işlem CSV'si üretilir. Deneme günlüğünde `resmi:true` satırları oluşur.
 - [x] Rapor sonucu olduğu gibi gösterir. "Hiçbir aile geçmedi" de geçerli bir sonuçtur. Sonuç Levent'e
       teknik olmayan dille bildirilir.
-- [ ] Görev Zamanlayıcı etkinleştirilir ve ilk gece kendiliğinden çalıştığı doğrulanır.
-  - Etkinleştirildi (aşağıda). İlk otomatik koşu: 06.10 19:30 sonrası doğrulanacak.
+- [x] Görev Zamanlayıcı etkinleştirilir ve ilk gece kendiliğinden çalıştığı doğrulanır.
+  - 06.10 19:30 koşusu geçti: `Get-ScheduledTaskInfo` LastRunTime 06.10.2026 19:30, LastTaskResult 0;
+    `rapor/durum.txt` 19:59 "TAMAM, anlık görüntü 20261006-1930, son çubuk 2026-10-06, 100 sembol, bugün kart yok";
+    `kayit/kartlar.jsonl`'e `{"anlik": "20261006-1930", "kartlar": [], "tarih": "2026-10-06"}` satırı eklendi.
 
 ## Comments
 
@@ -51,7 +53,8 @@ günlük kart ve kâğıt dönem saati başlamaz.
 
 **Beklenmeyen:** rapor "Veri durumu: SORUNLU" der (kaynak günü hataları 2010-11-15, 2010-12-21, 2011-08-29, 2016-01-26,
 2026-05-21; olay denetimi farkı üye oranı %1,94, eşik %2,00 sınırda). Karantina %0,16. Kapı koşuyu durdurmadı. İşlem sayısı 91
-(örneklem şartı 100) ölçüt 5'i Ölçülemedi bıraktı.
+(örneklem şartı 100) ölçüt 5'i Ölçülemedi bıraktı. Düzeltme 35109f9 (06.10): kaynak günü hataları eksik gün
+olarak işlenir ve yalnız tarihle listelenir; veri durumunu SORUNLU yapmaz. Yukarıdaki HTML rapor düzeltmeden önce yazıldı.
 
 **Görev Zamanlayıcı:** `TansuGunluk` ve `TansuAylik` etkinleştirildi (`Get-ScheduledTask`: ikisi **Ready**). Sonraki koşular:
 TansuGunluk 06.10.2026 19:30, TansuAylik 31.10.2026 20:45. İlk otomatik koşu: 06.10 19:30 sonrası doğrulanacak.
