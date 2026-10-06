@@ -41,7 +41,7 @@ Tansu'nun "sistemim", "kodum", "taramalarımız" dediği dört hat var (dördün
    böyle yazılır." (T R080); "gözü kapalı ABCD'ye nasıl güveneceksin kanalı okumadan" (T R085); "İşte bu yapıların
    peşindeyiz." (T R081); "confluence alanları o kadar kıymetli ki ... taratmak lazım" (T R055).
 3. **Çift (istatistiksel arbitraj).** "Arbitraj her zaman en en sevdiğim 2 sistemden birisi" (T R102). Eşbütünleşme
-   "şarttır, şarttır. şarttır." (T R228); rolling eşbütünleşme (T R034); Z ±2 giriş, 0,5 çıkış (M/T R099, R101).
+   "şarttır, şarttır. şarttır." (T R228); rolling eşbütünleşme (T R034); Z ±2 giriş (M/T R099, R101); Tansu'nun aracında çıkış ters sinyalde öbür hisseye geçiştir (G R251).
 4. **Risk ve çıkış.** Boyut volatiliteyle küçülür (T R211); %1 risk örneği (T R212 "Diyelim ki"), 2 ATR acil stop ve
    SMA250 gün sonu çıkışı (G-dış R212 infografik; T R212 SMA250'yi "giriş bileşenlerinizden birisi" diye anar; T/M R184
    2 ATR). Çıkış zinciri: Giriş + 1,5 ATR'de iz süren mod, sonra önceki gün dibi altı kapanışta %50, kalan için 2 ATR
@@ -228,9 +228,12 @@ raporda "ilk deneme geçmedi" yazılır:
 - Kapı: rolling eşbütünleşme. Çift yalnız son 252 günde ve son 126 günde p < 0,05 iken işlem görür (T R034 "rolling
   cointegration ile zamanla bozulmayı önlüyor", T R228 "şarttır"; pencereler YORUM).
 - Giriş Z ±2 ve ΔZ dönüşü (mevcut kuraldaki gibi; Tansu'nun "momentum dönüş teyidi" T R098 ve G R095 "Z-Skoru ve
-  Momentum Dönüşü Onaylı İşlemler" ile aynı şey olduğu YORUM). Çıkış: Z 0,5'e dönünce (M/T R101 "normale (0.5
-  seviyelerine)"); rolling kapı bozulursa çıkış (T R100 "Görünmez bağ kopmuş olabilir"; M/T R101 "Yanıldığını anladığı
-  an zararı keser").
+  Momentum Dönüşü Onaylı İşlemler" ile aynı şey olduğu YORUM). Z ≤ −2'den dönüşte Y (ucuz bacak) alınır, Z ≥ +2'den
+  dönüşte X alınır. Çıkış (06.10 düzeltmesi): ters sinyalde öbür hisseye geçiş; tutulan hisse ters sinyale kadar
+  tutulur (G R251 grafiği: altı AL etiketi = "Gecis Sayisi 6"; portföy yalnız ilk sinyalden önce nakitte). Rolling kapı
+  bozulursa nakde çıkış (T R100 "Görünmez bağ kopmuş olabilir"; M/T R101 "Yanıldığını anladığı an zararı keser").
+  Z 0,5'e dönünce nakde çıkış (M/T R101 "normale (0.5 seviyelerine)") ölçüm kolu olur: Tansu'nun aracı böyle çıkmıyor,
+  metin M/T karışık.
 - Long-only: Tansu'nun uzun-kısa işlemi (M/T R099 "AGROT SAT, GARAN AL") burada ucuz bacağı tutan rotasyondur; bu
   arbitraj değil, göreli değer işlemidir. İlk denemenin geçmemesinin nedeni bu olabilir; sınanamaz (açığa satış yok).
   Tansu'nun kendi aracı da long-only rotasyon yapar (G R251 "RELATIVE VALUE ROTATION | VAKBN <-> GARAN": "Aktif Hisse
@@ -238,12 +241,12 @@ raporda "ilk deneme geçmedi" yazılır:
   Son Z −3,108, önceki Z −3,404, "Cointegration p 0.048"). Bu, "ucuz bacağı tutan rotasyon" yorumunu Tansu'nun araç
   çıktısıyla destekler; ΔZ dönüşü giriş şartı (Z −3,40 → −3,11 ve "Z donusu +0.30" etiketi) bu çıktıyla uyumludur. Raporun kendi sayıları
   (toplam +%52,86, 50/50 al-tut +%20,88, en büyük düşüş −%27,44, 6 geçiş) kaynak iddiasıdır, bağımsız ölçülmedi.
-  Piyasada kalma %72 olduğu için araç zaman zaman nakitte durur; çıkış kuralı rapordan okunmaz (YORUM: mevcut Z 0,5
-  çıkışı kalır). Kointegrasyon testleri: "Johansen veya Engle-Granger" (M R262); burada Engle-Granger.
+  Piyasada kalma %72'nin nakit kısmı ilk sinyalden önceki dönemdir (portföy paneli 2025-06'ya kadar düz); sonra araç
+  hep bir hisse tutar. Kointegrasyon testleri: "Johansen veya Engle-Granger" (M R262); burada Engle-Granger.
 - Boyut: tüm bölme sermayesi (M/T R099 "tüm bakiyesiyle"; TASARIM 5.6 çift bölmesi).
 - Tansu'nun ilkesi "Borsada "yönü" bilmek zorunda değilsiniz" (M/T R101) piyasa yönünden bağımsız (uzun-kısa) işlem
   ister; long-only rotasyon bu ilkeyi taşımaz, yalnız yaklaşır (kilit: açığa satış).
-Ölçüm: taslak 7'nin aynı sektör kuralı (karşılaştırma), z_pencere 120, Z 0 çıkışı.
+Ölçüm: taslak 7'nin aynı sektör kuralı (karşılaştırma), z_pencere 120, Z 0 çıkışı, Z 0,5 çıkışı (M/T R101).
 
 ### 3.4 m ve B
 

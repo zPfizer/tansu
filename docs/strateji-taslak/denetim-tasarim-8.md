@@ -361,3 +361,38 @@ Yöntem: `tasarim-8.md`, `defter-4.md`, `kural-yok-inceleme.md`, `izlenebilirlik
 Yeni sorun: yok. Not: Kelebek geçersizliği "XA 1,618" araç etiketinden ("max risk"); YORUM işaretli, kabul.
 
 Hüküm: KABUL. Kalan tek DÜŞÜK (madde 4) kabulü engellemez.
+
+## Tur 4 (S3 çıkışı, G R251 grafiği)
+
+Okuma anı: 06.10.2026. Açılan: `02-vakbn-garan-rapor-2.jpg` (dört panel) ve `01-vakbn-garan-rapor-1.png` (rapor tablosu). Okunan: `tasarim-8.md` §1 satır 44, §3.3, §5.1; `defter-4.md` R251; `izlenebilirlik.md` R101, R251 satırları, Tablo 1 ve 2. Piksel okumaları yaklaşıktır (±1 hafta).
+
+### Görsel okuması
+
+1. **Etiket sayısı: 6, doğru.** Z panelinde üç GARAN AL (mavi üçgen) ve üç VAKBN AL (yeşil üçgen). Sıra dönüşümlü: GARAN, VAKBN, GARAN, VAKBN, GARAN, VAKBN. Rapor "Gecis Sayisi 6" diyor. Tutuyor. Not: ilk etiket nakitten girişi gösterir; rapor onu da "geçiş" sayıyor.
+2. **Yerler (eksen çentiklerinden tahmin): doğru.** Yaklaşık 30.06.2025, 17.08.2025, 20.08.2025, 20.09.2025, 05.03.2026, 03.08.2026. Defterin "2025-06, 2025-08, 2025-08, 2025-09, 2026-03, 2026-08" yazımı tutuyor. Ağustos 2025'te iki etiket arası yaklaşık 3 gün: Z bir günde −2,6'dan +4'e sıçrıyor (olası veri sıçraması). Araç bu çift geçişi aynen yapıyor.
+3. **Portföy çizgisi düzlüğü: doğru.** Yeşil çizgi 100k'da düz, ilk etikete (yaklaşık 30.06.2025) kadar. Sonra düz kesit yok. Z, sıfırı ve 0,5'i en az 10 kez geçiyor (Temmuz 2025'te yaklaşık 40 gün sıfır çevresinde) ve çizgi hiç yatay kalmıyor. Nakde çıkış yok. Bu, "çıkış = ters sinyalde geçiş" okumasını destekler.
+4. **%72,27 piyasada kalma: tutarlı.** Grafik yaklaşık 30.12.2024–06.09.2026 (≈616 takvim günü); ilk sinyal ≈30.06.2025. Piyasada ≈433 gün = %70. Rapor %72,27. Fark okuma hatası sınırında (iş günü/takvim günü, T+1). Önemli sonuç: rapordaki değer benim tahminimden küçük değil. Yani ilk düz dönem dışında ek nakit dönemi yok. Okuma doğrulandı.
+5. **Aletin etiketi ve rapor tablosu.** Tablo (görsel 1) metindeki sayılarla birebir: 152.862,86; +%52,86; +%20,88; −%27,44; 6; 2.054,78 TL; +%72,27; Son Z −3,108; Önceki Z −3,404. Grafik sonu ≈153k (strateji), ≈120k (50/50). Tutuyor. Düşüş ≈177k → ≈128k = −%27: tutuyor.
+
+### Koordinatörün okumasında düzeltme (ORTA T4-1)
+
+"AL'ler Z ±2 geçilip geri dönüşte" kısmen yanlış. Altı etiketin Z değeri (yaklaşık): +1,85 (GARAN), +1,7 (VAKBN, sıçrama günü), +3,5 (GARAN), −1,9 (VAKBN), +2,6 (GARAN), −1,9 (VAKBN). İki etiket ±2 bandının hâlâ dışında (Z +3,5 ve +2,6; ikisi de tepe sonrası ilk düşüşte). Son gün sinyali de Z −3,1'de, bandın dışında ("Z donusu +0.30"). Yani tetik "banda geri girmek" değil, Z ±2 dışındayken yönün dönmesi (ΔZ). Bandın içindeki dört etiket T+1 açılış gününde çizilir; sinyal günü Z daha dışarıdaydı. Tasarım-8 §3.3 "Z ≤ −2'den dönüşte ... Z ≥ +2'den dönüşte" ifadesi doğru (ΔZ dönüşü). Ama `defter-4.md` R251 yeni maddesindeki "Z +2 üstüne çıkıp geri döndükten sonra; Z −2 altına inip geri döndükten sonra" yanıltıcı. "Geri dönüş" = ΔZ işaret değiştirmesi diye yaz.
+
+### Tasarım ve defter kontrolü
+
+- §3.3 çıkış kuralı (ters sinyalde geçiş; Z 0,5 nakit çıkışı ölçüm kolu; rolling kapı bozulursa nakde çıkış korunmuş) görselle uyumlu ve R101 satırı ölçüme indi. Bu doğru ve YORUM/T ayrımı korunmuş.
+- **DÜŞÜK T4-2.** Aynı yönde tekrar sinyal (son gün: VAKBN zaten tutuluyor, yine "VAKBN AL") ne yapar, yazılı değil. Öneri: aynı hisse zaten tutuluyorsa işlem yok, maliyet yok.
+- **DÜŞÜK T4-3.** §5.1 S3 sadakat hedefi hâlâ yalnız son gün. Artık altı geçiş ayı var. Öneri: altı ay (2025-06, 08, 08, 09; 2026-03, 08) ve yön ek hedef; Z formülü bilinmediği için ±1 ay toleransı YORUM.
+- **DÜŞÜK T4-4.** `defter-4.md` R251 ikinci maddesi hâlâ "giriş/çıkış kuralı ve formül yok" diyor; yeni madde "kural tam" diyor. İkinci maddeyi "formül yok; kural için bkz. sonraki madde" yap.
+- **DÜŞÜK T4-5.** Ağustos 2025 çift geçiş (3 gün) olası veri sıçraması. §3.3'e "araç bu geçişi de yapar; veri sıçraması boş dünya denetiminde ölçülür" notu iyi olur. Zorunlu değil.
+- Etiket "T+1 Open" doğrulandı (panel başlığı "Z-Score ve T+1 Open Islemler"). Tasarım açılış kısıtını AOF vekiliyle çözüyor; doğru.
+
+### Tablo sayıları
+
+`python` ile 752 satır yeniden sayıldı. Tablo 1 tüm hücreler ve toplamlar tutuyor: 175 / 194 / 130 / 53 (+2 BAĞSIZ) / 1 / 81 / 5 / 42 / 69 = 752. "çıkış" rolü 63 → 64, "ölçüm kolu" 193 → 194 doğru (yeni R251 çıkış satırı resmi, R101 0,5 satırı ölçüm). R251 artık 4 satır: resmi 2, bilgi 1, kural 1. Defter-4 R251 maddesi 4 = izlenebilirlik 4. Tablo 2 (175, 194) tutuyor.
+
+- **DÜŞÜK T4-6.** `izlenebilirlik.md` satır 804 ("Sürüm 5.1 tablosuyla fark") hâlâ "73 fikir satırı ... = 751" diyor; satır 802 +1'i anlatıyor. Satır 804'e "+1 (R251 çıkış satırı) = 752" ekle.
+
+### Hüküm: KOŞULLU KABUL
+
+S3 çıkış değişikliği görselle doğrulandı: etiket sayısı, yerleri, düz portföy ve %72,27 tutuyor; kural doğru (ters sinyalde geçiş, nakit yok). Koşul: T4-1'i düzelt (defter-4 R251 ifadesi: "geri dönüş" = ΔZ dönüşü; band içine dönüş değil). T4-2 ile T4-6 küçük, isteğe bağlı.

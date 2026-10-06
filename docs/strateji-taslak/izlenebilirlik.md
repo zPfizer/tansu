@@ -1,6 +1,6 @@
 # İzlenebilirlik tablosu: defter-1..4 fikirleri ve tasarım-8 (sürüm 5.2), iki eksenli
 
-Kaynak: defter-1..4.md (denetim düzeltmeleri işlenmiş hali) ve tasarim-8.md (sürüm 5.2, 06.10.2026). 751 satırın her biri sürüm 5.2'ye göre bağlıdır (R245–R263 tweet metinleri kaynaktan çekildi, `ham-yapistirmalar-3.md`).
+Kaynak: defter-1..4.md (denetim düzeltmeleri işlenmiş hali) ve tasarim-8.md (sürüm 5.2, 06.10.2026). 752 satırın her biri sürüm 5.2'ye göre bağlıdır (R245–R263 tweet metinleri kaynaktan çekildi, `ham-yapistirmalar-3.md`).
 
 ## Neden iki eksen (Levent 06.10 itirazı)
 
@@ -246,7 +246,7 @@ Okuma kuralları:
 | R100 | ölçüm-ilkesi | "Mutlaka backtest etmek lazım" | T+G | TASARIM 2 (Sınamadan inanma); 5.11 deneme günlüğü; 5.12 kabul ölçütü | ilke | ilke: tasarımın kuralı |
 | R101 | tarama-evren | "Eğer bu iki varlık gerçekten birbiriyle eşbütünleşik (cointegrated) ise" | T/M | 3.3 (kapı: rolling eşbütünleşme) | evren-likidite | resmi sınav |
 | R101 | giriş | "Eğer Z-Skoru +2.0 seviyesini yukarı kırarsa ... Aşırı Ucuzlayanı AL (Long)" | T/M | 3.3 (Z ±2 giriş) | giriş | resmi sınav |
-| R101 | hedef-çıkış | "Fark kapanıp Z-Skoru normale (0.5 seviyelerine) döndüğünde, pozisyonları kapatır" | T/M | 3.3 (çıkış Z 0,5, M/T R101) | çıkış | resmi sınav |
+| R101 | hedef-çıkış | "Fark kapanıp Z-Skoru normale (0.5 seviyelerine) döndüğünde, pozisyonları kapatır" | T/M | 3.3 ölçüm (Z 0,5 çıkışı; resmi çıkış G R251 ters sinyalde geçiş, 06.10) | çıkış | ölçüm kolu |
 | R101 | stop-geçersizlik | "Yanıldığını anladığı an zararı keser." | T/M | 3.3 (rolling kapı bozulursa çıkış, M/T R101) | çıkış | resmi sınav |
 | R101 | felsefe | "Borsada "yönü" bilmek zorunda değilsiniz." | T/M | 3.3 (yönsüz işlem; long-only rotasyon yalnız yaklaşır) | ilke | kilit: açığa satış (BIST) |
 | R102 | felsefe | "Arbitraj her zaman en en sevdiğim 2 sistemden birisi İlki volatilite işi İkincisi de arbitraj" | T+G | 1 (hat 3); 3.3; volatilite işi için 8: "Volatilite işi" satırı (parçalı) | evren-likidite | resmi sınav |
@@ -720,6 +720,7 @@ Okuma kuralları:
 | R251 | portföy | "Arbitraj hisselerini bu başlıkta paylaşıyorum." (üst tweet) | T | 8: Ahengin uyumu / arbitraj başlığı / RT satırı | araç-öğrenme | bilgi: işlem kuralı değil |
 | R251 | ölçüm-ilkesi | "RELATIVE VALUE ROTATION \| VAKBN <-> GARAN ... YENI AL SINYALI ... Z donusu +0.30 ... Cointegration p 0.048" (rapor) | G | 3.3 (long-only rotasyon ve ΔZ kanıtı, G R251); 5.1 S3 sadakat | portföy | resmi sınav |
 | R251 | rejim | normalize fiyat, Z, rolling korelasyon/beta panelleri, "Pair Quality", "Half-Life" (görsel) | G | 3.3 (yalnız Z ve kointegrasyon; Pair Quality ve Half-Life formülü yok) | ölçüm-yöntemi | kilit: Tansu kural/formül vermedi |
+| R251 | çift/çıkış | altı AL etiketi = "Gecis Sayisi 6"; portföy ilk sinyalden sonra hep bir hisse tutar; Z 0/0,5'te nakit yok (görsel) | G | 3.3 (resmi çıkış: ters sinyalde öbür hisseye geçiş, G R251) | çıkış | resmi sınav |
 | R252 | ölçüm-ilkesi | "Corwin-Schultz ... sadece günlük High ve Low fiyatlarını kullanarak ... spread'ini tahmin etmeye çalışır." | T+G | 4.5 (Corwin–Schultz, T R252, 21 gün G R252) | ölçüm-yöntemi | ölçüm kolu |
 | R252 | ölçüm-ilkesi | "Spread düşük, Sigma düşük ... Spread yüksek, Sigma yüksek: ... En riskli yapı." | T | 4.5 (dört sınıf kesimi) | rejim | ölçüm kolu |
 | R252 | felsefe | "işlem kalitesi ve likidite risk radarı olarak ... tek başına al-sat göstergesi olarak değil." | T | 4.5 (Corwin–Schultz yalnız ölçüm katmanında) | ilke | ilke: tasarımın kuralı |
@@ -787,7 +788,7 @@ Sütun başlıkları B değerlerinin kısaltmasıdır: kilit: bilanço = kilit: 
 | formasyon | 39 | 15 | 0 | 0 | 0 | 9 | 1 | 0 | 0 | 0 | 64 |
 | teyit | 9 | 39 | 4 | 13 | 1 | 17 | 0 | 0 | 1 | 0 | 84 |
 | giriş | 12 | 9 | 0 | 6 | 0 | 9 | 2 | 0 | 1 | 0 | 39 |
-| çıkış | 36 | 11 | 1 | 8 | 0 | 6 | 0 | 0 | 1 | 0 | 63 |
+| çıkış | 36 | 12 | 1 | 8 | 0 | 6 | 0 | 0 | 1 | 0 | 64 |
 | boyut-risk | 9 | 5 | 2 | 0 | 0 | 6 | 0 | 0 | 2 | 0 | 24 |
 | rejim | 7 | 28 | 1 | 12 | 0 | 15 | 0 | 0 | 2 | 0 | 65 |
 | değerleme-temel | 0 | 0 | 105 | 0 | 0 | 2 | 0 | 0 | 0 | 0 | 107 |
@@ -796,9 +797,9 @@ Sütun başlıkları B değerlerinin kısaltmasıdır: kilit: bilanço = kilit: 
 | ilke | 4 | 2 | 0 | 0 | 0 | 0 | 1 | 42 | 0 | 0 | 49 |
 | araç-öğrenme | 0 | 0 | 1 | 0 | 0 | 2 | 0 | 0 | 49 | 0 | 52 |
 | ürün-hedefi | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 7 | 0 | 7 |
-| **toplam** | **175** | **193** | **130** | **53** | **1** | **81** | **5** | **42** | **69** | **2** | **751** |
+| **toplam** | **175** | **194** | **130** | **53** | **1** | **81** | **5** | **42** | **69** | **2** | **752** |
 
-Doğrulama: 175 + 193 + 130 + 53 + 1 + 81 + 5 + 42 + 69 + 2 = 751. Sayılar bu dosyadaki satırlardan hesaplandı (06.10, sürüm 5.2).
+Doğrulama: 175 + 194 + 130 + 53 + 1 + 81 + 5 + 42 + 69 + 2 = 752. 06.10 gece: G R251 grafiğinden S3 çıkış satırı eklendi (resmi), R101 Z 0,5 çıkışı ölçüme indi. Sayılar bu dosyadaki satırlardan hesaplandı (06.10, sürüm 5.2).
 
 Sürüm 5.1 tablosuyla fark: R245–R263'ün 19 "kanıt yok" satırı, tweet metinleri kaynaktan çekilince 73 fikir satırı oldu (697 − 19 + 73 = 751); "kilit: kanıt" sütunu kalktı. Yeni satırların durumu: resmi 18, ölçüm 20, kural vermedi 7, açığa satış 2, ilke 11, bilgi 15. Eski tablo dosyadaki satırlarla üç hücrede uyuşmuyordu (ölçüm kolu 172 yazılıydı, satır 173; ilke 33 yazılıydı, satır 31; açığa satış 2 yazılıydı, satır 3); yeni tablo satırlardan sayıldı.
 
@@ -809,7 +810,7 @@ Eski sürümle fark: eski "dışarıda" 106, "kapsam dışı" 36, "strateji değ
 | durum ve kilit | satır | kilidi açan iş |
 |---|---|---|
 | resmi sınav | 175 | Kilit yok. Tasarımın resmi koluna (S1, S2, S3, 6 rapor, 5.1 sadakat) girdi; sınav sonucu bekleniyor. |
-| ölçüm kolu | 193 | Kilit yok. Ölçüm kolunda sınanır; kol hiç resmi olmaz (tasarim-8 5.2). Resmi yapmak için ayrı karar ve Holm m artışı gerekir. |
+| ölçüm kolu | 194 | Kilit yok. Ölçüm kolunda sınanır; kol hiç resmi olmaz (tasarim-8 5.2). Resmi yapmak için ayrı karar ve Holm m artışı gerekir. |
 | kilit: bilanço verisi | 130 | İş Yatırım mali tablo kaynağı (tasarim-8 §8 ilk satır, §9 madde 4). Kaynak henüz doğrulanmadı (denetim D3). Veri gelince ilk sınanacak filtreler: R059, R060. |
 | kilit: VIX-opsiyon-gün içi-emir defteri verisi | 53 | Bu veri tasarım-8 §2 tablosunda "Yok" sütunundadır (VIX, opsiyon IV, gün içi veri, emir defteri, kümülatif delta). Açan iş: bu veriyi sağlayacak bir kaynak bulmak. Kaynak şimdilik yok. |
 | kilit: açılış fiyatı | 1 | Açılış fiyatı içeren veri kaynağı (tasarim-8 §2: açılış yok). O zamana kadar AOF vekili kullanılır; mum gövdesi tam kurulamaz. |
