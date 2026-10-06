@@ -178,6 +178,19 @@ def test_rapor_baslik_uyari_yasakli_sozcuk_ve_csv_sutunlari(tmp_path):
     assert csv["getiri"].iloc[0] == pytest.approx(0.0035756, abs=1e-6)
 
 
+def test_kaynak_gunu_hatasi_raporu_sorunlu_yapmaz_gunu_tarihle_yazar(tmp_path):
+    # 20 sembol; 29.01'de 10'unun satırı bozuk (düşük 101 > AOF 100) = yarı: kaynak günü (TASARIM 5.13). Gün eksik gün
+    # olarak işlenir, karantina oranı 0; "veri sorunlu" yalnız oran eşiklerinden gelir. Gün raporda tarihle yazılır.
+    gunler = pd.bdate_range("2026-01-26", periods=8)
+    seriler = {f"S{i}": [mum(g, 100.0, 102.0 if (j == 3 and i < 10) else 100.0, 101.0 if (j == 3 and i < 10) else 100.0)
+                         for j, g in enumerate(gunler)] for i in range(20)}
+    _, s = kos(tmp_path, seriler)
+    html = s["rapor"].read_text(encoding="utf-8")
+    assert s["sim"]["bilgi"]["sorunlar"] == ["kaynak günü hatası: 2026-01-29"]
+    assert "<td>Veri durumu</td><td>TAMAM</td>" in html
+    assert "VERİ SORUNLU" not in html and "kaynak günü hatası: 2026-01-29" in html
+
+
 def test_uc_masraf_duzeyi_kosulur_ve_yillik_tablo_yazilir(tmp_path):
     # %0,1: 1.000.000 - 99.944*1,001 + 100.905*0,999 = 1.000.000 - 100.043,944 + 100.804,095 = 1.000.760,151.
     # %0,5: 1.000.000 - 99.944*1,005 + 100.905*0,995 = 1.000.000 - 100.443,72 + 100.400,475 = 999.956,755.

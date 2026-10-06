@@ -119,11 +119,21 @@ def _cift_uyarilari(cift) -> list:
             else "Her yıl en az bir çift seçildi."]
 
 
+def _kapi_sorunlari(b) -> tuple:
+    """(veri kapısı sorunları, kaynak günü satırları). Kaynak günü eksik gün olarak işlenir; koşuyu sorunlu yapmaz,
+    tarihle yazılır (TASARIM 5.13)."""
+    kaynak = [x for x in b["sorunlar"] if x.startswith("kaynak günü hatası")]
+    return [x for x in b["sorunlar"] if x not in kaynak], kaynak
+
+
 def _uyarilar(sim, bilgi) -> list:
     b, m = sim["bilgi"], sim["masraf"][0.003]
     n = len(m["islemler"])
     pay = lambda k: yuzde(m["bagli"][k] / n) if n else yuzde(0)  # noqa: E731
-    sorun = ("VERİ SORUNLU: " + "; ".join(b["sorunlar"])) if b["sorunlar"] else "Veri kapıları (evren üyesi hisse-günler) temiz."
+    kapi, kaynak = _kapi_sorunlari(b)
+    sorun = ("VERİ SORUNLU: " + "; ".join(kapi)) if kapi else "Veri kapıları (evren üyesi hisse-günler) temiz."
+    if kaynak:
+        sorun += " Eksik gün olarak işlenen " + "; ".join(kaynak) + "."
     return [
         f"{sorun} Karantina oranı {yuzde(b['oran_uye'][0])} (eşik %1,00), olay denetimi farkı oranı "
         f"{yuzde(b['oran_uye'][1])} (eşik %2,00); {tl(b['uye_gun'])} üye hisse-günü, {b['uye_sembol']} sembol.",
@@ -149,7 +159,7 @@ def yaz(sim, bilgi, cift=None, dizin=None, kabul=None) -> tuple:
     dizin = Path(dizin or RAPOR_DIZINI)
     dizin.mkdir(parents=True, exist_ok=True)
     m3, b = sim["masraf"][0.003], sim["bilgi"]
-    durum = "SORUNLU" if b["sorunlar"] else "TAMAM"
+    durum = "SORUNLU" if _kapi_sorunlari(b)[0] else "TAMAM"
     sonuc = [(yuzde(m), tl(s["ozkaynak"].iloc[-1]), yuzde(s["ozkaynak"].iloc[-1] / 1e6 - 1),
               yuzde(s["k2"].iloc[-1] / 1e6 - 1), len(s["islemler"]), s["reddedilen"])
              for m, s in sim["masraf"].items()]
