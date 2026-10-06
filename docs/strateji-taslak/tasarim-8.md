@@ -114,7 +114,7 @@ testidir (T R120: "Ben de bunu BIST'te test etmek istedim"); kuralı tam olan te
      - Gartley (araç tablosu G/M R222): B = XA 0,618, C = AB 0,382–0,886, D = XA 0,786, tolerans %3–5. Geçersizlik X
        (G R012 "Stop (X)", G R014 "Bk Stop (X)"); R222 görselindeki X − 2 ATR ölçüm kolu.
      H ölçüm kolları: C'den alım, D'de satış (T R018 "C noktasından alım yapılsa idi D satış karları"; sürüm 4'ün resmi
-     kolu); X–B trend çizgisi kırılımı girişi (T R013, G R008); Lindsay Trident hedefi D = (B·C)/A ve B kırılımı teyidi
+     kolu; giriş C'nin pivot olarak doğrulandığı günün ertesi AOF'u); X–B trend çizgisi kırılımı girişi (T R013, G R008); Lindsay Trident hedefi D = (B·C)/A ve B kırılımı teyidi
      (T R090, alış yönlü paragraf; satış yönlü kural açığa satış olduğu için yok); hedef merdiveni TP1–TP4 = D +
      {0,382; 0,618; C; 1,272}·(C−D) (M/G R203) ve TP1 1:1 R/R, TP2 0,618 CD (G R014); Kuğu harmonikleri (T R075, R076;
      oran verilmedi, standart tanım YORUM); harmonikte EMA sıkışması var/yok kesimi (T R005 "hangi noktada momentum
@@ -138,7 +138,8 @@ testidir (T R120: "Ben de bunu BIST'te test etmek istedim"); kuralı tam olan te
      sıkışması (G R127 KRDMD, G R125 ICBCT EMA30/50/100/200); kırılım sonrası boğa dizilimi EMA5 > EMA8 > EMA13 teyidi
      (M R124, T R214, G R167, M R128); retest girişi (M R198, T R194); sıkışma süresi ile kırılım şiddeti raporu (T R082
      "konoslidasyon ne kadar uzarsa kırılım o denli şiddetli"; T R077 rehavet; T R086 breakout).
-4. **Ödül/risk kapısı:** risk = giriş − geçersizlik; ödül/risk < 1,5 ise girilmez (M R222; T R234). Ödül:
+4. **Ödül/risk kapısı:** risk = giriş − geçersizlik; ödül/risk < 1,5 ise girilmez (M R222; aynı eşiği T R234 kendi
+   lojistik modeli için "Kritik Kural" diye yazar). Ödül:
    - H: ana hedef TP2 (Gartley D + 0,618·(A−D), G/M R222 "Kalan Pozisyonu Kapat"; AB=CD D + 0,618·(C−D), M/G R203
      "Ana Hedef"). YORUM: R222 ödülü TP1 diye yazar. Ama TP1 = D + 0,382·(A−D) ve stop X ile her Gartley'de oran
      0,382·0,786/0,214 ≈ 1,40'tır; harfiyen okumada hiçbir Gartley 1,5'i geçmez. Harfiyen hal ölçüm kolu.
@@ -244,7 +245,8 @@ girişten en az 1 ATR yukarıda (YORUM). 20 bar penceresi (G R013) ölçümde ay
   taban kilidinde dolmaz; 10 işlem gününde dolmazsa iptal (10 gün YORUM). (Sürüm 4'te ölçümdeydi; şimdi resmi
   koldadır, hash içi.)
 - **Boyut:** %1 risk, adet = risk / (giriş − geçersizlik); %10 tavan, %2 likidite, en çok 10 pozisyon (T R211, R212;
-  %1 örnektir, YORUM). Geçersizlik mesafesi 2 ATR'den büyükse acil stop 2 ATR'dir ve boyut ona göre hesaplanır.
+  %1 örnektir, YORUM). Geçersizlik mesafesi 2 ATR'den büyükse acil stop 2 ATR'dir ve boyut ona göre hesaplanır
+  (YORUM: Tansu adedi 2 ATR'ye böler, G-dış R212; burada küçük olan mesafe kullanılır).
 - **Çıkış zinciri** (T R239 ve R224'ün sonu, harfiyen): (1) geçersizlik ya da giriş − 2 ATR acil stop, gün içi
   (stop dolumu TASARIM 5.3); istisna: AB=CD geçersizliği ve talep bölgesi bitişi kapanışladır (T R043 `Close <
   zone_low`), ertesi AOF'ta çıkılır; acil stop yine gün içidir; (2) fiyat giriş + 1,5 ATR'ye ulaşınca iz süren mod (T R224, R239); (3) sonra ilk
@@ -350,6 +352,7 @@ cümle T). Akşam kartı o gün durum değiştiren kurulumları yazar; dil "kura
 | Weinstein 4 evre (M R108), DMA kanal eğimi ve evreler (G-dış R216), piyasa evreleri ve birikim anlatısı (G-dış R235, T R237), fat tail (M R220), BIST_VOL gülümsemesi (T R094), hacimle mal boşaltma/toplama (T/M R119) | Dışarıda | Kural ve parametre yok ("X haftalık"). |
 | Mum ve gösterge yorumları: inverted hammer (T R241), HIKKAKE (M R193), uzun yeşil mumun yüksek yakın kapanışı (M R124), MACD/RSI panelleri (G R168, M R221; ADX ve CMF Tansu'nun T R137 3. aşamasıdır, S1 ölçümünde), RSI kırılımı (G R008), %5–10 kesişim primi (M R105), 0,786'nın direnç olarak kullanımı (M R126), "hissenin oranı %50'den fazla" (M R110, belirsiz) | Dışarıda | Açılış yok ya da kural yok; R110 cümlesi anlaşılmıyor. |
 | Kural taşımayan yan cümleler: yatay sıkışma/üçgen görüntüsü (G R008), bant genişliği ve VaR (T R053), sell yönlü AB=CD ile kırılım çatışması (T R076), dinamik hedef kalibrasyonu (R090, başka hesabın cevabı), Mark-to-Market (M/T R099; rapor zaten kapanış değeriyle), düşük hacim uyarısı / "Liderleri Takip Edin" / mikro-makro çelişkisi (M R118), EMA'ların dinamik desteğe dönmesi (M R128), likidite süpürme ve önce üst dirençleri test (M R129), HBK'nın evrensel ölçü olması (T R133), sektörel döngüler (M R183), EMA kümesi üstü kalıcılık (M R192) | Dışarıda | Eşik ve kural yok: M cümleleri ya da kuralsız T gözlemleri (T R053 bant genişliği, T R076, T R133). R118 NH-NL ve R192 hedef mantığı tasarımda (4.5, 3.2). |
+| Kalan yan fikirler: R077 yeşil üçgen sinyalleri (G, formül yok), ortalamadan uzaklaşınca soğuma/re-test (M R128), TP2'yi hacimli mumla geçince yeni trend (M R203), konsantrasyon/kümelenme COT (T/M R227; açık pozisyon verisi yok), "Fading the Gap" kısa pozisyon (M R243; açığa satış yok), büyük mumları incelemek (T R243) | Dışarıda | Formül, veri ya da long-only uyumu yok. |
 | Trailing stop'a geçiş için risk/ödül hedefi (M R233) | Dışarıda | Sayı verilmemiş; S2 iz süren modu T R224/R239 ile tanımlı (4.4). |
 | Ürün hedefi: tek tuş, LLM/NLP ile faaliyet raporundan veri (T R065), Excel çıktıları (R154, R163), infografik akış (R056) | Kapsam dışı | Ürün hedefi, strateji kuralı değil. TANSU'nun sinyal sistemi kapsamı dışında. |
 | Makro, Gordon, ROC, CAPM, kur Monte Carlo, yöntem notları (R045, R052, M R162, R173, R177, R200, M R231) | Kapsam dışı | Strateji değil; ders ya da kurumsal çalışma. |

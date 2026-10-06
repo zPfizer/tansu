@@ -1,0 +1,799 @@
+# İzlenebilirlik tablosu: defter-1..4 fikirleri ve tasarım-8 (sürüm 5.1)
+
+Kaynak: defter-1..4.md (denetim düzeltmeleri işlenmiş hali) ve tasarim-8.md (sürüm 5.1, 06.10.2026). Tasarım değiştirilmedi. Tablo, sürüm 5'e göre yazılmış eski halin yerine yeniden üretildi. 697 satırın her biri sürüm 5.1'e göre yeniden bağlandı.
+
+Okuma kuralları:
+- Her satır bir defter fikir satırıdır (madde). Strateji içeriği olmayan kayıtlar tek satırdır.
+- "Yer" sütunu tasarım-8 bölüm numarasıdır. "8:" sonrası, 8. bölüm tablosundaki satırın adıdır (adlar kısaltıldı). "(kavram)" = tasarım o R numarasını anmıyor, ama aynı kavramı başka bir R ile ya da aynı cümleyle bağlıyor. Kavram bağı yoksa durum BAĞSIZ'dır; bağ uydurulmadı.
+- Durum: resmi (S1, S2, S3, 4. bölümün resmi kolları, 5.1 sadakat hedefleri, 6 rapor) / ölçüm (3.1, 3.2, 3.3, 4.x ölçüm kolları ve 8. bölümdeki "Ölçüm" satırları) / ikinci dalga / dışarıda / kapsam dışı / strateji değil / BAĞSIZ.
+- "strateji değil": bağlantı, kitap önerisi, ders niteliğinde felsefe ve ürün notu. 8. bölümdeki "Felsefe ve ölçüm ilkeleri" satırı bu durumun yeridir.
+- Bir satırda iki bileşen varsa baskın bileşenin durumu yazıldı; ikinci bileşen yer sütununda belirtildi.
+- 8. bölümdeki "R245–R263" satırı "kanıt sayılmaz" der; durum listesinde karşılığı "kapsam dışı"dır.
+- Tasarımda iki yerde anılan bir fikir (R156 APO: hem "Bant kuyruğu tepki alımı" hem "RSI 30, ... APO" satırı) için 8. bölümdeki daha özel satır esas alındı; çakışma (c) notlarında yazılı.
+- Yazar kodları defterlerdeki gibidir: T, M, G, G-dış, A, T/M (karışık), bağlantı.
+
+| R | aşama | fikir | yazar | yer | durum |
+|---|---|---|---|---|---|
+| R001 | ölçüm-ilkesi | "Ortalamaları temel alan indikatörler hava civadır Medyan temelli çalışın" | T | 8: Medyan temelli çalışma, medyan kanal (T R001) | ölçüm |
+| R002 | tarama-evren | "Sektör rotasyonu, yüksek korele sektörler, lider sektör" | T | 8: Sektör rotasyonu zinciri (T R002) | ölçüm |
+| R002 | temel-değerleme | "lider sektörde Dupont analizi, ucuz kalmış hisseler çalışması" | T | 8: Bilanço kalite filtreleri (Dupont, T R002) | ikinci dalga |
+| R002 | diğer | "App'da da olacak Paylaşırım biterse" | T | ürün notu | strateji değil |
+| R003 | formasyon | "güzel trend kırılımı yaptı ve bearısh butterfly yapı oluşturmaya gidiyor" | T | 3.2 H (Kelebek) | resmi |
+| R003 | hedef-çıkış | "Strateji 125.42'ye kadar long fırsatı uyarısı verdi" | T | 3.2 adım 4 (ödül/risk kapısı, hedef); 6 (rapor: hedef) (kavram) | resmi |
+| R003 | teyit-tetik | "Ancak pullback yapar mı izlemek lazım." | T | 8: Kanal alt bandı, düşen direnç kırılımı + retest (kavram) | ölçüm |
+| R004 | tarama-evren | "Arbitraj" | T | 3.3 (kavram) | resmi |
+| R004 | portföy | "Volatilite Harvesti" | T | 8: Volatilite harvesti, rebalancing, Markowitz + volatilite trading (kavram) | ölçüm |
+| R004 | formasyon | "Harmonik yapılar (ABCD, Kelebek, Gartley)" | T | 3.2 H | resmi |
+| R004 | momentum-seçim | "Alpha Hisseleri Momentum Hisseleri" | T | 3.1 S1; alpha kısmı 3.1 ölçüm kolu (R202) | resmi |
+| R004 | bölge | "Haftalık kanal dibine temas eden hisse taraması" | T | 8: Kanal alt bandı, düşen direnç kırılımı + retest (T R004) | ölçüm |
+| R004 | teyit-tetik | "Düşeni kıran Farklı kırılımları gösteren tarama" | T | 8: Kanal alt bandı, düşen direnç kırılımı + retest (T R004) | ölçüm |
+| R004 | formasyon | "Takoz TOBO OBO" ve "Bir de bayrak flama olur" | T | 8: Klasik formasyonlar (T R004) | ikinci dalga |
+| R005 | formasyon | "hangi noktada momentum squeeze olur onu pek anlatmazlar" | T | 3.2 H ölçüm kolları (harmonikte EMA sıkışması var/yok kesimi, T R005) | ölçüm |
+| R006 | formasyon | "Takoz olur" | T | 8: Klasik formasyonlar (T R006) | ikinci dalga |
+| R006 | diğer | "Opsiyon fiyatları ile ABD borsasında analizler olur" | T | 8: VRP, implied move, IV kesişimi (kavram: opsiyon verisi yok) | dışarıda |
+| R007 | formasyon | "Bir de bayrak flama olur" | T | 8: Klasik formasyonlar (T R007) | ikinci dalga |
+| R008 | formasyon | XABCD harmonik; "D: 226,80 [TAMAMLANDI]" | G | 4.3; 5.1 (H) | resmi |
+| R008 | formasyon | "DGATE.IS - Kelebek Formasyonu (AL (Buy)) [AKTİF]", D 49.66 | G | 3.2 H; 4.3; 5.1 (DGATE) | resmi |
+| R008 | teyit-tetik | X-B kırılım tarihi; X→B trend çizgisi tetiği araçta üretiliyor | G | 3.2 H ölçüm kolları (X–B trend çizgisi kırılımı girişi, G R008); 8: X–B trend çizgisi kırılımı | ölçüm |
+| R008 | formasyon | "MARKA ... AB=CD Patern #13 Backtest Modu", D (hedef) 70.25 | G | 3.2 H (AB=CD) | resmi |
+| R008 | formasyon | "KRPLS ... D (hedef): 11.29 [TAMAM]"; Fibonacci 0.236 ... 2.000 | G | 4.2; 4.3; 5.1 (KRPLS) | resmi |
+| R008 | bölge | "Kırılım 2026-07-29 (Temas:4)", "RSI Kırılım 2026-06-18 (T:3)" | G | 4.2 (trend çizgisi dokunuş sayısı ve kırılım, araç çıktısı G R008; ölçüm); RSI kırılımı kısmı 8: Mum ve gösterge yorumları (G R008) | ölçüm |
+| R008 | bölge | sarı arz, mavi talep bölgesi; volume profile; MACD ve RSI panelleri | G | 4.1 (volume profile kısmı 8: VWAP / POC / VAH / VAL; MACD/RSI panelleri 8: Mum ve gösterge yorumları) | resmi |
+| R008 | formasyon | yatay sıkışma, üçgen/flama benzeri daralma, "Kırılım" etiketi | G | 8: Kural taşımayan yan cümleler (yatay sıkışma/üçgen görüntüsü, G R008) | dışarıda |
+| R008 | formasyon | G1 ve G5: X, B, C, D etiketli harmonik; X-B nokta-çizgi trend çizgisi | G | 3.2 H; 4.3 | resmi |
+| R009 | bölge | "böyle tam arz talep bölgesinde vereceğim" | T | 3.2 akış 2 (talep bölgesi zorunlu) | resmi |
+| R010 | temel-değerleme | "Nakit ve Nakit Benzerleri / Piyasa Değeri %18.89" | M | 8: Bilanço kalite filtreleri (nakit/piyasa değeri, M R010) | ikinci dalga |
+| R010 | temel-değerleme | "Ancak oran tek başına “hisse ucuz” anlamına gelmez" | M | 8: Bilanço kalite filtreleri (M R010) | ikinci dalga |
+| R010 | temel-değerleme | "Borçlar düşülerek net nakit / piyasa değeri hesaplanmalı." | M | 8: Bilanço kalite filtreleri (M R010) | ikinci dalga |
+| R010 | temel-değerleme | "Oranın yükselmesi bazen nakit artışından değil" | M | 8: Bilanço kalite filtreleri (M R010) | ikinci dalga |
+| R011 | tarama-evren | "Gartley taramasını ayrı yapın butterfly taramasını ayrı yapın" | T | 3.2 akış 3 (ayrı tarayıcılar, T R011) | resmi |
+| R012 | formasyon | Tablo: Hisse, Tip, Sistem, Durum, Reaksiyon, D Hedefi, Giriş, Stop (X) | G | 1 (hat 2); 6 (tablo biçimi) | resmi |
+| R012 | giriş | LUKSK: "AL (Buy)", D Hedefi 86.95, Giriş 86.95, Stop (X) 73.00 | G | 3.2 H; 5.1 (LUKSK) | resmi |
+| R012 | formasyon | SOKE: "D (Hedef): 12.53 [Carney]" = Fibonacci 0.786 | G | 3.2 H; 5.1 (SOKE) | resmi |
+| R013 | teyit-tetik | "trade yapmanın bir yolu da XB noktasından çizilecek olan trend çizgisinin" kırılması | T | 3.2 H ölçüm kolları (X–B trend çizgisi kırılımı, T R013); 8: X–B trend çizgisi kırılımı | ölçüm |
+| R013 | stop-geçersizlik | "D gerçekleşti ama 20 bar içinde TEPKİ GELMEDİ" | G | 4.3 (20 bar ölçümde ayrı parametre); 5.1 (KAPLM) | resmi |
+| R014 | teyit-tetik | "10 gün içinde D noktasından bir tepki yapmıyor ise belirsiz" | T | 4.3 (BELİRSİZ, T R014) | resmi |
+| R014 | felsefe | "Her gartley çalışmaz ama çalışmasa bile oluşumunda bazı stratejiler kurgulanabilir." | T | 6 (başarısız kurulumlar da listelenir, T R014) | resmi |
+| R014 | giriş | "Giriş (D)", "Bk Stop (X)", "TP1 (1:1 R/R)", "TP2 (.618 CD)" | G | 3.2 H (giriş D, geçersizlik X); TP1/TP2 3.2 H ölçüm kolları (hedef merdiveni, G R014); 5.1 (SAYAS) | resmi |
+| R014 | boyut-risk | SAYAS Fibonacci çizgileri 0.000 ... 1.000 | G | 4.2; 5.1 (SAYAS) | resmi |
+| R015 | tarama-evren | "Haftalık taramada uzun vade talep toplama alanında C noktası oluşmuş" bullish gartley | T | 4.1 (haftalık bölge, T R015); 3.2 H | resmi |
+| R016 | formasyon | "AB=CD patterninde, CD bacağının şiddetini ne belirler?" | T | 3.2 H ölçüm kolları (CD bacağının şiddeti raporu, T R016) | ölçüm |
+| R017 | ölçüm-ilkesi | "Toplam pattern 12; hedefe ulaşan 7; stop/bozulan 3; açık 2" | G | 5.1 (SMRTG kapanmış kalıplar); 4.3 | resmi |
+| R017 | formasyon | "SMRTG - Swing Yapısı, Fibonacci ve AB=CD Analizi (Yükseliş)" | G | 5.1 (SMRTG); 4.2 | resmi |
+| R017 | ölçüm-ilkesi | "BACKTEST SONUÇLARI (SMRTG)" konsol çıktısı | G | 5.1; 6 | resmi |
+| R018 | giriş | "AB=CD 1000 günlük C noktasından alım yapılsa idi D satış karları." | T | 3.2 H ölçüm kolları (C'den alım, D'de satış, T R018); 5.1 (ISKPL C tarihleri sadakat hedefi) | ölçüm |
+| R019 | formasyon | "BC, AB'yi aşamaz" | T | 3.2 H (AB=CD kapısı, T R019) | resmi |
+| R019 | formasyon | "BC tam 1.00 olabilir" | T | 3.2 H (AB=CD kapısı, BC/AB üst sınırı 1,00) | resmi |
+| R019 | formasyon | "D, B'yi aşmalı" | T | 3.2 H (AB=CD kapısı) | resmi |
+| R019 | stop-geçersizlik | "C'den sonra fiyat A'yı geçerse patern bozuldu sayılır" | T | 3.2 H (giriş öncesi bozulma) | resmi |
+| R020 | hedef-çıkış | "FIBO extension'ları öğrenin arkadaşlar ve ABCD ile nasıl kullanılacağını." | T | 4.2 (Fibonacci seviyeleri) | resmi |
+| R020 | hedef-çıkış | Fibonacci merdiveni; uzantılar 1.272 / 1.618 / 2.000 | G | 4.2 (G R020) | resmi |
+| R021 | ölçüm-ilkesi | "Finansta %70 çok yüksek bir başarı oranıdır ... 13 trade gününde 9 isabetli" | T | 8: RSI 30 / Williams %R / APO / A/D–EMA3 / HalfTrend / ML lojistik satırı (kavram) | dışarıda |
+| R021 | felsefe | "ML ile trade hiç sevmem ama ara ara bakarım" | T | 8: ML lojistik satırı (kavram) | dışarıda |
+| R022 | momentum-seçim | "Mom1'den Mom5'e kadar beş eşit dilimli ayirin" | T | 3.1 ölçüm kolu (5 dilimli çeyreklik hali, T R022) | ölçüm |
+| R022 | temel-değerleme | "faaliyet nakit akışlarına göre ... 1'den 5'e kadar yeni beşlik dilim" | T | 8: Momentum × faaliyet nakit akışı 5×5 satırı | ikinci dalga |
+| R022 | portföy | "25 farklı kombinasyon portföyü oluşturun." | T | 8: Momentum × faaliyet nakit akışı 5×5 satırı | ikinci dalga |
+| R022 | portföy | "aynı anda hem en yüksek momentuma hem de en yüksek nakit akışına sahip" | T | 8: Momentum × faaliyet nakit akışı 5×5 satırı | ikinci dalga |
+| R023 | formasyon | "İşte bullish engulfing mum yapısı" (Python kodu) | T+G | 2 (açılış yok; mum formasyonu yalnız ölçülür); 8: Mum formasyonları (engulfing, G R023) | ölçüm |
+| R024 | felsefe | "Her harmonik %100 çalışır diye de bir kaide olamaz" | T | 6 (başarısız kurulumlar listelenir) (kavram) | resmi |
+| R024 | bölge | "Destek ve dirençlere bakıyoruz Hacim ayak izine bakıyoruz" | T | 8: VWAP / POC / VAH / VAL (T R024) | dışarıda |
+| R024 | hedef-çıkış | "VAL seviyesine hareket etme potansiyeli görünüyor" | T | 8: VWAP / POC / VAH / VAL (T R024) | dışarıda |
+| R024 | bölge | legend: Demand/Supply, Gaussian VP POC/VAH/VAL, BOS/CHoCH | G | 4.1 (bölge kısmı); 4.2 (BOS/CHoCH); VP kısmı 8: VWAP / POC / VAH / VAL | resmi |
+| R025 | formasyon | "Şu tweezer bottom mumunu yazayım taramasını da yapayım" | T | 8: Mum formasyonları (tweezer, T R025) | ölçüm |
+| R025 | bölge | "Bu formasyon talep bölgesinde şahane fırsatlar sunuyor." | T | 8: Mum formasyonları (tweezer); 3.2 akış 2 (bölge) | ölçüm |
+| R026 | rejim | "Sabit hareketli ortalamalar ani piyasa paniklerinde yavaş kalır" | T | 4.5 (şok freni, T R026) | ölçüm |
+| R026 | rejim | "Kısa vadeli dalgalanma aniden fırlarsa algoritmayı Piyasa Şoku moduna geçirir." | T | 4.5 (şok freni, T R026) | ölçüm |
+| R026 | boyut-risk | "Yeni al sinyallerini tamamen durdur" | T | 4.5 (şok freni: yeni alım yok) | ölçüm |
+| R026 | felsefe | "bıçak tutmaya çalışmayın ve sadece elinizdeki riski yönetin" | T | 4.5 (şok freni) | ölçüm |
+| R027 | bölge | "Bu kardeş bas basbağırmış talep bölgesinde ben geliyorum diye." | T+G | 4.1 (volume ayak izi kısmı 8: VWAP / POC / VAH / VAL) | resmi |
+| R028 | tarama-evren | "risk premium varyans ile modelden bağımsız varyans replikasyonu" iki kod | T | 8: VRP, implied move, IV kesişimi (T R028) | dışarıda |
+| R028 | tarama-evren | "Kesişim kümesi yatırım noktasıdır." | T | 8: VRP, implied move, IV kesişimi (T R028) | dışarıda |
+| R029 | hedef-çıkış | "%10.4 Implied Move opsiyon tüccarlarının ... beklediğini gösterir" | T+G | 8: VRP, implied move, IV kesişimi (T R029) | dışarıda |
+| R030 | portföy | "Ters korelasyona sahip iki varlığı belirli bir oranda sabit tutarak ... volatilite harvesti" | T | 8: Volatilite harvesti, rebalancing, Markowitz + volatilite trading (T R030) | ölçüm |
+| R031 | ölçüm-ilkesi | "VRP (Risk Primi - Fırsat): Aradaki farktır (IV - RV)." | M | 8: VRP, implied move, IV kesişimi (M R031) | dışarıda |
+| R031 | teyit-tetik | "VOL SAT (VRP Yüksek) ... reversal beklenir" | M | 8: VRP, implied move, IV kesişimi (M R031) | dışarıda |
+| R031 | teyit-tetik | "VOL AL (VRP Negatif ) ... çok sert ve büyük bir trend hareketinin" | M | 8: VRP, implied move, IV kesişimi (M R031) | dışarıda |
+| R031 | tarama-evren | "BIST Variance Risk Premium (VRP) Scanner" dört panel | G | 8: VRP, implied move, IV kesişimi (M R031) | dışarıda |
+| R031 | teyit-tetik | "Sat eşiği (0.025)" ve "AL eşiği (-0.005)" | G | 8: VRP, implied move, IV kesişimi (M R031) | dışarıda |
+| R031 | tarama-evren | Dollar Gamma haritası %70 / %30 renk bölgeleri | G | 8: VRP, implied move, IV kesişimi (M R031) | dışarıda |
+| R032 | momentum-seçim | Sektör getiri liderleri 30 / 60 / 90 gün | G | 3.1 ölçüm kolu (sektör lideri filtresi, G R032) | ölçüm |
+| R033 | tarama-evren | "Sektör rotasyonu yaparken anomalileri çıkarmaz iseniz sizi yanıltır." | T | 3.1 ölçüm kolu (30 günlük getiri mutlak değeri > %50 anomali hariç, G R033) | ölçüm |
+| R033 | tarama-evren | "ANOMALİ OLARAK İŞARETLENEN HİSSELER (30 günlük getiri mutlak değeri > %50) ... ortalamadan çıkarıldı" | G | 3.1 ölçüm kolu (G R033) | ölçüm |
+| R033 | tarama-evren | "Hisse bazlı basit ortalama" (eski fiyat-ortalaması terk) | G | 3.1 ölçüm kolu (G R033) | ölçüm |
+| R034 | stop-geçersizlik | "çok azı rolling cointegration ile zamanla bozulmayı önlüyor" | T | 3.3 (kapı: rolling eşbütünleşme, T R034); 2.1 (5.6 Çift) | resmi |
+| R035 | tarama-evren | "İstenilen hissenin fiili dolaşım oranı görülebilir Eşik değer değiştirilebilir" | T+G | 8: Fiili dolaşım < %30; 2 (HAO_PD doğrulaması, KENT/GARAN karşılaştırması) | ölçüm |
+| R036 | felsefe | "Fiyat ve hacim, resmin yalnızca üçte ikisidir, fiilen işlem gören hisse sayısı" | T | 8: Fiili dolaşım < %30 (T R036) | ölçüm |
+| R037 | bölge | "Distal line ve proximal line'ı kavrarsak bu işişn %50'si biter" | T | 4.1 (T R037) | resmi |
+| R037 | bölge | "The distal line is located at the highest of the basing structure" | T+G | 4.1 (T R037 arz tarafı tanımı) | resmi |
+| R038 | — | "Al çalış" (strateji içeriği yok) | T | — | strateji değil |
+| R038 | bölge | "HKTM - Demand & Supply Bölgesi Analizi" | G | 4.1 (kavram) | resmi |
+| R039 | bölge | "1: Swing Pivot Eşleştirmesi." | T/M | 4.2 (pivot, T/M R039) | resmi |
+| R039 | bölge | "çizilen doğrunun aradaki hiçbir mum tarafından delinip geçilmemiş olması" | T/M | 4.2 (trend çizgisi: aradaki hiçbir mum çizgiyi delmez; düşen direnç kırılımı bu tanımla ölçülür) | ölçüm |
+| R039 | teyit-tetik | "fiyat buna her dokunup döndüğünde çizgi güçlenir, mum kapanışıyla aştığında trend kırılmış" | T/M | 4.2 (dokunuş sayısı güçtür; kırılım kapanışla) | ölçüm |
+| R039 | bölge | "2. Yöntem: Regresyon ve Zarf" | T/M | 4.2 (regresyon-zarf yöntemi ölçüm kolu) | ölçüm |
+| R039 | felsefe | "İnsan psikolojisini yansıttığı ... asıl kullanmamız gereken yöntemdir." | T/M | 4.2 (pivot yöntemi seçimi) | resmi |
+| R040 | bölge | "Confluence alanları neden her zaman daha güvenlidir?" | T | 8: Çoklu aralık Fibonacci kümeleri, confluence ilkesi (T R040) | ölçüm |
+| R041 | rejim | "BOS (Break of Structure): Trendin aynı yönde devam ettiğini gösterir." | T/M | 4.2 (yapı: BOS, M R041) | resmi |
+| R041 | rejim | "CHoCH (Change of Character) ... Higher Low altına düştüğünde" | T/M | 4.2 (yapı: CHoCH, M R041) | resmi |
+| R041 | bölge | FROTO tablo: En Yakın Demand 74.75 - 76.70, D.Teyit 2026-08-14 | G | 5.1 (bölge: FROTO); 4.1 (bölge temas sayısı, G R041) | resmi |
+| R042 | formasyon | "Advance Block ... art arda gelen 3 yeşil (yükseliş) mumundan oluşur" | M | 8: Mum formasyonları (advance block, M R042) | ölçüm |
+| R042 | bölge | "alıcıların gücünün tükenmeye başladığını gösteren düşüş yönlü bir yorulma sinyalidir" | M | 8: Mum formasyonları (advance block, M R042) | ölçüm |
+| R043 | stop-geçersizlik | "Demand bölgesinin en dip fiyatını referans noktası olarak al." | T/M | 4.1 | resmi |
+| R043 | stop-geçersizlik | "Bölgenin oluştuğu günden sonraki tüm mumların verisini sırayla taramaya başla." | T/M | 4.1 | resmi |
+| R043 | stop-geçersizlik | "(Close < zone\_low)" | T/M | 4.1; 4.4 (bölge bitişi kapanışla) | resmi |
+| R043 | bölge | "demand kutusunu ... tam bu kırılımın yaşandığı tarihte bitir." | T/M | 4.1 | resmi |
+| R044 | — | yalnız bağlantı (cmegroup.com) | bağlantı | — | strateji değil |
+| R045 | temel-değerleme | "Gordon Büyüme Modelini ... PV=100\*(1.05) / 0.10 - 0.05" | T | 8: Makro, Gordon, ROC, CAPM, kur Monte Carlo, yöntem notları (R045) | kapsam dışı |
+| R046 | temel-değerleme | "Operasyonel Faktörler: ... endüstri yapısı, sunulan ürün, hedef pazar" | M | 8: Bilanço kalite filtreleri (işletme kriterleri, M R046) | ikinci dalga |
+| R046 | temel-değerleme | "Finansal Faktörler: ... büyüklük, kaldıraç oranı, kar marjları" | M | 8: Bilanço kalite filtreleri (M R046) | ikinci dalga |
+| R046 | temel-değerleme | "İşletme Analizi Kriterleri" infografiği (6 + 7 madde) | M | 8: Bilanço kalite filtreleri (M R046) | ikinci dalga |
+| R047 | bölge | "FIGURE 1[RALLY BASE RALLY PATTERN] OR RBR PATTERN" | G | 4.1 (G R047) | resmi |
+| R047 | giriş | "ENTRY POINT" = "Proximal line" | G | 4.1 (proximal = tabanın en yüksek gövdesi) | resmi |
+| R047 | stop-geçersizlik | "DISTAL line always be at the low of base candle or leg out candle" | G | 4.1 (distal, G R047) | resmi |
+| R048 | temel-değerleme | "Bir nevi rölatif değerleme yapıyor olacaksınız." | T | 8: Değerleme sistemi (kavram) | ikinci dalga |
+| R048 | teyit-tetik | "bunu farklı rasyolar ya da çarpanlar ile teyit edeceksiniz" | T | 8: Değerleme sistemi (kavram) | ikinci dalga |
+| R049 | momentum-seçim | "Temel ve momentum staratejisi beraber çalışacak" | T | 8: Momentum × faaliyet nakit akışı 5×5 satırı (kavram) | ikinci dalga |
+| R049 | temel-değerleme | "Ekranda mavi çizgi xxxx kırmızı ise fiyat bir altta iken diğeri kesin üste" | T+G | 8: YSA momentumu / Optimal Momentum+ / pre-signal / gizli "xxxx" metriği satırı (T R049) | dışarıda |
+| R050 | bölge | "3. How to judge power of Im-balance" (Strongest / Strong / Weak / Weakest) | G | 3.2 E ölçüm kolları (FVG güç sınıfı, G R050) | ölçüm |
+| R051 | bölge | "En yüksek mumun gövdesinin bittiği yer ile, en düşük mumun gölgesinin bittiği yer." | T+G | 4.1 (konsolidasyon sınırı, T R051; ölçüm) | ölçüm |
+| R052 | diğer | "1 yıl sonra eur/try 57.61 olur, banka bize bu rakama göre forward kur" | T+G | 8: Makro, Gordon, ROC, CAPM, kur Monte Carlo, yöntem notları (R052) | kapsam dışı |
+| R052 | hedef-çıkış | "ÖNERİLEN FORWARD KURLAR" (Konservatif / Medyan / Agresif) | G | 8: kur Monte Carlo (R052) | kapsam dışı |
+| R053 | giriş | "Bollinger Bantlarında alt ve üst bantlar genelde +-2 standart sapmayı temsil eder" | T | 8: Bant kuyruğu tepki alımı (T R053) | ikinci dalga |
+| R053 | giriş | "-2SE veya -3SE seviyesine inmesi ... tepki alımı fırsatı" | T | 8: Bant kuyruğu tepki alımı (T R053) | ikinci dalga |
+| R053 | boyut-risk | "Bantların genişliği hissenin ne kadar riskli ve oynak olduğunu ortaya koyar." | T | 8: Kural taşımayan yan cümleler (bant genişliği, T R053) | dışarıda |
+| R053 | boyut-risk | "maksimum kaybı hesaplamaya yarar ... (VaR)" | T | 8: Kural taşımayan yan cümleler (VaR, T R053) | dışarıda |
+| R054 | bölge | "Bullish Sponsor Candle: Sert bir yükseliş hareketi başlamadan hemen önceki son düşüş mumudur." | T/M | 4.1 (sponsor mumu, G R054; ölçümde alternatif bölge) | ölçüm |
+| R054 | bölge | "Bearish Sponsor Candle: Sert bir düşüş hareketi başlamadan hemen önceki son yükseliş mumudur." | T/M | 4.1 (sponsor mumu, G R054) | ölçüm |
+| R055 | bölge | "Şu confluence alanları o kadar kıymetli ki, aslında grafiklerde bunları arayıp taratmak lazım." | T | 1 (hat 2); 4.1 (bölge kalitesi: talep + HSAR kesişimi, T R055); 8: Çoklu aralık Fibonacci kümeleri, confluence ilkesi | ölçüm |
+| R055 | bölge | legend: "Swing Points, Talep+HSAR Kesişimi", EMA 9/21/50/100/200 | G | 4.1 (bölge kalitesi: talep + HSAR kesişimi, G R055; ölçüm) | ölçüm |
+| R056 | diğer | "Hisse Senedi Analiz ve Karar Destek Süreci" (10 rasyo, MLP, teknik, karar) | G | 8: Ürün hedefi (infografik akış, R056) | kapsam dışı |
+| R057 | temel-değerleme | "Öz kaynağın artışının en önemli sebebi bir şirketin net kar elde etmesi idi." | T | 8: Bilanço kalite filtreleri (özkaynak artışı, T R057) | ikinci dalga |
+| R058 | temel-değerleme | "Regresyon veya makine öğrenmesi modelleri ile ... olması gereken piyasa değeri" | T | 8: Bilanço kalite filtreleri (regresyonla olması gereken değer, T R058) | ikinci dalga |
+| R058 | felsefe | "Ml modelleri sıkıntılıdır" | T | 8: ML lojistik satırı (kavram) | dışarıda |
+| R059 | temel-değerleme | "Bilançolarda maddi duran varlık artışları er ya da geç (insider yoksa) fiyata yansır." | T+G | 8: Bilanço kalite filtreleri (T R059: veri gelince ilk sınanacak) | ikinci dalga |
+| R060 | temel-değerleme | "Dönen varlıkları KVB’larından yüksek değilse o firma 1 yıl içerisinde nakde ihtiyaç duyacaktır" | T | 8: Bilanço kalite filtreleri (T R060: veri gelince ilk sınanacak) | ikinci dalga |
+| R061 | temel-değerleme | "Merton Modeli A0 = ... (100) σA = ... (%25) D = ... (80)" | T+G | 8: Bilanço kalite filtreleri (Merton DD/EDF, T R061) | ikinci dalga |
+| R061 | temel-değerleme | "D0 (74.6) ... DD (0.97) ... EDF (%17)" | T+G | 8: Bilanço kalite filtreleri (Merton DD/EDF, T R061) | ikinci dalga |
+| R061 | boyut-risk | "Temerrüt önemli artık daha çok bakmak lazım." | T | 8: Bilanço kalite filtreleri (Merton DD/EDF, T R061) | ikinci dalga |
+| R062 | felsefe | "Temel analiz ve değerlemeyi küçümsemeyin Tüm bu analizler birbiri ile entegre olacak" | T | 8: Değerleme sistemi (T R062) | ikinci dalga |
+| R062 | temel-değerleme | "hepsi tutarlı" (F/K, PD/DD, FD/FAVÖK hedefleri yakın) | T+G | 8: Değerleme sistemi (T R062) | ikinci dalga |
+| R062 | temel-değerleme | F/K aracı: IQR (k=1.5), ortalama hedef 129.83 TL | G | 8: Değerleme sistemi (T R062) | ikinci dalga |
+| R062 | temel-değerleme | PD/DD aracı: Kısa Dönem (8Ç), Uzun Dönem (36Ç), hedef 120.07 TL | G | 8: Değerleme sistemi (T R062) | ikinci dalga |
+| R062 | temel-değerleme | manuel F/K 10.00x ve FD/FAVÖK 16.00x, ortalama 119.74 TL | G | 8: Değerleme sistemi (T R062) | ikinci dalga |
+| R063 | temel-değerleme | "#TTRAK da 900'lerden çok güzel yıktılar malı millete." | T+G | 8: Değerleme sistemi (kavram: PD/DD primi) | ikinci dalga |
+| R064 | temel-değerleme | "çarpanlara göre değerlemede fk, pd/dd , fd/favök kullanacaksın ... A olsun" | T+G | 8: Değerleme sistemi (T R064) | ikinci dalga |
+| R064 | temel-değerleme | "basit model ile fk ve df/favök ile değerlemeyi bulacaksın ... B olsun" | T+G | 8: Değerleme sistemi (T R064) | ikinci dalga |
+| R064 | temel-değerleme | "(A\*0.6) + (DCF \* 0.4) = Hisse fiyatın" | T+G | 8: Değerleme sistemi (T R064) | ikinci dalga |
+| R064 | teyit-tetik | "B'yi teyit için de kullanabilirsin." | T+G | 8: Değerleme sistemi (T R064) | ikinci dalga |
+| R065 | felsefe | "Nihai hedef Tek bir tuş ile temel ve teknik analizin yapıldığı ... LLM ve NLP" | T | 8: Ürün hedefi (T R065) | kapsam dışı |
+| R066 | temel-değerleme | "beklenen FK hesaplanabilir mi, güvenilirliği ne olur?" | T | 8: Bilanço kalite filtreleri (beklenen F/K, T R058, R066) | ikinci dalga |
+| R066 | temel-değerleme | "beklenen kâr büyüme oranı, özsermaye kârlılığı (ROE), temettü ödeme oranı, risk faktörleri (beta)" | T | 8: Bilanço kalite filtreleri (T R066) | ikinci dalga |
+| R066 | ölçüm-ilkesi | "ilişki her zaman lineer değildir ... Çoklu doğrusal bağlantı problemleri" | T | 8: Bilanço kalite filtreleri (T R066) | ikinci dalga |
+| R067 | temel-değerleme | "Ben tüm sekmelerin kodunu da yazacağım tek tuş ile hazır hale getireceğim" (6 sekme) | T+G | 8: Bilanço kalite filtreleri (skor kartı ve sekmeler, T/G R067) | ikinci dalga |
+| R067 | temel-değerleme | Skor kartı: Makro %20, Sektör %20, Şirket %25, Finansal %25, Değerleme %10; karar matrisi | T+G | 8: Bilanço kalite filtreleri (skor kartı ve sekmeler, T/G R067) | ikinci dalga |
+| R068 | temel-değerleme | "En sonunda bu ortalamanın %60'ını, DCF'in de %40'ını alırım." | T+G | 8: Değerleme sistemi (T R068) | ikinci dalga |
+| R068 | temel-değerleme | seçilen dönem 2023/12; kısa dönem 8 çeyrek, uzun dönem 36 çeyrek, IQR k=1.5 | T+G | 8: Değerleme sistemi (T R068) | ikinci dalga |
+| R068 | ölçüm-ilkesi | "2024 mart ayında gelen 2023 sonu bilançosuna göre yapılan değerlemede, Nisan ayında hisse tam da ederine ulaştı." | T+G | 8: Değerleme sistemi (T R068) | ikinci dalga |
+| R069 | temel-değerleme | "Bu 1 milyar tl'nin bugünkü değeri, %20 iskonto oranı ile bugün 579 miliyon tl ediyor." | T+G | 8: Bilanço kalite filtreleri (proje cirosu bugünkü değeri, T R069) | ikinci dalga |
+| R069 | teyit-tetik | "Buna bir de tekniği ekleyin olsun bitsin." | T+G | 8: Hibrit alarm (kavram) | ikinci dalga |
+| R070 | temel-değerleme | "python ile DCF WACC hesaplamasını 3 farklı yolla yaparak ortalamasını alıyorum." | T+G | 8: DCF altyapısı (WACC üç yöntem, T R070) | ikinci dalga |
+| R071 | temel-değerleme | "Beklenti satın alınır" (FED beklentisi ve altın) | T+G | 8: Makro, Gordon, ROC, CAPM, kur Monte Carlo, yöntem notları (kavram) | kapsam dışı |
+| R072 | rejim | "Sağlıklı trend örneği" (CSCO, "TÜM ŞARTLAR SAĞLANDI") | T+G | 4.5 (kavram: sağlıklı yükseliş, T R093) | ölçüm |
+| R073 | formasyon | "bu kardeşimiz gartley yapmış, ABCD olmuş, bunlar talep bölgesinde kavuşmuş bir de düşeni de kırmış" | T+G | 3.2 H; 3.2 akış 2 | resmi |
+| R073 | momentum-seçim | "Henüz endeksi yenecek güçte değil ama bu formasyonlar hisseyi oraya itecek" | T+G | 3.1 ölçüm kolu (endekse göre göreli güç, T R073) | ölçüm |
+| R073 | giriş | "yarın otorop izlemesi kalıyor" | T+G | izleme notu | strateji değil |
+| R074 | portföy | "Portföyün min volatiliteve maks sharpe ağırlıklandırmasına göre getiri eğrileridir." | T+G | 3.1 ölçüm kolu (Max Sharpe); 8: Volatilite harvesti, rebalancing, Markowitz + volatilite trading | ölçüm |
+| R074 | ölçüm-ilkesi | "Ortadaki çizgiler portföyün kapanış getirisi En üsteki çizgiler ise dönem içindeki en yüksek marjlar" | T+G | 6 (dönem içi en yüksek getiri DEY, T R074) | resmi |
+| R075 | formasyon | "Kuğuyu bir de talep toplama bölgesinde yakalarsanız" (Siyah Kuğu) | T+G | 3.2 H ölçüm kolları (Kuğu harmonikleri, T R075) | ölçüm |
+| R075 | bölge | "LIDER / Düşen Direnci Kıran + Talep + Fibo + ABCD / Kırılım: 2026-05-18 / Temas: 3" | G | 1 (hat 2); 8: Kanal alt bandı, düşen direnç kırılımı + retest (G R075) | ölçüm |
+| R076 | formasyon | "Düşeni kırmış, sell yönlü abcd'yi tamamlamışi beyaz kuğu da oluşmuş" | T+G | 3.2 H ölçüm kolları (Kuğu harmonikleri, T R076) | ölçüm |
+| R076 | teyit-tetik | "eh bunu yolculamayalım mı şimdi..." (yön çatışması) | T+G | 8: Kural taşımayan yan cümleler (sell yönlü AB=CD ile kırılım çatışması, T R076) | dışarıda |
+| R077 | rejim | "Kırmızı oklar illa düşeceği anlamına gelmez oynaklığı berliler. Rehavet ortamı vardır" | T+G | 3.2 S ölçüm kolları (T R077 rehavet); 8: "Volatilite işi" satırı (R077 rejim/defansif); 4.5 | ölçüm |
+| R077 | rejim | yeşil üçgenler (nisan 2025 oynaklık sıçraması sonrası alım) | T+G | tasarımda yok (R077 yalnız rehavet cümlesiyle anılır; yeşil üçgen alımı yok) | BAĞSIZ |
+| R078 | portföy | "Şu rebalancing stratejisini öğrenin derim." | T+G | 8: Volatilite harvesti, rebalancing, Markowitz + volatilite trading (T R078) | ölçüm |
+| R078 | portföy | "gün sonu eklemeler eksiltmeler ile sistem getirisi 1.5 yada %27" | T+G | 8: Volatilite harvesti, rebalancing, ... (G R078 %26,76 / %27,81) | ölçüm |
+| R079 | formasyon | "Not alın işte süper brir yapı..." (haftalık AB=CD + talep + EMA) | T+G | 3.2 H (D = C − 1,0·(A−B), G R079); 4.1 (haftalık bölge) | resmi |
+| R080 | formasyon | "peş peşe gelen lokal tepe ve dip noktaları tespit edilir" | T/M | 3.2 H (AB=CD; pivot 4.2) | resmi |
+| R080 | formasyon | "BC ... AB uzunluğuna bölünür ... (0.382, 0.50, 0.618 vb.)" | T/M | 3.2 H (BC/AB alt sınırı 0,382, M R080; üst sınır 1,00 T R019 esas) | resmi |
+| R080 | hedef-çıkış | "CD ... AB'nin uzunluğuna bölünür ... (1.00, 1.27, 1.618 vb.)" | T/M | 3.2 H (CD = AB resmi; 1,27 ölçüm kolu; 1,272·AB geçersizlik) | resmi |
+| R080 | bölge | "D noktasına bakın, talep toplama bölgesine bakın, hissenin tepkilerine bakın. Doğru kod böyle yazılır." | T/M | 1 (hat 2, T R080); 3.2 akış 2 | resmi |
+| R081 | formasyon | "ABCD yi görüyor musun tam talep toplama bölgesinden haftalıkta tepkisini almış" | T+G | 3.2 H (G R081); 4.1 (haftalık bölge, T R081) | resmi |
+| R081 | felsefe | "İşte bu yapıların peşindeyiz." | T+G | 1 (hat 2, T R081) | resmi |
+| R082 | teyit-tetik | "konoslidasyon ne kadar uzarsa kırılım o denli şiddetli oluyor" | T+G | 3.2 S ölçüm kolları (sıkışma süresi ile kırılım şiddeti raporu, T R082) | ölçüm |
+| R083 | tarama-evren | "Dolaşımdaki pay adedinin <%30 olduğu senetler ile ilgili çok tatlı stratejik taramalar" | T | 8: Fiili dolaşım < %30 (T R083); 3.1 ölçüm kolu | ölçüm |
+| R083 | tarama-evren | "KAP ile verileri alabiliyoruz, sırada taramalar var." | T | 8: Fiili dolaşım < %30 (T R083); 2 (veri dipnotu) | ölçüm |
+| R084 | formasyon | "Şimdi ne diyeyim yani buna:)" (BUY AB=CD, D "ALIM SİNYALİ - CD=1.0AB") | T+G | 3.2 H (AB=CD, G R084 "CD=1.0AB") | resmi |
+| R085 | bölge | "gözü kapalı ABCD'ye nasıl güveneceksin kanalı okumadan iş yapılır mı?" | T+G | 1 (hat 2, T R085); 8: Kanal alt bandı, düşen direnç kırılımı + retest | ölçüm |
+| R085 | stop-geçersizlik | D noktasından aşağı ok, kanal altı çizgisi (RYSAS) | T+G | 8: Kanal alt bandı, düşen direnç kırılımı + retest (T R085) | ölçüm |
+| R086 | teyit-tetik | "1-2 filtre ile enteresan bir breakout sinyali var aslında:) yeni keşfettim." | T+G | 3.2 S ölçüm kolları (sıkışma süresi ile kırılım şiddeti raporu, T R086 breakout) | ölçüm |
+| R087 | teyit-tetik | "Abcd analizine güvenip çaat diye alırsan ... Her zaman çalışmaz. İkinci alt grafiğe dikkat." | T+G | 6 (başarısız kurulumlar, R087 "Her zaman çalışmaz"); kümülatif delta kısmı 2: veri yok | resmi |
+| R087 | stop-geçersizlik | "BALAT / Düşen Direnci Kıran + Talep + Fibo + ABCD / Temas: 3 / Lookback: 30" | T+G | 8: Kanal alt bandı, düşen direnç kırılımı + retest (G R087) | ölçüm |
+| R088 | — | GitHub kitap reposu önerisi (strateji içeriği yok) | bağlantı | — | strateji değil |
+| R089 | rejim | "Mavi çizgi sıfırı yukarı kestiği anda kırmızı bölgede oluşan yükselişler büyük oranda patır patır geri gelir." | T+G | 4.5 (fiyat + volatilite, T R089) | ölçüm |
+| R090 | formasyon | "Alış yönlü formasyon taranarak oluşmuş ABC yakalanır ve trident hedefi beklenerek teorik D noktasından yani dipten pozisyon alınır." | T+G | 3.2 H ölçüm kolları (Lindsay Trident hedefi, T R090 alış yönlü paragraf) | ölçüm |
+| R090 | formasyon | "Satış yönlü formasyon taranarak ABC taratılır ... D noktasından sonra teorik olarak düşüş olacaktır." | T+G | 3.2 H ölçüm kolları (satış yönlü kural açığa satış olduğu için yok) | dışarıda |
+| R090 | teyit-tetik | "D oluşumunu teyit etmek için ise B noktası kırılımı gerekir." | T+G | 3.2 H ölçüm kolları (B kırılımı teyidi) | ölçüm |
+| R090 | hedef-çıkış | "D = (B \* C) / A" (Lindsay Trident) | T+G | 3.2 H ölçüm kolları (D = (B·C)/A) | ölçüm |
+| R090 | hedef-çıkış | "FIBO seviylerine göre iz süren takibe göre TP kovalanır." | T+G | 3.2 H ölçüm kolları (hedef merdiveni TP1–TP4) (kavram) | ölçüm |
+| R090 | hedef-çıkış | "hedefi dinamik olarak kalibre ediyor ... otonom kâr alabiliyor" | M/A | 8: Kural taşımayan yan cümleler (dinamik hedef kalibrasyonu, R090 başka hesabın cevabı) | dışarıda |
+| R090 | felsefe | "artık strateji vs yazmıyorum. Zaten grafik açıklıyor herşeyi." | T | felsefe notu | strateji değil |
+| R091 | rejim | "Trend rejim değişikliği için HMM yapmanıza gerek yok" (rolling korelasyon) | T | 4.5 (trend yönü: XU100 ile evren sepetinin rolling korelasyonu, T R091; seri ve pencere YORUM) | ölçüm |
+| R092 | rejim | "Fiyat ve volatilite aynı anda artması pek istenilen bir durum değildir" | T+G | 4.5 (T R092); 1 (hat 4) | ölçüm |
+| R092 | boyut-risk | "benden demesi sistemim pozisyonu kapatıp defansif pozisyoon aldı" | T+G | 4.5; 1 (hat 4); 8: "Volatilite işi" satırı (R092) | ölçüm |
+| R093 | rejim | "sağlıklı yükseliş böyle olur, fiyat çıkarken alt panaldeki mavi çizgi de 0'ın altına iner" | T+G | 4.5 (T R093) | ölçüm |
+| R093 | felsefe | "Quant strateji farklı görmektir." | T+G | felsefe notu | strateji değil |
+| R094 | rejim | "Piyasa yapıcının bize bir mesajı var:) KY sizi seviyorum diyor" (BIST100 / BIST_VOL gülümseme) | T+G | 8: Weinstein / DMA / piyasa evreleri / fat tail / BIST_VOL gülümsemesi / mal boşaltma-toplama satırı (T R094) | dışarıda |
+| R095 | portföy | "CIMSA (X)" ve "OYAKC (Y)"; Z-Skoru ±2; "Relatif Momentum Portföyü" | G | 3.3 (giriş Z ±2 ve ΔZ dönüşü, G R095) | resmi |
+| R096 | tarama-evren | "eşbütünleşme testi iyi ihtimal ile 150.000 kombinasyon taramasına kadar çıkabilir" | T | 3.3 (aday çiftler: evrendeki tüm çiftler, T R096; sektör şartı kalktı: YORUM); 2.1 | resmi |
+| R097 | boyut-risk | "garch ve standart sapma kullanarak volatiliteden kaynaklanan riski minimize etmenin yolunu" | T | 8: GARCH / ARIMA / ana frekans / finans mühendisliği / risk of ruin / kurtosis satırı (T R097) | dışarıda |
+| R098 | teyit-tetik | "Stat-arb sisteminde momentum dönüş teyidi uygulamasının karlarda çarpan etkisine" | T | 3.3 (giriş ΔZ dönüşü; Tansu'nun "momentum dönüş teyidi" ile aynı olduğu YORUM, T R098) | resmi |
+| R099 | giriş | "Sistem Z-Skorunun +2'yi aştığını görüyor ve "AGROT SAT, GARAN AL"" | M | 3.3 (Z ±2 giriş; long-only: ucuz bacak, M/T R099) | resmi |
+| R099 | giriş | "Z-Skoru bu kez -2'yi kırıyor ... tüm bakiyesiyle yeni bir işleme giriyor" | M | 3.3 (Z ±2 giriş; boyut: tüm bölme sermayesi) | resmi |
+| R099 | hedef-çıkış | "Z-Skorunun ortalamaya (0.5) döndüğünü görüyor ve pozisyonu kapatıyor" | M | 3.3 (çıkış Z 0,5'e dönünce, M/T R101); 2.1 (5.6 Çift) | resmi |
+| R099 | boyut-risk | "92.354 TL'lik tüm bakiyesiyle" | M | 3.3 (boyut: tüm bölme sermayesi, M/T R099) | resmi |
+| R099 | ölçüm-ilkesi | "Mark-to-Market" | M | 8: Kural taşımayan yan cümleler (Mark-to-Market, M/T R099; rapor zaten kapanış değeriyle) | dışarıda |
+| R099 | felsefe | "Sistem inatlaşmamış, kurala uyup çıkmış." | M | 8: Felsefe ve ölçüm ilkeleri | strateji değil |
+| R100 | stop-geçersizlik | "Her arbitraj fırsatı çalışmaz Mutlaka backtest etmek lazım Görünmez bağ kopmuş olabilir." | T+G | 3.3 (rolling kapı bozulursa çıkış, T R100) | resmi |
+| R100 | ölçüm-ilkesi | "Mutlaka backtest etmek lazım" | T+G | 8: Felsefe ve ölçüm ilkeleri | strateji değil |
+| R101 | tarama-evren | "Eğer bu iki varlık gerçekten birbiriyle eşbütünleşik (cointegrated) ise" | T/M | 3.3 (kapı: rolling eşbütünleşme) | resmi |
+| R101 | giriş | "Eğer Z-Skoru +2.0 seviyesini yukarı kırarsa ... Aşırı Ucuzlayanı AL (Long)" | T/M | 3.3 (Z ±2 giriş) | resmi |
+| R101 | hedef-çıkış | "Fark kapanıp Z-Skoru normale (0.5 seviyelerine) döndüğünde, pozisyonları kapatır" | T/M | 3.3 (çıkış Z 0,5, M/T R101) | resmi |
+| R101 | stop-geçersizlik | "Yanıldığını anladığı an zararı keser." | T/M | 3.3 (rolling kapı bozulursa çıkış, M/T R101) | resmi |
+| R101 | felsefe | "Borsada "yönü" bilmek zorunda değilsiniz." | T/M | felsefe notu | strateji değil |
+| R102 | felsefe | "Arbitraj her zaman en en sevdiğim 2 sistemden birisi İlki volatilite işi İkincisi de arbitraj" | T+G | 1 (hat 3); 3.3; volatilite işi için 8: "Volatilite işi" satırı (parçalı) | resmi |
+| R103 | felsefe | "Bizim "grafik" dediğimiz şeye onlar binlerce satırlık bir veri seti" | M | 8: Felsefe ve ölçüm ilkeleri (kavram) | strateji değil |
+| R103 | felsefe | "Fibonacci seviyelerinden ziyade; piyasa likiditesini, emir defterindeki dengesizlikleri" | M | rakip yöntem anlatımı | strateji değil |
+| R103 | felsefe | "İndikatör cart curt bizim zamanımızda kaldı. Kod öğrenin" | T | 8: Felsefe ve ölçüm ilkeleri (kavram) | strateji değil |
+| R104 | felsefe | "Profesyoneller tahminlerle değil, stratejilerle hareket eder." | M | felsefe notu | strateji değil |
+| R104 | felsefe | "Usta İşi İfadeler: "Yüksek olasılıklı bir formasyon", "Risk-ödül oranı uygun"" | M | felsefe notu | strateji değil |
+| R105 | momentum-seçim | "Arkadaşlar ortalama kullanıyor iseniz eğimlere dikkt edeceksiniz." | T | 3.1 ölçüm kolu (eğim kapısı, T R137, R105) | ölçüm |
+| R105 | momentum-seçim | "Momentum (Hız), değerden (Fiyat veya Gösterge) önce döner." | M | 3.1 ölçüm kolu (eğim kapısı) (kavram) | ölçüm |
+| R105 | teyit-tetik | "bir ortalamanın eğimi onun birinci türevidir ... eğimin yön değiştirmesi bir erken uyarı" | M | 3.1 ölçüm kolu (eğim kapısı) (kavram) | ölçüm |
+| R105 | giriş | "Kesişim gerçekleştiğinde fiyat genellikle %5-%10 primlenmiş olur." | M | 8: Mum ve gösterge yorumları (%5–10 kesişim primi, M R105) | dışarıda |
+| R105 | teyit-tetik | "uzun vadeli ortalamanın da eğimi pozitife dönmüşse" | M | 3.1 ölçüm kolu (eğim kapısı) (kavram) | ölçüm |
+| R106 | felsefe | "Ortalama (aritmetik ortalama), verideki en buyuk yalanci ve en kirilgan yapidir." | T/M | 8: Medyan temelli çalışma, medyan kanal (kavram, T R001) | ölçüm |
+| R106 | ölçüm-ilkesi | "n degeri ne kadar kucukse ... bu yalan o kadar buyuk olur." | T/M | 8: Medyan temelli çalışma, medyan kanal (kavram, T R001) | ölçüm |
+| R107 | bölge | "Finans mühendisliği modelleri destek ve direnç seviyelerini bulmak için kullanılır mı?" | T | 8: GARCH / ARIMA / ana frekans / finans mühendisliği / risk of ruin / kurtosis satırı (T R107) | dışarıda |
+| R108 | rejim | "Evre 1: Taban/Birikim ... Evre 2: Yükseliş/Boğa ... Evre 4: Düşüş/Ayı" | M | 8: Weinstein / DMA / piyasa evreleri / fat tail / BIST_VOL gülümsemesi / mal boşaltma-toplama satırı (M R108) | dışarıda |
+| R109 | felsefe | "Asla kalem kağıt kullanmadan sistem yazmam, bunu huy edinin bence." | T | 8: Felsefe ve ölçüm ilkeleri | strateji değil |
+| R109 | felsefe | "Eğer AI kullanıyor iseniz bunu yapmanız bir zorunluluk." | T | 8: Felsefe ve ölçüm ilkeleri | strateji değil |
+| R110 | tarama-evren | "Düşük Korelasyon: ... Yüksek Volatilite: Portföye girecek hisselerin "hareketli" olması" | T/M | 8: Volatilite harvesti, rebalancing, Markowitz + volatilite trading (T/M R110) | ölçüm |
+| R110 | portföy | "Seçilen 10-20 hisselik aday listesi, Modern Portföy Teorisi (Markowitz)" | T/M | 8: Markowitz + volatilite trading (T/M R110); 3.1 ölçüm kolu | ölçüm |
+| R110 | portföy | "Sharpe Oranı Optimizasyonu: ... Max Sharpe "Teğet Portföy"" | T/M | 3.1 ölçüm kolu (Max Sharpe, T/M R110) | ölçüm |
+| R110 | boyut-risk | "en verimli 3 ile 10 arası hisse, nihai trade listesine alınır" | T/M | 3.1 ölçüm kolu (3–10 hisse, T/M R110) | ölçüm |
+| R110 | boyut-risk | "4. Sistemin üzerine inşaa edilecek hissenin oranı %50 den fazla olmalıdır." | T/M | 8: Mum ve gösterge yorumları ("hissenin oranı %50'den fazla", M R110, belirsiz) | dışarıda |
+| R110 | giriş | "RSI, Bollinger Bandı veya Mean Reversion modelleri ile ... iç dalgalanmalarından kar" | T/M | 8: Markowitz + volatilite trading (T/M R110) | ölçüm |
+| R110 | portföy | "Markowitz ağırlıkları korunurken ... "Alpha" yaratılır." | T/M | 8: Markowitz + volatilite trading (T/M R110) | ölçüm |
+| R111 | felsefe | "kendinize has, özgün bir yapı kurmaktan geçer" (model sentezi) | T | 8: Felsefe ve ölçüm ilkeleri | strateji değil |
+| R111 | ölçüm-ilkesi | "sabırla backtest ve forward test süreçlerini yönetmeniz gerekir" | T | 8: Felsefe ve ölçüm ilkeleri | strateji değil |
+| R111 | felsefe | "kurduğunuz kod mimarisi başarınızın asıl anahtarıdır" | T | 8: Felsefe ve ölçüm ilkeleri | strateji değil |
+| R112 | portföy | "Portföy yönetimi e getiri hesaplamak geriye doğru simülasyonlar önemlidir" | T+G | 3.1 ölçüm kolu (tek hisse ağırlık duyarlılığı, T R112) | ölçüm |
+| R112 | portföy | "TEKTU ağırlığı artıkça portföy getirisi doğrusal artıyor" | T+G | 3.1 ölçüm kolu (tek hisse ağırlık duyarlılığı, T R112) | ölçüm |
+| R112 | portföy | "Mevcut %30 TEKTU / %20 EREGL dağılımın EREGL tarafı portföyü baskılıyor." | T+G | 3.1 ölçüm kolu (tek hisse ağırlık duyarlılığı, T R112) | ölçüm |
+| R113 | portföy | "Portföy optimizasyonu ve volatilite trading arasındaki ilişki huzurlu gecelerin anahtarıdır." | T | 8: Markowitz + volatilite trading (kavram) | ölçüm |
+| R114 | formasyon | "Fincan Oluşumu (Mavi Çizgi) ... Fibo 100% ... 317.00 (Fibo 0%)" | T+G | 8: Fincan-kulp (T/M R114) | ikinci dalga |
+| R114 | formasyon | "Kulp ... Fibonacci 61.8% (252.23) ve 50% (264.60) bölgesi" | T+G | 8: Fincan-kulp | ikinci dalga |
+| R114 | teyit-tetik | "300.75 seviyesindeki yeşil kesik çizgiyi (KIRILMA) yukarı kesiyor" | T+G | 8: Fincan-kulp (GUBRF 2025-10-24 kırılımı sadakat hedefi olarak saklanır) | ikinci dalga |
+| R114 | hedef-çıkış | "Fincan derinliği kadar yukarı gitme mantığına dayanan formasyon hedefimizi" (389.30) | T+G | 8: Fincan-kulp (hedef tabanı çelişkili: 389,30 − 104,80 = 284,50) | ikinci dalga |
+| R114 | boyut-risk | "1:2.27 Risk/Reward (Risk-Ödül) oranı sunuyor." | T+G | 8: Fincan-kulp | ikinci dalga |
+| R114 | felsefe | "doğru formasyonu doğru seviyede, sıfır duyguyla ve tam zamanında yakalamak" | T+G | 1 (hat 2: formasyon bölgesiz kullanılmaz) (kavram) | strateji değil |
+| R115 | ölçüm-ilkesi | "Stratejimiz, ham getiriden bir miktar feragat ederek ... çok daha huzurlu bir eğri" | T+G | 6 (sermaye eğrisinin sakinliği, T/M R115) | resmi |
+| R115 | ölçüm-ilkesi | "volatiliteyi %33'ten %23'e çekmesi ... Sharpe oranlarının aynı olması" (B&H kıyası) | T+G | 6 (yıllık volatilite ve en büyük düşüş, kural ile K2 yan yana, T/M R115) | resmi |
+| R116 | teyit-tetik | "diplerin yükseldiğini ... diplerin aşağı kaydığını" (gizli pozitif uyumsuzluk) | T/M | 8: Gizli pozitif uyumsuzluk (T/M R116) | ikinci dalga |
+| R116 | rejim | "Teknik olarak biz buna trend devam sinyali diyoruz." | T/M | 8: Gizli pozitif uyumsuzluk (T/M R116) | ikinci dalga |
+| R117 | teyit-tetik | "Gizli uyumsuzlukları takip ediniz, arkadaşça hatırlatma." | T+G | 8: Gizli pozitif uyumsuzluk (T R117) | ikinci dalga |
+| R118 | rejim | "ADX (28.9) ve RSI (77.6) ... VIX (20.6)" (trend skoru 5/5) | M | 2 (VIX yok); 8: BIST100 + VIX beş adım (kavram) | dışarıda |
+| R118 | rejim | "Kısa Vade (20 Günlük): 83 puan ... "Katılım Yok" uyarısı" (NH-NL) | M | 4.5 (piyasa genişliği: 20 ve 65 günlük NH-NL, M R118; 2.1) | ölçüm |
+| R118 | rejim | "Endeks bazında ortalama spread %1.06" | M | 4.5 (Corwin–Schultz, T/M R119); 2.1 (kavram) | ölçüm |
+| R118 | rejim | "Düşük Hacim uyarısı" | M | 8: Kural taşımayan yan cümleler (düşük hacim uyarısı, M R118) | dışarıda |
+| R118 | giriş | "Hacim Teyidi Bekleyin: Hacim barlarında belirgin bir artış" | M | 8: Hacim teyidi (kavram) | ölçüm |
+| R118 | giriş | "Sigma ani bir sıçrama görmediğimiz sürece, mevcut trendin tadını çıkarmaya devam edebiliriz." | M | 4.5 (Corwin–Schultz spread ve sigma) | ölçüm |
+| R118 | giriş | "Liderleri Takip Edin: XU100 spread'i düşük ve stabil olduğu için" | M | 8: Kural taşımayan yan cümleler ("Liderleri Takip Edin", M R118) | dışarıda |
+| R118 | rejim | "Mikro-Makro Çelişkisi: XU100 spread'i dar olmasına rağmen ... Düşük Hacim uyarısı" | M | 8: Kural taşımayan yan cümleler (mikro-makro çelişkisi, M R118) | dışarıda |
+| R119 | rejim | "En Yüksek ve En Düşük fiyatlar üzerinden piyasanın "arka planını"" (Corwin-Schultz) | T/M | 4.5 (Corwin–Schultz; yüksek/düşük ile hesaplanır); 2.1 | ölçüm |
+| R119 | rejim | "Spread yüksek, Sigma yüksekse; o tahtadan uzak durun" | T/M | 4.5 (Corwin–Schultz, T/M R119) | ölçüm |
+| R119 | giriş | "spread'in tekrar ortalamaya (%1.79) dönmesini beklemek gerekir" | T/M | 4.5 (Corwin–Schultz) (kavram) | ölçüm |
+| R119 | giriş | "Hacim (Volume) ile korele edip ... "mal boşaltma" mı yoksa "toplama" mı" | T/M | 8: Weinstein / DMA / piyasa evreleri / fat tail / BIST_VOL gülümsemesi / mal boşaltma-toplama satırı (T/M R119) | dışarıda |
+| R119 | rejim | "Sigma'nın zıpladığı her yerde Spread de onu takip ederek yukarı kafa atıyor." | T/M | 4.5 (Corwin–Schultz) | ölçüm |
+| R119 | rejim | "Spread'in %7 civarına fırladığı bir bölge var." | T/M | 4.5 (Corwin–Schultz) | ölçüm |
+| R119 | rejim | "Ocak ayı boyunca ... Spread (Kırmızı) genel olarak ortalamanın altında seyrediyor." | T/M | 4.5 (Corwin–Schultz) | ölçüm |
+| R119 | rejim | "Tahtanın tekrar dolması, stabil bir trend için şart." | T/M | 4.5 (Corwin–Schultz) | ölçüm |
+| R120 | momentum-seçim | "Her ay için her hissenin son 12 aydaki getirisini hesapladım ... 10 eşit gruba böldüm." | T+G | 3.1 S1 | resmi |
+| R120 | portföy | "bir sonraki ay o gruptaki hisseleri eşit ağırlıkla tuttuğumu varsaydım" | T+G | 3.1 S1 | resmi |
+| R120 | tarama-evren | "2015'ten bugüne BIST'teki 500'den fazla hissenin fiyat verisini çektim." | T+G | 1 (hat 1); 3.1 S1 (evren ilk 100, YORUM); geniş evren ölçüm kolu | resmi |
+| R120 | ölçüm-ilkesi | "işlem maliyetleri, vergiler ve likidite sorunu olan hisseler hesaba katılmadı" | T+G | 3.1 S1 (masraf %0,3, likidite %2) | resmi |
+| R120 | ölçüm-ilkesi | "En iyi momentum grubundaki hisseler diğer tüm grupları geride bıraktı." | T+G | 3.1 S1 (hipotez) | resmi |
+| R121 | momentum-seçim | "kodum optimal momentum+ portföyü için simülasyon yapıyor" | T | 8: YSA momentumu / Optimal Momentum+ / pre-signal / gizli "xxxx" metriği satırı (T R121) | dışarıda |
+| R122 | felsefe | "Öyle bir matematiksel yapı kurun ki sistem sürekli kendini yenilesin." | T/M | felsefe notu | strateji değil |
+| R122 | felsefe | "sisteminizle, o karmaşanın içindeki "ana frekansı" yakalamaya çalışın." | T/M | 8: GARCH / ARIMA / ana frekans / ... satırı (T/M R122) | dışarıda |
+| R122 | felsefe | "hata payını minimize eden o kusursuz matematiğin peşinde olun" | T/M | felsefe notu | strateji değil |
+| R122 | felsefe | "her döngüde daha güçlü hale gelen ... siz sistemin kendisi olursunuz" | T/M | felsefe notu | strateji değil |
+| R123 | — | Stefan Jansen kitap/yazar önerisi (strateji içeriği yok) | T | — | strateji değil |
+| R124 | teyit-tetik | "fiyatın bu çizgiyi sert bir şekilde yukarı kırdığını görüyoruz" | M | 8: Kanal alt bandı, düşen direnç kırılımı + retest (kavram) | ölçüm |
+| R124 | bölge | "Talep Bölgesi (Yeşil Yatay Kutu) ... Fiyat bu bölgeye girdiğinde her seferinde destek bulmuş." | M | 3.2 akış 2 (kavram) | resmi |
+| R124 | teyit-tetik | "Hacimli kırılım, gerçek kırılımdır kuralı" | M | 8: Hacim teyidi ("Hacimli kırılım", M R124) | ölçüm |
+| R124 | teyit-tetik | "Hareketli Ortalamalar (EMA 5, 8, 13) ... Boğa Dizilimi" | M | 3.2 S ölçüm kolları (kırılım sonrası boğa dizilimi EMA5 > EMA8 > EMA13, M R124) | ölçüm |
+| R124 | teyit-tetik | "En sağdaki uzun yeşil mum ... o günü en yüksek seviyeye yakın kapattığını" | M | 8: Mum ve gösterge yorumları (uzun yeşil mumun yüksek yakın kapanışı, M R124) | dışarıda |
+| R125 | formasyon | "Ema sıkışması parametrelerin detaylarını verip stratejimi anlatamam" | T+G | 3.2 S (G R125; ölçüm kolu EMA30/50/100/200 ICBCT) | resmi |
+| R125 | teyit-tetik | "Pre signal ok ile işaretlenen mum matrix ekranında" | T+G | 8: YSA momentumu / Optimal Momentum+ / pre-signal oku / "xxxx" satırı (T R125) | dışarıda |
+| R126 | bölge | "düşüşün 0.786 düzeltme seviyesine (yaklaşık ₺31.00)" | T/M | 8: Mum ve gösterge yorumları (0,786'nın direnç olarak kullanımı, M R126) | dışarıda |
+| R126 | bölge | "POC (Point of Control): ₺29.71 ... VAH (Value Area High - ₺30.24)" | T/M | 8: VWAP / POC / VAH / VAL (kavram) | dışarıda |
+| R126 | bölge | "VWAP ... ₺28.00'ın (VWAP) %+10.73 üzerindedir" | T/M | 8: VWAP / POC / VAH / VAL (kavram) | dışarıda |
+| R126 | teyit-tetik | "+DI ... -DI ... DMI" ve "Delta ve Kümülatif Delta" | T/M | 2 (kümülatif delta yok) | dışarıda |
+| R127 | formasyon | "sıkışma zamanlarını iyi tespit eder ve yakalarsanız hele ki bir de o alanda formasyon vs varsa" | T+G | 3.2 S (T R127) | resmi |
+| R127 | formasyon | "Rasyoyu siz belirleyeceksiniz"; "Tolerans %1.2 / Min 3 gün" | T+G | 3.2 S (tolerans %1,2, min 3 gün; EMA 20/50/100/200 ölçüm kolu, G R127); 5.1 (KRDMD) | resmi |
+| R128 | formasyon | "neredeyse iç içe geçtiğini ... Yay ne kadar çok gerilirse, ok o kadar uzağa gider." | M | 3.2 S (kavram: sıkışma) | resmi |
+| R128 | bölge | "11.300 seviyelerindeki KDE tepe dirençlerini hacimli mumlarla geçmesiyle patlama" | M | 4.1 (ölçüm: KDE fiyat yoğunluk seviyeleri, M R128) | ölçüm |
+| R128 | teyit-tetik | "EMAs'ların birbirini keserek yukarı yönlü "Boğa Dizilimi"ne girmesidir" | M | 3.2 S ölçüm kolları (boğa dizilimi teyidi, M R128) | ölçüm |
+| R128 | rejim | "EMAs'lar artık birer direnç değil, güçlü birer dinamik destek haline gelmiştir." | M | 8: Kural taşımayan yan cümleler (EMA'ların dinamik desteğe dönmesi, M R128) | dışarıda |
+| R128 | teyit-tetik | "hacim barlarının son dönemde yükselmiş olması ... taze para girişi" | M | 8: Hacim teyidi (kavram) | ölçüm |
+| R128 | hedef-çıkış | "fiyat ortalamalardan çok uzaklaştığında bir soğuma, yatay seyir veya ... re-test" | M | tasarımda yok (ortalamadan uzaklık ve soğuma cümlesi) | BAĞSIZ |
+| R129 | bölge | "Açık yeşil alan (Bullish FVG) ... bir "mıknatıs" ve "denge" bölgesidir." | T/M | 4.2 (FVG) (kavram) | resmi |
+| R129 | giriş | "bu yeşil alan "Optimal Trade Entry" (OTE) dediğimiz en verimli alım bölgesi olacaktır." | T/M | 3.2 E (M R197 OTE 0,618–0,786, kavram) | resmi |
+| R129 | teyit-tetik | "alt zaman dilimlerinde (1H veya 4H) bir karakter değişimi (CHoCH) görmeden doğrudan long pozisyon almak riskli" | T/M | 4.2 (1H/4H CHoCH teyidi, M R129: gün içi veri yok) | dışarıda |
+| R129 | teyit-tetik | "BOS (Break of Structure) ... EMA 9, 21, 50, 100, 200 üzerine" | T/M | 4.2 (BOS, M R129; EMA üstü kısmı atıfsız) | resmi |
+| R129 | bölge | "FVG'ler bazen sadece birer durak değil, fiyatın altına sarkıp altındaki likiditeyi temizlemek istediği yerler" | T/M | 8: Kural taşımayan yan cümleler (likidite süpürme, M R129) | dışarıda |
+| R129 | bölge | "Fiyat önce yukarıdaki dirençleri test edip likidite topladıktan sonra bu açık hesabı kapatmak isteyecektir." | T/M | 8: Kural taşımayan yan cümleler (önce üst dirençleri test, M R129) | dışarıda |
+| R129 | bölge | "Grafikteki yeşil alanın konumu, fiyatın uzun vadeli ana destek bölgesiyle de örtüşüyor." | T/M | 8: Çoklu aralık Fibonacci kümeleri, confluence ilkesi (kavram) | ölçüm |
+| R130 | stop-geçersizlik | "arkanıza bakmadan kaçmanız gereken mum gravestone doji" | T+G | 8: Mum formasyonları (gravestone, T R130) | ölçüm |
+| R131 | rejim | "eğer piyasa hareketli ortalamanın altındaysa ... satış yönlü; ... üzerindeyse, alış yönlü" | T | 4.5 (trend yönü: XU100 ortalamanın üstü/altı, T R131); 3.2 akış 1 (SMA250 kapısı) (kavram) | ölçüm |
+| R131 | felsefe | "Konu bundan ibarettir. Trend is your friend." | T | 4.5 (trend yönü, T R131 "Trend is your friend") | ölçüm |
+| R132 | formasyon | "dragonfly doji ile ... Ortalamalar kesişmiş vs vs sıkışma alanından da çıkmış" | T+G | 2 (doji: mum formasyonu yalnız ölçülür); 3.2 S (sıkışma kısmı) | ölçüm |
+| R133 | temel-değerleme | "Bana kalırsa bu hisse ilk çeyrek bilançosunun açıklanmasını bekliyor." | T+M+G | 8: Bilanço kalite filtreleri (HBK U dönüşü, T R133) (kavram) | ikinci dalga |
+| R133 | temel-değerleme | "hissenin FK'sı zaten ortalamalarda, güzel bir U dönüş görünüyor" (HBK) | T+M+G | 8: Bilanço kalite filtreleri (HBK U dönüşü, T R133) | ikinci dalga |
+| R133 | felsefe | "Formüller burada bir tercüman görevi görür." | T+M+G | felsefe notu | strateji değil |
+| R133 | temel-değerleme | "O yüzden HBK evrensel bir cevap sunar." | T+M+G | 8: Kural taşımayan yan cümleler (HBK'nın evrensel ölçü olması, T R133) | dışarıda |
+| R134 | temel-değerleme | "Eğer borç artarken aynı zamanda Maddi Duran Varlıklar kalemi de artıyorsa" | M+G | 8: Bilanço kalite filtreleri (borç büyümesi vs ciro, M R134) | ikinci dalga |
+| R134 | temel-değerleme | "Borç %84 artarken ciro %100 artıyorsa, bu sağlıklı bir büyümedir." | M+G | 8: Bilanço kalite filtreleri (M R134) | ikinci dalga |
+| R134 | temel-değerleme | "ASUZU'nun borç büyümesi %83 iken rakiplerinde (FROTO, TOASO) bu oran %20 ise" (metin–görsel çelişkisi: görselde FROTO +0,7%, TOASO +47,0%) | M+G | 8: Bilanço kalite filtreleri (M R134) | ikinci dalga |
+| R134 | temel-değerleme | "Özkaynak / Borç Dengesi: Borç artarken özkaynaklar yerinde sayıyorsa" | M+G | 8: Bilanço kalite filtreleri (M R134) | ikinci dalga |
+| R134 | temel-değerleme | "Bu şirket borç aldığı parayla, borcun maliyetinden daha fazla para kazanabiliyor mu?" | M+G | 8: Bilanço kalite filtreleri (M R134) | ikinci dalga |
+| R134 | felsefe | "Python kullanmak, binlerce satırlık bilanço verisini saniyeler içinde" | M+G | felsefe notu | strateji değil |
+| R135 | temel-değerleme | "def borc\_buyume\_hesapla(guncel\_borc, onceki\_borc)" | T | 8: Bilanço kalite filtreleri (borç büyümesi, T R135) | ikinci dalga |
+| R136 | teyit-tetik | "gizli pozitif uyumsuzlukların gücü tabi nerede baktığınıza bağlı" | T+G | 8: Gizli pozitif uyumsuzluk (T R136) | ikinci dalga |
+| R137 | diğer | "Bu sistem satılık değil arkadaşlar önce onu belirteyim." | T | 1 (hat 1) | strateji değil |
+| R137 | felsefe | "veriyi farklı süzgeçlerden geçirerek rafine eden çok aşamalı bir karar destek mekanizması" | T | 1 (hat 1); 3.1 ölçüm kolları | ölçüm |
+| R137 | momentum-seçim | "yapay sinir ağları ile oluşturduğum bir momentum stratejim var" | T | 3.1 (YSA ve gizli; yerine R120 ölçüsü); 8: YSA momentumu satırı | dışarıda |
+| R137 | momentum-seçim | "hem fiyatın hem de oluşan sinyalin eğimi ni kontrol ediyorum" | T | 3.1 ölçüm kolu (eğim kapısı, T R137) | ölçüm |
+| R137 | teyit-tetik | "ADX ve Para Akışı (CMF) ... 'Çekiç' veya 'Sabah Yıldızı'" | T | 3.1 ölçüm kolu (teknik onay: ADX > eşik ve CMF > 0; çekiç/sabah yıldızı AOF vekiliyle) | ölçüm |
+| R137 | portföy | "4. Aşama: Markowitz Portföy Optimizasyonu" | T | 1 (hat 1); 3.1 ölçüm kolu | ölçüm |
+| R137 | portföy | "5. Aşama: Maksimum Sharpe Seçimi (Final Kararı)" | T | 3.1 ölçüm kolu (Max Sharpe 3–10 hisse) | ölçüm |
+| R137 | felsefe | "en dengeli takımı nasıl kurarım sorusuna yanıt vererek bilimsel bir yatırım planı" | T | felsefe notu | strateji değil |
+| R138 | giriş | "sadece belirgin trendleri (AD > EMA) toplamanın hikayesidir" | M+T+G | 8: RSI 30 / Williams %R / APO / A/D–EMA3 / HalfTrend / ML lojistik satırı (A/D–EMA3, M/T R138) | dışarıda |
+| R138 | ölçüm-ilkesi | "geceleri huzurlu uyumanızı sağlayan şey Sharpe değil, kümülatif getiri grafiğindeki o sakinliktir" | M+T+G | 6 (sermaye eğrisinin sakinliği, M/T R138: gövde M, son cümle T) | resmi |
+| R138 | boyut-risk | "piyasa kan ağlarken sizi nakitte tutarak sermayenizi bir kalkan gibi korumuş" | M+T+G | 8: A/D–EMA3 (kavram) | dışarıda |
+| R138 | felsefe | "piyasada Haklı çıkmak bir ego tatminidir, ancak sermayeyi korumak bir hayatta kalma becerisidir." | M+T+G | felsefe notu | strateji değil |
+| R138 | ölçüm-ilkesi | "EMA değeri walk forward le optimzie edilerek model oluşturulmuştur." | M+T+G | 8: A/D–EMA3 (M/T R138) | dışarıda |
+| R139 | giriş | "Enter long: AD() Ref(Mov(AD(),opt1,E), 1) ... OPT1 Current value: 3" | T | 8: A/D–EMA3 (R139'da operatör eksik) | dışarıda |
+| R139 | diğer | "Çatır çutur girip çıkmak için, 1-2 gün" | T | 8: A/D–EMA3 (kavram) | dışarıda |
+| R140 | ölçüm-ilkesi | "Yüzdelik doğruluk ..., acemi yatırımcıların bir takıntısıdır" | M/A | 6 (kazanma oranı tek ölçüt değildir, M R140) | resmi |
+| R140 | ölçüm-ilkesi | "temel performans ölçütü, toplam net kârın maksimum sermaye erimesine oranıdır" | M/A | 6 (net kâr / en büyük düşüş, M R140) | resmi |
+| R140 | ölçüm-ilkesi | "erimeler diğer indikatörlerin erimeleriyle karşılaştırıldığında şiddetliyse, o işlem sistemini bir kenara bırakmalı" | M/A | 6 (kavram) | resmi |
+| R140 | felsefe | "Basit tut hala verilebilecek en iyi tavsiyedir." | M/A | 8: Felsefe ve ölçüm ilkeleri | strateji değil |
+| R141 | — | "Awesome Econ AI Stuff" kaynak tanıtımı (strateji içeriği yok) | A | — | strateji değil |
+| R142 | — | ekonometri yöntem haritası: "13 blok, 81 soruluk bir harita" (strateji içeriği yok) | A | — | strateji değil |
+| R143 | formasyon | "Upper Shadow ... Lower Shadow ..." (üst/alt gölge formülleri) | M+T+G | 2 (açılış yok); 8: Mum formasyonları (kavram) | ölçüm |
+| R143 | formasyon | "Aşağıdaki kodu kullan geliştir formasyonları tanımla vs vs" | M+T+G | 8: Mum formasyonları (kavram) | ölçüm |
+| R144 | temel-değerleme | "PD/DD ... şirketin özkaynaklarını ne kadar verimli kullandığını gösteren bir sağlamlık filtresi" | M+T | 8: Momentum × faaliyet nakit akışı 5×5 / TOPSIS / DEA / PD/DD+ROE satırı (M R144) | ikinci dalga |
+| R144 | temel-değerleme | "Tarihsel Ortalamalar: Şirket son 36 çeyrekte ..." | M+T | 8: PD/DD+ROE (M R144) | ikinci dalga |
+| R144 | temel-değerleme | "36 çeyreklik (uzun dönem) ortalamayı bir 'çıpa' noktası olarak alıp" | M+T | 8: PD/DD+ROE (M R144) | ikinci dalga |
+| R144 | temel-değerleme | "'PD/DD oranı 1'in altında, o halde bu hisse bedava' diyerek alım yapmak büyük bir hatadır" (değer tuzağı) | M+T | 8: PD/DD+ROE (M R144) | ikinci dalga |
+| R144 | temel-değerleme | "Düşük PD/DD + Yüksek Özkaynak Karlılığı + Sektör Altı Çarpan = Potansiyel Yıldız." | M+T | 8: PD/DD+ROE (M R144) | ikinci dalga |
+| R144 | temel-değerleme | "Teknoloji ve Yazılım: ... PD/DD genellikle çok yüksek çıkar" | M+T | 8: PD/DD+ROE (M R144) | ikinci dalga |
+| R145 | momentum-seçim | "Topsis analizinin deneysel sonuçları inanılmaz. İndikatör cart curt hikaye. Topsis yapın." | T | 8: TOPSIS (T R145) | ikinci dalga |
+| R146 | temel-değerleme | "full\_year\_beklenti = onceki\_yil\_satis(2022/12) × (1 + 1.88)" | T | 8: Değerleme sistemi (basit model) (kavram) | ikinci dalga |
+| R146 | temel-değerleme | "kalan\_donem\_satis = full\_year\_beklenti - ytd\_satis" | T | 8: Değerleme sistemi (basit model) (kavram) | ikinci dalga |
+| R146 | temel-değerleme | "tahmini\_net\_kar = kalan\_donem\_satis × NET\_KAR\_MARJI + ytd\_net\_kar" | T | 8: Değerleme sistemi (basit model) (kavram) | ikinci dalga |
+| R147 | temel-değerleme | "doğrudan şirketin faaliyet hacmine (adet/ton) inen 'aşağıdan yukarıya' (bottom-up) bir sistem mimarisi" | T+M+G | 8: Değerleme sistemi (kavram: adet bazlı tahmin) | ikinci dalga |
+| R147 | temel-değerleme | "Net kar, havadan gelen bir rakam değildir; cironun bir türevidir." | T+M+G | 8: Değerleme sistemi (kavram) | ikinci dalga |
+| R147 | temel-değerleme | "FD/FAVÖK ... %6.0 FAVÖK Marjı ... 119.28 TL" | T+M+G | 8: Değerleme sistemi (kavram) | ikinci dalga |
+| R147 | temel-değerleme | "Ne kadar satar? (Adet) → Hangi fiyattan ve kurdan satar? (Ciro) → ..." | T+M+G | 8: Değerleme sistemi (kavram) | ikinci dalga |
+| R147 | temel-değerleme | "INA, Çarpanlar değerleme sisteminin bir ayağıdır." | T+M+G | 8: Değerleme sistemi (kavram) | ikinci dalga |
+| R148 | teyit-tetik | "if (half\_trend[t] == 'buy' and momentum[t] > momentum\_threshold)" | T | 8: RSI 30 / Williams %R / APO / A/D–EMA3 / HalfTrend / ML lojistik satırı (HalfTrend, T R148) | dışarıda |
+| R149 | bölge | "confluence alanının gücü..." (PETKM) | T+G | 8: Çoklu aralık Fibonacci kümeleri, confluence ilkesi (kavram) | ölçüm |
+| R150 | temel-değerleme | "şirketlerin cari dönem içindeki ara raporlarını modelimize entegre etmek hayati bir önem taşıyor." | M+T+G | 8: Değerleme sistemi (kavram) | ikinci dalga |
+| R150 | temel-değerleme | "ilk yarının gerçekleşen FAVÖK marjını bizzat sahadan, yani son rapordan çekip" | M+T+G | 8: Değerleme sistemi (kavram) | ikinci dalga |
+| R150 | temel-değerleme | "O nedenle koda manuel giriş sseçeneği de koydum." | M+T+G | 8: Değerleme sistemi (kavram) | ikinci dalga |
+| R150 | ölçüm-ilkesi | "xxcelde eski yaptığım değerlemeleri koda döküyorum" | M+T+G | 8: Değerleme sistemi (kavram) | ikinci dalga |
+| R151 | temel-değerleme | "Temel mantık 'Şirketin geçmişteki karlılık ve satış performansına bak ...'" | T+M+G | 8: Değerleme sistemi (T R151) | ikinci dalga |
+| R151 | temel-değerleme | "Bunları da temel analiz kodlarımızın çıktılarından alıyoruz." | T+M+G | 8: Değerleme sistemi (T R151) | ikinci dalga |
+| R151 | temel-değerleme | "Kod, manuel olarak girilen (4.33x) FK çarpanını kullanır" | T+M+G | 8: Değerleme sistemi (T R151) | ikinci dalga |
+| R151 | temel-değerleme | FD/FAVÖK: FAVÖK marjı, net borç, piyasa değeri = FD - net borç | T+M+G | 8: Değerleme sistemi (T R151) | ikinci dalga |
+| R151 | temel-değerleme | "Kod bu iki değerin ortalamasını alarak sene sonu için 1118.85 TL'lik bir hedef fiyat belirler." | T+M+G | 8: Değerleme sistemi (T R151) | ikinci dalga |
+| R151 | temel-değerleme | "Sistemin ikinci ayağının ikinci aşaması ise FK , PD/DD , fd/FAVÖK ile kısa uzun ve sektör ortalama değerlerini" | T+M+G | 8: Değerleme sistemi (T R151) | ikinci dalga |
+| R151 | temel-değerleme | "İNA'sonucunun %40'ı, ... ortalamasının %60'ı alınarak sapmalar minimize edilir." | T+M+G | 8: Değerleme sistemi (T R151) | ikinci dalga |
+| R152 | temel-değerleme | "çarpanla rile değerleme sistemimizin ilk adımı basit çalışmalar olacak" | T+M+G | 8: Değerleme sistemi (kavram) | ikinci dalga |
+| R152 | temel-değerleme | beş adım: önceki yıl satış, büyüme, net kâr marjı, F/K, ödenmiş sermaye | T+M+G | 8: Değerleme sistemi (kavram) | ikinci dalga |
+| R152 | ölçüm-ilkesi | "2023 yıl sonunda sanırım froto gerçek maliyet ve kapanış değeri tam olarak 747 TL idi." | T+M+G | 8: Değerleme sistemi (kavram) | ikinci dalga |
+| R153 | temel-değerleme | "Bir şirketin bugünkü gerçek değeri, gelecekte cebimize koyacağı nakitlerin bugünkü değeridir." (10 yıllık FCFF DCF) | T+M+G | 8: DCF altyapısı (FCFF, T R153) | ikinci dalga |
+| R153 | temel-değerleme | tarihsel oran analizi 2010–2021/6 (brüt kâr marjı, FAVÖK marjı, capex/satış) | T+M+G | 8: DCF altyapısı (T R153) | ikinci dalga |
+| R153 | temel-değerleme | "Satışların ilk yıllarda hızlı, sonra daha oturmuş bir tempoda büyüyeceğini varsaydık." | T+M+G | 8: DCF altyapısı (T R153) | ikinci dalga |
+| R153 | temel-değerleme | özkaynak maliyeti: temettü, risk primi vb. yöntemlerin ortalaması | T+M+G | 8: DCF altyapısı (CoE, T R153) | ikinci dalga |
+| R153 | temel-değerleme | "WACC hesabı kavramı anlamanız için gösterilmiştir. DCF de WACC 19.1 kullanılmıştır." | T+M+G | 8: DCF altyapısı (WACC, T R153) | ikinci dalga |
+| R153 | temel-değerleme | "Devam Eden Değer (Terminal Value)"; sürekli büyüme %3,0 | T+M+G | 8: DCF altyapısı (terminal değer, T R153) | ikinci dalga |
+| R154 | temel-değerleme | "DCF artık varsayımları girdikten sonra tek bir tuş ile sonuç verecek." | T+G | 8: Ürün hedefi (tek tuş, Excel çıktıları, R154); DCF altyapısı (T R154) | kapsam dışı |
+| R155 | temel-değerleme | "şirketin bugünkü değerinin %60 ile %80'i ... 'Uç Değer'den gelir" | M+G | 8: DCF altyapısı (terminal değer, M R155) | ikinci dalga |
+| R155 | temel-değerleme | "Sensitivity Analysis Yapın" (WACC × g matrisi) | M+G | 8: DCF altyapısı (duyarlılık, M R155) | ikinci dalga |
+| R155 | temel-değerleme | "Tersine DCF (Reverse DCF) Çalıştırın" | M+G | 8: DCF altyapısı (ters DCF, M R155) | ikinci dalga |
+| R155 | boyut-risk | "ciddi bir güvenlik marjı (örneğin %20 ile %30 arası) talep edin" | M+G | 8: DCF altyapısı (güvenlik marjı %20–30, M R155) | ikinci dalga |
+| R155 | temel-değerleme | "Muhafazakar Olun ... Büyüme oranlarını her zaman makroekonomik gerçeklere yakınsayacak şekilde törpüleyin." | M+G | 8: DCF altyapısı (M R155) | ikinci dalga |
+| R155 | felsefe | "DCF bir hedef fiyat üretme makinesi değil ... matematiksel bir stres çarkıdır." | M+G | 8: DCF altyapısı (M R155) (kavram) | ikinci dalga |
+| R156 | giriş | "Mean reversion, absolute pricing oscilator kullanılarak oluşturulan bir strateji." | T+G | 8: Bant kuyruğu tepki alımı (mean reversion APO, T R156; aynı fikir "RSI 30 / ... APO" satırında da anılır) | ikinci dalga |
+| R156 | bölge | "Buna bir de yükselen kanal desteği çizdik mi mis:)" | T+G | 8: Kanal alt bandı, düşen direnç kırılımı + retest (kavram) | ölçüm |
+| R157 | felsefe | "Hipotez Oluşturma Test Etme Analiz Geliştirme" | M+T | 8: Felsefe ve ölçüm ilkeleri | strateji değil |
+| R157 | ölçüm-ilkesi | "Backtesting ... İşlem maliyetleri, piyasa likiditesi ve kayma (slippage)" | M+T | 8: Felsefe ve ölçüm ilkeleri | strateji değil |
+| R157 | boyut-risk | "Risk Kontrolleri ve Beklenmedik Durum Planları: ... zarar durdur (stop-loss)" | M+T | 8: Felsefe ve ölçüm ilkeleri | strateji değil |
+| R157 | felsefe | "iki satır kod yazayım ya da yazdırayım sevdası ... yıkıma sebep olabilir." | M+T | 8: Felsefe ve ölçüm ilkeleri | strateji değil |
+| R158 | temel-değerleme | FCFF 388, FCFE 421, DDM 396: "Üç yöntemin birbirine bu kadar yakın çıkması tesadüf değil" | T/M+G | 8: DCF altyapısı (FCFF/FCFE/DDM, T/M R158) | ikinci dalga |
+| R158 | temel-değerleme | "hem kısa hem orta hem uzun vadeli çarpanlar ayrı ayrı hesaplanacak." | T/M+G | 8: Değerleme sistemi (çarpanlar 3×3, T R158) | ikinci dalga |
+| R158 | temel-değerleme | "üçünün ortalaması toplam ağırlığın yüzde kırkını ... çarpanlar analizinin ortalaması ise yüzde altmışı." | T/M+G | 8: Değerleme sistemi (%60/%40, T R158) | ikinci dalga |
+| R158 | temel-değerleme | "piyasa ne der sorusu, biz ne hesapladık sorusundan genellikle daha bağlayıcı oluyor." | T/M+G | 8: Değerleme sistemi (T R158) | ikinci dalga |
+| R158 | portföy | "Radara giren, sinyal üreten hisselerin tüm değerlemeleri yapılacak" (Dupont, teknik analiz) | T/M+G | 8: Hibrit alarm (kavram); Bilanço kalite filtreleri (Dupont) | ikinci dalga |
+| R159 | temel-değerleme | "Damodaran'ın bu yaklaşımını kullanmalısınız" (Total Beta) | M+G | 8: DCF altyapısı (Damodaran total beta, M R159) | ikinci dalga |
+| R159 | temel-değerleme | Unlevered beta; Total Beta = unlevered β / √R²; CoE = Rf + levered total β × ERP | M+G | 8: DCF altyapısı (total beta, CoE, M R159) | ikinci dalga |
+| R159 | felsefe | "Python ... tek tuşla güncelleyebilirsiniz" | M+G | 8: Ürün hedefi (tek tuş) (kavram) | kapsam dışı |
+| R160 | temel-değerleme | "Bu kadar basit işte" (CoE = rF + beta × rP) | T+G | 8: DCF altyapısı (CoE, T R160) | ikinci dalga |
+| R161 | temel-değerleme | FCFE / FCFF / DDM karşılaştırma tablosu | G | 8: DCF altyapısı (G R161) | ikinci dalga |
+| R162 | temel-değerleme | "roc = (ebit\*(1-tr/100)) / (bvd + bve)" | M+T | 8: Makro, Gordon, ROC, CAPM, kur Monte Carlo, yöntem notları (M R162) | kapsam dışı |
+| R163 | temel-değerleme | "Kod bu iki akışı 5 yıl boyunca büyütür ... Terminal Value" (FCFE + DDM) | T/M | 8: DCF altyapısı (M R163) | ikinci dalga |
+| R163 | temel-değerleme | "Eğer FCFE değeri, DDM değerinden çok yüksekse" | T/M | 8: DCF altyapısı (M R163) | ikinci dalga |
+| R163 | felsefe | "bir değerleme uzmanı bu modeli tek başına mutlak doğru kabul etmek yerine ... makası görmek" | T/M | 8: DCF altyapısı (M R163) (kavram) | ikinci dalga |
+| R163 | diğer | "Profesyonel Raporlama: ... Excel dosyasına dökerek" | T/M | 8: Ürün hedefi (Excel çıktıları, R163) | kapsam dışı |
+| R164 | temel-değerleme | "Çarpan ve INA değerlemesi çalışmasının küçük kodlamalarından bir kesit." (EBIT bileşik büyüme) | T+G | 8: DCF altyapısı (T R164) | ikinci dalga |
+| R165 | temel-değerleme | DCF 5 adım (WACC, FCF tahmini, bugünkü değer, terminal değer, içsel değer) | G-dış | 8: DCF altyapısı (G-dış R165) | ikinci dalga |
+| R166 | diğer | "Çok önceleri excelde hazırladığım bir değerleme çalışmam vardı onu artık koda dökmenin zamanı geldi." | T | 8: Değerleme sistemi (T R166) | ikinci dalga |
+| R166 | temel-değerleme | "Temel Analiz’in tüm matematiksel gücüyle Teknik Analiz’in zamanlamasını birleştiren, bir 'Hibrit Değerleme Sistemi'ni kodlamaya başlayacağım." | T | 8: Hibrit alarm (T R166); Değerleme sistemi | ikinci dalga |
+| R166 | temel-değerleme | "Şirketin gelecek 10 yıllık nakit üretme kapasitesini bugüne indirgeyeceğiz." | T | 8: Değerleme sistemi; DCF altyapısı (T R166) | ikinci dalga |
+| R166 | temel-değerleme | "WACC & Beta: ... Damodaran yaklaşımıyla" (Dinamik İskonto) | T | 8: DCF altyapısı (Damodaran, WACC; T R166) | ikinci dalga |
+| R166 | temel-değerleme | "Sistem, satış gelirlerinden net kara, döviz bazlı büyümeden FAVÖK marjına kadar her kalemi tek tek işleyecek." (Adet Bazlı Tahminleme) | T | 8: Değerleme sistemi (T R166) | ikinci dalga |
+| R166 | temel-değerleme | "Sistem çıktı olarak bize 3 farklı senaryo sunacak" | T | 8: Değerleme sistemi (T R166) | ikinci dalga |
+| R166 | teyit-tetik | "değerleme %50 potansiyel diyorsa, Teknik 'Şimdi al' dediğinde sistem alarm verecek." | T | 8: Hibrit alarm (T R166) | ikinci dalga |
+| R166 | diğer | "Amacım bilanço açıklandığı an temel veriyi saniyeler içinde çekip ... 'Ucuz/Pahalı/Trendte' etiketini" | T | 8: Hibrit alarm (T R166) | ikinci dalga |
+| R166 | felsefe | "Çünkü piyasa fiyatı sizin ödediğinizdir, değer ise aldığınızdır." | T | felsefe notu | strateji değil |
+| R166 | temel-değerleme | "Marj Analizleri: Brüt kar marjından, operasyonel işletme sermayesi (ONİS) değişimine kadar nakit döngüsünü" | T | 8: Değerleme sistemi (T R166) | ikinci dalga |
+| R167 | teyit-tetik | "KLMSN.IS - Engulfing + EMA34 Tepki/Kırılım" | G | 8: Mum formasyonları (engulfing) (kavram) | ölçüm |
+| R167 | teyit-tetik | EMA5, EMA8, EMA13, EMA34 dizisi çizilmiş | G | 3.2 S ölçüm kolları (boğa dizilimi EMA5 > EMA8 > EMA13, G R167) | ölçüm |
+| R168 | bölge | "GEDZA": trend desteği, en yakın demand, en yakın FVG, BOS | G | 4.1; 4.2 (FVG, BOS; trend desteği 4.2 trend çizgisi) | resmi |
+| R168 | teyit-tetik | Hacim, MACD, ADX, RSI panelleri; "Temas" işareti | G | 8: Mum ve gösterge yorumları (MACD/RSI panelleri, G R168) | dışarıda |
+| R169 | — | Python öğrenme rehberi (strateji içeriği yok) | M+T | — | strateji değil |
+| R170 | rejim | "Trend Filtresi: Fiyat, 14 periyotluk SMA çizgisinin üzerinde seyretmelidir." | T+M | 8: RSI 30 / Williams %R 30 dk satırı (M R170; gün içi) | dışarıda |
+| R170 | teyit-tetik | "Williams %R önce aşırı alım bölgesine (-20 ile 0 arası) girmelidir." | T+M | 8: Williams %R 30 dk (M R170) | dışarıda |
+| R170 | giriş | "-50'den yukarı döndüğü mumun (yeşil mum) en yüksek seviyesinin üzerine çıkıldığında işleme girilir." | T+M | 8: Williams %R 30 dk (M R170) | dışarıda |
+| R170 | stop-geçersizlik | "Stop Loss: En yakın dip (swing low) seviyesine konulur." | T+M | 8: Williams %R 30 dk (M R170) | dışarıda |
+| R170 | hedef-çıkış | "Hedef: En az 1:2 Risk/Ödül oranı hedeflenir." | T+M | 8: Williams %R 30 dk (M R170) | dışarıda |
+| R170 | giriş | Short ayna: SMA altı, %R -80 altı, swing high stop | T+M | 8: Williams %R 30 dk (M R170) | dışarıda |
+| R171 | felsefe | "kendi fikirlerinizi (veya başkalarının iddialarını) test edebilme imkanıdır" | T+M | 8: Felsefe ve ölçüm ilkeleri | strateji değil |
+| R171 | ölçüm-ilkesi | "Python, duyguları denklemden çıkarır." | T+M | 8: Felsefe ve ölçüm ilkeleri | strateji değil |
+| R171 | felsefe | "'Acaba çalışır mı?' diye kumar oynamak yerine, 'Veriler ne diyor?'" | T+M | 8: Felsefe ve ölçüm ilkeleri | strateji değil |
+| R172 | rejim | "bir piyasa bir kez harekete geçtiğinde, tersine bir sinyal oluşana kadar mevcut trendini sürdürme eğilimindedir." | T/M | 8: Felsefe ve ölçüm ilkeleri | strateji değil |
+| R172 | felsefe | "trenddeki kırılma (dönüş) noktalarını 'tespit etmek' ve trene doğru zamanda binip doğru zamanda inmektir." | T/M | 8: Felsefe ve ölçüm ilkeleri | strateji değil |
+| R172 | felsefe | "Asıl amacımız ASLA TEPE VEYA DİP NOKTALARI YAKALAMAYA ÇALIŞMAK DEĞİLDİR." | T/M | 8: Felsefe ve ölçüm ilkeleri | strateji değil |
+| R172 | momentum-seçim | "akıntının (momentumun) yönünü tayin edip o dalgayı sürmeye odaklanmalısınız." | T/M | 8: Felsefe ve ölçüm ilkeleri | strateji değil |
+| R173 | portföy | Ham fiyat → getiri → standart sapma, korelasyon, Sharpe (öğrenme notu) | G-dış | 8: Makro, Gordon, ROC, CAPM, kur Monte Carlo, yöntem notları (R173) | kapsam dışı |
+| R174 | ölçüm-ilkesi | "ARIMA Hiperparametre Optimizasyonunu ... itertools ... Ben doğrusu bunu kullanıyorum..." | T | 8: GARCH / ARIMA / ana frekans / ... satırı (ARIMA grid search, T R174) | dışarıda |
+| R175 | momentum-seçim | "her bir sektörü ... birer Karar Verme Birimi (KVB) olarak kabul ederiz." | T+M | 8: DEA / Convex Hull (T R175) | ikinci dalga |
+| R175 | portföy | "skoru 1 olan (veya 1'e en yakın olan) 3-4 sektör portföye dahil edilir." | T+M | 8: DEA / Convex Hull (T R175) | ikinci dalga |
+| R175 | portföy | "etkinlik skoru belirgin bir şekilde düşmeye başladığında ... bu sektörden çıkış yapılır." | T+M | 8: DEA / Convex Hull (T R175) | ikinci dalga |
+| R175 | momentum-seçim | "Malmquist ... skoru 1'in üzerindeyse" | T+M | 8: DEA / Convex Hull (T R175) | ikinci dalga |
+| R175 | diğer | "PyDEA veya Scipy kütüphaneleriyle modelleyerek" | T+M | 8: DEA / Convex Hull (T R175) | ikinci dalga |
+| R176 | momentum-seçim | "momentum\_func: ... slope ... annualized = (1 + slope) \*\* 252; return annualized \* (rvalue \*\* 2)" | T | 3.1 ölçüm kolu (Clenow, T R176) | ölçüm |
+| R176 | momentum-seçim | "sadece hissenin ne kadar yükseldiğine (getiri) değil, ne kadar istikrarlı/pürüzsüz yükseldiğine bakar" | T | 3.1 ölçüm kolu (Clenow, T R176) | ölçüm |
+| R177 | portföy | CAPM beklenen getiri, portföy varyansı, minimum varyans ağırlığı | G | 8: Makro, Gordon, ROC, CAPM, kur Monte Carlo, yöntem notları (R177) | kapsam dışı |
+| R178 | momentum-seçim | "Sektör rotasyonu Convex Hull ile VZA analizini birlikte çalışırsanız muazzam sonuçlar" | T | 8: DEA / Convex Hull (T R178) | ikinci dalga |
+| R179 | momentum-seçim | "birçok farklı ve bazen birbiriyle çelişen veriyi ... tek bir rasyonel puana indirgeyebilmesidir." (TOPSIS) | M+T | 8: TOPSIS (T R179) | ikinci dalga |
+| R179 | momentum-seçim | "'nakit akışı' 'temettü verimi'nden daha önemliyse, sistemi bu önceliğe göre kolayca güncelleyebilirsiniz." | M+T | 8: TOPSIS (T R179) | ikinci dalga |
+| R179 | diğer | "Yakında projeye başlıyorum." | M+T | 8: TOPSIS (T R179) | ikinci dalga |
+| R180 | — | kurumsal stratejik yönetim (vizyon/misyon ↔ hedef, SMART) projesi (strateji içeriği yok) | T | — | strateji değil |
+| R181 | portföy | "161.700 kombinasyon yaptıktan sonra sevgili algo matematiksel olarak optimal 3 hisselik portföyü verecek" | T+G | 3.1 ölçüm kolu (Max Sharpe 3–10 hisse, R181) | ölçüm |
+| R181 | momentum-seçim | "6 Ocak momentum alanında olan hisselerden bir test yapıyorum" | T+G | 3.1 ölçüm kolu (Max Sharpe, R181) | ölçüm |
+| R182 | portföy | "Neden Monte Carlo Yerine 'Spicy' Model? ... Bizim tercih ettiğimiz 'Spicy' yaklaşımı" | M | 3.1 ölçüm kolu (Markowitz/Max Sharpe) (kavram) | ölçüm |
+| R182 | portföy | "Monte Carlo bir tahmin makinesidir, Spicy modeli ise bir denge mimarıdır." | M | 3.1 ölçüm kolu (kavram) | ölçüm |
+| R183 | rejim | "Hangi aylarda %70 ve üzeri ihtimalle yükseldiğine bakın (Yüksek Olasılık)." | T+M | 4.5 (mevsimsellik, M R183); 8: Mevsimsellik ≥ %70 ay | ölçüm |
+| R183 | rejim | "BIST 100 ... son 10 yılın 8'inde 'Ocak' ayını pozitif kapatmışsa" | T+M | 4.5 (son 10 yılda ≥ %70 pozitif kapanan aylar, M R183) | ölçüm |
+| R183 | boyut-risk | "Nisan Ayı ... kasanızın %80'i ile oyuna girebilirsiniz. Ağustos Ayı ... kasanızın sadece %30'u" | T+M | 4.5 (ay bazlı maruziyet; %80/%30 kasa örnek, M R183) | ölçüm |
+| R183 | felsefe | "Sell in May and Go Away"; Eylül zayıf | T+M | 4.5 (mevsimsellik) (kavram) | ölçüm |
+| R183 | diğer | "Sektörel Döngüleri Yakalamak" (elektrik yaz/kış) | T+M | 8: Kural taşımayan yan cümleler (sektörel döngüler, M R183) | dışarıda |
+| R183 | felsefe | "İstatistik bir kristal küre değildir ... size pusula olur." | T+M | felsefe notu | strateji değil |
+| R184 | boyut-risk | "Ne kadar hisse alacağınıza fiyatına bakarak değil, risk limitinize bakarak karar vermelisiniz." | T/M | 4.4 (boyut, T R184) | resmi |
+| R184 | boyut-risk | "Göze Alınan Kayıp / Hisse Volatilitesi = Lot Sayısı. Örnek: 500 TL / 2 TL = 250 Lot." | T/M | 4.4 (boyut: adet = risk / mesafe; Tansu'nun formülü risk / 2 ATR) | resmi |
+| R184 | stop-geçersizlik | "Giriş fiyatının 2ATR altına da acil stop konulur." | T/M | 4.4 (acil stop 2 ATR; T/M R184, 1) | resmi |
+| R184 | stop-geçersizlik | "Gün Sonu Stop: Kapanış bazlıdır" | T/M | 4.4 (çıkış zinciri adım 4: kapanış SMA250 altı, G-dış R212 gün sonu çıkışı) (kavram) | resmi |
+| R184 | hedef-çıkış | "İz süren stop, fiyat yükseldikçe stop seviyenizi de yukarı çekerek" | T/M | 4.4 (iz süren mod, T R224/R239) (kavram) | resmi |
+| R184 | felsefe | "ne kadar kaybetmeyi göze aldığınızı yönetebilmektir." | T/M | felsefe notu | strateji değil |
+| R185 | felsefe | "algoritma geliştirenlerin düştüğü en büyük tuzak, fiyatın gelecekteki yönünü 'tahmin etmeye' çalışmaktır." | M | felsefe notu | strateji değil |
+| R185 | ölçüm-ilkesi | "bir işlem dizisinin Beklenen Değerine (E) odaklanırsınız" | M | felsefe notu | strateji değil |
+| R185 | boyut-risk | "Kurtosis ... Skewness ... Monte Carlo ... iflas riskini (Risk of Ruin)" | M | 8: GARCH / ARIMA / ana frekans / ... risk of ruin, kurtosis satırı (M R185) | dışarıda |
+| R185 | felsefe | "Vaktinizi indikatörlere değil, olasılık yoğunluk fonksiyonlarına harcayın." | M | felsefe notu | strateji değil |
+| R186 | rejim | "Fiyat VWAP üstünde + POC üstündeyse: Sadece alış yönlü bak." | T+M | 8: VWAP / POC / VAH / VAL (T R186) | dışarıda |
+| R186 | bölge | "Fiyat hem VWAP'ın hem de POC'nin altındaysa ... 'short' fırsatı" | T+M | 8: VWAP / POC / VAH / VAL (T R186) | dışarıda |
+| R186 | teyit-tetik | "fiyat VWAP ile birlikte VAH'ın (üst sınırın) üzerine çıkar ve orada kalıcı olursa" | T+M | 8: VWAP / POC / VAH / VAL (T R186) | dışarıda |
+| R186 | giriş | "Fiyat VAL'ın altına sarktığında ama VWAP hala yukarıda kaldığında" | T+M | 8: VWAP / POC / VAH / VAL (T R186) | dışarıda |
+| R186 | hedef-çıkış | hedef POC (VAL içine dönüş sonrası) | T+M | 8: VWAP / POC / VAH / VAL (T R186) | dışarıda |
+| R187 | bölge | "Fiyatın %68.2'si 1SD, %95.4'ü 2SD ve %99'u 3SD bantları içinde gerçekleşir." (IV'den) | M+T+G | 8: Bant kuyruğu tepki alımı (±1/2 SD bantları, M R187; IV yok, gerçekleşen volatilite vekili YORUM) | ikinci dalga |
+| R187 | bölge | "Alt Bantlar (Destek): -1SD veya -2SD ... Üst Bantlar (Direnç)" | M+T+G | 8: Bant kuyruğu tepki alımı (M R187) | ikinci dalga |
+| R187 | giriş | "-1SD seviyesine (ilk destek) geri çekilmesi güçlü bir alım fırsatıdır." | M+T+G | 8: Bant kuyruğu tepki alımı (M R187) | ikinci dalga |
+| R187 | stop-geçersizlik | "stop seviyesi genellikle -2SD ... altına konulur." | M+T+G | 8: Bant kuyruğu tepki alımı (M R187) | ikinci dalga |
+| R187 | teyit-tetik | "IV seviyeleri; günlük pivot noktaları veya trend çizgileri ile kesiştiğinde sinyal gücü çok daha yüksektir." | M+T+G | 8: Bant kuyruğu tepki alımı (M R187) | ikinci dalga |
+| R188 | rejim | yedi gösterge: Borsa-VIX korelasyonu, SMA 18/35, AO, RSI, VIX, ADX, hacim; skor "4/5" | G-dış | 2 (VIX yok); 8: BIST100 + VIX beş adım (kavram) | dışarıda |
+| R189 | momentum-seçim | "tüm hisseler önce momentum sistemimden geçiyor sonra ayrıntılı yazıyorum" | T+M+G | 1 (hat 1, T R189); 3.2 akış 1 | resmi |
+| R189 | bölge | 4 saatlik: BOS, supply 38,00–39,50, destek 31,00–32,50; günlük EMA 200, talep 28,00–31,50 | T+M+G | 2 (gün içi veri yok) | dışarıda |
+| R189 | teyit-tetik | "Bu ortalamanın üzerine hacimli bir yerleşme gelmeden 'kalıcı dönüş başladı' demek zor." | T+M+G | 8: Hacim teyidi (kavram) | ölçüm |
+| R189 | bölge | "38.70 (Fib 0.382) seviyesi, hem Fibonacci direnciyle hem de günlükteki arz bölgesiyle çakıştığı için en riskli alan" | T+M+G | 8: Çoklu aralık Fibonacci kümeleri, confluence ilkesi (kavram) | ölçüm |
+| R190 | rejim | "önceki günün Değer Bölgesi içinde açılırsa, piyasa muhtemelen yatay ve dengeli" | T+M | 8: VWAP / POC / VAH / VAL (denge-dengesizlik, M R190) | dışarıda |
+| R190 | rejim | "Fiyat, Değer Bölgesinin üst sınırına (Value Area High) geldiğinde satış, alt sınırına (Value Area Low) geldiğinde alış" | T+M | 8: VWAP / POC / VAH / VAL (M R190) | dışarıda |
+| R190 | rejim | "Dengesizlik durumlarında aralığın tersine işlem açmak (fading) son derece risklidir." | T+M | 8: VWAP / POC / VAH / VAL (M R190) | dışarıda |
+| R190 | hedef-çıkış | "Fiyat bu uç noktalara (2. veya 3. sapma) ulaştığında, 'ortalama değerine geri dönme'" | T+M | 8: VWAP / POC / VAH / VAL (M R190) | dışarıda |
+| R190 | felsefe | "piyasa dengedeyken 'ping-pong' oynamalı ..., dengesizlik varken ise 'sörf' yapmalı" | T+M | 8: VWAP / POC / VAH / VAL (M R190) | dışarıda |
+| R191 | bölge | "calculate\_daily\_pivot": P = (H+L+C)/3; R1 = 2P - L; S1 = 2P - H | G+G-dış | 4.1 (ölçüm: günlük pivot P/R/S, G R191) | ölçüm |
+| R192 | tarama-evren | "yeni tarama kodumuz ... Price Action ve Smart Money Concepts (FVG/Zone) bölgelerini bize getiriyor" | T+M+G | 3.2 adım 4 (S: ilk arz bölgesi ya da ilk düşüş FVG'si, T/M R192 "yeni tarama kodumuz") | resmi |
+| R192 | bölge | Demand 3,50–3,70 giriş; bearish FVG ilk hedef 4,50–4,80; supply 5,70–6,00 | T+M+G | 3.2 adım 4 (S hedef: ilk arz bölgesi ya da ilk düşüş FVG'si, T/M R192) | resmi |
+| R192 | stop-geçersizlik | "Eğer fiyat bu Yeşil Kutunun (3.50 altı gibi) altına sarkar ve orada kapanış yaparsa" | T+M+G | 4.1 (kapanış distal altına inince biter) (kavram) | resmi |
+| R192 | teyit-tetik | "tam bir boğa trendi için fiyatın, o tepesindeki Mor ve Turuncu çizgilerin de üzerine çıkıp kalıcı olması gerekir." | T+M+G | 8: Kural taşımayan yan cümleler (EMA kümesi üstü kalıcılık, M R192) | dışarıda |
+| R193 | formasyon | Elliott: 1-2-3, A-B-C düzeltme, "Hedef (Wave 5)" (ENJSA, başlıkta Wave 4 %54) | T+M+G | 5.1 (ENJSA dalga 4 %54); 3.2 E ölçüm kolları (dalga 4 geri alımı); 8: Elliott dalga 4 | ölçüm |
+| R193 | bölge | "yeşil yatay kutular ... FVG" destek | T+M+G | 4.2 (FVG) | resmi |
+| R193 | formasyon | "HIKKAKE ... 'ayı tuzağı'" | T+M+G | 8: Mum ve gösterge yorumları (HIKKAKE, M R193) | dışarıda |
+| R194 | teyit-tetik | "İşte bu yüzden retest beklemek önemlidir. Bakın macd yanıltmış ama hacim asla desteklememiş." | T+G | 3.2 S ölçüm kolları (retest girişi, T R194); 8: Kanal alt bandı, düşen direnç kırılımı + retest | ölçüm |
+| R195 | teyit-tetik | "Fiyatın trend çizgisinin veya direncin ötesinde kararlı bir şekilde kapanış yapması gerekir." | T+M | 4.2 (kırılım kapanışla); 8: Kanal alt bandı, düşen direnç kırılımı + retest (M R195) | ölçüm |
+| R195 | giriş | "En temiz giriş fırsatı genellikle 'Retest' (Yeniden Test) aşamasında olur." | T+M | 8: Kanal alt bandı, düşen direnç kırılımı + retest (M R195) | ölçüm |
+| R195 | bölge | Gap: runaway gap; gap fill; "Başarısız Boşluklar" | T+M | 4.1 (ölçüm: boşluk/gap, M R195; açılışsız tanım YORUM) | ölçüm |
+| R195 | stop-geçersizlik | "Stop-loss seviyenizi belirlerken ATR indikatörünü kullanın." (1×ATR) | T+M | 4.4 (ATR tabanlı acil stop; tasarım 2 ATR) (kavram) | resmi |
+| R195 | teyit-tetik | OBV fiyatla uyumlu mu | T+M | 8: Hacim teyidi (OBV) | ölçüm |
+| R196 | teyit-tetik | "Fiyat ve OBV Senkronizasyonu = Yüksek Güven" | G-dış | 8: Hacim teyidi (OBV, G-dış R196) | ölçüm |
+| R197 | rejim | "Fiyatın yükseliş trendinde olduğunu teyit et, bir düzeltme (geri çekilme) bekle ve FVG güçlü destek bloklarından işleme gir." | T+M+G | 3.2 E (M R197) | resmi |
+| R197 | teyit-tetik | "sol taraftaki önceki önemli bir tepeyi yukarı yönlü kırıp ... BOS (Break of Structure)" | T+M+G | 3.2 E; 4.2 (BOS) | resmi |
+| R197 | bölge | "Fibonacci Retracement ... OTE ... 0.618 (Altın Oran) ile 0.786 arasındaki bölge" | T+M+G | 3.2 E | resmi |
+| R197 | bölge | "Kesişim: ... Order Block veya FVG ... Fibo 0.618-0.786" | T+M+G | 3.2 E | resmi |
+| R197 | giriş | "0.618 seviyesine ... indiğinde ve ... yeşil kutu ile temas ettiğinde ALIM (LONG)" | T+M+G | 3.2 E | resmi |
+| R197 | stop-geçersizlik | "Fibonacci 1.0 seviyesinin ... hemen altına" | T+M+G | 3.2 E (stop Fib 1,0) | resmi |
+| R197 | hedef-çıkış | "İlk hedef genellikle hareketin başladığı tepe noktasıdır (Fibonacci 0.0 seviyesi)." | T+M+G | 3.2 E (hedef Point 1) | resmi |
+| R198 | formasyon | "geniş yeşil kutu (Demand Zone) içinde, sarı, turkuaz ve mor çizgilerin (EMA) birbirine iyice yaklaştığını" | M+T+G | 3.2 S | resmi |
+| R198 | teyit-tetik | "EMA'ların (örneğin EMA 20, 50, 100) ... Ben 5-8-13 kullandım." | M+T+G | 3.2 S (EMA 5/8/13, T R198) | resmi |
+| R198 | giriş | "Agresif Giriş (Riskli) ... Güvenli Giriş (Önerilen): 'Breakout'" | M+T+G | 3.2 S (M R198 "Güvenli Giriş"); retest girişi ölçüm kolu | resmi |
+| R198 | stop-geçersizlik | "Stop noktası, EMA sıkışmasının olduğu Talep Bölgesinin (Yeşil Kutu) hemen altı" | M+T+G | 3.2 S (geçersizlik bölge altı) | resmi |
+| R198 | hedef-çıkış | "İlk hedef ... Kırmızı Bölge (Supply/Arz)" | M+T+G | 3.2 S; 3.2 adım 4 | resmi |
+| R198 | felsefe | "Yeşilde al, EMA'lar açılınca sür, Kırmızıda sat." | M+T+G | felsefe notu | strateji değil |
+| R199 | felsefe | "fiyatın 'İndirimli Bölgeye' (Discount Zone) geri çekilmesini bekler" | M+G | 3.2 E | resmi |
+| R199 | tarama-evren | "Zaman Dilimi: Günlük (Daily) Varlıklar: Yüksek Hacimli Hisseler (BIST 30/100)" | M+G | 3.2 E; 3.1 evren (TASARIM 5.2) (kavram) | resmi |
+| R199 | momentum-seçim | "en az %10'luk bir marj içermeli" (itki) | M+G | 3.2 E | resmi |
+| R199 | bölge | "Minimum: %50 Geri Çekilme (0.50) / İdeal (Golden Pocket): %61.8 - %65 / Maksimum: %78.6" | M+G | 3.2 E | resmi |
+| R199 | formasyon | "Tercihen A-B-C Elliott Zigzag yapısında" | M+G | 3.2 E ölçüm kolları (A-B-C zigzag düzeltmesi kesimi, M R199 "Tercihen") | ölçüm |
+| R199 | teyit-tetik | "Fair Value Gap (FVG) ... doldurulmamış (Fresh/Unmitigated)" | M+G | 3.2 E; 4.2 (FVG) | resmi |
+| R199 | giriş | "FVG kutusunun üst bandına veya %61.8 seviyesine 'Limit Alış' emri." | M+G | 3.2 E (üst banda limit; 0,618 ölçüm kolu); 4.4 (limit dolumu) | resmi |
+| R199 | stop-geçersizlik | "Yükselişin başladığı ana dibin (Point 0) hemen altı" | M+G | 3.2 E (geçersizlik Point 0) | resmi |
+| R199 | hedef-çıkış | "Hedef 1 (Güvenli): Eski Tepe Noktası (Point 1)." (Hedef 2 = Wave 3, 1.618) | M+G | 3.2 adım 4 (E: Point 1, M R199); Hedef 2 atıfsız | resmi |
+| R199 | rejim | "Düşüş trendi (Lower Highs & Lower Lows) yapan bir hissede bu strateji uygulanmaz." | M+G | 3.2 E (yükseliş yapısı, HH) | resmi |
+| R199 | felsefe | "FOMO Yok: Fiyat FVG bölgesine gelmeden dönerse işlem yapılmaz." | M+G | 4.4 (limit 10 günde dolmazsa iptal) (kavram); haber öncesi risk cümlesi atıfsız | resmi |
+| R200 | ölçüm-ilkesi | "β = Kovaryans(Ri, Rm) / Varyans(Rm)" | G-dış | 8: Makro, Gordon, ROC, CAPM, kur Monte Carlo, yöntem notları (R200) | kapsam dışı |
+| R200 | portföy | "Beta = 1 (Dengeli) / Beta > 1 (Agresif) / Beta < 1 (Defansif)" | G-dış | 8: Makro, Gordon, ROC, CAPM, ... (R200) | kapsam dışı |
+| R200 | rejim | "Boğa Piyasası: Beta > 1 olan hisseler tercih edilir. Ayı Piyasası: Beta < 1" | G-dış | 8: Makro, Gordon, ROC, CAPM, ... (R200) | kapsam dışı |
+| R200 | boyut-risk | "Beklenen Getiri Hesabı: CAPM" | G-dış | 8: Makro, Gordon, ROC, CAPM, ... (R200) | kapsam dışı |
+| R201 | tarama-evren | "doğrudan ETF'lere ve likit hisselere odaklanın" | T | 3.1 S1 (evren: TASARIM 5.2 ilk 100) (kavram) | resmi |
+| R201 | ölçüm-ilkesi | "istediğiniz fiyattan rahatça girip çıkabilmektir. Paranızı içeride kilitlemeyin" | T | 3.1 S1 (likidite %2 sınırı); 4.4 (%2 likidite) (kavram) | resmi |
+| R202 | momentum-seçim | "Rolling alpha Rolling skewness. ... Momentum listelerimize uyguluyoruz." | T | 1 (hat 1, T R202); 3.1 ölçüm kolu (rolling alpha, rolling skewness) | ölçüm |
+| R203 | hedef-çıkış | "TP1 (İlk Kar Al - 0.382): Formül: D + ((C - D) \* 0.382)" | M+G | 3.2 H ölçüm kolları (hedef merdiveni TP1–TP4 = D + {0,382; 0,618; C; 1,272}·(C−D), M/G R203) | ölçüm |
+| R203 | hedef-çıkış | "TP2 (Ana Hedef - 0.618 - Golden Pocket): D + ((C - D) \* 0.618)" | M+G | 3.2 adım 4 (H: AB=CD ana hedef D + 0,618·(C−D), M/G R203) | resmi |
+| R203 | hedef-çıkış | "TP3 (Formasyon Zirvesi - C Noktası)"; "TP4 (Fibonacci Extension - 1.272 veya 1.618)" | M+G | 3.2 H ölçüm kolları (hedef merdiveni, M/G R203) | ölçüm |
+| R203 | stop-geçersizlik | "X Noktası Altı: ...formasyon geçersiz sayılır (Invalidation)." | M+G | 3.2 H (geçersizlik X) | resmi |
+| R203 | formasyon | "D noktası Potansiyel Dönüş Bölgesi (PRZ)" | M+G | 3.2 H (D/PRZ) (kavram) | resmi |
+| R203 | teyit-tetik | "TP2'yi (0.618) güçlü ve hacimli bir mumla geçerse... yeni bir yükseliş trendi olabilir" | M+G | tasarımda yok (R203'ün TP1'de %50 ve stop girişe kısmı 4.4 ölçüm çıkış kollarında; TP2 sonrası trend cümlesi yok) | BAĞSIZ |
+| R204 | bölge | "0.618 seviyesine temas etmek hem de o bölgede kalan FVG boşluğunu doldurmak için oraya iner." | T/M | 3.2 E (T R204) | resmi |
+| R204 | teyit-tetik | "0.618 (veya 0.50) seviyesi, geçmişte bırakılan bir FVG kutusu ile çakışıyorsa" | T/M | 3.2 E | resmi |
+| R204 | felsefe | "Elliott ve Fibonacci 'Fiyatın nereye düşeceğini' (Seviye) söyler; FVG ..." | T/M | felsefe notu | strateji değil |
+| R205 | hedef-çıkış | "4. Dalga Düşüşü = 3. Dalga Yükselişi X (0.24 veya 0.38 veya 0.50)" | T+M | 3.2 E ölçüm kolları (dalga 4 geri alımı, T/M R205); 8: Elliott dalga 4 | ölçüm |
+| R206 | bölge | "Fibo 0.618 bir 'duvar' değil, sadece bir 'bölge'dir." | T | 4.2 (Fibonacci bir "bölge"dir: ±tolerans, T R206) | resmi |
+| R206 | teyit-tetik | "Matematiksel oran (Fibo) + Piyasa Yapısı (Order Block) = Sniper Giriş." (H4) | T | 4.2 (H4 Order Block gün içi veri ister, yoktur; T R206) | dışarıda |
+| R207 | formasyon | "Temel Piyasa Döngüsü: 5 Yükseliş, 3 Düşüş"; Fibonacci dizisi | G-dış | 8: Elliott 5+3 ve Fibonacci günleri (G-dış R207); 8: Elliott dalga 4 | ölçüm |
+| R207 | diğer | "Zaman Hedeflemesi ... Fibonacci günlerinde (5., 8., 13., 21. gün)" | G-dış | 8: Elliott 5+3 ve Fibonacci günleri (G-dış R207) | ölçüm |
+| R208 | teyit-tetik | "Kesişim (Confluence) Nedir? ... birden fazla bağımsız teknik sinyalin aynı anda oluşmasıdır." | G-dış | 8: Çoklu aralık Fibonacci kümeleri, confluence ilkesi (G-dış R208) | ölçüm |
+| R208 | felsefe | "Tek Sinyale Güvenme, Kesişim Ara!" | G-dış | 8: Çoklu aralık Fibonacci kümeleri, confluence ilkesi (G-dış R208) | ölçüm |
+| R209 | rejim | "ADIM 1: Korelasyon Kontrolü ... ADIM 4: VIX Teyidi" | G-dış | 8: BIST100 + VIX beş adım (G-dış R209) | dışarıda |
+| R209 | hedef-çıkış | "ADIM 5: Çıkış Stratejisi — Çıkışlar VIX'e göre değil, fiyat grafiğine göre" | G-dış | 8: BIST100 + VIX beş adım (G-dış R209) | dışarıda |
+| R210 | felsefe | "herşey kurallara dayalı. Duyguya yer yok. Sistem ne derse o." | T/M | 8: Felsefe ve ölçüm ilkeleri | strateji değil |
+| R210 | rejim | "Korelasyon Kontrolü (Negative Correlations)" (BIST100 / VIX) | T/M | 8: BIST100 + VIX beş adım (T/M R210) | dışarıda |
+| R210 | teyit-tetik | "Disiplin (Heikin Ashi)... Fiyat > Ortalamalar + AO = Yeşil + RSI > MAV" | T/M | 8: BIST100 + VIX beş adım (T/M R210; açılış yok) | dışarıda |
+| R210 | rejim | "VIX < Hızlı Bantlar & VIX RSI < MAV" | T/M | 8: BIST100 + VIX beş adım (T/M R210; VIX yok) | dışarıda |
+| R210 | hedef-çıkış | "Çıkışlar VIX'e göre değil, Fiyat grafiğine (BIST 100) göre yapılır. 4 indikatörden 2'sinin bozulması gerekir." | T/M | 8: BIST100 + VIX beş adım (T/M R210) | dışarıda |
+| R211 | boyut-risk | "Volatilitesi yüksek olan hisselerde position sizing matematiksel olarak küçülür ve bu çok doğrudur." | T | 4.4 (boyut, T R211); 1 (hat 4) | resmi |
+| R211 | felsefe | "Asıl amacımız sermayemizi korumak.." | T | felsefe notu | strateji değil |
+| R212 | boyut-risk | "sermayenizin ancak %1'ini kaybetmek riskini göze alabilirsiniz" (Hisse Adedi = Risk Tutarı / 2 ATR) | T+G-dış | 4.4 (boyut %1 risk, T R212; %1 örnektir, YORUM) | resmi |
+| R212 | stop-geçersizlik | "Acil Durum Stop'u: ... 2 ATR ... Gün Sonu Stop'u: ... 250 günlük hareketli ortalamanın altında bir kapanış" | T+G-dış | 4.4 (acil stop 2 ATR; çıkış zinciri adım 4: kapanış SMA250 altı, G-dış R212) | resmi |
+| R212 | giriş | "işleme giriş bileşenlerinizden birisi 250SMA" | T+G-dış | 3.2 akış 1 (SMA250 giriş kapısı; T R212 örnek bileşen, 200SMA/200EMA/250EMA olabilir) | resmi |
+| R213 | diğer | "1. Teknoloji ve Analitik Araçlar (Python) ... 4. Optimizasyon ve Sinyal Tasarımı" | G-dış | süreç infografiği | strateji değil |
+| R214 | teyit-tetik | "ema5>ema8>ema13 de oluşmuş son gün yükselen trend desteğinden tepki almış" | T+G | 3.2 S ölçüm kolları (boğa dizilimi, T R214; trend desteği 4.2 trend çizgisi) | ölçüm |
+| R215 | felsefe | "Bilgi ve Hazırlık Eksikliği; Disiplin ve Psikoloji Sorunları; Sermaye ve Risk Yönetimi Zafiyeti" | G-dış | infografik | strateji değil |
+| R216 | rejim | "Eğim Ne Kadar Dikse, Yükseliş O Kadar Güçlüdür" (DMA kanalı) | G-dış | 8: Weinstein / DMA kanal eğimi ve evreler / ... satırı (G-dış R216) | dışarıda |
+| R216 | rejim | "Evrelerin Birbirine Etkisi: Mevcut Evre Bir Sonrakini Belirler" | G-dış | 8: Weinstein / DMA kanal eğimi ve evreler / ... satırı (G-dış R216) | dışarıda |
+| R217 | bölge | "Geleneksel Yaklaşım ... en yüksek ve en düşük noktaları arasındaki mesafeyi ölçer" | G-dış | 8: Çoklu aralık Fibonacci kümeleri (G-dış R217); 4.1 (çoklu aralık Fibonacci kümesi) | ölçüm |
+| R217 | bölge | "Piyasa Standart Seviyeleri Neden Görmezden Gelir?" (Caterpillar) | G-dış | 8: Çoklu aralık Fibonacci kümeleri (G-dış R217) | ölçüm |
+| R217 | bölge | "Aralık 'd' ... 50% seviyesini (A çizgisi)" genişleme ve daralma | G-dış | 8: Çoklu aralık Fibonacci kümeleri (G-dış R217) | ölçüm |
+| R217 | bölge | "Konfluans bölgesi, birden fazla ve farklı uzunluktaki fiyat aralığından hesaplanan Fibonacci oranlarının çakıştığı" | G-dış | 8: Çoklu aralık Fibonacci kümeleri (G-dış R217) | ölçüm |
+| R218 | diğer | "Neden Pine Script Değil de Python tercih ettim." | T | felsefe notu | strateji değil |
+| R218 | tarama-evren | "Python, binlerce hisseyi saniyeler içinde tarayıp ... çok katmanlı kriterlere" | T | felsefe notu | strateji değil |
+| R218 | ölçüm-ilkesi | "2008 krizinde veya pandemi düşüşünde nasıl davranacağını, komisyon oranlarını ve kayma maliyetlerini" | T | 8: Felsefe ve ölçüm ilkeleri | strateji değil |
+| R218 | diğer | "Yapay Zeka ve Makine Öğrenimi" kapısı; "İcra Özgürlüğü" | T | felsefe notu | strateji değil |
+| R219 | formasyon | "1. Üç Tepeyi Tespit Et (Sol Omuz, Baş, Sağ Omuz)"; "2. Boyun Çizgisini (Neckline) Çiz" | G-dış | 8: Klasik formasyonlar (OBO kuralı, G-dış R219) | ikinci dalga |
+| R219 | teyit-tetik | "3. Kırılımı Onayla ... Hacmi Kontrol Et: Sağ omuz oluşurken işlem hacminin azalması" | G-dış | 8: Klasik formasyonlar (G-dış R219) | ikinci dalga |
+| R219 | hedef-çıkış | "4. Hedef Fiyatı Belirle: Baş tepesi ile boyun çizgisi arasındaki mesafe kadar düşmesi beklenir." | G-dış | 8: Klasik formasyonlar (G-dış R219; long-only: OBO yalnız çıkış uyarısı) | ikinci dalga |
+| R220 | felsefe | "George Soros der ki: 'En büyük karlar Fat Tails alanında yapılır.'" (%95 / %5) | M | 8: Weinstein / DMA / piyasa evreleri / fat tail / BIST_VOL / mal boşaltma-toplama satırı (fat tail, M R220) | dışarıda |
+| R220 | rejim | "Küçük yatırımcı genelde bu %5'lik şoklarda panikleyip elindekini satar." | M | 8: ... fat tail (M R220) (kavram) | dışarıda |
+| R221 | formasyon | "Bullish Gartley ... Potansiyel Dönüş Bölgesi (PRZ)" (MAKIM) | T/M+G | 3.2 H (Gartley, G/M R222) | resmi |
+| R221 | bölge | "Gartley formasyonunun dönüş noktası tam olarak bu FVG kutusunun içine denk geliyor." | T/M+G | 3.2 H; 4.2 (FVG) (kavram) | resmi |
+| R221 | teyit-tetik | "Swing Yapı ve Mum Formasyonları ... MACD ... RSI ... Hacim ve Takas Mantığı" | T/M+G | 8: Mum ve gösterge yorumları (MACD/RSI panelleri, M R221) | dışarıda |
+| R221 | felsefe | "Piyasa matematiktir, disiplin ise anahtardır." | T/M+G | felsefe notu | strateji değil |
+| R222 | formasyon | "AB Bacağı: XA bacağının tam olarak %61.8 seviyesine kadar geri çekilmelidir." | T/M+G | 3.2 H (Gartley) | resmi |
+| R222 | formasyon | "BC Bacağı: AB bacağının %38.2 ile %88.6 arasına"; "CD Bacağı: XA bacağının %78.6" | T/M+G | 3.2 H (Gartley) | resmi |
+| R222 | bölge | "PRZ... XA 0.786 ile BC uzantısının kesiştiği dar bir fiyat aralığıdır." | T/M+G | 3.2 H | resmi |
+| R222 | boyut-risk | "Eğer Ödül / Risk < 1.5 ise ... formasyon teknik olarak doğru olsa bile işleme girilmez" | T/M+G | 3.2 adım 4 (ödül/risk kapısı, M R222; harfiyen TP1 hali ölçüm kolu) | resmi |
+| R222 | formasyon | "BIST verilerinde bazen tam 0.618'i yakalamak zor olabilir... %3-%5 tolerans" | T/M+G | 3.2 H (tolerans %3–5) | resmi |
+| R222 | stop-geçersizlik | Excel tablosu: Buy Limit, SL = X_Fiyat - (ATR\*2), TP1 = D + (A-D) \* 0.382 | T/M+G | 3.2 H (Buy Limit, geçersizlik X; X − 2 ATR ölçüm kolu); 3.2 adım 4 (ana hedef TP2; TP1 harfiyen ölçüm); 4.4 | resmi |
+| R223 | ölçüm-ilkesi | "Volatilite, aslında piyasanın 'ruh halidir'." (GBPUSD %10) | T+G | 3.2 adım 4 ölçüm (aktif volatilite kesimi, T/G R223) (kavram) | ölçüm |
+| R223 | ölçüm-ilkesi | "yillik_volatilite = gunluk_volatilite \* np.sqrt(252)"; eşik 0.40 | T+G | 3.2 adım 4 ölçüm (yıllık gerçekleşen volatilite ≥ %40, 252 gün; T/G R223) | ölçüm |
+| R224 | hedef-çıkış | "Giriş + 1.5 ATR seviyesine ulaştığında Trailing Stop (TS) aktif hale gelir" | T+G | 4.4 (çıkış zinciri adım 2, T R224); 1 (hat 4) | resmi |
+| R224 | hedef-çıkış | "önceki günün en düşüğünün altında kapanış ve %50 satış, ve emergency stop 2atr" | T+G | 4.4 (çıkış zinciri adım 3 ve 4, T R224); "kar alma %10, ikinci kar alma" kısmı 4.4 ölçüm çıkış kolları | resmi |
+| R225 | tarama-evren | "Soldaki Grafik - Piyasa Geneli Derinlik Dağılımı" (VWAP/TWAP, slippage) | M+G | 2 (emir defteri yok) | dışarıda |
+| R225 | giriş | "emir defterinde ... sadece ilk 2-3 kademede yeterli lot var mı kontrol edin" | M+G | 2 (emir defteri yok) | dışarıda |
+| R225 | teyit-tetik | "Emir defterin alış tarafı kalınsa... satış tarafı inceyse... alım için iyi sinyal olabilir." | M+G | 2 (emir defteri yok) | dışarıda |
+| R225 | tarama-evren | "BIST30 gibi büyük hisseler genelde daha güvenlidir çünkü derinlikleri iyidir." | M+G | 2 (emir defteri yok) (kavram) | dışarıda |
+| R226 | teyit-tetik | "1. İstatistiksel Sapma: Fiyat, etrafındaki gri/yeşil bantların ... dışına taşmış." | T/M+G | 8: Kapitülasyon üçlüsü (istatistiksel sapma, T/M R226) | ölçüm |
+| R226 | teyit-tetik | "2. Kapitülasyon ve El Değişimi: Fiyat dipteyken ... Hacim Skoru tavana vurmuş" | T/M+G | 8: Kapitülasyon üçlüsü (fiyat-hacim konumu); 4.5 (T/G R227) | ölçüm |
+| R226 | teyit-tetik | "3. Görünmeyen Emirler (OBI Analizi)" | T/M+G | 8: Kapitülasyon üçlüsü (OBI emir defteri ister); 2 | dışarıda |
+| R226 | giriş | "bu üç koşulun aynı anda (confluence) gerçekleştiği o 'kırmızı ok' anında tetiği çekmekti" | T/M+G | 8: Kapitülasyon üçlüsü (iki koşulla, ölçüm) | ölçüm |
+| R227 | ölçüm-ilkesi | "Konsantrasyon... Kümelenme... Pozisyon Büyüklüğü" (COT mantığı, açık pozisyon) | T+M+G | tasarımda yok (4.5 R227'yi yalnız fiyat-hacim konumu için anar; açık pozisyon/COT verisi 2. bölümde de yok) | BAĞSIZ |
+| R227 | momentum-seçim | "Dinamik Aralık: ... son 1 yıla (252 işlem günü) göre nerede olduğunu yüzdesel olarak hesaplar." | T+M+G | 4.5 (fiyat ve hacim konumu 252 gün, T/G R227) | ölçüm |
+| R227 | teyit-tetik | "Sol Üst Köşe (Düşük Fiyat + Yüksek Hacim)... güçlü bir 'Al' fırsatı olabilir." | T+M+G | 4.5 (sol üst köşe dip adayı: fiyat ≤ 20, hacim ≥ 80) | ölçüm |
+| R227 | ölçüm-ilkesi | "RSI: Genelde son 14 muma bakar ... Bizim Kodumuz: Son 1 yıla (252 gün)" | T+M+G | 4.5 (kavram) | ölçüm |
+| R227 | ölçüm-ilkesi | "Eğer Konsantrasyon yüksek ama Kümelenme düşükse: Piyasayı az sayıda "balina" domine ediyordur." | T+M+G | tasarımda yok (açık pozisyon/COT verisi yok) | BAĞSIZ |
+| R227 | ölçüm-ilkesi | "Bu verileri 1 yıllık ... hareketli pencereler (rolling window) içinde normalize etmemiz lazım." | T+M+G | 4.5 (kavram) | ölçüm |
+| R227 | teyit-tetik | "Durum A (Yükseliş Yorgunluğu) ... Durum B (Panik Satışı): Fiyat dipte. RSI: 30 altında" | T+M+G | 4.5 (kavram) | ölçüm |
+| R228 | ölçüm-ilkesi | "Arbitraj için Cointegration (Eşbütünleşme) şarttır, şarttır. şarttır." | T | 3.3 (kapı: rolling eşbütünleşme, T R228); 1 (hat 3) | resmi |
+| R228 | felsefe | "sarhoş adam ve tasmalı köpek" benzetmesi | T | felsefe notu | strateji değil |
+| R228 | felsefe | "Cointegration olmadan açılan işlemlerde büyük zararlar yazıp ta ne yapacağız diyen çok insan gördüm." | T | felsefe notu | strateji değil |
+| R229 | rejim | "1. Makro ve Döngü Analizi" (konveks rotasyon) | T/M | 8: Konveks rotasyon (T/M R229) | ikinci dalga |
+| R229 | tarama-evren | "2. Konveksite Filtresi: Asimetrik Getiri" | T/M | 8: Konveks rotasyon (T/M R229) | ikinci dalga |
+| R229 | momentum-seçim | "3. Erken Aşama Tespiti: Dip Yakınlığı ... Göreceli Güç Filtresi" | T/M | 8: Konveks rotasyon (T/M R229) | ikinci dalga |
+| R229 | portföy | "4. Rotasyon ve Uygulama: Negatif konveksite taşıyan sektörlerden ... pozitif konveksite" | T/M | 8: Konveks rotasyon (T/M R229) | ikinci dalga |
+| R229 | stop-geçersizlik | "5. Risk Yönetimi: ... 'Rolling Convexity'" | T/M | 8: Konveks rotasyon (T/M R229) | ikinci dalga |
+| R230 | tarama-evren | "1. Aktif Volatilite (Oynaklık) Aranmalı" | T/M | 3.2 adım 4 ölçüm (aktif volatilite kesimi, M R230) | ölçüm |
+| R230 | teyit-tetik | "2. Sinyallerin Uyumuna (Confluence) Dikkat Edilmeli" | T/M | 8: Çoklu aralık Fibonacci kümeleri, confluence ilkesi (kavram) | ölçüm |
+| R230 | momentum-seçim | "3. Pozitif Momentum Takip Edilmeli" | T/M | 3.1 S1 (kavram) | resmi |
+| R230 | rejim | "4. Trend Yönünde Giriş Sinyalleri Alınmalı ... Yükselen Trend: Yalnızca Al" | T/M | 3.2 akış 1 (SMA250 kapısı) (kavram) | resmi |
+| R230 | boyut-risk | "5. Risk/Ödül ... 1 kaybetme riskine karşılık 2 veya 3 kazanma hedefi" | T/M | 3.2 adım 4 (ölçümde 2 ve 3 eşikleri, M R230; resmi eşik 1,5) | ölçüm |
+| R231 | rejim | "sadece hisse senetlerinin ya da kripto paraların fiyat grafiğine bakarak yatırım yapmak, büyük resmin çok küçük bir parçasını görmektir" | M | 8: Makro, Gordon, ROC, CAPM, kur Monte Carlo, yöntem notları (M R231) | kapsam dışı |
+| R232 | tarama-evren | "Eğer BIST100 ortalamasını referans alırsanız, analizinizi daha başlamadan çöpe atarsınız." | T/M | 8: Sektör rotasyonu zinciri (T/M R232) | ölçüm |
+| R232 | tarama-evren | "Adım 2: Son 20 günün ... veya 60 günün ... hacim ortalaması"; 10 Milyon TL; alt %25 | T/M | 3.1 geniş evren ölçüm kolu (20 günlük ortalama TL hacmi ≥ 10 milyon TL, T/M R232); 8: Sektör rotasyonu zinciri | ölçüm |
+| R232 | tarama-evren | "Sektörleri kendiniz belirleyin. Sanırım şu anda halihazırda 80'e yakun sektör var faaliyette." | T/M | 8: Sektör rotasyonu zinciri (T/M R232) | ölçüm |
+| R233 | giriş | "RSI (14) değeri, 30 seviyesinin altından yukarı doğru keserek bu seviyenin üzerinde bir kapanış yaptığında." | M+T | 8: RSI 30 / Williams %R / APO / A/D–EMA3 / HalfTrend / ML lojistik satırı (RSI 30, M R233) | dışarıda |
+| R233 | hedef-çıkış | "ana kâr alma sinyali RSI 70 Reddi ile başlar ... Pozisyonun %50'si satılır." | M+T | 4.4 ölçüm çıkış kolları (R233 zinciri: RSI 70 reddinde %50, M R233) | ölçüm |
+| R233 | hedef-çıkış | "Bir önceki günün (mumun) en düşük fiyat seviyesinin (LOW) altında bir kapanış ... Kalan %50" | M+T | 4.4 ölçüm çıkış kolları (R233 zinciri: kalan %50 için ikinci "önceki gün düşüğü altı kapanış"; resmi zincir T R224/R239) | ölçüm |
+| R233 | hedef-çıkış | "pozisyonun risk/ödül oranı hedefine ulaştığında Trailing Stop (TS)... devreye girer" | M+T | 8: Trailing stop'a geçiş için risk/ödül hedefi (M R233) | dışarıda |
+| R234 | ölçüm-ilkesi | "temel modelim de bir makine öğrenmesi algoritmasına dayanıyor:)" | T+G | 8: ML lojistik (T R234) | dışarıda |
+| R234 | teyit-tetik | "hacim RSI verileri ile lojistik regresyonla bir model" | T+G | 8: ML lojistik (T R234) | dışarıda |
+| R234 | ölçüm-ilkesi | "Finansal piyasalarda %70 gibi bir değer yakalarsanız bu harika bir sonuçtur." | T+G | 8: ML lojistik (T R234) | dışarıda |
+| R234 | boyut-risk | "Kritik Kural: %55 başarı oranıyla ... Risk/Ödül oranını en az 1:1.5" | T+G | 3.2 adım 4 (ödül/risk kapısı, T R234); 1 (hat 4) | resmi |
+| R234 | rejim | "Trendli piyasalada çok iyi ve düşüşleri iyi yakalıyor." | T+G | 8: ML lojistik (T R234) | dışarıda |
+| R234 | teyit-tetik | "Sistem daha seçici ve muhafazakar hale geldi. Her harekete atlamıyor" | T+G | 8: ML lojistik (T R234) | dışarıda |
+| R234 | ölçüm-ilkesi | "Hacim ve RSI filtrelerinin eklenmesiyle modelin Doğruluk oranı %55.00 oldu." | T+G | 8: ML lojistik (T R234) | dışarıda |
+| R235 | rejim | "Yükselen Trend → Birikim Süreci → Alım Tepesi / Test → Dağıtım Süreci → Satış Tepesi → Düşen Trend" | G-dış | 8: Weinstein / DMA / piyasa evreleri ve birikim anlatısı / ... satırı (G-dış R235) | dışarıda |
+| R236 | formasyon | "İkili Dip (Double Bottom) ... Çekiç, Yutan Boğa veya Cımbız Dip formasyonu"; Adam ve Havva | M | 8: Klasik formasyonlar (ikili dip, M R236) | ikinci dalga |
+| R237 | rejim | "Her şey genelde piyasa için kötü algılanan bir haberle başlar ... alımları gizli ve yavaş yaparlar" | T | 8: Weinstein / DMA / piyasa evreleri ve birikim anlatısı / ... satırı (T R237) | dışarıda |
+| R238 | teyit-tetik | "Geniş gövdeli mum yüksek hacim, ok / Dar gövdeli mum yüksek hacim, anomali" | T | 8: Hacim teyidi (T R238) | ölçüm |
+| R239 | hedef-çıkış | "Statik iz süren stop: Hedef = Giriş + (1.5 × Giriş ATR)"; "Dinamik İz Süren Stop" | T | 4.4 (çıkış zinciri adım 2; dinamik hal "daha zekice" ölçüm kolu, T R239) | resmi |
+| R239 | hedef-çıkış | "İz süren moda girdiğinizde yani Giriş + 1.5ATR noktasına geldiğinizde ... %50'sin satın." | T | 4.4 (çıkış zinciri adım 3, T R239) | resmi |
+| R240 | temel-değerleme | "şirket değerlendirirken şunlara bakılır" (Sektör, İşletme, Finansallar kontrol listesi) | T/M | 8: Bilanço kalite filtreleri (işletme kriterleri, M R240) | ikinci dalga |
+| R240 | felsefe | "gerçi bistte artık bir önemi yok. sırtlanların kol gezdiği bir cambazhaneden farksız." | T/M | 8: Değerleme sistemi (T R240: çelişki raporda yazılır) | ikinci dalga |
+| R241 | rejim | "Yükseliş İmpulsu (1 Nolu Dalga)... Higher High (HH)... Düzeltme (A-B-C)... Dalga 2" (ALKA) | T/M+G | 3.2 E; 5.1 (ALKA düzeltme −%39,3) | resmi |
+| R241 | bölge | "FVG (Adil Değer Boşluğu) veya Talep Bölgesi... Fiyatın düzeltme hareketindeki son noktası (C)" | T/M+G | 3.2 E; 4.2 (FVG) | resmi |
+| R241 | teyit-tetik | "TC noktasında oluşan inverted hammer ise pastanın üzerindeki çilektir." | T/M+G | 8: Mum ve gösterge yorumları (inverted hammer, T R241) | dışarıda |
+| R242 | rejim | "düzeltmenin bir önceki yükselen dip (HL) seviyesine ... bir destek/talep bölgesine (demand zone) kadar inmesi idealdir" | M+G | 3.2 E ölçüm kolları (düzeltmenin önceki yükselen dibin (HL) üstünde kalması kesimi, M R242) | ölçüm |
+| R242 | rejim | "Net Piyasa Yapısı Kayması: ... Lower Low (LL) seviyesinden sonra Higher Low (HL)" | M+G | 3.2 E ölçüm kolları (HL kesimi, M R242) (kavram) | ölçüm |
+| R242 | felsefe | "yükselen dip yapısı (LL → HL) ... daha üstün ve güvenilir kabul edilir" | M+G | 3.2 E ölçüm kolları (HL kesimi, M R242) (kavram) | ölçüm |
+| R242 | bölge | "talep bölgesine (sarı/yeşil kutu) geri çekilmesi (C noktası), ... güvenilir bir test" | M+G | 3.2 E ölçüm kolları (HL kesimi, M R242) (kavram) | ölçüm |
+| R243 | giriş | "Boşluğu Soldurma (Fading the Gap) ... kısa (short) pozisyon" | T/M | tasarımda yok (kısa pozisyon; R243 yalnız dolmuş FVG sonrası giriş için anılır) | BAĞSIZ |
+| R243 | giriş | "Boşluğun Dolmasını Bekleyip Başlangıç Yönünde İşlem Yapma" | T/M | 3.2 E ölçüm kolları (dolmuş FVG sonrası giriş, M R243); 9 madde 3 | ölçüm |
+| R243 | bölge | "FVG'yi avlamanın en kolay yolu ise büyük mumları incelemektir." | T/M | tasarımda yok (R243 büyük mum cümlesi) | BAĞSIZ |
+| R244 | bölge | "Medyanı şöyle bir kanal gibi kullanın arkadaşlar." | T+G | 8: Medyan temelli çalışma, medyan kanal (T R244) | ölçüm |
+| R245 | — | yalnız bağlantı (2096582181170598078) | bağlantı | 8: R245–R263 | kapsam dışı |
+| R246 | — | yalnız bağlantı (2096580811080261784) | bağlantı | 8: R245–R263 | kapsam dışı |
+| R247 | — | yalnız bağlantı (2096577500612624410) | bağlantı | 8: R245–R263 | kapsam dışı |
+| R248 | — | yalnız bağlantı (2096576027791131079) | bağlantı | 8: R245–R263 | kapsam dışı |
+| R249 | — | yalnız bağlantı (2096510322190201208) | bağlantı | 8: R245–R263 | kapsam dışı |
+| R250 | — | yalnız bağlantı (2096505383955079277) | bağlantı | 8: R245–R263 | kapsam dışı |
+| R251 | — | yalnız bağlantı (2096358189696520213) | bağlantı | 8: R245–R263 | kapsam dışı |
+| R252 | — | yalnız bağlantı (2096145981062475910) | bağlantı | 8: R245–R263 | kapsam dışı |
+| R253 | — | yalnız bağlantı (2095523694881697974) | bağlantı | 8: R245–R263 | kapsam dışı |
+| R254 | — | yalnız bağlantı (2095218573631279414) | bağlantı | 8: R245–R263 | kapsam dışı |
+| R255 | — | yalnız bağlantı (2095213493133713664) | bağlantı | 8: R245–R263 | kapsam dışı |
+| R256 | — | yalnız bağlantı (2095201144544846208) | bağlantı | 8: R245–R263 | kapsam dışı |
+| R257 | — | yalnız bağlantı (2095196517577461974) | bağlantı | 8: R245–R263 | kapsam dışı |
+| R258 | — | yalnız bağlantı (2094850165920403866) | bağlantı | 8: R245–R263 | kapsam dışı |
+| R259 | — | yalnız bağlantı (2094486927328059452) | bağlantı | 8: R245–R263 | kapsam dışı |
+| R260 | — | yalnız bağlantı (2094148699769241961 ve 2094148704089587805) | bağlantı | 8: R245–R263 | kapsam dışı |
+| R261 | — | yalnız bağlantı (2094128312729624792) | bağlantı | 8: R245–R263 | kapsam dışı |
+| R262 | — | yalnız bağlantı (2093658795700338821) | bağlantı | 8: R245–R263 | kapsam dışı |
+| R263 | — | yalnız bağlantı (2093647837162553475) | bağlantı | 8: R245–R263 | kapsam dışı |
+
+## (a) BAĞSIZ satırların tam listesi (7 satır)
+
+Tasarım-8 sürüm 5.1'de hiçbir bölüme ve hiçbir 8. bölüm satırına bağlanamayan fikirler. Bağ uydurulmadı. Parantez içi sayı, o R'de BAĞSIZ satır sayısıdır. Eski tabloda 145 satır vardı; 138'i sürüm 5.1'de (3.2 ölçüm kolları, 4.x, 8. bölüm genişlemesi) bağlandı.
+
+- R077 (1): yeşil üçgen sinyalleri (nisan 2025 oynaklık sıçraması sonrası alım). Tasarım R077'yi yalnız "rehavet" cümlesiyle anar.
+- R128 (1): fiyat ortalamalardan çok uzaklaşınca soğuma, yatay seyir ya da re-test cümlesi.
+- R203 (1): TP2'yi hacimli mumla geçince yeni yükseliş trendi cümlesi.
+- R227 (2): Konsantrasyon / Kümelenme (COT mantığı) ve "Konsantrasyon yüksek, Kümelenme düşük" yorumu. Tasarım R227'yi yalnız fiyat-hacim konumu için anar; açık pozisyon verisi 2. bölümde de anılmaz.
+- R243 (2): "Fading the Gap" kısa pozisyon; "FVG'yi avlamanın en kolay yolu büyük mumları incelemektir".
+
+## (b) Güçlü vurgu, ama resmi ya da ölçümde olmayan fikirler
+
+Ölçüt: defterin "Tansu'nun vurgusu" satırında "çok güçlü", "güçlü", "yüksek", "en yüksek", "kendi sistemi / kodu / modeli / aracı / projesi" denen kayıtlar. Resmi ya da ölçümde olanlar listeye girmedi. Felsefe ve ders niteliğindeki güçlü vurgular (R099, R109, R111, R171, R172, R218) 8. bölümün "Felsefe ve ölçüm ilkeleri" satırına bağlı; listeye girmedi.
+
+Eski listeden çıkanlar (sürüm 5.1'de resmi ya da ölçüme girdi): R016 (3.2 H ölçüm: CD şiddeti raporu), R055 (4.1 bölge kalitesi: talep + HSAR), R101 (3.3: rolling kapı bozulursa çıkış), R192 (3.2 adım 4: S hedefi), R230 (3.2 adım 4 ölçüm: aktif volatilite), R090 alış yönlü Trident (3.2 H ölçüm).
+
+| R | fikir | defterdeki vurgu | durum | gerekçe (bölüm) |
+|---|---|---|---|---|
+| R062 | değerleme: F/K, PD/DD, FD/FAVÖK hedefleri tutarlı; "Temel analiz ve değerlemeyi küçümsemeyin" | Çok güçlü | ikinci dalga | 8: Değerleme sistemi. Bilanço verisi yok (2); ilk iş İş Yatırım mali tablo kaynağı. Tansu "bistte artık bir önemi yok" diyor (T R240): çelişki raporda yazılır |
+| R064 | "Kabaca sistem bu": A, B, %60 çarpan / %40 DCF | Çok güçlü, kendi sistemi | ikinci dalga | 8: Değerleme sistemi; 2 |
+| R068 | çarpan ortalaması %60 + DCF %40; ex-ante kontrol | Güçlü (birinci şahıs) | ikinci dalga | 8: Değerleme sistemi; 2 |
+| R147, R150, R151, R152 | bottom-up adet bazlı ciro, ara rapor marjı, %40 İNA / %60 çarpan, basit model | Yüksek, Çok yüksek (kendi modeli) | ikinci dalga | 8: Değerleme sistemi (yalnız R151 anılır; R147, R150, R152 kavram bağı); 2 |
+| R158 | FCFF/FCFE/DDM ve 3×3 çarpan, %40 / %60 | Yüksek | ikinci dalga | 8: Değerleme sistemi (çarpanlar 3×3, %60/%40) ve DCF altyapısı (FCFF/FCFE/DDM); 2 |
+| R166 | Hibrit Değerleme Sistemi: değerleme potansiyeli + teknik tetik alarmı | En yüksek | ikinci dalga | 8: Hibrit alarm (değerlemeye bağlı), Değerleme sistemi; 2 |
+| R153, R154 | 10 yıllık FCFF DCF, WACC; "tek bir tuş" | Yüksek | ikinci dalga (R153); kapsam dışı (R154 tek tuş cümlesi) | 8: DCF altyapısı (%40 ayak, bilanço verisi); R154 "tek tuş, Excel çıktıları" 8: Ürün hedefi satırındadır |
+| R061 | Merton DD / EDF | Yüksek | ikinci dalga | 8: Bilanço kalite filtreleri (Merton DD/EDF, T R061); bilanço verisi (2). Eski tabloda kapsam dışıydı |
+| R059 | maddi duran varlık artışı → fiyat ("Göz ardı etmeyin") | Yüksek | ikinci dalga | 8: Bilanço kalite filtreleri (R059 kural tam: veri gelince ilk sınanacak); 2 |
+| R022 | momentum × faaliyet nakit akışı 5×5 | Yüksek | ikinci dalga | 8: Momentum × faaliyet nakit akışı 5×5 satırı; bilanço verisi (2). Mom5 yarısı 3.1 ölçüm kolunda |
+| R049 | "Temel ve momentum staratejisi beraber çalışacak" | Yüksek | ikinci dalga (kavram bağı) | 8: Momentum × faaliyet nakit akışı 5×5 satırı; gizli "xxxx" metriği 8: YSA momentumu satırında dışarıda |
+| R145, R179 | TOPSIS | Çok yüksek, Yüksek | ikinci dalga | 8: TOPSIS; bilanço verisi (2) |
+| R178 | Convex Hull + DEA ile sektör rotasyonu | Yüksek | ikinci dalga | 8: DEA / Convex Hull; bilanço verisi (2) |
+| R229 | konveks rotasyon (5 adım) | Yüksek ("sırada bekleyen projeler") | ikinci dalga | 8: Konveks rotasyon: 2. adım tarihsel F/K (bilanço), 1. adım makro döngü kuralsız |
+| R004 | Takoz, TOBO, OBO, bayrak, flama (uygulamanın ilk algoritmaları) | Yüksek | ikinci dalga | 8: Klasik formasyonlar: Tansu kural vermedi, R219 dış kaynak; standart tanımla "yorum" tarayıcısı, sadakat hedefi olmadan. Long-only: OBO yalnız çıkış uyarısı |
+| R114 | fincan-kulp ("kendi tarama sistemimin yakaladığı") | Yüksek | ikinci dalga | 8: Fincan-kulp: S2 tek hipotez, tarayıcı eklemek m'yi artırmaz, engel kuraldır. Fincan biçimi ve kulp tek örnekten (GUBRF) çıkarılamıyor; hedef tabanı çelişkili (389,30 − 104,80 = 284,50; kırılma 300,75). Sadakat hedefi olarak GUBRF 2025-10-24 kırılımı saklanır |
+| R136 | gizli pozitif uyumsuzluk, kendi alt panel göstergesi | kendi aracı | ikinci dalga | 8: Gizli pozitif uyumsuzluk: osilatör kimliği gizli ("pek bilinen birşey değil", R136) |
+| R240 | "bistte artık bir önemi yok" (temel analiz) | Güçlü olumsuz tutum | ikinci dalga | 8: Değerleme sistemi (çelişki raporda yazılır); R240 kontrol listesi 8: Bilanço kalite filtreleri |
+| R065 | tek tuş + LLM/NLP ile faaliyet raporundan veri ("Nihai hedef") | Çok güçlü | kapsam dışı | 8: Ürün hedefi: strateji kuralı değil |
+| R028 | iki kodun kesişim kümesi (varyans replikasyonu + gerçek IV) | Yüksek | dışarıda | 8: VRP, implied move, IV kesişimi; opsiyon IV yok (2) |
+| R102 | "İlki volatilite işi" (en sevdiği 2 sistemden biri; ikincisi arbitraj) | Çok güçlü | resmi (arbitraj kısmı); volatilite işi parçalı | 3.3 arbitraj; 8: "Volatilite işi" satırı: Tansu hangi sistem olduğunu söylemiyor; "sistemim" dediği tek volatilite kaydı R092 (4.5 ölçüm, vekil formül); harvesti ölçüm (R030); VRP dışarıda (IV yok) |
+| R186 | VWAP + POC yön filtresi ("benim kullandığım mantık") | Yüksek | dışarıda | 8: VWAP / POC / VAH / VAL; gün içi veri yok (2) |
+| R210 | BIST100 + VIX kurallı sistem ("python çıktımızla") | Güçlü, kendi sistemi | dışarıda | 8: BIST100 + VIX beş adım; VIX ve açılış yok (2) |
+| R225 | emir defteri derinliği, BMP ("Quant kodlarımız") | kendi kodu | dışarıda | 2: emir defteri yok |
+| R226 | OBI (kapitülasyon üçlüsünün 3. koşulu) | Yüksek, kendi sistemi | dışarıda (OBI kısmı); diğer iki koşul ölçüm | 8: Kapitülasyon üçlüsü: OBI emir defteri ister |
+| R227 | konsantrasyon / kümelenme (COT proxy) | orta-yüksek, kendi sistemi | BAĞSIZ | tasarımda yok; 4.5 R227'yi yalnız fiyat-hacim konumu için anar (diğer R227 satırları ölçüm) |
+| R234 | "temel modelim de bir makine öğrenmesi algoritmasına dayanıyor"; lojistik model | kendi sistemi | dışarıda | 8: ML lojistik ("henüz yazdığım", T R234). "Kritik Kural" 1:1,5 cümlesi 3.2 adım 4'te resmi |
+| R137 | YSA ile momentum stratejisi, pozitif eğimli excel çıktısı | Çok yüksek | dışarıda | 3.1: formül YSA ve gizli; yerine R120 ölçüsü. Eğim kapısı, ADX/CMF, Markowitz, Max Sharpe 3.1 ölçüm kollarında |
+| R121 | Optimal Momentum+ | kendi projesi | dışarıda | 8: YSA momentumu / Optimal Momentum+ satırı: formül tanımsız |
+| R122 | "ana frekans" (spektral yaklaşım) | Güçlü ama soyut | dışarıda | 8: GARCH / ARIMA / ana frekans satırı: araç ya da araştırma fikri, işlem kuralı yok |
+| R174 | ARIMA parametre grid search ("Ben doğrusu bunu kullanıyorum") | kendi yöntemi | dışarıda | 8: GARCH / ARIMA satırı: işlem kuralı yok |
+| R090 | Lindsay Trident satış yönlü ABC ve dinamik hedef kalibrasyonu | yüksek önem | dışarıda (alış yönlü Trident ölçümde) | satış yönlü: açığa satış (3.2 H); dinamik kalibrasyon: 8: Kural taşımayan yan cümleler |
+
+## (c) Sayılar
+
+| Sayı | Değer | Eski (sürüm 5) |
+|---|---|---|
+| Toplam fikir satırı | 697 | 697 |
+| resmi | 157 | 144 |
+| ölçüm | 172 | 128 |
+| ikinci dalga | 154 | 82 |
+| dışarıda | 106 | 71 |
+| kapsam dışı | 36 | 58 |
+| strateji değil | 65 | 69 |
+| BAĞSIZ | 7 | 145 |
+
+Doğrulama: 157 + 172 + 154 + 106 + 36 + 65 + 7 = 697. Sayılar dosyadaki satırlardan `grep` ile sayıldı. Defter madde sayıları: defter-1 155, defter-2 170, defter-3 213, defter-4 159 (toplam 697; defter-4'te 19 satır R245–R263).
+
+Notlar:
+- Kapsam dışı 36 satırın 19'u R245–R263'tür (kanıt sayılmaz). Kalan 17 satır: makro/Gordon/ROC/CAPM/Beta/kur satırı (R045, R052, R071, R162, R173, R177, R200, R231) ve ürün hedefi satırı (R056, R065, R154, R159, R163).
+- Eski tabloda kapsam dışı olan R061 (Merton) ve R153–R165 DCF satırları sürüm 5.1'de "ikinci dalga" oldu (8: Bilanço kalite filtreleri; DCF altyapısı). R187 (±1/2 SD bantları) "dışarıda"dan "ikinci dalga"ya (8: Bant kuyruğu tepki alımı) geçti. R233'ün RSI 70 ve ikinci "önceki gün düşüğü" satırları "resmi"den "ölçüm"e geçti (resmi zincir T R224/R239).
+- "(kavram)" ile bağlanan satırlar tasarımın o R'yi anmadığı, ama aynı kavramı başka R ile bağladığı satırlardır. Bu bağlar yorum içerir; BAĞSIZ sayısı bu yoruma duyarlıdır. Daha sıkı okumada şu satırlar BAĞSIZ'a döner: R090 "FIBO iz süren takibe göre TP" (hedef merdiveni bağı), R242 üç satırı (HL kesimi kavram bağı), R129 "BOS ... EMA üzerine" (EMA kısmı atıfsız), R214 trend desteği kısmı.
+- Tasarımda iki yerde anılan R156 APO: "Bant kuyruğu tepki alımı" satırı (ikinci dalga tarayıcı) ve "RSI 30 / Williams %R / APO ..." satırı (dışarıda, ilk dalga). Tablo ilkini esas aldı. Tasarımda tek satıra indirilmeli.
+- R154 hem "DCF altyapısı" (ikinci dalga) hem "Ürün hedefi" (kapsam dışı) satırında anılır. Tablo "tek tuş" cümlesi için ürün hedefini esas aldı.
+
+### Denetim kontrolü: denetim-tasarim-8.md Tur 1 ve Tur 2 "kapandı" denenler
+
+Tasarım-8 sürüm 5.1 metniyle karşılaştırıldı. Kapandığı doğrulananlar: Y1 (Gartley TP2 oranı 0,618·0,786/0,214 = 2,27; harfiyen TP1 1,40 yazılı, ölçüm kolu), Y2 (AB=CD BC/AB [0,382; 1,00], D = C − 1,0·(A−B), CD 1,272·AB altı kapanış: risk 0,272·AB, ödül 0,618·AB, oran 2,27), Y3 (ADX/CMF 3.1 ölçüm kolu), Y4 (R224 ilk kısım ve ikinci kâr alma 4.4 ölçüm kolları; adım 4 R224 harfiyen, SMA250 G-dış R212), Y5 (4.1 eşik aday kümeleri; 3.2 madde 5 haftalık ve FVG kuralı), O1–O4, O7 (R260 parametre kaynağı kalktı), O8, O9, O10, O11, O12 (2.1 listesi), O13 (HAO_PD dipnotu), O14, N2 (§9 madde 2 "Kapandı"), N3 (4.4 adım 1 AB=CD kapanış istisnası), N4 (a) (5.3 atfı yok), N4 (c) ("m'yi 2 fazla artırır"), N4 (d) ("dört hat" ve beş aşama), N4 (f). S3 önceki koşu sayıları (−%9,0; [−%14,6; −%2,8]; 91 işlem; Holm p 1,0; 18/18 negatif) tasarımda yazılı.
+
+Kapandı denmesine rağmen ya da hiç anılmadan açık kalanlar (tasarım-8.md'de hâlâ görünenler):
+1. N4 (b) / D2: §2 tablosunda "piyasa değeri (TASARIM 5.1)" duruyor; alan listesi TASARIM §4 Kaynaklar'dadır. "TL hacim (2000'den)" ile indirme başlangıcı (2010) ayrı yazılmadı.
+2. D3: "İş Yatırım mali tablo kaynağı" (§8 ilk satır ve §9 madde 4) doğrulanmadı; tasarım "var" gibi yazıyor.
+3. O16: 3.2 H ölçüm kolu "C'den alım, D'de satış": giriş günü (C'nin doğrulandığı ilk gün + ertesi AOF) yazılı değil; bakış ileri riski kalıyor.
+4. O15 kalanları: mevsimsellikte (4.5) hesabın yalnız geçmiş 10 yılı kullandığı yazılı değil; 4.4 boyutta Tansu'nun risk / 2 ATR formülüyle farkı YORUM olarak yazılı değil; 3.1'de ay başı yeniden kurmada ortak hisselerin işlemi ve 252 günlük geçmişi olmayan hisse yazılı değil.
+5. O6: 3.2 madde 4 ve §1 hâlâ T R234 "Kritik Kural"ı genel kapı atfı olarak anar; R234'ün 1:1,5 şartı %55 isabete bağlıdır, "isabete bağlı" notu yok. Dayanak M R222 yeterli.
+6. Tur 2 N1 (S3 yeni kuralı): 3.3 artık seçim, kapı ve çoklu test notunu yazıyor; "boş dünya denetiminde şans tabanı ölçülür" resmi kayıttan önce yapılacak iş olarak açık.
+7. Yeni (bu üretimde görüldü): R156 APO ve R154 çift anılıyor (yukarıdaki notlar).
