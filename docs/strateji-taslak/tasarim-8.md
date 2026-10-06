@@ -49,7 +49,7 @@ Ayrı bir hat, **değerleme** (T R062, R064 "Kabaca sistem bu", R068, R151, R158
 |---|---|
 | Kapanış, yüksek, düşük, AOF, TL hacim (2000'den), fiili dolaşım değeri*, sermaye, piyasa değeri (TASARIM 5.1) | **Açılış** (mum gövdesi, engulfing, çekiç, doji, Heikin Ashi tam kurulamaz) |
 | XU100 kapanışı, sektör (bugünkü sınıflama), faiz | Bilanço (satış, kâr, FAVÖK, borç, özkaynak) |
-| Haftalık mum (günlükten türetilir) | VIX, opsiyon IV, gün içi veri, emir defteri, kümülatif delta |
+| Haftalık mum (günlükten türetilir) | VIX, opsiyon IV, gün içi veri, emir defteri, kümülatif delta, açık pozisyon / COT (T/M R227; Tansu da vekil kullanır, 4.5) |
 
 \* Kaynak alanı `HAO_PD` (halka açık piyasa değeri). Tansu'nun KAP "fiili dolaşım oranı" (T R035, R083) ile aynı tanım
 olduğu doğrulanmadı; ilk bilette KENT %0,54 ve GARAN %13,98 (G R035) değerleriyle karşılaştırılır.
@@ -186,6 +186,8 @@ raporda "ilk deneme geçmedi" yazılır:
 - Long-only: Tansu'nun uzun-kısa işlemi (M/T R099 "AGROT SAT, GARAN AL") burada ucuz bacağı tutan rotasyondur; bu
   arbitraj değil, göreli değer işlemidir. İlk denemenin geçmemesinin nedeni bu olabilir; sınanamaz (açığa satış yok).
 - Boyut: tüm bölme sermayesi (M/T R099 "tüm bakiyesiyle"; TASARIM 5.6 çift bölmesi).
+- Tansu'nun ilkesi "Borsada "yönü" bilmek zorunda değilsiniz" (M/T R101) piyasa yönünden bağımsız (uzun-kısa) işlem
+  ister; long-only rotasyon bu ilkeyi taşımaz, yalnız yaklaşır (kilit: açığa satış).
 Ölçüm: taslak 7'nin aynı sektör kuralı (karşılaştırma), z_pencere 120, Z 0 çıkışı.
 
 ### 3.4 m ve B
@@ -291,6 +293,13 @@ değil. Hedefler (defterden):
 Ayar adayları önceden yazılır; plasebo (rastgele tarih) karşılaştırması yapılır. Sonuç yalnız etiketi belirler.
 
 ### 5.2 Sayım, kayıt, ölçüm
+
+**Kendini yenileyen sistem (ölçüm kolu):** Tansu "Öyle bir matematiksel yapı kurun ki sistem sürekli kendini
+yenilesin" der (T/M R122) ve EMA'yı "walk forward le optimzie" eder (M/T R138). Önceden yazılmış kural ile çelişmez,
+yeter ki yenileme kuralı da önceden yazılsın: S2'de her yılın ilk işlem günü, ön kayıtlı aday ayarlardan (4.1 eşikleri,
+pivot k, sıkışma toleransı) yalnız o güne kadarki son 3 yılın verisinde en iyi net kâr / en büyük düşüş oranını veren
+seçilir ve o yıl kullanılır. Bu kol bakış ileri taşımaz (geçmiş pencere). Resmi kol sabit ayarla kalır; yenileyen kol
+ölçümde yan yana raporlanır. (S1 ve S3 zaten kendini yeniler: aylık sıralama, yıllık çift seçimi.)
 
 Sürüm 4'teki kurallar aynen geçerlidir: getirisiz sayım koşusu; kayıt sadakat ve sayımdan sonra, ilk getiri koşusundan
 önce; yeni hatların gerçek getirisi kayıttan önce görülmez; her yeni kod hash'i için boru hattı denetimi (yanlış kabul
