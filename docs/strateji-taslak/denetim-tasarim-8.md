@@ -396,3 +396,43 @@ Okuma anı: 06.10.2026. Açılan: `02-vakbn-garan-rapor-2.jpg` (dört panel) ve 
 ### Hüküm: KOŞULLU KABUL
 
 S3 çıkış değişikliği görselle doğrulandı: etiket sayısı, yerleri, düz portföy ve %72,27 tutuyor; kural doğru (ters sinyalde geçiş, nakit yok). Koşul: T4-1'i düzelt (defter-4 R251 ifadesi: "geri dönüş" = ΔZ dönüşü; band içine dönüş değil). T4-2 ile T4-6 küçük, isteğe bağlı.
+
+## Tur 5 (X soru taraması)
+
+Okuma anı: 07.10.2026. Okunan: commit `8599fff` (üç dosya), `ham-yapistirmalar-3.md` Ek X1–X7, `kural-yok-inceleme.md` "07.10 X taraması", `tasarim-8.md` değişen dört satır, `izlenebilirlik.md` (değişmedi). BOM görseli `curl` ile indirildi ve açıldı.
+
+### a) Alıntı sadakati
+
+- Yedi tweet de `api.fxtwitter.com/x/status/<id>` ile yeniden çekildi ve `ham-yapistirmalar-3.md` Ek metniyle karşılaştırıldı (python, boşluk ve tırnak normalleştirilmiş): X1–X7 hepsi BİREBİR. Hesap `The_Tansu_`, UTC saatleri Ek'teki ile aynı.
+- `kural-yok-inceleme.md` ve `tasarim-8.md` alıntıları ("günlük bakıyorum genelde 2 seneye kadar geriye bakıyorum"; "Genellikle 10 ile 30 bar arası mesafeler en sağlıklı sinyali verir"; "Eğer eğim negatiften pozitife dönüyorsa ..."; "noktanin gerçekten swing lowpivot ..."; "kanalın alt bandına yaklaşıldığında hisse almak, üst banda yaklaşıldığında ise satmaktır") ham metinle birebir. Üç noktalı kısaltmalar özgün sırayı bozmuyor. Bulgu yok.
+- Yazar notu (DÜŞÜK): X6 ve X7 "T" sayıldı, ama ilk paragraf dışında metin genel ders biçimli ("Finansal piyasalarda çoğu yatırımcı ...", "En çok uygulanan yöntemlerden biri ..."). R249 ve R234 ile aynı kural; sorun değil, ama X7 için aşağıdaki E2'ye bak.
+
+### b) BOM görsel okuması
+
+- Görselde iki "BOM" etiketi, ikisi de siyah üçgenle bir mumun dibinde: (1) mavi talep bölgesinin sol kenarında, "D-HL" etiketinin yanında; (2) Ağustos başında, kırmızı okla gösterilen swing dipte. Ardından yükseliş. Lejantta "HVN" ve "Gaussian Fit". Ek'teki okuma doğru.
+- X1 ("swing low pivot", "X bar öteleyerek") görselle uyumlu: iki BOM da yerel dip mumunda, sağında daha yüksek mumlar var.
+- **ORTA E1. §8 BOM satırı fazla genelliyor.** "Görselde talep bölgesindeki yükselen dipte ('D-HL') çıkar ... S2'nin bölge kapısında zaten." Yalnız ilk BOM bölgenin içinde. İkinci BOM (Ağustos, fiyat ≈110) mavi bölgenin üst kenarının (≈101) üstünde, yani bölge dışında. Satırı "iki örnekten biri bölge içinde, biri bölgenin ≈%9 üstünde" diye düzelt. "Bölge kapısında zaten" cümlesi çıksın ya da "bir örnekte" olsun. BOM "dışarıda" kalması doğru: X (öteleme) ve "şartlar" yok.
+
+### c) X7 → R246 bağı
+
+- **ORTA E2. Bağ aşırı, kısmen.** X7 (07.07.2025) genel bir yatay kanal taraması anlatısıdır: "en çok uygulanan yöntemlerden biri", "yatırımcı", kural cümleleri genel; birinci şahıs yalnız ilk paragrafta ("hazırladığım kod"). Kırılımda yön, sahte kırılımda ters işlem ve ortalamaya dönüş de aynı metinde sayılıyor. Süre yok ("uzun süre"); 80–100 hafta R246'dadır. Haftalık tarama kodu "bitti" demesi haftalık bakışla uyumlu ve bağı makul kılıyor. Ama "çıkış = üst bant (T X7)" Tansu'nun R246 için verdiği kural değil, genel yöntem anlatımıdır. `kural-yok-inceleme.md` "Çıkış = üst bant" cümlesini olgu gibi yazıyor.
+  - Düzelt: tasarim-8 §8 R246 satırında "(T X7, genel yatay kanal anlatısı; R246'ya bağı çıkarım, YORUM)". `kural-yok-inceleme.md` madde 9: "Çıkış = üst bant" yerine "X7'de genel kanal için üst banttan satış anılır; R246'ya bağı çıkarım".
+  - Ölçüm tanımı (alt %20 giriş, üst %20 çıkış, %5 stop) zaten ölçüm kolu ve YORUM işaretli; resmi etkisi yok. "Tansu'ya sorulacak" kalmalı: yataylık ölçüsü hâlâ yok. Doğru.
+- "mutlaka stop seviyeleri belirlemek" genel öğüt; seviye yok. "Bant dibinin %5 altı" YORUM; atıf T X7 yazılı ama %5 işaretli. Kabul.
+
+### d) Diğer değişiklikler
+
+- **DÜŞÜK E3. Eğim eşiği 0 (X6).** "eğim negatiften pozitife dönüyorsa" bir olay (dönüş), 3.1'deki "eğim kapısı: fiyat eğimi > 0 ve sinyal eğimi > 0" bir durum. İşaret eşiği 0 makul; ama X6 ortalamanın eğimini anlatır, YSA sinyalinin eğimini değil. Ek yaz: "ölçüm: eğim > 0 durumu ve negatiften pozitife dönüş olayı iki kol". `kural-yok-inceleme.md` "YSA çıktısının eşiği yine yok" diyor: doğru ve dürüst.
+- **DÜŞÜK E4. Uyumsuzluk 10–30 bar.** X4 "genellikle" der; 31–69 bar aralığı tanımsız (70+ "yeni trend"). "70 bar üstü sayılmaz" T'ye uygun; 31–69 için YORUM yaz (ör. sayılır ama zayıf). Görseldeki MinGap=15 aralığın içinde: iyi bir uyum. X5 "2 seneye kadar geriye bakıyorum" tarama penceresidir, iki dip arası mesafe değil; satırda yalnız "günlük" alınmış. Doğru; 2 yıl geri bakış ölçüm adayı olarak eklenebilir.
+- **DÜŞÜK E5. Çapraz not.** X6 "%5-%10 primlenmiş" cümlesi, §8'de "M R105" diye dışarıdaki "%5–10 kesişim primi" fikrini T olarak destekliyor. §8'deki satıra "T X6 ile doğrulandı" notu eklenebilir; kural yine yok.
+- X1–X3 (BOM, IDGYO): IDGYO Elliott C dibi ve "BOM sinyalim teyit vermişti" cümlesi tasarımda yok; yalnız `kural-yok-inceleme.md`'de. BOM kuralsız kaldığı için sorun değil.
+
+### e) "Tansu kural vermedi" sayıları
+
+- `izlenebilirlik.md` bu committe değişmedi. 752 satır, kilit: kural = 81 aynı kalır. Doğru: BOM hâlâ tanımsız, R136 osilatör adı yok, R137 YSA eşiği yok, R246 yataylık ölçüsü yok. Hiçbir satırın kilidi açılmadı; X bulguları kısmi.
+- X1–X7 R kaydı değil (R-numarası yok); satır sayısına girmemeleri doğru. Eksik: izlenebilirlik'te "bu fikirler X Ek'inden, tasarim-8 §8'de izlenir" notu yok. DÜŞÜK E6: giriş bölümüne bir cümle ekle, yoksa X4 ve X7 fikirlerinin izi yalnız tasarimde kalır.
+- `kural-yok-inceleme.md` toplamı hâlâ "10 soru"; 07.10 paragrafı kısmi cevapları ayrı veriyor, sayıyı değiştirmiyor. Tutarlı. Not: arama dizini konuşma yanıtlarının bir kısmını döndürür; "bulunamadı = yok" değil. Metin bunu yazıyor, doğru.
+
+### Hüküm: KOŞULLU KABUL
+
+Alıntılar API ile birebir, sayılar etkilenmedi, BOM okuması doğru. Koşul: E1 (BOM bölge cümlesi) ve E2 (X7 → R246 atfı "çıkarım" diye işaretlensin; "Çıkış = üst bant" olgu gibi yazılmasın). E3–E6 isteğe bağlı.

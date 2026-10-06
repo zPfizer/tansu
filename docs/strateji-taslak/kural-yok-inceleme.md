@@ -477,11 +477,11 @@ yok; BOM yalnız R263'te geçer, tanımsız; R246 ve R249'da çıkış/hedef/sto
 - 6 (R137 eğim eşiği): kısmi. "Eğer eğim negatiften pozitife dönüyorsa, momentum yukarı yönlü ivme kazanmaya başlamış
   demektir." (X6): eşik işaret değişimidir (0); YSA çıktısının eşiği yine yok.
 - 8 (BOM): kısmi. "noktanin gerçekten swing lowpivot olduğundan emin olmak için X bar kadar öteleyerek kodladım" (X1):
-  BOM bir swing dip pivotudur, sağında X bar ister. Görselde BOM, talep bölgesi başındaki "D-HL" ve bir swing dipte;
+  BOM bir swing dip pivotudur, sağında X bar ister. Görselde BOM, talep bölgesi başındaki "D-HL" yanında ve bölgenin üstündeki bir swing dipte;
   IDGYO'da Elliott C dibinden sonra "BOM sinyalim de teyit vermişti" (X3). Tam kural ve "şartlar" yine yok.
 - 9 (R246): kısmi. 2025 yatay kanal taraması: "kanalın alt bandına yaklaşıldığında hisse almak, üst banda
   yaklaşıldığında ise satmaktır"; hacimli kırılımda kırılım yönü; "mutlaka stop seviyeleri belirlemek ve hacimle teyit
-  almaktır" (X7). Çıkış = üst bant. Yataylık ölçüsü yine yok.
+  almaktır" (X7). Çıkış = üst bant çıkarımdır (YORUM): X7 genel anlatıdır ve R246'dan 14 ay öncedir. Yataylık ölçüsü yine yok.
 - 1, 2, 3, 4, 7, 10: X'te yeni bilgi bulunamadı (arama: xxxx, pre signal, sıkışma, lojistik, temel model, three drives,
   conversation_id). Not: arama dizini konuşma yanıtlarının yalnız bir kısmını döndürür; bulunamadı "yok" demek değildir.
 
