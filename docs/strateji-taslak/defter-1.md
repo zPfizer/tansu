@@ -71,7 +71,7 @@ Olgunluk etiketleri: kural tam / çekirdek belli / yalnız fikir.
 ### R008 · 2026-08-27 16:57 UTC
 - Yazar: G (Tansu'nun araç çıktıları; 9 görsel; metin yok).
 - Fikirler (hepsi görselden):
-  - [formasyon] XABCD harmonik yapı; "D: 226,80 [TAMAMLANDI]" ve "D: 11,29 [TAMAMLANDI]" etiketleri; D'ye sert yükselişten sonra geri çekilme — durum etiketi: TAMAMLANDI — çekirdek belli
+  - [formasyon] XABCD harmonik yapı; "D: 226,80 [TAMAMLANDI]" ve "D: 11.20 [TAMAMLANDI]" etiketleri (07.10 düzeltme: eski okuma 11,29; 11.29 ayrı AB=CD grafiğinin "D (hedef): 11.29 [TAMAM]" etiketi; kaynak X 2092340608480297126); D'ye sert yükselişten sonra geri çekilme — durum etiketi: TAMAMLANDI — çekirdek belli
   - [formasyon] "DGATE.IS - Kelebek Formasyonu (AL (Buy)) [AKTİF] — SİSTEM: Pesavento — Tarama eşleşmesi", D etiketi "D: 49.66 [AKTİF]"; alt başlık "X→B trend çizgisi: Kırılım: AŞAĞI yönde, 2026-08-18 tarihinde"; mavi X-B çizgisi grafikte; A tepede, C ikinci tepede, D aşağıda — durum etiketi: AKTİF; X-B kırılımı kayıtlı — çekirdek belli
   - [teyit-tetik] DGATE görselindeki X-B kırılım tarihi, R013'teki "XB noktasından çizilecek trend çizgisi" tetiğinin araçta üretildiğini gösterir (görselden) — çekirdek belli
   - [formasyon] "MARKA - Patern #13 Backtest Modu - Düşüş (AB bacağı aşağı)", legend "AB=CD Patern #13"; A ≈95, B ≈73, C ≈92,5; C'den noktalı D "(hedef) 70.25"; gerçek mumlar C sonrası 84-91 bandında — durum: backtest/projeksiyon — çekirdek belli
@@ -79,7 +79,7 @@ Olgunluk etiketleri: kural tam / çekirdek belli / yalnız fikir.
   - [bölge] G4 etiketleri: "Kırılım 2026-07-29 (Temas:4)", "RSI Kırılım 2026-06-18 (T:3)", "RSI Kırılım 2026-07-22 (T:2)", BOS, HH/LH/HL/LL/H/L; panel sırası: fiyat+bölge, hacim (+ortalama çizgisi), MACD benzeri (histogram, iki çizgi, AL/SAT üçgenleri), RSI (kesikli üst/alt çizgi, kırmızı trend çizgileri) — kırılım ve temas sayısı araç çıktısında — çekirdek belli (eşik okunamadı)
   - [bölge] G2/G4/G7/G8: sarı üst arz, mavi alt talep bölgesi; sağda volume profile (yeşil yoğun düğüm, sarı Gauss eğrisi); altta hacim, MACD benzeri ve RSI panelleri; G2/G4'te turuncu yükselen trend çizgisi; G4'te fiyat mavi bölgeden çıkıp sarı arzın içine/üstüne yaklaşıyor — yalnız fikir (G2/G7/G8 etiketleri okunamadı)
   - [formasyon] G7/G8: yatay sıkışma ve üçgen/flama benzeri daralma; G8'de yükselen alt çizgi kırılmış (kırmızı "Kırılım" etiketi, okunaksız) — yalnız fikir
-  - [formasyon] G1 ve G5: X, B, C, D etiketli harmonik; X-B mavi nokta-çizgi trend çizgisi; D etiketleri "D: 226.80 [TAMAMLANDI]" ve "D: 11.29 [TAMAMLANDI]" (G5'te okunuş "11.20/11.29", belirsiz); yatay renkli Fibonacci çizgileri — çekirdek belli
+  - [formasyon] G1 ve G5: X, B, C, D etiketli harmonik; X-B mavi nokta-çizgi trend çizgisi; D etiketleri "D: 226.80 [TAMAMLANDI]" ve "D: 11.20 [TAMAMLANDI]" (G5; 07.10'da X 2092340608480297126 görselinden kesinleşti, 11.29 AB=CD hedefidir); yatay renkli Fibonacci çizgileri — çekirdek belli
 - Örnek ve sonuç: DGATE D 49,66 (aktif); MARKA D 70,25 (projeksiyon); KRPLS D 11,29 ve 10,05 tamam; (hepsi görselden). Başarı sayısı yok.
 - Tansu'nun vurgusu: Metin yok. Aynı anda 9 görsel paylaşmak, araçların formasyon/bölge/hacim/momentum panellerini birlikte gösterdiğini belirtir. Kendi sözü yok.
 
@@ -129,8 +129,8 @@ Olgunluk etiketleri: kural tam / çekirdek belli / yalnız fikir.
 - Fikirler:
   - [teyit-tetik] "10 gün içinde D noktasından bir tepki yapmıyor ise belirsiz bir yapı olarak bakılabilir." — pencere 10 gün; D'den tepki yoksa "belirsiz" — çekirdek belli (tepki eşiği yok)
   - [felsefe] "Her gartley çalışmaz ama çalışmasa bile oluşumunda bazı stratejiler kurgulanabilir." — çekirdek belli (yapı çalışmasa da strateji kurulur)
-  - [giriş] (görselden) "SAYAS - Patern #2 Detaylı (Fibonacci + Trade Management) | Bullish (LONG) | Sistem: Carney"; legend: "Giriş (D)", "Bk Stop (X)", "TP1 (1:1 R/R)", "TP2 (.618 CD)" — giriş D'de; stop X'te; TP1 = 1:1 risk/ödül; TP2 = CD bacağının 0,618'i — çekirdek belli (araçta işlem yönetimi var; hesap detayı okunamadı)
-  - [boyut-risk] (görselden) Fibonacci çizgileri 0.000: ≈144; 0.236: 115; 0.382: 97; 0.618: ≈68?; 0.786: 47.10; 1.000: 20.6 (küçük yazı; okunuş yaklaşık) — yalnız fikir
+  - [giriş] (görselden) "SAYAS - Patern #2 Detaylı (Fibonacci + Trade Management) | Bullish (LONG) | Sistem: Carney"; legend: "Giriş (D)", "İlk Stop (X)", "TP1 (1:1 R/R)", "TP2 (.618 AD)" — giriş D'de; stop X'te; TP1 = 1:1 risk/ödül; TP2 = D + 0,618 × (A − D) (47,05 + 0,618 × 97,15 ≈ 107,09; X arşivi 2091220738510332198) — çekirdek belli (araçta işlem yönetimi var)
+  - [boyut-risk] (görselden) Fibonacci çizgileri 0.000: 144.20; 0.236: 115.03; 0.382: 96.98; 0.500: 82.40; 0.618: 67.82; 0.786: 47.05; 1.000: 20.60 — yalnız fikir
 - Örnek ve sonuç: SAYAS; X ≈20,6 (Mayıs-Haziran 2023), A ≈145 (Kasım 2023), B ≈68 (Ocak 2024), C ≈122, D ≈47 (2024 sonu); D'den sonra fiyat 2025-2026 boyunca 30-70 arasında yatay; 10 günlük pencere görselde çizili değil (görselden).
 - Tansu'nun vurgusu: Orta-yüksek; somut kural (10 gün) veriyor, kesinlik iddia etmiyor ("bakılabilir").
 
@@ -648,6 +648,7 @@ Notlar:
 38. R062 (G3): eski: "2023’te 40-95, 2025-2026’da çoğunlukla 50-75". Yeni: başlık "ASUZU — Mum Grafik (2023-2026) | 120 TL'ye En Yakın: 118.60 TL (2024-04-29)"; Tansu kırmızı ok çizmiş; fiyat 2023 başında ≈78, dip ≈41.
 39. R063: eski: "sekiz otomotiv hissesi; 2025/9 değerlerinin ortalaması ≈2,27". Yeni: tam tablo (10 dönem × 8 hisse + Sektör Ort., Ortalama ve Anlık satırları) eklendi; Sektör Ort. sütunu sekiz hissenin basit ortalamasıdır (2025/9: 2.27 doğrulandı).
 40. R064: eski: "satış 33.656.444.165 TL ... FAVÖK 2.019.386.650 TL". Yeni: net borç ayrıştırması (2AA + 2BA − 1AA − (1AB+1BC)), firma değeri 32.310.186.398, piyasa değeri 30.059.184.999, ödenmiş sermaye 252.000.000 TL; görsel R062 G4 ile aynı (kırmızı kutu yok).
+41. R014 (SAYAS, 07.10, X arşivi karşılaştırması): eski: legend "Bk Stop (X)", "TP2 (.618 CD)"; Fibonacci 0.618 ≈68?, 0.786 47.10. Yeni: X gönderisi 2091220738510332198'deki aynı görselden "İlk Stop (X)", "TP2 (.618 AD)"; çizgiler 144.20 / 115.03 / 96.98 / 82.40 / 67.82 / 47.05 / 20.60. Hesap AD ile tutar (TP2 çizgisi ≈107). Bu okuma hatası iliskiler.md, izlenebilirlik.md, parca-01.md ve ham-sentez-b.md'ye de geçmişti.
 
 ## Denetim düzeltmeleri
 

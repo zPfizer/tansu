@@ -1,0 +1,2 @@
+{"id": "1839723975733027277", "kaynak": "@mehmetemanet", "kod_metni": "ColA = if(V > 10*ref(V,-1),1,0)\n\nColB = Ref(barssince(V>10*ref(V,-1)),-1)\n\nFilter: ColA=1 and ColB>60", "baglanti": null, "tansu": "çevirecek"}
+{"id": "1840862040719835352", "kaynak": "@golgemed", "kod_metni": null, "baglanti": "https://colab.research.google.com/drive/1YctudxtbGozud8zRoxWy6Gfb9X0kdsKe", "tansu": "övdü"}

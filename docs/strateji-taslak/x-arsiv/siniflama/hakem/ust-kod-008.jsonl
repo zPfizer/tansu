@@ -1,0 +1,3 @@
+{"id": "1842298710262497616", "kaynak": "@fiboanaliz", "kod_metni": "BAR:=144;\nFibo:=78.6;\nYuzde:=5;\nHV:=HHV(H,BAR);\nLV:=LLV(L,BAR);\nHV-(HV-LV)*(Fibo-Yuzde)/100>C AND C>HV-(HV-LV)*(Fibo+Yuzde)/100 and BarsSince(HLBTop(BAR)=H)<BarsSince(HLBBot(BAR)=L)", "baglanti": null, "tansu": "çevirecek"}
+{"id": "1842305345110302780", "kaynak": "@fiboanaliz", "kod_metni": "BAR:=144;\nFibo:=78.6;\nYuzde:=5;\nHV:=HHV(H,BAR);\nLV:=LLV(L,BAR);\nHV-(HV-LV)*(Fibo-Yuzde)/100>C AND C>HV-(HV-LV)*(Fibo+Yuzde)/100 and BarsSince(HLBTop(BAR)=H)<BarsSince(HLBBot(BAR)=L)", "baglanti": null, "tansu": "uyguladı"}
+{"id": "1843387861770612872", "kaynak": "@TTesviyeci", "kod_metni": null, "baglanti": "https://tr.tradingview.com/script/rPD08oAV/", "tansu": "çevirecek"}

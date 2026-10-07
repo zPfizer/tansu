@@ -121,3 +121,85 @@ Hiçbir sınıflayıcı #15'teki formülü çıkarmadı: "dipten uzaklık %" = (
 8. Okuma kuralını tamamla: alıntılı gönderi, üst gönderi görseli (367), üst metni alınamayan yanıt (579), video (14).
 9. Token tahminini metin ve görsel hacmine göre yeniden hesapla (metin %56 fazla); kod çevirisi çıktısını ekle.
 10. README'yi düzelt: "777 ana" → "683 ana + 94 kendi-zincir yanıtı; eksik 5 ana, 3 yanıt"; 172 kimlik listesini kaydet ya da iddiayı kaldır; `medya/` tanımını güncelle.
+
+## Tur: hakem talimatı ve ön karşılaştırma (07.10)
+
+Kapsam: siniflama/hakem-talimat.md (K1, K2, örnekler), opus-v5 (176 dosya, 8.785 kayıt), codex-v5 (yalnız `.jsonl`).
+Yöntem: sayılar `python -c`/stdin ile yeniden hesaplandı. Ayrışan gönderilerin hepsinin metni, üst metni ve alıntısı okundu.
+28 görsel Read ile açıldı (6'sı ayrışan, 22'si iki okuyucunun da `kod: yok` dediği kod adayı). Bağlantıların hiçbiri açılmadı.
+Codex denetim sırasında yazmaya devam etti. Sayılar üç kez değişti (aşağıda).
+
+### İddiaların sonucu
+
+| # | İddia | Sonuç | Kanıt |
+|---|---|---|---|
+| 1 | 4.155 ortakta rol %81,2, kural %86,7, kod %98,9 | DOĞRU | İlk 831 Codex dosyasıyla birebir aynı çıktı: 4.155; 81,2 / 86,7 / 98,9; 45 ayrışma. Son durum: 951 dosya, 4.755 ortak gönderi; rol %81,5, kural %86,5, kod %98,9; `kod` var/yok ayrışması 52. Kod uyumu çoğunlukla "yok = yok" (Opus 8.543/8.785 `yok`). |
+| 2 | 45 ayrışmanın hemen hepsi (a) üst/alıntı kodu, (b) açılmamış bağlantı; okuyucu hatası değil | KISMEN | 4.155'te 40/45 (a)+(b), 5'i değil. 4.755'te 33 (a) + 10 (b) + 9 başka = 52. "Okuyucu hatası değil" sözü 2 gönderide yanlış (ORTA-1). |
+| 3 | K1, Ayırma kuralı 6 ile tutarlı ve kod kaybettirmez | KISMEN | Kural 6 ile tutarlı. "Kod kaybettirmez" YANLIŞ: Tansu'nun kaydı olmayan kendi üst gönderilerinde kod kaybolur (YÜKSEK-1). Başkasının kod bağlantısı da kaybolur (ORTA-3). |
+| 4 | K2 doğru sınır | KISMEN | Yön doğru. Ama karar Tansu'nun cümlesine bağlı. Aynı tür gönderi, okuyucular uyuştuysa `baglanti`, ayrıştıysa `yok` olabilir (ORTA-2). |
+| 5 | Örnek kararlar doğru | ÇOĞU DOĞRU | 1783149446089383961 ve 1829983002304086142 doğru. 1842658091239694553 kararı doğru, gerekçesi eksik (DÜŞÜK-1). 1770856035709817030 kararı doğru ama K2'nin ilk maddesiyle lafzen çelişir (DÜŞÜK-2). "Görsel açılıp karar verilir" denen 4 gönderi için kural yok (ORTA-1). |
+
+### YÜKSEK
+
+**Y-1. K1 Tansu'nun kaydı olmayan kendi üst gönderisinde kodu kaybettirir.**
+K1 "Üst gönderi Tansu'nunsa: o gönderinin kendi kaydı kodu taşır" der. Bu, üst gönderi tweets.jsonl'de varsa doğrudur. Sınadım: 8 kendi-üst ayrışmasının (1761491657529213237, 1784693133978059014, 1826114685084561492, 1904748990458900518 vb.) üst kayıtlarında iki okuyucu da kodu taşıyor.
+Ama Tansu'nun yanıt verdiği 45 kendi üst gönderisi tweets.jsonl'de YOK. 24'ü ust.jsonl'de "hata" (alınamadı). 21'inin metni ust.jsonl'de var, kimliklerinin hepsi arşiv aralığında. Bu 21 gönderinin sınıflama kaydı yok, görselleri indirilmedi. K1'e göre yanıt `yok` olur, üstün de kaydı yok; kod hiçbir yere yazılmaz. Kod izi olanlar:
+- 1845380189410201878: "Kod güncellendi / Para akışı da yazılacak koda", 2 görsel (indirilmedi, okunmadı). Yanıtları 1845728745040068881 ve 1845381519147176179: iki okuyucu da `yok`.
+- 1911030879519994288: HBK hesaplayan kodu adım adım anlatıyor, 1 görsel (okunmadı). Yanıtı 1911030882531418617: ikisi de `yok`.
+- 1897595121345966255: "Yataysütun birleştirme", 1 görsel (okunmadı). Aynı dizinin yanıtı 1897595124877517216 "Keys kullanımı" görselinde kod var (iki okuyucu `gorselde`). Üstte de kod olup olmadığı okunmadı.
+- 1906617990407196857: "bir Python kodu yazdım"; görsel yok, metinde kod yok.
+Bu, ayrıca bir toplama boşluğudur: arşivde 21 Tansu gönderisi eksik. Denetim 1'de kendi-zincirde 3 eksik bulunmuştu; bu sayı daha büyük.
+Düzeltme: bu 21 gönderiyi (medyasıyla) sınıflamaya ekle. Ya da K1'e istisna yaz: "Tansu'nun üst gönderisinin kaydı yoksa hakem kodu ust-kod.jsonl'e yazar."
+
+### ORTA
+
+**O-1. Üçüncü bir kitap boşluğu var. Talimat bunu kapatmıyor (iddia 2).**
+(a) ya da (b) olmayan ayrışmalar, 52'den 9'u:
+- Tansu'nun kendi metninde fonksiyon adı ya da parametre: 1826740082239570089 ("qf.iplot kodu çalıştır"), 1922905765708251592 (`read_csv()`, `np.where()` listesi), 1922994519655538765 (`print()`), 1925633169694277851 ("range = 30"). Codex `metinde`, Opus `yok`.
+- Matematik formülü kod mu: 1925561082392834472 (metinde "C = BS(S, K, r, T, σ)"), 1851750265239609482 (görselde Excel; "(E_est/3-1)^2 + (sigma_E/0.8-1)^2" ve Merton formülleri; görseli açtım). Kitap "Formül dili de koddur" der. Bu formüllerin gösterge dili mi matematik mi olduğu tanımlı değil. Aynı durumda iki okuyucu birlikte `yok` dedi: 2087251201691685145 (görselde "FAVÖK (YoY) = [3H + 4B](t) / [3H + 4B](t-1yıl) - 1"), 1985831305662050335 ("W1*1.618"). Ben ikisini de açtım.
+- Fotoğrafın arka planındaki ekran: 1891183558858883162 (kitap kapağının arkasında bulanık kod; okunamıyor), 1893725545260544026 (yalnız "plt.show()" okunuyor; altta grafik çıktısı), 1892643772430766103 (Gartley program çıktısı; sağ kenarda silik, okunamayan kod parçaları). Üçünü de açtım. Bence üçü de `yok`: okunabilir, paylaşılan kod yok.
+Okuyucu tutarsızlığı: Codex 1891183558858883162 ve 1893725545260544026'da arka plan kodu için `gorselde` dedi. Aynı durumda (kitap fotoğrafı, arkada okunamayan ekran) 1842520794586341379'da `yok` dedi; görseli açtım. Bu bir kitap boşluğu değil, okuyucu tutarsızlığıdır. İddia 2'deki "okuyucu hatası değil" sözü bu iki gönderi için yanlış.
+Talimat bu 4 görselli gönderiyi "görsel açılıp karar verilir" diye bırakıyor; karar kuralı vermiyor. Hakem kuralsız karar verir.
+Düzeltme: K3 ekle: "Okunamayan ya da paylaşım konusu olmayan arka plan kodu → `yok`. Metinde yalnız fonksiyon adı/parametre → `yok`, notta adlar. Matematik formülü → kod değil, `parametreler`e."
+
+**O-2. K2 sözcüğe bağlı. Ayrışan ve uyuşan kayıtlar arasında tutarsızlık yaratır.**
+Tansu'nun kendi metninde dosya bağlantısı (we.tl, colab, github, drive, tradingview script) 65 gönderide var. Opus: 56 `baglanti`, 6 `yok`, 3 `gorselde`. Bağlantı dışındaki metinde K2'nin anahtar sözcükleri (kod, Python, indikatör, tarama, dosya, kullan, dene) 19 gönderide yok. Bu bir düzenli ifade yaklaşımıdır; hakem anlamdan da karar verebilir. Bu 19'un 13'ü şimdi en az bir okuyucuda `baglanti`. Örnek: 1797024166698176638 "Jupiter file … dataset", 1845164267789512855 "Vegas tüneli stratejisini bir daha yolluyorum", 1939327640332050705 "Alın geliştirin".
+K2 yalnız ayrışan kayıtlara uygulanır. Sonuç: 1840777067882787015 (ölçütler + we.tl + program çıktısı) K2'ye göre `yok` olur. Aynı türden 1847558481227702504 ("200EMA 50 EMA CMF RSI" + we.tl) iki okuyucuda `baglanti` kalır.
+Maliyetler aynı değil. Yanlış `baglanti` bir deneme açılışına mal olur. Yanlış `yok` bağlantıyı deneme aşamasından kalıcı olarak çıkarır.
+Düzeltme: alan adına göre kural: Tansu'nun metnindeki dosya/kod barındırma bağlantısı → `baglanti`. LinkedIn ve haber sitesi → `yok`.
+Not: we.tl bağlantıları geçicidir (1781980143747010739: "1 hafta süresi var"). Hiçbir bağlantıyı denemedim. Deneme aşamasının ne kadar kod kurtaracağı bilinmiyor.
+
+**O-3. ust-kod.jsonl şemasında bağlantı alanı yok.**
+K1 yalnız `kod_metni` yazar. Başka kullanıcının kodu metin değil bağlantıysa hiçbir yere gitmez. Ayrışmalarda 6 gönderi: 1824958910681264505 (github), 1840862040719835352 (colab), 1847661816442184171 (colab), 1845228714109329533 (tradingview; Tansu "Bunu yaptık … tavan da yakaladık" diyor, yani uyguladı), 1912597066033078607 (tradingview), 1843387861770612872 (alıntıda tradingview; Tansu "python taramasını yazacağım").
+Düzeltme: şemaya `baglanti` alanı ekle. Bu kayıtları bağlantı deneme aşamasına da gönder.
+
+**O-4. Sayılar koşu sırasında değişiyor.**
+Denetim sırasında ortak gönderi 4.590 → 4.755 oldu, ayrışma 48 → 52 oldu. Talimat "45 ayrışmadan" diye yazıldı. Yeni ayrışmalar (1912597066033078607, 1913270044257124805, 1922905765708251592, 1922994519655538765, 1925561082392834472, 1925633169694277851, 1925863641338859943) talimattaki örneklere girmedi. Bunların 4'ü O-1 türünde. 4.155 anındaki 45 ayrışmadan biri sonraki dosya kümesinde ayrışma değil (45 + 4 yeni ≠ 48). Hangisi olduğunu araştırmadım.
+Düzeltme: hakem talimatını Codex bitince son ayrışma listesiyle yeniden sına.
+
+### DÜŞÜK
+
+**D-1. Örnek 1842658091239694553 gerekçesi eksik.** Talimat "kod Tansu'nun üst gönderisinde (we.tl)" der. Üst gönderi 1842657804374720958'in iki kaydı da `gorselde` (Python kodu görselde). Metindeki we.tl ("txt dosyası yukarıda") kayda geçmedi, çünkü `kod` tek değerlidir. Ayrıca Opus notuna göre yanıt, kendi kodunu düzeltiyor (kod RSI <= 30'da al veriyor; yanıt "RSI > 30" diyor). K1 yanıtı `yok` yapınca bu düzeltme kod aşamasında görünmez. Düzeltme: K1 yanıtında notta "üst kodu düzeltiyor: …" yazılsın.
+
+**D-2. Örnek 1770856035709817030 K2'nin ilk maddesiyle lafzen çelişir.** Metin "Python çalışmalarım linkedin sayfamda" der. İlk madde ("Python dosyası olduğunu söylüyorsa") bunu `baglanti` yapar. Karar ancak ikinci maddedeki "LinkedIn profili" örneğiyle `yok` olur. Kuralın sırası açık değil.
+
+**D-3. `tansu` alanı eksik değerli.** Değerler: onayladı, uyguladı, övdü, çevirecek. 1853136887961043422 ("Diğer bullish sinyallerini de lütfeder misin") ve 1847661816442184171 ("yazsana stratejiyi") istek bildiriyor. 1913270044257124805 bir şaka. Bunlar için değer yok.
+
+**D-4. Okunmayan videolarda `kod: yok`.** 10 video gönderisinde Opus `gorsel_okundu: false` ve `kod: yok` yazdı (ör. 1773715205274403212, 1863989280688746532). İçerik okunmadı. `yok` burada bir tahmindir. Kod kitabının "Tahmin yazılmaz" kuralıyla çelişir.
+
+### Ortak hata taraması (iki okuyucu da `kod: yok`)
+
+22 kod adayı görseli açtım. Seçim: metin ya da görsel özeti kodu anıyor ("kod yazdım", "Python", "tarama kodu", "program çıktısı").
+Açılanlar: 1840307089429651792, 1842520794586341379, 1870623312260513908, 1871248456964329949, 1900500470029795548, 1900483420456653124, 1907840096851624360, 1907860073239683477, 1909130007827317168, 1962942414391283988, 1964205713430876532, 1980136440672465307, 1985831305662050335, 2043089809359466951, 2087251201691685145, 1889451595584115079, 1763696979119382658, 1837875098834882936, 1845558544126366115 (1. görsel), 1957917338571051457, 2003227972720033858, 2039748457804550392.
+Sonuç: hiçbirinde okunabilir kod yok. Hepsi program çıktısı (grafik, konsol tablosu), kitap, uygulama ekranı ya da caps. Kural 7'ye göre `yok` doğru. Tek istisna formül satırları (2087251201691685145, 1985831305662050335); bunlar O-1'deki tanım boşluğuna girer.
+Bu seçim sözcüğe dayalıdır. Metni kodu anmayan görsellerde kod olup olmadığı ölçülmedi. Açmadığım ikinci görseller: 1829983002304086142-2, 1840777067882787015-2, 1845558544126366115-2.
+
+### Düzeltme listesi
+
+1. 21 eksik kendi gönderisini (medyasıyla) sınıflamaya ekle ya da K1'e istisna yaz (Y-1).
+2. K3 yaz: arka plan kodu, metinde fonksiyon adı, matematik formülü (O-1).
+3. K2'yi alan adına göre yaz. Ayrışan ve uyuşan kayıtlara aynı kuralı uygula (O-2).
+4. ust-kod.jsonl şemasına `baglanti` alanı ve `istedi` değeri ekle (O-3, D-3).
+5. Codex bitince talimatı son ayrışma listesiyle yeniden sına (O-4).
+
+Bu turda dosya oluşturulmadı. Denetim sırasında %TEMP% altında açılan geçici bir liste dosyası (dis.json) silindi.

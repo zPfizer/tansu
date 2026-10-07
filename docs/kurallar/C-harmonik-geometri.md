@@ -248,7 +248,7 @@ Not: Üretici araç, Tansu'nun kendi taraması gibi görünüyor (Plotly grafik,
 
   - Ek (not, Levent iletisi, ikinci el): tolerans "%3–5" (BIST için Python/Excel); `reward/risk < 1,5` veya stratejiye göre `< 2` ise pattern doğru olsa da işlem reddedilir; D/PRZ = XA 0,786 ile BC 1,272/1,618 uzantısının kesişimi; risk = |D−X|.
   - Tarayıcı tablosu (birinci el, 02): LUKSK Gartley için Giriş = D hedefi = 86,95, Stop (X) = 73,00.
-  - SAYAS detay grafiği başlığı (birinci el): `SAYAS - Patern #2 Detaylı (Fibonacci + Trade Management) | Bullish (LONG) | Sistem: Carney`. Lejant (okunurluk sınırlı): `Giriş (D)`, `Bk Stop (X)`, `TP1 (1:1 R/R)`, `TP2 (.618 CD)`.
+  - SAYAS detay grafiği başlığı (birinci el): `SAYAS - Patern #2 Detaylı (Fibonacci + Trade Management) | Bullish (LONG) | Sistem: Carney`. Lejant (okunurluk sınırlı): `Giriş (D)`, `İlk Stop (X)`, `TP1 (1:1 R/R)`, `TP2 (.618 AD)` (07.10 okuma düzeltmesi; ilk okuma "Bk Stop", ".618 CD").
 - Tanım (bullish, hesaplanabilir; tablo ile düzeltilmiş yön):
   1. X=dip, A=tepe, `X < A`. `XA = A − X`.
   2. B: `AB/XA ≈ 0,618`. `B_beklenen = A − 0,618*XA`.
@@ -269,7 +269,7 @@ Not: Üretici araç, Tansu'nun kendi taraması gibi görünüyor (Plotly grafik,
 | Stop | X, veya XA 1,13, veya X − 2*ATR | görsel (üç alternatif) |
 | TP1 | AD'nin 0,382'si, pozisyonun %50'si | görsel |
 | TP2 | AD'nin 0,618'i, kalan | görsel |
-| SAYAS TP1 / TP2 | 1:1 R/R ; 0,618 CD | görsel (okunurluk sınırlı) |
+| SAYAS TP1 / TP2 | 1:1 R/R ; 0,618 AD | görsel (07.10 yeniden okundu) |
 | Tolerans | %3–5 | not (ikinci el). Oran mı, fiyat mı belli değil. |
 | Min R:R | 1,5 (veya 2) | not (ikinci el) |
 | n_period (X için) | bilinmiyor | YORUM |
@@ -278,7 +278,7 @@ Not: Üretici araç, Tansu'nun kendi taraması gibi görünüyor (Plotly grafik,
 - Giriş / stop / hedef / bozulma / durum: yukarıda. Durum: `AKTIF` → `TAMAMLANDI` → `TEPKI_VERDI` (kural 2). Bozulma: D, X'i aşağı kırarsa Gartley kimliği bozulur (genel kural; Tansu'dan açık söz yok, YORUM).
 - Belirsiz kalanlar:
   - Stop üç farklı: X, XA 1,13 (`A − 1,13XA = X − 0,13XA`), `X − 2ATR`. Tabloda "veya". Hangisi tarayıcıda? Tarayıcı çıktısı "Stop (X)" yazıyor (birinci el, 02), yani X.
-  - TP: bu tablo AD üzerinden. BALAT (kural 11) CD üzerinden. SAYAS "0,618 CD". Üç farklı TP çapası. Hangi sistem hangisi? Bilinmiyor.
+  - TP: bu tablo AD üzerinden. BALAT (kural 11) CD üzerinden. SAYAS "0,618 AD" (07.10 okuma düzeltmesi; eski okuma "CD" idi). İki farklı TP çapası: AD ve CD. Hangi sistem hangisi? Bilinmiyor.
   - MAKIM "Yükseliş Gartley" etiketi (birinci el, 122): bacak etiketleri `X->A: 2.11`, `A->B: -1.43`, `B->C: 0.68` (okunurluk sınırlı; 0,68 mi 0,88 mi), `C->D: -1.25`. Etiketler fiyat farkı ise: AB/XA = 1,43/2,11 = 0,678 (0,618'den %9,7 sapma); CD/BC = 1,84. Bu, tabloda önerilen %3–5 toleransla uyuşmaz. Tarayıcının gerçek toleransı en az ~%10 olabilir (YORUM, ölçüm).
   - Tolerans oran mı fiyat mı? Tablo formülü fiyat farkını `Tolerans` ile kıyaslıyor. Metin "%3–5" diyor.
 - Tansu'nun kanıtı: LUKSK (TEPKI_VERDI), SOKE (aktif), SAYAS (uzun grafik). Başarı oranı yok.
@@ -390,7 +390,7 @@ Not: Üretici araç, Tansu'nun kendi taraması gibi görünüyor (Plotly grafik,
 | parametre | değer | kaynak |
 | --- | --- | --- |
 | TP1 | 0,382 CD, kısmi kâr + stop girişe | görsel (fiyat), not (kısmi) |
-| TP2 | 0,618 CD | görsel |
+| TP2 | 0,618 AD | görsel (07.10 yeniden okundu; eski okuma CD) |
 | TP3 | C noktası | görsel |
 | TP4 | 1,272 (not: veya 1,618) | görsel (1,272) |
 | Stop | 64,00 (≈X) | görsel |

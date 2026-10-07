@@ -1,0 +1,1 @@
+{"id": "1839721946516201976", "kaynak": "@mehmetemanet", "kod_metni": "jaw:=Ref(Wilders(MP(),13),-8);\nteeth:=Ref(Wilders(MP(),8),-5);\nlips:=Ref(Wilders(MP(),5),-3);}\ncene:=Ref(mov((H+L)/2,13,ww),-8);\ndis:=Ref(mov((H+L)/2,8,ww),-5);\ndudak:=Ref(mov((H+L)/2,5,ww),-3);\ncene;dis;dudak", "baglanti": null, "tansu": "çevirecek"}

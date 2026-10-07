@@ -1,0 +1,40 @@
+{"id":"2057002158617211234","alan":"kural","eski":"cekirdek","yeni":"yok","kural_no":"K5","gerekce":"Gönderi yalnız \"#kfein tavan\" diyor; düşen kırılımı, ABCD ve beyaz kuğu yalnız alıntılanan kendi gönderisinde, görsel yok."}
+{"id":"2057002158617211234","alan":"rol2","eski":"formasyon","yeni":null,"kural_no":"K5","gerekce":"Yöntem yalnız alıntıda olduğundan sonuç gönderisine rol2 verilmez."}
+{"id":"2085695250194911566","alan":"kural","eski":"cekirdek","yeni":"yok","kural_no":"K5","gerekce":"Metin yalnız \"bu sistem\" diyor, görsel oklu düz ISDMR fiyat grafiği; eşbütünleşme yöntemi yalnız alıntılanan kendi gönderisinde."}
+{"id":"2085695250194911566","alan":"rol2","eski":"çift","yeni":null,"kural_no":"K5","gerekce":"Çift arbitrajı yöntemi yalnız alıntıda olduğundan sonuç gönderisine rol2 verilmez."}
+{"id":"2048341370742436134","alan":"rol","eski":"sinyal-sonucu","yeni":"giriş","kural_no":"K15","gerekce":"\"Bunlar yeni oluşan sistemin geçmiş tarihli çalışmaları\": sinyal önceden verilmemiş, görselde \"TÜM ŞARTLAR SAĞLANDI\" giriş koşulları var."}
+{"id":"2048341370742436134","alan":"rol2","eski":"giriş","yeni":"ölçüm-yöntemi","kural_no":"K22","gerekce":"Geriye dönük çalıştırılan sistem ve sonraki getirisi (%167, %31) gösteriliyor; K22 geriye dönük tarama için rol2 ölçüm-yöntemi."}
+{"id":"1839944955067806037","alan":"rol","eski":"formasyon","yeni":"sohbet-duyuru","kural_no":"K6","gerekce":"\"Gerçekten öyle.\" @Artijital'in genel gözlemine yumuşak katılım, Ayırma kuralı 6'daki onay değil; Tansu'nun cümlesinde piyasa içeriği yok."}
+{"id":"1839944955067806037","alan":"kural","eski":"fikir","yeni":"yok","kural_no":"K6","gerekce":"Fibonacci/ABCD ifadesi başkasının; onay olmadığından Tansu'nun kuralı yok ve sohbet-duyuru her zaman yok."}
+{"id":"1761664509876265367","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K22","gerekce":"ADX ve ADXR herkesçe bilinen göstergeler; eşik yazılı değil."}
+{"id":"1761664509876265367","alan":"rol2","eski":null,"yeni":"araç-öğrenme","kural_no":"K24","gerekce":"\"Konuyu çok karmaşık hale getirmeden önce ADX indikatöründen örnekle bahsedelim\" ders dizisinin ilk gönderisi."}
+{"id":"1778740373495353562","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K9","gerekce":"Görselde \"MACDAS OPT\" var: bilinen gösterge, optimize edilmiş ama seçilen parametre değerleri yazılı değil."}
+{"id":"1821574187146006939","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K22","gerekce":"WACC için Damodaran ve CAPM yaklaşımları herkesçe bilinen tanımlı yöntemler; girdiler yazılı değil."}
+{"id":"1840046005787504758","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K22","gerekce":"Ichimoku bulutu herkesçe bilinen gösterge; optimize parametre yazılı değil."}
+{"id":"1840169707275534403","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K22","gerekce":"\"15 dakikalık yatayda mean reversion\": bilinen yöntem ve zaman dilimi yazılı, eşik ve pencere yok."}
+{"id":"1840387895724519810","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K22","gerekce":"\"pozitif uyumsuzluğu da ve adx'ide ilave edeceğim\": bilinen gösterge ve kavram, eşik yok."}
+{"id":"1840856092592443682","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K22","gerekce":"Trend tayini ve kuvveti için ADX herkesçe bilinen gösterge; eşik yazılı değil."}
+{"id":"1841567398660305114","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K15","gerekce":"Hammer standart mum formasyonu (görselde \"ENJSA.IS - Hammer Pattern\"); eşik yok."}
+{"id":"1842136109691670713","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K29","gerekce":"\"Engulfing taraması\" bilinen formasyonun adını taşıyan tarama."}
+{"id":"1842286394690998551","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K22","gerekce":"Engulfing herkesçe bilinen mum formasyonu; görselde \"ARCLK.IS Engulfing Pattern\"."}
+{"id":"1842286917632553401","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K22","gerekce":"Görseldeki çıktı \"PGSUS.IS Engulfing Pattern\": bilinen formasyon adı, eşik yok."}
+{"id":"1843017197884760484","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K29","gerekce":"\"Boğa ve Ayı Yutan Boğa taramasıdır\": yutan (engulfing) bilinen formasyon."}
+{"id":"1843390919791522156","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K22","gerekce":"RSI pozitif/negatif uyumsuzluk bilinen kavram; görselde RSI 70/30 var, uyumsuzluk penceresi yok."}
+{"id":"1843421214317945155","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K22","gerekce":"Harmonik formasyon bilinen formasyon ailesi; görselde yalnız sigma 0.015/0.02/0.025 var, oranlar yok."}
+{"id":"1844079823829991777","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K15","gerekce":"MOST standart gösterge (görselde \"ARCLK.IS için MOST Gösterge Grafiği\"); parametre yazılı değil."}
+{"id":"1844830887294197939","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K15","gerekce":"\"BIST100 Supertrend taramasıdır\": parametresiz standart gösterge; görselde \"SuperTrend Signal bullish\"."}
+{"id":"1845371629993414881","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K15","gerekce":"Görseldeki çıktıda DOJI_Bull ve HAMMER_Bull standart formasyon adları; eşik yok."}
+{"id":"1845372312620552554","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K13","gerekce":"\"Formasyon: ENGULFING_Bear\" kütüphanede tanımlı formasyon adı veren çıktı."}
+{"id":"1845478584154026462","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K22","gerekce":"\"giriş çıkış optimım ema değerini\": bilinen EMA ve optimizasyon yöntemi, periyot yazılı değil."}
+{"id":"1846135722635313326","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K22","gerekce":"\"Supertrend+poz.volume + CMF\" bilinen göstergeler; eşik ve periyot yok."}
+{"id":"1846258267934347334","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K22","gerekce":"Alıntıdaki kendi ölçütü Supertrend + pozitif hacim + CMF bilinen göstergeler; eşik yok."}
+{"id":"1847334466227724450","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K22","gerekce":"\"GOLDEN CROSS ADAYIMIZ\" bilinen kesişim; görselde ortalamalar etiketsiz, periyot yazılı değil (K28 tam için eksik)."}
+{"id":"1847551553353187453","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K22","gerekce":"\"200EMA , RSI , CMF\" bilinen göstergeler; RSI ve CMF eşikleri yok."}
+{"id":"1847558481227702504","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K22","gerekce":"\"200EMA 50 EMA CMF RSI\" bilinen göstergeler; koşul ve eşik yazılı değil."}
+{"id":"1847652888903913716","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K22","gerekce":"Görselde PP, S1, S2, R1, R2: standart pivot noktaları, formülü herkesçe bilinir; işlem eşiği yok."}
+{"id":"1848098444537119119","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K15","gerekce":"\"MOST ve Supertrend bir arada\": parametresiz standart göstergeler."}
+{"id":"1852089146099032284","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K22","gerekce":"VWAP herkesçe bilinen gösterge; görselde VWAP çizgisi, strateji eşiği yok."}
+{"id":"1852350185189380308","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K29","gerekce":"\"engulfing taramasını paylaşalım\": bilinen formasyonun adını taşıyan tarama."}
+{"id":"1852351828408578451","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K29","gerekce":"Üstteki kendi engulfing taraması bilinen formasyon; ek koşul yazılı değil."}
+{"id":"1852451504705155208","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K22","gerekce":"Keltner kanalı herkesçe bilinen gösterge (görselde DC_UP/DC_DOWN bantları); periyot ve çarpan yok."}
+{"id":"1852781717460811877","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K29","gerekce":"\"EMA ortalamalı engulfing taramamı\": bilinen formasyon ve gösterge, EMA periyodu yazılı değil."}

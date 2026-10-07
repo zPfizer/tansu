@@ -454,7 +454,7 @@ Modül no'ları katalogdaki R/T/D/C/Y numaralarıdır. "Birinci el" = Tansu'nun 
 - (parça 05) Çift ailesinin daha çok örneği var: CIMSA–OYAKC (51), AGROT–GARAN (52/54/55) ve bir olumsuz örnek (53).
   Parça 03'teki "ek kapı" sorusu bu örneklerle birlikte sınanmalı.
 - (parça 05) Paket 71: notun "Dragonfly işaretli" dediği etiket görselde yok.
-- (parça 01) Harmonik hedef merdiveni: SAYAS'ta ".618 CD" etiketli TP2 ≈ 107, D + 0,618·(A−D) = 107,2 ile uyuyor
+- (parça 01) Harmonik hedef merdiveni: SAYAS'ta ".618 AD" etiketli (07.10 okuma düzeltmesi) TP2 ≈ 107, D + 0,618·(A−D) = 107,2 ile uyuyor
   (C–D üzerinden ≈ 93 olurdu). Önceki "kaynaklar çelişiyor" yargısı zayıflar.
 - (parça 04) AB=CD yönü: SMRTG getirileri C'den D'ye AŞAĞI yönlü fiyat farkı olarak yeniden üretildi (kısa yön);
   paket 03 notu "yükseliş" diyor. KURALLAR'daki tespit doğrulandı. BIST'te açığa satış yok: modül "D'de alım"

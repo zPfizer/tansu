@@ -1,0 +1,109 @@
+# 1999567041905492120 · faster-whisper · sure 389 sn
+[    0.0] Hepiniz hoş geldiniz. Bugün masada çok ama çok kritik bir konu var.
+[    4.2] Küresel piyasalardaki korku bizim cebimizi, yani Borsa İstanbul'u nasıl etkiliyor?
+[    9.1] Gelin piyasaların bu gizli dilini birlikte çözelim ve bu bilgiyi nasıl lehimize çevirebileceğimizi görelim.
+[   14.9] Şimdi dürüst olalım. Hepimizin aklına takılan o meşhur soru bu değil mi?
+[   19.2] Amerika'da bir banka batıyor, Avrupa'da bir gerginlik çıkıyor, bir bakmışız bizim borsa kıpkırmızı.
+[   24.5] Peki ama neden? Bu etkiyi önceden sezmek, fırtınayı önceden görmek mümkün mü?
+[   30.3] İşte bugün bu sorunun peşine düşüyoruz.
+[   33.0] Piyasaların kendine as bir dili var, adeta bir alfabe gibi.
+[   36.5] İşte biz bugün bu alfabeyi sökeceğiz.
+[   38.8] Ama önce bu dilin en önemli iki harfini, yani sahadaki iki kilit oyuncumuzu tanımamız gerekiyor.
+[   44.6] Sahneye ilk oyuncumuz çıkıyor, VIX.
+[   47.5] Ona piyasanın korku endeksi ya da daha havalı bir tabirle korku metresi diyebiliriz.
+[   52.5] Bu endeks ne zaman fırlasa anlıyoruz ki dünyadaki büyük yatırımcılar panik moduna geçmiş ve riskten köşe bucak kaçıyor.
+[   60.6] Kısacası küresel finansal tansiyonu ölçen bir termometre gibi.
+[   64.7] Ve tabii ki bizim sahamızın yıldızı BIST-100.
+[   68.2] Kendi evimizin barometresi.
+[   70.1] Ama ne var ki, bu barometrenin havası sık sık okyanus ötesinden esen rüzgarlardan.
+[   75.5] Yani az önce tanıştığımız VIX'den fena halde etkileniyor.
+[   79.5] İşte bu ilişkiyi gözünüzde canlandırmanın en güzel yolu bir tahterevaldi.
+[   83.8] Düşünün, bir ucunda küresel korkuyu tartan VIX oturuyor, diğer ucunda da bizim yerel gerçekliğimiz yani BIST-100.
+[   90.4] Ve çoğu zaman küresel panik o kadar ağır basıyor ki bizim tarafı hop diye aşağı indiriveriyor.
+[   95.2] Bu ikili arasındaki dansı çözmek, inanın bana piyasayı okumanın ta kendisi.
+[  100.6] Peki bu tahterevallinin ne zaman, ne yöne hareket edeceğini nasıl anlayacağız?
+[  106.0] İşte şimdi işin en heyecanlı kısmına, yani bu ikili arasındaki korelasyonu, yani dansın adımlarını okumaya geliyoruz.
+[  113.6] Önümüzde üç ana senaryo var.
+[  116.5] Birinci senaryo, yani en sık gördüğümüz, tabiri caizse standart fabrika ayarı.
+[  121.4] Küresel korku pompalandığında, VIX fırladığında, yabancı yatırımcı ne yapıyor?
+[  126.0] Riskli varlıklardan kaçalım diyor ve bizim gibi gelişmekte olan piyasalardan parasını çekiyor.
+[  131.3] Sonuç, BIST-100 kırmızıya boyanıyor.
+[  133.4] Gayet basit, net bir ilişki.
+[  135.4] Biri yukarı, diğeri aşağı.
+[  137.4] İşte burası işlerin acayip ilginçleştiği yer.
+[  140.4] İkinci senaryo, anomali.
+[  142.4] Yani dünya yanarken biz kendi ateşimizi yakıyoruz.
+[  147.3] Düşünün, VIX taban yapmış, küresel piyasalar kan ağlıyor ama bir bakıyorsunuz, BIST-100 yeşil.
+[  154.4] İşte bu bizim yerel hikayemizin küresel fırtınayı yendiği o nadir ve değerli anlardan biri.
+[  160.8] Buna ayrışma diyoruz.
+[  162.8] Üçüncü ve son senaryo ise kendi bildiğini okuma durumu.
+[  166.4] BIST-100 adeta kulaklıklarını takmış, dünyada olan biteni umursamıyor.
+[  170.7] VIX yükselmiş, düşmüş, hiç umurunda değil.
+[  174.4] Neden?
+[  175.0] Çünkü bütün odak içeride.
+[  177.1] Belki bir bilanço dönemi fırtınası var, belki seçim atmosferi.
+[  180.9] Piyasa tamamen kendi gündemine kilitlenmiş ve dünyadan kopmuş durumda.
+[  185.6] Tamam, teoriyi anladık, harika.
+[  187.0] Ama biz yatırımcıyız, değil mi?
+[  189.1] Bizim için asıl soru şu, bu bilgiyi nasıl nakle çeviririz?
+[  192.8] İşte şimdi bu analizleri alıp cebimize yarayacak 3 altın değerini stratejiye dönüştürme zamanı.
+[  198.4] Stratejik oyun planımız hazır ve 3 maddeden oluşuyor.
+[  202.0] 1. Korkuyu satın al.
+[  203.7] 2. Rehaveti sat.
+[  204.9] 3. Ayrışmayı oyna.
+[  207.1] Kulağa basit geliyor, değil mi?
+[  208.8] Gelin şimdi her birinin içine dalalım ve nasıl uygulandığını görelim.
+[  213.1] Korkuyu satın almak.
+[  214.5] Yani meşhur dip avcılığı.
+[  216.4] İşte bu cesurların oyunudur.
+[  218.7] Herkesin çığlık çığlığa mal sattığı, VIX'in 30'ları 40'ları gördüğü o anlar,
+[  223.3] piyasanın artık dayanamıyorum deyip beyaz bayrak çektiği o kapitülasyon anı.
+[  227.2] İşte tam da VIX'in o zirveden afikçe kafasını aşağı yemeye başladığı an,
+[  231.9] genellikle en tatlı alım fırsatlarının kapısını aralar.
+[  235.2] Bu stratejiyi özetleyen o efsanevi sözü hatırlayalım,
+[  238.5] başkaları korkarken aç gözlü ol.
+[  240.8] İşte bu felsefe, sürü psikolojisinin tersine hareket etmenin,
+[  244.5] yani panik anında soğukkanlılıkla alım yapabilmenin,
+[  247.7] ne kadar kazançlı olabileceğinin altını defalarca çiziyor.
+[  251.3] Madalyonun bir de diğer yüzü var tabii, rehaveti satmak.
+[  254.3] Eğer VIX endeksi yerlerde sürünüyorsa,
+[  257.4] 10-13 gibi komik rakamlarda uzun süredir takılıyorsa,
+[  260.7] bilin ki piyasanın üzerinde tehlikeli bir rehavet bulutu dolaşıyor demektir.
+[  265.3] Herkesin artık hiçbir şey olmaz dediği o anlar,
+[  268.4] genellikle beklenmedik bir fırtına öncesi sessizliktir.
+[  271.8] İşte bu, karı cebe koyup biraz nakite geçmek için harika bir sinyaldir.
+[  276.7] Ve gelelim üçüncü belki de en usta işi stratejiye, ayrışmayı oyna.
+[  280.6] Yurtdışı kıpkırmızı VIX tırmanışta ama bizim BIS 100 dimdik Arak'ta,
+[  285.0] hatta belki de yeşil.
+[  286.5] İşte bu, pozitif ayrışma dediğimiz çok ama çok güçlü bir sinyaldir.
+[  290.7] Bu durum bize ne diyor?
+[  292.0] Bizim iç dinamiklerimiz küresel fırtınadan daha güçlü diyor.
+[  295.6] Böyle zamanlarda endeksin geneline değil,
+[  297.9] bu ayrışmaya liderlik eden,
+[  299.5] hikayesi daha da sağlam olan hisselere odaklanmak,
+[  302.2] adeta rüzgarı arkanızı almak gibidir.
+[  304.1] Ama bir saniye, acele etmeyin.
+[  307.0] Bu analizde özellikle bizim gibi gelişmekte olan piyasalar için
+[  310.6] hayati önem taşıyan bir nüans var.
+[  313.1] Bu uyarıyı dikkate almazsanız çok fena ters köşe olabilirsiniz.
+[  317.3] Bakın, işin püf noktası şu.
+[  319.7] Bazen VIX yükseldiğinde yatırımcılar güvenli liman olarak gördükleri
+[  323.9] Amerikan dolarına koşar.
+[  325.2] Bu da dolar-tl kurunu yukarı yiter.
+[  328.3] E kur yükselince ne oluyor?
+[  330.2] Bizdeki yatırımcılar da paralarının değerini korumak için borsaya sığınıyor.
+[  334.1] Yani BIST aslında şirketler iyi gittiği için değil,
+[  337.8] TL'den kaçış olduğu için bir nevi zorunluluktan yükseliyor.
+[  341.4] İşte bu, sağlıklı bir ralli değil, sahte bir yükseliştir.
+[  344.9] O yüzden pozitif ayrışma gördüğünüzde ilk bakacağınız yer dolar-tl kuru olmalı.
+[  350.4] Bu çok önemli.
+[  351.5] İşte tüm bu konuştuklarımızı hap gibi bir araya getiren kopya kağıdınız.
+[  356.3] Piyasada ne oluyor, hangi senaryodayız, nasıl bir strateji izlemeliyiz,
+[  360.1] bu tabloya bakarak saniyeler içinde karar verebilirsiniz.
+[  363.0] Kaydedin, bir kenarda dursun, çok işinize yarayacak.
+[  366.2] Artık piyasanın gizli dilini çözdünüz.
+[  369.2] Elinizde bir yol haritası, bir strateji rehberi var.
+[  372.8] Korku ne zaman satın alınır, rehavet ne zaman satılır biliyorsunuz.
+[  377.2] Şimdi asıl soru şu.
+[  379.1] Piyasa bir sonraki hamlesini yaptığında, o büyük dolga geldiğinde siz ne yapacaksınız?
+[  384.6] Cevap artık sizde.

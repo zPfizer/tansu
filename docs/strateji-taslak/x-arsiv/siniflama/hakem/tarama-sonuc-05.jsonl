@@ -1,0 +1,50 @@
+{"id":"1855002192115024146","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K22","gerekce":"Görselde 'AYGAZ.IS - Shooting Star Pattern on Last Day'; shooting star herkesçe bilinen mum formasyonu."}
+{"id":"1860710010839241210","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K22","gerekce":"Metin yalnız 'Gartley'; Gartley tanımı herkesçe bilinen harmonik formasyon."}
+{"id":"1861803141479457118","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K22","gerekce":"'2 SMA kesişimi', 'EMA', 'MACD RSI' herkesçe bilinen göstergeler; eşik ve pencere yazılı değil (K26 eğitim örneği)."}
+{"id":"1866680568965922864","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K13","gerekce":"Görselde yalnız TA-Lib CDL adları (CDLDOJI, CDLSHOOTINGSTAR, CDLCLOSINGMARUBOZU…); adlar kütüphanede tanımlı."}
+{"id":"1870247700957946232","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K22","gerekce":"Görselde 'Bullish Shark Found' ve bacak uzunlukları; Shark bilinen harmonik formasyon, oran eşikleri yazılı değil."}
+{"id":"1870798641209671806","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K22","gerekce":"'günlük periyodda bullish gartley formasyonu'; Gartley herkesçe bilinen harmonik formasyon."}
+{"id":"1871514446524547369","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K22","gerekce":"'haftalık bullish blackswan formasyonu'; Black Swan bilinen harmonik formasyon adı (Tansu'ya özgü değil)."}
+{"id":"1874426039340007571","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K22","gerekce":"'limitim genelde KC'dır' (Kelly Criteria); formülü herkesçe bilinen boyutlama yöntemi, girdiler yazılı değil."}
+{"id":"1876556627148472731","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K29","gerekce":"'Bugünün harmonik taraması'; tarama bilinen formasyon ailesinin adını taşıyor."}
+{"id":"1886161867128656349","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K22","gerekce":"'En son gartley vardı burada'; Gartley herkesçe bilinen harmonik formasyon."}
+{"id":"1888577337534410910","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K14","gerekce":"Plandaki en tam ölçüt 'harmonik formasyonlar' bilinen formasyon ailesi (K29); 'momentum alanı' fikir kalır ama kural en tama göre."}
+{"id":"1889377222160486600","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K13","gerekce":"Görselde yalnız TA-Lib CDL adları (CDLHARAMI, CDLHAMMER, CDLHANGINGMAN…)."}
+{"id":"1889453445549097041","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K13","gerekce":"Görselde yalnız TA-Lib CDL adları (CDLENGULFING, CDLDOJI, CDLSPINNINGTOP…)."}
+{"id":"1893042415272968347","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K17","gerekce":"'Momentum tabanlı trend yönelimlerini tahmin etmek için … yapay sinir ağları'; model ve özellik yazılı, ayrıntı yok."}
+{"id":"1893400214951579824","alan":"rol","eski":"formasyon","yeni":"ürün-hedefi","kural_no":"K21","gerekce":"'Size 1-2 tane formasyon vereceğim' tarama sonucu teklifi, gelecek paylaşım sözü."}
+{"id":"1893400214951579824","alan":"rol2","eski":null,"yeni":"formasyon","kural_no":"K21","gerekce":"Duyurunun içeriği harmonik formasyonlar (Ayırma kuralı 4: içeriğin rolü rol2)."}
+{"id":"1893400214951579824","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K29","gerekce":"'harmonik formasyonlar çıkmaya devam ediyor'; bilinen formasyon ailesi adı."}
+{"id":"1898114891531071762","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K13","gerekce":"Görselde yalnız TA-Lib CDL adları (CDLENGULFING, CDL3OUTSIDE, CDLHARAMI…)."}
+{"id":"1898292620645781672","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K22","gerekce":"'bullish engulfing taraması'; engulfing herkesçe bilinen mum formasyonu."}
+{"id":"1899175610821321144","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K29","gerekce":"'Şu harmonik arkadaş oluşumunu tamamladı'; bilinen formasyon ailesi adı, oranlar yazılı değil."}
+{"id":"1899562937414537239","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K22","gerekce":"'Güzel bir engulfing' ve görselde 'Son Engulf Green' ile EMA 5/8/13/34; engulfing bilinen formasyon."}
+{"id":"1899922146769485826","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K13","gerekce":"'engulfing hisse' ve görselde TA-Lib CDL etiketleri (CDLENGULFING, CDLDOJI…)."}
+{"id":"1900332136906784924","alan":"rol","eski":"ölçüm-yöntemi","yeni":"formasyon","kural_no":"K22","gerekce":"'haftalık TOBO geriye dönük kontrolleri yaptım … getirmiş': geriye dönük tarama + sonuç → içeriğin rolü formasyon."}
+{"id":"1900332136906784924","alan":"rol2","eski":"formasyon","yeni":"ölçüm-yöntemi","kural_no":"K22","gerekce":"Geriye dönük çalıştırılan tarama için rol2 ölçüm-yöntemi."}
+{"id":"1900332136906784924","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K22","gerekce":"TOBO herkesçe bilinen klasik formasyon; haftalık periyot yazılı, eşik yok."}
+{"id":"1900500470029795548","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K29","gerekce":"Görselde 'Boğa Bayrak, Ayı Bayrak, Ayı Flama' formasyon taraması; bayrak/flama bilinen formasyon."}
+{"id":"1900536123773850053","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K29","gerekce":"Görselde ASELS 'Boğa Bayrak, Ayı Bayrak, Ayı Flama' tarama çıktısı; bilinen formasyonlar."}
+{"id":"1904748983735455775","alan":"rol","eski":"araç-öğrenme","yeni":"ölçüm-yöntemi","kural_no":"K24","gerekce":"'Ekonometri öğrencileri … Konumuz Durağanlık' ders dizisi bir yöntemi (durağanlık testi) anlatıyor."}
+{"id":"1904748983735455775","alan":"rol2","eski":"ölçüm-yöntemi","yeni":"araç-öğrenme","kural_no":"K24","gerekce":"Ders dizisi gönderisinde rol2 araç-öğrenme."}
+{"id":"1904748983735455775","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K22","gerekce":"Durağanlık herkesçe bilinen kavram; 'görsel incelemeler ve istatistiksel testler' ölçü belli, test ve eşik yazılı değil."}
+{"id":"1907095706285826234","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K13","gerekce":"Görselde yalnız TA-Lib CDL adları (CDLDOJI, CDLHAMMER, CDLHIGHWAVE…)."}
+{"id":"1907829919188660522","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K15","gerekce":"'Dragon fly doji, Marubozu benzeri yapı, inverted hammer' herkesçe bilinen mum formasyonları."}
+{"id":"1908275237717721365","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K15","gerekce":"'dragonfly doji bırakmış son gün'; bilinen mum formasyonu."}
+{"id":"1908276450450432440","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K13","gerekce":"Görselde ECILC.IS ve TA-Lib CDL adları (CDLENGULFING, CDL3OUTSIDE…)."}
+{"id":"1908967296971796534","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K15","gerekce":"Görselde 'ECILC.IS - Dragonfly Doji Tespiti'; bilinen mum formasyonu."}
+{"id":"1910413283720380594","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K22","gerekce":"'RSI pozitif uyumsuzluk, … ema kesişimleri, MACD, CMF, STOC' herkesçe bilinen göstergeler, eşik yok."}
+{"id":"1910977240453505452","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K22","gerekce":"'gizli pozitif uyumsuzluk' ve 'Fibo dönüş seviyeleri' herkesçe bilinen yöntemler, eşik yok."}
+{"id":"1914173637898236379","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K22","gerekce":"Görselde 'Kanal Orta Noktası' çizgisi ve 'breakout'; ölçü belli, kanal penceresi yazılı değil."}
+{"id":"1924518333967159587","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K29","gerekce":"Görselde 'AVPGY.IS - Mum Grafik ve Bayrak/Flama Formasyonları, Breakout: 2025-05-16'; bilinen formasyon."}
+{"id":"1925627889174659386","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K29","gerekce":"'güzel bayrak ya' ve görselde 'Bayrak/Flama Formasyonları Breakout'; bilinen formasyon."}
+{"id":"1942304429476065441","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K22","gerekce":"'haftalık tobo oluşturdu'; TOBO herkesçe bilinen klasik formasyon."}
+{"id":"1947392596180922610","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K29","gerekce":"'Bu akşam 6 TOBO çıktı'; tarama bilinen formasyonun adını taşıyor."}
+{"id":"1948289375327961203","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K29","gerekce":"'bayrak flama tarıyorum'; bayrak listesi K29'da açıkça cekirdek."}
+{"id":"1948326028423671933","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K29","gerekce":"'sadece tobo taraması'; tarama bilinen formasyonun adını taşıyor."}
+{"id":"1950934573468025012","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K29","gerekce":"'Elliot C taraması değil, 3.itki dalgası taraması yapın'; Elliott taraması K29'da açıkça cekirdek."}
+{"id":"1952846771694256219","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K29","gerekce":"'Elliot C düzeltmeleri tamamlanmış'; Elliott dalga yapısı herkesçe bilinir."}
+{"id":"1954342666122244306","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K22","gerekce":"'RSI pozitif uyumsuzluk var'; RSI uyumsuzluğu herkesçe bilinen gösterge koşulu, pencere yok."}
+{"id":"1962974999800877501","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K15","gerekce":"'Mezar taşı dojisi … aylıkta'; gravestone doji bilinen mum formasyonu."}
+{"id":"1964205713430876532","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K22","gerekce":"Görselde 'TUPRS.IS - Son 100 Gün Anomali Analizi: Threshold / Quantile Anomali'; pencere yazılı, eşikler yok."}
+{"id":"1977815566183497963","alan":"kural","eski":"fikir","yeni":"cekirdek","kural_no":"K22","gerekce":"'Gartley aramak istiyoruz' ve görselde harmonik menüde Gartley seçimi; Gartley herkesçe bilinen formasyon."}

@@ -63,7 +63,7 @@ Okuma kuralları:
 | R013 | stop-geçersizlik | "D gerçekleşti ama 20 bar içinde TEPKİ GELMEDİ" | G | 4.3 (20 bar ölçümde ayrı parametre); 5.1 (KAPLM) | çıkış | resmi sınav |
 | R014 | teyit-tetik | "10 gün içinde D noktasından bir tepki yapmıyor ise belirsiz" | T | 4.3 (BELİRSİZ, T R014) | teyit | resmi sınav |
 | R014 | felsefe | "Her gartley çalışmaz ama çalışmasa bile oluşumunda bazı stratejiler kurgulanabilir." | T | 6 (başarısız kurulumlar da listelenir, T R014) | ilke | resmi sınav |
-| R014 | giriş | "Giriş (D)", "Bk Stop (X)", "TP1 (1:1 R/R)", "TP2 (.618 CD)" | G | 3.2 H (giriş D, geçersizlik X); TP1/TP2 3.2 H ölçüm kolları (hedef merdiveni, G R014); 5.1 (SAYAS) | giriş | resmi sınav |
+| R014 | giriş | "Giriş (D)", "İlk Stop (X)", "TP1 (1:1 R/R)", "TP2 (.618 AD)" | G | 3.2 H (giriş D, geçersizlik X); TP1/TP2 3.2 H ölçüm kolları (hedef merdiveni, G R014); 5.1 (SAYAS) | giriş | resmi sınav |
 | R014 | boyut-risk | SAYAS Fibonacci çizgileri 0.000 ... 1.000 | G | 4.2; 5.1 (SAYAS) | boyut-risk | resmi sınav |
 | R015 | tarama-evren | "Haftalık taramada uzun vade talep toplama alanında C noktası oluşmuş" bullish gartley | T | 4.1 (haftalık bölge, T R015); 3.2 H | formasyon | resmi sınav |
 | R016 | formasyon | "AB=CD patterninde, CD bacağının şiddetini ne belirler?" | T | 3.2 H ölçüm kolları (CD bacağının şiddeti raporu, T R016) | formasyon | ölçüm kolu |

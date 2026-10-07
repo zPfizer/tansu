@@ -1,0 +1,58 @@
+# 2000153302927806546 · faster-whisper · sure 297 sn
+[    0.0] Merhaba, bu bölümde hepimizin başına en az bir kere gelen o can sıkıcı trade anını ve arkasındaki nedenleri konuşacağız.
+[    8.4] Eğer bu senaryo size tanıdık geliyorsa, merak etmeyin, yalnız değilsiniz.
+[   12.7] Ve bunun aslında çok basit, çok mantıklı bir sebebi var.
+[   16.5] O zaman hazırsanız başlayalım.
+[   18.7] Gelin, o tek bir çizgiden ibaret olan yaklaşımınızı nasıl olur da çok daha güçlü bir bölge stratejisine dönüştürürüz, hep birlikte görelim.
+[   26.5] İlk olarak, en temelden başlamalıyız.
+[   29.5] O Fibonacci seviyesini neden tek, sihirli bir çizgi gibi görmenin büyük bir hata olduğunu anlamamız gerekiyor.
+[   37.2] Bakın, işin sırrı tam olarak burada.
+[   40.0] Sizin o kesin diye gördüğünüz giriş noktası var ya, aslında o daha düşük zaman diliminde baktığınızda kocaman bir fiyat alanının sadece bir parçası, yani bir nevi tahmin yürütüyorsunuz.
+[   52.1] İşte bu tablo durumu mükemmel bir şekilde özetliyor.
+[   55.1] Siz günlük grafiğe bakıp 100 liradan dönecek diye bekliyorsunuz ama oyunun asıl kurulduğu yer 4 saatlik grafikteki 98 liralık kurumsal seriye.
+[   64.9] Ve sonuç ne oluyor?
+[   66.3] Fiyat sizin o 0.618 seviyenizi ezip geçiyor, stopunuzu patlatıyor ve geriye sadece sinir bozucu upuzun bir iğne bırakıyor.
+[   75.7] En kötü tarafı da ne biliyor musunuz?
+[   77.5] Yönü doğru tahmin etmiştiniz ama o bölgeyi hesaba katmadığınız için avlandınız.
+[   83.4] Peki, bu işin arkasında kim var?
+[   85.6] Şimdi madalyonun diğer yüzüne bakalım ve piyasa yapıcıların bu oyunu nasıl kurduğunu anlayalım.
+[   91.6] Bu söz aslında her şeyi açıklıyor.
+[   94.0] Bu bir kırılım değil, bu planlanmış, bilinçli bir operasyon.
+[   98.0] Akıllı para için bir indirim fırsatı.
+[   99.5] Peki, bu likidite avı tan olarak nasıl işliyor?
+[  103.6] Şöyle, büyük oyuncular yani piyasa yapıcılar, küçük yatırımcıların stop emirlerinin nereye koyduğunu adı gibi biliyor.
+[  111.0] Genellikle de bu yer 0.618 gibi herkesin bildiği seviyelerin hemen altıdır.
+[  116.9] Onlar da ne yapıyor?
+[  118.1] Fiyatı bilerek oraya kadar itip bütün o stopları patlatıyorlar.
+[  122.1] Bu patlayan stoplar onların devasa işlemleri için gereken yakıtı yani likiditeyi sağlıyor.
+[  127.6] Ve çoğu zaman bu hareketi yaparken bölgedeki bir fiyat boşluğunu da doldurmuş oluyorlar.
+[  133.3] İşleri bittiği anda da fiyatı tam tersi yöne doğru roketliyorlar.
+[  137.6] Tamam, sorunu artık anladık.
+[  139.2] Şimdi en önemli kısma geldik.
+[  140.9] Çözüm, bu tuzaklara düşmek yerine tam tersini onları kendi lehimize çevirecek sağlam bir stratejiyi nasıl kurarız?
+[  148.3] İşte bunun sırrı kesişim dediğimiz konsepte yatıyor.
+[  151.4] Yani tek bir sinyale körü körüne güvenmek yerine birden fazla güçlü teknik onayın aynı noktayı işaret ettiği o özel bölgeyi bulma sanatı bu.
+[  161.1] İşte size üç adımlık o keskin nişancı yöntemi.
+[  164.5] 1. Önce büyük resme yani günlük grafiğe bakıyoruz, ana trendi anlıyoruz ve fiyatın o meşhur altın bölgeye yani 0.5 ile 0.618 arasına gelmesini sabırla bekliyoruz.
+[  176.9] 2. Fiyat o bölgeye girer girmez hemen daha düşük bir zaman dilimine, mesela 4 saatliğe iniyoruz.
+[  183.7] O büyük bölgenin içinde saklanan asıl hedefleri yani kurumsal seviyeleri arıyoruz.
+[  189.1] Ve 3. İşte en kritik adım.
+[  191.5] Girişimizi o tek başına duran 0.618 çizgisine değil, bulduğumuz o kurumsal seviyeyle Fibonacci bölgesinin kesiştiği o sihirli noktaya yapıyoruz.
+[  201.8] Peki, o düşük zaman diliminde tam olarak ne arayacağız?
+[  205.2] İşte akıllı paranın ayak izleri, emir bloğu yani kurumların alım emirlerini yığdığı o güçlü bölge.
+[  212.1] Kırılım bloğu yani eskiden direnç olan ama artık desteğe dönüşen bir seviye.
+[  217.8] Ve dengesizlik yani FVG, piyasanın mıknatıs gibi çekildiği, doldurulması gereken fiyat boşlukları.
+[  225.2] İşte bu üçünden birine o altın bölge içinde bulduğumuzda işlemimiz için çok ama çok güçlü bir onay almış oluruz.
+[  232.3] Harika! Şimdi tüm bu parçaları birleştirelim ve bu yeni hibrit yaklaşımın klasik yöntemlerden neden kat kat daha güçlü olduğunu net bir şekilde görelim.
+[  242.2] Bakın, klasik Fibonacci size sadece genel bir alanı gösterir.
+[  247.2] Yani bir neviye tahmin yaparsınız.
+[  249.9] Sadece fiyat hareketlerine odaklanmaksa büyük resmi ana trendi kaçırmanıza neden olabilir.
+[  255.6] Peki bizim hibrit yöntemimiz ne yapıyor?
+[  258.1] İkisinin de en iyi yanlarını alıyor.
+[  260.4] Günlük grafikle büyük resmi görüyor, 4 saatlik grafikle de o resmin içindeki en net noktayı buluyor.
+[  266.2] Sonuç mu? Tahmin yerine keskin nişancı hassasiyetinde bir giriş.
+[  271.4] Başarı olasılığı en yüksek olan da işte bu.
+[  274.5] İşte bugünden aklınızda kalması gereken en önemli soru bu.
+[  279.0] Bir dahaki sefere grafiği açtığınızda kendinize sorun.
+[  282.7] Ben hala körü körüne bir çizgiye mi bakıyorum yoksa akıllı paranın oyun kurduğu o bölgeyi mi görmeye başlıyorum?
+[  290.2] İnanın bana bu bakış açısı farkı tüm trade anlayışınızı değiştirecek.

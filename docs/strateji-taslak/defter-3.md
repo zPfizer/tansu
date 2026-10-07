@@ -291,7 +291,7 @@ Yazar işaretleri: T = Tansu'nun kısa birinci şahıs metni; M = uzun, başlık
 ### R164 · 2026-08-28 04:21 UTC
 - Yazar: T; G1 (kod).
 - Fikirler:
-  - [temel-değerleme] "Çarpan ve INA değerlemesi çalışmasının küçük kodlamalarından bir kesit." — EBIT ve vergi bileşik büyüme: e = ebit × (1+g/100)^i; vergi = e × t/100 — kural tam (görselden).
+  - [temel-değerleme] "Çarpan ve INA değerlemesi çalışmasının küçük kodlamalarından bir kesit." — EBIT ve vergi büyümesi: döngüde e = ebit × (1+g/100)^i, sonra ebit = e; üs birikir (EBIT_i = EBIT_(i−1) × 1,017^i; yıl 5 = 5000 × 1,017^15 = 6.438,49; düz bileşik büyüme 5.439,7 verirdi). Kod düz bileşik büyüme değil; bu bir kod hatası olabilir. vergi = e × t/100 — kural tam (görselden). (07.10 düzeltme: eski okuma "bileşik büyüme"; kaynak X 2036840358210945219.)
 - Örnek ve sonuç: görselden: EBIT 5000, g %1,7, yıl 5'te 6.438,49; vergi -1.250,00 → -1.609,62 (t = %25).
 - Vurgu: "Örnek teşkil etsin size."
 
@@ -398,7 +398,7 @@ Yazar işaretleri: T = Tansu'nun kısa birinci şahıs metni; M = uzun, başlık
 ### R176 · 2026-08-28 05:42 UTC
 - Yazar: T ("dostlar ... Bunun detaylı kodunu yazıp denemeler yapacağım bakalım BIST için ne kadar verimli olacak.") + kod.
 - Fikirler:
-  - [momentum-seçim] "momentum\_func: r = np.log(price\_array); slope, _, rvalue = linregress(np.arange(len(r)), r); annualized = (1 + slope) \*\* 252; return annualized \* (rvalue \*\* 2)" — log fiyat regresyonu eğimi yıllıklandırılır × R² — kural tam (pencere uzunluğu belirtilmiyor).
+  - [momentum-seçim] "momentum\_func: r = np.log(price\_array); slope, _, rvalue = linregress(np.arange(len(r)), r); annualized = (1 + slope) \*\* 252; return annualized \* (rvalue \*\* 2)" — log fiyat regresyonu eğimi yıllıklandırılır × R² — kural tam (pencere uzunluğu belirtilmiyor). (07.10 not: X gönderisi 2018743366112985154'te satır "slope, _, rvalue, _, _ = linregress(np.arange(len(r)), r)"; linregress beş değer döndürür, üç değerli biçim çalışmaz.)
   - [momentum-seçim] "Özünde sadece hissenin ne kadar yükseldiğine (getiri) değil, ne kadar istikrarlı/pürüzsüz yükseldiğine bakar" — çekirdek belli.
 - Örnek ve sonuç: sonuç yok; BIST testi planlı.
 - Vurgu: Orta-yüksek ("detaylı kodunu yazıp denemeler yapacağım"). Not: kodda (1+slope)**252 doğru Clenow formülü exp(slope)**252'dir; Tansu'nun kodu böyle yazılmış (kayıtta açıklama yok).

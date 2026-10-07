@@ -64,7 +64,7 @@ Kaynak: `ham-yapistirmalar.md`. Alıntılar birebir hedeflenir; denetimde düzel
 - Fikirler:
   - [portföy] "Portföyün min volatiliteve maks sharpe ağırlıklandırmasına göre getiri eğrileridir." — iki portföy: min volatilite, max Sharpe; kırmızı noktalı BIST100; DEY = dönem içi en yüksek marj (kümülatif en yüksek) — kural tam (hesap görselde değil)
   - [ölçüm-ilkesi] "Ortadaki çizgiler portföyün kapanış getirisi En üsteki çizgiler ise dönem içindeki en yüksek marjlar" — iki ölçü: kapanış getirisi ve DEY — çekirdek belli
-- Örnek ve sonuç: görselden (21–31 Mayıs 2026, taban 100): min vol kapanış ~115, DEY ~124; max Sharpe kapanış ~108,5, DEY ~118; BIST100 ~97,8.
+- Örnek ve sonuç: görselden (20 Mayıs–1 Haziran 2026, taban 100; 07.10 düzeltme: eski okuma 21–31 Mayıs, kaynak X 2061554188832702624 tablosu 2026-05-20 / 2026-06-01): min vol kapanış ~115, DEY ~124; max Sharpe kapanış ~108,5, DEY ~118; BIST100 ~97,8.
 - Tansu'nun vurgusu: "Bence portföy üzerine düşeni yaptıve yapıyor."
 
 ### R075 · 2026-08-27 21:28 UTC

@@ -1,0 +1,78 @@
+# 1999163401763799349 · faster-whisper · sure 355 sn
+[    0.0] Şöyle bir düşünelim, piyasaların derinliklerinde doğanın ta kendisinden alınmış gizli bir kodun yattığını söylesem,
+[    7.1] işte bugün gelin o kodu birlikte kırmaya çalışalım.
+[   10.3] Yani şöyle bir etrafınıza bakın, ister devasa bir galaksiye bakın, isterseniz de elinize aldığınız küçücük bir deniz kabuğuna.
+[   18.1] Bu spiral şekli var ya, işte o her yerde.
+[   21.1] Ve her zaman ama her zaman şaşmaz bir matematiksel yasayı izliyor.
+[   25.7] Peki ya bu evrensel desen, borsayı da tahmin edebilseydi?
+[   29.4] İşte Fibonacci analizinin o baş döndürücü vaadi de tam olarak bu.
+[   34.4] Bize diyor ki, piyasalarda tıpkı doğa gibi evrensel bir ritme, yani adeta ilahi bir plana göre hareket ediyor olabilir.
+[   43.0] Harika, o zaman gelin bu kodun özüne inelim.
+[   45.8] Yani her şeyin başladığı yere, altın oranı.
+[   48.8] İşte karşınızda 1.688, yani fi ya da bizim bildiğimiz adıyla altın oran.
+[   56.3] Şimdi bu sayı, yüzyıllardır insanlığı boşuna büyülemiyor.
+[   59.7] Neden mi?
+[   60.4] Çünkü doğadaki büyüme, çürüme, kısacası yaşamın ve ölümün bütün döngülerinde onun parmak izi olduğu düşünülüyor.
+[   67.5] Zaten tarihe şöyle bir baktığımızda, antik Yunan'da Pisagor'un harmonilerinden,
+[   72.7] Platon'un felsefesine, oradan da adını aldığı Fibonacci'nin Avrupa'ya tanıttığı o meşhur sayılara kadar hep bu oranın izini görüyoruz.
+[   80.6] Yani anlayacağınız bu öyle sıradan bir sayı değil, adeta evrenin temel yapı taşlarından biri olarak kabul edilmiş.
+[   88.4] Peki madem öyle, evrenin bu kadar temel bir sabiti, finansal piyasalarda neden çoğu zaman fiyaskoyla sonuçlanıyor gibi duruyor?
+[   96.8] İşte bunun sebebi, modern yatırımcıların bu güçlü oranı uygularken genellikle farkında olmadan çok kritik bir hata yapmaları.
+[  105.0] Genellikle yapılan şey son derece basit. Şöyle yapıyorlar, grafikteki bir trendin en tepe noktasını alıyorlar, sonra da en dip noktasına bağlıyorlar.
+[  113.8] Bu kadar. Sonra da arkalarına yaslanıp fiyatın bu sihirli çizgilerden birine gelip oradan destek bulmasını bekliyorlar.
+[  120.6] Kulağa mantıklı geliyor değil mi?
+[  122.5] Ama işte can alıcı noktada burası.
+[  124.8] Piyasanın sizin o mükemmel çizdiğiniz çizgilere pek saygısı olmuyor.
+[  128.9] Fiyat, o çok önemli görünen destek seviyesini sanki orada hiç yokmuş gibi delip geçiveriyor.
+[  134.0] E haliyle de bu yönteme körü körüne güvenen yatırımcılar büyük bir hayal kırıklığıyla baş başa kalıyor.
+[  140.8] İşte tam da bu başarısızlık yüzünden çoğu insan bırakın bu işleri, Fibonacci falan tamamen hurafe deyip konuyu kapatıyor.
+[  148.5] Ama durun bir dakika, ya sorun teorinin kendisinde değil de bizim onu uygulama şeklimizde ise?
+[  155.1] Hiç bunu düşündünüz mü?
+[  156.7] Çünkü asıl sır matematiksel bir cetvelle çizilmiş o mükemmel kusursuz çizgilerde değil.
+[  161.8] Asıl sır doğanın kendisi gibi, evet kusurlu ama canlı nefes alan ritminin ta kendisinde saklı.
+[  169.2] Bakın, bu karşılaştırma inanılmaz önemli.
+[  172.1] Altın oranın sembolü olarak bildiğimiz o meşhur natilüs kabuğuna bir bakın, gördünüz mü?
+[  178.0] O bile o mükemmel matematiksel spirale birebir uymuyor.
+[  181.9] Çünkü gerçek hayat tıpkı bu kabuk gibi ideal çizgilerden her zaman sapar.
+[  187.1] Genişler, daralır, kendi ritmi vardır.
+[  189.5] İşte bu inceleme bize kilit noktayı gösteriyor.
+[  193.6] Piyasalarda katı birer matematik denklemi değil, onlar da tıpkı doğa gibi genişleyen, daralan, nefes alan, yaşayan sistemler.
+[  201.8] Ve bizim asıl görevimiz de bu canlı ritmi yakalamak.
+[  205.3] Peki güzel de bu canlı ritmi nasıl yakalayacağız?
+[  208.8] İşte şimdi işin en heyecanlı kısmına geliyoruz.
+[  211.6] Gelin doğru uygulama yöntemine yani piyasanın gerçek haritasını nasıl çıkaracağımıza bakalım.
+[  216.7] Bakın, buradaki fark çok ince ama gerçekten hayati.
+[  221.7] Mutlak en dip noktayı almak yerine ne yapıyoruz?
+[  224.6] Grafikteki gibi çok daha anlamlı bir ikinci dip noktasını kullanıyoruz.
+[  228.3] Bunun anlamı şu, piyasayı körü körüne en uç noktalarına bakarak değil, onun kendi iç yapısına saygı duyarak okumaya çalışıyoruz.
+[  235.4] Peki sonuç ne oluyor?
+[  236.3] Sonuçta piyasanın gerçekten de itibar ettiği, saygı duyduğu o destek seviyesini bulmuş oluyoruz.
+[  241.9] İşte bu yeni bakış açısı bizi çok daha güçlü bir tekniğe götürüyor.
+[  245.7] Artık tek bir ölçüme güvenmek yok.
+[  247.7] Onun yerine farklı salınımlardan gelen birden fazla Fibonacci hesabını alıp sanki şeffaf kağıtlar gibi üst üste koyuyoruz.
+[  254.9] Ve ne arıyoruz?
+[  256.0] Çizgilerin nerede anlaştığını.
+[  257.6] Yani nerede kesiştiğini, nerede bir oraya geldiğini bulmaya çalışıyoruz.
+[  263.2] Mesela bakın şu grafiğe.
+[  264.9] Ne yapmışız?
+[  265.9] Farklı tepe noktalarını baz alarak iki ayrı Fibonacci seti çizmişiz.
+[  270.0] Dikkat ettiniz mi?
+[  271.3] Bazı seviyeler böyle tek başına yalnız duruyor.
+[  273.8] Ama belirli bir bölgede çizgiler ne yapıyor?
+[  276.3] Üst üste biniyor, adeta bir küme oluşturuyorlar.
+[  279.4] İşte teknik analizde bu yoğunlaşma bölgelerine biz kesişim bölgesi diyoruz.
+[  284.7] Ve bu bölgeler tek bir çizgiden fersah fersah daha anlamlı.
+[  289.1] Neden?
+[  289.6] Çünkü bunlar adeta birer fiyat mıknatası gibi çalışıyor.
+[  293.0] Piyasayı kendine çekiyor ve potansiyel dönüş noktaları için bize tek bir çizgiden çok ama çok daha güvenilir sinyaller veriyor.
+[  300.3] Peki, tamam.
+[  301.5] Bütün bu teknik detayların arkasındaki asıl büyük resim ne?
+[  305.0] Buradan çıkarmamız gereken en önemli ders aslında analiz yönteminden ziyade piyasaya bakış açımızı temelden değiştirmekle ilgili.
+[  311.9] Tıpkı Constance Brown'un dediği gibi, verileri nasıl okuyacağınızı bildiğinizde piyasalar gerçekten de matematiksel bir fiyat ızgarası oluşturur.
+[  321.0] Yani olay şu, Fibonacci geleceğe gören bir kristal küre değil.
+[  325.3] O, piyasa hareketlerinin altında yatan, o gizli geometriyi, o ızgarayı görmemizi sağlayan özel bir mercek sadece.
+[  331.7] Ve sonunda bu analiz bize çok temel bir soruyu miras bırakıyor.
+[  337.6] Piyasalar ve hatta belki de hayatın kendisi sandığımız gibi tamamen rastgele bir kaos mu,
+[  343.8] yoksa her yere işlenmiş, sadece doğru mercekle bakıldığında çözülebilen gizli bir kod mu var?
+[  350.7] Karar sizin.
+[  351.3] Altyazı M.K.

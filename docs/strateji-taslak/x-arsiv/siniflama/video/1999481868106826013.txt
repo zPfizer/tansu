@@ -1,0 +1,86 @@
+# 1999481868106826013 · faster-whisper · sure 345 sn
+[    0.0] Herkese selamlar. Bu sunumda, alım-satımda riski yönetmek için gerçekten basit ama bir o kadar da etkili, kurallara dayalı bir sisteme dalıyoruz.
+[    9.7] Hazırsanız, hadi başlayalım.
+[   11.8] Evet, işte o meşhur iki soru.
+[   14.6] Bence her yatırımcının her işlemde kendine sorduğu en zor sorular bunlar değil ne?
+[   19.4] Ne kadar alacağım ve daha da önemlisi, ne zaman satacağım?
+[   23.6] İşte bugün inceleyeceğimiz sistemin güzelliği de tam olarak bu.
+[   26.7] Bu kararları duygularınızdan, o anki heyecanınızdan alıp tamamen net bir matematiksel temele oturtuyor.
+[   33.8] Ve işte karşınızda bu sistemin kalbindeki sihirli sayı, yüzde bir.
+[   38.6] Bu ne demek biliyor musunuz?
+[   40.0] Bu herhangi tek bir işlemde tüm sermayenizin en fazla ama en fazla yüzde birini riske atacağınız anlamına geliyor.
+[   47.5] Sadece yüzde bir.
+[   48.9] Neden mi bu kadar önemli?
+[   50.3] Çünkü bu basit kural, tek bir kötü kararın sizi tamamen oyunun dışına atmasını imkansız hale getiriyor.
+[   56.3] Bu sizin sigortanız.
+[   58.8] Peki, ilk bölüme geçelim.
+[   61.1] Risk.
+[   62.1] Şimdi bakın, çoğu yatırımcı bir hisseye bakarken ilk ne düşünür?
+[   66.6] Bundan ne kadar kazanırım?
+[   68.3] İşte bu sistem bu denklemi tamamen tersine çeviriyor.
+[   72.0] Biz işe ne kadar kazanırım diye değil, en kötü senaryoda ne kadar kaybetmeye göze alabilirim sorusuyla başlıyoruz.
+[   79.5] Evet, sistemin felsefesi işte bu kadar net.
+[   82.7] Kara odaklanmadan önce sorulması gereken tek bir soru var.
+[   85.9] Ben bu işlemde ne kadar kaybetmeye razıyım?
+[   89.2] Bu aslında başarılı alım-satımın en temel sıra.
+[   92.4] Büyük kazanç peşinde koşmak yerine önce potansiyel kayıplarınızı kontrol altına alırsınız.
+[   98.1] Risk yönetimi her şeyden ama her şeyden önce gelir.
+[  102.4] İşte bu sorunun cevabı da bizi risk sermayesi dediğimiz kavrama getiriyor.
+[  107.3] Bakın bu soyut bir yüzde değil.
+[  109.3] Elle tutulur, somut bir para miktarı.
+[  111.5] Örneğimize bakalım, diyelim ki yüz bin dolarlık bir hesabınız var.
+[  116.1] Yüzde bir kuralına göre sizin bu işlem için risk sermayeniz tam olarak bin dolar.
+[  121.1] Yani masaya koyduğunuz, kaybetmeyi göze aldığınız para bu.
+[  124.6] Bundan sonraki bütün hesaplamaları işte bu bin dolar üzerinden yapacağız.
+[  128.2] Tamam, bin dolarlık bir risk sermayemiz var.
+[  131.5] Harika.
+[  132.2] Peki şimdi ne yapacağız?
+[  133.4] O bin dolarla ne kadar hisse alacağız?
+[  135.5] İşte şimdi ikinci bölüme geçiyoruz ve işin matematiğine giriyoruz.
+[  139.1] Bu rakamı kullanarak tam olarak kaç adet hisse senedi almamız gerektiğini hesaplayacağız.
+[  144.5] Şimdi gelin bu dört adımı beraber tane tane yapalım.
+[  147.8] Adım bir, cepte risk sermayemiz bin dolar.
+[  151.0] Adım iki, hisse başına riski bulmamız lazım.
+[  153.5] Burada hissenin oynaklığını yani ne kadar hareketli olduğunu ölçen bir gösterge kullanıyoruz.
+[  159.1] Ortalama gerçek aralık ya da kısaca ATR.
+[  162.4] Sistem diyor ki bunun iki katını al.
+[  164.8] Diyelim ki bu rakam 14.30 dolar çıktı.
+[  167.4] Adım üç, çok basit bir bölme işlemi.
+[  169.6] Bin dolarlık toplam riskimizi, hisse başına riskimiz olan 14.30'a görüyoruz.
+[  174.1] Ve dördüncü adımda sonuç karşımızda.
+[  176.3] 69.9 yuvarlayalım, 70 hisse.
+[  179.3] Gördünüz mü?
+[  179.9] Kaç hisse alacağımız artık bir tahmin değil, net bir hesaplama.
+[  184.2] Harika! Kaç hisse alacağımızı artık biliyoruz.
+[  187.3] Ama ya işler planladığımız gibi gitmez mi?
+[  190.1] İşte burada sistemin bir başka güzelliği ortaya çıkıyor.
+[  193.7] Farklı durumlar için bize iki ayrı çıkış stratejisi, yani iki tane güvenlik ağı sunuyor.
+[  199.3] Gelin bunlara bakalım.
+[  200.9] Şimdi bu ikisini birbirinden ayırmak gerçekten çok önemli.
+[  204.7] Sol taraftaki acil durum stopunu bir anlık yangın alarmı gibi düşünün.
+[  208.8] Fiyat gün içinde o belirlediğimiz seviyeye, yani 14.30 dolar aşağıya değer değmez, alarm çalar ve siz düşünmeden anında satarsınız.
+[  218.3] Bu sizi ani çöküşlerden korur.
+[  220.8] Sağdaki stratejik stop ise daha çok binanın genel durumunu kontrol eden bir müfettiş gibi.
+[  226.1] Hisse gün içinde dalgalanabilir, sorun değil.
+[  229.3] Ama gün sonunda o önemli 250 günlük hareketli ortalamanın altında bir kapanış yaparsa bu artık bir zayıflık işaretidir.
+[  236.6] Müfettiş raporunu verir ve pozisyonu kapatma zamanı gelmiş demektir.
+[  240.3] Süper! Şimdiye kadar tüm parçaları tek tek ele aldık, riskimizi belirledik, pozisyon büyüklüğümüzü hesapladık, çıkış noktalarımızı öğrendik.
+[  250.9] Şimdi dördüncü bölümde hepsini bir araya getirelim ve bu yapbozun tamamlanmış haline, yani eksiksiz alım-satım planımıza bir bakalım.
+[  260.6] İşte karşınızda her şeyin özetlendiği o tablo.
+[  263.9] Buna alım-satım planınızın bir nevi yol haritası da diyebiliriz.
+[  267.2] Bakın her şey ne kadar net. Hesap büyüklüğünüz belli, işlem başına maksimum riskiniz belli, kaç hisse alacağınız hesaplanmış, acil durum ve gün sonu stoplarınız da yerli yerinde.
+[  278.5] Burada belirsizliğe, acaba şöyle mi yapsam diye düşünmeye, duygusal kararlara kesinlikle yer yok. Her şey kurallara bağlı.
+[  286.6] Bu söz, bence bu sunumdaki her şeyin özeti.
+[  289.9] Amaç, kayıplardan kaçınmak değildir. Amaç, tek bir kaybın sizi asla oyunun dışına atamamasını sağlamaktır.
+[  297.2] Bu ne kadar güçlü bir felsefe değil mi?
+[  300.0] Çünkü kaybetmek bu işin doğasında var. Bundan kaçamazsınız.
+[  303.5] Ama asıl mesele, her kaybıttan sonra bile ayakta kalıp bir sonraki fırsat için masada olmaya devam edebilmektir.
+[  310.7] İşte bu sistemin amacı tam da bu.
+[  313.4] Ve son olarak bu soruyla bitirelim.
+[  315.3] Artık kuralları biliyorsunuz, hesaplamalarınız elinizde, planınız hazır.
+[  319.0] Ama asıl soru şu, bu kurallara uyacak disipline sahip misiniz?
+[  322.8] Çünkü inanın bana, bu planın en zor kısmı matematiği değil.
+[  327.1] En zor kısmı, piyasa çalkalanırken, her şey kırmızıya dönmüşken, panik anında bu kurallara harfiyen sadık kalabilmektir.
+[  335.0] Bilgi bir yere kadar.
+[  336.4] Asıl oyun, o bilgiyi uygulama disiplininde başlıyor.
+[  339.5] İşte bu soruyu da size düşünmeniz için bırakıyorum.

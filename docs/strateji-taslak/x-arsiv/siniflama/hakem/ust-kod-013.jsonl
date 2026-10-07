@@ -1,0 +1,1 @@
+{"id":"1858947560381046834","kaynak":"@mehmetemanet","kod_metni":"FallingThreeMethods := \n(C4 < O4) AND \n(C > O) AND \n(C1 > O1) AND \n(C2 > O2) AND \n(C3 < O3) AND \n(C3 < C4) AND \n(C < C3);\n\nFallingThreeMethods;","baglanti":null,"tansu":"çevirecek"}

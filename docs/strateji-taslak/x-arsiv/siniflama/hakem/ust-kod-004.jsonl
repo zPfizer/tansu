@@ -1,0 +1,3 @@
+{"id":"1782870149395018090","kaynak":"@BugraComez","kod_metni":"(Cross(C,BBand(C,20,S,2)) and Rsi(14)>=50) or (Cross(rsi(14),50) and C>BBand(C,20,S,2))","baglanti":null,"tansu":"onayladı"}
+{"id":"1783149446089383961","kaynak":"@BugraComez","kod_metni":"AL\n\ncross(mov(c,12,e),mov(c,144,e)) and cross(mov(c,12,e),mov(c,169,e))\n\nSAT\n\ncross(mov(c,144,e),mov(c,12,e)) and cross(mov(c,169,e),mov(c,12,e))","baglanti":null,"tansu":"övdü"}
+{"id":"1783150274120487199","kaynak":"@BugraComez","kod_metni":"AL    \n\ncross(mov(c,12,e),mov(c,144,e)) and mov(c,144,e)>mov(c,169,e)\n\nSAT    \n\ncross(mov(c,169,e),mov(c,12,e))","baglanti":null,"tansu":"çevirecek"}

@@ -37,7 +37,7 @@ sadakat testiyle (Tansu'nun kendi örneğini yeniden üretme) doğrulanmadan kur
 - Bağlam: (A) "ABCD'ye gözü kapalı güvenilmez; kanalı okumadan iş yapılmaz" (p04, 43); talep toplama bölgesi (p04, 40).
 - Tepki penceresi: (G) "D gerçekleşti ama 20 bar içinde TEPKİ GELMEDİ" (p01, KAPLM).
 - Teyit: (G) BALAT "Küm. Delta" negatif, kör ABCD başarısız (p05, 45). Günlük veride delta yok → hacim yaklaşımı.
-- Stop ve hedef: (G) "Bk Stop (X)", "TP1 (1:1 R/R)", "TP2 (.618 CD)" (p01, SAYAS); (G) "Hedef 0.618 / 1.000 / 1.618" (p04, 42/43).
+- Stop ve hedef: (G) "İlk Stop (X)", "TP1 (1:1 R/R)", "TP2 (.618 AD)" (p01, SAYAS; okuma 07.10'da düzeltildi, defter-1 görsel düzeltmesi 41); (G) "Hedef 0.618 / 1.000 / 1.618" (p04, 42/43).
 - Yön: SMRTG tablosu kısa yönlü (p04); BIST'te "D'de alım" varyantı (p04, RYSAS "Taze D Noktası (Alış)").
 - Hipotez: tam kurulum = kanal/talep bağlamında D → 20 bar içinde tepki + hacim teyidi → giriş → stop X, TP1 1:1, TP2 0,618.
 
@@ -153,7 +153,7 @@ Bu görevde ham görselden doğrulananlar "(görsel doğrulandı)" ile işaretli
 ### Çelişkiler (hangisi esas)
 
 1. **SMRTG yönü.** p04/03 notu "Yükseliş" diyor; p04/A-EK getirileri C'den D'ye düşüş olarak yeniden üretti. Esas: görsel + hesap (aşağı yön). ISKPL için yön henüz doğrulanmadı (p02/M1 çıkarım).
-2. **TP2 çapası.** SAYAS ".618 CD" etiketi A–D üzerinden tutuyor (p01); BALAT 109 gerçekten C–D üzerinden (p06). Esas: araç başına ölçüm; etiketin harfine güvenme.
+2. **TP2 çapası.** SAYAS etiketi ".618 AD" (07.10 okuma düzeltmesi; ilk okuma "CD" idi) ve hesap A–D üzerinden tutuyor (p01); BALAT 109 gerçekten C–D üzerinden (p06). Esas: araç başına ölçüm.
 3. **TP1.** SAYAS "1:1 R/R" (p01) ile p06/123 "AD'nin %38,2'si". İki ayrı sistem (Carney / Excel tablo). Esas: kendi görselinden okunan sistem.
 4. **Gartley D formülü.** p06/123 tablosu ile SOKE (p04/02). Esas: SOKE görseli; tablo yön hatalı (satır 4).
 5. **10 gün / 20 bar.** p01/K2 ayrı parametre (satır 2). Esas: KAPLM görselinin kendisi.

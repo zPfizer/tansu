@@ -139,7 +139,7 @@ testidir (T R120: "Ben de bunu BIST'te test etmek istedim"); kuralı tam olan te
      H ölçüm kolları: C'den alım, D'de satış (T R018 "C noktasından alım yapılsa idi D satış karları"; sürüm 4'ün resmi
      kolu; giriş C'nin pivot olarak doğrulandığı günün ertesi AOF'u); X–B trend çizgisi kırılımı girişi (T R013, G R008); Lindsay Trident hedefi D = (B·C)/A ve B kırılımı teyidi
      (T R090, alış yönlü paragraf; satış yönlü kural açığa satış olduğu için yok); hedef merdiveni TP1–TP4 = D +
-     {0,382; 0,618; C; 1,272}·(C−D) (M/G R203) ve TP1 1:1 R/R, TP2 0,618 CD (G R014); Kuğu harmonikleri (T R075, R076;
+     {0,382; 0,618; C; 1,272}·(C−D) (M/G R203) ve TP1 1:1 R/R, TP2 0,618 AD (G R014; 07.10 okuma düzeltmesi); Kuğu harmonikleri (T R075, R076;
      oran verilmedi, standart tanım YORUM); harmonikte EMA sıkışması var/yok kesimi (T R005 "hangi noktada momentum
      squeeze olur"); CD bacağının şiddeti (CD/AB oranı, CD süresi, CD hacmi) ile sonuç ilişkisi raporu (T R016 "CD
      bacağının şiddetini ne belirler? Çok önemlidir").

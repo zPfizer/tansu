@@ -1,0 +1,2 @@
+{"id": "1893645272900620413", "kaynak": "@durduozkarci", "kod_metni": "pip install --upgrade yfinance\nprice = http://yf.download('http://FROTO.IS', start='2010-01-01',multi_level_index=False)", "baglanti": null, "tansu": "onayladı"}
+{"id": "1895843915418517617", "kaynak": "@mehmetemanet", "kod_metni": "(Sum(RSI(252)-LLV(RSI(252),252),54) /\nSum(HHV(RSI(252),252) - LLV(RSI(252),252),54))*100", "baglanti": null, "tansu": "övdü"}

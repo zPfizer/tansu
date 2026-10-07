@@ -1,0 +1,95 @@
+# 2000103306325004349 · faster-whisper · sure 400 sn
+[    0.0] Herkese merhaba. Finansal grafiklere baktığımızda, o gördüğümüz karmaşık iniş çıkışların ardında aslında bir melodi, hatta bir ritim olabilir mi?
+[    9.2] Gelin bu bölümde piyasanın bu gizli dilini, yani Elliot dalgalarını ve Fibonacci sayılarını hep birlikte deşifre edelim.
+[   16.5] O zaman en temel soruyla başlayalım.
+[   19.3] Bir hisse senedinin ya da bir endeksin grafiğini açtığınızda gördüğünüz o hareketler tamamen kaotik,
+[   26.0] tamamen öngörülemez bir gürültüden mi ibaret, yoksa bu kaosun içinde gizlenmiş bir düzen olabilir mi acaba?
+[   33.9] Ama işte bakın, ta 1930'lardan yani büyük buhran zamanlarından kalma bir teori var ki, bu fikre tamamen meydan okuyor.
+[   42.9] Bu teorinin adı Elliot dalga prensibi.
+[   45.8] Ve diyor ki, hayır piyasa hareketleri hiç de rastgele değil.
+[   49.6] Tam tersine içinde insan psikolojisinin yattığı öngörülebilir bir ritim var.
+[   54.3] Peki neymiş bu ritim?
+[   56.7] Gelin şimdi teorinin tam kalbine inelim ve piyasanın temel nabız atışı olan bu beşe üçlük ritmin ne anlama geldiğini anlayalım.
+[   66.2] Teori en basit haliyle aslında şunu söylüyor.
+[   69.9] Piyasalar yatırımcıların, yani bizlerin, kollektif psikolojisiyle hareket eder.
+[   75.2] Fiyat grafikleri aslında toplumun o iyimserlikten kötümserliğe, açgözlülükten korkuya geçişlerinin adeta bir haritasıdır.
+[   82.7] Ve bu duygusal döngülerde belirli ve sürekli tekrarlayan dalgalar yaratıyor.
+[   88.4] İşte o ritim tam olarak bu.
+[   90.5] Bakın, olay şöyle işliyor.
+[   92.2] Piyasalar ana trend yönünde önce bir, iki, üç, dört, beş dalgalık bir hareket yapıyor.
+[   96.9] Biz bunlara itki dalgaları diyoruz.
+[   99.0] Hani o iyimserliğin talan yaptığı, herkesin alıma geçtiği anlar var ya, işte onlar.
+[  103.8] Sonra bu beş adımlık coşku duruluyor ve bu sefer trendin tersine üç dalgalık bir düzeltme geliyor.
+[  108.9] Yani kar satışları başlıyor, biraz şükre bulutları dolaşıyor.
+[  112.7] Formül aslında çok basit.
+[  114.3] Beş adım ileri, üç adım geri.
+[  116.4] İşte piyasanın o meşhur kalp atışı tam olarak bu.
+[  120.0] Ve bu döngü tamamlandığında ne oluyor?
+[  122.6] Toplamda sekiz dalgamız oluyor.
+[  124.9] Bakın bu sekiz sayısını aklınızın bir köşesine yazın.
+[  128.2] Çünkü birazdan çözeceğimiz yapbozun en büyüleyici parçasının anahtarı tam da bu sayıda gizli.
+[  133.7] Şimdi geldik işin gerçekten ilginçleştiği, hatta neredeyse mistik bir hal aldığı kısma.
+[  140.5] Bu sekiz dalgalık piyasa yapısının doğanın her yerde karşımıza çıkan o evrensel matematiksel kodla,
+[  147.0] yani Fibonacci dizisiyle olan inanılmaz bağlantısını keşfedeceğiz.
+[  152.1] İşte bu slide'daki kilit nokta tam olarak şu.
+[  155.4] Az önce bahsettiğimiz üç düzeltme dalgası, beş itki dalgası ve bunların toplamı olan sekiz dalga,
+[  161.7] bunların hepsi, hani doğanın gizli formülü olarak bilinen Fibonacci dizisinin birbiri ardına gelen sayıları.
+[  169.0] Şimdi bu bir tesadüf mü, yoksa piyasa hareketlerinin temelinde evrensel bir matematiksel uyum mu var?
+[  175.8] Ama durun, hepsi bu kadar değil, dahası var.
+[  179.3] Teoriye göre bu beşe üçlük model sadece bir kez yaşanıp biten bir şey değil, tıpkı bir matruşka bebek gibi.
+[  185.9] Her dalganın içinde daha küçük ölçeklerde aynı modelin tekrar tekrar ettiğini göreceğiz.
+[  191.7] Bu tablo durumu mükemmel bir şekilde özetliyor aslında.
+[  195.0] Gördüğünüz gibi, ana trendeki o sekiz dalganın içine şöyle bir yakından baktığımızda,
+[  199.6] daha küçük ölçekte otuz dört dalga buluyoruz.
+[  202.3] Biraz daha derine indiğimizde ise bu sayı yüz kırk dörde kadar çıkıyor.
+[  206.1] Ve dikkat ettiniz mi, tablodaki her bir sayı yine ve yine Fibonacci dizisinin bir parçası.
+[  211.3] Bu da piyasanın, fraktal yani kendi kendini sürekli tekrarlayan bir yapıya sahip olduğunun en net kanıtı.
+[  218.0] Ve işte can alıcı nokta.
+[  220.0] Bu sadece soyut bir sayı oyunu değil.
+[  222.5] Teoriye göre bu sayılar aslında kolektif insan psikolojisinin ta kendisi.
+[  227.5] O beş adımlık coşkulu yükseliş aslında açgözlülük döngüsünün,
+[  231.6] üç adımlık geri çekilme ise korku veya en azından temkinli olma halinin matematiksel bir parmak izi gibi.
+[  237.3] Şimdiye kadar hep fiyatın ne kadar yükseleceğini veya düşeceğini konuştuk.
+[  242.5] Peki ya ne zaman?
+[  244.1] Bu prensipleri bir trendin ne kadar süreceğini tahmim etmek için de kullanabilir miyiz acaba?
+[  249.7] Cevap kesinlikle evet.
+[  251.9] Yani artık analizimizi iki boyuta taşıyoruz.
+[  255.3] Fiyat ve zaman.
+[  256.7] Fibonacci sayıları bize sadece fiyat hedeflerini vermekle kalmıyor,
+[  260.4] aynı zamanda bu hedeflere ulaşmanın ne kadar sürebileceğini
+[  264.6] ya da bir trendin ne zaman gücünü yitirebileceğini anlamak için de bir yol haritası sunuyor.
+[  270.4] Peki bu pratikte ne anlama geliyor?
+[  272.5] Şöyle düşünün, bir trend başladığında bu Fibonacci sayıları sizin için birer kontrol noktası,
+[  278.6] birer alarm gibi çalışıyor.
+[  280.4] Mesela beşinci günde trend hala gücünü koruyor mu?
+[  283.5] Süper!
+[  284.2] O zaman bir sonraki potansiyel dönüm noktası için sekizinci güne bakabilirsiniz.
+[  288.6] Bugünler bir trendin gücünü test ettiği veya yön değiştirme ihtimalinin arttığı kritik anlar.
+[  294.6] Ve şimdi, tüm bu zaman analizini yaparken,
+[  297.9] en tecrübeli analistlerin bile gözden kaçırabildiği,
+[  300.8] hatta tüm denklemi değiştirebilecek o son, o hayati detaya geliyoruz.
+[  305.8] Soru çok basit.
+[  307.4] Bugünleri sayarken yapılan en yaygın ve en maliyetli hata ne olabilir?
+[  312.8] Cevap, sandığınızdan çok daha basit ama bir o kadar da önemli.
+[  316.7] İşte o kritik netay geliyor.
+[  319.3] Sayım yaparken sakın sadece borsanın açık olduğu işlem günlerini almayın.
+[  323.7] Hayır, hafta sonları, tatiller ne varsa,
+[  327.2] takvimdeki her bir günü saymanız gerekiyor.
+[  329.9] Peki ama neden?
+[  331.0] E çünkü bu teorinin temelinde yatan kitle psikolojisi,
+[  334.6] borsa kapanınca hadi ben tatile çıkayım demiyor ki,
+[  337.5] yatırımcıların düşünceleri, endişeleri, o beklentileri,
+[  340.7] hepsi hafta sonu da tıkır tıkır işlemeye devam ediyor.
+[  343.9] Bakın bu küçücük gibi görünen fark var ya,
+[  346.4] işte o yaptığınız analizlerin isabet oranını bambaşka bir seviyeye taşıyabilir.
+[  351.0] O halde öğrendiklerimizi hızla bir toparlayalım.
+[  355.1] Piyasalar, bizim kolektif psikolojimizin bir yansıması olarak,
+[  359.2] Fibonacci sayılarına dayanan 5'e 3'lük fraktal bir dalga düzeninde hareket ediyor.
+[  364.3] Bu düzen hem fiyat seviyeleri hem de zamanlama için bize müthiş ipuçları veriyor.
+[  370.0] Ve en kritik nokta, zamanı ölçerken her zaman ama her zaman takvim günlerini kullanmalıyız.
+[  376.4] Ve tüm bu analiz bizi şu temel soruyla baş başa bırakıyor.
+[  380.8] Acaba piyasanın kendisi mi doğası gereği matematiksel bir yapıya sahip,
+[  385.1] yoksa matematik, bizim zaten öngörülebilir olan kolektif davranışlarımızı
+[  389.2] ve duygusal döngülerimizi açıklamak için kullandığımız evrensel bir dilden mi ibaret?
+[  394.2] Belki de cevap her ikisinde birden gizlidir.
+[  396.7] Altyazı M.K.

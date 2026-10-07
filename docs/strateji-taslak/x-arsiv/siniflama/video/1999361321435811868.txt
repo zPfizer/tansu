@@ -1,0 +1,81 @@
+# 1999361321435811868 · faster-whisper · sure 353 sn
+[    0.0] Bugünkü analizimizde gerçekten çok ilginç bir konuya dalıyoruz.
+[    4.2] Sadece fiyata bakmak yerine piyasanın genel iklimini, yani adeta hava durumunu okuyarak nasıl bir ticaret stratejisi geliştirilir?
+[   12.8] Gelin hep birlikte bakalım.
+[   14.8] Başlarken size bir soru.
+[   16.8] Sürekli fiyatın nereye gideceğini tahmin etmeye çalışmak yerine, piyasanın ta kendisine o kolektif korku duygusunu alıp satabileceğiniz bir sistem olsaydı nasıl olurdu?
+[   26.0] Özellikle de panik anlarında varlıklar arasındaki ilişkiden kar etmeyi sağlayan bir sistem.
+[   31.6] Mümkün mü? Hadi görelim.
+[   33.8] İşte yol haritamız bu şekilde olacak.
+[   36.3] Önce elimizdeki araçları tek tek tanıyacağız, sonrasında da tüm bu parçaları birleştirip güçlü bir karar verme makinesi inşa edeceğiz.
+[   44.5] Haydi o zaman ilk ve en önemli bileşenimizle, yani altın piyasasındaki korkuyu nasıl ölçtüğümüzle başlayalım.
+[   51.8] JVX'i aslında bir tür erken uyarı sistemi gibi düşünebilirsiniz.
+[   55.4] Bize çok net bir şekilde altın yatırımcılarının önümüzdeki bir ay için ne kadar endişeli, ne kadar gergin olduğunu söylüyor.
+[   63.5] Yani eğer hisse senedi piyasalarındaki meşhur korku endeksi VIX'e aşinaysanız, işte JVX'te bunun altın için olan versiyonu.
+[   72.8] Bu kadar basit.
+[   73.9] Ve bizim stratejimiz için de kesinlikle hayati bir role sahip.
+[   78.4] Tamam, şimdi bu korku ölçerini alalım ve onu piyasanın en temel dinamiklerinden biriyle birleştirelim.
+[   84.6] Değerli metaller dünyasını yöneten o meşhur dolar ve altın arasındaki çekişme.
+[   90.4] Normalde işler oldukça basittir değil mi?
+[   93.5] Aralarında ters bir ilişki vardır.
+[   95.7] Dolar güçlendiğinde bir ons altın almak için daha az dolara ihtiyaç duyarsınız.
+[  100.5] Dolayısıyla altının dolar cinsinden fiyatı düşer.
+[  103.3] Ama işlerin gerçekten ilginçleştiği yer tam olarak burası.
+[  108.6] Piyasaya yüksek korku yani yüksek bir JVX hakim olduğunda o basit bildiğimiz ilişki bir anda ortadan kalkıyor.
+[  116.7] Altının davranışı artık öngörülemez bir hal alıyor.
+[  119.7] İşte bu noktada JVX bizim ana şalterimiz haline geliyor.
+[  125.0] Bir rejim filtresi gibi çalışarak bize hangi stratejiyi ne zaman devreye sokacağımızı ve daha da önemlisi ne zaman kenara çekilip beklememiz gerektiğini söylüyor.
+[  133.8] Stratejinin temelindeki fikir aslında şu.
+[  137.2] Altın ve dolar arasındaki bu tarihsel ilişkinin yani bizim spread dediğimiz fiyat farkının eninde sonunda her zaman ortalamasına geri döneceğine inanıyoruz.
+[  146.4] Eğer bu fark aşırı açılırsa biz de bu farkın kapanacağı yönünde pozisyon alıyoruz.
+[  151.5] JVX düşükken deniz adeta çarşaf gibi.
+[  155.1] Piyasa sakin, her şey öngörülebilir.
+[  157.7] İşte bu sakin sularda bizim istatistiksel arbitraj teknimiz tıkır tıkır işleyerek kar üretebiliyor.
+[  163.8] Fakat JVX fırladığında işte o zaman bir fırtına yaklaşıyor demektir.
+[  169.7] Bütün o bildiğimiz istatistiksel ilişkiler darmadağın olur.
+[  173.7] Böyle bir havada normale döner diye bahse girmek kelimenin tam anlamıyla bir felaket reçetesi olabilir.
+[  180.0] O yüzden motorları durduruyoruz.
+[  182.4] Şimdi resme bir katman daha ekleyerek analizi biraz daha derinleştirelim.
+[  187.1] Denkleme altının o biraz daha hareketli yüksek betalı kardeşi olan gümüşü dahil ediyoruz.
+[  193.8] Altın-gümüş rasyosu emin olun tüm emtia piyasasındaki risk algısını ölçen en güçlü göstergelerden biridir.
+[  201.3] Çok basit bir şekilde bir ons altın alabilmek için kaç ons gümüşe ihtiyacınız olduğunu gösterir.
+[  206.7] Buradaki can alıcı nokta şu.
+[  209.5] Rasyo yükseliyorsa bilin ki yatırımcılar korkuyor ve daha güvenli olan altına sığınıyor.
+[  215.8] Eğer rasyo düşüyorsa bu da piyasada cesaretin ve risk alma iştahının arttığını gösterir.
+[  222.2] Ve işte bu bize harika bir fırsat sunuyor.
+[  225.0] Bakın bir yanda korku ölçerimiz GVX tavan yapmış.
+[  230.2] Normalde ne bekleriz?
+[  231.5] Yatırımcıların altına kaçmasını.
+[  233.5] Yani altın bölü gümüş rasyosunun yükselmesini.
+[  236.9] Ama bir bakıyoruz ki rasyo tam tersine düşüyor.
+[  240.3] İşte bu bir anomali.
+[  241.7] Piyasada bir yanlış fiyatlandırma var demektir.
+[  244.4] Ve biz de tam olarak bu anomali üzerine pozisyon alıyoruz.
+[  247.5] Peki tüm bu öğrendiğimiz parçaları bir araya getirdiğimizde ortaya nasıl bir tablo çıkıyor?
+[  253.8] Gelin şimdi her şeyi tek bir güçlü karar matrisinde toplayalım.
+[  257.4] Bu matris bize piyasanın hava durumuna göre ne yapmamız gerektiğini söyleyecek.
+[  262.6] İşte bu matris.
+[  264.0] Stratejimizin adeta beyni.
+[  266.0] GVX'in durumunu alıyor, doların trendiyle birleştiriyor ve bize farklı piyasa koşulları için son derece net bir eylem planı sunuyor.
+[  273.6] Mesela bakın GVX yükselirken dolar düşüyorsa bu klasik bir stagflasyon fiyatlamasıdır ve stratejimiz net.
+[  281.0] Altını al, dolar sat.
+[  282.6] Ne kadar açık değil mi?
+[  284.3] Teori harika.
+[  285.4] Peki tüm bu düşünceyi pratiğe yani koda nasıl dökeriz?
+[  289.2] Şimdi bu stratejik planı somut bir kantitatif modele dönüştürmenin adımlarına hızlıca bir göz atalım.
+[  295.3] Bu yol haritası aslında oldukça net.
+[  297.6] Ham verilerle değil, normalize edilmiş verilerle işe başlıyoruz.
+[  300.8] Sonra istatistiksel bir modelle o aradaki ilişkiyi yani spread'ı oluşturuyoruz.
+[  306.0] Ve işte en kritik adım GVX filtresini uyguluyoruz.
+[  309.3] Yani hava fırtınalıysa sistemi kapatıyoruz.
+[  312.2] Sonra olarak da opsiyon piyasasındaki olası etkileri de hesaba katmayı unutmuyoruz.
+[  317.0] Ve işte belki de bu analizden aklımızda kalması gereken en önemli cümle bu.
+[  321.7] GVX'i size ne zaman alıp satacağınızı söyleyen bir sinyal olarak değil,
+[  325.6] içinde bulunduğunuz piyasanın hava durumunu gösteren bir barometre olarak kullanın.
+[  330.8] Bu da bizi son bir düşünceye getiriyor.
+[  333.7] Belki de her şeyin algoritmalar tarafından yönetildiği bu yeni piyasalarda,
+[  338.4] başarılı olmanın sırrı, fiyatın nereye gideceğini tahmin etmekten çok,
+[  343.1] mevcut piyasa iklimine yani o anki hava durumuna doğru bir şekilde uyum sağlamakta yatıyordur.
+[  349.2] Ne dersiniz?
+[  349.7] Altyazı M.K.
+[  350.7] Altyazı M.K.

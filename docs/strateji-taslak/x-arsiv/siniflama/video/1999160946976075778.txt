@@ -1,0 +1,90 @@
+# 1999160946976075778 · faster-whisper · sure 373 sn
+[    0.0] Herkese merhaba, bugün finansal piyasaların o karmaşık görünen dünyasına dalıyoruz ve yatırımcıların geleceği okumak için kullandığı en gizemli araçlardan birini birlikte masaya yatıracağız.
+[   11.1] Şöyle bir düşünün, bir hisse senedi ya da döviz kuru, roketlemiş hızla yükseliyor.
+[   16.6] Hepimizin aklına gelen o tek bir soru var değil mi?
+[   19.3] Tamam da bu yükseliş nerede duracak, fiyat nereden geri dönecek?
+[   23.3] İşte bu, piyasadaki herkesin cevabını aradığı o meşhur milyon dolarlık soru.
+[   27.7] Peki ya size desem ki, o grafiklerdeki o karman çorman gürültünün içinde piyasanın bir sonraki adımı için bıraktığı küçük ipuçları var ve bu ipuçlarını okumamızı sağlayan harika bir araç mevcut.
+[   42.0] İşte bugünkü yolculuğumuzda rehberimiz ta antik matematikten ve doğanın sırlarından çıkıp modern finans grafiklerine konuk olan Fibonacci düzeltmesi olacak.
+[   52.2] Hadi gelin, bu aracın sır perdesini birlikte aralayalım.
+[   55.2] Ama durun, hemen baştan bir şeye açıklığa kavuştıralım.
+[   58.8] Bu, geleceği gören sihirli bir küre falan değil, kesinlikle değil.
+[   63.0] Bunu daha çok bir yol haritası gibi düşünün.
+[   65.1] Bize grafikteki olası mola yerlerini, yani potansiyel dönüş noktalarını gösteren bir rehber.
+[   71.1] Sakın gözünüz korkmasın.
+[   72.9] Bütün bu karmaşık görünen yapının arkasında yatan şey çok basit aslında.
+[   76.7] Doğada, sanatta, her yerde karşımıza çıkan birkaç tane temel oran.
+[   80.7] Evet, bildiğiniz yüzdeler.
+[   83.1] Ve işte sahneye çıkan ilk oranımız, yüzde 23.6.
+[   87.5] Bu genelde nedir biliyor musunuz?
+[   89.1] Güçlü bir trend sonrası piyasanın şöyle bir nefes aldığı, ilk küçük mola verdiği yerdir.
+[   93.8] Hani ilk fren noktası diyebiliriz.
+[   96.3] Sıradaki ise çok daha önemli bir seviye, yüzde 38.2.
+[  100.1] Hah, işte yatırımcılar burayı çok daha dikkatli izler.
+[  102.8] Çünkü bu, artık daha ciddi bir düzeltmenin habercisi olabilir.
+[  107.1] Piyasanın kendi kendine, bir dakikaya acaba yön mü değiştiriyoruz diye sormaya başladığı yerdir burası.
+[  112.8] Ve geldik en meşhuruna, yüzde 61.8.
+[  117.1] Evet, o meşhur altın oran.
+[  119.5] Hani antik mimariden tutun da sanata kadar her yerde gördüğümüz o oran.
+[  123.9] İşte bu seviye, analistler için en kritik, en önemli geri dönüş noktasıdır.
+[  128.4] Fiyat buraya bir gelsin, piyasadaki bütün gözler anında bu çizginin üzerine çevrilir.
+[  134.8] Tabii, resmi tamamlamak için birkaç seviyemiz daha var.
+[  138.0] Mesela yüzde 50.
+[  139.3] Aslında bu teknik olarak bir fibonacci oranı değil.
+[  142.0] Ama bir hareketin tam ortası olduğu için psikolojik olarak inanılmaz önemlidir.
+[  146.7] Yani yonun yarısı dediğimiz yerdir, beyinlerimiz doğal olarak bu seviyeye bir anlam yükler.
+[  152.4] Tamam, bu kadar teori yeter.
+[  153.7] Şimdi bu soyut rakamları, bu oranları bir kenara bırakalım ve işin mutfağına girelim.
+[  159.9] Bu sayıların bir finansal grafikte nasıl canlandığını, basit bir Python koduyla adım adım nasıl çizildiğini göreceğiz.
+[  166.5] Planımız çok basit.
+[  168.2] Dört adımda halledeceğiz.
+[  169.7] Bir, veriyi çekeceğiz.
+[  171.4] İki, en yüksek ve en düşük noktaları yani zirve ve dibi bulacağız.
+[  176.0] Üç, o sihirli oranları kullanarak seviyeleri hesaplayacağız.
+[  179.8] Ve dört, bütün bunları alıp şık bir grifiye dökeceğiz.
+[  183.1] İşte bütün analiz bu dört adımdan ibaret.
+[  186.5] Her şey veriye ulaşmakla başlar, değil mi?
+[  188.9] Tıpkı bir aşçının önce malzemelerini tezgahına dizmesi gibi, bizim kodumuz da ilk iş olarak analiz edeceği fiyat verilerini internetten çekip getiriyor.
+[  197.4] Veri elimizde.
+[  198.5] Şimdi kod ne yapıyor?
+[  199.8] Belirlediğimiz zaman aralığındaki en tepe noktayı ve en dip notkayı buluyor.
+[  204.2] Bu iki nokta bizim çapa noktalarımız olacak.
+[  206.5] Yani bütün hesaplamalarımızı bu zirve ile dip arasındaki mesafeye göre yapacağız.
+[  210.9] Ve işte, sihir tam da burada başlıyor.
+[  215.0] Hani az önce konuştuğumuz o yüzdeler var ya, işte o oranlar alınıyor, az önce bulduğumuz zirve ve dip arasındaki o mesafeye uygulanıyor ve puf, soyut yüzdeler grafiğe çizeceğimiz somut, elle tutulur fiyat seviyelerine dönüşüyor.
+[  228.2] İşte bu tabloda da kodun hesaplarının sorucunu net bir şekilde görüyoruz.
+[  233.2] Her bir Fibonacci oranı artık karşısında somut bir fiyat seviyesiyle eşleşmiş durumda.
+[  238.9] Birazdan grafikte göreceğiniz o yatay çizgiler var ya, işte onlar bu rakamlardan oluşuyor.
+[  243.8] Evet, bütün parçalar artık elimizde.
+[  246.0] Oranları öğrendik, kodu çalıştırdık, hesaplamaları yaptık.
+[  249.4] Şimdi tüm bu çabanın bir araya gelip, o anlamsız gibi görünen verinin nasıl anlamlı bir görsele bir içgörüye dönüştüğünü görme zamanı.
+[  257.7] Hazır mısınız?
+[  259.0] Ve bütün bunları bir araya getirdiğimizde karşımıza çıkan şey, işte bu.
+[  264.2] O soyut yüzdeler, o rakamlar yığını, hepsi şimdi bu grafikte bize olası destek ve direnç bölgelerini gösteren anlamlı, somut çizgilere dönüştü.
+[  275.7] Harika görünüyor değil mi?
+[  277.6] Tamam, çok güzel bir grafik çizdik, harika.
+[  280.3] Ama asıl soru şimdi geliyor.
+[  282.2] Eee bu çizgiler ne anlama geliyor?
+[  284.2] Bir yatırımcı bu grafiğe baktığında ne görmeli?
+[  286.8] Bunu kararlarında nasıl kullanabilir?
+[  288.8] Hadi şimdi işin yorumlama kısmına geçelim.
+[  291.1] Şimdi grafiğe biraz daha yakından bakın lütfen.
+[  293.3] Fiyatların bu çizgilere nasıl adeta saygı gösterdiğine bir dikkat edin.
+[  297.9] Görüyor musunuz?
+[  298.8] Fiyatlar bu sevilelere yaklaştığında ya yavaşlıyor, ya onlardan bir trambolin gibi sekiyor, ya da bir süre o çizginin etrafında oyalanıyor.
+[  306.6] Sanki grafikte görünmez zeminler ve tavanlar varmış gibi.
+[  310.3] Ama bakın, burada unutmamamız gereken çok kritik bir şey var.
+[  313.4] Bu araç geleceği gösteren sihirli bir küre değil.
+[  316.9] Bu bir alet çantası.
+[  318.9] İçindeki güçlü bir alet bize ne sağlıyor?
+[  321.7] Potansiyel destek ve direnç bölgeleri için bir yol haritası sunuyor.
+[  325.9] Fiyat hareketlerini bir bağlama oturtmamıza yardım ediyor ama asla ve asla kesin sonuçlar vaat etmiyor.
+[  332.7] Kısacası, lafı toparlayacak olursak, bu bir garanti değil.
+[  336.3] Bu bir rehber.
+[  337.0] Bilinçli yatırım kararları alırken diğer analiz yöntemlerinizle birlikte kullanacağınız elinizdeki güçlü silahlardan sadece bir tanesi.
+[  345.6] Ve son olarak, aklınızda bir soruyla sizi baş başa bırakmak istiyorum.
+[  349.9] Sizce bu Fibonacci seviyeleri neden işe yarıyor?
+[  352.8] Piyasaların doğasında gerçekten gizli bir matematiksel düzen olduğu için mi?
+[  356.6] Yoksa, milyonlarca yatırımcı aynı anda aynı çizgilere baktığı ve benzer tepkiler verdiği için bu durum kendi kendini gerçekleştiren bir kehanete mi dönüşüyor?
+[  366.6] Piyasa psikolojisinin gücü hakkında düşünmeye değer bir soru değil mi?
+[  369.7] Altyazı M.K.

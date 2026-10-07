@@ -1,0 +1,109 @@
+# 2001021294612242538 · faster-whisper · sure 420 sn
+[    0.0] Bir hissenin fiyatı yükseldi diye gerçekten para kazandınız mı sayılır?
+[    4.2] Kulağa basit gelse de bu sorunun cevabı finansal getiri dediğimiz o güçlü kavramda saklı.
+[    9.8] Hadi gelin, şimdi bir yatırımın gerçek performansına oyanıp sönen fiyatların arkasında nasıl ölçeceğimizi hep birlikte bakalım.
+[   17.2] İşte, bütün mesele aslında bu.
+[   19.3] Bir varlığın fiyatı her gün değişiyor, ekranda rakamlar dans ediyor, yeşiller, kırmızılar.
+[   25.4] Ama peki tüm bu hareketlilik sizin cebiniz için gerçekte ne anlama geliyor?
+[   30.4] Yani karda mısınız, zararda mı yoksa sadece bir aşağı bir yukarı giden fiyatları mı seyrediyorsunuz?
+[   36.4] Gelin bu işi bir netliğe kavuşturalım.
+[   39.1] Şimdi yatırımınızın yolculuğunu bir takip edelim bakalım.
+[   42.2] Bunu yapmak için de böyle teorik lafları bir kenara bırakalım tamam mı?
+[   45.4] Elimizde somut gerçek bir örnek olsun.
+[   48.0] Mesela bir varlığın 10 günlük fiyat hareketini masaya yatıralım.
+[   51.9] Karşımızda 10 günlük bir fiyat serüveni var.
+[   55.1] Bakın, birinci gün fiyat 1447 dolarmış.
+[   58.2] Sonra inmiş çıkmış ve 10. günün sonunda 1474 dolara gelmiş.
+[   64.0] E ilk bakışta basit değil mi?
+[   66.0] Başladığımızdan daha yüksekte bitirmişiz, yani kardayız.
+[   69.1] Ama, ama asıl soru şu, bu yolculuk bizim için tam olarak ne kadar karlı oldu?
+[   75.7] İşte bütün mesele bu rakamı bulmakta.
+[   79.0] İşte bu performansı ölçmek için elimizde iki tane temel alet var.
+[   83.8] Bunlardan biri bürüt getiri, diğeri ise net getiri.
+[   87.4] Hadi şimdi bu ikisi neymiş, ne işe yararmış, aralarındaki fark neymiş ona bir bakalım.
+[   93.4] Şimdi bakın, bürüt getiri dediğimiz şey, en basit haliyle paran kaç katına çıktı sorusunun cevabıdır.
+[  102.0] Formülü PT bölü PT eksi 1.
+[  105.4] Yani bugünün fiyatını dünün fiyatına bölüyorsun, bu kadar.
+[  108.6] Eğer sonuç 1.05 ise, paran 1.05 katına çıkmış demek.
+[  114.6] Net getiri ise, işte bu bizim çok daha aşina olduğumuz bir şey, yüzde kaç kazandın veya kaybettin?
+[  121.0] Bunu bulmak için de, o bürüt getiriden, yani 1.05'den 1'i çıkarıyoruz.
+[  126.7] Ne kaldı? 0.05, yani yüzde 5 kar.
+[  130.9] Gördüğünüz gibi ikisi de aynı kapıya çıkıyor, sadece anlatım şekilleri farklı.
+[  136.0] Hadi o zaman, şu teoriyi pratiğe dökelim.
+[  138.6] Örneğimizdeki ikinci günün net getirisini beraber hesaplayalım.
+[  142.2] Adım 1. İkinci günün fiyatını alıyoruz. Neydi o? 1465 dolar.
+[  146.6] Adım 2. Bunu ilk günün fiyatına, yani 1447 dolara bölüyoruz.
+[  150.8] Adım 3. Çıkan sonuçtan da o sihirli sayıyı, yani 1'i çıkarıyoruz.
+[  155.1] İşte o zaman yüzdeyi bulmuş olacağız. Hazır mısınız?
+[  158.8] Ve sonuç. Artı %1.24. İşte bu kadar basit. Gördünüz mü?
+[  163.8] Artık elimizde sadece, dün 1447 idi, bugün 1465 oldu gibi ham fiyat bilgisi yok.
+[  170.3] Hayır. Elimizde o günkü yatırımımızın başarısını tek bir rakamla özetleyen net, anlamlı bir veri var.
+[  176.2] %1.24'lük bir kazanç.
+[  179.4] İşte bütün olayın özeti de aslında bu.
+[  182.5] Pozitif bir net getiri görüyorsanız, para kazanıyorsunuz demektir.
+[  186.5] Negatif bir net getiri görüyorsanız, para kaybediyorsunuz.
+[  190.0] Bu kadar net, bu kadar basit.
+[  192.3] Finansın alfabesi bu, diyebiliriz.
+[  194.3] Tamam, temel konuları hallettik.
+[  197.0] Artık net getirinin ne olduğunu biliyoruz.
+[  199.4] Şimdi, işleri bir sonraki seviyeye taşıma zamanı.
+[  202.8] Gelin, size profesyonellerin sıkça kullandığı, analizleri acayip kolaylaştıran, güçlü bir araçtan bahsedeyim.
+[  209.2] Sürekli bileşik getiri.
+[  211.0] Şimdi, sürekli bileşik getiri ya da diğer adıyla logaritmik getiri.
+[  215.8] Biliyorum, logaritma kelimesi biraz okul yıllarına hatırlatıp insanı gerebilir.
+[  220.5] Ama hiç korkmayın.
+[  221.7] Asıl amacı tam tersi.
+[  223.2] Hayatımızı kolaylaştırmak.
+[  224.9] Özellikle uzun bir dönemin toplam getirisini bulmaya çalıştığınızda,
+[  228.8] bu yöntem sayesinde karmaşık çarpma işlemleriyle uğraşmak yerine bambaşka bir şey yapıyoruz.
+[  234.6] Ne mi?
+[  235.2] Hemen göstereyim.
+[  236.6] Normalde, diyelim, 10 günlük toplam getiriyi bulmak istiyorsunuz.
+[  240.9] Ne yapmanız lazım?
+[  241.8] Her bir günün bürüt getirisini bulup, sonra hepsini birbiriyle çarpmanız gerekiyor.
+[  247.8] Yani birinci gün çarpı ikinci gün çarpı üçüncü gün.
+[  251.0] Bu hem çok zahmetli, tam bir angarya, hem de hata yapmaya inanılmaz açık bir yöntem.
+[  257.1] Ama logaritmik getirinin o bahsettiğim süper gücü işte tam da burada devreye giriyor.
+[  263.5] O korkunç çarpma zinciriyle uğraşmak yerine, her günün logaritmik getirisini bulup basitçe topluyorsunuz.
+[  270.1] Evet, yanlış duymadınız. Çarpma yok, sadece toplama.
+[  274.2] İşte bu yüzden analistler bu yöntemi çok seviyor.
+[  276.9] Bütün sihir bu.
+[  278.6] Şimdi size bu getiri dediğimiz şeyin aslında ne kadar güçlü olduğunu kanıtlayacak bir şey yapalım.
+[  284.2] Bir nevi sihirbazlık gibi düşünün, işi tamamen tarsten yapacağız.
+[  288.0] Fiyatları falan unutun.
+[  289.5] Elimizde sadece günlük getiri yüzdeleri olsa,
+[  292.5] acaba bir yatırımın bütün fiyat yolculuğunu sıfırdan yeniden çizebilir miyiz?
+[  296.7] Cevap, kesinlikle evet.
+[  298.1] Evet, elimizdeki yeni bulmacanın parçaları bunlar.
+[  301.6] Bakın, bu tabloda hiç fiyat bilgisi yok.
+[  304.6] Sadece her günün net getirisi var.
+[  306.9] İşte pazartesi eksi yüzde 1.4, salı artı yüzde 1.3 ve böyle devam ediyor.
+[  313.1] Elimizdeki tek şey bu küçük yüzde değişimleri.
+[  316.5] Bakalım bu bilgi kırıntılarından bütün bir hikaye çıkarabilecek miyiz?
+[  320.3] Tabii ki bir yerden başlamamız lazım.
+[  322.9] O yüzden diyelim ki bu getiri serisi başlamadan hemen önce varlığımızın fiyatı tam olarak bin dolardı.
+[  329.7] Bu bizim sıfır noktamız.
+[  331.9] Hadi başlayalım inşa etmeye.
+[  334.0] İlk gün ne olmuş?
+[  335.2] Yüzde 1.4'lük bir düşüş.
+[  337.5] Peki, bu durumda bin dolarımız neye dönüşür?
+[  340.4] Cevap 986 dolar.
+[  343.6] Basit bir hesapla bin dolarımızdan 14 dolar eksildi ve ilk günü 986 dolarla kapattık.
+[  350.7] Gördüğünüz gibi o küçücük yüzde fiyatta somut bir değişime yol açtı.
+[  355.8] Geldik ikinci güne.
+[  357.1] Bu sefer yüzde 1.3'lük bir artış var.
+[  360.0] Ama dikkat, burası çok önemli.
+[  361.5] Bu artışı artık başlangıçtaki bin dolara değil, bir önceki günün kapanış fiyatı olan 986 doların üzerine ekliyoruz.
+[  369.9] İşte bileşik getiri dediğimiz o sihirli etkinin başladığı an tam olarak burası.
+[  375.7] Ve bu hesabı yaptığımızda ikinci günün sonunda yeni fiyatımızın 998.82 dolar olduğunu görüyoruz.
+[  383.8] İşte bu şekilde her günün getirisini bir önceki günün fiyatına uygulayarak adım adım bütün bir fiyat grafiğini, bütün bir yolculuğu yeniden inşa edebiliriz.
+[  392.8] Yani getiriler aslında bir yatırımın DNA'sıdır.
+[  396.6] Hikayeyi anlatan asıl yapı taşlarıdır.
+[  398.6] Artık getirilerin nasıl hesaplayacağınızı biliyorsunuz.
+[  402.8] Ama asıl soru bu değil.
+[  404.8] Asıl soru şu, finansal geleceğinize yön verirken bu araçlardan hangisi size rehberlik edecek?
+[  411.5] İşte bu sorunun cevabı sizin kendi yatırım hikayenizi belirleyecek.
+[  415.6] Düşünmeye değer değil mi?
+[  416.8] Altyazı M.K.
+[  417.8] Altyazı M.K.
+[  418.7] Altyazı M.K.

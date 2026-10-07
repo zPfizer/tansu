@@ -1,0 +1,25 @@
+{"id":"1954920287146852526","alan":"kural","eski":"cekirdek","yeni":"yok","kural_no":"K5","gerekce":"Gönderi yalnız sonuç ('aracı kurumlarda bugün güzel kazandı', 'sadece finans mühendisliği') veriyor; Sharpe/volatilite yöntemi yalnız alıntılanan kendi gönderisinde."}
+{"id":"1954920287146852526","alan":"rol2","eski":"seçim-momentum","yeni":null,"kural_no":"K5","gerekce":"Yöntem yalnız alıntıda olduğundan bu gönderiye rol2 verilmez."}
+{"id":"1955570449431089464","alan":"kural","eski":"cekirdek","yeni":"yok","kural_no":"K5","gerekce":"Metin yalnız 'Ve bu da gitti'; bayrak adı yalnız alıntılanan kendi gönderisinde ('Bir de bayrak vereyim size'), görsel yok."}
+{"id":"1955570449431089464","alan":"rol2","eski":"formasyon","yeni":null,"kural_no":"K5","gerekce":"Yöntem yalnız alıntıda olduğundan bu gönderiye rol2 verilmez."}
+{"id":"1989295191652458901","alan":"kural","eski":"cekirdek","yeni":"yok","kural_no":"K5","gerekce":"Metin yalnız 'Tavana doğru adım adım'; 'Elliot taraması' adı yalnız alıntılanan kendi gönderisinde."}
+{"id":"1989295191652458901","alan":"rol2","eski":"formasyon","yeni":null,"kural_no":"K5","gerekce":"Yöntem yalnız alıntıda olduğundan bu gönderiye rol2 verilmez."}
+{"id":"1999010659980525750","alan":"kural","eski":"cekirdek","yeni":"yok","kural_no":"K5","gerekce":"Metin yalnız '%7 #nibas'; gartley, RSI 50 üzeri, hacim koşulları yalnız alıntılanan kendi gönderisinde."}
+{"id":"1999010659980525750","alan":"rol2","eski":"formasyon","yeni":null,"kural_no":"K5","gerekce":"Yöntem yalnız alıntıda olduğundan bu gönderiye rol2 verilmez."}
+{"id":"1999377790865375697","alan":"kural","eski":"cekirdek","yeni":"yok","kural_no":"K5","gerekce":"Metin yalnız 'Tavanı gördük bunda da şükür #crfsa'; ema5>ema8>ema13 koşulu yalnız alıntılanan kendi gönderisinde."}
+{"id":"1999377790865375697","alan":"rol2","eski":"teyit","yeni":null,"kural_no":"K5","gerekce":"Yöntem yalnız alıntıda olduğundan bu gönderiye rol2 verilmez."}
+{"id":"2016419922486710735","alan":"kural","eski":"cekirdek","yeni":"yok","kural_no":"K5","gerekce":"Metin yalnız 'sinyali alan kazandı bugünde'; trend desteği ve talep bölgesi anlatımı yalnız alıntılanan kendi gönderisinde, görsel yok."}
+{"id":"2016419922486710735","alan":"rol2","eski":"bölge","yeni":null,"kural_no":"K5","gerekce":"Yöntem yalnız alıntıda olduğundan bu gönderiye rol2 verilmez."}
+{"id":"1954806833689858122","alan":"kural","eski":"cekirdek","yeni":"fikir","kural_no":"K12","gerekce":"Yöntem yalnız Tansu'ya özgü 'Momentum listemiz' adıyla geçiyor, ölçü ya da eşik yazılı değil."}
+{"id":"1955915925518983333","alan":"kural","eski":"cekirdek","yeni":"fikir","kural_no":"K12","gerekce":"Yöntem yalnız 'sektör momentum listesi' adıyla geçiyor, tanım ya da ölçü yazılı değil."}
+{"id":"2014724388008923151","alan":"kural","eski":"cekirdek","yeni":"fikir","kural_no":"K12","gerekce":"'Bir momentum listesi klasiği' yalnız liste adı; seçim ölçüsü yazılı değil, görsel yok."}
+{"id":"2015501247105642834","alan":"kural","eski":"cekirdek","yeni":"fikir","kural_no":"K12","gerekce":"Metinde yalnız 'Momentum Listemiz' adı var; görseldeki DEY_Marj tablosu sonuç ölçüsü, seçim ölçütü değil."}
+{"id":"2015739391893721354","alan":"kural","eski":"cekirdek","yeni":"fikir","kural_no":"K12","gerekce":"'15 Ocakta verilen momentum listesi' yalnız liste adı; görsel yalnız fiyat ve günlük % listesi."}
+{"id":"2031771168647090313","alan":"kural","eski":"cekirdek","yeni":"fikir","kural_no":"K12","gerekce":"Metinde yalnız 'momentum listesi' adı var; görseldeki tablo yalnız referans fiyat ve DEY marj sonucu, seçim ölçütü yok."}
+{"id":"2032469181145207220","alan":"kural","eski":"cekirdek","yeni":"fikir","kural_no":"K12","gerekce":"'Dünkü momentum listesi' yalnız liste adı; görsel yalnız izleme listesi fiyat ve günlük %."}
+{"id":"2033584293843239328","alan":"kural","eski":"cekirdek","yeni":"fikir","kural_no":"K12","gerekce":"Metinde yalnız 'momentum listesi' adı var; görseldeki tablo DEY marj sonucu, seçim ölçütü yok."}
+{"id":"2015504637198037346","alan":"kural","eski":"cekirdek","yeni":"fikir","kural_no":"K19","gerekce":"'Çeşitli formasyonları bulan kodumuz' formasyon adı vermiyor; görsel yalnız DEY marj sonuç tablosu."}
+{"id":"1968020268506345772","alan":"rol","eski":"sinyal-sonucu","yeni":"ürün-hedefi","kural_no":"K16","gerekce":"Aynı gönderide 'bir kod yazdım ... bu olasılığa göre de bir liste hazırlıyorum' duyurusu ve 'Bugünkü performansı o listenin' sonucu birlikte."}
+{"id":"1968020268506345772","alan":"rol2","eski":"seçim-momentum","yeni":"sinyal-sonucu","kural_no":"K16","gerekce":"Sonuç sözü + kod/liste duyurusu K16'ya göre rol2 sinyal-sonucu alır."}
+{"id":"1959563037062398253","alan":"rol","eski":"sinyal-sonucu","yeni":"ürün-hedefi","kural_no":"K16","gerekce":"Aynı gönderide '5 işlem gününde %21' sonucu ve 'Taramasını paylaşacağız grupta' tarama duyurusu birlikte."}
+{"id":"1959563037062398253","alan":"rol2","eski":"bölge","yeni":"sinyal-sonucu","kural_no":"K16","gerekce":"Sonuç sözü + tarama duyurusu K16'ya göre rol2 sinyal-sonucu alır."}
