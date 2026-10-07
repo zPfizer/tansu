@@ -15,6 +15,27 @@ Terimler `GLOSSARY.md`'dedir.
 **05.10 ön denemesi (ilk kod ve `rapor/kanit-20261005.md`) bu belgeden önce yazıldı. Kanıt değildir;
 rakamları hiçbir kararda kullanılmaz.** (C7)
 
+**Bölüm → kod** (`tansu/` içindeki `TASARIM <bölüm>` atıflarından, 07.10; test dosyası `tests/test_<modül>.py`).
+Bir bölümün kodunu bulmak için: `grep -n "TASARIM 5.7" tansu/*.py`.
+
+| Bölüm | Modüller |
+|---|---|
+| 4 Modüller | `kaynak`, `veri`, `kayit` |
+| 5.1 Veri | `veri`, `aileler`, `motor` |
+| 5.2 Evren | `evren`, `veri`, `simulator`, `ciftbolme`, `gunluk` |
+| 5.3 İşlem kuralları | `motor` |
+| 5.4 Masraf | `simulator` |
+| 5.5 Çıkış | `motor`, `gostergeler` |
+| 5.6 Portföy ve bölmeler | `simulator`, `ciftbolme`, `motor`, `rapor`, `veri` |
+| 5.7 Karşılaştırma | `istatistik`, `simulator`, `kayit`, `motor` |
+| 5.8 Dönemler | `gunluk` |
+| 5.9 Şans payı | `istatistik` |
+| 5.10 Parametre sağlamlığı | `saglamlik`, `istatistik`, `kayit` |
+| 5.11 Deneme günlüğü | `kayit` |
+| 5.12 Kabul ölçütü | `denetim`, `istatistik`, `kayit`, `rapor`, `__main__` |
+| 5.13 Veri kapıları | `veri`, `kaynak`, `gunluk`, `rapor`, `simulator` |
+| 6 Günlük işleyiş | `gunluk`, `rapor`, `kayit`, `gostergeler` |
+
 ---
 
 ## 1. Amaç
