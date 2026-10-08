@@ -521,6 +521,27 @@ Sonuç: 1 soru kapandı (2). 2 soru cevap beklenmez (3, 6). 8'in tam kuralını 
 kalan sorular: 1, 4 (ICBCT toleransı ve en az gün), 5, 7, 8 ("şartlar"), 9 ("80–100 haftalık tarama eski haftalık araçla
 aynı mı; bant hangi fiyatlardan, hangi eşikle; çıkış şartı ne?"), 10.
 
+08.10 ikinci tur (Levent: "cevaplar referanslarda vardır"). Yeni kaynaklar: Drive klasörü, video dökümleri (12),
+görseller (Codex 87, Claude ~60 açtı), aynı aracın başka çıktıları, beyin Veri Havuzu (259). Codex Astra + iki Claude
+ajanı ayrı bağlamda; iki sorgulama turu; hükümler uzlaşmadır. Bu bölüm yukarıdaki 08.10 hükümlerinin yerine geçer.
+Kaynak düzeltmesi: `baglanti/1779612373331927391-*` (20 dosya) @algotrader06'nın Drive klasörüdür ("# YAZAR:
+Algotrader06"); Tansu yalnız "Deneyeceğim … Elinize sağlık" der. Tansu'nun kuralı sayılmaz. Videolarda ilgili bilgi yok.
+"Tasarım varsayılanı": Tansu cevap verene kadar kullanılan değer; Tansu'nun en yakın kendi kuralıdır, YORUM etiketlidir.
+
+| # | Hüküm | Kaynaklı cevap | Tasarım varsayılanı (YORUM) |
+|---|---|---|---|
+| 1 R049 | KISMİ | Mavi seri bir temel/rölatif değerleme oranıdır: "Üste olanlar piyasaya göre ucuz şirketlerdir ... Bir nevi rölatif değerleme" (2087585144387379297); "Temel ve momentum staratejisi beraber çalışacak". Ad gizli ("xxxx"); üst gönderi 404. | Ters çarpan (ör. kâr/piyasa değeri) ile fiyat ters fazı; ad Tansu'dan. |
+| 4 R125 | KISMİ | "Rasyoyu siz belirleyeceksiniz" (2045420999743606827); aynı aracın açık çıktısı KRDMD "Tolerans %1.2 \| Min 3 gün". ICBCT'de alan kapatılmış; "AKTİF 3g" görünen süredir. Ayrı gönderide "Ben 5-8-13 kullandım" (2002087132089770127). | %1,2 ve 3 gün (ICBCT yayılımı %1,05 bununla uyumlu). |
+| 5 R136 | KISMİ | "subplot pek bilinen birşey değil"; günlük, 2 yıl geriye; aynı uyumsuzluk aracında "Swing=15 sol-only \| MinGap=15" (2046693110990655558); "10 ile 30 bar arası mesafeler en sağlıklı" (2046663429478330488). Ad ve formül gizli. | Uyumsuzluk tespiti Swing=15, MinGap=15, 10–30 bar; osilatör yerine RSI (YORUM, ad Tansu'dan). |
+| 7 R234 | KISMİ | Tansu'nun ana sistemi momentum + ML: "Sistemin temeli ... Momentum bazlı tepe tespiti, Regresyon analizi ... Lojistik regresyon ile trend devamı olasılığını tahmin etme" (1923281964422894010); hedef "önümüzdeki N gün boyunca devam edecek mi"; Şubat 2025 kodunda "karar sınırını 0.5" (1893042422088642888). R234'ün "temel modelim"inin bu model olduğu yazılı değil; Ekim 2025 "RSI, MACD ... dayanmıyor" (1978048657170518510) Mayıs girdilerinin aynen taşınmasına engel. N yok. | Hedef: N günlük trend devamı (ikili); sınır 0,5; N tasarımda parametre. |
+| 8 R263 | KISMİ | BOM Tansu'nun kendi sinyali ("P-BOM sinyalini ararım ben (benim yazdığım sinyal)", 2094052769493582241): X bar ötelenerek doğrulanan swing dip pivotu (2093465820932235288). CRDFA: "önce C'nin korunmasını, sonra küçük 1-2 yapısının oluşmasını ve o küçük 1 tepesinin kırılmasını". Şartları paylaşmıyor ("herseyi de kamuoyu ile paylaşamıyorum"). "P-BOM 0/5" sayacın anlamı yazılı değil. | BOM = sağında X bar doğrulanmış swing dip; teyit: C korunur + küçük 1 tepesi kırılır; X tasarımda parametre. |
+| 9 R246 | KISMİ | R246 iki cümledir ("80-100 haftalık yatay giden bir hisse dibinde oturup bekleyeceksin"). Tansu'nun kanal kuralı: "alt bandına yaklaşıldığında hisse almak, üst banda yaklaşıldığında ise satmaktır"; stop ve hacim teyidi; hacimli kırılımda kırılım yönü (1942087033247166573); alt çizgi "birkaç ayrı swing low tarafından doğrulanmış" (2096605373905936804); "65 hafta yatay" örneği U1–U4/L1–L4. Aracın "N hafta" etiketi günlük veride de çıkar (YKSLN, AGYO): "hafta" bar sayısı olabilir. 6 Eylül "DENGE" çıktıları simetrik üçgendir, yatay değildir. Eşik yazılı değil. | Haftalık barda swing temaslı yatay kanal; alt bant temasında al, üst bantta sat; stop bant altı; hacimli aşağı kırılımda çık. |
+| 10 R249 | YOK | Yalnız "Drive 3 oluştu diye doğrudan ters yönde işlem açmak doğru değildir" ve "1,618 extension seviyesini aşabilir ve formasyon başarısız olabilir". Başka formasyonlardaki TP/stop (Kelebek, Gartley) Three Drives'a bağlanmamış. | Giriş Drive 3 sonrası tepki teyidiyle; geçersizlik 1,618 üstü; hedef YORUM (C). |
+
+Değerleme ağırlığı da bu turda çözüldü: güncel kural %60 çarpan / %40 DCF-İNA (rapor.md bulgu 1).
+Tansu'ya kalanlar (tasarımı durdurmaz): 1 seri adı; 4 ICBCT ayarı; 5 osilatör adı; 7 R234 modeli ve N; 8 X ve "şartlar";
+9 "hafta" mı bar mı, eşik; 10 hedef/stop.
+
 ## H5 için en önemli 10 yorum kararı
 
 1. Fincan-kulp tespiti (R114): dip, sol ağız ve sağ ağız nasıl seçilir; kulp en fazla kaç % geri çekilir. Tansu'nun GUBRF örneğine uyan: sol ağız = dipten önceki en yüksek pivot (300,75); kulp tabanı görselde %61,8 ile %78,6 arasında.

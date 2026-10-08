@@ -51,7 +51,15 @@ Tema belgelerindeki öneri sayısı: 204 (tema-1: 46, tema-2: 27, tema-3: 35, te
 
 ## En önemli 10 bulgu
 
-1. **Değerleme ağırlığı ters.** 2023-08–2024-04 tabloları ve TTRAK metni "çarpan %40, İNA %60"
+1. **Değerleme ağırlığı zamanla değişti; defter güncel kuralı yazar (08.10 çözümü).** Kaynak tarihine göre:
+   2023-09 (1708030356564160854) ve 2024-04 (1780322528658886674) çarpan %40 / İNA %60; 2025-04
+   (1913527179364765803: "Çarpan ve Kâr Modeli Ortalaması (Ağırlık: %60) •DCF Değeri (Ağırlık: %40)"), 2026-03
+   (2038015111047024913), 2026-04 (2039748457804550392), 2026-08 (2084757098529693800, 2085423779686109661) çarpan %60 /
+   DCF-İNA %40. 2024-10 (1848034791116931310) "%6 / %40" yazım hatalı, kanıt sayılmaz. Gerekçe Tansu'nun: "Dcf çok
+   subjektif, o nedenle payını düşük tutma taraftarıyım" (05.08.2026). Defter (R068/R151/R158) değişmez; tasarım %60/%40
+   kalır. %40/60 eski sürümdür. Geçiş 2024-04 ile 2025-04 arasıdır. Codex Sol ve Claude ayrı ayrı doğruladı. Eski
+   bulgu metni aşağıda kayıt için kalır.
+   Eski metin: **Değerleme ağırlığı ters.** 2023-08–2024-04 tabloları ve TTRAK metni "çarpan %40, İNA %60"
    (1708030356564160854: "Çarpanlar %40, İNA %60 ağırlıklandırılarak"). Hesap tutar: TTRAK
    0,4×785,30 + 0,6×2.116,93 = 1.584,28; SAYAS 0,4×159,39 + 0,6×133,71 = 143,98 (ters ağırlık 1.317,95 ve
    149,12 verir, tutmaz). Defter R068/R151/R158 "çarpan %60, İNA %40"; R158 gerekçe yazar ("piyasa ne der sorusu …
