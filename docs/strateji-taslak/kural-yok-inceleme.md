@@ -485,6 +485,42 @@ yok; BOM yalnız R263'te geçer, tanımsız; R246 ve R249'da çıkış/hedef/sto
 - 1, 2, 3, 4, 7, 10: X'te yeni bilgi bulunamadı (arama: xxxx, pre signal, sıkışma, lojistik, temel model, three drives,
   conversation_id). Not: arama dizini konuşma yanıtlarının yalnız bir kısmını döndürür; bulunamadı "yok" demek değildir.
 
+08.10 arşiv taraması (tam X arşivi `x-arsiv/tweets.jsonl`, `ust.jsonl`, `birlesik-v5.jsonl`, görseller; beyin
+`Tansu X Veri Havuzu` Ham bölümleri). İki bağımsız araştırmacı (Codex Astra, Claude), sonra karşılıklı sorgulama; son
+hükümler ikisinin uzlaştığı hükümlerdir. Sınır: `conversation_id` yok, `reply_to` kullanıldı; 2.731 üst kaydın 577'si hatalı.
+- 1 (mavi çizgi): YOK. Görselde yalnız "Oran (%)"; adı gizli.
+- 2 (kırmızı çizgi): CEVAP VAR, fiyat. 2087583020207272335: "kırmızı ise fiyat" (defter R049'da zaten vardı).
+- 3 (PRE oku): koşul için CEVAP BEKLENMEZ ("parametrelerin detaylarını verip stratejimi anlatamam", 2045468835793244481).
+  Yeni: BULL/BEAR/CONFLICT sınıfları; conflict = "EMA sıkışması bull sinyal aldınız ama momentum squeeze neg ve negatif
+  büyüyor" (2045457969215631398), bu durumda boğa yönünde işlem yok.
+- 4 (tolerans): KISMİ. Görsel açıldı: ICBCT EMA20/50/100/200 ve "AKTİF 3g" (defter R125 düzeltildi; eski okuma EMA30, 2g).
+  Kullanıcı %1–1,5 aldığını söyler; Tansu "Güzel olur. Ama conflict sinyalleri bulmak için başka bir filtre de" der
+  (2045489485996019907): bu, toleransın onayı değildir. YORUM: görseldeki dört EMA'nın yayılımı 14,44/14,29 = %1,05
+  (KRDMD %1,2 içinde). ICBCT toleransı kaynakta yok.
+- 5 (R136 osilatör): KISMİ, yeni kanıt yok. Görselde adlar kapatılmış (açıldı, doğrulandı).
+- 6 (YSA eğim eşiği): CEVAP BEKLENMEZ. Ek: "bunu tam açarsam zaten sistemi vemriş olurum" (1993444658085826808; üst
+  gönderi arşivde yok, R137'ye bağı YORUM).
+- 7 (temel model): YOK (önceki "cevap beklenmez" kaldırıldı: R234'e özgü "anlatmam" sözü yok). 1992348863273816453:
+  "temel modelim de bir makine öğrenmesi algoritmasına dayanıyor"; aynı gönderideki hacim+RSI lojistik örneği "hiç
+  çalışmadığım henüz yazdığım bir algoritma"dır, temel modelle aynı değil. Genel söz: "Tüm stratejilerimi anlatamam" (1986161558490390926).
+- 8 (BOM): KISMİ. Kullanıcı "O bom ne bomu acaba" sorar; Tansu "herseyi de kamuoyu ile paylaşamıyorum" (2093430803262812229),
+  backtestler bitince bakacağını söyler. CRDFA örneği: "önce C'nin korunmasını, sonra küçük 1-2 yapısının oluşmasını ve
+  o küçük 1 tepesinin kırılmasını beklerdim" (2094052769493582241); "P-BOM" adı. Görsellerde "P-BOM 0/5" ve "SATIŞ P-BOM C2?"
+  var; "0/5"in 5 koşullu sayaç olduğu kaynakta yazılı değil ("Yazılanlara bakmayın denemeler yapıyorum").
+- 9 (R246 yataylık): KISMİ. Tansu'nun kendi haftalık yatay tarama aracı var ("Şu anda haftalık tarama kodu bitti",
+  1942087033247166573); çıktıları "N hafta yatay (alt - üst)" ve "% değişim" = (üst/alt − 1)×100 (5/5 iki araştırmacı
+  da hesapladı; gözlenen %1,46–%38,41, kabul eşiği değil; fitiller bant dışına taşar, bant mutlak en düşük–en yüksek
+  değildir). Etiketler: "YUKARI KIRILIM", "Teyitli (önceki hafta breakout, son hafta teyit)". Günlük ayrı tanım: "en az
+  7 en fazla 30 gün boyunca %10'dan fazla hareket etmeyen" (1939569795696922684). Bunların R246'nın 80–100 haftalık
+  ölçüsüyle aynı araç olduğu, bant eşiği, dip tanımı ve çıkış yazılı değil. ADX/BBW önerisi (2004287128214356186)
+  genel öneridir, R246'ya taşınmaz. Aynı gün örnek: DNISI "65 hafta yatay", swing temasları U1–U4 / L1–L4.
+- 10 (Three Drives): YOK. R249 yalnız "1,618 extension seviyesini aşabilir ve formasyon başarısız olabilir" der.
+  YORUM: harmonik araç çıktılarında "TP3 (C)" ve "İlk Stop (X)" var; Three Drives'a uygulandığı yazılı değil.
+
+Sonuç: 1 soru kapandı (2). 2 soru cevap beklenmez (3, 6). 8'in tam kuralını Tansu şimdilik paylaşmıyor. Tansu'ya
+kalan sorular: 1, 4 (ICBCT toleransı ve en az gün), 5, 7, 8 ("şartlar"), 9 ("80–100 haftalık tarama eski haftalık araçla
+aynı mı; bant hangi fiyatlardan, hangi eşikle; çıkış şartı ne?"), 10.
+
 ## H5 için en önemli 10 yorum kararı
 
 1. Fincan-kulp tespiti (R114): dip, sol ağız ve sağ ağız nasıl seçilir; kulp en fazla kaç % geri çekilir. Tansu'nun GUBRF örneğine uyan: sol ağız = dipten önceki en yüksek pivot (300,75); kulp tabanı görselde %61,8 ile %78,6 arasında.

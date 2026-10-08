@@ -496,7 +496,7 @@ Kaynak: `ham-yapistirmalar.md`. Alıntılar birebir hedeflenir; denetimde düzel
 ### R125 · 2026-08-28 00:46 UTC
 - Yazar: T; G.
 - Fikirler:
-  - [formasyon] "Ema sıkışması parametrelerin detaylarını verip stratejimi anlatamam ama öz fikri zaten verdim." — EMA sıkışması — çekirdek belli. Görselden: ICBCT, EMA30/50/100/200, "Pre signal" ok, hacim, mavi kutu "AKTİF 2g"
+  - [formasyon] "Ema sıkışması parametrelerin detaylarını verip stratejimi anlatamam ama öz fikri zaten verdim." — EMA sıkışması — çekirdek belli. Görselden: ICBCT, EMA20/50/100/200, "Pre signal" ok, hacim, mavi kutu "AKTİF 3g" (08.10 düzeltme: görsel açıldı; eski okuma EMA30, 2g)
   - [teyit-tetik] "Pre signal ok ile işaretlenen mum matrix ekranında da soon gün gelen mumu görüyorsunuz." — sıkışma + pre-signal oku — çekirdek belli
 - Örnek ve sonuç: ICBCT; "Bir günde %5"; son kapanış 14.55 (görselden). G2 (matrix sonraki mum): gözle: sağda mavi/beyaz bant çizgileri, yeşil mum.
 - Tansu'nun vurgusu: "stratejimi anlatamam" — kendi stratejisi diyor; parametre vermiyor.
