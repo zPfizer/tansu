@@ -30,6 +30,22 @@ Tema belgelerindeki öneri sayısı: 204 (tema-1: 46, tema-2: 27, tema-3: 35, te
    birlikte sayar; ölçü farkı bu listeyi değiştirmez.
 4. Sınır: 76 çelişkinin 9'u yalnız "M" yazarlı defter kayıtlarına dayanır (LLM biçimli kartlar; ör. R182, R185,
    R199, R225). Bu 9'da Tansu'nun kendi X gönderisi daha birinci elden olabilir.
+   08.10 çözümü (Claude okuması + bağımsız okuyucu, iki okuma uyuştu; defter değişmedi, giriş Levent'in onayıyla):
+
+   | Gönderi | R | Hüküm | Güçlü kanıt |
+   |---|---|---|---|
+   | 1907899832108274069 | R185 | gerçek çelişki; "tahmin algoritmam" yalnız görsel betiminde | belirsiz |
+   | 1864545215593304274 | R185 | büyüklük tahminini reddeder, yön sınıflaması yapar; R185 ile kısmen çatışır | gönderi |
+   | 1893637273029050563 | R199 | FVG'yi "subjektif" bulur; R199 FVG'yi kesin kural yazar | gönderi |
+   | 1950934573468025012 | R199 | çelişki yalnız "tercihen A-B-C"; hedef ikisinde de 3. dalga | gönderi (zayıf) |
+   | 1771531828676919771 | R182 | gerçek çelişki: Monte Carlo tercihi ↔ "Spicy" | gönderi |
+   | 1888577333059084322 | R182 | gerçek çelişki; gönderi plan, sonuç yok | gönderi (orta) |
+   | 1983480217894060348 | R225 | kendi ölçümü: derinlik fiyatı açıklamaz; R225 kısmen likidite için | gönderi |
+   | 1983528060700778778 | R225 | aynı; 1. kademe r metinde 0,241, görselde ~0,10 | gönderi |
+   | 1941620987495080092 | R101, R099 | farklı çift, bağlam farkı; çıkış z'si ~1,95, R101 0,5 der | gönderi (çıkış eşiği) |
+
+   Sonuç: 9'un 8'inde Tansu'nun gönderisi M kartından güçlü. Açık: R182 ve R185'in özgün tarihi bilinmez; "görüş
+   değişti" olasılığı kalır. Üst gönderiler 1864544699152757174, 1771531247933624325, 1893635723439268180 arşivde yok.
 5. Sınır: defter başlık tarihi (2026-08/09) Levent'in kayıt tarihidir. Tansu'nun sözünün özgün tarihi bilinmez.
    "Hangisi sonra" sorusu çoğu çelişkide kesin değildir.
 
