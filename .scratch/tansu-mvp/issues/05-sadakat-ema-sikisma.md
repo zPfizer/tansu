@@ -47,3 +47,6 @@ Açık işler:
 - KURALLAR §4 "birebir" cümlesi gerçek ölçümle çelişiyor; belgeyi düzeltmek karar gerektirir (Levent).
 - `docs/sadakat.md`'yi komut baştan yazar. Bilet 06 (çift Z) kendi bölümünü `rapor_metni`'ne eklemeli.
 - `kayit/deneme.jsonl` satırı basit; `kayit` modülü (bilet 09) şemayı üstlenir. `kayit/` git'e girmedi.
+
+- 2026-10-09: Worktree `TANSU-wt/05` ve dal `bilet-05` kaldırıldı (dal master'daydı). Worktree'deki tek `kayit/deneme.jsonl` satırı ana kayda eklenmedi: `olay` alanı yok, `kayit` okuyucusu bozulur. Ham satır:
+  `{"tur": "sadakat", "tarih": "2026-10-05T11:56:47.894454+00:00", "anlik": "20261005-1452", "aile": "ema_sikismasi"}`
