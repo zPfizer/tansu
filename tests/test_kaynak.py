@@ -1,6 +1,9 @@
 """`kaynak` adaptörü: alan eşleme, şema denetimi, yeniden deneme. Sahte HTTP oturumuyla, ağsız."""
 
+import ast
 import datetime as dt
+import re
+from pathlib import Path
 
 import pandas as pd
 import pytest
@@ -299,3 +302,61 @@ def test_kap_sektor_listede_olmayan_kod_none_http_hatasi_ve_bos_sayfa_hatadir():
     ):  # 200 ama sektör alanı yok: engel sayfası olabilir, sektörsüz diye yazılmaz
         k.sektor("THYAO")
     assert len(oturum.adresler) == 3
+
+
+def test_tarih_sutunu_saat_dilimsiz_saf_tarihtir():
+    # TASARIM 4: kaynak tarih sütunu saat dilimsiz saf tarihtir.
+    k = kaynak.IsYatirim(oturum=SahteOturum([Yanit(200, {"value": [HAM]})]), bekleme=0)
+    f = k.fiyat("CCOLA", dt.date(2024, 8, 13), dt.date(2024, 8, 13))
+    assert f["tarih"].dt.tz is None
+    assert f["tarih"].tolist() == [pd.Timestamp("2024-08-13 00:00:00")]
+
+
+def test_is_yatirim_istekleri_arasinda_en_az_bir_saniye(monkeypatch):
+    # TASARIM 4: İş Yatırım istekleri arasında varsayılan bekleme 1 saniyedir.
+    saat = [0.0]
+    anlar = []
+
+    def bekle(sure):
+        saat[0] += sure
+
+    class Oturum(SahteOturum):
+        def get(self, *args, **kwargs):
+            anlar.append(saat[0])
+            return super().get(*args, **kwargs)
+
+        post = get
+
+    monkeypatch.setattr(kaynak.time, "sleep", bekle)
+    k = kaynak.IsYatirim(
+        oturum=Oturum([Yanit(200, {"value": [HAM]}), Yanit(200, {"d": OLAY})])
+    )
+    k.fiyat("CCOLA", dt.date(2024, 8, 13), dt.date(2024, 8, 13))
+    k.olaylar("CCOLA")
+    assert anlar == [0.0, 1.0]
+
+
+def test_hicbir_modul_yahoo_yfinance_tradingview_ithal_etmez_ve_cagirmaz():
+    # TASARIM 4, 5.1: Yahoo ve TradingView veri kaynağı olarak kullanılmaz.
+    yasak = re.compile(r"yahoo|yfinance|tradingview|tvdatafeed", re.IGNORECASE)
+    for yol in Path(kaynak.__file__).parent.rglob("*.py"):
+        agac = ast.parse(yol.read_text(encoding="utf-8"))
+        for dugum in ast.walk(agac):
+            if isinstance(dugum, ast.Import):
+                adlar = [ad.name for ad in dugum.names]
+            elif isinstance(dugum, ast.ImportFrom):
+                adlar = [dugum.module or "", *(ad.name for ad in dugum.names)]
+            elif isinstance(dugum, ast.Call):
+                adlar = [ast.unparse(dugum.func)]
+                if adlar[0].split(".")[-1] in ("__import__", "import_module"):
+                    adlar += [
+                        a.value
+                        for a in dugum.args
+                        if isinstance(a, ast.Constant) and isinstance(a.value, str)
+                    ]
+            elif isinstance(dugum, ast.Constant) and isinstance(dugum.value, str):
+                # Sabit URL'ler de taranır; kaynak yasağını anlatan yorum/metin sayılmaz.
+                adlar = re.findall(r"https?://[^\s/]+", dugum.value)
+            else:
+                continue
+            assert not any(yasak.search(ad) for ad in adlar), (yol.name, dugum.lineno)

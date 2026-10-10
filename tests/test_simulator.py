@@ -13,7 +13,7 @@ import re
 import pandas as pd
 import pytest
 
-from tansu import aileler, kayit, veri
+from tansu import aileler, kayit, simulator, veri
 from tests.test_veri import SahteBorsapy, SahteKaynak, satir
 
 P = aileler.Parametre(
@@ -288,3 +288,130 @@ def test_uc_masraf_duzeyi_kosulur_ve_yillik_tablo_yazilir(tmp_path):
     yil = sim(s)["yillik"]
     assert list(yil.index) == [2026]
     assert yil.loc[2026, "kural"] == pytest.approx(0.000358453, abs=1e-9)
+
+
+def bolme(islemler, hacimler=None):
+    """Simülatörün dış girdisi: dört gün sabit fiyat, faizsiz anlık görüntü."""
+    gunler = pd.bdate_range("2026-02-02", periods=4)
+    semboller = list(islemler["sembol"].unique())
+    fiyat = pd.DataFrame(
+        [
+            dict(mum(g, 100.0, hacim=(hacimler or {}).get(s, 1e9)), sembol=s)
+            for s in semboller
+            for g in gunler
+        ]
+    )
+    anlik = veri.Anlik(
+        "bolme",
+        fiyat,
+        pd.DataFrame(columns=["sembol", "tarih", "kod", "carpan"]),
+        pd.DataFrame({"tarih": [pd.Timestamp("2026-01-01")], "faiz": [0.0]}),
+    )
+    return simulator.calistir(
+        anlik,
+        islemler,
+        bas="2026-02-02",
+        masraflar=(0.003,),
+        evr={pd.Period("2026-02"): semboller},
+    )["masraf"][0.003]
+
+
+def test_ayni_gun_once_cikis_sonra_giris_sonra_degerleme():
+    # TASARIM 5.3, 5.6: on dolu yer çıkışlarla boşalır; yeni giriş kapanışta değerlenir.
+    t = pd.DataFrame(
+        {
+            "sembol": [f"A{i}" for i in range(10)] + ["Z"],
+            "sinyal_tarih": [pd.Timestamp("2026-02-02")] * 10
+            + [pd.Timestamp("2026-02-03")],
+            "giris_tarih": [pd.Timestamp("2026-02-03")] * 10
+            + [pd.Timestamp("2026-02-04")],
+            "cikis_tarih": [pd.Timestamp("2026-02-04")] * 10
+            + [pd.Timestamp("2026-02-05")],
+            "giris_fiyat": 100.0,
+            "cikis_fiyat": 100.0,
+            "adet": 1,
+            "planlanan_risk": 4.0,
+            "neden": "sma250",
+        }
+    )
+    s = bolme(t)
+    # İlk gün 9*1000 + 970 adet; özkaynak 997009. Çıkış nakdi 994018.
+    # Z: 997 adet, alış 99999,1, kapanış değeri 99700 -> özkaynak 993718,9.
+    assert s["reddedilen"] == 0
+    assert s["islemler"].iloc[-1][["sembol", "adet"]].tolist() == ["Z", 997]
+    assert s["ozkaynak"].loc["2026-02-04"] == pytest.approx(993718.9)
+
+
+@pytest.mark.parametrize(
+    "risk,hacim,onceki,beklenen,adet",
+    [
+        (10.0, 5000000.0, 0, "risk", 1000),
+        (4.0, 5000000.0, 0, "tavan", 1000),
+        (4.0, 4850448.654037888, 9, "likidite", 970),
+    ],
+)
+def test_baglayici_sinir_esitlikte_risk_tavan_likidite_nakit_sirasi(
+    risk, hacim, onceki, beklenen, adet
+):
+    # TASARIM 5.6: eşit sınırlar risk, tavan, likidite, nakit sırasıyla seçilir.
+    t = pd.DataFrame(
+        {
+            "sembol": [f"A{i}" for i in range(onceki)] + ["Z"],
+            "sinyal_tarih": pd.Timestamp("2026-02-02"),
+            "giris_tarih": pd.Timestamp("2026-02-03"),
+            "cikis_tarih": pd.Timestamp("2026-02-05"),
+            "giris_fiyat": 100.0,
+            "cikis_fiyat": 100.0,
+            "adet": 1,
+            "planlanan_risk": [4.0] * onceki + [risk],
+            "neden": "veri_sonu",
+        }
+    )
+    # Risk=tavan=likidite=1000; tavan=likidite=1000; dokuz alıştan sonra
+    # nakit 97300, likidite=nakit=970,0897308075776 adet (tam lot 970).
+    z = bolme(t, {"Z": hacim})["islemler"].iloc[-1]
+    assert (z.sembol, z.bagli, z.adet) == ("Z", beklenen, adet)
+
+
+def test_esit_likiditede_sembol_alfabetik_sirayla_girer(tmp_path):
+    # TASARIM 5.6: eşit likiditedeki on bir sinyalden alfabetik ilk on alınır.
+    seriler = {f"S{i:02d}": sinyalli() for i in range(11, 0, -1)}
+    seriler.update({"D1": duz(1e3), "D2": duz(1e3)})
+    _, s = kos(tmp_path, seriler)
+    assert sim(s)["islemler"]["sembol"].tolist() == [
+        "S01",
+        "S02",
+        "S03",
+        "S04",
+        "S05",
+        "S06",
+        "S07",
+        "S08",
+        "S09",
+        "S10",
+    ]
+    assert sim(s)["reddedilen"] == 1
+
+
+def test_satis_nakdi_ayni_gun_kullanilir_valor_yok():
+    # TASARIM 5.4, 5.6: satış nakdi aynı gün yeni alışın nakit sınırına girer.
+    t = pd.DataFrame(
+        {
+            "sembol": [f"A{i}" for i in range(9)] + ["Z"],
+            "sinyal_tarih": [pd.Timestamp("2026-02-02")] * 9
+            + [pd.Timestamp("2026-02-03")],
+            "giris_tarih": [pd.Timestamp("2026-02-03")] * 9
+            + [pd.Timestamp("2026-02-04")],
+            "cikis_tarih": [pd.Timestamp("2026-02-04")]
+            + [pd.Timestamp("2026-02-05")] * 9,
+            "giris_fiyat": 100.0,
+            "cikis_fiyat": 100.0,
+            "adet": 1,
+            "planlanan_risk": 4.0,
+            "neden": "sma250",
+        }
+    )
+    # Dokuz alış sonrası nakit 97300, özkaynak 997300. A0 satışı 99700 getirir.
+    # Z tavanı 997 adet; satış ertelenirse nakit yalnız 970 adede yeter.
+    z = bolme(t)["islemler"].iloc[-1]
+    assert (z.sembol, z.adet, z.bagli) == ("Z", 997, "tavan")
