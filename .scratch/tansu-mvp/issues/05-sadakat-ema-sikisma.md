@@ -45,6 +45,7 @@ gevşek bant (±0,05) kullanılmadı.
 
 Açık işler:
 - KURALLAR §4 "birebir" cümlesi gerçek ölçümle çelişiyor; belgeyi düzeltmek karar gerektirir (Levent).
+- 2026-10-10: KURALLAR §4 "birebir" kararı 05.10'da verildi (commit 5829a16: KRDMD sadakati İş serisinde gevşek bantla üretildi; "birebir" Yahoo ölçümüne ait). Açık iş kapandı.
 - `docs/sadakat.md`'yi komut baştan yazar. Bilet 06 (çift Z) kendi bölümünü `rapor_metni`'ne eklemeli.
 - `kayit/deneme.jsonl` satırı basit; `kayit` modülü (bilet 09) şemayı üstlenir. `kayit/` git'e girmedi.
 

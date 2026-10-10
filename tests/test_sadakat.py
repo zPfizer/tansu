@@ -61,3 +61,54 @@ def test_cift_z_aramasi_tum_gunlerde_ve_adaylarda():
     x = pd.Series([1.0] * 4, index=gunler)
     sonuc = sadakat.cift_ara(y, x, hedef=(1.0, 1.0), tolerans=0.0005, pencereler=range(3, 4))
     assert sonuc == [("log_oran", 3, 1, gunler[-1])]
+
+
+def test_ek_fiyat_ols_pencerenin_kendi_kalintilarini_kullanir():
+    # Elle: Y = 2X+1+[0,0,0,2]; h=2,6, a=0; s=[0,4;-0,2;-0,8;0,6], var_0=0,3; Z=0,6/√0,3.
+    x = pd.Series([1.0, 2.0, 3.0, 4.0])
+    y = pd.Series([3.0, 5.0, 7.0, 11.0])
+    z = sadakat._ek_z(y, x, "fiyat_ols", "kalinti", 4, 0)
+    assert z.iloc[:3].isna().all()
+    assert abs(z.iloc[-1] - 1.0954451150103321) < 1e-12
+    z = sadakat._ek_z(y, x, "fiyat_ols", "kalinti", 4, 1)
+    assert abs(z.iloc[-1] - 0.9486832980505138) < 1e-12
+
+
+def test_ek_sabit_std_butun_seride_tek_sapma_kullanir():
+    # Elle: d=[0,0,0,3,0,6], w=3; e=[0,2,-1,3], ort=1; std_0=√2,5; Z_3=2/√2,5.
+    y = pd.Series(np.exp([0.0, 0.0, 0.0, 3.0, 0.0, 6.0]))
+    x = pd.Series([1.0] * 6)
+    z = sadakat._ek_z(y, x, "sabit_std", "log_oran", 3, 0)
+    assert z.iloc[:2].isna().all()
+    assert abs(z.iloc[2]) < 1e-12
+    assert abs(z.iloc[3] - 1.2649110640673518) < 1e-12
+    np.testing.assert_allclose([2 / z.iloc[3], -1 / z.iloc[4], 3 / z.iloc[5]],
+                               [1.5811388300841898] * 3, rtol=0, atol=1e-12)
+    z = sadakat._ek_z(y, x, "sabit_std", "log_oran", 3, 1)
+    assert abs(z.iloc[3] - 1.0954451150103321) < 1e-12
+
+
+def test_ek_dun_pencere_bugunu_dislar():
+    # Elle: d=[0,1,2,4,3]; t=3 için önceki [0,1,2], ort=1, std_0=√(2/3); Z=3/√(2/3).
+    y = pd.Series(np.exp([0.0, 1.0, 2.0, 4.0, 3.0]))
+    x = pd.Series([1.0] * 5)
+    z = sadakat._ek_z(y, x, "dun_pencere", "log_oran", 3, 0)
+    assert z.iloc[:3].isna().all()
+    assert abs(z.iloc[3] - 3.6742346141747673) < 1e-12
+    z = sadakat._ek_z(y, x, "dun_pencere", "log_oran", 3, 1)
+    assert abs(z.iloc[3] - 3.0) < 1e-12
+    # Log OLS, önceki [0,1,2] → [1,3,6]: h=2,5, a=5/6, var_0=1/18; Z_3=(2/3)/√(1/18).
+    y = pd.Series(np.exp([1.0, 3.0, 6.0, 9.0, 10.0]))
+    x = pd.Series(np.exp([0.0, 1.0, 2.0, 3.0, 4.0]))
+    z = sadakat._ek_z(y, x, "dun_pencere", "kalinti", 3, 0)
+    assert z.iloc[:3].isna().all()
+    assert abs(z.iloc[3] - 2.8284271247461903) < 1e-12
+
+
+def test_ek_aday_ara_isaret_cevirerek_ara_gunde_cifti_bulur():
+    # Elle: d=[0,1,2,4,3,10], w=3, ddof=1; Z_3=3; Z_4=(3-7/3)/√(7/3)=2/√21; -Z hedefi tutar.
+    gunler = pd.bdate_range("2025-01-01", periods=6)
+    y = pd.Series(np.exp([0.0, 1.0, 2.0, 4.0, 3.0, 10.0]), index=gunler)
+    x = pd.Series([1.0] * 6, index=gunler)
+    sonuc = sadakat.ek_aday_ara(y, x, hedef=(-0.4364357804719848, -3.0), pencereler=range(3, 4))
+    assert sonuc == [("dun_pencere", "log_oran", 3, 1, -1, gunler[4])]

@@ -4,6 +4,7 @@ import datetime as dt
 import json
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
 from tansu import cift, gostergeler, veri
@@ -81,6 +82,49 @@ def _cift_serileri(anlik):
     return f[CIFT_Y], f[CIFT_X]
 
 
+def _ols_z(y, x, pencere, ddof, dun=False):
+    """Pencerenin kendi OLS kalıntılarından Z; dun=True ise uyum ve sapma t−1'de biter."""
+    ry, rx = y.rolling(pencere), x.rolling(pencere)
+    h = ry.cov(x) / rx.var()
+    ort_y, ort_x = ry.mean(), rx.mean()
+    varyans = ry.var(ddof=ddof) - h * ry.cov(x, ddof=ddof)
+    if dun:
+        h, ort_y, ort_x, varyans = h.shift(), ort_y.shift(), ort_x.shift(), varyans.shift()
+    # Sabit terimli OLS'de pencerenin kalıntı ortalaması sıfırdır.
+    kalinti = (y - ort_y) - h * (x - ort_x)
+    return kalinti / np.sqrt(varyans.where(varyans > 0))
+
+
+def _ek_z(y, x, aile, mod, pencere, ddof):
+    if aile == "fiyat_ols":
+        return _ols_z(y, x, pencere, ddof)
+    ly, lx = np.log(y), np.log(x)
+    s = ly - lx
+    if aile == "sabit_std":
+        e = s - s.rolling(pencere).mean()
+        return e / e.std(ddof=ddof)
+    if mod == "kalinti":
+        return _ols_z(ly, lx, pencere, ddof, dun=True)
+    ort = s.rolling(pencere).mean().shift()
+    sapma = s.rolling(pencere).std(ddof=ddof).shift()
+    return (s - ort) / sapma
+
+
+def ek_aday_ara(y, x, hedef=CIFT_Z, tolerans=CIFT_TOLERANS, pencereler=CIFT_PENCERELER) -> list:
+    """Bütün günlerde ek adayları arar: [(aile, mod, pencere, ddof, isaret, tarih)]."""
+    sonuc = []
+    for aile, mod in [("fiyat_ols", "kalinti"), ("sabit_std", "log_oran")] + [
+            ("dun_pencere", m) for m in cift.MODLAR]:
+        for pencere in pencereler:
+            for ddof in CIFT_DDOF:
+                z = _ek_z(y, x, aile, mod, pencere, ddof)
+                for isaret in (1, -1):
+                    tuttu = ((isaret * z - hedef[0]).abs() <= tolerans) & (
+                        (isaret * z.shift() - hedef[1]).abs() <= tolerans)
+                    sonuc += [(aile, mod, pencere, ddof, isaret, g) for g in z.index[tuttu]]
+    return sonuc
+
+
 def _cift_bolumu(anlik) -> list:
     y, x = _cift_serileri(anlik)
     giris = [
@@ -108,6 +152,43 @@ def _cift_bolumu(anlik) -> list:
                     "eşleşti: tek aday kalmadığı için **üretmedi**. Kural YORUM kalır: log oran, 60 gün.", ""]
 
 
+def _ek_aday_bolumu(anlik) -> list:
+    y, x = _cift_serileri(anlik)
+    sayi = len(CIFT_PENCERELER) * len(CIFT_DDOF) * 2
+    giris = [
+        "## Çift Z, ek aday turu (10.10.2026)", "",
+        "- `fiyat_ols` (Tansu X403: \"spread = A - hedge_ratio * B\"): fiyat düzeyinde "
+        "s_t = Y_t − a − h·X_t; a ve h, t'de biten w günlük OLS'den. "
+        "Z_t = (s_t − ortalama(s)) / std(s); istatistikler aynı pencerenin kendi uyumunun kalıntılarından.",
+        "- `sabit_std` (Tansu X404: log farkı, hareketli ortalama, \"Sabit standart sapma\"): "
+        "d = log Y − log X; e = d − w günlük hareketli ortalama(d); Z_t = e_t / std(e). "
+        "Standart sapma bütün mevcut seri için tek sabit sayıdır.",
+        "- `dun_pencere` (bugünü dışlayan pencere, bilet 06 notu): `cift.z_skor` ile aynı spread "
+        "(log oran veya log fiyatların OLS kalıntısı); ortalama ve standart sapma t−1'de biten w günden. "
+        "Kalıntı modunda OLS uyumu da bu pencereden; Z_t = (s_t − ortalama) / std.", "",
+        f"Ham kapanış, Y = {CIFT_Y}, X = {CIFT_X}; bütün işlem günleri aranır. "
+        f"Hedef: Z_t {CIFT_Z[0]}, Z_{{t−1}} {CIFT_Z[1]}. "
+        "Pencere 10–400; ddof {0; 1}; her adayda Z ve −Z. Getiri hesaplanmaz.",
+        f"Aday sayıları (iki işaret dahil): fiyat_ols {sayi}, sabit_std {sayi}, "
+        f"dun_pencere {len(cift.MODLAR) * sayi}; toplam {(2 + len(cift.MODLAR)) * sayi}. "
+        f"Tolerans ±{CIFT_TOLERANS}; gevşek bant ±{CIFT_GEVSEK} yalnız tek aday kalırsa.", ""]
+    sik = ek_aday_ara(y, x)
+    if sik:
+        return giris + ["Sıkı toleransta eşleşen (aday, gün):", ""] + [
+            f"- {a}, {m}, pencere {p}, ddof {d}, işaret {i:+d}: {g.date()}"
+            for a, m, p, d, i, g in sik] + [""]
+    gevsek = ek_aday_ara(y, x, tolerans=CIFT_GEVSEK)
+    adaylar = sorted({g[:5] for g in gevsek})
+    if len(adaylar) == 1:
+        a, m, p, d, i = adaylar[0]
+        gunler = ", ".join(str(g[5].date()) for g in gevsek)
+        return giris + [f"Sıkı toleransta eşleşme yok. Gevşek bantta tek aday kaldı: {a}, {m}, "
+                        f"pencere {p}, ddof {d}, işaret {i:+d}; günler: {gunler}.", ""]
+    return giris + [f"Sıkı toleransta eşleşme yok. Gevşek bantta {len(adaylar)} aday ({len(gevsek)} gün) "
+                    "eşleşti: tek aday kalmadığı için **üretmedi**.",
+                    "Ek tur da üretmedi. Çift Z kalıcı olarak YORUM kalır: log oran, 60 gün.", ""]
+
+
 def rapor_metni(anlik) -> str:
     satirlar = [
         "# Sadakat kontrolü", "",
@@ -121,6 +202,7 @@ def rapor_metni(anlik) -> str:
         satirlar += _bolum(anlik, gecmis)
     if {CIFT_Y, CIFT_X} <= set(anlik.fiyat["sembol"]):
         satirlar += _cift_bolumu(anlik)
+        satirlar += _ek_aday_bolumu(anlik)
     return "\n".join(satirlar)
 
 
