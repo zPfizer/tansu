@@ -12,11 +12,11 @@ Her bilginin tek sahip dosyası vardır; öteki dosyalar yalnız atıf verir. Ok
 | `docs/TASARIM.md` | sayı, formül, davranış ve kararlar; §7 uygulama sırası |
 | `docs/KURALLAR.md` | aile kuralları ve YORUM'lar (§3–4) |
 | beyin: `kisisel/300-Projects/Tansu X Veri Havuzu/` (depo dışı) | Tansu'nun ham paylaşımları: not ve görsel. Ham kaynaktır, değiştirilmez |
-| `docs/kurallar/A-yapi-bolge.md` … `E-risk-cikis-surec.md` | havuzun okuması: Tansu'nun ne dediği. Havuzdaki her not burada ya atıflıdır ya "kural içermez" listesindedir |
+| `docs/kurallar/A-yapi-bolge.md` … `E-risk-cikis-surec.md` (yerel, git dışı) | havuzun okuması: Tansu'nun ne dediği. Kural: havuzdaki her not burada atıflı ya da "kural içermez" listesinde olmalı |
 | `docs/sadakat.md` | sadakat ölçümü |
 | `AGENTS.md` | çalışma kuralı ve iş akışı |
 | `CODING_STANDARDS.md`, `DEFINITION_OF_DONE.md` | kod biçimi ve bitiş ölçütü (`## Tansu`) |
-| `docs/sorgu/sonuc-3-4.md`, `docs/sorgu/izleme/karar.md` | kararların gerekçesi (gerekirse okunur) |
+| `docs/sorgu/sonuc-3-4.md`, `docs/sorgu/izleme/karar.md` (yerel, git dışı) | kararların gerekçesi (gerekirse okunur) |
 
 Bu dosyaların hepsi drift denetimindedir: biri ötekiyle çelişirse, eski bilgi taşırsa ya da başka dosyanın
 bilgisini kopyalarsa düzeltilir.
@@ -61,8 +61,9 @@ Tansu'nun ekidir. `tests/test_standartlar.py` genel kısmın evdeki asılla ayn�
 okur. Ev dosyası olmayan CI'da test atlanır; denetim yerel test kapısındadır.
 
 ## İş akışı (Matt Pocock ana akışı)
-**Geliştirme durdu:** belgeler drift, eski bilgi ve çelişkiden arınana kadar yeni geliştirme yapılmaz; yalnız
-`.scratch/belge-hizasi/` biletleri yürür (Levent 10.10). Bilet 08 bitince bu satır kalkar.
+**Geliştirme durdu:** belgeler drift, eski bilgi ve çelişkiden arınana kadar Tansu'nun davranışını değiştiren yeni
+geliştirme yapılmaz; `.scratch/belge-hizasi/` biletleri ve çalışma düzeni işleri (`.scratch/yazilim-fabrikasi/`) yürür
+(Levent 10.10). Bilet 08 bitince bu satır kalkar.
 
 Her iş bu sırayla yürür. Basamağı atlamadan önce o skill'in `SKILL.md`'sini oku. Bu skill'lerin çoğu kullanıcı
 komutudur; ajan çağıramıyorsa `SKILL.md`'yi (`~/.claude/plugins/cache/mattpocock/`) okuyup adımlarını uygular.
@@ -80,8 +81,13 @@ komutudur; ajan çağıramıyorsa `SKILL.md`'yi (`~/.claude/plugins/cache/mattpo
 5. **Kapanış:** `/retro` ortamı düzeltir: mekanik hata bir teste ya da CI adımına, muhakeme hatası kodlama
    standardına gider. Biten işin spec ve biletleri `.scratch/arsiv/`'e taşınır; kalıcı olan yalnız GLOSSARY ve TASARIM'dır.
 
+**Hata kaydı:** ajanın yaptığı her anlamlı hata (Levent'in düzeltmesi, inceleme ya da CI bulgusu) o anda, iş bitmeden
+kaydedilir: mekanik hata bir teste ya da CI adımına, muhakeme hatası `CODING_STANDARDS.md` `## Tansu`'ya gider.
+`/retro` kapanışta kaçanı tamamlar; `/code-review` bu kuralları sonraki işte uygular.
+
 Yan girişler: hata → `/diagnosing-bugs`, dışarıdan gelen istek → `/triage`, bakım → `/improve-codebase-architecture`.
-Hepsi 3. adımdan akışa katılır.
+Hepsi 3. adımdan akışa katılır. Anlaşılmayan cevapta Levent `/wait-what` der: ajan cevabı GLOSSARY terimleriyle, sade
+dille yeniden anlatır.
 
 ## Agent skills
 

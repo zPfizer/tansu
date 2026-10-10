@@ -2,7 +2,7 @@
 
 **What to build:** Belgeler yeniden ayrılırsa ya da mekanik bir çalışma kuralı bozulursa CI kırmızı olur; düzen kendiliğinden korunur.
 
-**Blocked by:** 01, 02, 03, 04, 05
+**Blocked by:** 01, 02, 03, 04, 05, 06, 07
 
 **Status:** ready-for-agent
 

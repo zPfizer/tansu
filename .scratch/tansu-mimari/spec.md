@@ -1,6 +1,6 @@
 # Tansu mimarisi: önce sistem, en son ölçüm
 
-Status: blocked (belge hizası bitene kadar; Levent 10.10: "tüm proje drift ve stale bilgilerden ve çelişkilerden arınana kadar yeni bir geliştirme yapmayacağız")
+Status: blocked (AGENTS.md "Geliştirme durdu")
 
 Levent 10.10: "İlk önce sistemi kuracağız. Ölçümleri en sona bırakacağız." Yavaş ve sırayla ilerlenir.
 "Ölçüm" burada getiri sınamasıdır (geçmiş veride kural işe yarar mı). Bir parçanın çalıştığını gerçek veriyle

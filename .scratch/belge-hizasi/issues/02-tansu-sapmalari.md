@@ -15,6 +15,9 @@ denetlenir: Tansu'nun fikri varsa kural ona çevrilir; uygulanamıyorsa nedeni K
       EMA sıkışmasında girişin sıkışma bittikten sonra olması (Tansu'nun ön sinyali sıkışma sürerken çıkar, parametrelerini vermedi);
       işlem fiyatı AOF (Tansu ertesi gün açılış kullanır; İş Yatırım verisinde açılış yok); gün sonu stopunda ertesi gün çıkış;
       kart durumlarının pozisyona bağlanması; likidite ölçüsü; sabit parametre ile Tansu'nun walk-forward ayarı; şok filtresi.
+      İkinci tur (aynı denetim): mum (Tansu'da açılışlı; veride açılış yok), ATR'de Wilder yumuşatması, adedin aşağı yuvarlanması,
+      β için log fiyata OLS, stop ve gün sonu stopunun adları (NotebookLM infografiği), harmonik D hedefi, ilk girişe kadar nakit. Üçüncü tur: "bozulma" Tansu'da formasyonun geçersizleşmesidir; projede SMA250 altı kapanışın (kart durumu BOZULDU) adı olması uygun mu.
+      Denetim çıktısı: `$TEMP/codex-sozluk-tansu-cikti.md`, `codex-sozluk-tansu-cikti2.md` (10.10).
 - [ ] Kurala çevrilen her değişiklik TASARIM/KURALLAR'a karar etiketiyle yazıldı; kural kaydından sonra değiştiyse yeni deneme sayıldı.
       Kod değişikliği gerekiyorsa bilet 07 gibi ele alınır (önce davranışı gösteren test).
 - [ ] Levent'e yalnız Tansu'nun fikrinin okunuşu belirsiz kalan yerler soruldu.

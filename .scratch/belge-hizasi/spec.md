@@ -35,11 +35,10 @@ denetlenebilen her kural bir teste ya da CI adımına bağlanır, böylece belge
 
 - Sahiplik: AGENTS.md "Belgeler ve sahipleri" tablosu. Beyindeki Tansu havuzu ham kaynaktır ve değiştirilmez; kural
   dosyaları onun okumasıdır.
-- Tansu önce gelir (Levent 10.10): YORUM yalnız Tansu'nun o konuda fikri yoksa geçerlidir. Fikri varsa kural ona çevrilir;
-  uygulanamıyorsa nedeni yazılır. Bu denetim TASARIM ve kural dosyası düzeltmelerinden önce yapılır, çünkü kuralları değiştirebilir.
+- Tansu önce gelir: KURALLAR "Okuma kuralları" (YORUM). Bu denetim TASARIM ve kural dosyası düzeltmelerinden önce yapılır, çünkü kuralları değiştirebilir.
 - Gözden geçirme: belgeleri Claude ve bağımsız denetçi (Codex) kaynağa göre denetler; Levent'e yalnız kaynağın cevap
   vermediği karar sorulur.
-- Geliştirme durdu: bu iş bitene kadar yeni geliştirme yok; mimari işi bekler.
+- Geliştirme durdu: AGENTS.md "Geliştirme durdu".
 - Geçerli tasarım TASARIM.md (taslak 7). Taslak 8 ve strateji modülleri taslağı onay bekleyen öneridir; onlardaki
   farklar düzeltilmez, yalnız yanlış kaynak aktarımı düzeltilir.
 - Karar kaydında cevabı olan çelişki o karara göre düzeltilir ve TASARIM'da karar etiketiyle (İ:, B-, C-, bilet) gösterilir.
