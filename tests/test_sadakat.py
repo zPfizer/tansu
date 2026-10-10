@@ -50,8 +50,8 @@ def test_komut_iki_kosuda_ayni_rakamlari_verir_ve_deneme_gunlugune_yazar(tmp_pat
 def test_sadakat_gunlugunun_her_satirinda_olay_var(tmp_path):
     gunluk = tmp_path / "deneme.jsonl"
     sadakat.calistir(hazirla(tmp_path), tmp_path, tmp_path / "sadakat.md", gunluk)
-    for satir in gunluk.read_text(encoding="utf-8").splitlines():
-        assert "olay" in json.loads(satir)
+    for gunluk_satiri in gunluk.read_text(encoding="utf-8").splitlines():
+        assert "olay" in json.loads(gunluk_satiri)
 
 
 def test_komut_kontrol_edilen_her_aileyi_gunluge_yazar(tmp_path):

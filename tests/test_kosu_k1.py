@@ -8,10 +8,9 @@ import datetime as dt
 import json
 import re
 
-import numpy as np
 import pytest
 
-from tansu import aileler, kayit, istatistik, veri
+from tansu import aileler, kayit, veri
 from tests.test_k1 import trend
 from tests.test_simulator import ATR_N, BAS, P, duz, sinyalli
 from tests.test_veri import SahteBorsapy, SahteKaynak
