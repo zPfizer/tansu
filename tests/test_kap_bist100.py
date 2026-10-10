@@ -1,4 +1,5 @@
 """Dondurulmus KAP BIST100 dosyasinin sozlesmesi (bilet 16). Ag yok; yalniz depodaki CSV okunur."""
+
 import csv
 from pathlib import Path
 

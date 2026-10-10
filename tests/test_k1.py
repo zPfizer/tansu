@@ -21,24 +21,38 @@ M3 = 0.003
 def anlik_hazirla(tmp_path, seriler, faiz=0.0):
     k = SahteKaynak(seriler, {s: [] for s in seriler})
     b = SahteBorsapy([("2025-01-01", faiz)], {s: "X" for s in seriler})
-    kimlik = veri.indir(list(seriler), tmp_path, k, simdi=dt.datetime(2026, 10, 5, 19, 30), borsapy=b)
+    kimlik = veri.indir(
+        list(seriler), tmp_path, k, simdi=dt.datetime(2026, 10, 5, 19, 30), borsapy=b
+    )
     return veri.oku(kimlik, tmp_path)
 
 
 def trend():
     """Her gün +3 kapanış (100, 103, ... 121), yüksek = kapanış + 0,5: sıkışma dönemi yok; gün i >= 3 önceki 3 günün
     yükseğini aşar (sıkışmasız kırılım, L=3)."""
-    return [mum(g, 100.0 + 3 * i, 100.5 + 3 * i, 99.5 + 3 * i, 1e9)
-            for i, g in enumerate(pd.bdate_range("2026-01-26", periods=8))]
+    return [
+        mum(g, 100.0 + 3 * i, 100.5 + 3 * i, 99.5 + 3 * i, 1e9)
+        for i, g in enumerate(pd.bdate_range("2026-01-26", periods=8))
+    ]
 
 
 def ema_kur(tmp_path, p=P):
     """İki sinyalli (S1, S2: sinyal gün 5, pencere gün 5-7), iki trend (T1, T2) ve bir düşük hacimli hisse (D1, evrenden elenir)."""
-    seriler = {"S1": sinyalli(), "S2": sinyalli(), "T1": trend(), "T2": trend(), "D1": duz(1e3)}
+    seriler = {
+        "S1": sinyalli(),
+        "S2": sinyalli(),
+        "T1": trend(),
+        "T2": trend(),
+        "D1": duz(1e3),
+    }
     anlik = anlik_hazirla(tmp_path, seriler)
     ilk = simulator.ilk_gun(anlik, BAS)
     evr = simulator.evrenler(anlik, ilk, anlik.gunler[-1])
-    return anlik, evr, istatistik.EmaK1(anlik, p, ATR_N, simulator.uyeler(anlik, evr, ilk), kirilim=3)
+    return (
+        anlik,
+        evr,
+        istatistik.EmaK1(anlik, p, ATR_N, simulator.uyeler(anlik, evr, ilk), kirilim=3),
+    )
 
 
 def test_ema_k1_gercek_sinyaller_motorla_ayni_tabloyu_verir(tmp_path):
@@ -46,8 +60,11 @@ def test_ema_k1_gercek_sinyaller_motorla_ayni_tabloyu_verir(tmp_path):
     ilk = simulator.ilk_gun(anlik, BAS)
     beklenen, _ = motor.sinama(anlik, P, ATR_N, simulator.uyeler(anlik, evr, ilk))
     tablo, _ = k.tablo(k.gercek)
-    pd.testing.assert_frame_equal(tablo.reset_index(drop=True), beklenen.sort_values("sembol").reset_index(drop=True),
-                                  check_dtype=False)
+    pd.testing.assert_frame_equal(
+        tablo.reset_index(drop=True),
+        beklenen.sort_values("sembol").reset_index(drop=True),
+        check_dtype=False,
+    )
     assert k.gercek == {"S1": [5], "S2": [5]}
 
 
@@ -61,7 +78,9 @@ def test_ema_k1_b_ayni_hisse_pencere_icinde_baska_gun(tmp_path):
     # Piyasa durumu bilinmiyor (XU100 SMA50 yok) her gün aynı. Her hissede gün 5 dışında ön şartlı gün: 6 ve 7.
     _, _, k = ema_kur(tmp_path)
     secim = k.cek("b", np.random.default_rng(0))
-    assert sorted(secim) == ["S1", "S2"] and all(len(v) == 1 and v[0] in (6, 7) for v in secim.values())
+    assert sorted(secim) == ["S1", "S2"] and all(
+        len(v) == 1 and v[0] in (6, 7) for v in secim.values()
+    )
 
 
 def test_ema_k1_ek_kol_sikismasiz_kirilim_havuzu(tmp_path):
@@ -75,14 +94,22 @@ def test_ema_k1_ayni_hissenin_ayni_gune_iki_sinyali_tek_sayilir(tmp_path, monkey
     # Bir hisse bir günde tek sinyaldir: gerçek sinyal listesi, gün başına sinyal sayısı ve (a) havuzu buna göre kurulur.
     asil = aileler.sinyal
     monkeypatch.setattr(aileler, "sinyal", lambda f, p: asil(f, p).append(asil(f, p)))
-    _, _, k = ema_kur(tmp_path)  # tekrarlı sinyalle (a) havuzu yetmiyor diye K1Hatasi atılmamalı
+    _, _, k = ema_kur(
+        tmp_path
+    )  # tekrarlı sinyalle (a) havuzu yetmiyor diye K1Hatasi atılmamalı
     assert k.gercek == {"S1": [5], "S2": [5]} and sum(k.sayi.values()) == 2
 
 
 def test_ema_k1_ek_kol_havuzu_yetmezse_havuz_kadar_ceker_ve_eksigi_sayar(tmp_path):
     # Gün 5'te iki gerçek sinyal (S1, S2); sıkışmasız kırılım havuzu yalnız T1 (D2 düz, kırılım yok; D1 likidite eleğinde).
     # Ek kol raporluk: koşu durmaz, T1 çekilir, 2 − 1 = 1 eksik sinyal sayılır. (a) havuzu gerçek hisseler: eksik yok.
-    seriler = {"S1": sinyalli(), "S2": sinyalli(), "T1": trend(), "D1": duz(1e3), "D2": duz(1e9)}
+    seriler = {
+        "S1": sinyalli(),
+        "S2": sinyalli(),
+        "T1": trend(),
+        "D1": duz(1e3),
+        "D2": duz(1e9),
+    }
     anlik = anlik_hazirla(tmp_path, seriler)
     ilk = simulator.ilk_gun(anlik, BAS)
     evr = simulator.evrenler(anlik, ilk, anlik.gunler[-1])
@@ -91,7 +118,9 @@ def test_ema_k1_ek_kol_havuzu_yetmezse_havuz_kadar_ceker_ve_eksigi_sayar(tmp_pat
     assert k.cek("ek", np.random.default_rng(0)) == {"T1": [5]}
     assert k.ek_eksik == 1
     b = simulator.k1_baglam(anlik, evr, BAS)
-    assert istatistik.ema_k1(anlik, b, P, ATR_N, uye, tekrar=3, kirilim=3)["ek_eksik"] == 1
+    assert (
+        istatistik.ema_k1(anlik, b, P, ATR_N, uye, tekrar=3, kirilim=3)["ek_eksik"] == 1
+    )
 
 
 def test_ema_k1_p_alt_siniri_ayni_tohum_ayni_sonuc_ve_a_turu_birdir(tmp_path):
@@ -102,7 +131,9 @@ def test_ema_k1_p_alt_siniri_ayni_tohum_ayni_sonuc_ve_a_turu_birdir(tmp_path):
     bir = istatistik.ema_k1(anlik, b, P, ATR_N, uye, tekrar=20, tohum=7, kirilim=3)
     iki = istatistik.ema_k1(anlik, b, P, ATR_N, uye, tekrar=20, tohum=7, kirilim=3)
     assert bir == iki
-    assert bir["p_a"] == 1.0  # havuz = gerçek hisseler: her tekrar gerçeğin aynısı, k = B
+    assert (
+        bir["p_a"] == 1.0
+    )  # havuz = gerçek hisseler: her tekrar gerçeğin aynısı, k = B
     assert 1 / 21 <= bir["p_b"] <= 1.0 and bir["p"] == max(bir["p_a"], bir["p_b"])
     assert bir["tekrar"] == 20 and bir["sinyal"] == 2 and bir["komsusuz"] == 0
 
@@ -110,6 +141,7 @@ def test_ema_k1_p_alt_siniri_ayni_tohum_ayni_sonuc_ve_a_turu_birdir(tmp_path):
 def test_ema_k1_uygun_gun_yetmezse_hata(tmp_path):
     # Isınma 8: hisse düzeyi uygun gün yalnız gün 7 (i + 1 >= 8); sinyal gün 7'de (pencere 5-7), başka uygun gün yok.
     import dataclasses
+
     with pytest.raises(istatistik.K1Hatasi, match="başka uygun gün"):
         ema_kur(tmp_path, dataclasses.replace(P, isinma=8))
 
@@ -120,14 +152,21 @@ def cift_kur(tmp_path):
     f.update(dummy(1))
     seriler = {s: seri(*x) if isinstance(x, tuple) else seri(x) for s, x in f.items()}
     k = SahteKaynak(seriler, {s: [] for s in seriler})
-    kimlik = veri.indir(list(seriler), tmp_path, k, simdi=dt.datetime(2026, 10, 5, 19, 30),
-                        borsapy=SektorBorsapy([("2014-01-01", 0.0)], sektor))
+    kimlik = veri.indir(
+        list(seriler),
+        tmp_path,
+        k,
+        simdi=dt.datetime(2026, 10, 5, 19, 30),
+        borsapy=SektorBorsapy([("2014-01-01", 0.0)], sektor),
+    )
     anlik = veri.oku(kimlik, tmp_path)
     evr = simulator.evrenler(anlik, simulator.ilk_gun(anlik), anlik.gunler[-1])
     return anlik, simulator.k1_baglam(anlik, evr), ciftbolme.hazirla(anlik, evr)
 
 
-def test_cift_k1_ayni_cift_ayni_sayida_sinyal_ilk_gun_gercege_esit_z_esigi_ustu_gunler(tmp_path):
+def test_cift_k1_ayni_cift_ayni_sayida_sinyal_ilk_gun_gercege_esit_z_esigi_ustu_gunler(
+    tmp_path,
+):
     _, b, h = cift_kur(tmp_path)
     k = istatistik.CiftK1(h, b)
     assert len(k.gercek) > 0
@@ -135,12 +174,18 @@ def test_cift_k1_ayni_cift_ayni_sayida_sinyal_ilk_gun_gercege_esit_z_esigi_ustu_
     for (y, x), g in k.gercek.groupby(["y", "x"]):
         rastgele = k.cek(np.random.default_rng(1))[(y, x)]
         konum = np.flatnonzero(rastgele)
-        ilk = h["gunler"].get_loc(g["giris_tarih"].min()) - 1  # ilk giriş günü gerçeğe eşit: sinyal bir gün önce
+        ilk = (
+            h["gunler"].get_loc(g["giris_tarih"].min()) - 1
+        )  # ilk giriş günü gerçeğe eşit: sinyal bir gün önce
         assert len(konum) == len(g) and konum[0] == ilk
         z = cift.z_skor(h["Kc"][y], h["Kc"][x], p.z_pencere).to_numpy()
         assert (np.abs(z[konum]) >= p.z_esik).all()
-        yon = 1 if g.sort_values("giris_tarih")["sembol"].iloc[0] == y else -1  # gerçek ilk hedef
-        assert list(rastgele[konum]) == [yon * (-1) ** i for i in range(len(konum))]  # sırayla öteki bacak
+        yon = (
+            1 if g.sort_values("giris_tarih")["sembol"].iloc[0] == y else -1
+        )  # gerçek ilk hedef
+        assert list(rastgele[konum]) == [
+            yon * (-1) ** i for i in range(len(konum))
+        ]  # sırayla öteki bacak
 
 
 def test_cift_k1_p_araligi_ve_ayni_tohum_ayni_sonuc(tmp_path):

@@ -20,10 +20,14 @@ def piyasa_durumu(xu100: pd.Series, n: int = 50) -> pd.Series:
     return xu100 > sma(xu100, n)
 
 
-def atr(yuksek: pd.Series, dusuk: pd.Series, kapanis: pd.Series, n: int = 14) -> pd.Series:
+def atr(
+    yuksek: pd.Series, dusuk: pd.Series, kapanis: pd.Series, n: int = 14
+) -> pd.Series:
     """Wilder ATR: ilk değer ilk n gerçek aralığın ortalaması, sonra (önceki*(n-1) + TR)/n (TASARIM 5.5)."""
     onceki = kapanis.shift(1)
-    tr = pd.concat([yuksek - dusuk, (yuksek - onceki).abs(), (dusuk - onceki).abs()], axis=1).max(axis=1)
+    tr = pd.concat(
+        [yuksek - dusuk, (yuksek - onceki).abs(), (dusuk - onceki).abs()], axis=1
+    ).max(axis=1)
     tohum = tr.copy()
     tohum.iloc[: n - 1] = float("nan")
     if len(tr) >= n:
@@ -37,16 +41,26 @@ def sikisma_orani(kapanis: pd.Series, periyotlar=SIKISMA_PERIYOTLAR) -> pd.Serie
     return (emalar.max(axis=1) - emalar.min(axis=1)) / emalar.iloc[:, -1]
 
 
-def sikisma_donemleri(oran: pd.Series, esik=SIKISMA_ESIK, min_gun=SIKISMA_MIN_GUN) -> list:
+def sikisma_donemleri(
+    oran: pd.Series, esik=SIKISMA_ESIK, min_gun=SIKISMA_MIN_GUN
+) -> list:
     """Oranın <= eşik olduğu art arda en az `min_gun` gün. Eşiği aşan ilk gün dönemi bitirir."""
     donemler, bas = [], None
-    for i, ici in enumerate([*(oran <= esik), False]):  # sondaki False açık dönemi kapatır
+    for i, ici in enumerate(
+        [*(oran <= esik), False]
+    ):  # sondaki False açık dönemi kapatır
         if ici and bas is None:
             bas = i
         elif not ici and bas is not None:
             if i - bas >= min_gun:
                 kesit = oran.iloc[bas:i]
-                donemler.append({"bas": kesit.index[0], "bit": kesit.index[-1], "gun": len(kesit),
-                                 "ortalama": float(kesit.mean())})
+                donemler.append(
+                    {
+                        "bas": kesit.index[0],
+                        "bit": kesit.index[-1],
+                        "gun": len(kesit),
+                        "ortalama": float(kesit.mean()),
+                    }
+                )
             bas = None
     return donemler

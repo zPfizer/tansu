@@ -10,15 +10,37 @@ from pathlib import Path
 
 import pandas as pd
 
-from tansu import aileler, ciftbolme, evren, kayit, kaynak as kaynak_modulu, motor, rapor, simulator, veri
+from tansu import (
+    aileler,
+    ciftbolme,
+    evren,
+    kayit,
+    kaynak as kaynak_modulu,
+    motor,
+    rapor,
+    simulator,
+    veri,
+)
 
 ERKEN = dt.time(18, 15)  # TASARIM 6.2: bundan önce çubuk yarım olabilir
 SAKLA_GUN = 30  # TASARIM 6.2: günlük anlık görüntü ömrü
 KAGIT_AY = 6  # TASARIM 5.8: en az kâğıt dönem
 BASARILI = ("TAMAM", "BUGÜN ÇUBUK YOK")
 KARTLI = ("Kâğıt", "Canlı")
-SUTUNLAR = ["Tarih", "Hisse", "Aile", "Durum", "Referans", "Stop", "Pozisyon %", "Adet", "Fiili risk",
-            "Likidite sınırı TL", "Kanıt", "Kaynak"]
+SUTUNLAR = [
+    "Tarih",
+    "Hisse",
+    "Aile",
+    "Durum",
+    "Referans",
+    "Stop",
+    "Pozisyon %",
+    "Adet",
+    "Fiili risk",
+    "Likidite sınırı TL",
+    "Kanıt",
+    "Kaynak",
+]
 AILE_ADI = {simulator.AILE: "EMA sıkışması"}
 
 
@@ -43,10 +65,16 @@ def _kanit(aile, tarih) -> str:
     if not k or None in (k["fazla"], *k["ci"]):
         return f"{satirlar[-1]['durum']} · kanıt kaydı yok · kâğıt dönem {ay}/{KAGIT_AY} ay"
     alt, ust = k["ci"]
-    aralik = "sıfırı içeriyor: ayırt edilemiyor" if alt <= 0 <= ust else f"{_isaretli(alt)} ile {_isaretli(ust)}"
-    return (f"{satirlar[-1]['durum']} · {k['islem']} işlem · rastgele kurala göre işlem başına fazla getiri "
-            f"{_isaretli(k['fazla'])} (%0,3 masraf) · portföy fazla getirisi (K2'ye göre, yıllık, blok bootstrap "
-            f"%95 aralık {aralik}) · kâğıt dönem {ay}/{KAGIT_AY} ay")
+    aralik = (
+        "sıfırı içeriyor: ayırt edilemiyor"
+        if alt <= 0 <= ust
+        else f"{_isaretli(alt)} ile {_isaretli(ust)}"
+    )
+    return (
+        f"{satirlar[-1]['durum']} · {k['islem']} işlem · rastgele kurala göre işlem başına fazla getiri "
+        f"{_isaretli(k['fazla'])} (%0,3 masraf) · portföy fazla getirisi (K2'ye göre, yıllık, blok bootstrap "
+        f"%95 aralık {aralik}) · kâğıt dönem {ay}/{KAGIT_AY} ay"
+    )
 
 
 def _durum(p) -> str:
@@ -59,17 +87,44 @@ def _durum(p) -> str:
 def _kart(anlik, s, m, p, kanit) -> list:
     f = anlik.fiyat[anlik.fiyat["sembol"] == s].set_index("tarih")
     sinyal = p.sinyal_tarih
-    ref, oran = f.at[sinyal, "ham_kapanis"], f.at[sinyal, "ham_kapanis"] / f.at[sinyal, "kapanis"]
+    ref, oran = (
+        f.at[sinyal, "ham_kapanis"],
+        f.at[sinyal, "ham_kapanis"] / f.at[sinyal, "kapanis"],
+    )
     atr = p.atr * oran
     stop = p.stop * oran if p.stop is not None else ref - motor.STOP_ATR * atr
-    lq = f["hacim"].reindex(m.index).fillna(0).rolling(simulator.LIKIDITE_GUN, min_periods=1).median().at[sinyal]
+    lq = (
+        f["hacim"]
+        .reindex(m.index)
+        .fillna(0)
+        .rolling(simulator.LIKIDITE_GUN, min_periods=1)
+        .median()
+        .at[sinyal]
+    )
     ozk = simulator.SERMAYE
-    adet = int(math.floor(min(simulator.RISK * ozk / (motor.STOP_ATR * atr), simulator.TAVAN * ozk / ref,
-                              simulator.LIKIDITE * lq / ref)))
-    return [sinyal.date().isoformat(), s, AILE_ADI[simulator.AILE], _durum(p), _sayi(ref),
-            _sayi(stop) + (" (tahmini)" if p.stop is None else ""), rapor.yuzde(adet * ref / ozk), adet,
-            rapor.yuzde(adet * max(0.0, ref - stop) / ozk), f"{simulator.LIKIDITE * lq:.0f}", kanit,
-            f"İş Yatırım {anlik.kimlik}"]
+    adet = int(
+        math.floor(
+            min(
+                simulator.RISK * ozk / (motor.STOP_ATR * atr),
+                simulator.TAVAN * ozk / ref,
+                simulator.LIKIDITE * lq / ref,
+            )
+        )
+    )
+    return [
+        sinyal.date().isoformat(),
+        s,
+        AILE_ADI[simulator.AILE],
+        _durum(p),
+        _sayi(ref),
+        _sayi(stop) + (" (tahmini)" if p.stop is None else ""),
+        rapor.yuzde(adet * ref / ozk),
+        adet,
+        rapor.yuzde(adet * max(0.0, ref - stop) / ozk),
+        f"{simulator.LIKIDITE * lq:.0f}",
+        kanit,
+        f"İş Yatırım {anlik.kimlik}",
+    ]
 
 
 def _kartlar(anlik, tarih, p, atr_n) -> list:
@@ -81,8 +136,12 @@ def _kartlar(anlik, tarih, p, atr_n) -> list:
     kanit, kartlar = _kanit(simulator.AILE, tarih), []
     for s in sorted(anlik.fiyat["sembol"].unique()):
         m = motor.mumlar(anlik, s, p, atr_n)
-        poz, kapanan = motor.tara(m, aileler.sinyal(m.dropna(subset=["kapanis"]), p))[2:]
-        kartlar += [_kart(anlik, s, m, x, kanit) for x in (poz, kapanan) if x is not None]
+        poz, kapanan = motor.tara(m, aileler.sinyal(m.dropna(subset=["kapanis"]), p))[
+            2:
+        ]
+        kartlar += [
+            _kart(anlik, s, m, x, kanit) for x in (poz, kapanan) if x is not None
+        ]
     return kartlar
 
 
@@ -90,7 +149,9 @@ def _yaz(yol: Path, yaz_fn) -> None:
     """Geçici dosyaya yazıp `os.replace` ile taşır (TASARIM 6.7)."""
     gecici = yol.with_name(yol.name + ".gecici")
     yol.parent.mkdir(parents=True, exist_ok=True)
-    with gecici.open("w", encoding="utf-8-sig" if yol.suffix == ".csv" else "utf-8", newline="") as f:
+    with gecici.open(
+        "w", encoding="utf-8-sig" if yol.suffix == ".csv" else "utf-8", newline=""
+    ) as f:
         yaz_fn(f)
     try:
         os.replace(gecici, yol)
@@ -103,11 +164,25 @@ def _kart_gunlugu(tarih, kimlik, kartlar) -> None:
     yol = kayit.KAYIT_DIZINI / "kartlar.jsonl"
     yol.parent.mkdir(parents=True, exist_ok=True)
     gun = tarih.date().isoformat()
-    if yol.exists() and any(json.loads(s)["tarih"] == gun for s in yol.read_text(encoding="utf-8").splitlines() if s):
+    if yol.exists() and any(
+        json.loads(s)["tarih"] == gun
+        for s in yol.read_text(encoding="utf-8").splitlines()
+        if s
+    ):
         return
     with yol.open("a", encoding="utf-8") as f:  # yalnız ekleme
-        f.write(json.dumps({"tarih": gun, "anlik": kimlik, "kartlar": [dict(zip(SUTUNLAR, k)) for k in kartlar]},
-                           ensure_ascii=False, sort_keys=True) + "\n")
+        f.write(
+            json.dumps(
+                {
+                    "tarih": gun,
+                    "anlik": kimlik,
+                    "kartlar": [dict(zip(SUTUNLAR, k)) for k in kartlar],
+                },
+                ensure_ascii=False,
+                sort_keys=True,
+            )
+            + "\n"
+        )
 
 
 def _acik_hisseler() -> set:
@@ -116,14 +191,24 @@ def _acik_hisseler() -> set:
     if not yol.exists():
         return set()
     satirlar = [s for s in yol.read_text(encoding="utf-8").splitlines() if s]
-    return {k["Hisse"] for k in json.loads(satirlar[-1])["kartlar"] if k["Durum"] == "AKTİF"} if satirlar else set()
+    return (
+        {
+            k["Hisse"]
+            for k in json.loads(satirlar[-1])["kartlar"]
+            if k["Durum"] == "AKTİF"
+        }
+        if satirlar
+        else set()
+    )
 
 
 def _semboller(kok: Path, tarih) -> list:
     """Bugünkü evren (en çok sembollü son tam anlık görüntüden) ve açık kartların hisseleri (TASARIM 6.2)."""
     klasorler = sorted((kok / "ag").glob("2*"))
     if not klasorler:
-        raise veri.VeriHatasi("evren için tam anlık görüntü yok: önce `python -m tansu evren-indir` çalıştır")
+        raise veri.VeriHatasi(
+            "evren için tam anlık görüntü yok: önce `python -m tansu evren-indir` çalıştır"
+        )
     taban = veri.oku(klasorler[-1].name, kok)
     ay = min(tarih, taban.gunler[-1])  # taban eskiyse tabanın son ayının evreni (YORUM)
     return sorted(set(evren.evren(taban, ay)) | _acik_hisseler())
@@ -140,7 +225,9 @@ def _temizle(kok: Path, simdi) -> None:
         if d.name.startswith("_gecici"):
             shutil.rmtree(d, ignore_errors=True)
         elif d.name[:8].isdigit():
-            yas = (simdi.date() - dt.datetime.strptime(d.name[:8], "%Y%m%d").date()).days
+            yas = (
+                simdi.date() - dt.datetime.strptime(d.name[:8], "%Y%m%d").date()
+            ).days
             if yas > SAKLA_GUN and d.name not in metin:
                 shutil.rmtree(d, ignore_errors=True)
 
@@ -151,25 +238,47 @@ def _kapi_sorunlari(anlik, son) -> list:
     f = anlik.fiyat
     uye = f.loc[f["tarih"] >= pd.Timestamp(simulator.BASLANGIC), ["sembol", "tarih"]]
     bugun = f"kaynak günü hatası: {son.date()}"
-    return [x for x in anlik.sorunlar_uye(uye) if not x.startswith("kaynak günü hatası") or x == bugun]
+    return [
+        x
+        for x in anlik.sorunlar_uye(uye)
+        if not x.startswith("kaynak günü hatası") or x == bugun
+    ]
 
 
-def gunluk(tarih, kok="veri", simdi=None, kaynak=None, semboller=None, p=aileler.Parametre(),
-           atr_n=motor.ATR_N) -> int:
+def gunluk(
+    tarih,
+    kok="veri",
+    simdi=None,
+    kaynak=None,
+    semboller=None,
+    p=aileler.Parametre(),
+    atr_n=motor.ATR_N,
+) -> int:
     """Günlük koşu; çıkış kodu: TAMAM ve BUGÜN ÇUBUK YOK 0, SORUNLU ve VERİ YOK 1. `kaynak`, `semboller`, `p` testte verilir."""
     tarih, kok = pd.Timestamp(tarih), Path(kok)
     simdi = simdi or dt.datetime.now(veri.ISTANBUL)
     yol = rapor.RAPOR_DIZINI / "durum.txt"
     onceki = yol.read_text(encoding="utf-8").splitlines() if yol.exists() else []
-    saat = next((x.split(": ", 1)[1] for x in onceki if x.startswith("Son başarılı koşu: ")), "yok")
+    saat = next(
+        (x.split(": ", 1)[1] for x in onceki if x.startswith("Son başarılı koşu: ")),
+        "yok",
+    )
     if onceki[:1] and onceki[0] in BASARILI and saat[:10] == tarih.date().isoformat():
         print("Bugünün başarılı koşusu var; bir şey yapılmadı.")
         return 0
 
     def bitir(durum, eylem, kimlik="yok", son="yok", sayi="yok") -> int:
         basarili = durum in BASARILI
-        satirlar = [durum, f"Son başarılı koşu: {simdi:%Y-%m-%d %H:%M}" if basarili else f"Son başarılı koşu: {saat}",
-                    f"Anlık görüntü: {kimlik}", f"Son çubuk: {son}", f"Sembol sayısı: {sayi}", f"Eylem: {eylem}"]
+        satirlar = [
+            durum,
+            f"Son başarılı koşu: {simdi:%Y-%m-%d %H:%M}"
+            if basarili
+            else f"Son başarılı koşu: {saat}",
+            f"Anlık görüntü: {kimlik}",
+            f"Son çubuk: {son}",
+            f"Sembol sayısı: {sayi}",
+            f"Eylem: {eylem}",
+        ]
         _yaz(yol, lambda f: f.write("\n".join(satirlar) + "\n"))
         print(durum, "-", eylem)
         return 0 if basarili else 1
@@ -177,18 +286,33 @@ def gunluk(tarih, kok="veri", simdi=None, kaynak=None, semboller=None, p=aileler
     kimlik = son = sayi = "yok"
     try:
         if simdi.date() == tarih.date() and simdi.time() < ERKEN:
-            return bitir("VERİ YOK", "Koşu 18:15'ten önce başladı, kart üretilmedi (çubuk yarım olabilir). 18:15'ten sonra yeniden çalıştır.")
+            return bitir(
+                "VERİ YOK",
+                "Koşu 18:15'ten önce başladı, kart üretilmedi (çubuk yarım olabilir). 18:15'ten sonra yeniden çalıştır.",
+            )
         _temizle(kok, simdi)
         semboller = semboller or _semboller(kok, tarih)
-        kimlik = veri.indir(semboller, kok / "gunluk", kaynak or kaynak_modulu.IsYatirim(), simdi=simdi)
+        kimlik = veri.indir(
+            semboller, kok / "gunluk", kaynak or kaynak_modulu.IsYatirim(), simdi=simdi
+        )
         anlik = veri.oku(kimlik, kok / "gunluk")
         son, sayi = anlik.gunler[-1], anlik.fiyat["sembol"].nunique()
         bilgi = dict(kimlik=kimlik, son=son.date().isoformat(), sayi=sayi)
         if son.date() != tarih.date():
-            return bitir("BUGÜN ÇUBUK YOK", "Bugün işlem günü değil ya da çubuk yok; bir şey yapma.", **bilgi)
+            return bitir(
+                "BUGÜN ÇUBUK YOK",
+                "Bugün işlem günü değil ya da çubuk yok; bir şey yapma.",
+                **bilgi,
+            )
         sorunlar = _kapi_sorunlari(anlik, son)
         if sorunlar:
-            return bitir("SORUNLU", "Kart üretilmedi: veri kapısı başarısız (" + "; ".join(sorunlar) + "). Kartlara güvenme.", **bilgi)
+            return bitir(
+                "SORUNLU",
+                "Kart üretilmedi: veri kapısı başarısız ("
+                + "; ".join(sorunlar)
+                + "). Kartlara güvenme.",
+                **bilgi,
+            )
         kartlar = _kartlar(anlik, tarih, p, atr_n)
         csv_yol = rapor.RAPOR_DIZINI / f"kartlar-{tarih:%Y%m%d}.csv"
 
@@ -200,11 +324,29 @@ def gunluk(tarih, kok="veri", simdi=None, kaynak=None, semboller=None, p=aileler
         try:
             _yaz(csv_yol, yaz_csv)
         except PermissionError:
-            return bitir("SORUNLU", f"Kart yazılamadı: {csv_yol.name} açık, kapatıp yeniden çalıştır.", **bilgi)
+            return bitir(
+                "SORUNLU",
+                f"Kart yazılamadı: {csv_yol.name} açık, kapatıp yeniden çalıştır.",
+                **bilgi,
+            )
         _kart_gunlugu(tarih, kimlik, kartlar)
-        return bitir("TAMAM", f"Bugün {len(kartlar)} kart var: rapor/{csv_yol.name} dosyasını aç." if kartlar
-                     else "Bugün kart yok; bir şey yapma.", **bilgi)
+        return bitir(
+            "TAMAM",
+            f"Bugün {len(kartlar)} kart var: rapor/{csv_yol.name} dosyasını aç."
+            if kartlar
+            else "Bugün kart yok; bir şey yapma.",
+            **bilgi,
+        )
     except veri.KaynakYok:
-        return bitir("VERİ YOK", "Kaynağa ulaşılamadı, kart üretilmedi. Saat başı yeniden denenir.")
+        return bitir(
+            "VERİ YOK",
+            "Kaynağa ulaşılamadı, kart üretilmedi. Saat başı yeniden denenir.",
+        )
     except Exception as hata:  # noqa: BLE001 — her hata SORUNLU yazılır, çıkış kodu 1
-        return bitir("SORUNLU", f"Kart üretilmedi: {hata}. Hatayı oku ve yeniden çalıştır.", kimlik, str(son)[:10] if son != "yok" else son, sayi)
+        return bitir(
+            "SORUNLU",
+            f"Kart üretilmedi: {hata}. Hatayı oku ve yeniden çalıştır.",
+            kimlik,
+            str(son)[:10] if son != "yok" else son,
+            sayi,
+        )

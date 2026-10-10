@@ -20,9 +20,14 @@ from tests.test_veri import SahteKaynak, satir
 
 def hazirla(tmp_path):
     gunler = pd.bdate_range(end="2026-04-09", periods=260)
-    fiyat = [satir(g, 10.0 if i < 220 else 20.0, 10.0 if i < 220 else 20.0) for i, g in enumerate(gunler)]
+    fiyat = [
+        satir(g, 10.0 if i < 220 else 20.0, 10.0 if i < 220 else 20.0)
+        for i, g in enumerate(gunler)
+    ]
     kaynak = SahteKaynak({"KRDMD": fiyat}, {"KRDMD": []})
-    return veri.indir(["KRDMD"], tmp_path, kaynak, simdi=dt.datetime(2026, 10, 5, 19, 30))
+    return veri.indir(
+        ["KRDMD"], tmp_path, kaynak, simdi=dt.datetime(2026, 10, 5, 19, 30)
+    )
 
 
 def test_sikisma_donemi_ham_seriden_bulunur(tmp_path):
@@ -31,7 +36,11 @@ def test_sikisma_donemi_ham_seriden_bulunur(tmp_path):
     assert len(sonuc["donemler"]) == 1
     d = sonuc["donemler"][0]
     assert (d["bas"], d["bit"], d["gun"], d["ortalama"]) == (
-        pd.Timestamp("2025-10-10"), pd.Timestamp("2026-02-12"), 90, 0.0)
+        pd.Timestamp("2025-10-10"),
+        pd.Timestamp("2026-02-12"),
+        90,
+        0.0,
+    )
 
 
 def test_komut_iki_kosuda_ayni_rakamlari_verir_ve_deneme_gunlugune_yazar(tmp_path):
@@ -58,14 +67,19 @@ def test_komut_kontrol_edilen_her_aileyi_gunluge_yazar(tmp_path):
     semboller = ["KRDMD", "VAKBN", "GARAN"]
     fiyatlar = {s: [satir("2026-04-09", 10.0, 10.0)] for s in semboller}
     kaynak = SahteKaynak(fiyatlar, {s: [] for s in semboller})
-    kimlik = veri.indir(semboller, tmp_path, kaynak, simdi=dt.datetime(2026, 10, 5, 19, 30))
+    kimlik = veri.indir(
+        semboller, tmp_path, kaynak, simdi=dt.datetime(2026, 10, 5, 19, 30)
+    )
     gunluk = tmp_path / "deneme.jsonl"
     sadakat.calistir(kimlik, tmp_path, tmp_path / "sadakat.md", gunluk)
     satirlar = [json.loads(s) for s in gunluk.read_text(encoding="utf-8").splitlines()]
     assert len(satirlar) == 2
     assert {s["aile"] for s in satirlar} == {"ema_sikismasi", "cift_rotasyonu"}
     assert satirlar[0]["tarih"] == satirlar[1]["tarih"]
-    assert all(s["olay"] == "sadakat" and s["tur"] == "sadakat" and s["anlik"] == kimlik for s in satirlar)
+    assert all(
+        s["olay"] == "sadakat" and s["tur"] == "sadakat" and s["anlik"] == kimlik
+        for s in satirlar
+    )
 
 
 def test_cift_z_aramasi_tum_gunlerde_ve_adaylarda():
@@ -73,7 +87,9 @@ def test_cift_z_aramasi_tum_gunlerde_ve_adaylarda():
     gunler = pd.bdate_range("2025-01-01", periods=4)
     y = pd.Series(np.exp([0, 2, 4, 6]), index=gunler)
     x = pd.Series([1.0] * 4, index=gunler)
-    sonuc = sadakat.cift_ara(y, x, hedef=(1.0, 1.0), tolerans=0.0005, pencereler=range(3, 4))
+    sonuc = sadakat.cift_ara(
+        y, x, hedef=(1.0, 1.0), tolerans=0.0005, pencereler=range(3, 4)
+    )
     assert sonuc == [("log_oran", 3, 1, gunler[-1])]
 
 
@@ -96,8 +112,12 @@ def test_ek_sabit_std_butun_seride_tek_sapma_kullanir():
     assert z.iloc[:2].isna().all()
     assert abs(z.iloc[2]) < 1e-12
     assert abs(z.iloc[3] - 1.2649110640673518) < 1e-12
-    np.testing.assert_allclose([2 / z.iloc[3], -1 / z.iloc[4], 3 / z.iloc[5]],
-                               [1.5811388300841898] * 3, rtol=0, atol=1e-12)
+    np.testing.assert_allclose(
+        [2 / z.iloc[3], -1 / z.iloc[4], 3 / z.iloc[5]],
+        [1.5811388300841898] * 3,
+        rtol=0,
+        atol=1e-12,
+    )
     z = sadakat._ek_z(y, x, "sabit_std", "log_oran", 3, 1)
     assert abs(z.iloc[3] - 1.0954451150103321) < 1e-12
 
@@ -124,5 +144,7 @@ def test_ek_aday_ara_isaret_cevirerek_ara_gunde_cifti_bulur():
     gunler = pd.bdate_range("2025-01-01", periods=6)
     y = pd.Series(np.exp([0.0, 1.0, 2.0, 4.0, 3.0, 10.0]), index=gunler)
     x = pd.Series([1.0] * 6, index=gunler)
-    sonuc = sadakat.ek_aday_ara(y, x, hedef=(-0.4364357804719848, -3.0), pencereler=range(3, 4))
+    sonuc = sadakat.ek_aday_ara(
+        y, x, hedef=(-0.4364357804719848, -3.0), pencereler=range(3, 4)
+    )
     assert sonuc == [("dun_pencere", "log_oran", 3, 1, -1, gunler[4])]

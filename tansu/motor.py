@@ -47,8 +47,13 @@ def adim(p: Pozisyon, m) -> Pozisyon:
     if p.durum == "bekliyor":
         if m["karantina"] or not m["islem"] or m["kilit_tavan"]:
             return _kapat(p, m["tarih"], None, "iptal")
-        p = replace(p, durum="acik", giris_tarih=m["tarih"], giris_fiyat=m["aof"],
-                    stop=m["aof"] - STOP_ATR * p.atr)
+        p = replace(
+            p,
+            durum="acik",
+            giris_tarih=m["tarih"],
+            giris_fiyat=m["aof"],
+            stop=m["aof"] - STOP_ATR * p.atr,
+        )
         ilk_gun = True
     else:
         ilk_gun = False
@@ -113,10 +118,14 @@ class Zincir:
 
     def __init__(self, mumlar: pd.DataFrame):
         self.mumlar = mumlar
-        self.satirlar = [{**s, "tarih": t} for t, s in zip(mumlar.index, mumlar.to_dict("records"))]
+        self.satirlar = [
+            {**s, "tarih": t} for t, s in zip(mumlar.index, mumlar.to_dict("records"))
+        ]
         kar = mumlar["karantina"].to_numpy(dtype=bool)
         son = pd.Series(range(len(kar))).where(kar).ffill().to_numpy()
-        self.engelli = (range(len(kar)) - son) < KARANTINA_GUN  # NaN (karantina yok) -> yanlış
+        self.engelli = (
+            range(len(kar)) - son
+        ) < KARANTINA_GUN  # NaN (karantina yok) -> yanlış
         gecerli = mumlar["kapanis"].dropna()
         self.son = (gecerli.index[-1], gecerli.iloc[-1]) if len(gecerli) else None
         self.onbellek = {}
@@ -159,16 +168,38 @@ class Zincir:
 
 
 def _tablo(pozisyonlar) -> pd.DataFrame:
-    return pd.DataFrame([{
-        "sinyal_tarih": p.sinyal_tarih, "giris_tarih": p.giris_tarih, "giris_fiyat": p.giris_fiyat, "cikis_tarih": p.cikis_tarih,
-        "cikis_fiyat": p.cikis_fiyat, "neden": p.neden, "adet": p.adet,
-        "planlanan_risk": p.adet * (p.giris_fiyat - p.stop),
-        "gerceklesen_kayip": p.adet * max(0.0, p.giris_fiyat - p.cikis_fiyat)} for p in pozisyonlar],
-        columns=["sinyal_tarih", "giris_tarih", "giris_fiyat", "cikis_tarih", "cikis_fiyat", "neden", "adet",
-                 "planlanan_risk", "gerceklesen_kayip"])
+    return pd.DataFrame(
+        [
+            {
+                "sinyal_tarih": p.sinyal_tarih,
+                "giris_tarih": p.giris_tarih,
+                "giris_fiyat": p.giris_fiyat,
+                "cikis_tarih": p.cikis_tarih,
+                "cikis_fiyat": p.cikis_fiyat,
+                "neden": p.neden,
+                "adet": p.adet,
+                "planlanan_risk": p.adet * (p.giris_fiyat - p.stop),
+                "gerceklesen_kayip": p.adet * max(0.0, p.giris_fiyat - p.cikis_fiyat),
+            }
+            for p in pozisyonlar
+        ],
+        columns=[
+            "sinyal_tarih",
+            "giris_tarih",
+            "giris_fiyat",
+            "cikis_tarih",
+            "cikis_fiyat",
+            "neden",
+            "adet",
+            "planlanan_risk",
+            "gerceklesen_kayip",
+        ],
+    )
 
 
-def mumlar(anlik, sembol: str, p: aileler.Parametre = aileler.Parametre(), atr_n: int = ATR_N) -> pd.DataFrame:
+def mumlar(
+    anlik, sembol: str, p: aileler.Parametre = aileler.Parametre(), atr_n: int = ATR_N
+) -> pd.DataFrame:
     """Bir sembolün mum tablosu: düzeltilmiş fiyat + gösterge + ham seriden kilit/karantina (gun_tablosu).
 
     Tablo anlık görüntü başına bir kez kurulur (motor, K1 ve ızgara aynı tabloyu okur; değiştirilmez)."""
@@ -180,7 +211,11 @@ def mumlar(anlik, sembol: str, p: aileler.Parametre = aileler.Parametre(), atr_n
 
 
 def _mumlar_kur(anlik, sembol, p, atr_n) -> pd.DataFrame:
-    f = anlik.fiyat[anlik.fiyat["sembol"] == sembol].sort_values("tarih").set_index("tarih")
+    f = (
+        anlik.fiyat[anlik.fiyat["sembol"] == sembol]
+        .sort_values("tarih")
+        .set_index("tarih")
+    )
     g = anlik.gun_tablosu
     g = g[g["sembol"] == sembol].set_index("tarih")
     m = f[["aof", "yuksek", "dusuk", "kapanis"]].reindex(g.index)  # eksik gün NaN kalır
@@ -191,13 +226,17 @@ def _mumlar_kur(anlik, sembol, p, atr_n) -> pd.DataFrame:
     return m
 
 
-def sinama(anlik, p: aileler.Parametre = aileler.Parametre(), atr_n: int = ATR_N, uye=None) -> tuple:
+def sinama(
+    anlik, p: aileler.Parametre = aileler.Parametre(), atr_n: int = ATR_N, uye=None
+) -> tuple:
     """Anlık görüntünün sembolleri için (işlem listesi, düşen sinyal sayısı).
 
     `uye`: (sembol, tarih) tablosu (`simulator.uyeler`); verilirse yalnız o hisse-günlerdeki sinyaller motora girer,
     yani simülatörün alabileceği sinyaller (TASARIM 5.6 evren süzgeci)."""
     parcalar, dusen = [], 0
-    gunler = None if uye is None else uye.groupby("sembol")["tarih"].agg(pd.DatetimeIndex)
+    gunler = (
+        None if uye is None else uye.groupby("sembol")["tarih"].agg(pd.DatetimeIndex)
+    )
     for s in anlik.fiyat["sembol"].unique():
         if gunler is not None and s not in gunler.index:
             continue
@@ -205,8 +244,14 @@ def sinama(anlik, p: aileler.Parametre = aileler.Parametre(), atr_n: int = ATR_N
         sig = aileler.sinyal(m.dropna(subset=["kapanis"]), p)
         if gunler is not None:
             sig = sig[sig.isin(gunler[s])]
-        t, d = Zincir(m).calistir(m.index.get_indexer(sig))  # `islemler` ile bire bir (test), ama tek geçişte hızlı
+        t, d = Zincir(m).calistir(
+            m.index.get_indexer(sig)
+        )  # `islemler` ile bire bir (test), ama tek geçişte hızlı
         if len(t):  # boş tablolar sütun türünü object'e bozar
             parcalar.append(t.assign(sembol=s))
         dusen += d
-    return (pd.concat(parcalar, ignore_index=True) if parcalar else _tablo([]).assign(sembol=[])), dusen
+    return (
+        pd.concat(parcalar, ignore_index=True)
+        if parcalar
+        else _tablo([]).assign(sembol=[])
+    ), dusen

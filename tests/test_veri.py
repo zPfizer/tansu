@@ -13,15 +13,34 @@ import pytest
 from tansu import veri
 from tansu.kaynak import KaynakHatasi
 
+
 # Olay tarihi: SHHE_TARIH, ms epoch, İstanbul gece yarısı (UTC 21:00, önceki gün).
 def epoch(gun):
-    return int(dt.datetime(gun.year, gun.month, gun.day, tzinfo=dt.timezone(dt.timedelta(hours=3))).timestamp() * 1000)
+    return int(
+        dt.datetime(
+            gun.year, gun.month, gun.day, tzinfo=dt.timezone(dt.timedelta(hours=3))
+        ).timestamp()
+        * 1000
+    )
 
 
 def satir(tarih, ham, duz):
-    return {"tarih": pd.Timestamp(tarih), "ham_kapanis": ham, "kapanis": duz,
-            "ham_aof": ham, "ham_yuksek": ham, "ham_dusuk": ham, "aof": duz, "yuksek": duz, "dusuk": duz,
-            "hacim": 1.0, "pd": 1.0, "hao_pd": 1.0, "sermaye": 1.0, "xu100": 1.0}
+    return {
+        "tarih": pd.Timestamp(tarih),
+        "ham_kapanis": ham,
+        "kapanis": duz,
+        "ham_aof": ham,
+        "ham_yuksek": ham,
+        "ham_dusuk": ham,
+        "aof": duz,
+        "yuksek": duz,
+        "dusuk": duz,
+        "hacim": 1.0,
+        "pd": 1.0,
+        "hao_pd": 1.0,
+        "sermaye": 1.0,
+        "xu100": 1.0,
+    }
 
 
 CCOLA_FIYAT = [
@@ -33,9 +52,21 @@ CCOLA_FIYAT = [
     satir("2024-08-15", 67.6, 65.1179),
 ]
 CCOLA_OLAY = [
-    {"SHT_KODU": "02", "SHHE_TARIH": epoch(dt.date(2024, 8, 13)), "SHHE_FIYAT_AYAR_OR": 0.09090909138724523},
-    {"SHT_KODU": "04", "SHHE_TARIH": epoch(dt.date(2025, 5, 26)), "SHHE_FIYAT_AYAR_OR": 0.9792410463023796},
-    {"SHT_KODU": "04", "SHHE_TARIH": epoch(dt.date(2026, 5, 12)), "SHHE_FIYAT_AYAR_OR": 0.9837037037037037},
+    {
+        "SHT_KODU": "02",
+        "SHHE_TARIH": epoch(dt.date(2024, 8, 13)),
+        "SHHE_FIYAT_AYAR_OR": 0.09090909138724523,
+    },
+    {
+        "SHT_KODU": "04",
+        "SHHE_TARIH": epoch(dt.date(2025, 5, 26)),
+        "SHHE_FIYAT_AYAR_OR": 0.9792410463023796,
+    },
+    {
+        "SHT_KODU": "04",
+        "SHHE_TARIH": epoch(dt.date(2026, 5, 12)),
+        "SHHE_FIYAT_AYAR_OR": 0.9837037037037037,
+    },
 ]
 
 
@@ -70,7 +101,9 @@ def test_ccola_bolunmesi_olay_carpaniyla_tutar(tmp_path):
 
 def test_bozuk_duzeltilmis_fiyat_uyari_verir(tmp_path):
     bozuk = [dict(s) for s in CCOLA_FIYAT]
-    bozuk[1]["kapanis"] = 70.0  # 09.08: 70/757,5 = 0,09241; beklenen 0,08757 → fark %5,5
+    bozuk[1]["kapanis"] = (
+        70.0  # 09.08: 70/757,5 = 0,09241; beklenen 0,08757 → fark %5,5
+    )
     a = anlik(tmp_path, fiyat=bozuk)
     assert list(a.olay_uyarilari["tarih"]) == [pd.Timestamp("2024-08-09")]
 
@@ -108,7 +141,14 @@ def test_ayni_gune_iki_kayit_carpilir(tmp_path):
 
 def test_pencereden_onceki_olay_hicbir_satiri_etkilemez(tmp_path):
     # Gerçek koşuda bulundu: pencere başından önceki olay ilk güne kaydırılıp ilk satıra uygulanıyordu.
-    once = [{"SHT_KODU": "04", "SHHE_TARIH": epoch(dt.date(2024, 8, 7)), "SHHE_FIYAT_AYAR_OR": 0.5}, *CCOLA_OLAY]
+    once = [
+        {
+            "SHT_KODU": "04",
+            "SHHE_TARIH": epoch(dt.date(2024, 8, 7)),
+            "SHHE_FIYAT_AYAR_OR": 0.5,
+        },
+        *CCOLA_OLAY,
+    ]
     a = anlik(tmp_path, olay=once)
     assert a.olay_uyarilari.empty
 
@@ -116,7 +156,9 @@ def test_pencereden_onceki_olay_hicbir_satiri_etkilemez(tmp_path):
 def test_bozuk_manifest_hata_verir(tmp_path):
     k = SahteKaynak({"CCOLA": CCOLA_FIYAT}, {"CCOLA": CCOLA_OLAY})
     kimlik = veri.indir(["CCOLA"], tmp_path, k, simdi=SIMDI)
-    dosya = next(p for p in (tmp_path / "ag" / kimlik).iterdir() if p.suffix == ".parquet")
+    dosya = next(
+        p for p in (tmp_path / "ag" / kimlik).iterdir() if p.suffix == ".parquet"
+    )
     dosya.write_bytes(dosya.read_bytes() + b"x")
     with pytest.raises(veri.VeriHatasi):
         veri.oku(kimlik, tmp_path)
@@ -126,7 +168,9 @@ def test_anlik_goruntu_kimligi_tarihli_ve_olay_ham_json_saklanir(tmp_path):
     k = SahteKaynak({"CCOLA": CCOLA_FIYAT}, {"CCOLA": CCOLA_OLAY})
     kimlik = veri.indir(["CCOLA"], tmp_path, k, simdi=SIMDI)
     assert kimlik == "20261005-1930"
-    ham = json.loads((tmp_path / "ag" / kimlik / "olaylar.json").read_text(encoding="utf-8"))
+    ham = json.loads(
+        (tmp_path / "ag" / kimlik / "olaylar.json").read_text(encoding="utf-8")
+    )
     assert ham["CCOLA"] == CCOLA_OLAY
     assert not any(p.name.startswith("_") for p in (tmp_path / "ag").iterdir())
 
@@ -136,7 +180,12 @@ class SahteBorsapy:
         self._faiz, self._sektor = faiz, sektor
 
     def faiz(self):
-        return pd.DataFrame({"tarih": pd.to_datetime([t for t, _ in self._faiz]), "faiz": [f for _, f in self._faiz]})
+        return pd.DataFrame(
+            {
+                "tarih": pd.to_datetime([t for t, _ in self._faiz]),
+                "faiz": [f for _, f in self._faiz],
+            }
+        )
 
     def sektor(self, sembol):
         return self._sektor[sembol]
@@ -154,7 +203,9 @@ def anlik_borsapy(tmp_path, faiz=FAIZ, fiyat=CCOLA_FIYAT):
 
 def test_faiz_ve_sektor_anlik_goruntuye_yazilir_ve_manifestte_hashlenir(tmp_path):
     kimlik, a = anlik_borsapy(tmp_path)
-    manifest = json.loads((tmp_path / "ag" / kimlik / "manifest.json").read_text(encoding="utf-8"))
+    manifest = json.loads(
+        (tmp_path / "ag" / kimlik / "manifest.json").read_text(encoding="utf-8")
+    )
     assert {"faiz.parquet", "sektor.json"} <= set(manifest["dosyalar"])
     assert list(a.faiz["faiz"]) == [50.0, 47.5, 45.0]
     assert a.sektor == {"CCOLA": "GIDA"}
@@ -177,7 +228,9 @@ def test_faiz_gunluge_ileri_doldurulur_ve_bir_gun_gecikir(tmp_path):
     assert s[pd.Timestamp("2024-07-01")] == 50.0
     assert s[pd.Timestamp("2024-12-27")] == 50.0
     assert s[pd.Timestamp("2024-12-28")] == 47.5
-    assert len(s) == 282  # 23.03 – 29.12.2024 takvim günü: 9 + 30+31+30+31+31+30+31+30+29 → 282
+    assert (
+        len(s) == 282
+    )  # 23.03 – 29.12.2024 takvim günü: 9 + 30+31+30+31+31+30+31+30+29 → 282
 
 
 def test_faiz_serisi_baslangici_kapsamiyorsa_hata(tmp_path):
@@ -194,7 +247,13 @@ def test_son_faiz_degisim_tarihi_kaydedilir(tmp_path):
 def test_bos_faiz_serisi_sorunludur(tmp_path):
     k = SahteKaynak({"CCOLA": CCOLA_FIYAT}, {"CCOLA": CCOLA_OLAY})
     with pytest.raises(veri.VeriHatasi):
-        veri.indir(["CCOLA"], tmp_path, k, simdi=SIMDI, borsapy=SahteBorsapy([], {"CCOLA": "GIDA"}))
+        veri.indir(
+            ["CCOLA"],
+            tmp_path,
+            k,
+            simdi=SIMDI,
+            borsapy=SahteBorsapy([], {"CCOLA": "GIDA"}),
+        )
     assert not (tmp_path / "ag").exists() or not list((tmp_path / "ag").iterdir())
 
 
@@ -203,7 +262,10 @@ def test_takvim_xu100_kapanisi_olan_gunlerdir(tmp_path):
     f = [dict(s) for s in CCOLA_FIYAT]
     f[1]["xu100"], f[2]["xu100"] = float("nan"), 0.0
     _, a = anlik_borsapy(tmp_path, fiyat=f)
-    assert list(a.gunler) == [pd.Timestamp(t) for t in ("2024-08-08", "2024-08-13", "2024-08-14", "2024-08-15")]
+    assert list(a.gunler) == [
+        pd.Timestamp(t)
+        for t in ("2024-08-08", "2024-08-13", "2024-08-14", "2024-08-15")
+    ]
 
 
 def test_sektoru_alinamayan_ya_da_bos_sembol_indirmeyi_durdurmaz(tmp_path):
@@ -215,9 +277,13 @@ def test_sektoru_alinamayan_ya_da_bos_sembol_indirmeyi_durdurmaz(tmp_path):
             assert sembol != "BOS", "boş sembol için sektör sorulmaz"
             return "GIDA"
 
-    k = SahteKaynak({"CCOLA": CCOLA_FIYAT, "CCOLA2": CCOLA_FIYAT, "BOS": []},
-                    {"CCOLA": CCOLA_OLAY, "CCOLA2": CCOLA_OLAY, "BOS": []})
-    kimlik = veri.indir(["CCOLA", "CCOLA2", "BOS"], tmp_path, k, simdi=SIMDI, borsapy=Borsapy(FAIZ, {}))
+    k = SahteKaynak(
+        {"CCOLA": CCOLA_FIYAT, "CCOLA2": CCOLA_FIYAT, "BOS": []},
+        {"CCOLA": CCOLA_OLAY, "CCOLA2": CCOLA_OLAY, "BOS": []},
+    )
+    kimlik = veri.indir(
+        ["CCOLA", "CCOLA2", "BOS"], tmp_path, k, simdi=SIMDI, borsapy=Borsapy(FAIZ, {})
+    )
     a = veri.oku(kimlik, tmp_path)
     assert (a.sektor, a.bos) == ({"CCOLA": "GIDA"}, ("BOS",))
 
@@ -225,8 +291,14 @@ def test_sektoru_alinamayan_ya_da_bos_sembol_indirmeyi_durdurmaz(tmp_path):
 def test_tarihsiz_ya_da_carpansiz_olay_kaydi_okumada_atilir(tmp_path):
     # Gerçek ACSEL kayıtları: planlanmış temettü yer tutucusu, tarih 0001-01-01 (ms -62135596800000) ve
     # çarpan 0,0; bir başkasında tarih geçerli ama çarpan 0,0. İkisi de düzeltme taşımaz.
-    bos = [{"SHT_KODU": "04", "SHHE_TARIH": -62135596800000, "SHHE_FIYAT_AYAR_OR": 0.0},
-           {"SHT_KODU": "04", "SHHE_TARIH": epoch(dt.date(2024, 8, 14)), "SHHE_FIYAT_AYAR_OR": 0.0}]
+    bos = [
+        {"SHT_KODU": "04", "SHHE_TARIH": -62135596800000, "SHHE_FIYAT_AYAR_OR": 0.0},
+        {
+            "SHT_KODU": "04",
+            "SHHE_TARIH": epoch(dt.date(2024, 8, 14)),
+            "SHHE_FIYAT_AYAR_OR": 0.0,
+        },
+    ]
     a = anlik(tmp_path, olay=CCOLA_OLAY + bos)
     assert len(a.olaylar) == 3 and (a.olaylar["carpan"] > 0).all()
 
@@ -256,7 +328,9 @@ class _YalnizA(SahteBorsapy):
 
 
 def _sektor_anlik(tmp_path, semboller=("A", "B", "C", "D")):
-    k = SahteKaynak({s: CCOLA_FIYAT for s in semboller}, {s: CCOLA_OLAY for s in semboller})
+    k = SahteKaynak(
+        {s: CCOLA_FIYAT for s in semboller}, {s: CCOLA_OLAY for s in semboller}
+    )
     return veri.indir(list(semboller), tmp_path, k, simdi=SIMDI, borsapy=_YalnizA())
 
 
@@ -265,28 +339,58 @@ def test_sektor_tamamla_yeni_anlik_goruntu_yazar_eskisi_degismez(tmp_path):
     eski = _sektor_anlik(tmp_path)
     manifest_eski = (tmp_path / "ag" / eski / "manifest.json").read_bytes()
     kap = SahteKapSektor({"B": "BANKA", "C": "GIDA", "D": None})
-    yeni, rapor = veri.sektor_tamamla(eski, tmp_path, kap, ["D", "C", "B", "A"], simdi=dt.datetime(2026, 10, 5, 20, 0))
+    yeni, rapor = veri.sektor_tamamla(
+        eski, tmp_path, kap, ["D", "C", "B", "A"], simdi=dt.datetime(2026, 10, 5, 20, 0)
+    )
     assert yeni == "20261005-2000" and kap.sorulan == ["D", "C", "B"]
     assert (tmp_path / "ag" / eski / "manifest.json").read_bytes() == manifest_eski
     a = veri.oku(yeni, tmp_path)  # manifest doğrulanır
     assert a.sektor == {"A": "ESKI", "B": "BANKA", "C": "GIDA"}
     assert len(a.fiyat) == 4 * len(CCOLA_FIYAT) and len(a.olaylar) == 4 * 3
-    m = json.loads((tmp_path / "ag" / yeni / "manifest.json").read_text(encoding="utf-8"))
+    m = json.loads(
+        (tmp_path / "ag" / yeni / "manifest.json").read_text(encoding="utf-8")
+    )
     assert m["kaynak"] == eski
-    assert m["sektor_kapsam"] == {"hedef": 4, "var": 3, "listede_yok": ["D"], "alinamayan": []}
+    assert m["sektor_kapsam"] == {
+        "hedef": 4,
+        "var": 3,
+        "listede_yok": ["D"],
+        "alinamayan": [],
+    }
     assert rapor == m["sektor_kapsam"]
 
 
-def test_sektor_tamamla_art_arda_bes_hatada_durur_tamamlananlar_tekrar_istenmez(tmp_path):
+def test_sektor_tamamla_art_arda_bes_hatada_durur_tamamlananlar_tekrar_istenmez(
+    tmp_path,
+):
     eski = _sektor_anlik(tmp_path, tuple("ABCDEFGH"))
     hedef = list("BCDEFGH")
-    kap = SahteKapSektor({"B": "BANKA", "C": "HATA", "D": "HATA", "E": "HATA", "F": "HATA", "G": "HATA"})
-    yeni, _ = veri.sektor_tamamla(eski, tmp_path, kap, hedef, simdi=dt.datetime(2026, 10, 5, 20, 0))
-    assert yeni is None and kap.sorulan == list("BCDEFG")  # beşinci art arda hatada durur
-    assert [a.name for a in (tmp_path / "ag").iterdir()] == [eski]  # yarım anlık görüntü yazılmaz
-    kap2 = SahteKapSektor({"C": "GIDA", "D": "GIDA", "E": "GIDA", "F": "GIDA", "G": "HATA", "H": "HAVA"})
-    yeni, rapor = veri.sektor_tamamla(eski, tmp_path, kap2, hedef, simdi=dt.datetime(2026, 10, 5, 20, 1))
+    kap = SahteKapSektor(
+        {"B": "BANKA", "C": "HATA", "D": "HATA", "E": "HATA", "F": "HATA", "G": "HATA"}
+    )
+    yeni, _ = veri.sektor_tamamla(
+        eski, tmp_path, kap, hedef, simdi=dt.datetime(2026, 10, 5, 20, 0)
+    )
+    assert yeni is None and kap.sorulan == list(
+        "BCDEFG"
+    )  # beşinci art arda hatada durur
+    assert [a.name for a in (tmp_path / "ag").iterdir()] == [
+        eski
+    ]  # yarım anlık görüntü yazılmaz
+    kap2 = SahteKapSektor(
+        {"C": "GIDA", "D": "GIDA", "E": "GIDA", "F": "GIDA", "G": "HATA", "H": "HAVA"}
+    )
+    yeni, rapor = veri.sektor_tamamla(
+        eski, tmp_path, kap2, hedef, simdi=dt.datetime(2026, 10, 5, 20, 1)
+    )
     assert kap2.sorulan == list("CDEFGH")  # B önbellekten
-    assert veri.oku(yeni, tmp_path).sektor == {"A": "ESKI", "B": "BANKA", "C": "GIDA", "D": "GIDA", "E": "GIDA",
-                                                "F": "GIDA", "H": "HAVA"}
+    assert veri.oku(yeni, tmp_path).sektor == {
+        "A": "ESKI",
+        "B": "BANKA",
+        "C": "GIDA",
+        "D": "GIDA",
+        "E": "GIDA",
+        "F": "GIDA",
+        "H": "HAVA",
+    }
     assert rapor["alinamayan"] == ["G"] and rapor["var"] == 6 and rapor["hedef"] == 7

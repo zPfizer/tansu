@@ -16,14 +16,29 @@ SIMDI = dt.datetime(2026, 10, 5, 19, 30)
 
 
 def epoch(gun):
-    return int(dt.datetime(gun.year, gun.month, gun.day, tzinfo=dt.timezone(dt.timedelta(hours=3))).timestamp() * 1000)
+    return int(
+        dt.datetime(
+            gun.year, gun.month, gun.day, tzinfo=dt.timezone(dt.timedelta(hours=3))
+        ).timestamp()
+        * 1000
+    )
 
 
 def satir(tarih, kapanis, hacim=1000.0, dusuk=None, yuksek=None, **ek):
     """Düzeltmesiz satır: ham = düzeltilmiş. dusuk/yuksek verilmezse kapanışın ±0,01'i."""
     d, y = dusuk or kapanis - 0.01, yuksek or kapanis + 0.01
-    s = {"tarih": pd.Timestamp(tarih), "ham_kapanis": kapanis, "kapanis": kapanis, "ham_aof": kapanis,
-         "aof": kapanis, "ham_yuksek": y, "yuksek": y, "ham_dusuk": d, "dusuk": d, "hacim": hacim}
+    s = {
+        "tarih": pd.Timestamp(tarih),
+        "ham_kapanis": kapanis,
+        "kapanis": kapanis,
+        "ham_aof": kapanis,
+        "aof": kapanis,
+        "ham_yuksek": y,
+        "yuksek": y,
+        "ham_dusuk": d,
+        "dusuk": d,
+        "hacim": hacim,
+    }
     return {**s, **ek}
 
 
@@ -54,24 +69,55 @@ def gun(a, tarih, sembol="A"):
 
 def test_normal_gun_limiti(tmp_path):
     # 2024: ±%10. Önceki ham kapanış 100 → tavan 110, taban 90.
-    g = gun(anlik(tmp_path, [satir("2024-01-02", 100.0), satir("2024-01-03", 105.0)]), "2024-01-03")
-    assert (g["limit"], g["tavan"], g["taban"]) == (0.10, pytest.approx(110.0), pytest.approx(90.0))
+    g = gun(
+        anlik(tmp_path, [satir("2024-01-02", 100.0), satir("2024-01-03", 105.0)]),
+        "2024-01-03",
+    )
+    assert (g["limit"], g["tavan"], g["taban"]) == (
+        0.10,
+        pytest.approx(110.0),
+        pytest.approx(90.0),
+    )
     assert not g["karantina"]
 
 
 def test_olay_gunu_tabani_carpanla_olcekli(tmp_path):
     # Önceki kapanış 100, çarpan 0,5 → taban 50; tavan 50 × 1,1 = 55, alt 45. Ham kapanış 55 = tavan.
-    olay = {"A": [{"SHT_KODU": "02", "SHHE_TARIH": epoch(dt.date(2024, 1, 3)), "SHHE_FIYAT_AYAR_OR": 0.5}]}
-    g = gun(anlik(tmp_path, [satir("2024-01-02", 100.0), satir("2024-01-03", 55.0)], olay), "2024-01-03")
+    olay = {
+        "A": [
+            {
+                "SHT_KODU": "02",
+                "SHHE_TARIH": epoch(dt.date(2024, 1, 3)),
+                "SHHE_FIYAT_AYAR_OR": 0.5,
+            }
+        ]
+    }
+    g = gun(
+        anlik(tmp_path, [satir("2024-01-02", 100.0), satir("2024-01-03", 55.0)], olay),
+        "2024-01-03",
+    )
     assert (g["tavan"], g["taban"]) == (pytest.approx(55.0), pytest.approx(45.0))
     assert not g["karantina"] and g["kilit_tavan"]
 
 
 def test_limit_13_mart_2020de_yuzde_yirmiden_ona_gecer(tmp_path):
     # 12.03.2020 ±%20: tavan 120. 13.03.2020 ±%10: tavan 110.
-    a = anlik(tmp_path, [satir("2020-03-11", 100.0), satir("2020-03-12", 100.0), satir("2020-03-13", 100.0)])
-    assert (gun(a, "2020-03-12")["limit"], gun(a, "2020-03-12")["tavan"]) == (0.20, pytest.approx(120.0))
-    assert (gun(a, "2020-03-13")["limit"], gun(a, "2020-03-13")["tavan"]) == (0.10, pytest.approx(110.0))
+    a = anlik(
+        tmp_path,
+        [
+            satir("2020-03-11", 100.0),
+            satir("2020-03-12", 100.0),
+            satir("2020-03-13", 100.0),
+        ],
+    )
+    assert (gun(a, "2020-03-12")["limit"], gun(a, "2020-03-12")["tavan"]) == (
+        0.20,
+        pytest.approx(120.0),
+    )
+    assert (gun(a, "2020-03-13")["limit"], gun(a, "2020-03-13")["tavan"]) == (
+        0.10,
+        pytest.approx(110.0),
+    )
 
 
 def test_kilitli_tavan_ve_taban(tmp_path):
@@ -80,17 +126,41 @@ def test_kilitli_tavan_ve_taban(tmp_path):
     # 90,0 taban; 90,04: taban + 0,05 içinde → kilit; 90,2: değil.
     fiyat = []
     for kapanis in (110.0, 109.95, 109.8, 90.0, 90.04, 90.2):
-        fiyat += [satir("2024-01-02", 100.0), satir("2024-01-03", kapanis, dusuk=kapanis, yuksek=kapanis)]
-    beklenen = [(True, False), (True, False), (False, False), (False, True), (False, True), (False, False)]
+        fiyat += [
+            satir("2024-01-02", 100.0),
+            satir("2024-01-03", kapanis, dusuk=kapanis, yuksek=kapanis),
+        ]
+    beklenen = [
+        (True, False),
+        (True, False),
+        (False, False),
+        (False, True),
+        (False, True),
+        (False, False),
+    ]
     for i, (tavan, taban) in enumerate(beklenen):
-        g = gun(anlik(tmp_path / str(i), fiyat[2 * i:2 * i + 2]), "2024-01-03")
-        assert (g["kilit_tavan"], g["kilit_taban"]) == (tavan, taban), fiyat[2 * i + 1]["ham_kapanis"]
+        g = gun(anlik(tmp_path / str(i), fiyat[2 * i : 2 * i + 2]), "2024-01-03")
+        assert (g["kilit_tavan"], g["kilit_taban"]) == (tavan, taban), fiyat[2 * i + 1][
+            "ham_kapanis"
+        ]
 
 
 def test_duyarlilik_surumu_dusuk_esit_yuksek_ister(tmp_path):
     # Önceki 100, kapanış 110 tavan. Düşük = yüksek = 110 → duyarlı kilit. Düşük 109 → kilit ama duyarlı değil.
-    kilit = anlik(tmp_path / "a", [satir("2024-01-02", 100.0), satir("2024-01-03", 110.0, dusuk=110.0, yuksek=110.0)])
-    gevsek = anlik(tmp_path / "b", [satir("2024-01-02", 100.0), satir("2024-01-03", 110.0, dusuk=109.0, yuksek=110.0)])
+    kilit = anlik(
+        tmp_path / "a",
+        [
+            satir("2024-01-02", 100.0),
+            satir("2024-01-03", 110.0, dusuk=110.0, yuksek=110.0),
+        ],
+    )
+    gevsek = anlik(
+        tmp_path / "b",
+        [
+            satir("2024-01-02", 100.0),
+            satir("2024-01-03", 110.0, dusuk=109.0, yuksek=110.0),
+        ],
+    )
     assert gun(kilit, "2024-01-03")["kilit_tavan_duyarli"]
     g = gun(gevsek, "2024-01-03")
     assert g["kilit_tavan"] and not g["kilit_tavan_duyarli"]
@@ -98,24 +168,49 @@ def test_duyarlilik_surumu_dusuk_esit_yuksek_ister(tmp_path):
 
 def test_limiti_asan_gun_karantinaya_girer(tmp_path):
     # Tavan 110; pay %0,5 → 110,55. 111 aşar → karantina. 110,5 aşmaz.
-    asan = anlik(tmp_path / "a", [satir("2024-01-02", 100.0), satir("2024-01-03", 111.0)])
-    sinirda = anlik(tmp_path / "b", [satir("2024-01-02", 100.0), satir("2024-01-03", 110.5)])
-    assert gun(asan, "2024-01-03")["karantina"] and not gun(sinirda, "2024-01-03")["karantina"]
+    asan = anlik(
+        tmp_path / "a", [satir("2024-01-02", 100.0), satir("2024-01-03", 111.0)]
+    )
+    sinirda = anlik(
+        tmp_path / "b", [satir("2024-01-02", 100.0), satir("2024-01-03", 110.5)]
+    )
+    assert (
+        gun(asan, "2024-01-03")["karantina"]
+        and not gun(sinirda, "2024-01-03")["karantina"]
+    )
 
 
 def test_carpani_bir_olan_ya_da_bilinmeyen_kodlu_kayit_istisna_degildir(tmp_path):
     # Çarpan 1 → taban değişmez (100); kapanış 111 limiti aşar, kod "99" bilinmese de karantina.
-    olay = {"A": [{"SHT_KODU": "99", "SHHE_TARIH": epoch(dt.date(2024, 1, 3)), "SHHE_FIYAT_AYAR_OR": 1.0}]}
+    olay = {
+        "A": [
+            {
+                "SHT_KODU": "99",
+                "SHHE_TARIH": epoch(dt.date(2024, 1, 3)),
+                "SHHE_FIYAT_AYAR_OR": 1.0,
+            }
+        ]
+    }
     a = anlik(tmp_path, [satir("2024-01-02", 100.0), satir("2024-01-03", 111.0)], olay)
     assert gun(a, "2024-01-03")["karantina"]
 
 
 def test_bozuk_satirlar_karantinaya_girer(tmp_path):
     # Düşük 101 > AOF 100; kapanış 103 > yüksek 102 (düzeltilmiş); ham kapanış 0.
-    fiyat = [satir("2024-01-02", 100.0), satir("2024-01-03", 100.0, ham_dusuk=101.0),
-             satir("2024-01-04", 100.0, yuksek=99.0, ham_kapanis=100.0, ham_yuksek=100.01),
-             satir("2024-01-05", 100.0, ham_kapanis=0.0, ham_aof=0.0, ham_yuksek=0.0, ham_dusuk=0.0),
-             satir("2024-01-08", 100.0)]
+    fiyat = [
+        satir("2024-01-02", 100.0),
+        satir("2024-01-03", 100.0, ham_dusuk=101.0),
+        satir("2024-01-04", 100.0, yuksek=99.0, ham_kapanis=100.0, ham_yuksek=100.01),
+        satir(
+            "2024-01-05",
+            100.0,
+            ham_kapanis=0.0,
+            ham_aof=0.0,
+            ham_yuksek=0.0,
+            ham_dusuk=0.0,
+        ),
+        satir("2024-01-08", 100.0),
+    ]
     g = anlik(tmp_path, fiyat).gun_tablosu.set_index("tarih")["karantina"]
     assert list(g) == [False, True, True, True, False]
 
@@ -123,23 +218,39 @@ def test_bozuk_satirlar_karantinaya_girer(tmp_path):
 def test_duzeltilmis_seride_yuvarlama_farki_bozuk_sayilmaz(tmp_path):
     # Gerçek THYAO 2010-01-13: kapanış 3,4421 > yüksek 3,442062; bağıl fark 1,1e-5 < 1e-4 → temiz.
     # Kapanış 100,5 > yüksek 100: bağıl fark 5e-3 > 1e-4 → karantina.
-    fiyat = [satir("2024-01-02", 100.0), {**satir("2024-01-03", 100.0, yuksek=100.0), "kapanis": 100.00001},
-             {**satir("2024-01-04", 100.0, yuksek=100.0), "kapanis": 100.5}]
+    fiyat = [
+        satir("2024-01-02", 100.0),
+        {**satir("2024-01-03", 100.0, yuksek=100.0), "kapanis": 100.00001},
+        {**satir("2024-01-04", 100.0, yuksek=100.0), "kapanis": 100.5},
+    ]
     assert list(anlik(tmp_path, fiyat).gun_tablosu["karantina"]) == [False, False, True]
 
 
 def test_satirdaki_kismi_nan_bozuk_satirdir_indirmeyi_durdurmaz(tmp_path):
     # Gerçek IZINV 13.11.2013: yüksek 634210 (saçma), AOF ve hacim NaN. Satır karantinaya girer.
-    bozuk = {**satir("2024-01-03", 100.0), "aof": np.nan, "hacim": np.nan, "ham_yuksek": 634210.0}
-    g = anlik(tmp_path, [satir("2024-01-02", 100.0), bozuk, satir("2024-01-04", 100.0)]).gun_tablosu
+    bozuk = {
+        **satir("2024-01-03", 100.0),
+        "aof": np.nan,
+        "hacim": np.nan,
+        "ham_yuksek": 634210.0,
+    }
+    g = anlik(
+        tmp_path, [satir("2024-01-02", 100.0), bozuk, satir("2024-01-04", 100.0)]
+    ).gun_tablosu
     assert list(g["karantina"]) == [False, True, False]
 
 
 @pytest.mark.parametrize("bozuk", ["tekrar", "sira"])
 def test_yapisal_ihlal_indirmeyi_durdurur(tmp_path, bozuk):
-    fiyat = [satir("2024-01-02", 100.0), satir("2024-01-03", 100.0), satir("2024-01-04", 100.0)]
+    fiyat = [
+        satir("2024-01-02", 100.0),
+        satir("2024-01-03", 100.0),
+        satir("2024-01-04", 100.0),
+    ]
     if bozuk == "tekrar":
-        fiyat[2] = satir("2024-01-03", 101.0)  # aynı gün, farklı alanlar (birebir aynı tekrar ihlal değil, 5.13)
+        fiyat[2] = satir(
+            "2024-01-03", 101.0
+        )  # aynı gün, farklı alanlar (birebir aynı tekrar ihlal değil, 5.13)
     else:
         fiyat[1], fiyat[2] = fiyat[2], fiyat[1]
     with pytest.raises(veri.VeriHatasi):
@@ -150,21 +261,40 @@ def test_yapisal_ihlal_indirmeyi_durdurur(tmp_path, bozuk):
 def test_eksik_gun_nan_kalir_hacimsiz_gun_islem_gunu_degildir(tmp_path):
     # B 03.01'i hiç getirmez (A getirir); A 04.01'de hacim 0.
     gunler = ["2024-01-02", "2024-01-03", "2024-01-04"]
-    a = anlik(tmp_path, {
-        "A": [satir(g, 100.0, hacim=0.0 if g == "2024-01-04" else 1000.0) for g in gunler],
-        "B": [satir("2024-01-02", 100.0), satir("2024-01-04", 100.0)]})
+    a = anlik(
+        tmp_path,
+        {
+            "A": [
+                satir(g, 100.0, hacim=0.0 if g == "2024-01-04" else 1000.0)
+                for g in gunler
+            ],
+            "B": [satir("2024-01-02", 100.0), satir("2024-01-04", 100.0)],
+        },
+    )
     eksik = gun(a, "2024-01-03", "B")
     assert eksik["eksik"] and not eksik["islem"] and not eksik["kilit_tavan"]
-    assert (gun(a, "2024-01-04", "A")["eksik"], gun(a, "2024-01-04", "A")["islem"]) == (False, False)
+    assert (gun(a, "2024-01-04", "A")["eksik"], gun(a, "2024-01-04", "A")["islem"]) == (
+        False,
+        False,
+    )
     assert gun(a, "2024-01-04", "B")["islem"]
 
 
 def kaynak_gunu_verisi(tmp_path, bozuk_sayisi):
     # 20 sembol, 3 gün (02-04.01.2024); 03.01'de ilk `bozuk_sayisi` sembolün satırı bozuk (düşük 101 > AOF 100).
     tarihler = ["2024-01-02", "2024-01-03", "2024-01-04"]
-    return anlik(tmp_path, {f"S{i}": [
-        satir(t, 100.0, ham_dusuk=101.0) if t == tarihler[1] and i < bozuk_sayisi else satir(t, 100.0)
-        for t in tarihler] for i in range(20)})
+    return anlik(
+        tmp_path,
+        {
+            f"S{i}": [
+                satir(t, 100.0, ham_dusuk=101.0)
+                if t == tarihler[1] and i < bozuk_sayisi
+                else satir(t, 100.0)
+                for t in tarihler
+            ]
+            for i in range(20)
+        },
+    )
 
 
 def test_ayni_gun_yarisi_karantinadaysa_kaynak_gunu_hatasi_eksik_gundur(tmp_path):
@@ -173,7 +303,12 @@ def test_ayni_gun_yarisi_karantinadaysa_kaynak_gunu_hatasi_eksik_gundur(tmp_path
     a = kaynak_gunu_verisi(tmp_path, 10)
     g = a.gun_tablosu
     d = g[g["tarih"] == pd.Timestamp("2024-01-03")]
-    assert len(d) == 20 and d["eksik"].all() and not d["karantina"].any() and not d["islem"].any()
+    assert (
+        len(d) == 20
+        and d["eksik"].all()
+        and not d["karantina"].any()
+        and not d["islem"].any()
+    )
     assert not g[g["tarih"] != pd.Timestamp("2024-01-03")]["karantina"].any()
     assert a.sorunlar == ["kaynak günü hatası: 2024-01-03"]
 
@@ -182,7 +317,7 @@ def test_yariden_az_karantina_hisse_sorunudur_kaynak_gunu_degildir(tmp_path):
     # 9/20 = %45 < %50: bu 9 hisse karantinada kalır, öbür 11 hisse eksik olmaz.
     a = kaynak_gunu_verisi(tmp_path, 9)
     g = a.gun_tablosu
-    d =g[g["tarih"] == pd.Timestamp("2024-01-03")]
+    d = g[g["tarih"] == pd.Timestamp("2024-01-03")]
     assert (d["karantina"].sum(), d["eksik"].sum()) == (9, 0)
     assert a.sorunlar == ["karantina oranı > %1"]  # 9/60 = %15
 
@@ -202,8 +337,11 @@ def test_karantina_orani_birin_ustundeyse_veri_sorunlu(tmp_path):
         tarihler = pd.bdate_range("2024-01-02", periods=200)
         s = [satir(t, 100.0) for t in tarihler]
         for i in range(n_bozuk):
-            s[10 + 50 * i] = satir(tarihler[10 + 50 * i], 100.0, ham_dusuk=101.0)  # bozuk satır
+            s[10 + 50 * i] = satir(
+                tarihler[10 + 50 * i], 100.0, ham_dusuk=101.0
+            )  # bozuk satır
         return s
+
     assert anlik(tmp_path / "a", seri(2)).sorunlar == []
     assert anlik(tmp_path / "b", seri(3)).sorunlar == ["karantina oranı > %1"]
 
@@ -229,27 +367,56 @@ def test_veri_donmeyen_sembol_bos_sayilir_inmeyen_degil(tmp_path):
 
 def test_ham_fiyati_ve_hacmi_bos_satir_islem_yapilmamis_gundur_atilir(tmp_path):
     # Gerçek BERDN 30.01.2012: ham alanların hepsi ve hacim NaN, düzeltilmiş alanlar dolu.
-    bos = {**satir("2024-01-03", 100.0), "ham_kapanis": np.nan, "ham_aof": np.nan, "ham_yuksek": np.nan,
-           "ham_dusuk": np.nan, "hacim": np.nan}
+    bos = {
+        **satir("2024-01-03", 100.0),
+        "ham_kapanis": np.nan,
+        "ham_aof": np.nan,
+        "ham_yuksek": np.nan,
+        "ham_dusuk": np.nan,
+        "hacim": np.nan,
+    }
     a = anlik(tmp_path, [satir("2024-01-02", 100.0), bos, satir("2024-01-04", 100.0)])
-    assert list(a.fiyat["tarih"]) == [pd.Timestamp("2024-01-02"), pd.Timestamp("2024-01-04")]
+    assert list(a.fiyat["tarih"]) == [
+        pd.Timestamp("2024-01-02"),
+        pd.Timestamp("2024-01-04"),
+    ]
 
 
 def test_birebir_ayni_tekrar_satir_tek_sayilir_farkli_tekrar_ihlaldir(tmp_path):
     # Gerçek BYDNR 23.08.2023: aynı satır iki kez geldi.
-    ayni = [satir("2024-01-02", 100.0), satir("2024-01-03", 100.0), satir("2024-01-03", 100.0)]
-    assert list(anlik(tmp_path / "a", ayni).fiyat["tarih"]) == [pd.Timestamp("2024-01-02"), pd.Timestamp("2024-01-03")]
-    farkli = [satir("2024-01-02", 100.0), satir("2024-01-03", 100.0), satir("2024-01-03", 101.0)]
+    ayni = [
+        satir("2024-01-02", 100.0),
+        satir("2024-01-03", 100.0),
+        satir("2024-01-03", 100.0),
+    ]
+    assert list(anlik(tmp_path / "a", ayni).fiyat["tarih"]) == [
+        pd.Timestamp("2024-01-02"),
+        pd.Timestamp("2024-01-03"),
+    ]
+    farkli = [
+        satir("2024-01-02", 100.0),
+        satir("2024-01-03", 100.0),
+        satir("2024-01-03", 101.0),
+    ]
     with pytest.raises(veri.VeriHatasi):
         anlik(tmp_path / "b", farkli)
 
 
 def test_hacmi_sifir_ve_ham_alanlari_nan_ya_da_sifir_satir_atilir(tmp_path):
     # Gerçek ISATR 23.06.2010: ham kapanış NaN, diğer ham alanlar ve hacim 0.
-    bos = {**satir("2024-01-03", 100.0), "ham_kapanis": np.nan, "ham_aof": 0.0, "ham_yuksek": 0.0,
-           "ham_dusuk": 0.0, "hacim": 0.0}
+    bos = {
+        **satir("2024-01-03", 100.0),
+        "ham_kapanis": np.nan,
+        "ham_aof": 0.0,
+        "ham_yuksek": 0.0,
+        "ham_dusuk": 0.0,
+        "hacim": 0.0,
+    }
     a = anlik(tmp_path, [satir("2024-01-02", 100.0), bos, satir("2024-01-04", 100.0)])
-    assert list(a.fiyat["tarih"]) == [pd.Timestamp("2024-01-02"), pd.Timestamp("2024-01-04")]
+    assert list(a.fiyat["tarih"]) == [
+        pd.Timestamp("2024-01-02"),
+        pd.Timestamp("2024-01-04"),
+    ]
 
 
 def test_yalniz_sermaye_farkli_tekrar_satir_tek_sayilir_ilki_kalir(tmp_path):

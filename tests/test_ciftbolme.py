@@ -25,7 +25,10 @@ from tests.test_veri import SahteBorsapy, SahteKaynak
 
 GUN = pd.bdate_range("2014-12-01", "2017-03-31")
 T = np.arange(len(GUN))
-S16, S17 = GUN.get_loc(pd.Timestamp("2016-01-01")), GUN.get_loc(pd.Timestamp("2017-01-02"))
+S16, S17 = (
+    GUN.get_loc(pd.Timestamp("2016-01-01")),
+    GUN.get_loc(pd.Timestamp("2017-01-02")),
+)
 ILK = GUN.get_loc(pd.Timestamp("2015-12-01"))
 SON = len(GUN) - 1
 P, ATR_N = aileler.Parametre(isinma=100_000), 14
@@ -40,7 +43,10 @@ class SektorBorsapy(SahteBorsapy):
 
 
 def seri(fiyat, bas=0, son=None, hacim=1e9):
-    return [mum(g, float(f), hacim=hacim) for g, f in zip(GUN[bas:son], np.asarray(fiyat)[bas:son])]
+    return [
+        mum(g, float(f), hacim=hacim)
+        for g, f in zip(GUN[bas:son], np.asarray(fiyat)[bas:son])
+    ]
 
 
 def kos(tmp_path, fiyatlar, sektor=None, tam=False):
@@ -49,8 +55,13 @@ def kos(tmp_path, fiyatlar, sektor=None, tam=False):
     for s, f in fiyatlar.items():
         seriler[s] = seri(*f) if isinstance(f, tuple) else seri(f)
     k = SahteKaynak(seriler, {s: [] for s in seriler})
-    kimlik = veri.indir(list(seriler), tmp_path, k, simdi=dt.datetime(2026, 10, 5, 19, 30),
-                        borsapy=SektorBorsapy([("2014-01-01", 0.0)], sektor or {}))
+    kimlik = veri.indir(
+        list(seriler),
+        tmp_path,
+        k,
+        simdi=dt.datetime(2026, 10, 5, 19, 30),
+        borsapy=SektorBorsapy([("2014-01-01", 0.0)], sektor or {}),
+    )
     kayit.kayitla(P, ATR_N)
     s = kayit.kosu(kimlik, tmp_path, p=P, atr_n=ATR_N, git=lambda: ("abc", False))
     return s if tam else s["cift"]
@@ -77,16 +88,26 @@ def test_sabit_cift_gecis_gunleri_adet_ve_ilk_sinyale_kadar_nakit(tmp_path):
     vakbn, garan = sabit(OLAY)
     c = kos(tmp_path, {"VAKBN": vakbn, "GARAN": garan})
     t = sonuc(c)["islemler"]
-    assert [(r.sembol, r.giris_tarih, r.cikis_tarih, r.neden) for r in t.itertuples()] == [
-        ("VAKBN", GUN[T0 + 2], GUN[T1 + 2], "gecis"), ("GARAN", GUN[T1 + 2], GUN[SON], "veri_sonu")]
+    assert [
+        (r.sembol, r.giris_tarih, r.cikis_tarih, r.neden) for r in t.itertuples()
+    ] == [
+        ("VAKBN", GUN[T0 + 2], GUN[T1 + 2], "gecis"),
+        ("GARAN", GUN[T1 + 2], GUN[SON], "veri_sonu"),
+    ]
     a, b = t.iloc[0], t.iloc[1]
-    assert a.giris_fiyat == pytest.approx(vakbn[T0 + 2]) and a.cikis_fiyat == pytest.approx(vakbn[T1 + 2])
+    assert a.giris_fiyat == pytest.approx(
+        vakbn[T0 + 2]
+    ) and a.cikis_fiyat == pytest.approx(vakbn[T1 + 2])
     assert a.adet == int(1_000_000 // (1.003 * vakbn[T0 + 2]))
     nakit = 1_000_000 - a.adet * vakbn[T0 + 2] * 1.003 + a.adet * vakbn[T1 + 2] * 0.997
-    assert b.adet == int(nakit // (1.003 * garan[T1 + 2])) and b.giris_fiyat == pytest.approx(garan[T1 + 2])
+    assert b.adet == int(
+        nakit // (1.003 * garan[T1 + 2])
+    ) and b.giris_fiyat == pytest.approx(garan[T1 + 2])
     assert b.getiri == pytest.approx(garan[SON] * 0.997 / (garan[T1 + 2] * 1.003) - 1)
     oz = sonuc(c)["ozkaynak"]
-    assert oz.loc[GUN[ILK]] == 1_000_000 and oz.loc[GUN[T0 + 1]] == 1_000_000  # ilk sinyale kadar nakit
+    assert (
+        oz.loc[GUN[ILK]] == 1_000_000 and oz.loc[GUN[T0 + 1]] == 1_000_000
+    )  # ilk sinyale kadar nakit
 
 
 def test_kilitli_bacakta_gecis_olmaz_ve_sinyal_tasinmaz(tmp_path):
@@ -96,10 +117,13 @@ def test_kilitli_bacakta_gecis_olmaz_ve_sinyal_tasinmaz(tmp_path):
     vakbn, garan = sabit(OLAY)
     vakbn = vakbn.copy()
     vakbn[T1 + 2] = vakbn[T1 + 1] * 1.2
-    vakbn[T1 + 3] = garan[T1 + 3] * np.exp(0.001 * (-1.0) ** (T1 + 3) + 0.0003 * np.sin((T1 + 3) / 3.7))
+    vakbn[T1 + 3] = garan[T1 + 3] * np.exp(
+        0.001 * (-1.0) ** (T1 + 3) + 0.0003 * np.sin((T1 + 3) / 3.7)
+    )
     t = sonuc(kos(tmp_path, {"VAKBN": vakbn, "GARAN": garan}))["islemler"]
-    assert [(r.sembol, r.giris_tarih, r.cikis_tarih, r.neden) for r in t.itertuples()] == [
-        ("VAKBN", GUN[T0 + 2], GUN[SON], "veri_sonu")]
+    assert [
+        (r.sembol, r.giris_tarih, r.cikis_tarih, r.neden) for r in t.itertuples()
+    ] == [("VAKBN", GUN[T0 + 2], GUN[SON], "veri_sonu")]
 
 
 def test_kapanan_bacak_pay_nakde_gecer(tmp_path):
@@ -109,10 +133,14 @@ def test_kapanan_bacak_pay_nakde_gecer(tmp_path):
     vakbn, garan = sabit(OLAY)
     c = kos(tmp_path, {"VAKBN": (vakbn, 0, T0 + 11), "GARAN": garan})
     t = sonuc(c)["islemler"]
-    assert [(r.sembol, r.giris_tarih, r.cikis_tarih, r.cikis_fiyat, r.neden) for r in t.itertuples()] == [
-        ("VAKBN", GUN[T0 + 2], GUN[T0 + 71], 0.0, "kapanma")]
+    assert [
+        (r.sembol, r.giris_tarih, r.cikis_tarih, r.cikis_fiyat, r.neden)
+        for r in t.itertuples()
+    ] == [("VAKBN", GUN[T0 + 2], GUN[T0 + 71], 0.0, "kapanma")]
     assert t.iloc[0].getiri == pytest.approx(-1.0)
-    assert sonuc(c)["ozkaynak"].iloc[-1] == pytest.approx(1_000_000 - t.iloc[0].adet * vakbn[T0 + 2] * 1.003, abs=1e-6)
+    assert sonuc(c)["ozkaynak"].iloc[-1] == pytest.approx(
+        1_000_000 - t.iloc[0].adet * vakbn[T0 + 2] * 1.003, abs=1e-6
+    )
 
 
 def test_tanisal_elli_elli_baslangicta_bir_kez_alinir_ve_tutulur(tmp_path):
@@ -125,7 +153,9 @@ def test_tanisal_elli_elli_baslangicta_bir_kez_alinir_ve_tutulur(tmp_path):
     av, ag = int(500_000 // (1.003 * vakbn[q])), int(500_000 // (1.003 * garan[q]))
     nakit = 1_000_000 - (av * vakbn[q] + ag * garan[q]) * 1.003
     assert e.loc[GUN[ILK]] == 1_000_000
-    assert e.loc[GUN[q]] == pytest.approx(1_000_000 - 0.003 * (av * vakbn[q] + ag * garan[q]))
+    assert e.loc[GUN[q]] == pytest.approx(
+        1_000_000 - 0.003 * (av * vakbn[q] + ag * garan[q])
+    )
     assert e.iloc[-1] == pytest.approx(nakit + av * vakbn[SON] + ag * garan[SON])
 
 
@@ -139,38 +169,63 @@ def test_sabit_cift_secimden_bagimsiz_ve_k2_ilk_gun_baslangic(tmp_path):
     assert set(c["masraf"]) == set(c["sabit"]) == {0.001, 0.003, 0.005}
 
 
-def test_tutulan_bacakta_karantina_son_temiz_aofta_kapatir_cift_girissiz_kalir(tmp_path):
+def test_tutulan_bacakta_karantina_son_temiz_aofta_kapatir_cift_girissiz_kalir(
+    tmp_path,
+):
     # t0+5'te VAKBN, önceki kapanışın 1,5 katına çıkar (limit ±%20 aşıldı, olay yok) → karantina günü ve sonraki 250 satır.
     # Tutulan VAKBN karantina gününde, son temiz AOF'tan (t0+4 AOF = kapanış) kapanır. t1 sinyalleri karantina penceresinde
     # (t0+5 … t0+254) yoksayılır: tek işlem. Son özkaynak = 1.000.000 − adet · giriş · 1,003 + adet · çıkış · 0,997.
     vakbn, garan = sabit(OLAY)
     vakbn = vakbn.copy()
-    vakbn[T0 + 5:] *= 1.5
+    vakbn[T0 + 5 :] *= 1.5
     c = kos(tmp_path, {"VAKBN": vakbn, "GARAN": garan})
     t = sonuc(c)["islemler"]
-    assert [(r.sembol, r.giris_tarih, r.cikis_tarih, r.neden) for r in t.itertuples()] == [
-        ("VAKBN", GUN[T0 + 2], GUN[T0 + 5], "karantina")]
+    assert [
+        (r.sembol, r.giris_tarih, r.cikis_tarih, r.neden) for r in t.itertuples()
+    ] == [("VAKBN", GUN[T0 + 2], GUN[T0 + 5], "karantina")]
     a = t.iloc[0]
     assert a.cikis_fiyat == pytest.approx(vakbn[T0 + 4])
     assert sonuc(c)["ozkaynak"].iloc[-1] == pytest.approx(
-        1_000_000 - a.adet * vakbn[T0 + 2] * 1.003 + a.adet * vakbn[T0 + 4] * 0.997, abs=1e-6)
+        1_000_000 - a.adet * vakbn[T0 + 2] * 1.003 + a.adet * vakbn[T0 + 4] * 0.997,
+        abs=1e-6,
+    )
 
 
 def test_rapor_cift_bolumu_ve_yasakli_sozcuk_yok(tmp_path):
     import re
+
     vakbn, garan = sabit(OLAY)
     s = kos(tmp_path, {"VAKBN": vakbn, "GARAN": garan}, tam=True)
     html = s["rapor"].read_text(encoding="utf-8")
-    for beklenen in ("<h2>Çift rotasyonu</h2>", "VAKBN–GARAN (sabit çift)", "50/50", "işlem yok", "K2"):
+    for beklenen in (
+        "<h2>Çift rotasyonu</h2>",
+        "VAKBN–GARAN (sabit çift)",
+        "50/50",
+        "işlem yok",
+        "K2",
+    ):
         assert beklenen in html
     assert html.count("<h2>Uyarılar</h2>") == 1
     assert not re.search(r"\b(AL|SAT|ÖNERİ)\b|Tansu'nun sistemi", html)
-    csv = pd.read_csv(s["rapor"].parent / f"cift-islemler-{s['kosu_id']}.csv", encoding="utf-8")
-    assert list(csv.columns) == ["cift", "sembol", "giris_tarih", "giris_fiyat", "cikis_tarih", "cikis_fiyat", "neden",
-                                 "adet", "getiri", "aile"]
+    csv = pd.read_csv(
+        s["rapor"].parent / f"cift-islemler-{s['kosu_id']}.csv", encoding="utf-8"
+    )
+    assert list(csv.columns) == [
+        "cift",
+        "sembol",
+        "giris_tarih",
+        "giris_fiyat",
+        "cikis_tarih",
+        "cikis_fiyat",
+        "neden",
+        "adet",
+        "getiri",
+        "aile",
+    ]
 
 
 # ---- yıllık seçim ve yıl geçişi: gerçekçi (tohumlu) veri ----
+
 
 def ar1(tohum, phi=0.7, sd=0.01):
     e = np.random.default_rng(tohum).normal(0, sd, len(T))
@@ -189,7 +244,9 @@ def fiyat(log_fiyat):
 
 
 def dummy(adet):
-    return {f"D{i}": (np.full(len(T), 100.0), 0, None, 1e3) for i in range(adet)}  # en az likit: evren elemesine girer
+    return {
+        f"D{i}": (np.full(len(T), 100.0), 0, None, 1e3) for i in range(adet)
+    }  # en az likit: evren elemesine girer
 
 
 def test_secim_kurallari(tmp_path):
@@ -202,20 +259,36 @@ def test_secim_kurallari(tmp_path):
     f = {k: fiyat(taban + ar1(10 + i)) for i, k in enumerate("ABCDE")}
     f["F"] = fiyat(taban2)
     f["G"] = 1e4 / f["F"] * np.exp(ar1(30))
-    f["H"], f["I"] = fiyat(rw(43)), fiyat(rw(143))  # 2016 seçim penceresinde Engle–Granger p ≈ 0,74
+    f["H"], f["I"] = (
+        fiyat(rw(43)),
+        fiyat(rw(143)),
+    )  # 2016 seçim penceresinde Engle–Granger p ≈ 0,74
     f["J"] = fiyat(taban3 + ar1(50))
     f["K"] = (fiyat(taban3 + ar1(51)), S16 - 100, None)
     f["L"], f["M"] = fiyat(taban2 + ar1(60)), fiyat(taban2 + ar1(61))
     f["N"] = fiyat(taban + ar1(70))
     f.update(dummy(3))
-    sektor = {**dict.fromkeys("ABCDE", "S1"), "F": "S2", "G": "S2", "H": "S3", "I": "S3", "J": "S4", "K": "S4",
-              "L": "S5", "M": "S6"}
+    sektor = {
+        **dict.fromkeys("ABCDE", "S1"),
+        "F": "S2",
+        "G": "S2",
+        "H": "S3",
+        "I": "S3",
+        "J": "S4",
+        "K": "S4",
+        "L": "S5",
+        "M": "S6",
+    }
     s = kos(tmp_path, f, sektor)["secim"]
     s16 = s[s["yil"] == 2016]
     assert len(s16) == 2 and set(s16["sektor"]) == {"S1"}
     hisseler = list(s16["y"]) + list(s16["x"])
     assert len(set(hisseler)) == 4 and set(hisseler) <= set("ABCDE")
-    assert all(y < x for y, x in zip(s16["y"], s16["x"])) and (s16["p"] < 0.05).all() and (s16["beta"] > 0).all()
+    assert (
+        all(y < x for y, x in zip(s16["y"], s16["x"]))
+        and (s16["p"] < 0.05).all()
+        and (s16["beta"] > 0).all()
+    )
 
 
 def kur_yil_gecisi():
@@ -226,23 +299,38 @@ def kur_yil_gecisi():
     b_log, bagimsiz_b = t1 - ar1(110), rw(307)
     b_log = np.where(T <= S16, b_log, b_log[S16] + bagimsiz_b - bagimsiz_b[S16])
     bagimsiz, a = rw(131), ar1(132)
-    f_log = np.where(T <= S16, bagimsiz, bagimsiz[S16] + (t3 - t3[S16]) + (a - a[S16]))  # S16'da süreklidir
-    f = {"A": fiyat(t1), "B": fiyat(b_log), "C": fiyat(t2 + ar1(122)), "D": fiyat(t2 + ar1(123)),
-         "E": fiyat(t3), "F": fiyat(f_log)}
+    f_log = np.where(
+        T <= S16, bagimsiz, bagimsiz[S16] + (t3 - t3[S16]) + (a - a[S16])
+    )  # S16'da süreklidir
+    f = {
+        "A": fiyat(t1),
+        "B": fiyat(b_log),
+        "C": fiyat(t2 + ar1(122)),
+        "D": fiyat(t2 + ar1(123)),
+        "E": fiyat(t3),
+        "F": fiyat(f_log),
+    }
     return f, {"A": "S1", "B": "S1", "C": "S2", "D": "S2", "E": "S3", "F": "S3"}
 
 
-def test_yil_gecisi_dusen_cift_kapanir_devam_eden_islemsiz_surer_yeni_cift_esit_pay_alir(tmp_path):
+def test_yil_gecisi_dusen_cift_kapanir_devam_eden_islemsiz_surer_yeni_cift_esit_pay_alir(
+    tmp_path,
+):
     f, sektor = kur_yil_gecisi()
     f.update(dummy(1))
     c = kos(tmp_path, f, sektor)
     s = c["secim"]
     cift = lambda y: set(zip(s[s["yil"] == y]["y"], s[s["yil"] == y]["x"]))  # noqa: E731
-    assert cift(2016) == {("A", "B"), ("C", "D")} and cift(2017) == {("C", "D"), ("E", "F")}
+    assert cift(2016) == {("A", "B"), ("C", "D")} and cift(2017) == {
+        ("C", "D"),
+        ("E", "F"),
+    }
     t = c["masraf"][0.003]["islemler"]
     gecis = GUN[S17 + 1]  # seçimden sonraki ilk işlem günü
     ab = t[t["cift"] == "A-B"]
-    assert ab.iloc[-1].neden == "yil_gecisi" and ab.iloc[-1].cikis_tarih == gecis  # düşen çift o gün AOF'ta kapanır
+    assert (
+        ab.iloc[-1].neden == "yil_gecisi" and ab.iloc[-1].cikis_tarih == gecis
+    )  # düşen çift o gün AOF'ta kapanır
     cd = t[t["cift"] == "C-D"]
     assert not (cd["neden"] == "yil_gecisi").any()  # devam eden çift işlemsiz sürer
     assert ((cd["giris_tarih"] < gecis) & (cd["cikis_tarih"] > gecis)).any()
@@ -251,7 +339,10 @@ def test_yil_gecisi_dusen_cift_kapanir_devam_eden_islemsiz_surer_yeni_cift_esit_
         ilk = t[t["cift"] == k].iloc[0]
         assert ilk.adet == int(200_000 // (1.003 * ilk.giris_fiyat))
     # 2017: boşta 3 pay (600.000) + A–B payının satış sonrası nakdi, devam etmeyen 4 pay arasında eşit bölünür.
-    ab_nakit = 200_000 + (ab["adet"] * (ab["cikis_fiyat"] * 0.997 - ab["giris_fiyat"] * 1.003)).sum()
+    ab_nakit = (
+        200_000
+        + (ab["adet"] * (ab["cikis_fiyat"] * 0.997 - ab["giris_fiyat"] * 1.003)).sum()
+    )
     ef = t[t["cift"] == "E-F"].iloc[0]
     assert ef.adet == int((600_000 + ab_nakit) / 4 // (1.003 * ef.giris_fiyat))
 

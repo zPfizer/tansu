@@ -40,8 +40,12 @@ def test_dz_ardisik_farktir():
 
 def test_kalinti_z_beta_ile():
     y, x = seri([0, 2, 3]), seri([0, 1, 2])
-    assert cift.z_skor(y, x, 3, ddof=1, mod="kalinti").iloc[-1] == pytest.approx(-0.577350, abs=1e-6)
-    assert cift.z_skor(y, x, 3, ddof=0, mod="kalinti").iloc[-1] == pytest.approx(-0.707107, abs=1e-6)
+    assert cift.z_skor(y, x, 3, ddof=1, mod="kalinti").iloc[-1] == pytest.approx(
+        -0.577350, abs=1e-6
+    )
+    assert cift.z_skor(y, x, 3, ddof=0, mod="kalinti").iloc[-1] == pytest.approx(
+        -0.707107, abs=1e-6
+    )
 
 
 def test_beta_ve_korelasyon():

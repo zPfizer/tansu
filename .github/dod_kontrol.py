@@ -86,7 +86,9 @@ def hatalar(govde: str) -> list[str]:
         if re.match(r"^\s*- \[ \]", satir)
     ]
     if isaretsiz:
-        sonuc.append("Kural 2: işaretsiz kutu var; satır: " + ", ".join(isaretsiz) + ".")
+        sonuc.append(
+            "Kural 2: işaretsiz kutu var; satır: " + ", ".join(isaretsiz) + "."
+        )
 
     kabul, dod, inceleme, kanit = bolumler
     if kabul is not None and not any(

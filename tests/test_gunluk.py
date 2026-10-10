@@ -20,11 +20,25 @@ from tansu import aileler, gunluk, kayit, rapor
 from tansu.kaynak import KaynakHatasi
 from tests.test_veri import SahteKaynak, satir
 
-P = aileler.Parametre(periyotlar=(1, 2), esik=0.005, min_gun=3, pencere=3, isinma=4, sma_n=2)
+P = aileler.Parametre(
+    periyotlar=(1, 2), esik=0.005, min_gun=3, pencere=3, isinma=4, sma_n=2
+)
 TARIH = dt.date(2026, 10, 5)
 SIMDI = dt.datetime(2026, 10, 5, 19, 30)
-BASLIK = ["Tarih", "Hisse", "Aile", "Durum", "Referans", "Stop", "Pozisyon %", "Adet", "Fiili risk",
-          "Likidite sınırı TL", "Kanıt", "Kaynak"]
+BASLIK = [
+    "Tarih",
+    "Hisse",
+    "Aile",
+    "Durum",
+    "Referans",
+    "Stop",
+    "Pozisyon %",
+    "Adet",
+    "Fiili risk",
+    "Likidite sınırı TL",
+    "Kanıt",
+    "Kaynak",
+]
 
 
 def fiyatlar(bozuk=False):
@@ -33,10 +47,14 @@ def fiyatlar(bozuk=False):
     sonuc = []
     for g, k, y in zip(pd.bdate_range("2026-09-28", periods=6), kap, yuk):
         s = satir(g, k, k)
-        s.update(yuksek=y, ham_yuksek=y, dusuk=k - 0.5, ham_dusuk=k - 0.5, hacim=4_000_000.0)
+        s.update(
+            yuksek=y, ham_yuksek=y, dusuk=k - 0.5, ham_dusuk=k - 0.5, hacim=4_000_000.0
+        )
         sonuc.append(s)
     if bozuk:
-        sonuc[3].update(ham_dusuk=200.0, dusuk=200.0)  # düşük > yüksek: bozuk satır, 1/6 > %1
+        sonuc[3].update(
+            ham_dusuk=200.0, dusuk=200.0
+        )  # düşük > yüksek: bozuk satır, 1/6 > %1
     return sonuc
 
 
@@ -60,7 +78,15 @@ def kaynak(**kw):
 
 
 def kos(tmp_path, k=None, tarih=TARIH, simdi=SIMDI):
-    return gunluk.gunluk(tarih, tmp_path, simdi=simdi, kaynak=k or kaynak(), semboller=["XXXX"], p=P, atr_n=2)
+    return gunluk.gunluk(
+        tarih,
+        tmp_path,
+        simdi=simdi,
+        kaynak=k or kaynak(),
+        semboller=["XXXX"],
+        p=P,
+        atr_n=2,
+    )
 
 
 def durum_satirlari():
@@ -68,8 +94,17 @@ def durum_satirlari():
 
 
 def kagit_aile():
-    kayit._yaz({"tur": "durum", "olay": "durum", "tarih": "2026-07-05T10:00:00+00:00", "aile": "ema_sikismasi",
-                "durum": "Kâğıt", "resmi": True, "kanit": {"islem": 148, "fazla": 0.009, "ci": [0.002, 0.016]}})
+    kayit._yaz(
+        {
+            "tur": "durum",
+            "olay": "durum",
+            "tarih": "2026-07-05T10:00:00+00:00",
+            "aile": "ema_sikismasi",
+            "durum": "Kâğıt",
+            "resmi": True,
+            "kanit": {"islem": 148, "fazla": 0.009, "ci": [0.002, 0.016]},
+        }
+    )
 
 
 def test_tamam_kart_csv_ve_durum(tmp_path):
@@ -77,22 +112,47 @@ def test_tamam_kart_csv_ve_durum(tmp_path):
     assert kos(tmp_path) == 0
     d = durum_satirlari()
     assert d[0] == "TAMAM"
-    assert d[1:5] == ["Son başarılı koşu: 2026-10-05 19:30", "Anlık görüntü: 20261005-1930",
-                      "Son çubuk: 2026-10-05", "Sembol sayısı: 1"]
+    assert d[1:5] == [
+        "Son başarılı koşu: 2026-10-05 19:30",
+        "Anlık görüntü: 20261005-1930",
+        "Son çubuk: 2026-10-05",
+        "Sembol sayısı: 1",
+    ]
     assert "kartlar-20261005.csv" in d[5] and len(d) == 6
     ham = (rapor.RAPOR_DIZINI / "kartlar-20261005.csv").read_bytes()
     assert ham.startswith(b"\xef\xbb\xbf")
     satirlar = list(csv.reader(ham.decode("utf-8-sig").splitlines(), delimiter=";"))
-    kanit = ("Kâğıt · 148 işlem · rastgele kurala göre işlem başına fazla getiri +%0,90 (%0,3 masraf) · "
-             "portföy fazla getirisi (K2'ye göre, yıllık, blok bootstrap %95 aralık +%0,20 ile +%1,60) · kâğıt dönem 3/6 ay")
-    assert satirlar == [BASLIK, ["2026-10-05", "XXXX", "EMA sıkışması", "AKTİF", "103,00",
-                                 "98,44 (tahmini)", "%7,99", "776", "%0,35", "80000", kanit,
-                                 "İş Yatırım 20261005-1930"]]
+    kanit = (
+        "Kâğıt · 148 işlem · rastgele kurala göre işlem başına fazla getiri +%0,90 (%0,3 masraf) · "
+        "portföy fazla getirisi (K2'ye göre, yıllık, blok bootstrap %95 aralık +%0,20 ile +%1,60) · kâğıt dönem 3/6 ay"
+    )
+    assert satirlar == [
+        BASLIK,
+        [
+            "2026-10-05",
+            "XXXX",
+            "EMA sıkışması",
+            "AKTİF",
+            "103,00",
+            "98,44 (tahmini)",
+            "%7,99",
+            "776",
+            "%0,35",
+            "80000",
+            kanit,
+            "İş Yatırım 20261005-1930",
+        ],
+    ]
 
 
 def test_sinyal_yoksa_yalniz_baslik(tmp_path):
     assert kos(tmp_path) == 0  # aile Deneme: kart yok
-    satirlar = (rapor.RAPOR_DIZINI / "kartlar-20261005.csv").read_bytes().decode("utf-8-sig").splitlines()
+    satirlar = (
+        (rapor.RAPOR_DIZINI / "kartlar-20261005.csv")
+        .read_bytes()
+        .decode("utf-8-sig")
+        .splitlines()
+    )
     assert satirlar == [";".join(BASLIK)]
     assert durum_satirlari()[0] == "TAMAM"
 
@@ -100,9 +160,15 @@ def test_sinyal_yoksa_yalniz_baslik(tmp_path):
 def test_kart_gunlugu_yalniz_eklenir_ve_gun_basina_bir_satir(tmp_path):
     kagit_aile()
     kos(tmp_path)
-    satirlar = (kayit.KAYIT_DIZINI / "kartlar.jsonl").read_text(encoding="utf-8").splitlines()
+    satirlar = (
+        (kayit.KAYIT_DIZINI / "kartlar.jsonl").read_text(encoding="utf-8").splitlines()
+    )
     s = json.loads(satirlar[0])
-    assert len(satirlar) == 1 and s["tarih"] == "2026-10-05" and s["anlik"] == "20261005-1930"
+    assert (
+        len(satirlar) == 1
+        and s["tarih"] == "2026-10-05"
+        and s["anlik"] == "20261005-1930"
+    )
     assert [k["Hisse"] for k in s["kartlar"]] == ["XXXX"]
 
 
@@ -116,7 +182,12 @@ def test_bugun_basarili_kosu_varsa_hicbir_sey_yapmadan_cikar(tmp_path):
 
 
 def test_bugun_cubuk_yok_tatil_cikis_sifir(tmp_path):
-    assert kos(tmp_path, tarih=dt.date(2026, 10, 6), simdi=dt.datetime(2026, 10, 6, 19, 30)) == 0
+    assert (
+        kos(
+            tmp_path, tarih=dt.date(2026, 10, 6), simdi=dt.datetime(2026, 10, 6, 19, 30)
+        )
+        == 0
+    )
     assert durum_satirlari()[0] == "BUGÜN ÇUBUK YOK"
     assert not list(rapor.RAPOR_DIZINI.glob("kartlar-*.csv"))
 
@@ -139,7 +210,9 @@ def test_1815ten_once_kart_uretilmez_ve_kaynaga_gidilmez(tmp_path):
     assert kos(tmp_path, k, simdi=dt.datetime(2026, 10, 5, 18, 14)) == 1
     assert k.cagri == 0 and durum_satirlari()[0] == "VERİ YOK"
     assert not list(rapor.RAPOR_DIZINI.glob("kartlar-*.csv"))
-    assert kos(tmp_path, k, simdi=dt.datetime(2026, 10, 5, 18, 15)) == 0  # sınırda koşar
+    assert (
+        kos(tmp_path, k, simdi=dt.datetime(2026, 10, 5, 18, 15)) == 0
+    )  # sınırda koşar
 
 
 def test_basarisiz_koşudan_sonra_son_basarili_saat_korunur(tmp_path):
@@ -171,4 +244,8 @@ def test_gunluk_anlik_goruntuler_30_gun_sonra_silinir_denemede_gecenler_kalir(tm
     kayit._yaz({"tur": "deneme", "olay": "basladi", "anlik": "20260802-1930"})
     kos(tmp_path)
     # 05.10 − 04.09 = 31 gün (silinir); 05.10 − 06.09 = 29 gün (kalır); 02.08 denemede geçiyor (kalır).
-    assert sorted(p.name for p in ag.iterdir()) == ["20260802-1930", "20260906-1930", "20261005-1930"]
+    assert sorted(p.name for p in ag.iterdir()) == [
+        "20260802-1930",
+        "20260906-1930",
+        "20261005-1930",
+    ]
