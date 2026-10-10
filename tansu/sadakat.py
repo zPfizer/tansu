@@ -130,7 +130,7 @@ def calistir(kimlik, kok, rapor_yolu, gunluk_yolu) -> str:
     Path(rapor_yolu).write_text(metin, encoding="utf-8")
     gunluk = Path(gunluk_yolu)
     gunluk.parent.mkdir(parents=True, exist_ok=True)
-    satir = {"tur": "sadakat", "tarih": dt.datetime.now(dt.timezone.utc).isoformat(), "anlik": kimlik,
+    satir = {"olay": "sadakat", "tur": "sadakat", "tarih": dt.datetime.now(dt.timezone.utc).isoformat(), "anlik": kimlik,
              "aile": "ema_sikismasi"}
     with gunluk.open("a", encoding="utf-8") as f:  # yalnız ekleme; Holm yalnız tur=deneme sayar
         f.write(json.dumps(satir, ensure_ascii=False) + "\n")

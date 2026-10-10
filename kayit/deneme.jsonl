@@ -49,3 +49,5 @@
 {"aile": "cift_rotasyonu", "fazla": -0.049134936090606464, "hucre": {"p_esik": 0.1, "z_esik": 1.5, "z_pencere": 120}, "islem": 96, "kosu_id": "20261005T205624-cdc34e", "kural_id": "a3ba880f3e82a57d", "olay": "hucre", "pozitif": false, "tarih": "2026-10-05T21:03:05.760964+00:00", "tur": "destek"}
 {"aile": "cift_rotasyonu", "fazla": -0.050486430167539904, "hucre": {"p_esik": 0.1, "z_esik": 2.0, "z_pencere": 120}, "islem": 74, "kosu_id": "20261005T205624-cdc34e", "kural_id": "a3ba880f3e82a57d", "olay": "hucre", "pozitif": false, "tarih": "2026-10-05T21:03:05.761639+00:00", "tur": "destek"}
 {"aile": "cift_rotasyonu", "fazla": -0.09959890418494588, "hucre": {"p_esik": 0.1, "z_esik": 2.5, "z_pencere": 120}, "islem": 48, "kosu_id": "20261005T205624-cdc34e", "kural_id": "a3ba880f3e82a57d", "olay": "hucre", "pozitif": false, "tarih": "2026-10-05T21:03:05.762185+00:00", "tur": "destek"}
+{"tur": "sadakat", "tarih": "2026-10-05T11:56:47.894454+00:00", "anlik": "20261005-1452", "aile": "ema_sikismasi", "olay": "sadakat"}
+{"tur": "sadakat", "tarih": "2026-10-05T12:05:09.978100+00:00", "anlik": "20261005-1504", "aile": "ema_sikismasi", "olay": "sadakat"}

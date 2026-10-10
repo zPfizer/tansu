@@ -47,6 +47,13 @@ def test_komut_iki_kosuda_ayni_rakamlari_verir_ve_deneme_gunlugune_yazar(tmp_pat
     assert all(s["anlik"] == kimlik for s in satirlar)
 
 
+def test_sadakat_gunlugunun_her_satirinda_olay_var(tmp_path):
+    gunluk = tmp_path / "deneme.jsonl"
+    sadakat.calistir(hazirla(tmp_path), tmp_path, tmp_path / "sadakat.md", gunluk)
+    for satir in gunluk.read_text(encoding="utf-8").splitlines():
+        assert "olay" in json.loads(satir)
+
+
 def test_cift_z_aramasi_tum_gunlerde_ve_adaylarda():
     # Elle: X = 1, log Y = [0, 2, 4, 6]; pencere 3, ddof 1, log oran: Z_{t-1} = Z_t = 1 (tests/test_cift.py).
     gunler = pd.bdate_range("2025-01-01", periods=4)

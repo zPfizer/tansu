@@ -50,3 +50,4 @@ Açık işler:
 
 - 2026-10-09: Worktree `TANSU-wt/06` ve dal `bilet-06` kaldırıldı (dal master'daydı). Worktree'deki tek `kayit/deneme.jsonl` satırı ana kayda eklenmedi: `olay` alanı yok, `kayit` okuyucusu bozulur. Ham satır:
   `{"tur": "sadakat", "tarih": "2026-10-05T12:05:09.978100+00:00", "anlik": "20261005-1504", "aile": "ema_sikismasi"}`
+- 2026-10-10: Satır `olay: sadakat` ile ana kayda eklendi.
