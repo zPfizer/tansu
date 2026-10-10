@@ -12,7 +12,7 @@ planlanan risk, gerçekleşen kayıp).
 import pandas as pd
 import pytest
 
-from tansu import aileler, motor
+from tansu import aileler, gostergeler, motor, veri
 
 GUNLER = pd.bdate_range("2026-03-02", periods=10)
 STD = (100, 101, 99, 100)
@@ -387,3 +387,74 @@ def test_sinama_evren_disi_sinyal_pozisyon_acmaz_sonraki_gecerli_sinyal_gecikmez
         t.cikis_tarih,
         t.cikis_fiyat,
     ) == (gun[5], gun[6], 104.0, gun[7], 105.0)
+
+
+def test_piyasa_durumu_motoru_ve_girisi_etkilemez():
+    # TASARIM 3: piyasa durumu etiketi motorun sinyalini ve girişini değiştirmez.
+    from tests.test_simulator import P, mum, sinyalli
+
+    gunler = pd.bdate_range("2025-11-17", periods=58)
+    fiyat = pd.DataFrame(
+        [mum(g, 100.0, 100.5, 99.5) for g in gunler[:50]] + sinyalli()
+    ).assign(sembol="A")
+    sonuclar = []
+    for son_endeks, etiket in ((110.0, True), (90.0, False)):
+        f = fiyat.copy()
+        f["xu100"] = [100.0] * 55 + [son_endeks] * 3
+        assert (
+            gostergeler.piyasa_durumu(f.set_index("tarih")["xu100"]).iloc[55] == etiket
+        )
+        a = veri.Anlik(
+            "piyasa", f, pd.DataFrame(columns=["sembol", "tarih", "kod", "carpan"])
+        )
+        t, dusen = motor.sinama(a, P, atr_n=2)
+        assert dusen == 0
+        assert t[
+            ["sinyal_tarih", "giris_tarih", "giris_fiyat", "cikis_fiyat"]
+        ].values.tolist() == [
+            [pd.Timestamp("2026-02-02"), pd.Timestamp("2026-02-03"), 104.0, 105.0]
+        ]
+        sonuclar.append(t)
+    pd.testing.assert_frame_equal(sonuclar[0], sonuclar[1])
+
+
+def test_gostergeler_duzeltilmis_limit_ve_kilit_ham_seriden():
+    # TASARIM 5.1: göstergeler HGDG'den, limit ve kilit HG'den hesaplanır.
+    from tests.test_simulator import P, sinyalli
+
+    fiyat = pd.DataFrame(sinyalli()).assign(sembol="A")
+    for sutun in ("ham_kapanis", "ham_aof", "ham_yuksek", "ham_dusuk"):
+        fiyat[sutun] *= 2.0
+        fiyat.loc[6:, sutun] = 226.6
+    a = veri.Anlik(
+        "olcek", fiyat, pd.DataFrame(columns=["sembol", "tarih", "kod", "carpan"])
+    )
+    m = motor.mumlar(a, "A", P, atr_n=2)
+    assert (m.iloc[5].sma250, m.iloc[5].atr) == (101.5, 2.28125)
+    assert m.iloc[6].kilit_tavan and not m.iloc[6].karantina
+    assert a.gun_tablosu.iloc[6].tavan == pytest.approx(226.6)
+    # Düzeltilmiş 104, tavanda değildir; ham 226,6 tavanda olduğu için giriş düşer.
+    t, dusen = motor.sinama(a, P, atr_n=2)
+    assert t.empty and dusen == 1
+
+
+def test_evrenden_cikan_acik_pozisyon_kendi_kuraliyla_kapanir():
+    # TASARIM 5.2: üyelik yalnız yeni girişi sınırlar, açık pozisyonu kapatmaz.
+    from tests.test_simulator import P, sinyalli
+
+    fiyat = pd.DataFrame(sinyalli()).assign(sembol="A")
+    a = veri.Anlik(
+        "evren", fiyat, pd.DataFrame(columns=["sembol", "tarih", "kod", "carpan"])
+    )
+    # Sinyal günü üye; girişten itibaren evrende değil. Çıkış yine kendi veri sonu kuralı.
+    # Tek satırlı üyelik motoru düşürür (bilet 07); sinyal günü ve önceki gün üye.
+    uye = pd.DataFrame(
+        {"sembol": ["A", "A"], "tarih": pd.to_datetime(["2026-01-30", "2026-02-02"])}
+    )
+    t, dusen = motor.sinama(a, P, atr_n=2, uye=uye)
+    assert dusen == 0
+    assert t[
+        ["giris_tarih", "cikis_tarih", "cikis_fiyat", "neden"]
+    ].values.tolist() == [
+        [pd.Timestamp("2026-02-03"), pd.Timestamp("2026-02-04"), 105.0, "veri_sonu"]
+    ]

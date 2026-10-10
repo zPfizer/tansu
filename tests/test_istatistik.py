@@ -3,7 +3,7 @@
 import numpy as np
 import pytest
 
-from tansu import istatistik
+from tansu import istatistik, simulator
 
 
 def test_holm_elle_ornek():
@@ -47,3 +47,39 @@ def test_blok_bootstrap_sabit_seride_dar_aralik_ve_ayni_tohum_ayni_sonuc():
 def test_blok_uzunlugu_en_az_yirmi():
     assert istatistik.blok_uzunlugu(5.0) == 20
     assert istatistik.blok_uzunlugu(37.4) == 38
+
+
+def test_ek_kol_ailenin_p_degerine_girmez(tmp_path):
+    # TASARIM 5.7: ek kol yalnız rapordur; aile p'si yalnız a ve b'den gelir.
+    from tests.test_k1 import anlik_hazirla, trend
+    from tests.test_simulator import ATR_N, BAS, P, duz, mum, sinyalli
+
+    aday = sinyalli()
+    aday[4].update(yuksek=105.0, ham_yuksek=105.0)  # Ön şart var, kırılım sinyali yok.
+    aday[6:] = [
+        mum("2026-02-03", 100.0, 100.5, 99.5),
+        mum("2026-02-04", 100.0, 100.5, 99.5),
+    ]
+    a = anlik_hazirla(
+        tmp_path,
+        {
+            "S1": sinyalli(),
+            "S2": sinyalli(),
+            "S3": aday,
+            "T1": trend(),
+            "T2": trend(),
+            "D1": duz(1e3),
+        },
+    )
+    ilk = simulator.ilk_gun(a, BAS)
+    evr = simulator.evrenler(a, ilk, a.gunler[-1])
+    b = simulator.k1_baglam(a, evr, BAS)
+    k = istatistik.ema_k1(
+        a, b, P, ATR_N, simulator.uyeler(a, evr, ilk), tekrar=20, tohum=7, kirilim=3
+    )
+    # (b) her seferinde son gün alıp aynı gün çıkar: gerçeğin altında, k=0 -> 1/21.
+    # Ek kol T1/T2'nin +3 trendidir: her tekrar gerçeğin üstünde, k=20 -> 1.
+    assert k["p_b"] == pytest.approx(0.047619047619047616)
+    assert k["p_ek"] == 1.0
+    assert k["p_b"] <= k["p_a"] < 1.0
+    assert k["p"] == k["p_a"]
