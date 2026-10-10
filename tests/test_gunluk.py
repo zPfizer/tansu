@@ -16,7 +16,7 @@ import os
 
 import pandas as pd
 
-from tansu import aileler, ciftbolme, gunluk, kayit, rapor
+from tansu import aileler, gunluk, kayit, rapor
 from tansu.kaynak import KaynakHatasi
 from tests.test_veri import SahteKaynak, satir
 
@@ -257,7 +257,7 @@ def test_cift_ailesi_kagit_olursa_gunluk_kosu_sorunludur(tmp_path):
         {
             "tur": "durum",
             "olay": "durum",
-            "aile": ciftbolme.AILE,
+            "aile": "cift_rotasyonu",
             "durum": "Kâğıt",
             "resmi": True,
         }

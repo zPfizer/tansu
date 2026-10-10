@@ -16,3 +16,6 @@
 (sırayla kod değişikliği uygulanıp geri alındı). Mutasyonla denetlenmeyen 3 test: piyasa durumu, karantina yamanmaz,
 çift bölmesinde stop/hedef yok (dış davranış testleri; doğrudan kırıcı tek satır bulunamadı).
 Kalan: kart durumları (bilet 02 değiştirebilir, ondan sonra); rapor üstüne yazmama (kod TASARIM'dan farklı, bilet 07).
+/code-review (10.10, Codex iki eksen): literal sabit ihlali düzeltildi. Kısmi kalanlar (sonraki tur): aynı gün testinde
+giriş ve kapanış fiyatı aynı (kapanışla değerleme hatası yakalanmaz); olay oranının koşu sonucuna aktarılması; dinamik
+geri import; borsapy fiyat çağrısının davranış testi; simülatörde evren çıkışı; yalnız seçilmiş çiftlere eklenen stop.
