@@ -6,7 +6,9 @@ import pandas as pd
 MODLAR = ("log_oran", "kalinti")
 
 
-def z_skor(y: pd.Series, x: pd.Series, pencere: int, ddof: int = 1, mod: str = "log_oran") -> pd.Series:
+def z_skor(
+    y: pd.Series, x: pd.Series, pencere: int, ddof: int = 1, mod: str = "log_oran"
+) -> pd.Series:
     """Kayan pencerede Z. `log_oran`: s = log(Y/X). `kalinti`: s = pencere içi OLS kalıntısı log Y - a - b log X.
     Kalıntı penceresinin ortalaması 0'dır; Z_t = kalıntı_t / std(kalıntı)."""
     ly, lx = np.log(y), np.log(x)

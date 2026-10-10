@@ -2,13 +2,24 @@
 
 import pandas as pd
 
-from tansu.aileler import Parametre, on_sart, pencere_gunleri, sikismasiz_kirilim, sinyal
+from tansu.aileler import (
+    Parametre,
+    on_sart,
+    pencere_gunleri,
+    sikismasiz_kirilim,
+    sinyal,
+)
 
 
 def _fiyat(kapanis, yuksek=None):
     gun = pd.bdate_range("2026-03-02", periods=len(kapanis))
-    return pd.DataFrame({"kapanis": [float(k) for k in kapanis],
-                         "yuksek": yuksek or [k + 0.5 for k in kapanis]}, index=gun)
+    return pd.DataFrame(
+        {
+            "kapanis": [float(k) for k in kapanis],
+            "yuksek": yuksek or [k + 0.5 for k in kapanis],
+        },
+        index=gun,
+    )
 
 
 def test_sikismadan_sonra_pencerede_ilk_kirilim_tek_giris():
@@ -19,7 +30,9 @@ def test_sikismadan_sonra_pencerede_ilk_kirilim_tek_giris():
     # dönem başına tek giriş. Isınma 6: gün 5'te 6 gün dolmuş (izin). SMA(2) gün 5 = 101,5 <= 103.
     yuksek = [100.5, 100.5, 101, 100.5, 100.5, 103.5, 104.5, 105.5]
     f = _fiyat([100, 100, 100, 100, 100, 103, 104, 105], yuksek)
-    p = Parametre(periyotlar=(1, 2), esik=0.005, min_gun=3, pencere=3, isinma=6, sma_n=2)
+    p = Parametre(
+        periyotlar=(1, 2), esik=0.005, min_gun=3, pencere=3, isinma=6, sma_n=2
+    )
     assert list(sinyal(f, p)) == [f.index[5]]
 
 
@@ -65,5 +78,11 @@ def test_sikismasiz_kirilim_onceki_l_gunun_yuksegini_asan_pencere_disi_gun():
     f = _fiyat([100, 103, 106, 109, 112, 115])
     ortak = dict(periyotlar=(1, 2), esik=0.005, min_gun=3, pencere=3, sma_n=2)
     assert not pencere_gunleri(f, Parametre(isinma=4, **ortak)).any()
-    assert list(sikismasiz_kirilim(f, Parametre(isinma=4, **ortak), 3)) == [False] * 3 + [True] * 3
-    assert list(sikismasiz_kirilim(f, Parametre(isinma=5, **ortak), 3)) == [False] * 4 + [True] * 2
+    assert (
+        list(sikismasiz_kirilim(f, Parametre(isinma=4, **ortak), 3))
+        == [False] * 3 + [True] * 3
+    )
+    assert (
+        list(sikismasiz_kirilim(f, Parametre(isinma=5, **ortak), 3))
+        == [False] * 4 + [True] * 2
+    )

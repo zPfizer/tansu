@@ -34,15 +34,22 @@ def evren(anlik, tarih, en_buyuk=100, elenen=0.20, coklu=COKLU_KOD) -> list:
     f = anlik.fiyat
     gun = f[f["tarih"] == ref]
     gun = gun[(gun["hacim"] > 0) & (gun["pd"] > 0)].set_index("sembol")["pd"]
-    hacim = (f[f["tarih"].isin(pencere)].pivot(index="tarih", columns="sembol", values="hacim")
-             .reindex(pencere).fillna(0).median())  # eksik gün hacmi 0 sayılır
+    hacim = (
+        f[f["tarih"].isin(pencere)]
+        .pivot(index="tarih", columns="sembol", values="hacim")
+        .reindex(pencere)
+        .fillna(0)
+        .median()
+    )  # eksik gün hacmi 0 sayılır
     hacim = hacim.reindex(gun.index)
     for grup in coklu:
         var = [s for s in grup if s in hacim.index]
-        hacim = hacim.drop([s for s in var if s != hacim[var].idxmax()]) if var else hacim
+        hacim = (
+            hacim.drop([s for s in var if s != hacim[var].idxmax()]) if var else hacim
+        )
     gun = gun.reindex(hacim.index)
     hacim = hacim.sort_values(kind="stable")
-    kalan = hacim.index[int(len(hacim) * elenen):]
+    kalan = hacim.index[int(len(hacim) * elenen) :]
     return list(gun[kalan].sort_values(ascending=False, kind="stable").index[:en_buyuk])
 
 
@@ -58,10 +65,20 @@ def kapananlar(anlik, nedeni_bilinen=()) -> pd.DataFrame:
     for s, g in f.groupby("sembol", sort=False):
         poz = np.unique(gunler.get_indexer(g["tarih"]))
         poz = poz[poz >= 0]
-        sonraki = np.append(poz[1:], len(gunler))  # son işlemden sonra takvim sonuna kadar
+        sonraki = np.append(
+            poz[1:], len(gunler)
+        )  # son işlemden sonra takvim sonuna kadar
         boslar = np.nonzero(sonraki - poz - 1 > PENCERE)[0]
         if len(boslar):
             i = poz[boslar[0]]
-            satirlar.append({"sembol": s, "son_islem": gunler[i], "kapanma_gunu": gunler[i + PENCERE + 1],
-                             "getiri": np.nan if s in nedeni_bilinen else -1.0})
-    return pd.DataFrame(satirlar, columns=["sembol", "son_islem", "kapanma_gunu", "getiri"])
+            satirlar.append(
+                {
+                    "sembol": s,
+                    "son_islem": gunler[i],
+                    "kapanma_gunu": gunler[i + PENCERE + 1],
+                    "getiri": np.nan if s in nedeni_bilinen else -1.0,
+                }
+            )
+    return pd.DataFrame(
+        satirlar, columns=["sembol", "son_islem", "kapanma_gunu", "getiri"]
+    )

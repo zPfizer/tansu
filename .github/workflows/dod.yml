@@ -1,0 +1,15 @@
+name: dod
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  dod:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v4
+      - run: python .github/dod_kontrol.py
+        env:
+          PR_GOVDE: ${{ github.event.pull_request.body }}

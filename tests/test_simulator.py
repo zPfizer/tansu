@@ -16,7 +16,9 @@ import pytest
 from tansu import aileler, kayit, veri
 from tests.test_veri import SahteBorsapy, SahteKaynak, satir
 
-P = aileler.Parametre(periyotlar=(1, 2), esik=0.005, min_gun=3, pencere=3, isinma=4, sma_n=2)
+P = aileler.Parametre(
+    periyotlar=(1, 2), esik=0.005, min_gun=3, pencere=3, isinma=4, sma_n=2
+)
 ATR_N = 2
 BAS = "2026-02-02"
 KAP = [100.0] * 5 + [103.0, 104.0, 105.0]
@@ -27,26 +29,41 @@ M3 = 0.003
 def mum(gun, kapanis, yuksek=None, dusuk=None, hacim=1e9, pd_=1e12):
     s = satir(gun, kapanis, kapanis)
     yuksek, dusuk = yuksek or kapanis, dusuk or kapanis
-    s.update(yuksek=yuksek, ham_yuksek=yuksek, dusuk=dusuk, ham_dusuk=dusuk, hacim=hacim, pd=pd_)
+    s.update(
+        yuksek=yuksek,
+        ham_yuksek=yuksek,
+        dusuk=dusuk,
+        ham_dusuk=dusuk,
+        hacim=hacim,
+        pd=pd_,
+    )
     return s
 
 
 def sinyalli(olcek=1.0, hacim=1e9, genis=0.5):
     """Temel seri; `genis` düşüğün kapanıştan uzaklığı (ATR'yi büyütür, sinyali değiştirmez)."""
-    return [mum(g, k * olcek, y * olcek, (k - genis) * olcek, hacim)
-            for g, k, y in zip(pd.bdate_range("2026-01-26", periods=8), KAP, YUK)]
+    return [
+        mum(g, k * olcek, y * olcek, (k - genis) * olcek, hacim)
+        for g, k, y in zip(pd.bdate_range("2026-01-26", periods=8), KAP, YUK)
+    ]
 
 
 def duz(hacim, adet=8, bas="2026-01-26"):
-    return [mum(g, 100.0, 100.0, 100.0, hacim) for g in pd.bdate_range(bas, periods=adet)]
+    return [
+        mum(g, 100.0, 100.0, 100.0, hacim) for g in pd.bdate_range(bas, periods=adet)
+    ]
 
 
 def kos(tmp_path, seriler, faiz=0.0, bas=BAS):
     k = SahteKaynak(seriler, {s: [] for s in seriler})
     b = SahteBorsapy([("2025-01-01", faiz)], {s: "X" for s in seriler})
-    kimlik = veri.indir(list(seriler), tmp_path, k, simdi=dt.datetime(2026, 10, 5, 19, 30), borsapy=b)
+    kimlik = veri.indir(
+        list(seriler), tmp_path, k, simdi=dt.datetime(2026, 10, 5, 19, 30), borsapy=b
+    )
     kayit.kayitla(P, ATR_N)
-    return kimlik, kayit.kosu(kimlik, tmp_path, p=P, atr_n=ATR_N, git=lambda: ("abc", False), bas=bas)
+    return kimlik, kayit.kosu(
+        kimlik, tmp_path, p=P, atr_n=ATR_N, git=lambda: ("abc", False), bas=bas
+    )
 
 
 def sim(sonuc, masraf=M3):
@@ -61,7 +78,13 @@ def test_tavan_baglar_ve_nakit_hesabi(tmp_path):
     t = sim(s)["islemler"]
     assert len(t) == 1
     a = t.iloc[0]
-    assert (a.sembol, a.adet, a.bagli, a.giris_fiyat, a.cikis_fiyat) == ("A", 961, "tavan", 104.0, 105.0)
+    assert (a.sembol, a.adet, a.bagli, a.giris_fiyat, a.cikis_fiyat) == (
+        "A",
+        961,
+        "tavan",
+        104.0,
+        105.0,
+    )
     assert sim(s)["ozkaynak"].iloc[-1] == pytest.approx(1000358.453, abs=1e-3)
     assert sim(s)["reddedilen"] == 0
 
@@ -105,9 +128,13 @@ def test_faiz_bir_gun_gecikmeli_gece_basina_tahakkuk_eder(tmp_path):
     # 04.02: 900.756,168 * 0,001 = 900,756168 → 901.656,924168; çıkış +100.602,285 → 1.002.259,209168.
     _, s = kos(tmp_path, {"A": sinyalli()}, faiz=36.5)
     oz = sim(s)["ozkaynak"]
-    assert list(oz.index) == list(pd.to_datetime(["2026-02-02", "2026-02-03", "2026-02-04"]))
+    assert list(oz.index) == list(
+        pd.to_datetime(["2026-02-02", "2026-02-03", "2026-02-04"])
+    )
     assert oz.iloc[0] == pytest.approx(1000000.0, abs=1e-6)
-    assert oz.iloc[1] == pytest.approx(900756.168 + 99944.0, abs=1e-3)  # 961 adet kapanış 104
+    assert oz.iloc[1] == pytest.approx(
+        900756.168 + 99944.0, abs=1e-3
+    )  # 961 adet kapanış 104
     assert oz.iloc[2] == pytest.approx(1002259.209168, abs=1e-3)
 
 
@@ -117,7 +144,11 @@ def test_k2_maruziyet_kuralinkine_esit(tmp_path):
     # K2: 02.02 1e6; 03.02 1e6 * (1 + pay * (104/103 - 1)) = 1.000.970,6211; 04.02 pay 0 → değişmez.
     _, s = kos(tmp_path, {"A": sinyalli()})
     k2, sepet = sim(s)["k2"], sim(s)["sepet"]
-    assert list(sepet.round(6)) == [0.997, round(0.997 * 104 / 103, 6), round(0.997 * 105 / 103, 6)]
+    assert list(sepet.round(6)) == [
+        0.997,
+        round(0.997 * 104 / 103, 6),
+        round(0.997 * 105 / 103, 6),
+    ]
     assert list(k2.iloc[:2].round(4)) == [1000000.0, 1000970.6211]
     assert k2.iloc[2] == pytest.approx(1000970.6211, abs=1e-4)
 
@@ -130,12 +161,31 @@ def test_k2_ay_basi_dengelemesi_masraf_oder(tmp_path):
     # 02.03: eski ağırlıklar B, D, E = 1/4,1; C = 1,1/4,1; yeni A, C, D, E = 0,25. Devir = B çıkar 1/4,1 + A girer 0,25
     # + C azalır (1,1/4,1 - 0,25) + D ve E artar 2*(0,25 - 1/4,1) = 0,5 + 0,1/4,1 = 0,5243902.
     # Masraf 0,003 * 0,5243902 = 0,0015731707 → 1,021925 * (1 - 0,0015731707) = 1,0203173375.
-    gun = pd.to_datetime(["2026-01-30", "2026-02-02", "2026-02-03", "2026-02-27", "2026-03-02", "2026-03-03"])
-    hacim = {"A": [10, 100, 100, 100, 100, 100], "B": [20, 5, 5, 5, 5, 5], "C": [30] * 6, "D": [40] * 6, "E": [50] * 6}
+    gun = pd.to_datetime(
+        [
+            "2026-01-30",
+            "2026-02-02",
+            "2026-02-03",
+            "2026-02-27",
+            "2026-03-02",
+            "2026-03-03",
+        ]
+    )
+    hacim = {
+        "A": [10, 100, 100, 100, 100, 100],
+        "B": [20, 5, 5, 5, 5, 5],
+        "C": [30] * 6,
+        "D": [40] * 6,
+        "E": [50] * 6,
+    }
     fiyat = {"C": [100, 100, 100, 110, 110, 110]}
 
     def uret(ad):
-        return [mum(g, float(fiyat.get(ad, [100] * 6)[i]), hacim=float(hacim[ad][i])) for i, g in enumerate(gun)]
+        return [
+            mum(g, float(fiyat.get(ad, [100] * 6)[i]), hacim=float(hacim[ad][i]))
+            for i, g in enumerate(gun)
+        ]
+
     _, s = kos(tmp_path, {ad: uret(ad) for ad in "ABCDE"})
     sepet = sim(s)["sepet"]
     assert list(sepet.index) == list(gun[1:])
@@ -148,7 +198,12 @@ def test_kapanan_hisse_acik_pozisyon_eksi_yuz_sayilir(tmp_path):
     # Son nakit = 1.000.000 - 100.243,832 = 899.756,168. Z sinyalsiz.
     _, s = kos(tmp_path, {"A": sinyalli(), "Z": duz(5e8, adet=69)})
     a = sim(s)["islemler"].iloc[0]
-    assert (a.neden, a.cikis_fiyat, a.cikis_tarih, a.adet) == ("kapanma", 0.0, pd.Timestamp("2026-04-30"), 961)
+    assert (a.neden, a.cikis_fiyat, a.cikis_tarih, a.adet) == (
+        "kapanma",
+        0.0,
+        pd.Timestamp("2026-04-30"),
+        961,
+    )
     assert a.gerceklesen_kayip == pytest.approx(961 * 104.0)
     assert sim(s)["ozkaynak"].iloc[-1] == pytest.approx(899756.168, abs=1e-3)
     assert s["sim"]["bilgi"]["kapanma"] == 1
@@ -156,7 +211,10 @@ def test_kapanan_hisse_acik_pozisyon_eksi_yuz_sayilir(tmp_path):
 
 def test_evren_disi_sinyal_islem_acmaz(tmp_path):
     # Şubat evreni referansı 30.01: tek hisse hacmi 0 → evrende yok. İşlem yok.
-    seri = [{**r, "hacim": 0.0} if r["tarih"] == pd.Timestamp("2026-01-30") else r for r in sinyalli()]
+    seri = [
+        {**r, "hacim": 0.0} if r["tarih"] == pd.Timestamp("2026-01-30") else r
+        for r in sinyalli()
+    ]
     _, s = kos(tmp_path, {"A": seri})
     assert len(sim(s)["islemler"]) == 0
 
@@ -165,14 +223,32 @@ def test_rapor_baslik_uyari_yasakli_sozcuk_ve_csv_sutunlari(tmp_path):
     kimlik, s = kos(tmp_path, {"A": sinyalli()})
     html = s["rapor"].read_text(encoding="utf-8")
     kod_hash = kayit._kural(P, ATR_N)["kod_hash"]
-    for beklenen in (s["kosu_id"], kimlik, kod_hash, "Tansu'dan esinlenen yorum", "Yıllık fazla getiri"):
+    for beklenen in (
+        s["kosu_id"],
+        kimlik,
+        kod_hash,
+        "Tansu'dan esinlenen yorum",
+        "Yıllık fazla getiri",
+    ):
         assert beklenen in html
     assert html.count("<h2>Uyarılar</h2>") == 1
     assert not re.search(r"\b(AL|SAT|ÖNERİ)\b|Tansu'nun sistemi", html)
     csv = pd.read_csv(s["csv"], encoding="utf-8")
-    assert list(csv.columns) == ["sembol", "aile", "sinyal_tarih", "giris_tarih", "giris_fiyat", "cikis_tarih",
-                                 "cikis_fiyat", "neden", "adet", "getiri", "planlanan_risk", "gerceklesen_kayip",
-                                 "bagli"]
+    assert list(csv.columns) == [
+        "sembol",
+        "aile",
+        "sinyal_tarih",
+        "giris_tarih",
+        "giris_fiyat",
+        "cikis_tarih",
+        "cikis_fiyat",
+        "neden",
+        "adet",
+        "getiri",
+        "planlanan_risk",
+        "gerceklesen_kayip",
+        "bagli",
+    ]
     assert s["csv"].name == f"islemler-{s['kosu_id']}.csv" and len(csv) == 1
     # getiri = 105*0,997 / (104*1,003) - 1 = 104,685 / 104,312 - 1 = 0,0035756
     assert csv["getiri"].iloc[0] == pytest.approx(0.0035756, abs=1e-6)
@@ -182,8 +258,18 @@ def test_kaynak_gunu_hatasi_raporu_sorunlu_yapmaz_gunu_tarihle_yazar(tmp_path):
     # 20 sembol; 29.01'de 10'unun satırı bozuk (düşük 101 > AOF 100) = yarı: kaynak günü (TASARIM 5.13). Gün eksik gün
     # olarak işlenir, karantina oranı 0; "veri sorunlu" yalnız oran eşiklerinden gelir. Gün raporda tarihle yazılır.
     gunler = pd.bdate_range("2026-01-26", periods=8)
-    seriler = {f"S{i}": [mum(g, 100.0, 102.0 if (j == 3 and i < 10) else 100.0, 101.0 if (j == 3 and i < 10) else 100.0)
-                         for j, g in enumerate(gunler)] for i in range(20)}
+    seriler = {
+        f"S{i}": [
+            mum(
+                g,
+                100.0,
+                102.0 if (j == 3 and i < 10) else 100.0,
+                101.0 if (j == 3 and i < 10) else 100.0,
+            )
+            for j, g in enumerate(gunler)
+        ]
+        for i in range(20)
+    }
     _, s = kos(tmp_path, seriler)
     html = s["rapor"].read_text(encoding="utf-8")
     assert s["sim"]["bilgi"]["sorunlar"] == ["kaynak günü hatası: 2026-01-29"]
