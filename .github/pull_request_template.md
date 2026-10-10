@@ -15,6 +15,7 @@ Değişikliği bir veya iki cümleyle açıklayın.
 - [ ] Doğruluk: kenar durumlar ve hata yolları ele alındı — kanıt: 
 - [ ] Kalite: adlar ve yapı niyeti gösteriyor; tekrar eden iş mantığı yok — kanıt: 
 - [ ] Kalite: ölü kod, deneme çıktısı, yoruma alınmış kod yok (CI: ruff) — kanıt: 
+- [ ] Kalite: lint ve biçim kontrolleri geçti (CI: ruff check; ruff format henüz CI'da yok) — kanıt: 
 - [ ] Kalite: değişiklik işin kapsamında; ilgisiz düzenleme yok — kanıt: 
 - [ ] Entegrasyon: sistemin geri kalanıyla çalışıyor; kayıt ve ayar değişiklikleri hesaba katıldı — kanıt: 
 - [ ] Belgeleme: davranış değişikliği belgelendi; belge bugünkü durumu anlatıyor — kanıt: 
