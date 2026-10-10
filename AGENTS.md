@@ -28,7 +28,8 @@ Belge ile kod çelişirse ya da belge sessizse dur: belgeyi önce düzelt, gerek
 - **Getiriye bakma:** sadakat kontrolünde ya da YORUM seçerken getiri sonucu hesaplanmaz.
 - **Deneme günlüğü:** her sınama koşusu `kayit/deneme.jsonl`'e yazılır. Günlük yalnız eklenir;
   düzenlenmez ve silinmez.
-- **Git:** `rebase`, `--amend`, `--force`, `reset --hard`, `git add .` ve `git add -A` yok (Claude için `.claude/hooks/block-dangerous-git.sh` engeller); dosyalar adıyla
+- **Git:** `rebase`, `--amend`, `--force` (ve `--force-with-lease`), `reset --hard`, `clean -f`, `branch -D`,
+  `checkout .`, `restore .`, `git add .` ve `git add -A` yok (Claude için `.claude/hooks/block-dangerous-git.sh` engeller); dosyalar adıyla
   eklenir. Veri (`veri/`) ve rapor çıktısı (`rapor/`) git'e girmez; `veri/` silinmez. `kayit/` git'e girer (günlüğün
   yalnız eklendiğinin kanıtı git geçmişidir); `kayit/` dosyalarını commit'te değiştirilmiş değil, yalnız
   eklenmiş olarak bırak.
@@ -45,10 +46,11 @@ Belge ile kod çelişirse ya da belge sessizse dur: belgeyi önce düzelt, gerek
 ## Standartlar
 `CODING_STANDARDS.md` ve `DEFINITION_OF_DONE.md` Levent'in genel standardıyla başlar; altlarındaki `## Tansu` bölümü
 Tansu'nun ekidir. `tests/test_standartlar.py` genel kısmın evdeki asılla aynı kaldığını denetler. `/code-review` ikisini
-okur. Ek bölüm, Tansu kurallarının inceleme kaynağına girmesi için bu dosyadan oraya taşındı (10.10).
+okur. Ev dosyası olmayan CI'da test atlanır; denetim yerel test kapısındadır.
 
 ## İş akışı (Matt Pocock ana akışı)
-Her iş bu sırayla yürür. Basamağı atlamadan önce o skill'in `SKILL.md`'sini oku.
+Her iş bu sırayla yürür. Basamağı atlamadan önce o skill'in `SKILL.md`'sini oku. Bu skill'lerin çoğu kullanıcı
+komutudur; ajan çağıramıyorsa `SKILL.md`'yi (`~/.claude/plugins/cache/mattpocock/`) okuyup adımlarını uygular.
 1. **Fikir:** `/grill-with-docs`. Netleşen terim o anda `GLOSSARY.md`'ye, karar `docs/TASARIM.md`'ye yazılır.
    Önce TASARIM ve `docs/sorgu/`'ya bak; verilmiş kararı yeniden sorma.
 2. **Plan:** iş birden çok oturum sürecekse `/to-spec`, sonra `/to-tickets`

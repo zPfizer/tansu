@@ -14,7 +14,7 @@ DANGEROUS_PATTERNS=(
   "git branch -D"
   "git checkout \.( |\"|$)"
   "git restore \.( |\"|$)"
-  "git add \.( |\"|$)"
+  "git add (-- )?\.( |\"|$)"
   "git add (-A|--all)( |\"|$)"
 )
 
