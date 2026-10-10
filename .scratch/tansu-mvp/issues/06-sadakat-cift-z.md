@@ -47,6 +47,7 @@ Açık işler:
 - `kayit/deneme.jsonl` satırı basit (bilet 09 şemayı üstlenir). `kayit/` git'e girmedi.
 - Aday kümesi Tansu'nun Z'sini üretmedi; olası ek adaylar (bugünü dışlayan pencere, getiri tabanlı beta)
   yeni deneme ve belge değişikliği gerektirir (Levent kararı).
+- 2026-10-10: Ek tur koşuldu (aday listesi bf79a28, 6256 aday: fiyat_ols, sabit_std, dun_pencere). Üretmedi; çift Z kalıcı YORUM. Açık iş kapandı.
 
 - 2026-10-09: Worktree `TANSU-wt/06` ve dal `bilet-06` kaldırıldı (dal master'daydı). Worktree'deki tek `kayit/deneme.jsonl` satırı ana kayda eklenmedi: `olay` alanı yok, `kayit` okuyucusu bozulur. Ham satır:
   `{"tur": "sadakat", "tarih": "2026-10-05T12:05:09.978100+00:00", "anlik": "20261005-1504", "aile": "ema_sikismasi"}`

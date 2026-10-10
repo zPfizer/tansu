@@ -84,7 +84,7 @@ yapılır.
 
 1. **Çift rotasyonu** (birinci el: giriş eşiği, ΔZ tanımı, yön, zaman, ham fiyat)
    - Sapma: log(Y) − log(X), ortalama ve standart sapma son 60 günden (YORUM; Tansu'nun Z'si 40.560
-     aday formülle üretilemedi; bilet 06 sadakati, §4, 1564 adayla yine üretemedi: YORUM kalır). Sabit terim (α) yok; ortalama çıkarıldığı için Z aynıdır.
+     aday formülle üretilemedi; bilet 06 sadakati, §4, 1564 adayla yine üretemedi; 10.10 ek turu 6256 adayla da üretemedi: YORUM kalıcıdır). Sabit terim (α) yok; ortalama çıkarıldığı için Z aynıdır.
    - Z ≤ −2 ve ΔZ > 0 → ertesi gün Y'ye geç. Z ≥ +2 ve ΔZ < 0 → ertesi gün X'e geç. Tek günlük ΔZ
      yeterlidir (YORUM; Tansu'nun raporundaki tek örnek +0,30).
    - İlk sinyale kadar nakit; sonra hep bir hissede. Stop yok.
@@ -145,6 +145,10 @@ Sonuçlar (Sorgu 3, 05.10.2026):
   Gevşek bantta (±0,05) 534 aday eşleşti: tek aday kalmadığı için gevşek bant kullanılmadı.
   Sonuç: **üretilemedi; YORUM kalır** (log oran, 60 gün). Beta, korelasyon, piyasada kalma ve
   Mart–Mayıs 2025 kontrolleri formül olmadığı için yapılmadı.
+- **Çift Z'si, ek tur (10.10.2026, `docs/sadakat.md`):** Tansu'nun kendi kaynaklarından üç aday ailesi, aday listesi
+  koşudan önce commit edildi (bf79a28): fiyat düzeyinde OLS spread (X403), log fark − hareketli ortalama ve sabit
+  standart sapma (X404), bugünü dışlayan pencere. 6256 aday (Z ve −Z), bütün günler. Sıkı toleransta eşleşme yok;
+  gevşek bantta 1393 aday, tek aday kalmadı. Sonuç: **üretilemedi; YORUM kalıcıdır** (log oran, 60 gün). Yeni tur açılmaz.
 
 Veri: Tansu `yfinance` kullanıyor, ama Yahoo ham kapanışı İş Yatırım ham serisiyle aynı. Kontrol İş Yatırım
 ham seriyle yapılır.
