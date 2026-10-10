@@ -68,10 +68,10 @@ yorumumuzdur**; ekranda "Tansu'nun sistemi" diye sunulmaz. (P5)
 
 | İlke | Kaynaktaki karşılığı | Sistemde |
 |---|---|---|
-| Önce piyasanın havası | "Piyasanın Nabzı" raporu (NotebookLM), XU100 setup puanı (formülü yok) | Piyasa durumu etiketi; ilk sürümde kapı değil |
+| Önce piyasanın havası | "Piyasanın Nabzı" raporu (NotebookLM), XU100 setup puanı (formülü yok) | Piyasa durumu etiketi (YORUM); ilk sürümde kapı değil |
 | Önce yer, sonra teyit | "zone → kırılım → likidite → teyit" | Aile = koşul + teyit (ilk sürümün iki ailesi bölge ailesi değil) |
-| Her fırsat bir kart, durum etiketiyle | `AKTİF / TAMAMLANDI / BOZULDU` (Tansu'nun etiketleri) | Kart: `AKTİF / STOP / BOZULDU` (hedef yok) |
-| Önce sermaye | %1 risk, adet = risk / 2ATR, acil stop | Risk |
+| Her fırsat bir kart, durum etiketiyle | Durum, Reaksiyon, Giriş ve Stop ayrı alanlar (araç, G02/g1) | İlk sürüm kartı pozisyon durumunu gösterir; harmonik formasyon durumunu ve reaksiyonunu yeniden üretmez |
+| Önce sermaye | NotebookLM örneğinde %1 risk ve adet = risk / 2ATR; acil stop adı aktarımda (5.5) | Risk |
 | Tek sinyale güvenme | "ABCD'ye gözü kapalı güvenilmez" | Teyit şartı |
 | Sınamadan inanma | "mutlaka backtest etmek lazım", negatif sonuçlarını da paylaşır | Kanıt |
 | Basit ve sağlam | "Medyan temelli çalışın", "Yüksek Sharpe modeller ilk virajda patlar" | Medyan, sağlamlık sınaması |
@@ -82,10 +82,12 @@ yorumumuzdur**; ekranda "Tansu'nun sistemi" diye sunulmaz. (P5)
 
 **Var:**
 - Günlük veri, BIST100 benzeri evren, yalnız alış yönü.
-- Piyasa durumu etiketi. Motoru ve girişi etkilemez; K1(b) örneklemesinde ve rapor bölmesinde
+- Piyasa durumu etiketi (YORUM, bizim). Motoru ve girişi etkilemez; K1(b) örneklemesinde ve rapor bölmesinde
   kullanılır. (İ: 11-078)
+  Tansu'nun şokta yeni alımı durdurma fikri (aktarım, tweet-volatilite-piyasa-soku-yeni-alim-freni:21) uygulanamaz: kaynak hesaplanabilir tanım vermiyor.
+  Tansu'nun yeni pozisyon için piyasa teyidi bekleme fikri (metin, XU:35–47) uygulanamaz: kaynak hesaplanabilir tanım vermiyor.
 - **2 aile** (`KURALLAR.md` §3): çift rotasyonu ve EMA sıkışması.
-- Tansu'nun risk paketi (5.5), işlem motoru, portföy simülasyonu ve istatistik.
+- Tansu kaynaklarından esinlenen risk paketi (5.5), işlem motoru, portföy simülasyonu ve istatistik.
 - Tek dosya HTML rapor, CSV kart ve işlem listeleri, `durum.txt`.
 
 **Yok** (ilk aile kabul edilene kadar bekler, gereksiz katman):
@@ -203,7 +205,8 @@ hatasından** ayırmak.
   - Göstergeler, getiriler ve pozisyon durumu (giriş, stop, adet, düşük karşılaştırması) düzeltilmiş
     seriden (`HGDG`), tek ölçekte.
   - Fiyat limiti, kilit ve likidite TL tutarı ham seriden (`HG`).
-  - Sadakat kontrolü ham seriyle; Tansu ham seri kullanıyor.
+  - Sadakat kontrolü ham seriyle (YORUM, bizim). Kaynak genel fiyat düzeltme politikasını açıklamaz
+    (araç, Rota/g2).
   (B2, B-2, İ: 07-017, 08-010)
 - **Eksik gün:** NaN kalır, ileri doldurulmaz. O gün sinyal ve giriş yok; açık pozisyon son bilinen
   kapanışla taşınır. (İ: 19-003)
@@ -281,8 +284,11 @@ hatasından** ayırmak.
 ### 5.3 İşlem kuralları ve elle hesaplanmış örnekler
 - **Sinyal ve giriş:**
   - Sinyal günün kapanışındadır.
-  - İşlem fiyatı ertesi günün **ağırlıklı ortalama fiyatıdır (AOF)**; kaynakta açılış yok.
-  - Sinyal günü kapanış SMA250 altındaysa ya da SMA250 hesaplanamıyorsa giriş yok.
+  - İşlem fiyatı ertesi günün **ağırlıklı ortalama fiyatıdır (AOF)**. VAKBN–GARAN paneli T+1 açılış
+    gösterir (araç, Rota/g2, işlem paneli); uygulanamaz: mevcut veri kaynağında açılış yok.
+    AOF, kaynak dolumunun yaklaşık modelidir.
+  - Sinyal günü kapanış SMA250 altındaysa ya da SMA250 hesaplanamıyorsa giriş yok (YORUM, bizim).
+    Kaynak kesin giriş karşılaştırmasını açıklamaz (aktarım, G115:20; NotebookLM, g1).
   (S2-7, B-12, İ: 07-065)
 - **Stop:** giriş fiyatından ve sinyal günü ATR'sinden hesaplanır. (M2, C10)
 - **Giriş günü:** yalnız stop kontrol edilir.
@@ -328,7 +334,10 @@ hatasından** ayırmak.
 - **Masraf:** sabit, her yönde %0,3 (komisyon, BSMV, kayma birlikte).
   - Sonuçlar %0,1 / %0,3 / %0,5 ile gösterilir.
   - Kabul için %0,5'te de geçmesi gerekir. (M3)
-- **Likidite:** pozisyon, 10 günün medyan TL işlem tutarının %2'sini geçemez.
+- **Likidite** (YORUM, bizim): pozisyon, 10 günün medyan TL işlem tutarının %2'sini geçemez.
+  - Sektör taraması ile genel medyan önerisi tek zorunlu ölçü vermiyor; genel evrene aktarım ve işlem
+    kapasitesi ölçüsü açık değil (aktarım, tweet-sektor-rotasyonu-hacim-tuzagi-sabit-tl-esigi:32–49;
+    tweet-medyan-temelli-finansal-indikatorler:23).
   - Pencere sinyal gününü kapsar, giriş gününü kapsamaz.
   - Kalan miktar ertesi gün alınmaz.
   - Rapor likidite tavanının bağladığı işlem oranını yazar.
@@ -337,13 +346,17 @@ hatasından** ayırmak.
 - **Vergi:** sınamaya girmez; raporda not edilir.
 
 ### 5.5 Çıkış
-Tansu'nun risk paketi (`kurallar/E` K1–K3; kaynak Tansu'nun paylaştığı infografik):
+Risk paketi (`kurallar/E` K1–K3): acil stop ve gün sonu stopu adları aktarılan Tansu metninde vardır
+(aktarım, tweet-atr-risk-butcesi-position-sizing-stop-loss:22). %1 risk ve SMA250 çıkışı NotebookLM
+örneğindedir (G115/g1). Ortalama seçimi okura bırakılmıştır (aktarım, G115:20); SMA250 bizim seçimimizdir (YORUM).
 - **Acil stop:** giriş − 2 ATR; gün içinde dokunulursa çıkılır.
-- **Gün sonu çıkış:** kapanış SMA250 altına inerse ertesi günün AOF'unda.
+- **Gün sonu stopu:** kapanış SMA250 altına inerse ertesi günün AOF'unda (YORUM: dolum).
+  Kaynak gerçekleşme fiyatını ve seansını açıklamaz.
 - **ATR:** uzunluk 14, Wilder ortalaması; ilk değer ilk 14 gerçek aralığın ortalaması; kendi kodumuz
   (YORUM). (İ: 19-025)
 - **Hedef yok:** iki ailede de Tansu hedef vermedi.
-- **Çift rotasyonu:** stop yok; karşı uçta diğer hisseye geçilir. Risk paketi bu bölmeye uygulanmaz.
+- **Çift rotasyonu:** ayrı stop yok (YORUM, bizim); karşı uçta diğer hisseye geçilir. Risk paketi bu bölmeye uygulanmaz.
+  Grafikte stop görünmemesi, stop bulunmadığını kanıtlamaz (aktarım, G125:20; araç, Rota/g2; eğitim, G118/g1).
   (Sorgu S3)
 - **Aile kuralları:** giriş kuralları ve YORUM'lar `KURALLAR.md` §3'tedir.
 - **İz süren stop ve kısmi kâr:** ikinci el kaynaklı; bir aile bu paketle kabul edildikten sonra denenir.
@@ -369,7 +382,8 @@ yıla taşınır. (Sorgu S6, İ: 08-083)
 - Sermaye 1.000.000 TL; en fazla 5 aktif çift.
 - Çift payları yıl başında eşittir; yıl içinde dengeleme yok (YORUM; Tansu tek çift kullandı).
   (İ: 08-056)
-- Her çift payı, ilk sinyale kadar nakittedir; sonra hep çiftin bir hissesindedir. Boş pay nakitte kalır.
+- Her çift payı, ilk sinyale kadar nakittedir; sonra hep çiftin bir hissesindedir. Boş pay nakitte kalır
+  (YORUM, bizim; araç, Rota/g2, genel nakit politikasını açıklamaz).
 - Bacaklardan biri kilitliyse geçiş yapılmaz. Sinyal ertesi gün yeniden değerlendirilir; eski sinyal
   taşınmaz. (İ: 04-068)
 - Bacaklardan biri karantinadaysa çift o pencerede girişsiz kalır; açık bacak son temiz AOF'ta kapanır.
@@ -380,8 +394,10 @@ yıla taşınır. (Sorgu S6, İ: 08-083)
 
 **Çift seçimi** önceden yazılır (Sorgu S4, B-10):
 - **Ne zaman:** her yıl, yılın ilk işlem günü kapanışında, o günkü evrenle. Çıkışlar ve girişler ertesi
-  günün AOF'unda. (İ: 03-051, 08-054)
-- **Neyden:** aynı sektördeki hisseler. 252 işlem günü verisi olmayan hisse aday olmaz. (İ: 04-094)
+  günün AOF'unda (YORUM, bizim). (İ: 03-051, 08-054)
+  Tansu'nun kayan eşbütünleşmeyle ilişki sağlığını izleme fikri (aktarım, tweet-rolling-cointegration-iliski-bozulma-kapisi:21) uygulanamaz: kaynak hesaplanabilir tanım vermiyor.
+- **Neyden:** aynı sektördeki hisseler (YORUM, bizim; aktarım, G54:21, long/short bağlamındadır ve
+  rotasyonun sektör filtresini açıklamaz). 252 işlem günü verisi olmayan hisse aday olmaz. (İ: 04-094)
 - **Ölçüt:** önceki 252 günde eşbütünleşme p < 0,05. 252 günlük seçim penceresi YORUM'dur; Z
   penceresinden bağımsızdır. (İ: 04-008)
 - **Sıralama:** p'ye göre açgözlü.
@@ -400,7 +416,7 @@ yıla taşınır. (Sorgu S6, İ: 08-083)
 **Çift bölmesi kuralları** (bilet 11; belge bu noktalarda sessizdi, kod bu okumayı uygular):
 - **Seçim ayrıntısı:** seçim günü `s` = yılın ilk işlem günü; evren o günün ayının evrenidir (5.2).
   - Aday hisse: evren üyesi, sektörü bilinen ve son 252 işlem gününün (`s` dahil) hepsinde düzeltilmiş
-    kapanışı olan. Aday çift: aynı sektörden iki aday.
+    kapanışı olan. Aday çift: aynı sektörden iki aday (YORUM, bizim).
   - Roller: Y = sembol sırasına göre ilk, X = ikinci (alfabetik).
   - Eşbütünleşme: statsmodels `coint(log Y, log X)` (Engle–Granger, sabit terimli, gecikme AIC), son 252 gün,
     düzeltilmiş kapanış. p < 0,05 olan çift kalır.
@@ -410,7 +426,7 @@ yıla taşınır. (Sorgu S6, İ: 08-083)
 - **Sinyal:** her gün kapanışta Z ve ΔZ (`cift.z_skor`, log oran, 60 gün, ddof 1; KURALLAR §3). Z ≤ −2 ve
   ΔZ > 0 ise hedef Y; Z ≥ +2 ve ΔZ < 0 ise hedef X. Başka günde sinyal yok. Düşünülen çiftler yalnız seçilmiş
   çiftlerdir; seçim günü kapanışındaki sinyal ertesi gün işlenir.
-- **Geçiş:** hedef, tutulandan farklıysa ertesi günün AOF'unda eski bacak satılır, yeni bacak alınır; her
+- **Geçiş:** hedef, tutulandan farklıysa ertesi günün AOF'unda (5.3'teki yaklaşık dolum modeli) eski bacak satılır, yeni bacak alınır; her
   bacakta %0,3 masraf. Adet = tam lot, aşağı yuvarlanır; alış, sinyal gününü kapsayan 10 günlük medyan TL
   hacmin %2'siyle sınırlanır (5.4); artan nakit çiftin payında kalır.
 - **Engeller** (geçiş yapılmaz, sinyal taşınmaz): iki bacaktan birinde o gün işlem yok (`islem` yanlış), tavan ya da
@@ -814,8 +830,9 @@ Getiri görülmeden yazılır; kural kaydına girer. (B-7, İ: 19-015)
    - **Referans:** sinyal günü kapanışı, ham TL olarak (düzeltilmiş seviye × ham/düzeltilmiş oranı).
    - **Stop:** "tahmini" etiketlidir (referans − 2 ATR). Gerçek stop, giriş dolunca Adım'da hesaplanır.
    - **Durum:** AKTİF / STOP / BOZULDU. (Bilet 14) AKTİF: giriş bekliyor ya da pozisyon açık. STOP: stop değdi
-     (çıkış bugün ya da kilitli taban yüzünden bekliyor). BOZULDU: kapanış SMA250 altı, karantina çıkışı ya da giriş
+     (çıkış bugün ya da kilitli taban yüzünden bekliyor). BOZULDU: SMA250 gün sonu stopu, karantina çıkışı ya da giriş
      iptal. Kapanmış pozisyon kartı yalnız kapandığı günün CSV'sinde görünür.
+     Bunlar ilk sürümün pozisyon durumlarıdır, Tansu'nun formasyon durumları değildir; BOZULDU, Tansu'nun formasyon geçersizliği anlamındaki "bozulma"sı değildir (araç, G02/g1; aktarım, tweet-abcd-geometrik-gecerlilik-kurallari:21; G13:21).
    - (Bilet 14) **Tarih** sinyal günüdür. **Kaynak** "İş Yatırım <anlık görüntü kimliği>". Büyüklük (Pozisyon %,
      Adet, Fiili risk, Likidite sınırı) 1.000.000 TL kâğıt özkaynağıyla ve sinyal gününün tahmini stopuyla hesaplanır
      (nakit sınırı yok; gerçek nakit bilinmez). Stop sütunu giriş dolunca Adım'ın gerçek stopunu gösterir, etiketsiz.

@@ -29,7 +29,7 @@ Hazırlık: **H** = birinci elden kodlanabilir, az YORUM · **K** = kısmen, ön
 ### Giriş aileleri
 | Kural | Dosya | Hazırlık | Birinci el olan | Eksik (YORUM) | Tansu'nun kanıtı |
 |---|---|---|---|---|---|
-| Çift rotasyonu (z-skor ±2, ΔZ dönüşü, T+1 açılış, hep yatırımda) | D | **K** | ±2, ΔZ tanımı = Z_t − Z_{t−1} (rakamla doğrulandı), yön, T+1, ham fiyat | sapma formülü (40.560 adayla bulunamadı), pencere, tek gün ΔZ yeterliliği, çift seçimi | VAKBN–GARAN +%52,9 (B&H +%20,9, MaxDD −%27,4); CIMSA–OYAKC +%49,2; bağı kopan çift ≈−%21 |
+| Çift rotasyonu (z-skor ±2, ΔZ dönüşü, T+1 açılış, hep yatırımda) | D | **K** | ±2, ΔZ tanımı = Z_t − Z_{t−1} (rakamla doğrulandı), yön, T+1 | sapma formülü (40.560 adayla bulunamadı), pencere, tek gün ΔZ yeterliliği, çift seçimi. Ham fiyat bizim seçimimiz (YORUM). Örnek ham fiyatla uyumlu. Genel düzeltme politikası açık değil. | VAKBN–GARAN +%52,9 (B&H +%20,9, MaxDD −%27,4); CIMSA–OYAKC +%49,2; bağı kopan çift ≈−%21 |
 | AB=CD + hedef merdiveni | C | **K** | D = C + r(B−A), r 1,0/1,27; BC ≤ AB; hedef D + {0,618; 1; 1,618}(A−D) (rakamla doğrulandı) | yön (SMRTG işlemleri aşağı yönlü), pivot ayarı, oran toleransı, stop | SMRTG 12 kalıp (7 hedef, 3 stop) +%305; ISKPL 5/5 +%610; tek hisse, masrafsız, C fiyatından giriş |
 | EMA sıkışması (KRDMD) | B | **H** | EMA20/50/100/200, tolerans %1,2, en az 3 gün; oran formülü sadakatle çözüldü (§4) | giriş tetiği | Tek örnek (sıkışmadan sonra yükseliş) |
 | Yükselen kanal alt bant teması (AEFES) | A | **K** | Lookback 120, 3/3 temas, Low-Bant %, Kapanış-Bant % | kanal çizim yöntemi, tolerans, stop/hedef | Tek örnek, sonuç yok |
@@ -48,9 +48,9 @@ Hazırlık: **H** = birinci elden kodlanabilir, az YORUM · **K** = kısmen, ön
 ### Risk ve çıkış (E)
 | Kural | Hazırlık | Not |
 |---|---|---|
-| %1 risk, lot = risk / (2 ATR) | H | NotebookLM infografiği (Tansu paylaştı) |
-| Acil stop: giriş − 2 ATR, gün içi dokunuşta çık | H | aynı kaynak |
-| Gün sonu çıkış: kapanış < SMA250 | H | aynı kaynak |
+| Örnekte %1 risk, lot = risk / (2 ATR) | H | NotebookLM, G115/g1 (Tansu paylaştı) |
+| Acil stop: giriş − 2 ATR, gün içi dokunuşta çık | H | Ad: aktarım, tweet-atr-risk-butcesi-position-sizing-stop-loss:22; hesap: NotebookLM, G115/g1 |
+| Gün sonu stopu: kapanış < SMA250 | H | Ad: aktarım, tweet-atr-risk-butcesi-position-sizing-stop-loss:22; çıkış örneği: NotebookLM, G115/g1; SMA250 seçimi: YORUM (TASARIM 5.5) |
 | İz süren stop (+1,5 ATR), kısmi kâr, önceki gün dibi altı %50 | K | ikinci el; görselde yalnız "STOP 184.54 / ATR 4.62" |
 | Harmonik hedef merdivenleri (Excel %38,2 / SAYAS 1:1 ve %61,8) | K | kaynaklar çelişiyor |
 | Durum etiketleri: AKTİF, TAMAMLANDI, TEPKİ_VERDİ, BOZULDU | H (ad) | eşikleri yok |
@@ -84,12 +84,13 @@ yapılır.
 
 **Ailelerin işlem kuralları (ilk sürüm):**
 
-1. **Çift rotasyonu** (birinci el: giriş eşiği, ΔZ tanımı, yön, zaman, ham fiyat)
+1. **Çift rotasyonu** (birinci el: giriş eşiği, ΔZ tanımı, yön, zaman). Ham fiyat bizim seçimimiz (YORUM). Örnek ham fiyatla uyumlu. Genel düzeltme politikası açık değil.
    - Sapma: log(Y) − log(X), ortalama ve standart sapma son 60 günden (YORUM; Tansu'nun Z'si 40.560
      aday formülle üretilemedi; bilet 06 sadakati, §4, 1564 adayla yine üretemedi; 10.10 ek turu 6256 adayla da üretemedi: YORUM kalıcıdır). Sabit terim (α) yok; ortalama çıkarıldığı için Z aynıdır.
    - Z ≤ −2 ve ΔZ > 0 → ertesi gün Y'ye geç. Z ≥ +2 ve ΔZ < 0 → ertesi gün X'e geç. Tek günlük ΔZ
      yeterlidir (YORUM; Tansu'nun raporundaki tek örnek +0,30).
-   - İlk sinyale kadar nakit; sonra hep bir hissede. Stop yok.
+   - İlk sinyale kadar nakit; sonra hep bir hissede (YORUM; genel nakit politikası kaynakta açık değil,
+     TASARIM 5.6). Ayrı stop yok (YORUM; kaynak stop politikasını açıklamaz, TASARIM 5.5).
    - Çiftler önceden yazılmış kuralla seçilir (TASARIM 5.6).
    - K1 ön şartı: çift seçilmiş ve |Z| ≥ 2 olan günler.
    - Sağlamlık ızgarası (TASARIM 5.10, YORUM): Z penceresi {60; 120}, eşik {1,5; 2; 2,5}, seçim p'si
@@ -109,9 +110,10 @@ yapılır.
 
 AEFES kanal, AKFIS kurulumu ve AB=CD ikinci dalgadadır. Diğerleri dizinde kalır; kaynak çıktıkça yükselir.
 
-"Ertesi gün" sınamada ertesi günün AOF'u olarak modellenir; kaynakta açılış yok (TASARIM 5.3).
+VAKBN–GARAN paneli T+1 açılış gösterir (araç, Rota/g2, işlem paneli). "Ertesi gün" sınamada ertesi günün
+AOF'u olarak modellenir; uygulanamaz: mevcut veride açılış yok (TASARIM 5.3).
 
-**Risk paketi:** %1 risk, 2 ATR acil stop, SMA250 altı kapanışta çıkış (EMA sıkışması; çift rotasyonu
+**Risk paketi:** %1 risk (NotebookLM örneği), 2 ATR acil stop, SMA250 altı kapanışta gün sonu stopu (EMA sıkışması; çift rotasyonu
 hariç, onun kendi çıkışı karşı uçta geçiştir). Pozisyon tavanı %10 (YORUM, bizim; çoğu işlemde %1
 riskten daha bağlayıcıdır).
 
@@ -140,8 +142,8 @@ Sonuçlar (Sorgu 3, 05.10.2026):
   - Neden: EMA200 uzun belleklidir; Tansu'nun veri başlangıcı bilinmiyor. Oran formülü değişmez.
   - Bütün geçmişle dönem bir gün erken başlıyor (21 gün, %0,665). Sınamada veri başlangıcı sabit
     tutulur ve rapora yazılır (İ: 06-014).
-- **Çift Z'si üretilemedi** (40.560 aday). Tansu'nun ham fiyat kullandığı doğrulandı (14.05.2025 ipucu
-  kutusu).
+- **Çift Z'si üretilemedi** (40.560 aday). VAKBN–GARAN örneğinin fiyatları ham okumayla uyumludur
+  (araç, Rota/g2); genel fiyat düzeltme politikası açık değildir (TASARIM 5.1).
 - **Çift Z'si, bilet 06 ölçümü (İş Yatırım ham seri, `docs/sadakat.md`):** 1564 aday (log oran ve β'lı
   kalıntı × pencere 10–400 × ddof {0; 1}), bütün işlem günleri. Sıkı toleransta (±0,0005) eşleşme yok.
   Gevşek bantta (±0,05) 534 aday eşleşti: tek aday kalmadığı için gevşek bant kullanılmadı.
@@ -169,6 +171,6 @@ Kural:
 ## 5. Bilinen riskler
 - Tansu'nun örnek çiftleri ve hisseleri sonuca bakılarak seçilmiş olabilir. Bu yüzden çift rotasyonu
   yalnız onun çiftlerinde değil, önceden yazılmış bir kuralla seçilen bütün çiftlerde sınanır
-  (aynı sektör, oluşum penceresinde eşbütünleşme). Onun çiftleri ayrıca gösterilir. AGROT–GARAN
+  (aynı sektör: YORUM, TASARIM 5.6; oluşum penceresinde eşbütünleşme). Onun çiftleri ayrıca gösterilir. AGROT–GARAN
   rotasyon değildir (iki bacak + nakit) ve borsapy'ye göre farklı sektördedir.
 - NotebookLM infografikleri Tansu'nun kendi kuralı olmayabilir.
