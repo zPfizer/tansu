@@ -394,3 +394,42 @@ def test_sektor_tamamla_art_arda_bes_hatada_durur_tamamlananlar_tekrar_istenmez(
         "H": "HAVA",
     }
     assert rapor["alinamayan"] == ["G"] and rapor["var"] == 6 and rapor["hedef"] == 7
+
+
+def test_olay_denetimi_yuzde_ikiyi_asarsa_uye_kosusu_sorunludur(tmp_path):
+    # TASARIM 5.13: yalnız üye hisse-günlerde olay farkı > %2 kapıyı tetikler.
+    gunler = pd.bdate_range("2024-01-02", periods=50)
+    fiyat = [satir(g, 100.0, 100.0) for g in gunler]
+    fiyat[0] = satir(gunler[0], 100.0, 99.0)  # 1/50 = %2, eşik dahil değil.
+    a = anlik(tmp_path / "sinir", fiyat=fiyat, olay=[])
+    uye = a.fiyat[["sembol", "tarih"]]
+    assert a.oranlar(uye) == (0.0, 0.02, 50)
+    assert a.sorunlar_uye(uye) == []
+    fiyat[1] = satir(gunler[1], 100.0, 99.0)  # 2/50 = %4, kapı başarısız.
+    b = anlik(tmp_path / "asan", fiyat=fiyat, olay=[])
+    assert b.oranlar(uye) == (0.0, 0.04, 50)
+    assert b.sorunlar_uye(uye) == ["olay denetimi farkı olan gün oranı > %2"]
+    # İkinci fark evren dışı bırakılırsa pay ve payda birlikte küçülür: 1/49 > %2.
+    assert b.sorunlar_uye(uye.iloc[1:]) == ["olay denetimi farkı olan gün oranı > %2"]
+    assert b.sorunlar_uye(uye.iloc[2:]) == []
+
+
+def test_karantinaya_giren_fiyat_yamanmaz(tmp_path):
+    # TASARIM 5.1: karantina fiyatı değiştirmez; ham ve düzeltilmiş değerler saklanır.
+    a = anlik(
+        tmp_path,
+        fiyat=[satir("2024-01-02", 100.0, 50.0), satir("2024-01-03", 150.0, 75.0)],
+        olay=[],
+    )
+    g = a.gun_tablosu.set_index("tarih")
+    assert g.loc["2024-01-03", "karantina"]
+    assert a.fiyat.loc[1, ["ham_kapanis", "ham_aof", "kapanis", "aof"]].tolist() == [
+        150.0,
+        150.0,
+        75.0,
+        75.0,
+    ]
+    yeniden = veri.oku(a.kimlik, tmp_path)
+    assert yeniden.fiyat.loc[
+        1, ["ham_kapanis", "ham_aof", "kapanis", "aof"]
+    ].tolist() == [150.0, 150.0, 75.0, 75.0]

@@ -7,6 +7,7 @@ Veri: 8 günlük sentetik seri (tests/test_motor.py'deki elle hesap): sinyal gü
 import datetime as dt
 import hashlib
 import json
+import shutil
 from pathlib import Path
 
 import pandas as pd
@@ -265,3 +266,28 @@ def test_sinama_son_tam_tekrari_calistirir_ve_gunluge_yazar(
         True,
     )
     assert "K1 ema_sikismasi: p" in capsys.readouterr().out
+
+
+def test_kod_hashi_yorum_ve_bosluktan_etkilenmez(tmp_path, monkeypatch):
+    # TASARIM 5.8: kod hash'i yorum ve boşluk değişince aynı kalır.
+    paket = tmp_path / "paket"
+    paket.mkdir()
+    for ad in kayit.KOD_DOSYALARI:
+        shutil.copyfile(kayit.PAKET / ad, paket / ad)
+    monkeypatch.setattr(kayit, "PAKET", paket)
+    once = kayit.kayitla(P, ATR_N)
+    yol = paket / "motor.py"
+    metin = yol.read_text(encoding="utf-8")
+    yol.write_text(
+        "# Yalnız açıklama değişti.\n\n"
+        + metin.replace("import pandas as pd", "import  pandas  as  pd"),
+        encoding="utf-8",
+    )
+    sonra = kayit.kayitla(P, ATR_N)
+    assert sonra["kod_hash"] == once["kod_hash"]
+    assert sonra["kural_id"] == once["kural_id"]
+    # Anlamlı değişiklik kontrolü: fonksiyon adı değişirse aynı hash kabul edilmez.
+    yol.write_text(
+        metin.replace("def bekleyen(", "def yeni_bekleyen("), encoding="utf-8"
+    )
+    assert kayit.kayitla(P, ATR_N)["kod_hash"] != once["kod_hash"]

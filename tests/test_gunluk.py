@@ -16,7 +16,7 @@ import os
 
 import pandas as pd
 
-from tansu import aileler, gunluk, kayit, rapor
+from tansu import aileler, ciftbolme, gunluk, kayit, rapor
 from tansu.kaynak import KaynakHatasi
 from tests.test_veri import SahteKaynak, satir
 
@@ -249,3 +249,21 @@ def test_gunluk_anlik_goruntuler_30_gun_sonra_silinir_denemede_gecenler_kalir(tm
         "20260906-1930",
         "20261005-1930",
     ]
+
+
+def test_cift_ailesi_kagit_olursa_gunluk_kosu_sorunludur(tmp_path):
+    # TASARIM 6.5: çift ailesi Kâğıt ise çift kartı yokluğu koşuyu SORUNLU yapar.
+    kayit._yaz(
+        {
+            "tur": "durum",
+            "olay": "durum",
+            "aile": ciftbolme.AILE,
+            "durum": "Kâğıt",
+            "resmi": True,
+        }
+    )
+    assert kos(tmp_path) == 1
+    assert durum_satirlari()[0] == "SORUNLU"
+    assert "çift kartı henüz yazılmadı" in durum_satirlari()[-1]
+    assert not list(rapor.RAPOR_DIZINI.glob("kartlar-*.csv"))
+    assert not (kayit.KAYIT_DIZINI / "kartlar.jsonl").exists()

@@ -169,6 +169,47 @@ def test_sabit_cift_secimden_bagimsiz_ve_k2_ilk_gun_baslangic(tmp_path):
     assert set(c["masraf"]) == set(c["sabit"]) == {0.001, 0.003, 0.005}
 
 
+def test_vakbn_garan_sabit_cifti_kabul_kararina_girmez(tmp_path):
+    # TASARIM 5.6: sabit VAKBN–GARAN yalnız tanısaldır; kabul seçilmiş bölmeden gelir.
+    vakbn, garan = sabit(OLAY)
+    kos(tmp_path, {"VAKBN": vakbn, "GARAN": garan})  # Sektör yok, seçilmiş çift yok.
+    s = kayit.kosu(
+        "20261005-1930",
+        tmp_path,
+        p=P,
+        atr_n=ATR_N,
+        tekrar=1,
+        git=lambda: ("abc", False),
+    )
+    assert len(s["cift"]["sabit"][0.003]["islemler"]) == 2
+    assert s["cift"]["masraf"][0.003]["islemler"].empty
+    assert (s["k1"]["cift_rotasyonu"]["gecis"], s["k1"]["cift_rotasyonu"]["p"]) == (
+        0,
+        1.0,
+    )
+    kabul = s["kabul"]["cift_rotasyonu"]
+    assert np.isnan(kabul["gercek"][0.003])
+    assert kabul["satirlar"][4]["ham"][0] == ("İşlem", 0, "sayi")
+
+
+def test_cift_bolmesinde_stop_ve_kar_hedefi_yok(tmp_path):
+    # TASARIM 5.5, 5.6: çiftte risk paketi ve kâr hedefi yok; çıkış karşı uç sinyaliyle.
+    vakbn, garan = sabit({T0: -0.05, T0 + 1: -0.02})
+    carpan = np.ones(len(GUN))
+    # İki bacak birlikte düşüp yükselir; oran ve Z değişmez, limit aşılmaz.
+    carpan[T0 + 4 : T0 + 34] = 0.97 ** np.arange(1, 31)
+    carpan[T0 + 34 : T0 + 74] = 0.97**30 * 1.05 ** np.arange(1, 41)
+    carpan[T0 + 74 :] = 0.97**30 * 1.05**40
+    t = sonuc(kos(tmp_path, {"VAKBN": vakbn * carpan, "GARAN": garan * carpan}))[
+        "islemler"
+    ]
+    assert t[["sembol", "giris_tarih", "cikis_tarih", "neden"]].values.tolist() == [
+        ["VAKBN", GUN[T0 + 2], GUN[SON], "veri_sonu"]
+    ]
+    assert (vakbn * carpan)[T0 + 33] < t.iloc[0].giris_fiyat * 0.5
+    assert (vakbn * carpan)[T0 + 73] > t.iloc[0].giris_fiyat * 2.0
+
+
 def test_tutulan_bacakta_karantina_son_temiz_aofta_kapatir_cift_girissiz_kalir(
     tmp_path,
 ):
