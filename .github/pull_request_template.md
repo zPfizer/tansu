@@ -20,6 +20,10 @@ _Kutuları Levent işaretler. İşaretsiz kutu varsa PR birleşmez._
 - [ ] Kalite: değişiklik işin kapsamında; ilgisiz düzenleme yok — kanıt: 
 - [ ] Entegrasyon: sistemin geri kalanıyla çalışıyor; kayıt ve ayar değişiklikleri hesaba katıldı — kanıt: 
 - [ ] Belgeleme: davranış değişikliği belgelendi; belge bugünkü durumu anlatıyor — kanıt: 
+- [ ] Tansu: geleceği görmeme testi yeşil; yeni hesap kapsamında — kanıt: 
+- [ ] Tansu: dokunulan her TASARIM değişmez kuralının kodu ve testi var — kanıt: 
+- [ ] Tansu: sadakat ve YORUM seçiminde getiriye bakılmadı; deneme günlüğü yalnız eklendi; kural parametresi yeni deneme olarak kaydedildi — kanıt: 
+- [ ] Tansu: davranış değiştiyse TASARIM aynı commit'te güncellendi — kanıt: 
 
 ## Bağımsız inceleme
 

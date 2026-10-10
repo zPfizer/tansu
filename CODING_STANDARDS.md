@@ -13,3 +13,14 @@ Turn each task into a checkable success criterion:
 - Refactor: tests pass before and after.
 
 For multi-step work, write a plan as `1. [Step] → verify: [check]`. Loop until each check passes.
+
+## Tansu
+Genel standarda ektir. Davranış kuralının sahibi `docs/TASARIM.md`'dir; burada kod yazarken uygulanış biçimi durur.
+- **Geleceği görmeme:** yeni ya da değişen her hesap `tests/test_gelecek.py` kapsamına eklenir (TASARIM §5.12).
+- **Tek kod:** sınama ve canlı koşu aynı fonksiyonu kullanır; ayrı kopya yazılmaz (TASARIM §4).
+- **Sessiz düzeltme yok:** eksik değer TASARIM §5.1'deki gibi boş kalır; tahminle doldurma, sessiz kırpma ve sessiz
+  atlama yok. Beklenmeyen durum hata verir.
+- **Belgeye bağlılık:** yeni ya da değişen her davranış kodda `TASARIM <bölüm>` atfı taşır.
+- **Değişmez kural:** TASARIM'da bir şeyin hiç olmayacağını ya da hep olacağını söyleyen her hükmün (örnek:
+  "anlık görüntü değişmez", "ileri doldurulmaz", "indirme durur") kodda bir uygulayıcısı ve bir testi vardır.
+  Yeni hüküm ikisiyle birlikte gelir.

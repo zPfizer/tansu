@@ -49,3 +49,9 @@ If the concept you need isn't in the glossary yet, that's a signal: either you'r
 If your output contradicts an existing ADR, surface it explicitly rather than silently overriding:
 
 > _Contradicts ADR-0007 (event-sourced orders), but worth reopening because…_
+
+## Tansu düzeni
+
+Tansu'da `docs/adr/` yoktur. Karar kaydı `docs/TASARIM.md`'dir; gerekçeler `docs/sorgu/` altındadır. Bir skill ADR
+yazacağı zaman kararı gerekçesiyle TASARIM'ın ilgili bölümüne yazar. "Flag ADR conflicts" kuralı TASARIM kararları için
+geçerlidir.

@@ -91,3 +91,12 @@ Tailor the list to the project once, then reuse it unchanged. A Definition of Do
 - A different bar applied depending on deadline pressure.
 - Acceptance criteria treated as the whole bar, with no standing quality floor.
 - "Done" declared before human review on changes that need it.
+
+## Tansu
+Genel listeye ektir. PR şablonundaki "Tansu:" satırları bu maddelerin kanıt alanlarıdır.
+- Değişen komut kaydedilmiş gerçek anlık görüntüyle baştan sona koşar; çıktısı PR'a konur.
+- `tests/test_gelecek.py` yeşil; yeni hesap kapsamında.
+- Değişikliğin dokunduğu her TASARIM değişmez kuralının kodu ve testi var.
+- Sadakat kontrolünde ve YORUM seçiminde getiriye bakılmadı; deneme günlüğü yalnız eklendi; kural parametresi
+  yeni deneme olarak kaydedildi (`AGENTS.md` çalışma kuralları).
+- Davranış değiştiyse TASARIM aynı commit'te güncellendi.

@@ -7,17 +7,20 @@ def _satirlar(yol):
     return yol.read_text(encoding="utf-8").splitlines()
 
 
-def test_kodlama_standartlari_ayni():
-    kaynak = Path.home() / ".claude" / "CODING_STANDARDS.md"
+def _genel_standart_basta(ad):
+    kaynak = Path.home() / ".claude" / ad
     if not kaynak.exists():
-        pytest.skip("Evde kodlama standartları dosyası yok.")
-    kopya = Path(__file__).resolve().parents[1] / "CODING_STANDARDS.md"
-    assert _satirlar(kopya) == _satirlar(kaynak)
+        pytest.skip(f"Evde {ad} yok.")
+    genel = _satirlar(kaynak)
+    kopya = _satirlar(Path(__file__).resolve().parents[1] / ad)
+    assert kopya[: len(genel)] == genel
+    ek = kopya[len(genel) :]
+    assert ek == [] or (ek[0] == "" and ek[1] == "## Tansu")
 
 
-def test_bitis_olcutleri_ayni():
-    kaynak = Path.home() / ".claude" / "DEFINITION_OF_DONE.md"
-    if not kaynak.exists():
-        pytest.skip("Evde Definition of Done dosyası yok.")
-    kopya = Path(__file__).resolve().parents[1] / "DEFINITION_OF_DONE.md"
-    assert _satirlar(kopya) == _satirlar(kaynak)
+def test_kodlama_standartlari_genel_standartla_baslar():
+    _genel_standart_basta("CODING_STANDARDS.md")
+
+
+def test_bitis_olcutleri_genel_standartla_baslar():
+    _genel_standart_basta("DEFINITION_OF_DONE.md")
