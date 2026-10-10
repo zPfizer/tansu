@@ -12,7 +12,7 @@ olduğunu söyler; sayı, formül ve işleyiş, atıf verilen bölümdedir (TASA
 | İkinci el | Tansu'dan aktarılan ama onun aracından çıkmayan metin: notlardaki özet ya da aktarılan tweet. |
 | NotebookLM | Tansu'nun paylaştığı ama kendi aracından çıkmayan infografik. |
 | YORUM | Tansu'nun fikir ya da değer vermediği bir noktada bizim belirlediğimiz değer ya da kural (ör. Tansu'nun açıklamadığı parametre). Tansu'nun fikri olan noktada YORUM geçerli değildir; Tansu'ya uyulamıyorsa bu "uygulanamaz" diye nedeniyle yazılır. Deneme sayımına etkisi KURALLAR'dadır. |
-| Sadakat kontrolü | Bir kuralın kaynak ekrandaki rakamları yeniden üretip üretmediğinin denetimi. Sonuç "üretti" (sıkı toleransla eşleşme) ya da "üretilemedi"dir; yalnız gevşek bantta yakınlık üretim sayılmaz (KURALLAR §4). |
+| Sadakat kontrolü | Bir kuralın kaynak ekrandaki rakamları yeniden üretip üretmediğinin denetimi. Sonuç türleri ve hangi toleransın üretim sayıldığı KURALLAR §4'tedir. |
 | Hazırlık (H / K / X) | Bir kuralın kaynaktan ne kadar kodlanabildiği: H birinci elden ve az YORUM'la, K kısmen ve önemli YORUM'la, X kodlanamaz. Ailenin durumundan ayrıdır (KURALLAR §2). |
 
 ## Veri
@@ -31,7 +31,7 @@ olduğunu söyler; sayı, formül ve işleyiş, atıf verilen bölümdedir (TASA
 | Olay çarpanı | Şirket olayının fiyat ölçeğini ne kadar değiştirdiğini gösteren katsayı (TASARIM §5.1). |
 | Olay denetimi | Olay çarpanıyla ham fiyattan bulunan değerin düzeltilmiş fiyatla tutarlı olup olmadığının kontrolü (TASARIM §5.1). |
 | Mum | Bir hissenin bir günlük fiyat kaydı (TASARIM §4). |
-| Anlık görüntü | Bir indirmenin değişmez kopyası. Kimliği veri sürümüdür (TASARIM §4, §6). |
+| Anlık görüntü | Bir indirmenin değişmez kopyası. Kimliği veri sürümüdür. Tam anlık görüntü bütün sembollerin bütün geçmişini, günlük anlık görüntü günlük koşunun indirdiği sembolleri taşır; günlük evrenin dayandığı tam görüntüye taban anlık görüntü denir (TASARIM §4, §6). |
 | Manifest | Anlık görüntünün dosyalarını ve her dosyanın parmak izini içeren kayıt (TASARIM §4, §5.11). |
 | NaN | Eksik sayısal değer. Sıfırdan ayrıdır (TASARIM §5.13). |
 | Eksik gün | Verisi olmayan gün (TASARIM §5.1). |
@@ -73,10 +73,10 @@ olduğunu söyler; sayı, formül ve işleyiş, atıf verilen bölümdedir (TASA
 | Sıkışma dönemi | Sıkışma oranının eşiği aşmadığı art arda günler (KURALLAR §3). |
 | Giriş penceresi | Sıkışma dönemi bittikten sonra giriş sinyalinin oluşabileceği dönem (KURALLAR §3). |
 | Çift rotasyonu | Bir çiftin iki hissesi arasında Z'ye göre geçiş yapmaya dayanan aile (KURALLAR §3). |
-| Bacak | İki anlamı vardır. Çiftte: iki hisseden biri (TASARIM §5.6). Formasyonda: iki dönüş noktası arasındaki fiyat hareketi, ör. CD bacağı (KURALLAR §2). |
+| Bacak | İki anlamı vardır. Çiftte: iki hisseden biri; iki bacağın rolleri Y ve X'tir (TASARIM §5.6). Formasyonda: iki dönüş noktası arasındaki fiyat hareketi, ör. CD bacağı (KURALLAR §2). |
 | Geçiş | Çiftte tutulan bacağı satıp öteki bacağı almak (TASARIM §5.6). |
 | Z, ΔZ | Z, çiftteki fark serisinin ortalamasından kaç standart sapma uzakta olduğudur. ΔZ, Z'nin bir günlük değişimidir (KURALLAR §2–3). |
-| Z penceresi | Z'nin ortalama ve sapmasının hesaplandığı gün sayısı. Seçim penceresinden bağımsızdır (KURALLAR §3). |
+| Z penceresi | Z hesaplanırken fark serisinin ortalaması ve standart sapması için kullanılan geçmiş gün sayısı. Seçim penceresinden bağımsızdır (KURALLAR §3). |
 | ddof | Standart sapma hesabında bölenden düşülen sayı (TASARIM §5.6). |
 | Eşbütünleşme | Tek başına durağan olmayan iki fiyat serisinin doğrusal bir birleşiminin durağan olması. Korelasyondan ayrıdır (TASARIM §5.6). |
 | Engle–Granger | İki seri arasındaki farkın kalıcı olarak ortalamaya dönüp dönmediğini sınayan eşbütünleşme testi (TASARIM §5.6). |
@@ -111,9 +111,9 @@ olduğunu söyler; sayı, formül ve işleyiş, atıf verilen bölümdedir (TASA
 | Bozulma | İki anlamı vardır. Projede: kapanışın uzun dönem ortalamasının altına inmesi, yani gün sonu stopu (TASARIM §5.5). Harmonik kaynaklarda: formasyonun geçersizleşmesi (KURALLAR §2). |
 | Hedef | Kâr hedefi, kâr alma seviyesidir; formasyon hedefi (D), harmonik kurulumun tamamlanma seviyesidir. Çift rotasyonunda hedef, geçilecek bacaktır (TASARIM §5.5–5.6, KURALLAR §2). |
 | R | Hisse başına planlanan risk tutarı (TASARIM §5.3). |
-| Planlanan risk | Stop değerse pozisyonun tamamında kaybedilecek tutar (TASARIM §5.3). |
+| Planlanan risk | Stop seviyesinde çıkılacağı varsayımıyla pozisyonun tamamında planlanan kayıp tutarı (TASARIM §5.3). |
 | Fiili risk | Planlanan riskin özkaynağa oranı. |
-| Gerçekleşen kayıp | İşlemde gerçekten kaybedilen tutar (TASARIM §5.3). |
+| Gerçekleşen kayıp | Masraf hariç, giriş ve çıkış fiyatlarından doğan kayıp tutarı (TASARIM §5.3). |
 | Çift | Aralarında eşbütünleşme olan iki hisse (TASARIM §5.6). |
 | Çift payı | Çift bölmesinde bir çifte ayrılan sermaye (TASARIM §5.6). |
 | Tutuş dönemi | Çift bölmesinde bir bacağın alımından satımına geçen süre. Bu bölmede işlemin karşılığıdır (TASARIM §5.6). |
@@ -146,7 +146,7 @@ olduğunu söyler; sayı, formül ve işleyiş, atıf verilen bölümdedir (TASA
 | Fazla getiri | Kuralın getirisinin karşılaştırma sepetinin getirisinden farkı (TASARIM §5.7). |
 | Ön şartlı gün havuzu | Bir karşılaştırmada rastgele girişin seçilebileceği günler (TASARIM §5.7). |
 | Rastgele kural | Karşılaştırma türünün uygunluk şartlarını sağlayan günlerden rastgele seçilen girişler (TASARIM §5.7). |
-| K1 | Rastgele girişlere dayanan kuralla karşılaştırma. İki türü vardır: (a) aynı gün başka hisse, (b) aynı hissede başka gün (TASARIM §5.7). |
+| K1 | Rastgele girişlere dayanan kuralla karşılaştırma. Tek hisse bölmesinde iki türü vardır: (a) aynı gün başka hisse, (b) aynı hissede başka gün. Çift bölmesinde aynı çiftlerin geçiş günleri rastgele seçilir (TASARIM §5.7). |
 | Ek kol | EMA sıkışması için sıkışmasız aynı kırılımla yapılan ek karşılaştırma (TASARIM §5.7). |
 | K2 | Aynı evrenin eşit ağırlıklı sepetiyle karşılaştırma (TASARIM §5.7). |
 | K3 | Faizle karşılaştırma (TASARIM §5.7). |
