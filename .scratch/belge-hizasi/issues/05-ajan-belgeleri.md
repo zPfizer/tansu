@@ -1,9 +1,9 @@
-# 04: Ajan belgeleri, araştırma ve eski rapor güncel
+# 05: Ajan belgeleri, araştırma ve eski rapor güncel
 
 **What to build:** AGENTS.md, `docs/agents/`, `docs/denetim.md`, araştırma notları ve 05.10 ön deneme raporu bugünkü kararları
 anlatır; geri çekilmiş öneriler işaretlidir.
 
-**Blocked by:** 02
+**Blocked by:** 03
 
 **Status:** ready-for-agent
 

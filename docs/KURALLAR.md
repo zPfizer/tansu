@@ -7,7 +7,9 @@ Okuma kuralları:
 - **Birinci el:** Tansu'nun aracının görsel çıktısı (başlık, etiket, tablo, kod).
 - **İkinci el:** notlardaki Claude özeti ya da aktarılan tweet. Kural olarak tek başına kullanılmaz.
 - **NotebookLM:** Tansu'nun paylaştığı ama kendi aracından çıkmayan infografikler. Ayrı işaretlenir.
-- **YORUM:** kaynakta olmayan, bizim doldurduğumuz değer. Bir YORUM'un sınamada denenen her değeri yeni
+- **YORUM:** kaynakta olmayan, bizim doldurduğumuz değer. Tansu'nun fikirleri esastır: YORUM yalnız Tansu'nun o konuda
+  fikri yoksa geçerlidir. Tansu'nun fikri varsa ona uyulur; uygulanamıyorsa (ör. veride açılış yok) neden yazılır (Levent
+  10.10). Bir YORUM'un sınamada denenen her değeri yeni
   deneme sayılır. Sadakat kontrolünde denenen aday formüller deneme sayısına girmez, p üretmez; seçilen
   formül kural kaydına girer (TASARIM 5.11, İ: 10-033, 04-090).
 

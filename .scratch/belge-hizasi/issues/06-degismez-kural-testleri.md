@@ -1,4 +1,4 @@
-# 05: TASARIM değişmez kurallarının hepsi testle korunur
+# 06: TASARIM değişmez kurallarının hepsi testle korunur
 
 **What to build:** Kodda olan ama testi olmayan her değişmez kural, dış davranıştan sınayan bir testle korunur. Kural bozulunca CI kırmızı olur.
 

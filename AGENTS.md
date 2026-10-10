@@ -3,11 +3,23 @@
 Tansu'dan esinlenen BIST günlük sinyal ve sınama sistemi. Kod belgelere uyar; belge değişmeden davranış
 değişmez.
 
-## Okuma sırası
-1. `GLOSSARY.md`: terimler.
-2. `docs/TASARIM.md`: tasarım; §7 uygulama sırası.
-3. `docs/KURALLAR.md`: aile kuralları, YORUM'lar, sadakat kontrolü.
-4. Gerekirse `docs/sorgu/sonuc-3-4.md` ve `docs/sorgu/izleme/karar.md`: kararların gerekçesi.
+## Belgeler ve sahipleri
+Her bilginin tek sahip dosyası vardır; öteki dosyalar yalnız atıf verir. Okuma sırası tablonun sırasıdır.
+
+| Dosya | Sahibi olduğu bilgi |
+|---|---|
+| `GLOSSARY.md` | terimlerin anlamı |
+| `docs/TASARIM.md` | sayı, formül, davranış ve kararlar; §7 uygulama sırası |
+| `docs/KURALLAR.md` | aile kuralları ve YORUM'lar (§3–4) |
+| beyin: `kisisel/300-Projects/Tansu X Veri Havuzu/` (depo dışı) | Tansu'nun ham paylaşımları: not ve görsel. Ham kaynaktır, değiştirilmez |
+| `docs/kurallar/A-yapi-bolge.md` … `E-risk-cikis-surec.md` | havuzun okuması: Tansu'nun ne dediği. Havuzdaki her not burada ya atıflıdır ya "kural içermez" listesindedir |
+| `docs/sadakat.md` | sadakat ölçümü |
+| `AGENTS.md` | çalışma kuralı ve iş akışı |
+| `CODING_STANDARDS.md`, `DEFINITION_OF_DONE.md` | kod biçimi ve bitiş ölçütü (`## Tansu`) |
+| `docs/sorgu/sonuc-3-4.md`, `docs/sorgu/izleme/karar.md` | kararların gerekçesi (gerekirse okunur) |
+
+Bu dosyaların hepsi drift denetimindedir: biri ötekiyle çelişirse, eski bilgi taşırsa ya da başka dosyanın
+bilgisini kopyalarsa düzeltilir.
 
 Belge ile kod çelişirse ya da belge sessizse dur: belgeyi önce düzelt, gerekçesini yaz, sonra kodu yaz.
 
@@ -49,12 +61,17 @@ Tansu'nun ekidir. `tests/test_standartlar.py` genel kısmın evdeki asılla ayn�
 okur. Ev dosyası olmayan CI'da test atlanır; denetim yerel test kapısındadır.
 
 ## İş akışı (Matt Pocock ana akışı)
+**Geliştirme durdu:** belgeler drift, eski bilgi ve çelişkiden arınana kadar yeni geliştirme yapılmaz; yalnız
+`.scratch/belge-hizasi/` biletleri yürür (Levent 10.10). Bilet 08 bitince bu satır kalkar.
+
 Her iş bu sırayla yürür. Basamağı atlamadan önce o skill'in `SKILL.md`'sini oku. Bu skill'lerin çoğu kullanıcı
 komutudur; ajan çağıramıyorsa `SKILL.md`'yi (`~/.claude/plugins/cache/mattpocock/`) okuyup adımlarını uygular.
-1. **Fikir:** `/grill-with-docs`. Netleşen terim o anda `GLOSSARY.md`'ye, karar `docs/TASARIM.md`'ye yazılır.
+1. **Fikir:** `/tansu-grill` (Matt'in `/grill-with-docs`'u Tansu ölçütleriyle: Tansu önce gelir, risk taraması,
+   değişecek metni gösterme). Netleşen terim o anda `GLOSSARY.md`'ye, karar `docs/TASARIM.md`'ye yazılır.
    Önce TASARIM ve `docs/sorgu/`'ya bak; verilmiş kararı yeniden sorma.
-2. **Plan:** iş birden çok oturum sürecekse `/to-spec`, sonra `/to-tickets`
-   (`.scratch/<iş>/spec.md`, `.scratch/<iş>/issues/NN-<ad>.md`). Tek oturumluk işte doğrudan 3. adım.
+2. **Plan:** her iş `/to-spec`, sonra `/to-tickets` ile planlanır (`.scratch/<iş>/spec.md`,
+   `.scratch/<iş>/issues/NN-<ad>.md`). Bilet elle yazılmaz. İş sürerken yeni bir karar çıkarsa önce spec güncellenir,
+   sonra `/to-tickets` biletleri bağımlılık sırasıyla yeniden kurar.
 3. **Yapım:** her bilet için `master`'dan `pr/NN-<ad>` dalı açılır. `/implement` biletin işini `/tdd` ile yapar,
    `/code-review` ile denetler, dala commit eder. Biletler arasında bağlam temizlenir.
 4. **PR:** dal `kaynak`'a gönderilir; PR gövdesini `/pr` ve `.github/pull_request_template.md` birlikte yazar.

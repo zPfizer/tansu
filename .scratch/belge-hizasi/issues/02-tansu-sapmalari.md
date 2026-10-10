@@ -1,0 +1,21 @@
+# 02: Tansu'nun fikri olan yerde YORUM kalmaz
+
+**What to build:** Tansu'nun fikirleri esastır; YORUM yalnız Tansu'nun o konuda fikri yoksa geçerlidir (Levent 10.10,
+KURALLAR "Okuma kuralları"). KURALLAR, TASARIM ve kart düzenindeki her YORUM ve her Tansu'dan ayrılma bu ilkeye göre
+denetlenir: Tansu'nun fikri varsa kural ona çevrilir; uygulanamıyorsa nedeni KURALLAR'a yazılır.
+
+**Blocked by:** 01
+
+**Status:** ready-for-agent
+
+- [ ] KURALLAR, TASARIM ve `docs/kurallar/A–E`'deki her YORUM listelendi. Her biri için Tansu havuzunda (not ve görsel) o konuda fikir arandı;
+      sonuç üç sınıftan biri: Tansu sessiz (YORUM kalır) · Tansu'nun fikri var (kural Tansu'ya çevrilir) · Tansu'nun fikri var ama
+      uygulanamaz (neden yazılır). Kaynak yeri her satırda.
+- [ ] Başlangıç listesi, sözlüğün Tansu denetiminden (10.10): çift seçiminde aynı sektör şartı (Tansu farklı sektörden de çift kurar);
+      EMA sıkışmasında girişin sıkışma bittikten sonra olması (Tansu'nun ön sinyali sıkışma sürerken çıkar, parametrelerini vermedi);
+      işlem fiyatı AOF (Tansu ertesi gün açılış kullanır; İş Yatırım verisinde açılış yok); gün sonu stopunda ertesi gün çıkış;
+      kart durumlarının pozisyona bağlanması; likidite ölçüsü; sabit parametre ile Tansu'nun walk-forward ayarı; şok filtresi.
+- [ ] Kurala çevrilen her değişiklik TASARIM/KURALLAR'a karar etiketiyle yazıldı; kural kaydından sonra değiştiyse yeni deneme sayıldı.
+      Kod değişikliği gerekiyorsa bilet 07 gibi ele alınır (önce davranışı gösteren test).
+- [ ] Levent'e yalnız Tansu'nun fikrinin okunuşu belirsiz kalan yerler soruldu.
+- [ ] Bağımsız denetçi aynı listeyi havuza karşı yeniden okudu; Tansu'nun fikri olduğu halde YORUM kalan yer yok.

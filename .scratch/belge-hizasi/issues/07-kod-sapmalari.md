@@ -1,9 +1,9 @@
-# 06: Kodun TASARIM'dan saptığı yerler karara bağlanır
+# 07: Kodun TASARIM'dan saptığı yerler karara bağlanır
 
 **What to build:** Kodun TASARIM'dan farklı davrandığı on yer tek tek incelenir. Her biri için ya kod TASARIM'a uyar ya da
 TASARIM gerekçesiyle güncellenir.
 
-**Blocked by:** 02
+**Blocked by:** 03
 
 **Status:** ready-for-agent
 
