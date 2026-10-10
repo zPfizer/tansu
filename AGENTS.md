@@ -57,8 +57,8 @@ Belge ile kod çelişirse ya da belge sessizse dur: belgeyi önce düzelt, gerek
 
 ## Standartlar
 `CODING_STANDARDS.md` ve `DEFINITION_OF_DONE.md` Levent'in genel standardıyla başlar; altlarındaki `## Tansu` bölümü
-Tansu'nun ekidir. `tests/test_standartlar.py` genel kısmın evdeki asılla aynı kaldığını denetler. `/code-review` ikisini
-okur. Ev dosyası olmayan CI'da test atlanır; denetim yerel test kapısındadır.
+Tansu'nun ekidir. `tests/test_standartlar.py` genel kısmın YONETIM'deki asılla aynı kaldığını denetler. `/code-review` ikisini
+okur. YONETIM olmayan CI'da test atlanır; denetim yerel test kapısındadır.
 
 ## İş akışı (Matt Pocock ana akışı)
 **Geliştirme durdu:** belgeler drift, eski bilgi ve çelişkiden arınana kadar Tansu'nun davranışını değiştiren yeni

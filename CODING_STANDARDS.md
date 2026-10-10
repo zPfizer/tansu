@@ -1,18 +1,14 @@
 # Coding standards
 
-## Clarify first
-State your assumptions. When several readings exist and the choice changes the result, list them and ask. Name a simpler approach when one exists, and push back when warranted.
+The general coding rules are in the global `~/.claude/CLAUDE.md`. This file holds only the rules that real mistakes taught.
 
-## Smallest diff
-Write the minimum code the request needs: no unrequested features, single-use abstractions, configurability, or error handling for impossible cases. Trace every changed line to the request. Match the existing style. Leave adjacent code, comments, and formatting unchanged, and refactor only what is broken. Report unrelated dead code and leave it in place. Remove only the imports, variables, and functions your change made unused.
-
-## Verified goals
-Turn each task into a checkable success criterion:
-- Validation: write tests for invalid inputs, then make them pass.
-- Bug: write a test that reproduces it, then make it pass.
-- Refactor: tests pass before and after.
-
-For multi-step work, write a plan as `1. [Step] → verify: [check]`. Loop until each check passes.
+## Mistakes
+This file starts short. It grows from real mistakes.
+- When an agent makes a meaningful coding mistake, record it before the task ends. A mistake is meaningful when Levent corrects it, or when a review or CI finds it.
+- For a mechanical mistake, add an automated check: a test, lint rule, hook, or CI step. Do not add a rule here. Examples: a code pattern, a banned API, a file location.
+- For a judgement mistake, add one short rule here. Put a rule for one project only in the `CODING_STANDARDS.md` of that project.
+- Write corrections to behavior or communication in Kurallar, not here.
+- At the end of a difficult session, the user command `/retro` finds the mistakes that nobody recorded.
 
 ## Tansu
 Genel standarda ektir. Davranış kuralının sahibi `docs/TASARIM.md`'dir; burada kod yazarken uygulanış biçimi durur.

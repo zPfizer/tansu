@@ -8,7 +8,7 @@ def _satirlar(yol):
 
 
 def _genel_standart_basta(ad):
-    kaynak = Path.home() / ".claude" / ad
+    kaynak = Path.home() / "Desktop" / "YONETIM" / ad
     if not kaynak.exists():
         pytest.skip(f"Evde {ad} yok.")
     genel = _satirlar(kaynak)
