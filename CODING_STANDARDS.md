@@ -1,18 +1,21 @@
 # Coding standards
 
-## Clarify first
-State your assumptions. When several readings exist and the choice changes the result, list them and ask. Name a simpler approach when one exists, and push back when warranted.
+The general coding rules are in the global `~/.claude/CLAUDE.md`. This file holds only the rules that real mistakes taught.
 
-## Smallest diff
-Write the minimum code the request needs: no unrequested features, single-use abstractions, configurability, or error handling for impossible cases. Trace every changed line to the request. Match the existing style. Leave adjacent code, comments, and formatting unchanged, and refactor only what is broken. Report unrelated dead code and leave it in place. Remove only the imports, variables, and functions your change made unused.
+## Mistakes
+This file starts short. It grows from real mistakes.
+- When an agent makes a meaningful coding mistake, record it before the task ends. A mistake is meaningful when Levent corrects it, or when a review or CI finds it.
+- For a mechanical mistake, add an automated check: a test, lint rule, hook, or CI step. Do not add a rule here. Examples: a code pattern, a banned API, a file location.
+- For a judgement mistake, add one short rule here. Put a rule for one project only in the `CODING_STANDARDS.md` of that project.
+- Write corrections to behavior or communication in Kurallar, not here.
+- At the end of a difficult session, the user command `/retro` finds the mistakes that nobody recorded.
 
-## Verified goals
-Turn each task into a checkable success criterion:
-- Validation: write tests for invalid inputs, then make them pass.
-- Bug: write a test that reproduces it, then make it pass.
-- Refactor: tests pass before and after.
-
-For multi-step work, write a plan as `1. [Step] → verify: [check]`. Loop until each check passes.
+## Rules
+- **Fail loud:** Stop with an error and a non-zero exit when the code cannot complete the requested operation. Do not continue in a weaker mode. (05.10: Tansu `kayit.py` changed an official run to a development run on a dirty tree. 07.10: the `erteleme` hook exited 0 on errors. 07.10: `eval_kod.py` ignored a subprocess exit code.)
+- **Check every item:** Check every record and each required item by its identity. (05.10: Tansu `kaynak.py` checked only the first record. 10.10: Tansu `dod_kontrol.py` checked a count only. 10.10: a git hook matched raw JSON instead of the parsed command.)
+- **A check needs the work:** Make the check fail when the required work is missing. (09.10: `pdf_oku.py` stored the answer codes in the manifest, so the check passed without opening the pages.)
+- **One path to outside services:** Send every text to an external service through the same masking function. Check that the response comes from the expected model. (08.10: the `agir.py` hook sent raw text to Jev, bypassed the `jev.py` masking, and did not check the model.)
+- **Wire it and run it:** Connect each new hook, command, or module to the live path in the same change. Show one real run through that path. (07.10: `erteleme.py` was not in `settings.json`. 05.10: the Tansu CLI read result keys that the change had removed.)
 
 ## Tansu
 Genel standarda ektir. Davranış kuralının sahibi `docs/TASARIM.md`'dir; burada kod yazarken uygulanış biçimi durur.
