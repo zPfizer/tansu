@@ -1,0 +1,17 @@
+.venv/
+/veri/
+/rapor/
+/gunluk/
+*.egg-info/
+__pycache__/
+*.pyc
+.pytest_cache/
+/docs/strateji-taslak/x-arsiv/medya/
+/docs/strateji-taslak/x-arsiv/siniflama/baglanti/*
+!/docs/strateji-taslak/x-arsiv/siniflama/baglanti/baglanti-sonuc.jsonl
+
+# Tansu kaynak içeriği: yalnız yerelde ve gizli tansu-kaynak deposunda
+/docs/strateji-taslak/
+/docs/sorgu/
+/docs/kurallar/
+/docs/strateji-modulleri-taslak.md
