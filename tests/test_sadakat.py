@@ -54,6 +54,20 @@ def test_sadakat_gunlugunun_her_satirinda_olay_var(tmp_path):
         assert "olay" in json.loads(satir)
 
 
+def test_komut_kontrol_edilen_her_aileyi_gunluge_yazar(tmp_path):
+    semboller = ["KRDMD", "VAKBN", "GARAN"]
+    fiyatlar = {s: [satir("2026-04-09", 10.0, 10.0)] for s in semboller}
+    kaynak = SahteKaynak(fiyatlar, {s: [] for s in semboller})
+    kimlik = veri.indir(semboller, tmp_path, kaynak, simdi=dt.datetime(2026, 10, 5, 19, 30))
+    gunluk = tmp_path / "deneme.jsonl"
+    sadakat.calistir(kimlik, tmp_path, tmp_path / "sadakat.md", gunluk)
+    satirlar = [json.loads(s) for s in gunluk.read_text(encoding="utf-8").splitlines()]
+    assert len(satirlar) == 2
+    assert {s["aile"] for s in satirlar} == {"ema_sikismasi", "cift_rotasyonu"}
+    assert satirlar[0]["tarih"] == satirlar[1]["tarih"]
+    assert all(s["olay"] == "sadakat" and s["tur"] == "sadakat" and s["anlik"] == kimlik for s in satirlar)
+
+
 def test_cift_z_aramasi_tum_gunlerde_ve_adaylarda():
     # Elle: X = 1, log Y = [0, 2, 4, 6]; pencere 3, ddof 1, log oran: Z_{t-1} = Z_t = 1 (tests/test_cift.py).
     gunler = pd.bdate_range("2025-01-01", periods=4)

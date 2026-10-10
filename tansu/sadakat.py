@@ -212,8 +212,12 @@ def calistir(kimlik, kok, rapor_yolu, gunluk_yolu) -> str:
     Path(rapor_yolu).write_text(metin, encoding="utf-8")
     gunluk = Path(gunluk_yolu)
     gunluk.parent.mkdir(parents=True, exist_ok=True)
-    satir = {"olay": "sadakat", "tur": "sadakat", "tarih": dt.datetime.now(dt.timezone.utc).isoformat(), "anlik": kimlik,
-             "aile": "ema_sikismasi"}
+    satir = {"olay": "sadakat", "tur": "sadakat", "tarih": dt.datetime.now(dt.timezone.utc).isoformat(), "anlik": kimlik}
+    aileler = ["ema_sikismasi"]
+    if {CIFT_Y, CIFT_X} <= set(anlik.fiyat["sembol"]):
+        aileler.append("cift_rotasyonu")
     with gunluk.open("a", encoding="utf-8") as f:  # yalnız ekleme; Holm yalnız tur=deneme sayar
-        f.write(json.dumps(satir, ensure_ascii=False) + "\n")
+        for aile in aileler:
+            satir["aile"] = aile
+            f.write(json.dumps(satir, ensure_ascii=False) + "\n")
     return metin
