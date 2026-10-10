@@ -41,7 +41,7 @@ olduğunu söyler; sayı, formül ve işleyiş, atıf verilen bölümdedir (TASA
 | Kilitli gün | Kapanışı tavanda ya da tabanda sayılan gün (TASARIM §5.3). |
 | Duyarlılık sürümü | Kilitli gün için daha dar bir tanımla aynı sınamanın yeniden koşulduğu sürüm; varsayımın sonuca etkisini gösterir (TASARIM §5.3). |
 | Satır ihlali | Tek bir fiyat satırının kendi içinde tutarsız ya da bozuk olması (TASARIM §5.13). |
-| Yapısal ihlal | Düzenlenmiş veri serisinde günlerin yanlış sırada olması ya da aynı günün farklı fiyatlarla tekrarlanması (TASARIM §5.13). |
+| Yapısal ihlal | Kaynak yanıtı düzenlendikten ve TASARIM §5.13'teki istisnalar uygulandıktan sonra serinin bozuk sırada kalması ya da bir günün tekrar etmesi (TASARIM §5.13). |
 | Hisse-gün | Bir hissenin bir günlük gözlemi. Üye hisse-gün, hissenin o ayın evreninde olduğu gündür; veri kapısı oranları bu birimle sayılır (TASARIM §5.13). |
 | Karantina | Veri ihlali nedeniyle bir hisseye belirli bir dönem için konan yeni giriş kısıtı (TASARIM §5.1, §5.13). |
 | Kaynak günü hatası | Bir günün verisinin kaynakta toplu bozuk gelmesi (TASARIM §5.13). |
@@ -75,6 +75,8 @@ olduğunu söyler; sayı, formül ve işleyiş, atıf verilen bölümdedir (TASA
 | Çift rotasyonu | Bir çiftin iki hissesi arasında Z'ye göre geçiş yapmaya dayanan aile (KURALLAR §3). |
 | Bacak | İki anlamı vardır. Çiftte: iki hisseden biri; iki bacağın rolleri Y ve X'tir (TASARIM §5.6). Formasyonda: iki dönüş noktası arasındaki fiyat hareketi, ör. CD bacağı (KURALLAR §2). |
 | Geçiş | Çiftte tutulan bacağı satıp öteki bacağı almak (TASARIM §5.6). |
+| Fark serisi | Çiftte iki hissenin fiyatından her gün hesaplanan tek seri; KURALLAR buna "sapma" der. Hesabı KURALLAR §3'tedir. |
+| Standart sapma | Bir serinin değerlerinin ortalamadan ortalama ne kadar uzaklaştığının ölçüsü. |
 | Z, ΔZ | Z, çiftteki fark serisinin ortalamasından kaç standart sapma uzakta olduğudur. ΔZ, Z'nin bir günlük değişimidir (KURALLAR §2–3). |
 | Z penceresi | Z hesaplanırken fark serisinin ortalaması ve standart sapması için kullanılan geçmiş gün sayısı. Seçim penceresinden bağımsızdır (KURALLAR §3). |
 | ddof | Standart sapma hesabında bölenden düşülen sayı (TASARIM §5.6). |
@@ -84,7 +86,7 @@ olduğunu söyler; sayı, formül ve işleyiş, atıf verilen bölümdedir (TASA
 | OLS | En küçük kareler: iki seri arasındaki eğimi, hataların karesini en aza indirerek bulan yöntem (TASARIM §5.6). |
 | Açgözlü seçim | Adayları sıraya koyup her adımda sınırlara uyan ilk adayı alan, önceki seçimi değiştirmeyen yöntem (TASARIM §5.6). |
 | Seçim penceresi | Çift seçiminde eşbütünleşmenin ölçüldüğü geçmiş dönem (TASARIM §5.6). |
-| β | Çift seçiminde bir hissenin logaritmik fiyatının ötekininkine göre ne kadar hareket ettiğini gösteren eğim (TASARIM §5.6). |
+| β | İki anlamı vardır. Çift seçiminde: bir hissenin logaritmik fiyatının ötekininkine göre ne kadar hareket ettiğini gösteren eğim (TASARIM §5.6). Boru hattı denetiminin sentetik dünyasında: bir hissenin getirisinin piyasa payını ne kadar taşıdığını gösteren katsayı (TASARIM §5.12). |
 
 ## İşlem ve risk
 
@@ -158,8 +160,10 @@ olduğunu söyler; sayı, formül ve işleyiş, atıf verilen bölümdedir (TASA
 | Saptanabilir en küçük etki (MDE) | Verinin şanstan ayırt edebileceği en küçük fazla getiri (TASARIM §5.9, §5.12). |
 | İleri yürüme yılları | Tek sürekli koşunun yıllara kesilmiş parçaları (TASARIM §5.8). |
 | İşlem yok yılı | Çift bölmesinde hiç çift seçilemeyen yılın etiketi; işlemsiz her yıl değildir (TASARIM §5.6, §5.12). |
+| Doğrulama | Kuralın geliştirme verisi üzerindeki geçmiş sınaması; ayrılmış dönemden ve kâğıt üstü dönemden ayrıdır (TASARIM §5.8). |
 | Ayrılmış dönem | Kurallar yazılırken bakılmamış dönem: kural kaydından sonrası. |
 | Sağlamlık ızgarası | Ailenin önceden belirlenmiş parametre hücreleri (TASARIM §5.10). |
+| Izgara hücresi | Izgaradaki her parametreden bir değer seçilerek oluşan tek birleşim (TASARIM §5.10). |
 | Pozitif hücre | Sağlamlık ızgarasında olumlu sayılan hücre (TASARIM §5.10). |
 | Portföy kuralı | Özkaynak düşüşünün büyüklüğü ve süresine ilişkin, aileden bağımsız ret ölçütü (TASARIM §5.12). |
 | En büyük düşüş | Özkaynak eğrisinin bir zirveden sonraki en derin düşüşü (TASARIM §5.12). |
