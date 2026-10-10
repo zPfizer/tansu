@@ -24,3 +24,10 @@ Genel standarda ektir. Davranış kuralının sahibi `docs/TASARIM.md`'dir; bura
 - **Değişmez kural:** TASARIM'da bir şeyin hiç olmayacağını ya da hep olacağını söyleyen her hükmün (örnek:
   "anlık görüntü değişmez", "ileri doldurulmaz", "indirme durur") kodda bir uygulayıcısı ve bir testi vardır.
   Yeni hüküm ikisiyle birlikte gelir.
+- **Tansu önce gelir:** bir kural, değer ya da tanım yazmadan önce Tansu havuzunda o konudaki fikrine bakılır. Fikri
+  varken YORUM yazılmaz; uyulamıyorsa "uygulanamaz" ve nedeni yazılır (KURALLAR "Okuma kuralları"). (10.10: sözlükte
+  11 yerde Tansu'nun fikri varken bizim seçimimiz Tansu'nunmuş gibi yazılmıştı.)
+- **Atıf ver, kopyalama:** sahip dosyası başka olan sayı, formül ya da kural ikinci dosyaya yazılmaz; atıf verilir
+  (AGENTS.md "Belgeler ve sahipleri"). (10.10: sözlük TASARIM'ın formüllerini yeniden yazmıştı.)
+- **Olmayanı var gibi yazma:** belgeler yalnız bugün var olanı anlatır. Planlanan iş spec ve bilette durur; kurulunca
+  belgeye girer.

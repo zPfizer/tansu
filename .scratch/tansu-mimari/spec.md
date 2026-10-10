@@ -1,6 +1,6 @@
 # Tansu mimarisi: önce sistem, en son ölçüm
 
-Status: needs-triage
+Status: blocked (AGENTS.md "Geliştirme durdu")
 
 Levent 10.10: "İlk önce sistemi kuracağız. Ölçümleri en sona bırakacağız." Yavaş ve sırayla ilerlenir.
 "Ölçüm" burada getiri sınamasıdır (geçmiş veride kural işe yarar mı). Bir parçanın çalıştığını gerçek veriyle

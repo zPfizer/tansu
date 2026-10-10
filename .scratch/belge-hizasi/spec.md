@@ -25,12 +25,20 @@ denetlenebilen her kural bir teste ya da CI adımına bağlanır, böylece belge
 6. Ajan olarak, kodun TASARIM'dan farklı davrandığı yerlerin bilinmesini istiyorum; böylece hata mı belge mi eksik, ayırabilirim.
 7. Ajan olarak, araştırma ve eski rapor dosyalarında geri çekilmiş önerilerin işaretli olmasını istiyorum; böylece onları güncel karar sanmam.
 8. Levent olarak, belge ayrılırsa bunun otomatik yakalanmasını istiyorum; böylece düzen kendiliğinden bozulmaz.
+9. Levent olarak, kuralların Tansu'nun fikirlerine göre olmasını istiyorum; bizim yorumumuz yalnız Tansu'nun o konuda fikri yoksa geçerli olsun.
+10. Levent olarak, Tansu'nun havuzdaki her paylaşımının kural dosyalarında okunmuş olmasını istiyorum; böylece yeni bir paylaşım sessizce dışarıda kalmaz.
+11. Levent olarak, belgeleri benim kontrol etmemi istemiyorum; Claude ve bağımsız denetçi kaynağa göre kontrol eder.
+12. Ajan olarak, her bilginin hangi dosyada durduğunu tek bir tablodan görmek istiyorum; böylece bilgiyi ikinci yere yazmam.
+13. Levent olarak, belgeler arınana kadar yeni geliştirme yapılmamasını istiyorum; böylece yeni iş yanlış belgeye dayanmaz.
 
 ## Implementation Decisions
 
-- Sahiplik: terimin anlamı GLOSSARY; sayı, formül ve davranış TASARIM; aile kuralı ve YORUM KURALLAR (§3–4);
-  kaynak okuması `docs/kurallar/A–E`; sadakat ölçümü `docs/sadakat.md`; çalışma kuralı AGENTS.md; kod biçimi ve
-  bitiş ölçütü CODING_STANDARDS.md / DEFINITION_OF_DONE.md `## Tansu`.
+- Sahiplik: AGENTS.md "Belgeler ve sahipleri" tablosu. Beyindeki Tansu havuzu ham kaynaktır ve değiştirilmez; kural
+  dosyaları onun okumasıdır.
+- Tansu önce gelir: KURALLAR "Okuma kuralları" (YORUM). Bu denetim TASARIM ve kural dosyası düzeltmelerinden önce yapılır, çünkü kuralları değiştirebilir.
+- Gözden geçirme: belgeleri Claude ve bağımsız denetçi (Codex) kaynağa göre denetler; Levent'e yalnız kaynağın cevap
+  vermediği karar sorulur.
+- Geliştirme durdu: AGENTS.md "Geliştirme durdu".
 - Geçerli tasarım TASARIM.md (taslak 7). Taslak 8 ve strateji modülleri taslağı onay bekleyen öneridir; onlardaki
   farklar düzeltilmez, yalnız yanlış kaynak aktarımı düzeltilir.
 - Karar kaydında cevabı olan çelişki o karara göre düzeltilir ve TASARIM'da karar etiketiyle (İ:, B-, C-, bilet) gösterilir.

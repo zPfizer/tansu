@@ -2,8 +2,8 @@
 
 Değişikliği bir veya iki cümleyle açıklayın.
 
-## Kabul ölçütleri (Levent kontrol eder)
-_Kutuları Levent işaretler. İşaretsiz kutu varsa PR birleşmez._
+## Kabul ölçütleri
+_Kutuları Claude kanıtıyla işaretler; Levent'in sohbetteki isteği onaydır. İşaretsiz kutu varsa PR birleşmez._
 
 - [ ]
 
