@@ -15,6 +15,7 @@ import json
 import os
 
 import pandas as pd
+import pytest
 
 from tansu import aileler, gunluk, kayit, rapor
 from tansu.kaynak import KaynakHatasi
@@ -267,3 +268,99 @@ def test_cift_ailesi_kagit_olursa_gunluk_kosu_sorunludur(tmp_path):
     assert "çift kartı henüz yazılmadı" in durum_satirlari()[-1]
     assert not list(rapor.RAPOR_DIZINI.glob("kartlar-*.csv"))
     assert not (kayit.KAYIT_DIZINI / "kartlar.jsonl").exists()
+
+
+@pytest.mark.parametrize(
+    "devam, durumlar, gecmis",
+    [
+        (
+            [(104, 103.5, 104.5), (100, 98, 100.5), (101, 100.5, 101.5)],
+            ["AKTİF", "AKTİF", "STOP", None],
+            0,
+        ),
+        (
+            [
+                (104, 103.5, 104.5),
+                (93.6, 93, 95),
+                (100, 99.5, 100.5),
+                (101, 100.5, 101.5),
+            ],
+            ["AKTİF", "AKTİF", "STOP", "STOP", None],
+            0,
+        ),
+        (
+            [
+                (104, 103.5, 104.5),
+                (100, 99.5, 100.5),
+                (101, 100.5, 101.5),
+                (102, 101.5, 102.5),
+            ],
+            ["AKTİF", "AKTİF", "BOZULDU", "BOZULDU", None],
+            0,
+        ),
+        (
+            [(113.3, 112.8, 113.3), (113, 112.5, 113.5)],
+            ["AKTİF", "BOZULDU", None],
+            0,
+        ),
+        (
+            [(104, 103.5, 104.5), (105, 200, 105.5), (106, 105.5, 106.5)],
+            ["AKTİF", "AKTİF", "BOZULDU", None],
+            100,
+        ),
+    ],
+    ids=["stop", "kilitli_tabanda_stop", "sma250", "giris_iptali", "karantina"],
+)
+def test_kart_durumlari_ve_kapanan_kart_yalniz_kapandigi_gun_gorunur(
+    tmp_path, devam, durumlar, gecmis
+):
+    # TASARIM 6.5: gerçek günlük yolunda giriş, çıkış bekleme ve kapanış gününün CSV'si.
+    # Sinyal 05.10; giriş 104, ATR 2,28125 -> stop 99,4375. 93,6, 104'ün tabanıdır.
+    kagit_aile()
+    fiyat = []
+    # Karantina senaryosunda bir bozuk gün / 108 gün < %1; veri kapısı kartı engellemez.
+    for tarih in pd.bdate_range(end="2026-09-25", periods=gecmis):
+        s = satir(tarih, 100, 100)
+        s.update(
+            dusuk=99.5,
+            ham_dusuk=99.5,
+            yuksek=100.5,
+            ham_yuksek=100.5,
+            hacim=4_000_000.0,
+        )
+        fiyat.append(s)
+    fiyat.extend(fiyatlar())
+    bas_uzunluk = len(fiyat)
+    for tarih, (kapanis, dusuk, yuksek) in zip(
+        pd.bdate_range("2026-10-06", periods=len(devam)), devam
+    ):
+        s = satir(tarih, kapanis, kapanis)
+        s.update(
+            dusuk=dusuk,
+            ham_dusuk=dusuk,
+            yuksek=yuksek,
+            ham_yuksek=yuksek,
+            hacim=4_000_000.0,
+        )
+        fiyat.append(s)
+    for uzunluk, durum in enumerate(durumlar, start=bas_uzunluk):
+        tarih = fiyat[uzunluk - 1]["tarih"].date()
+        k = SahteKaynak({"XXXX": fiyat[:uzunluk]}, {"XXXX": []})
+        assert (
+            kos(
+                tmp_path,
+                k,
+                tarih=tarih,
+                simdi=dt.datetime.combine(tarih, dt.time(19, 30)),
+            )
+            == 0
+        )
+        yol = rapor.RAPOR_DIZINI / f"kartlar-{tarih:%Y%m%d}.csv"
+        with yol.open(encoding="utf-8-sig", newline="") as f:
+            kartlar = list(csv.DictReader(f, delimiter=";"))
+        if durum is None:
+            assert kartlar == []
+        else:
+            assert [(k["Hisse"], k["Tarih"], k["Durum"]) for k in kartlar] == [
+                ("XXXX", "2026-10-05", durum)
+            ]
