@@ -1,32 +1,6 @@
-# Definition of Done (Levent's standard)
-
-Levent gave this standard on 2026-10-02. The source note is `beyin/knowledge/concepts/definition-of-done.md`.
-Do not change the standard text below "Standard text". Change only "How to use it here".
-
-## How to use it here
-- Done needs two parts: the task's acceptance criteria and this standing checklist.
-- Acceptance criteria: before you start, write them as a result Levent can check himself, in his terms
-  (for example, "the Tansu table shows today's three signals"). Show them to him. Wait for his agreement only on critical work.
-- Standing checklist: Claude checks it and shows the evidence. Levent checks only the acceptance criteria.
-- Before any "done" claim, apply the `verification-before-completion` skill (obra/superpowers 8ca22db, MIT).
-- Scope: a single task passes Correctness and Quality. A feature also passes Integration and Documentation.
-  A push, release, or deploy passes the full list. Work without code (notes, text) skips the code items.
-- Evidence is a real end-to-end run on real data. A unit test alone is not evidence. A trivial one-line change needs no test.
-- "The human has reviewed and approved": Levent's request to push, merge, or publish is the approval.
-  For review, use an independent check (a subagent or `mattpocock-skills:code-review`).
-- Skill names in the text map to ours:
-  - `code-review-and-quality` → `mattpocock-skills:code-review`
-  - `code-simplification` → `cyclomatic-complexity`, `ponytail:ponytail-review`
-  - `documentation-and-adrs` → `mattpocock-skills:domain-modeling` (ADR part)
-  - `security-and-hardening` → `thinking-red-team`
-  - `planning-and-task-breakdown`, `incremental-implementation`, `shipping-and-launch`,
-    `observability-and-instrumentation`: we have no skill. Apply the item directly.
-
-## Standard text
-
 # Definition of Done
 
-A standing, project-wide bar that every change must clear before it counts as done. Unlike acceptance criteria, which vary per task and answer "did we build the right thing?", the Definition of Done is the same every time and answers "is this finished to our standard?". Use it as the final gate in `planning-and-task-breakdown`, `incremental-implementation`, and `shipping-and-launch`.
+A standing, project-wide bar that every change must clear before it counts as done. Unlike acceptance criteria, which vary per task and answer "did we build the right thing?", the Definition of Done is the same every time and answers "is this finished to our standard?". Use it as the final gate in `mattpocock-skills:to-spec` / `mattpocock-skills:to-tickets`, `mattpocock-skills:implement`, and `mattpocock-skills:pr` with `verification-before-completion`.
 
 ## Definition of Done vs. Acceptance Criteria
 
@@ -58,7 +32,7 @@ Apply this to every change before declaring it done.
 - [ ] Changes are scoped to the task; no unrelated refactors snuck in
 - [ ] Linting and formatting pass
 
-The depth behind these items lives in `code-review-and-quality` (the five-axis review) and `code-simplification` (reducing complexity without changing behavior).
+The depth behind these items lives in `mattpocock-skills:code-review` (standards and spec review) and `ponytail:ponytail-review` with `cyclomatic-complexity` (reducing complexity without changing behavior).
 
 ### Integration
 - [ ] Change works with the rest of the system, not just in isolation
@@ -67,20 +41,20 @@ The depth behind these items lives in `code-review-and-quality` (the five-axis r
 
 ### Documentation
 - [ ] Public interfaces, APIs, and user-facing behavior are documented
-- [ ] Architectural decisions worth preserving are recorded (see `documentation-and-adrs`)
+- [ ] Architectural decisions worth preserving are recorded (see `mattpocock-skills:domain-modeling`)
 - [ ] Documentation describes the current state in timeless language, not the change history
 
 ### Ship-readiness
-- [ ] Security implications reviewed for any untrusted input, auth, or data handling (see `security-and-hardening`)
-- [ ] Observability in place for new critical paths (logs, metrics, traces) (see `observability-and-instrumentation`)
-- [ ] Rollback path exists for anything risky (see `shipping-and-launch`)
+- [ ] Security implications reviewed for any untrusted input, auth, or data handling (see `thinking-red-team`)
+- [ ] Observability in place for new critical paths (logs, metrics, traces) (see AKIS.md, flow A: log and measurement step)
+- [ ] Rollback path exists for anything risky (see `mattpocock-skills:pr` and `verification-before-completion`)
 - [ ] The human has reviewed and approved before merge or deploy
 
 ## How to Apply
 
 - **Per task**: confirm the Correctness and Quality sections before checking the task off.
 - **Per feature**: confirm Integration and Documentation before considering the feature complete.
-- **Per release**: the full checklist is the floor; `shipping-and-launch` adds the deploy-specific gates on top.
+- **Per release**: the full checklist is the floor; `mattpocock-skills:pr` and `verification-before-completion` add the deploy-specific gates on top.
 
 Tailor the list to the project once, then reuse it unchanged. A Definition of Done that is renegotiated every sprint is not a Definition of Done.
 
