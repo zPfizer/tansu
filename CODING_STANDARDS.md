@@ -5,10 +5,10 @@ The general coding rules are in the global `~/.claude/CLAUDE.md`. This file hold
 ## Mistakes
 This file starts short. It grows from real mistakes.
 - When an agent makes a meaningful coding mistake, record it before the task ends. A mistake is meaningful when Levent corrects it, or when a review or CI finds it.
-- For a mechanical mistake, add an automated check: a test, lint rule, hook, or CI step. Do not add a rule here. Examples: a code pattern, a banned API, a file location.
+- For a mechanical mistake, use an existing tool first: `permissions.deny`, an eval case, or a git check. Write a new script only when the same mistake repeats and no existing tool covers it (ADR 0001). Do not write a Claude hook. Do not add a rule here.
 - For a judgement mistake, add one short rule here. Put a rule for one project only in the `CODING_STANDARDS.md` of that project.
 - Write corrections to behavior or communication in Kurallar, not here.
-- At the end of a difficult session, the user command `/retro` finds the mistakes that nobody recorded.
+- At the end of a difficult session, the session review in `AKIS.md` (flows B and I) finds the mistakes that nobody recorded.
 
 ## Rules
 - **Fail loud:** Stop with an error and a non-zero exit when the code cannot complete the requested operation. Do not continue in a weaker mode. (05.10: Tansu `kayit.py` changed an official run to a development run on a dirty tree. 07.10: the `erteleme` hook exited 0 on errors. 07.10: `eval_kod.py` ignored a subprocess exit code.)
