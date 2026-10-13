@@ -41,7 +41,7 @@ Belge ile kod çelişirse ya da belge sessizse dur: belgeyi önce düzelt, gerek
 - **Deneme günlüğü:** her sınama koşusu `kayit/deneme.jsonl`'e yazılır. Günlük yalnız eklenir;
   düzenlenmez ve silinmez.
 - **Git:** `rebase`, `--amend`, `--force` (ve `--force-with-lease`), `reset --hard`, `clean -f`, `branch -D`,
-  `checkout .`, `restore .`, `git add .` ve `git add -A` yok (Claude için `.claude/hooks/block-dangerous-git.sh` engeller); dosyalar adıyla
+  `checkout .`, `restore .`, `git add .` ve `git add -A` yok (Claude için izin reddi engeller: `permissions.deny` global ve `.claude/settings.json`); dosyalar adıyla
   eklenir. Veri (`veri/`) ve rapor çıktısı (`rapor/`) git'e girmez; `veri/` silinmez. `kayit/` git'e girer (günlüğün
   yalnız eklendiğinin kanıtı git geçmişidir); `kayit/` dosyalarını commit'te değiştirilmiş değil, yalnız
   eklenmiş olarak bırak.
