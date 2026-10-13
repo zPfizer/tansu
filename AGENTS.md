@@ -40,11 +40,11 @@ Belge ile kod çelişirse ya da belge sessizse dur: belgeyi önce düzelt, gerek
 - **Getiriye bakma:** sadakat kontrolünde ya da YORUM seçerken getiri sonucu hesaplanmaz.
 - **Deneme günlüğü:** her sınama koşusu `kayit/deneme.jsonl`'e yazılır. Günlük yalnız eklenir;
   düzenlenmez ve silinmez.
-- **Git:** `rebase`, `--amend`, `--force` (ve `--force-with-lease`), `reset --hard`, `clean -f`, `branch -D`,
+- **Git (this repository only):** `rebase`, `--amend`, `--force` (ve `--force-with-lease`), `reset --hard`, `clean -f`, `branch -D`,
   `checkout .`, `restore .`, `git add .` ve `git add -A` yok (Claude için izin reddi engeller: `permissions.deny` global ve `.claude/settings.json`); dosyalar adıyla
   eklenir. Veri (`veri/`) ve rapor çıktısı (`rapor/`) git'e girmez; `veri/` silinmez. `kayit/` git'e girer (günlüğün
   yalnız eklendiğinin kanıtı git geçmişidir); `kayit/` dosyalarını commit'te değiştirilmiş değil, yalnız
-  eklenmiş olarak bırak.
+  eklenmiş olarak bırak. This rule covers this repository only. The global Stop hook runs `git add -A -- receipts "*850-Companion*"` in the brain repository (`YONETIM/beyin`). That is outside this Tansu rule.
 - **Görev Zamanlayıcı:** tanım `kurulum/tansu-gunluk.xml` (hafta içi 19:30, `python -m tansu gunluk`). Kurulum, bir kez, PowerShell
   (`schtasks /create /xml` UTF-8 XML'i okuyamaz): `Register-ScheduledTask -TaskName TansuGunluk -Xml (Get-Content -Raw -Encoding utf8 kurulum\tansu-gunluk.xml)`.
   Tanım kapalı kurulur (`<Enabled>false</Enabled>`); ilk resmi koşudan sonra `schtasks /change /tn TansuGunluk /enable`
@@ -57,37 +57,27 @@ Belge ile kod çelişirse ya da belge sessizse dur: belgeyi önce düzelt, gerek
 
 ## Standartlar
 `CODING_STANDARDS.md` ve `DEFINITION_OF_DONE.md` Levent'in genel standardıyla başlar; altlarındaki `## Tansu` bölümü
-Tansu'nun ekidir. `tests/test_standartlar.py` genel kısmın YONETIM'deki asılla aynı kaldığını denetler. `/code-review` ikisini
-okur. YONETIM olmayan CI'da test atlanır; denetim yerel test kapısındadır.
+Tansu'nun ekidir. `tests/test_standartlar.py` genel kısmın YONETIM'deki asılla aynı kaldığını denetler.
+`mattpocock-skills:code-review` reads both files. The CI without YONETIM skips the test. The check is in the local test gate.
 
-## İş akışı (Matt Pocock ana akışı)
+## İş akışı
+The work flow is in `C:\Users\levent\Desktop\YONETIM\AKIS.md` (flow A for code work). The Tansu additions:
+
 **Geliştirme durdu:** belgeler drift, eski bilgi ve çelişkiden arınana kadar Tansu'nun davranışını değiştiren yeni
 geliştirme yapılmaz; `.scratch/belge-hizasi/` biletleri ve çalışma düzeni işleri (`.scratch/yazilim-fabrikasi/`) yürür
 (Levent 10.10). Bilet 08 bitince bu satır kalkar.
 
-Her iş bu sırayla yürür. Basamağı atlamadan önce o skill'in `SKILL.md`'sini oku. Bu skill'lerin çoğu kullanıcı
-komutudur; ajan çağıramıyorsa `SKILL.md`'yi (`~/.claude/plugins/cache/mattpocock/`) okuyup adımlarını uygular.
-1. **Fikir:** `/tansu-grill` (Matt'in `/grill-with-docs`'u Tansu ölçütleriyle: Tansu önce gelir, risk taraması,
-   değişecek metni gösterme). Netleşen terim o anda `GLOSSARY.md`'ye, karar `docs/TASARIM.md`'ye yazılır.
-   Önce TASARIM ve `docs/sorgu/`'ya bak; verilmiş kararı yeniden sorma.
-2. **Plan:** her iş `/to-spec`, sonra `/to-tickets` ile planlanır (`.scratch/<iş>/spec.md`,
-   `.scratch/<iş>/issues/NN-<ad>.md`). Bilet elle yazılmaz. İş sürerken yeni bir karar çıkarsa önce spec güncellenir,
-   sonra `/to-tickets` biletleri bağımlılık sırasıyla yeniden kurar.
-3. **Yapım:** her bilet için `master`'dan `pr/NN-<ad>` dalı açılır. `/implement` biletin işini `/tdd` ile yapar,
-   `/code-review` ile denetler, dala commit eder. Biletler arasında bağlam temizlenir.
-4. **PR:** dal `kaynak`'a gönderilir; PR gövdesini `/pr` ve `.github/pull_request_template.md` birlikte yazar.
-   CI (`ci`: ruff, pytest; `dod`: PR gövdesi) yeşil olmadan ve bağımsız inceleme "geçti" demeden PR birleşmez.
-   Levent'in birleştirme isteği onaydır; birleştirme `gh pr merge --merge` ile yapılır.
-5. **Kapanış:** `/retro` ortamı düzeltir: mekanik hata bir teste ya da CI adımına, muhakeme hatası kodlama
-   standardına gider. Biten işin spec ve biletleri `.scratch/arsiv/`'e taşınır; kalıcı olan yalnız GLOSSARY ve TASARIM'dır.
+- **Fikir (idea):** In the step of flow A that sharpens the plan, call `/tansu-grill`. It is the Tansu version of `mattpocock-skills:grill-with-docs`. Tansu comes first. It scans the risk and shows the text that will change.
+- **Fikir, kayıt (record):** Write a settled term to `GLOSSARY.md` at once. Write a decision to `docs/TASARIM.md`. Read TASARIM and `docs/sorgu/` first. Do not ask again for a decision that exists.
+- **Plan:** The spec is `.scratch/<iş>/spec.md`. The tickets are `.scratch/<iş>/issues/NN-<ad>.md`. This is the own ticket layout of Tansu (`docs/agents/issue-tracker.md`). Do not write a ticket by hand. If a new decision appears during the work, update the spec first. Then `mattpocock-skills:to-tickets` builds the tickets again in dependency order.
+- **Yapım (build):** Open a branch `pr/NN-<ad>` from `master` for each ticket. Commit to that branch. Clear the context between tickets.
+- **PR:** Push the branch to `kaynak`. `mattpocock-skills:pr` and `.github/pull_request_template.md` write the PR body together. Do not merge the PR before two things are true.
+- **PR, birleştirme (merge):** CI is green (`ci`: ruff, pytest. `dod`: PR body). An independent review says "geçti". The merge request of Levent is the approval. Merge with `gh pr merge --merge`.
+- **Kapanış (close):** Move the spec and the tickets of a finished job to `.scratch/arsiv/`. Only GLOSSARY and TASARIM stay for good.
 
-**Hata kaydı:** ajanın yaptığı her anlamlı hata (Levent'in düzeltmesi, inceleme ya da CI bulgusu) o anda, iş bitmeden
-kaydedilir: mekanik hata bir teste ya da CI adımına, muhakeme hatası `CODING_STANDARDS.md` `## Tansu`'ya gider.
-`/retro` kapanışta kaçanı tamamlar; `/code-review` bu kuralları sonraki işte uygular.
+**Hata kaydı (error log):** Record each meaningful agent error at once, before the job ends. A meaningful error is a correction from Levent, a review finding, or a CI finding. A mechanical error goes to a test or a CI step. A reasoning error goes to `CODING_STANDARDS.md` under `## Tansu`. `mattpocock-skills:retro` records the ones that were missed at the close. `mattpocock-skills:code-review` applies these rules in the next job.
 
-Yan girişler: hata → `/diagnosing-bugs`, dışarıdan gelen istek → `/triage`, bakım → `/improve-codebase-architecture`.
-Hepsi 3. adımdan akışa katılır. Anlaşılmayan cevapta Levent `/wait-what` der: ajan cevabı GLOSSARY terimleriyle, sade
-dille yeniden anlatır.
+If Levent says "anlamadım", the agent calls `mattpocock-skills:wait-what`. The agent explains the answer again with the GLOSSARY terms and plain words.
 
 ## Agent skills
 
