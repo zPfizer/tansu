@@ -8,9 +8,8 @@ How the engineering skills consume the domain documentation of this repo.
 - `docs/TASARIM.md`: the decision record. Tansu has no ADR folder and no ADR files.
 - `docs/sorgu/`: the reasons behind the decisions (local, not in git).
 
-Do not create an ADR folder. The `mattpocock-skills:domain-modeling` skill (reached from
-`mattpocock-skills:grill-with-docs` and `mattpocock-skills:improve-codebase-architecture`) writes a settled term
-to `GLOSSARY.md` and a decision, with its reason, to the related section of `docs/TASARIM.md`.
+Do not create an ADR folder. Where a settled term and a decision go (also when `mattpocock-skills:domain-modeling`
+writes them): `AGENTS.md`, "Fikir, kayıt".
 
 ## Use the glossary's vocabulary
 

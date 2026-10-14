@@ -25,10 +25,10 @@ This section adds to the general standard. `docs/TASARIM.md` owns the behavior r
 them when you write code.
 - **No look-ahead (Geleceği görmeme):** Add each new or changed calculation to the scope of `tests/test_gelecek.py`
   (TASARIM §5.12).
-- **One code (Tek kod):** The backtest (sınama) and the live run use the same function. Do not write a separate copy
-  (TASARIM §4).
-- **No silent correction (Sessiz düzeltme yok):** A missing value stays empty, as in TASARIM §5.1. Do not fill it with
-  an estimate. Do not clip silently. Do not skip silently. An unexpected condition gives an error.
+- **One code (Tek kod):** Do not write a second copy of a function that TASARIM §4 (`motor`) shares between the
+  backtest (sınama) and the live run.
+- **No silent correction (Sessiz düzeltme yok):** Do not fill, clip, or skip silently. An unexpected condition gives an
+  error. The behavior for a missing value is in TASARIM §5.1.
 - **Follow the document (Belgeye bağlılık):** Each new or changed behavior has a `TASARIM <bölüm>` reference in the code.
 - **Invariant rule (Değişmez kural):** TASARIM has statements that say a thing never happens or always happens
   (examples: "anlık görüntü değişmez", "ileri doldurulmaz", "indirme durur"). For each such statement, the code has one

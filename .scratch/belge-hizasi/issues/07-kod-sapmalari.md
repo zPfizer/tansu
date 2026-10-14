@@ -61,3 +61,7 @@ FAILED tests/test_simulator.py::test_rapor_ayni_kosu_kimliginde_onceki_dosyanin_
 ```
 
 HTML bayt 437'de, CSV bayt 188'de değişti. Bu testlerin 06'dan çıkarılması hatayı düzeltmez; yeşil kanıt bu bilettedir.
+
+2026-10-14 (bilet 05, denetim tur 1): üretici dosyalar belgeyi eski metinle yeniden yazar; ikisi bu bilette düzeltilir.
+- `tansu/denetim.py:281–288` `docs/denetim.md`'yi yeniden üretir ve eski yanlış kabul cümlesini yazar ("ölçüt 1–4 geçen oran ... Kâğıt bunun alt kümesidir"). Cümle TASARIM 5.12 tanımıyla eşleşmeli (ölçüt 1–4 Geçti ve portföy kuralı reddetmedi) ya da yalnız TASARIM 5.12'ye atıf vermeli. `docs/denetim.md` bilet 05'te elle düzeltildi; yeniden koşu bu düzeltmeyi siler.
+- `tansu/sadakat.py:258–283` `docs/sadakat.md`'yi yeniden üretir. Çıktı, KURALLAR §4'teki eşdeğer aday tanımını (aynı dönem ve gün, ölçülen değerler ±0,005 içinde) ve EMA için seçilen adayı göstermeli; ayrıca sayfa başındaki "Getiriye bakılmaz." cümlesi (satır 3) KURALLAR §4'e atıf olmalı. `docs/sadakat.md` elle düzenlenmedi.
