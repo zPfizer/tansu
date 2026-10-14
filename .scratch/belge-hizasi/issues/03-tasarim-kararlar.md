@@ -24,3 +24,7 @@ kaydına göre düzeltilir. Kayıt sessizse Levent'e kısa soru sorulur.
 - [x] Sözlüğün Tansu denetimi (10.10) TASARIM tarafı: §5.12 ölçüt 1'deki "ileri yürüme yılları" Tansu'nun parametre optimize eden walk-forward'u değildir; ad "yıllık sonuç dilimleri" gibi ayırt edici bir adla değişir ya da fark §5.8'de yazılır.
 - [x] Sözlük denetimi 6. tur TASARIM tarafı: çift örnekleminin 100 geçişine nakitten ilk alımın girip girmediği §5.9'da yazılır; boru hattı denetimindeki sentetik dünyanın β'sı (piyasa payı çarpanı) çift seçimindeki β'dan ayrı adlandırılır.
 - [x] Sözlük denetimi 10. tur TASARIM tarafı: §5.7 K1 uygulamasında açık pozisyona gelen sinyal için "düşer" yerine "yeni işlem açmaz ve sayıma girmez"; §5.13'te yalnız hacmi farklı tekrar satırının sonucu açık yazılır.
+
+## Comments
+
+- 14.10 denetim (Codex, Astra): tur 1 KALDI (A1–A6, getiri örneği, rapor e-16); tur 2 KALDI (5.7 Holm eşiği cümlesi, kanıt örneğinde % birimi). İkisi düzeltildi; kutu 1 (e-21, e-10) ve kutu 2 (iki kanıt satırı) bu düzeltmeyle kapandı.

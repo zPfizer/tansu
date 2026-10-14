@@ -517,7 +517,7 @@ serisinin kaynağını ve son değişim tarihini yazar; seri boşsa koşu SORUNL
   - B ≥ max(1.000, 200·m); m = deneme sayısı (5.11'de tek tanım). 200·m bir duyarlılık payıdır, matematiksel zorunluluk
     değildir: p tabanı 1/(B+1) olduğundan B = 1.000 ile m ≤ 50 için kabul hâlâ mümkündür (m = 50'de en küçük düzeltilmiş
     p 50/1.001 ≈ 0,04995 < 0,05; m > 50'de imkânsız; cevaplar-15'teki "m ≥ 50 imkânsız" yanlıştır, sonuc O14 doğrudur).
-    B ≥ 200·m ile p tabanı eşiğin çok altında kalır, yani Holm eşiği p tabanıyla değil veriyle belirlenir.
+    B ≥ 200·m ile p tabanı Holm eşiğinin (α/(m−k+1)) çok altında kalır; kabul kararını p tabanı değil gerçek p değeri belirler.
   - Geliştirmede 200 tekrar; bu p'ler günlükteki Holm listesine girmez, m'yi artırmaz; rapor yalnız varsayımsal bir
     Holm p'si gösterir (5.11).
   (B-14, İ: 15-078, 19-068, 09-009; bilet 03)
@@ -879,7 +879,7 @@ Getiri görülmeden yazılır; kural kaydına girer. (B-7, İ: 19-015)
      sıfırı içeriyorsa "ayırt edilemiyor" yazar. Kâğıt dönem = ilk Kâğıt `durum` satırından geçen gün // 30, ölçüt 6 için
      gereken 6 aya bölünerek yazılır. p, Holm p ve toplam deneme sayısı raporun "Ayrıntı" bölümündedir.
    - **Kanıt örneği** (Kâğıt aile): "Kâğıt · 148 işlem · sepete göre işlem başına fazla getiri +%x,x (%0,3
-     masraf) · portföy fazla getirisi (K2'ye göre, yıllık, blok bootstrap %95 aralık +x,x ile +x,x) · kâğıt dönem 3/6 ay".
+     masraf) · portföy fazla getirisi (K2'ye göre, yıllık, blok bootstrap %95 aralık +%x,x ile +%x,x) · kâğıt dönem 3/6 ay".
 6. **Açık kartlar ayrıca saklanmaz:** her gün sinyal gününden itibaren Adım ile yeniden hesaplanır. Günün
    kart çıktısı `kayit/kartlar.jsonl`'e yalnız eklenir; kâğıt üstü dönem geriye dönük değişmez. (C-5)
 7. **`rapor/durum.txt`** (İ: 16-036, 16-070, 13-082, 17-048):
