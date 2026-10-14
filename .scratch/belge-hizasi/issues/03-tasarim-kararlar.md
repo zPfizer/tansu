@@ -7,15 +7,16 @@ kaydına göre düzeltilir. Kayıt sessizse Levent'e kısa soru sorulur.
 
 **Status:** in-review
 
-- [ ] `denetim/hiza-e.md` ÇELİŞKİ ve ESKİ satırları (1–21, 27) karara göre işlendi; her düzeltme karar etiketini gösterir.
-      Durum: 20 madde işlendi, e-6 ve e-7 Levent'e soruldu (`denetim/bilet-03-rapor.md`, "Levent'e sorular"); iki soru cevaplanınca kutu işaretlenir.
+- [x] `denetim/hiza-e.md` ÇELİŞKİ ve ESKİ satırları (1–21, 27) karara göre işlendi; her düzeltme karar etiketini gösterir.
+      Kanıt: 22 madde işlendi; e-6 ve e-7 vekil kararıyla (14.10, Threads 37) uygulandı, `denetim/bilet-03-rapor.md`.
       Örnek: `veri/` silinmez (karar.md:24) → 30 gün silme maddesi kalkar.
 - [x] `denetim/tasarim-kod.md` §4 iç çelişkileri (piyasa durumu K1(b), geliştirme Holm p'si, hash kapsamı, iki kanıt
       Kanıt: `denetim/bilet-03-rapor.md`, tasarim-kod §4 tablosu (4 düzeltildi, komut listesi zaten düzeltildi: bilet 09).
       satırı, komut listesi) çözüldü.
 - [x] `hiza-b.md` ÇELİŞKİ 1, 7 ve ESKİ 8 işlendi.
       Kanıt: `denetim/bilet-03-rapor.md` b-1, b-7, b-8 düzeltildi (KURALLAR:10, KURALLAR:108, TASARIM 5.11).
-- [ ] Levent'e yalnız kaydın sessiz kaldığı sorular gitti; cevaplar TASARIM'a ve gerekiyorsa karar.md'ye yazıldı.
+- [x] Levent'e yalnız kaydın sessiz kaldığı sorular gitti; cevaplar TASARIM'a ve gerekiyorsa karar.md'ye yazıldı.
+      Kanıt: iki soru vekile gitti (vekil kararı 14.10, Threads 37), Levent'e soru gitmedi; cevaplar TASARIM 5.1, 5.6'ya yazıldı. karar.md değişmedi (02-082 tam uygulandı).
 - [ ] `hiza-e-istem.md` yeniden koştu; ÇELİŞKİ bulgusu yok.
 - [x] Sözlük denetimi (10.10, bilet 01) TASARIM tarafı: §5.13 "tüm evren" → "indirilen bütün hisseler"; çift rotasyonundaki "hedef" GLOSSARY'deki anlamlarla tutarlı; yarım kalan resmi koşunun m'ye katkısı §5.11'de tek yerde.
 - [x] Sözlük denetimi 2. tur TASARIM tarafı: §5.3 "düşen sinyal kaymaz" ile §5.13 "dolum sonraki geçerli güne kayar" ayrımı açık; §5.10 "K1'e göre" ile uygulama (sepet farkı, K1 tekrarı yok) tek anlatım; §5.12 "ileri yürüme yılları" ile §5.8 sabit parametreli yıllık bölme ilişkisi açık.

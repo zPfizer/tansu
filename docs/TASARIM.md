@@ -200,7 +200,7 @@ Amaç: bir kuralın sonucunu **şanstan, piyasanın genel yükselişinden, enfla
 hatasından** ayırmak.
 
 ### 5.1 Veri
-- **İndirme:** veri 2010'dan indirilir. İlk sinyal 30.11.2015; ±%20 limit rejiminin başı. (B-6)
+- **İndirme:** veri 2010'dan indirilir. ±%20 limit rejiminin başı 30.11.2015; sinyal günleri 01.12.2015'ten sayılır (5.6). (B-6; vekil kararı 14.10, bilet 03)
 - **Isınma:**
   - Tek hisse ailesi, hissenin kendi ilk gününden 500 işlem günü dolmadan sinyal vermez (EMA200,
     SMA250).
@@ -396,7 +396,7 @@ yıla taşınır. (Sorgu S6, İ: 08-083)
   (YORUM, bizim; araç, Rota/g2, genel nakit politikasını açıklamaz).
 - Bacaklardan biri kilitliyse geçiş yapılmaz. Sinyal ertesi gün yeniden değerlendirilir; eski sinyal
   taşınmaz. (İ: 04-068)
-- Bacaklardan biri karantinadaysa çift o pencerede girişsiz kalır; açık bacak son temiz AOF'ta kapanır.
+- Bacaklardan biri karantinadaysa çift o pencerede girişsiz kalır; tutulan bacak karantinadaysa açık pozisyon son temiz AOF'ta kapanır, öbür bacaktaki karantina pozisyonu kapatmaz. (İ: 02-082; vekil kararı 14.10, bilet 03)
   (İ: 02-082)
 - Çiftin hissesi kapanırsa pay 5.2 kuralıyla kapanır ve yıl sonuna kadar nakitte faiz kazanır.
   (İ: 03-060)
@@ -466,8 +466,8 @@ yıla taşınır. (Sorgu S6, İ: 08-083)
 serisinin kaynağını ve son değişim tarihini yazar; seri boşsa koşu SORUNLU olur. (B4, B-8, İ: 08-071)
 
 **Simülatör kuralları** (bilet 10; belge bu noktalarda sessizdi, kod bu okumayı uygular):
-- **Başlangıç:** ilk gün = 2015-12-01'den sonraki ilk işlem günü (ya da veri daha geç başlıyorsa veri günü).
-  Bu günden önceki sinyaller sayılmaz. Her işlem günü: önce faiz, sonra çıkışlar, sonra girişler, sonra
+- **Başlangıç:** ilk gün = 2015-12-01 ya da sonraki ilk işlem günü (ya da veri daha geç başlıyorsa veri günü).
+  Sinyal günü bu günden önce olan sinyaller sayılmaz (30.11.2015 sinyali dahil; vekil kararı 14.10, bilet 03). Her işlem günü: önce faiz, sonra çıkışlar, sonra girişler, sonra
   kapanış değerlemesi.
 - **Evren süzgeci** (bilet 11 düzeltmesi): motor yalnız simülatörün alabileceği sinyalleri görür: sinyal günü
   simülatör başlangıcından sonra ve sinyal gününün ayının evreninde (5.2) olan sinyaller. Evren dışı sinyal

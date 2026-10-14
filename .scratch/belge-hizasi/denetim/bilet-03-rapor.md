@@ -15,8 +15,8 @@ parametresi değişmedi; getiriye bakılmadı. `docs/sorgu/` yerel (git dışı)
 | e-3 yıllık fazla getiri iki formül | 5.7 K2 "Fazla getiri (rapor)"; 5.8 | izleme-08 08-083 | düzeltildi: tek tanım = günlük fazla getirinin yıllık toplamı (5.8). Kod: bilet 07'ye |
 | e-4 "K1'e göre" belirsiz | 4 `saglamlik`; 5.10 Pozitif hücre | izleme-09 09-064 | düzeltildi: sepete göre işlem başına fazla getiri, K1 tekrarı yok; tek anlatım |
 | e-5 yarım resmi koşu m'si | 5.11 yeni "Deneme sayısı (m), tek tanım"; 5.7 tekrar sayısı | izleme-15 15-044 | düzeltildi: m tek yerde (5.11); 5.7 ve 5.12 atıf verir. Kod: bilet 07'ye |
-| e-6 ilk sinyal 30.11.2015 / simülatör başlangıcı | 5.1 İndirme; 5.6 Simülatör başlangıcı | sonuc-3-4 B-6 vs bilet 10 | Levent'e soru 1 |
-| e-7 karantinada bacak | 5.6 Çift bölmesi; Çift bölmesi kuralları, Engeller | izleme-02 02-082, cevaplar-02 02-082 | Levent'e soru 2 |
+| e-6 ilk sinyal 30.11.2015 / simülatör başlangıcı | 5.1 İndirme; 5.6 Simülatör başlangıcı | sonuc-3-4 B-6; vekil kararı 14.10 (Threads 37), soru 1 seçenek 2 | düzeltildi: ±%20 rejiminin başı 30.11.2015, sinyal günleri 01.12.2015'ten sayılır; 5.6 aynı. Kod değişmez |
+| e-7 karantinada bacak | 5.6 Çift bölmesi; Engeller | izleme-02 02-082; vekil kararı 14.10 (Threads 37), soru 2 seçenek 1 | düzeltildi: giriş iki bacaktan birinde karantinada engellenir; pozisyon yalnız tutulan bacağın karantinasında kapanır. 02-082 tam uygulandı. Kod değişmez |
 | e-8 50/50 alım günü | 5.6 Tanısal 50/50; 5.7 K2 Çift bölmesi | izleme-04 04-057; 03-051, 08-054 | düzeltildi: seçim günü yılın ilk işlem günü, alım ertesi günün AOF'u (geleceği görmeme); 5.7 aynı tarihe bağlandı. Davranış değişmedi |
 | e-9 ham stop | 6.5 Referans ve Stop | izleme-01 01-079 | düzeltildi: stop = (düzeltilmiş referans − 2 ATR) × oran. Kod zaten böyle (`gunluk.py:90-95`); kod değişmez |
 | e-10 kanıt örneği | 6.5 Kanıt satırı, Kanıt örneği | izleme-09 09-041 | düzeltildi: tek tanım; işlem düzeyi ve günlük seri aralığı ayrı ifade; örnek `gunluk._kanit` biçimine eşit |
@@ -53,7 +53,7 @@ parametresi değişmedi; getiriye bakılmadı. `docs/sorgu/` yerel (git dışı)
 
 ## Sayılar
 
-düzeltildi 25 · çürütüldü 1 · zaten düzeltildi 2 · Levent'e soru 2 (toplam 30 madde; b-7 ile e-27 ve tasarim-kod
+düzeltildi 27 · çürütüldü 1 · zaten düzeltildi 2 · Levent'e soru 0 (iki soru vekile gitti, kararlar uygulandı) (toplam 30 madde; b-7 ile e-27 ve tasarim-kod
 "iki kanıt satırı" ile e-10 aynı düzeltmeyi paylaşır).
 
 ## Bilet 07'ye (kod değişikliği; bu bilet kodu değiştirmedi)
@@ -67,7 +67,7 @@ düzeltildi 25 · çürütüldü 1 · zaten düzeltildi 2 · Levent'e soru 2 (to
 7. 17-093 rapor testi (sütun listesi, yasaklı kelime) yok (e-16).
 8. `tansu/denetim.py:38` docstring "β" → "piyasa yükü" (yalnız ad).
 
-## Levent'e sorular
+## Levent'e sorular (cevaplandı: vekil kararı 14.10, Threads 37; aşağıdaki iki soru karara bağlandı ve uygulandı)
 
 (Soru 1) **İlk sinyal günü: 30.11.2015 mi, 01.12.2015 mi?** Kayıt (sonuc-3-4 B-6, TASARIM 5.1): "İlk sinyal 30.11.2015". Kod ve TASARIM 5.6: simülatör 01.12.2015'te başlar ve bu günden önceki sinyal gününü saymaz, yani 30.11.2015 sinyali sayılmaz (`simulator.ilk_gun`, `sinyal_tarih >= ilk`).
 1. Kayda uy: 5.6 "ilk sinyal günü 30.11.2015, ilk dolum 01.12.2015" olur; kod değişir. Değişen: ilk günün sinyali (varsa) işleme girer, sonuçlar ve p değerleri kayabilir, yeni deneme sayılır. Risk: kural kaydı hash'i değişir, ön koşu rakamları eskir.
