@@ -17,3 +17,5 @@
 - [ ] Kodu hiç olmayan dokuz karar (`tasarim-kod.md` §1) mimari işinin (`.scratch/tansu-mimari/spec.md`) 5. adımına bağlandı.
 - [ ] AGENTS.md "Geliştirme durdu" satırı kaldırıldı; mimari spec'in `Status` satırı `needs-triage`'a döndü.
 - [ ] Havuz testi: beyindeki Tansu havuzunun her notu A–E'de atıflı ya da "kural içermez" listesinde; havuza yeni not gelince test kırmızı olur (CI'da beyin yoksa atlanır, yerel test kapısı denetler).
+
+- 14.10: CI `dod` kontrolü (`.github/dod_kontrol.py:49`) yalnız "Sonuç: geçti" kabul ediyor; AKIS sözlüğündeki NOTLU GEÇTİ kararını tanımıyor. PR gövdesinde "geçti" yazıldı, not Denetçi satırında. Kontrolün NOTLU GEÇTİ'yi tanıması bilet 08'e.
