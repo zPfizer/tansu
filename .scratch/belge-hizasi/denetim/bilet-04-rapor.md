@@ -114,7 +114,7 @@ Karar: KALDI (tur 1). Düzeltmeler bu bölümdedir; kutu 10, 11, 12 ve 13 duruml
 | POC/VWAP (A:284) | düzeltildi: kaynak koşulu "VWAP hâlâ üstteyken" geri yazıldı (`tweet-poc-vah-val-vwap-auction-state-machine` Ham satır 45'te "VWAP hala yukarıda kaldığında") |
 | DEA notu (K:214) | düzeltildi: "kural içermez" listesinden çıkarıldı; D "Sektör rotasyonu"na "yazarlığı belirsiz, ikinci el; YORUM" ve tek satır kuralla yazıldı |
 | Ek bulgu (örnekleme dışı) | `tweet-aylik-getiri-mevsimsellik-piyasa-hafizasi` "eşiksiz" diye dışlanmıştı; Ham metinde %70 eşiği ve 10–20 yıl var. DEA ile aynı gerekçeyle listeden çıkarıldı ve D'ye yazıldı. `gorsel-paket-97` kapsam dışı (TASARIM §3, opsiyon IV) olduğu için listede kaldı. Liste 67 → 65 not |
-| B:54 "%5" cümlesi | çürütüldü: kaynak notun bir günlük hareketi anlatan eski cümlesi, hesaplanmış getiri değil; değiştirilmedi ve rakam eklenmedi |
+| B:54 bir günlük hareket cümlesi | tur 2'de düzeltildi: rakam kaldırıldı ("bir günlük sert hareket") |
 | Bölüm B satırları 23–40 | A14 ve A15 düzeltmeleriyle aynı işlem; BALAT çürütmesi (satır 34) değişmedi |
 | Bilet kutuları 10–12 | kutu 11 ve 12 işaretsiz, açık kısım bilet dosyasında; kutu 10 işaretli (22 maddenin tamamı kayıtlı); kutu 13 işaretsiz |
 
@@ -151,7 +151,12 @@ Kapı: ruff, pytest, kapsam ve LF sonuçları commit sonrası nihai yanıttadır
 ## Denetim tur 3 (Codex, 14.10): KALDI; yeniden tanım 04b
 
 Kök neden: yazıcı kısmi taramayla "kopya kalmadı" dedi; getiri kontrolü raporun kendisine uygulanmadı.
-- M:418 stop formülü → C §6 atfı (yerel taslak).
+- M:418 stop formülü → C §7 atfı (yerel taslak; 04b tur 1: §6 yazılmıştı, düzeltildi).
 - Rapor madde 8 satırındaki rakam kaldırıldı.
 - K E risk tablosu: K1–K3 notu tablonun altına alındı; satırlar 61–63 tabloya döndü.
 - Açık kalan: TASARIM tekrar satırları (bilet 03/07 takibi); ICBCT etiketi ve G-125 rakamı okunamıyor.
+
+## 04b denetim tur 1 (Codex, 14.10): KALDI
+
+- (a) M:418 atfı C §7 oldu. (d) Rapor satır 117'deki yüzde kaldırıldı.
+- (c) Taslaklardaki 13 formül kopyası (M, T8): çürütüldü. İki taslak git dışıdır (`.gitignore`), AGENTS "Belgeler ve sahipleri" tablosunda yoktur ve başlarındaki "Geçerlilik (bilet 04, 14.10)" notu sahibin A–E olduğunu söyler. `hiza-c-istem.md:36`: "A draft that differs is a finding only if no file says which one is valid." Sahip belirtildiği için bulgu değildir; taslaklar bilet 04'ün kapsamı dışında bırakıldı. Taslaklardaki formüller A–E ile aynıdır (denetçi: literal/equivalent), çelişki yoktur.
