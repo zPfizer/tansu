@@ -114,7 +114,7 @@ Her modülün dışarıya küçük bir yüzü var. İçi değişse de dışı de
 
 | Modül | Girdi → çıktı | Not |
 |---|---|---|
-| `kaynak` | sembol, tarih aralığı → ham tablo | Ağa çıkan tek yer: İş Yatırım ve borsapy (yalnız faiz ve sektör). Ham alan adları (`HG_*`, `HGDG_*`) tek bir sözlükle proje adlarına çevrilir. (C-8, İ: 18-075) |
+| `kaynak` | sembol, tarih aralığı → ham tablo | Ağa çıkan tek yer: İş Yatırım ve borsapy (yalnız faiz ve sektör). Ham alan adları (`HG_*`, `HGDG_*`) tek bir sözlükle proje adlarına çevrilir. İş Yatırım okuma zaman aşımı (5, 120) sn: ağır sorgular 40 ve 90 sn'de zaman aşımına uğradı; C-8'deki (5, 30) bu değerle değişti. (C-8, İ: 18-075, 01-057) |
 | `veri` | indirme → anlık görüntü; olay tablosu; veri kapıları | Ayrıntı aşağıda. (B2, B-2, B-7) |
 | `evren` | tarih → o gün yeni giriş için taranabilecek hisseler | 5.2. |
 | `gostergeler` | fiyat → EMA, SMA, ATR, piyasa durumu | Vektörel; sınamada ve canlıda aynı kod. Kütüphane yok. |
@@ -124,7 +124,7 @@ Her modülün dışarıya küçük bir yüzü var. İçi değişse de dışı de
 | `motor` | Adım: (pozisyon, bugünkü mum) → pozisyon; Motor: sinyaller → işlemler | Mum, ön hesaplı ATR ve SMA250 sütunları olan bir gün satırıdır. **Sınama ve canlı günlük aynı Adım'ı kullanır.** (A5, İ: 11-010) |
 | `simulator` | işlemler + bölme kuralı → sermaye eğrisi | Boştaki nakit faiz kazanır. (A2, B4) |
 | `istatistik` | fazla getiri → güven aralığı, p değeri, Holm | statsmodels yalnız `coint` ve Holm için. |
-| `saglamlik` | ızgara hücreleri → pozitif hücre oranı | Önceden yazılmış ızgara (KURALLAR §3); her hücre K1'e göre ortalama fazla getiri. 5.10. (bilet 13) |
+| `saglamlik` | ızgara hücreleri → pozitif hücre oranı | Önceden yazılmış ızgara (KURALLAR §3); her hücre işlem başına ortalama fazla getiri (sepete göre, K1 tekrarı yok). 5.10. (bilet 13, İ: 09-064, bilet 03) |
 | `kayit` | kural kaydı, deneme günlüğü, kart günlüğü, durum kayıtları | Yalnız ekleme. Getiri gösteren tek yol `kosu()`'dur: kural kaydı yoksa ya da hash uyuşmazsa tek Türkçe satırla durur. (C-6, İ: 15-074) |
 | `rapor` | sonuçlar → HTML + CSV + `durum.txt` | Ayrıntı 6. bölümde. |
 | `denetim` | sentetik boş ve etkili dünya → yanlış kabul, güç | Boru hattı denetimi (5.12). Hash dışı: kuralı değil sınamanın doğruluğunu ölçer; sonucu günlükte kod hash'iyle durur. (bilet 13) |
@@ -153,6 +153,10 @@ Her modülün dışarıya küçük bir yüzü var. İçi değişse de dışı de
 → `saglamlik` → `rapor` → `kayit` → `gunluk`, `denetim` → `__main__`.
 (`rapor` yalnız `simulator`'a dayanır; `kosu()` raporu aynı çağrıda yazar ve `rapor-<koşu>.html` adı koşu kimliğinden
 gelir, bu yüzden `kayit` `rapor`'dan sonra gelir. Önceki sıra `kayit` → `rapor` koda uymuyordu.)
+
+**Test yüzleri:** testler yalnız bu yüzlere yazılır: Adım, Motor, Simülatör, İstatistik, Evren, veri kapıları, aileler, kayıt
+(sonuc C-9), göstergeler (Wilder ATR ve EMA için elle hesaplı 5 satırlık örnek; İ: 12-018) ve rapor (sahte sonuçtan rapor ve
+CSV: sütun listesi, ilk satır cümlesi, sabit durum listesi, yasaklı kelime AL, SAT, ÖNERİ, "Tansu'nun sistemi"; İ: 17-093). (bilet 03)
 
 Takvim, fiyat günlerinden çıkar (İş Yatırım XU100 günleri). Maliyet tek bir sabittir.
 
@@ -196,7 +200,7 @@ Amaç: bir kuralın sonucunu **şanstan, piyasanın genel yükselişinden, enfla
 hatasından** ayırmak.
 
 ### 5.1 Veri
-- **İndirme:** veri 2010'dan indirilir. İlk sinyal 30.11.2015; ±%20 limit rejiminin başı. (B-6)
+- **İndirme:** veri 2010'dan indirilir. ±%20 limit rejiminin başı 30.11.2015; sinyal günleri 01.12.2015'ten sayılır (5.6). (B-6; vekil kararı 14.10, bilet 03)
 - **Isınma:**
   - Tek hisse ailesi, hissenin kendi ilk gününden 500 işlem günü dolmadan sinyal vermez (EMA200,
     SMA250).
@@ -216,14 +220,16 @@ hatasından** ayırmak.
   - Olay tablosu çarpanı (`SHHE_FIYAT_AYAR_OR`) ham seriye uygulanır ve `HGDG` ile karşılaştırılır.
     Fark %0,5'i aşan gün uyarıdır; `HGDG` geçerli kalır.
   - Olay eşleştirmesi tablo tarihinin ±1 işlem günü penceresinde yapılır.
-  (B1, B-2, İ: 02-024)
+  - Sınama vakaları (veri birim testi): çarpan > 1 (sentetik), aynı güne iki kayıt (çarpanlar çarpılır), ±1 gün
+    kayması (HEKTS 26.11.2015). CCOLA temettü formülü alınmadı.
+  (B1, B-2, İ: 02-024, 02-093)
 - **Fiyat limiti:**
-  - Taban, önceki gün ham kapanışının ±L'sidir.
-  - Olay gününde taban = önceki ham kapanış × olay çarpanı. Kilit ve karantina bu tabanla yargılanır.
-    Bilinmeyen olay kodu ya da çarpanı 1 olan kayıt istisna sayılmaz.
-  - L = %20 (30.11.2015 – 12.03.2020), %10 (13.03.2020 sonrası). Önceki kapanış tabanı ±%10 döneminde
+  - Limit hesabının baz fiyatı önceki gün ham kapanışıdır; tavan ve taban baz fiyatın ±L'sidir.
+  - Olay gününde baz fiyat = önceki ham kapanış × olay çarpanı. Kilit ve karantina bu baz fiyattan çıkan limitlerle
+    yargılanır. Bilinmeyen olay kodu ya da çarpanı 1 olan kayıt istisna sayılmaz.
+  - L = %20 (30.11.2015 – 12.03.2020), %10 (13.03.2020 sonrası). Baz fiyatın önceki ham kapanış olduğu ±%10 döneminde
     veriyle doğrulandı.
-  (İ: 01-024, 02-033, 07-060)
+  (İ: 01-024, 02-033, 07-060; "baz fiyat" adı: bilet 03, sözlük denetimi)
 - **Fiyat adımı:** tarih bazlı tablo. 06.11.2023'te değişti; veriyle doğrulandı, bkz.
   `docs/arastirma/kullanim-kosullari-fiyat-adimi.md`.
 
@@ -241,7 +247,8 @@ hatasından** ayırmak.
   Sınama vakası: KONTR 08.07.2026. (İ: 01-023, 02-056, 05-043)
 - **Karantina:**
   - Kapanıştan kapanışa o günkü limiti (+%0,5) aşan ve şirket olayıyla açıklanmayan her gün karantinaya
-    girer.
+    girer. "Olayla açıklanan" eşleştirmesi de olay denetimindeki gibi tablo tarihinin ±1 işlem günü penceresinde yapılır
+    (HEKTS 26.11.2015). (İ: 02-024)
   - O hisse 250 gün yeni sinyal üretmez.
   - Açık pozisyon son temiz AOF'ta kapanır ve sayılır.
   - Fiyat yamanmaz.
@@ -264,8 +271,8 @@ hatasından** ayırmak.
   - Ayın ilk işlem günü, **önceki ayın son kapanışındaki** piyasa değerine göre en büyük 100 hisse.
   - O tarihte işlem gören, yalnız pay hisseleri.
   - 60 günlük medyan TL hacimde en alttaki %20 önce elenir.
-  - Aynı şirketin birden çok kodu varsa yalnız hacmi en yüksek kod alınır; bilinen çoklu kodlar elle
-    listelenir.
+  - Aynı şirketin birden çok kodu varsa yalnız 60 günlük medyan TL hacmi en yüksek kod alınır; bilinen çoklu kodlar elle
+    listelenir. Böylece aynı şirket K2 sepetinde iki kez ağırlıklanmaz. (İ: 03-004)
   - Evren yalnız yeni girişi sınırlar. Evrenden çıkan hissenin açık pozisyonu kendi kuralıyla
     kapanır. (B-9)
 - **İşlemi kapanan hisseler:** İş Yatırım bunları da veriyor, ama liste eksik.
@@ -301,7 +308,8 @@ hatasından** ayırmak.
   - Duyarlılık sürümü: yalnız düşük = yüksek, hacim > 0 ve limit fiyatında olan gün.
   (M4, B-5, İ: 01-026, karar.md)
 - **Düşen sinyal:** giriş günü yoksa ya da kilitli tavansa sinyal düşer, sonraki güne kaymaz. Sayısı
-  raporda "iptal" olarak yazılır. (İ: 05-044, 19-055)
+  raporda "iptal" olarak yazılır. Kayma yalnız çıkış dolumunda olur (kilitli taban, eksik gün; 5.13); giriş
+  dolumu kaymaz. (İ: 05-044, 19-055)
 - **Aynı gün sırası:** aynı AOF gününde önce çıkışlar, sonra girişler işlenir. (İ: 08-015)
 - **Yeni sinyal:** bir hissede pozisyon açıkken gelen yeni sinyal yeni işlem açmaz ve sayıma girmez.
   - SMA250 çıkışı bildirilmiş ama henüz dolmamış pozisyon açık sayılır.
@@ -312,7 +320,7 @@ hatasından** ayırmak.
 - **Veri sonu:** veri bitince açık pozisyon son kapanıştan zorunlu çıkar. K1 ve K2 aynı kuralı
   uygular. (İ: 09-092)
 - **İşlem günlüğü:** her işlemde "planlanan risk" ve "gerçekleşen kayıp" yazılır. (İ: 08-030)
-  - Planlanan risk = adet × (giriş − stop). Gerçekleşen kayıp = adet × max(0, giriş − çıkış).
+  - R = giriş − stop (hisse başına planlanan risk). Planlanan risk = adet × R. Gerçekleşen kayıp = adet × max(0, giriş − çıkış).
   - Karantina çıkışı: fiyat son temiz AOF, tarih karantina günüdür. Çıkış gününde (AOF'ta) çıkılmış pozisyon
     o günün kapanış sinyalini engellemez. Isınma: hissenin n. işlem günü dolduğunda (n = 500) sinyal serbesttir.
   - (Bilet 08: belge bu noktalarda sessizdi; kod bu okumayı uygular.)
@@ -355,7 +363,8 @@ Risk paketi (`kurallar/E` K1–K3): acil stop ve gün sonu stopu adları aktarı
 - **Gün sonu stopu:** kapanış SMA250 altına inerse ertesi günün AOF'unda (YORUM: dolum).
   Kaynak gerçekleşme fiyatını ve seansını açıklamaz.
 - **ATR:** uzunluk 14, Wilder ortalaması; ilk değer ilk 14 gerçek aralığın ortalaması; kendi kodumuz
-  (YORUM). (İ: 19-025)
+  (YORUM). Gerçek aralık = max(yüksek − düşük, |yüksek − önceki kapanış|, |düşük − önceki kapanış|); düzeltilmiş
+  seriden. (İ: 19-025, sözlük denetimi 3. tur)
 - **Hedef yok:** iki ailede de Tansu hedef vermedi.
 - **Çift rotasyonu:** ayrı stop yok (YORUM, bizim); karşı uçta diğer hisseye geçilir. Risk paketi bu bölmeye uygulanmaz.
   Grafikte stop görünmemesi, stop bulunmadığını kanıtlamaz (aktarım, G125:20; araç, Rota/g2; eğitim, G118/g1).
@@ -384,11 +393,11 @@ yıla taşınır. (Sorgu S6, İ: 08-083)
 - Sermaye 1.000.000 TL; en fazla 5 aktif çift.
 - Çift payları yıl başında eşittir; yıl içinde dengeleme yok (YORUM; Tansu tek çift kullandı).
   (İ: 08-056)
-- Her çift payı, ilk sinyale kadar nakittedir; sonra hep çiftin bir hissesindedir. Boş pay nakitte kalır
+- Her çift payı, ilk girişe (nakitten ilk alım) kadar nakittedir; sonra hep çiftin bir hissesindedir. Boş pay nakitte kalır
   (YORUM, bizim; araç, Rota/g2, genel nakit politikasını açıklamaz).
 - Bacaklardan biri kilitliyse geçiş yapılmaz. Sinyal ertesi gün yeniden değerlendirilir; eski sinyal
   taşınmaz. (İ: 04-068)
-- Bacaklardan biri karantinadaysa çift o pencerede girişsiz kalır; açık bacak son temiz AOF'ta kapanır.
+- Bacaklardan biri karantinadaysa çift o pencerede girişsiz kalır; tutulan bacak karantinadaysa açık pozisyon son temiz AOF'ta kapanır, öbür bacaktaki karantina pozisyonu kapatmaz. (İ: 02-082; vekil kararı 14.10, bilet 03)
   (İ: 02-082)
 - Çiftin hissesi kapanırsa pay 5.2 kuralıyla kapanır ve yıl sonuna kadar nakitte faiz kazanır.
   (İ: 03-060)
@@ -426,7 +435,7 @@ yıla taşınır. (Sorgu S6, İ: 08-083)
   - Sıralama: p artan, eşitlikte (Y, X) sembol sırası. Açgözlü seçim: bir hisse en fazla bir çiftte, sektör
     başına en fazla 2 çift, toplam en fazla 5.
 - **Sinyal:** her gün kapanışta Z ve ΔZ (`cift.z_skor`, log oran, 60 gün, ddof 1; KURALLAR §3). Z ≤ −2 ve
-  ΔZ > 0 ise hedef Y; Z ≥ +2 ve ΔZ < 0 ise hedef X. Başka günde sinyal yok. Düşünülen çiftler yalnız seçilmiş
+  ΔZ > 0 ise hedef Y; Z ≥ +2 ve ΔZ < 0 ise hedef X (hedef = geçilecek bacak; kâr hedefi değildir, 5.5). Başka günde sinyal yok. Düşünülen çiftler yalnız seçilmiş
   çiftlerdir; seçim günü kapanışındaki sinyal ertesi gün işlenir.
 - **Geçiş:** hedef, tutulandan farklıysa ertesi günün AOF'unda (5.3'teki yaklaşık dolum modeli) eski bacak satılır, yeni bacak alınır; her
   bacakta %0,3 masraf. Adet = tam lot, aşağı yuvarlanır; alış, sinyal gününü kapsayan 10 günlük medyan TL
@@ -437,7 +446,7 @@ yıla taşınır. (Sorgu S6, İ: 08-083)
   kapanır, pay nakde geçer, pencere dolana dek yeniden giriş olmaz.
 - **Kapanma:** bacak 5.2 kuralıyla kapanırsa (`evren.kapananlar`) tutulan bacak o gün 0 fiyatla kapanır; çift
   yıl sonuna dek işlemsizdir (pay nakitte faiz kazanır).
-- **Paylar:** sermaye 5 eşit paya bölünür. İlk geçişten önceki pay nakittedir. Seçimden sonraki ilk işlem günü
+- **Paylar:** sermaye 5 eşit paya bölünür. İlk girişten (nakitten ilk alım) önceki pay nakittedir. Seçimden sonraki ilk işlem günü
   (`s`'nin ertesi) AOF'unda düşen çiftlerin bacağı satılır; yeni çiftler ve boş paylar, o ana dek biriken serbest
   nakdi eşit paylaşır. Yine seçilen çift işlemsiz sürer ve payı eşitlenmez (YORUM: belge iki cümlesini
   birleştirir; eşitleme işlem ve masraf gerektirirdi). Yıl içinde dengeleme yok. Hiç çift seçilmeyen yıl
@@ -447,7 +456,10 @@ yıla taşınır. (Sorgu S6, İ: 08-083)
 - **K2:** aynı simülatör K2'si; maruziyet = çift bölmesinin hisse payı (kapanış değeri / özkaynak).
 - **Tanısal 50/50:** her yılın seçimden sonraki ilk işlem günü AOF'unda her payın yarısı Y'ye, yarısı X'e
   alınır (tam lot, masraflı); yıl sonuna dek tutulur; ertesi yıl başında hepsi satılıp yeni çiftler alınır.
-  Seçilen çift yoksa nakittedir.
+  Seçilen çift yoksa nakittedir. "Yılın ilk işlem gününde al" kararı (İ: 04-057) seçim gününü anlatır; seçim o günün
+  kapanışında yapıldığı için alım ertesi günün AOF'undadır; aynı günün AOF'unda alım geleceği görmek olurdu
+  (çift seçiminde de giriş ertesi günün AOF'undadır; İ: 03-051, 08-054). 5.7 K2'deki 50/50 anlatımı aynı tarihi
+  kullanır. (İ: 04-057, bilet 03)
 - **VAKBN–GARAN:** Y = VAKBN, X = GARAN, tek pay, 1.000.000 TL, simülatör başlangıcından itibaren; aynı Z, geçiş,
   engel ve masraf kuralı. Karşılaştırma: aynı çiftin 50/50 tutulması, başlangıçta bir kez.
 
@@ -455,8 +467,8 @@ yıla taşınır. (Sorgu S6, İ: 08-083)
 serisinin kaynağını ve son değişim tarihini yazar; seri boşsa koşu SORUNLU olur. (B4, B-8, İ: 08-071)
 
 **Simülatör kuralları** (bilet 10; belge bu noktalarda sessizdi, kod bu okumayı uygular):
-- **Başlangıç:** ilk gün = 2015-12-01'den sonraki ilk işlem günü (ya da veri daha geç başlıyorsa veri günü).
-  Bu günden önceki sinyaller sayılmaz. Her işlem günü: önce faiz, sonra çıkışlar, sonra girişler, sonra
+- **Başlangıç:** ilk gün = 2015-12-01 ya da sonraki ilk işlem günü (ya da veri daha geç başlıyorsa veri günü).
+  Sinyal günü bu günden önce olan sinyaller sayılmaz (30.11.2015 sinyali dahil; vekil kararı 14.10, bilet 03). Her işlem günü: önce faiz, sonra çıkışlar, sonra girişler, sonra
   kapanış değerlemesi.
 - **Evren süzgeci** (bilet 11 düzeltmesi): motor yalnız simülatörün alabileceği sinyalleri görür: sinyal günü
   simülatör başlangıcından sonra ve sinyal gününün ayının evreninde (5.2) olan sinyaller. Evren dışı sinyal
@@ -502,10 +514,13 @@ serisinin kaynağını ve son değişim tarihini yazar; seri boşsa koşu SORUNL
   - Bu karşılaştırma yalnız Z zamanlamasını ölçer; çift seçiminin değeri K2 ile okunur.
   (Sorgu S12, İ: 09-015)
 - **Tekrar sayısı:**
-  - B ≥ max(1.000, 200·m); m = o ana kadarki deneme sayısı. Daha azıyla p tabanı Holm eşiğini
-    aşamaz.
-  - Geliştirmede 200 tekrar; bu p'ler Holm'a girmez.
-  (B-14, İ: 15-078, 09-009)
+  - B ≥ max(1.000, 200·m); m = deneme sayısı (5.11'de tek tanım). 200·m bir duyarlılık payıdır, matematiksel zorunluluk
+    değildir: p tabanı 1/(B+1) olduğundan B = 1.000 ile m ≤ 50 için kabul hâlâ mümkündür (m = 50'de en küçük düzeltilmiş
+    p 50/1.001 ≈ 0,04995 < 0,05; m > 50'de imkânsız; cevaplar-15'teki "m ≥ 50 imkânsız" yanlıştır, sonuc O14 doğrudur).
+    B ≥ 200·m ile p tabanı Holm eşiğinin (α/(m−k+1)) çok altında kalır; kabul kararını p tabanı değil gerçek p değeri belirler.
+  - Geliştirmede 200 tekrar; bu p'ler günlükteki Holm listesine girmez, m'yi artırmaz; rapor yalnız varsayımsal bir
+    Holm p'si gösterir (5.11).
+  (B-14, İ: 15-078, 19-068, 09-009; bilet 03)
 - **p değeri:**
   - p = (1 + k) / (1 + B); k = gerçek kuraldan iyi ya da eşit rastgele tekrar sayısı.
   - Tek yönlü; istatistik işlem başına ortalama fazla getiridir.
@@ -536,13 +551,13 @@ serisinin kaynağını ve son değişim tarihini yazar; seri boşsa koşu SORUNL
   kapanış önceki 20 günün en yüksek yükseğinin üstünde (20: YORUM; KRDMD örnek sıkışması 20 gündü), sıkışma
   penceresinde değil, SMA250, ısınma, evren ve karantina şartları aynı. Yalnız rapor; aile p'sine girmez.
 - **Rastgele işlem:** aynı Adım ve aynı simülatörden geçer: hisse başına sinyaller sırayla işlenir, açık ya da
-  bekleyen pozisyonun varken gelen sinyal düşer (5.3). K1 bu zinciri tek işlem sonuçlarını önbelleğe alarak
+  bekleyen pozisyonun varken gelen sinyal yeni işlem açmaz ve sayıma girmez (5.3; İ: 07-079). K1 bu zinciri tek işlem sonuçlarını önbelleğe alarak
   kurar; gerçek sinyallerle `motor.islemler` ile aynı tabloyu verir (test).
 - **Çift:** her seçilmiş çift için gerçek tutuş sayısı kadar sinyal günü, çiftin etkin olduğu günlerden |Z| ≥ eşik
   olanlardan çekilir; ilk sinyal günü ve yönü gerçeğe eşit, sonrakiler sırayla öteki bacağı hedefler.
   Aynı kilit, karantina ve masraf kuralları işler; engellenen sinyal sayıyı azaltabilir.
-- **Tekrar sayısı m'si:** B = max(1.000, 200·m); m = günlükteki ilk resmi p sayısı (kural kimliği × aile) + bu
-  koşunun yeni p'leri. `--son` bu B'yi koşar; `--son` olmadan 200. Resmi koşu B'si bu değerin altındaysa durur.
+- **Tekrar sayısı m'si:** B = max(1.000, 200·m); m, 5.11'deki deneme sayısıdır. `--son` bu B'yi koşar; `--son`
+  olmadan 200. Resmi koşu B'si bu değerin altındaysa durur.
 - **Süre** (bilet 13, `python -m tansu sinama`, gerçek veri 20261005-1949, 32 çekirdekli geliştirme makinesi; bütçe
   200 tekrar için ≤ 5 dk): hızlandırmadan önce B = 200 7 dk 0 sn (ızgarasız). Sonra, ızgaralar dahil: B = 200 **2 dk 52 sn
   ve 3 dk 03 sn**; B = 1.000 (m = 2, resmi büyüklükte, `resmi:false`) **6 dk 48 sn ve 6 dk 50 sn** (iki ölçüm). Neden hızlandı:
@@ -562,11 +577,13 @@ serisinin kaynağını ve son değişim tarihini yazar; seri boşsa koşu SORUNL
     öteki günleri kapanıştan kapanışa, dengelemesiz. İlk kuruluş da masraf öder.
   - Sepette kapanma günü olan hisse o gün 0 olur (−%100); ağırlığı sonraki ay başına kadar nakde dönmez.
   - K2 her masraf düzeyinde sepet masrafı %0,3 kalır; maruziyet o düzeydeki kuraldan gelir.
-  - Fazla getiri (rapor): yıllık kural getirisi − yıllık K2 getirisi (yüzde puan).
+  - Fazla getiri (rapor): yıllık fazla getiri, o yıldaki günlük portföy fazla getirisinin (kural − K2) toplamıdır;
+    5.8 ile aynı tek tanım. Yıllık kural getirisi ve yıllık K2 getirisi ayrı sütunlarda bilgi olarak durur. (İ: 08-083;
+    bilet 03)
 - **Çift bölmesi:**
   - Kabul, evren sepetiyle (K2) verilir.
-  - Aynı çiftlerin 50/50 tutulması yalnız tanısaldır: yılın ilk işlem gününde bir kez alınır, yıl sonuna
-    kadar tutulur, dengeleme yok.
+  - Aynı çiftlerin 50/50 tutulması yalnız tanısaldır: yılın ilk işlem günü seçilir, alım seçimden sonraki ilk
+    işlem günü AOF'undadır (5.6); yıl sonuna kadar tutulur, dengeleme yok.
   (İ: 04-051, 04-057)
 
 **K3. Faiz:** simülatörde boştaki nakit faiz kazandığı için portföy sonucu zaten faize karşı okunur.
@@ -578,6 +595,8 @@ Dolar bazı ilk sürümde yok.
 - **Yıllık bölme:**
   - Parametreler sabittir; yıllık bölme yalnız çift seçimini yeniler. Kâğıt üstü dönemin yerine
     geçmez.
+  - Bu bölme, parametreleri her yıl yeniden optimize eden ileri yürüme (walk-forward) değildir: yıllar yalnız tek
+    sürekli koşunun sonuç dilimleridir (5.12'de "yıllık sonuç dilimleri"). (bilet 03, sözlük denetimi)
   - Tek sürekli koşunun eğrisi yıllara kesilir. Yıllık fazla getiri, o yıldaki günlük portföy fazla
     getirisinin toplamıdır.
   - Tamamlanmamış yıl (2026) 5.12.4'ün paydasından çıkar ve ayrıca gösterilir.
@@ -591,8 +610,10 @@ Dolar bazı ilk sürümde yok.
       değiştirebilecek her modül listededir. İndirme, rapor, günlük koşu, CLI, sadakat ve denetim kodu listede yoktur.
     - **Liste:** aileler, cift, ciftbolme, evren, gostergeler, istatistik, kayit, motor, saglamlik, simulator, veri.
     - **İki not:** `veri.py` indirmeyi de içerir ama kapı ve karantina mantığı (`Anlik.gun_tablosu`, `adim`) kuraldır;
-      dosya bölünmediği için bütünüyle listededir. `kayit.py` Holm, kabul girdisi ve K1 tekrar sayısını (B) hesaplar;
-      o da listededir (muhafazakâr: kayıt kodu değişince yeni kayıt gerekir).
+      dosya bölünmediği için bütünüyle listededir. `kayit.py` Holm, kabul girdisi ve K1 tekrar sayısının (B)
+      hesabını içerir; o da listededir (muhafazakâr: kayıt kodu değişince yeni kayıt gerekir). Bu, tekrar
+      sayısının değerinin hash dışı olmasıyla çelişmez: değer koşu parametresidir ve günlükte ayrı alandır; B'yi
+      hesaplayan kod ise kuraldır. (karar.md:28; bilet 03)
     - Boru hattı denetimi (`denetim.py`) hash dışıdır.
   - **Kod hash'i** kaynağın `ast.dump` sha256'sıdır; yorum ve boşluk değişmez.
   - **Hash dışı:** tekrar sayısı, tohum, blok uzunluğu, masraf senaryoları; günlükte ayrı alan olarak
@@ -614,7 +635,8 @@ Dolar bazı ilk sürümde yok.
   - Aralık yalnız rapordur; karar 5.12'den verilir.
 - **Örneklem** (M5, İ: 09-046, 09-047):
   - Tek hisse: en az 100 işlem **ve** en az 60 farklı sinyal günü.
-  - Çift bölmesi: en az 100 geçiş **ve** 60 farklı geçiş günü.
+  - Çift bölmesi: en az 100 geçiş **ve** 60 farklı geçiş günü. Geçiş sayısı, tutuş dönemi (işlem) sayısıdır: nakitten
+    ilk giriş de bir geçiş sayılır (5.6). (bilet 03, sözlük denetimi 6. tur)
   - Saptanabilecek en küçük etki günlük portföy serisinden hesaplanır ve raporda yazılır.
   - (Bilet 12) Güven aralığı: günlük fazla getirinin (kural − K2, %0,3) yıllıklandırılmış ortalaması (×252) üzerinde
     hareketli blok bootstrap, 1.000 tekrar, sabit tohum. Saptanabilir en küçük etki (yıllık, puan) =
@@ -626,7 +648,8 @@ Dolar bazı ilk sürümde yok.
 ### 5.10 Parametre sağlamlığı
 Parametreler ve ızgara önceden yazılır (`KURALLAR.md` §3). Kurallar:
 - Izgara hücreleri birlikte oynatılır. En iyi değer seçilmez.
-- **Pozitif hücre:** K1'e göre ortalama fazla getiri > 0, %0,3 masrafla; p aranmaz. (İ: 09-064)
+- **Pozitif hücre:** işlem başına ortalama fazla getiri > 0, %0,3 masrafla; fazla getiri = işlem getirisi − sepet
+  getirisi (5.7 işlem seviyesi). Rastgele karşılaştırma (K1 tekrarı) yapılmaz; p aranmaz. (İ: 09-064; bilet 03)
 - **Sağlamlık şartı:** pozitif hücre oranı ≥ %60. (İ: 04-089, karar.md)
 - Bu oran bir olasılık değildir; hücreler birbirine bağımlıdır. (İ: 05-096)
 - Izgara hücreleri ve masraf senaryoları Holm'daki deneme sayısına girmez. (m3, İ: 09-056)
@@ -645,12 +668,17 @@ Parametreler ve ızgara önceden yazılır (`KURALLAR.md` §3). Kurallar:
 20-003, 13-034)
 - **Satır başlangıcı ve bitişi:** her koşu önce `olay=basladi`, sonra `olay=bitti` satırı yazar.
   `bitti` satırı olmayan `basladi` de deneme sayılır.
+- **Deneme sayısı (m), tek tanım:** Holm'un ve K1 tekrar sayısının (B, 5.7) m'si; resmi koşuların sınadığı (kural
+  kimliği, aile) çiftleri sayar. Yarıda kalan, yani `bitti` satırı olmayan resmi koşu da m'ye sayılır (İ: 15-044);
+  geliştirme koşusu sayılmaz. Aynı çift yeniden koşulursa ilk resmi p kalır. Başka bölümler (5.7, 5.12 boru hattı
+  denetimi) m'yi yeniden tanımlamaz, buraya atıf verir. (bilet 03)
 - **Alanlar:**
   - tarih (UTC ISO), `kosu_id`, `kural_id`
   - `kod_hash`, `param_hash`
   - anlık görüntü kimliği ve manifest sha256'sı
   - parametrelerin tam JSON kopyası
   - `git_commit`, tohum, tekrar sayısı
+  - `sema`: günlük şema sürümü (şimdilik 1; İ: 15-046)
   - ham p, masraf düzeyi başına sonuç
   - ortam: Python ve kütüphane sürümleri, `requirements.lock.txt` sha256'sı
   - `resmi` ve `kirli` bayrakları
@@ -667,12 +695,14 @@ Parametreler ve ızgara önceden yazılır (`KURALLAR.md` §3). Kurallar:
 - **Kirli ağaç:** `kosu(resmi=True)` kirli ağaçta tek Türkçe satırla durur, günlüğe satır yazılmaz (neden: resmi
   koşu temiz bir `git_commit`'e bağlanır; kirli ağaçta sessizce resmi olmayan deneme yazmak niyeti gizler).
   Geliştirme koşusu (`resmi=False`) kirli ağaçta yazılır, `kirli` bayrağıyla.
-- **Silme yasağı:** günlükte adı geçen anlık görüntü silinmez.
+- **Silme yasağı:** `veri/` altındaki hiçbir anlık görüntü silinmez; günlükte adı geçen anlık görüntü her koşulda
+  durur. (karar.md:24; bilet 03)
 - **Başlangıç denetimi:** koşu başında manifest yeniden hash'lenir; uyuşmazsa koşu durur.
 
 **Holm** (İ: 15-052, 15-065, 09-051, 15-076, 19-043):
-- Her kural kimliği için tek p girer: ilk resmi koşunun %0,5 masrafta K1 iki türünün büyük p'si.
-- Geliştirme koşuları `resmi:false` yazılır ve m'yi şişirmez.
+- Her (kural kimliği, aile) çifti için tek p girer: ilk resmi koşunun %0,5 masrafta K1 iki türünün büyük p'si.
+  %0,5 seçimi, 09-056'daki "%0,3'teki p"nin yerine geçer: ölçüt 3 (5.12) %0,5'te de geçmeyi şart koşar, p'nin
+  kabul için gerekli en kötü masrafta hesaplanması muhafazakârdır (karar.md:31; bilet 03).- Geliştirme koşuları `resmi:false` yazılır ve m'yi şişirmez.
 - Kabul kararı, kabul anındaki m ile donar; sonradan artan m eski kararı geri almaz.
 - Rapor başlığı m'yi ve Holm hesap tarihini yazar; Holm rapor üretilirken yeniden hesaplanır.
 - (Bilet 12) Birim: bir koşu iki aileyi sınar; Holm'a (kural kimliği, aile) çifti başına tek p girer, yani resmi
@@ -694,7 +724,7 @@ Parametreler ve ızgara önceden yazılır (`KURALLAR.md` §3). Kurallar:
 - **Para:** para kararı Levent'indir.
 
 **Ölçütler:**
-1. İleri yürüme yıllarının birleşiminde K1'e göre fazla getiri pozitif, Holm düzeltmeli p < 0,05.
+1. Yıllık sonuç dilimlerinin (5.8) birleşiminde, yani bütün koşuda K1'e göre fazla getiri pozitif, Holm düzeltmeli p < 0,05.
 2. K2'ye göre portföy fazla getirisi pozitif.
 3. Masraf %0,5'te de 1 ve 2 sağlanıyor.
 4. Yılların en az %60'ında fazla getiri pozitif; en iyi %5 işlem atılınca sonuç hâlâ pozitif. (M10)
@@ -738,7 +768,7 @@ Genel "Geçti" yalnız hepsi sağlanınca yazılır. (İ: 17-079)
   resmi `basladi` m'ye sayılır (5.11) ama kapıyı açmaz (neden: yarıda kalan koşu hiçbir sonuç üretmedi, denetimsiz
   ikinci deneme hakkı doğmaz). Tamamlanan ilk resmi koşudan sonra denetim aranmaz.
 - **Boş dünya** (`denetim.dunya`): 125 sentetik hisse, 2.000 iş günü (02.01.2012'den), 4 sektör; günlük getiri = piyasa
-  payı·β + sektör payı + hisse payı, kalın kuyruklu (t(5), birim varyans), ±%7'ye kırpılmış (limit ve kilit olmaz).
+  payı · piyasa yükü + sektör payı + hisse payı (piyasa yükü: piyasa payının çarpanı; çift seçimindeki β değildir), kalın kuyruklu (t(5), birim varyans), ±%7'ye kırpılmış (limit ve kilit olmaz).
   Hiçbir kural getiri öngörmez: sinyalden sonraki getiri bağımsızdır. Sentetik anlık görüntü gerçek `veri` kapılarından
   geçer (test: karantina, kilit, olay uyarısı yok), olay yok, faiz tablosu ve sektör var, evren aynı kuralla (125
   hisseden likidite eleğiyle 100: gerçek koşudaki evren boyutu; 40 hisseli dünyada K1 (a) havuzu sinyal sayısına eşit
@@ -774,23 +804,23 @@ Getiri görülmeden yazılır; kural kaydına girer. (B-7, İ: 19-015)
   hacmin hepsi NaN ya da 0 olan satır işlem yapılmamış gündür; indirmede atılır (eksik gün, 5.1).
   İstisna 1b (BYDNR 23.08.2023, KUVVA 2020–): fiyat ve hacim alanları aynı olan tekrar satır tek
   sayılır, ilki kalır (KUVVA'da yalnız `PD` ve `SERMAYE` farklıydı: iki sermaye değeri; piyasa değeri o
-  aralıkta belirsiz); fiyat alanları farklı tekrar ihlaldir. İstisna 2: İş Yatırım
+  aralıkta belirsiz); fiyat ya da hacim alanları farklı tekrar ihlaldir (yalnız hacmi farklı satır da: yapısal ihlal, indirme durur; bilet 03, sözlük denetimi 10. tur). İstisna 2: İş Yatırım
   GARAN yanıtını 276 yerde sırasız verir (satır eksiksiz, tekrar yok; bilet 06'da görüldü); `kaynak` yanıtı
   tarihe göre sıralar, kapı sıralamadan sonraki seriye bakar.
 - **Kaynak günü hatası** (bilet 11 kararı): o gün satırı olan sembollerin en az yarısı aynı gün karantinadaysa
   (en az 20 satırlı gün) bu hisse sorunu değil, kaynak sorunudur (21.05.2026: 556/607 sembol, yüksek = düşük =
   kapanış, AOF aralığın dışında). O gün tüm semboller için eksik gün (NaN) olur: karantina yok, zorunlu çıkış yok,
-  dolum yok (dolum sonraki geçerli güne kayar; öbür eksik günler gibi). Sebep: tek bozuk kaynak günü bütün açık
+  dolum yok (çıkış dolumu sonraki geçerli güne kayar, giriş bekleyen sinyal düşer; öbür eksik günler gibi, 5.3; bilet 03, sözlük denetimi 2. tur). Sebep: tek bozuk kaynak günü bütün açık
   pozisyonları oynatmamalı. Rapor ve `sorunlar` günü tarihle yazar ("kaynak günü hatası: YYYY-AA-GG"). Gün
   karantina sayısına girmez. Alt sınır 20 satır: tek sembollü sentetik sınama günleri ve çok az sembollü
   erken günler kaynak günü sayılmaz.
 - **Oran eşikleri:** karantina hisse-gün oranı > %1 ya da olay denetimi farkı olan gün oranı > %2 ise
   koşu "veri sorunlu" olur. Eşik değerleri değişmez.
   - **Payda ve pay yalnız evren üyesi hisse-günlerdir** (bilet 10 kararı): sınama yalnız evren üyelerinde işlem
-    açar (5.2). Evren dışı illikit kodların bozuk satırları (tüm evrende karantina %3,00; ilk 20 sembolde
+    açar (5.2). Evren dışı illikit kodların bozuk satırları (indirilen bütün hisselerde karantina %3,00; ilk 20 sembolde
     %42) sınamayı etkilemez, ama oranı şişirip kapıyı hep tetikler. Üye hisse-günü: hissenin, o ayın
     evreninde (5.2) bulunduğu ayın fiyat satırları (sınama başlangıcından itibaren).
-  - Tüm evren oranları `Anlik.sorunlar` ile hâlâ hesaplanabilir; kapı kararı üye oranlarıyla verilir.
+  - İndirilen bütün hisselerin oranları `Anlik.sorunlar` ile hâlâ hesaplanabilir; kapı kararı üye oranlarıyla verilir (bilet 03, sözlük denetimi).
   - Kapı tetiklenirse koşu yine yazılır; rapor "SORUNLU" der ve iki oranı yazar. Eşik gevşetilmez.
 - **Eksik indirme:** 100 hisseden 5'ten fazlası inmezse koşu SORUNLU olur.
 
@@ -809,7 +839,7 @@ Getiri görülmeden yazılır; kural kaydına girer. (B-7, İ: 19-015)
      üretilmez.
    - (Bilet 14) "Tam" = her sembolün bütün geçmişi (2010'dan); indirilen semboller bugünün evreni (en çok sembollü
      son tam anlık görüntüden; taban başka aydaysa tabanın son ayının evreni, YORUM) ve dünkü açık kartların
-     hisseleridir (~100). Sebep: bütün evren (716 sembol) bilet 07'de ~3 sa 10 dk sürdü; görev sınırı 1 saat. 100 sembol
+     hisseleridir (~100). Sebep: indirilen bütün semboller (716; bilet 03, sözlük denetimi) bilet 07'de ~3 sa 10 dk sürdü; görev sınırı 1 saat. 100 sembol
      ≈ 30 dk; istekler arası 1 sn bekleme aynen kalır. Günlük anlık görüntü `veri/gunluk/ag/` altına yazılır (tam
      anlık görüntüler `veri/ag/`'da kalır; `sinama` onları kullanır), faiz ve sektör içermez (kart bunlara bakmaz;
      KAP'a ~100 istek atılmaz). Tabanın aylık yenilenmesi (`evren-indir`) `TansuAylik` göreviyle ayın son günü 20:45'te yapılır
@@ -818,35 +848,38 @@ Getiri görülmeden yazılır; kural kaydına girer. (B-7, İ: 19-015)
      hataları eksik gün olarak zaten işlenir, yalnız bugünün kaynak günü hatası kartı durdurur.
    - Koşu 18:15'ten önce başlarsa kart üretilmez (yarım çubuk riski).
    - Kaynak erişilemezse sınama eski anlık görüntülerle sürer; yalnız canlı kart durur.
-   - Günlük anlık görüntüler 30 gün sonra silinir; deneme günlüğünde adı geçenler hiç silinmez.
-     (İ: 11-061)
-3. **Piyasa durumu etiketi:** yalnız bilgi. XU100 kapanış > SMA50 (YORUM). (B-19)
+   - Günlük anlık görüntüler silinmez (`veri/` silinmez; 5.11 silme yasağı). (karar.md:24; İ: 11-061 reddedildi, karar.md:30; bilet 03)
+3. **Piyasa durumu etiketi:** kart kararını ve motoru etkilemez (kapı değil, bilgi); K1 (b) örneklemesinde ve rapor bölmesinde kullanılır (3, 5.7). XU100 kapanış > SMA50 (YORUM). (B-19, İ: 11-078; bilet 03)
 4. **Kartlar** (P1, İ: 17-049, 17-050, 17-087):
    - Kâğıt ve Canlı ailelerin sinyalleri her gün yeni bir CSV dosyasına yazılır:
      `rapor/kartlar-YYYYMMDD.csv` (`;` ayraç, ondalık virgül, UTF-8 BOM).
    - Deneme aileleri gösterilmez.
-   - Sinyal yoksa yalnız başlık satırı yazılır. CSV hiç yoksa koşu çalışmamıştır.
+   - Sinyal yoksa yalnız başlık satırı yazılır. CSV'nin yokluğu tek başına "koşu çalışmadı" demez: başarısız koşu da kart yazmaz. Koşunun çalışıp çalışmadığını ve neden başarısız olduğunu `durum.txt` söyler (6.7). CSV'nin ilk satırı her zaman başlıktır; veri bilgisi (anlık görüntü, son çubuk, sembol sayısı) `durum.txt`'te ve raporun başlığındadır. (İ: 17-050, 17-087; İ: 13-082'nin CSV kısmı reddedildi: karar.md:32, bilet 03)
    - Raporda başlık altında sabit uyarı: "Tansu'dan esinlenen yorum".
 5. **Kart içeriği** (P1, P2, B-20, İ: 17-041, 01-079, 07-090, 08-009, 08-098, 09-041, 17-010, 10-051):
-   - **Sabit sütunlar:** Tarih; Hisse; Aile; Durum; Referans; Stop; Pozisyon %; Adet; Fiili risk; Likidite
-     sınırı TL; Kanıt; Kaynak.
-   - **Referans:** sinyal günü kapanışı, ham TL olarak (düzeltilmiş seviye × ham/düzeltilmiş oranı).
-   - **Stop:** "tahmini" etiketlidir (referans − 2 ATR). Gerçek stop, giriş dolunca Adım'da hesaplanır.
+   - **Sabit sütunlar** (CSV başlıkları Türkçe ASCII, `AGENTS.md` Adlar kuralı; İ: 11-051): `tarih`; `hisse`; `aile`; `durum`;
+     `referans`; `stop`; `pozisyon_yuzde`; `adet`; `fiili_risk`; `likidite_siniri_tl`; `kanit`; `kaynak`. Kart metni
+     (Kanıt, Durum değerleri) Türkçe karakterlidir. (İ: 17-041; bilet 03)
+   - **Referans:** sinyal günü kapanışı, ham TL olarak (düzeltilmiş seviye × ham/düzeltilmiş oranı). (İ: 01-079)
+   - **Stop:** ham TL'dir: (düzeltilmiş referans − 2 ATR) × ham/düzeltilmiş oranı; ATR düzeltilmiş seride hesaplandığı
+     için oran stopun tamamına uygulanır. "tahmini" etiketlidir. Gerçek stop, giriş dolunca Adım'da hesaplanır.
+     (İ: 01-079; bilet 03)
    - **Durum:** AKTİF / STOP / BOZULDU. (Bilet 14) AKTİF: giriş bekliyor ya da pozisyon açık. STOP: stop değdi
      (çıkış bugün ya da kilitli taban yüzünden bekliyor). BOZULDU: SMA250 gün sonu stopu, karantina çıkışı ya da giriş
      iptal. Kapanmış pozisyon kartı yalnız kapandığı günün CSV'sinde görünür.
      Bunlar ilk sürümün pozisyon durumlarıdır, Tansu'nun formasyon durumları değildir; BOZULDU, Tansu'nun formasyon geçersizliği anlamındaki "bozulma"sı değildir (araç, G02/g1; aktarım, tweet-abcd-geometrik-gecerlilik-kurallari:21; G13:21).
-   - (Bilet 14) **Tarih** sinyal günüdür. **Kaynak** "İş Yatırım <anlık görüntü kimliği>". Büyüklük (Pozisyon %,
+   - (Bilet 14) **Tarih** sinyal günüdür. **Kaynak** her satırda "Tansu'dan esinlenen yorum · İş Yatırım <anlık görüntü kimliği>": yorum uyarısı ve veri kaynağı aynı
+     hücrededir (İ: 17-087, bilet 03). Büyüklük (Pozisyon %,
      Adet, Fiili risk, Likidite sınırı) 1.000.000 TL kâğıt özkaynağıyla ve sinyal gününün tahmini stopuyla hesaplanır
      (nakit sınırı yok; gerçek nakit bilinmez). Stop sütunu giriş dolunca Adım'ın gerçek stopunu gösterir, etiketsiz.
      Stop hücresi "98,44 (tahmini)" biçimindedir. Çift ailesi Kâğıt olursa çift kartı henüz yazılmadı: koşu SORUNLU olur.
-   - (Bilet 14) **Kanıt satırı** son resmi `durum` satırının `kanit` alanından gelir (işlem sayısı, %0,3 masrafta
-     işlem başına fazla getiri, portföy fazla getirisinin yıllık blok bootstrap aralığı). Aralık sıfırı içeriyorsa
-     "ayırt edilemiyor". Kâğıt dönem = ilk Kâğıt `durum` satırından geçen gün // 30, ölçüt 6 için gereken 6 ay'a bölünerek yazılır.
-   - **Kanıt satırı:** aralık birimi ve yöntemi yazılır. %95 aralık sıfırı içeriyorsa "ayırt edilemiyor"
-     yazar; p, Holm p ve toplam deneme sayısı raporun "Ayrıntı" bölümündedir.
-   - **Kanıt örneği** (Kâğıt aile): "Kâğıt · 148 işlem · rastgele kurala göre işlem başına fazla getiri
-     +%0,9 (günlük seri, blok bootstrap %95 aralık +%0,2 ile +%1,6) · kâğıt dönem 3/6 ay".
+   - **Kanıt satırı** (tek tanım; İ: 09-041, 17-041; bilet 03): son resmi `durum` satırının `kanit` alanından gelir. İki
+     ayrı ölçü ayrı ifade edilir: işlem düzeyinde işlem sayısı ve %0,3 masrafta işlem başına fazla getiri; günlük seri
+     düzeyinde portföy fazla getirisinin (K2'ye göre) yıllık blok bootstrap %95 aralığı, birimi ve yöntemiyle. Aralık
+     sıfırı içeriyorsa "ayırt edilemiyor" yazar. Kâğıt dönem = ilk Kâğıt `durum` satırından geçen gün // 30, ölçüt 6 için
+     gereken 6 aya bölünerek yazılır. p, Holm p ve toplam deneme sayısı raporun "Ayrıntı" bölümündedir.
+   - **Kanıt örneği** (Kâğıt aile): "Kâğıt · 148 işlem · sepete göre işlem başına fazla getiri +%x,x (%0,3
+     masraf) · portföy fazla getirisi (K2'ye göre, yıllık, blok bootstrap %95 aralık +%x,x ile +%x,x) · kâğıt dönem 3/6 ay".
 6. **Açık kartlar ayrıca saklanmaz:** her gün sinyal gününden itibaren Adım ile yeniden hesaplanır. Günün
    kart çıktısı `kayit/kartlar.jsonl`'e yalnız eklenir; kâğıt üstü dönem geriye dönük değişmez. (C-5)
 7. **`rapor/durum.txt`** (İ: 16-036, 16-070, 13-082, 17-048):
@@ -906,12 +939,12 @@ Adım 1–9 tamamlandı (MVP biletleri `.scratch/arsiv/tansu-mvp/issues/`, 05–
    birincil) kod, tarih ve bazen açıklama verir. Tamlığı doğrulanmadı (KAP "üyeliği sona erenler" sayfasına
    ulaşılamadı).
 5. 13.03.2020 öncesinde limit bütün paylarda ±%20 mi, bazı pazarlarda ±%15 mi (ikincil kaynak)? Limit
-   fiyatı adıma içe mi yuvarlanıyor? Bilet 03'te veriyle ölçülür. (±%10 döneminde taban = önceki
+   fiyatı adıma içe mi yuvarlanıyor? Bilet 03'te veriyle ölçülür. (±%10 döneminde baz fiyat = önceki
    kapanış doğrulandı.) Bilet 07, yalnız ikincil haber kaynağı (borsaningundemi.com, hurriyet.com.tr
    "Borsa İstanbul'dan marjlara tedbir", 13.03.2020): 30.11.2015 öncesi iki seansta ±%10, 30.11.2015'te
    BISTECH ile ±%20; 13.03.2020'de ±%20 ya da ±%15'ten ±%10'a. Birincil kaynak (Borsa İstanbul duyurusu,
-   Pay Piyasası Prosedürü) açılamadı. Kod 2010–2015 için ±%20 kullanır (karantina gevşek kalır; ilk sinyal
-   30.11.2015) ve ±%15 grubunu bilmez; birincil kaynak bulunana dek değişmedi.
+   Pay Piyasası Prosedürü) açılamadı. Kod 2010–2015 için ±%20 kullanır (karantina gevşek kalır; sinyal günleri
+   01.12.2015'ten sayılır, rejim başı 30.11.2015; 5.1) ve ±%15 grubunu bilmez; birincil kaynak bulunana dek değişmedi.
 6. Sıkışma oranının paydası düşüş trendinde EMA200 mü en küçük EMA mı? KRDMD'de ikisi aynı.
 7. Bireysel yatırımcı için vergi.
 8. `HACIM` toptan ya da çapraz işlemleri içeriyor mu? İçeriyorsa medyan şişkin olabilir. (İ: 08-027)
