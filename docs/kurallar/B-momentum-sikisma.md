@@ -309,7 +309,7 @@ Görsel kökü: `...\assets\<klasör>\`. Not dosyaları kökte. Aşağıda "gp-N
 | parametre | değer | kaynak |
 |---|---|---|
 | Skewness penceresi | 63 gün | görsel (başlık) |
-| Eşikler | -0.50, 0, +0.50, +1 | X metni (not, ilk el alıntı) |
+| Eşikler | -0.50, 0, +0.50, +1 | X metni (not, aktarılan tweet, ikinci el) |
 | Rolling alpha penceresi, benchmark | yok | BELİRSİZ |
 
 - Giriş kuralı: yok (risk/etiket katmanı). Alpha için hiçbir kural yok.
@@ -390,7 +390,7 @@ Görsel kökü: `...\assets\<klasör>\`. Not dosyaları kökte. Aşağıda "gp-N
 
 - Kaynak: `tweet-medyan-temelli-finansal-indikatorler.md`, `tweet-aritmetik-ortalama-outlier-rejim-tehlikesi.md` (görsel yok).
 - Tansu'nun ifadesi: kısa alıntı (not, X'ten): `Ortalamaları temel alan indikatörler... Medyan temelli çalışın.` Örnek (ikinci el): 19 gün 100 TL, 20. gün 50 TL: SMA20 = (19*100 + 50)/20 = 97.5, medyan 100.
-- Tanım/parametre/giriş: YOK (yöntem yönlendirmesi). Uygulanabilir mi: KISMEN (hareketli medyan hesaplanır; sinyal kuralı YOK). Güven: medyan tweeti birinci el (X doğrulandı), örnek ikinci el.
+- Tanım/parametre/giriş: YOK (yöntem yönlendirmesi). Uygulanabilir mi: KISMEN (hareketli medyan hesaplanır; sinyal kuralı YOK). Güven: medyan tweeti ikinci el (aktarılan tweet), örnek ikinci el.
 
 ## 29. BIST100 + VIX uzun pozisyon kontrol listesi ve "Piyasanın Nabzı" (gp-113, gp-114, gp-98)
 

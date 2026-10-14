@@ -638,7 +638,7 @@ Not: YORUM: bu katalogda ekranlar Tansu'ya atfedilen araç çıktıları olarak 
 - Belirsiz kalanlar: aralık seçim algoritması, küme eşiği, `31.2%` anlamı, giriş/stop/hedef. Hiçbiri yok.
 - Tansu'nun kanıtı: yok (eğitim görselleri, CAT seçilmiş).
 - Günlük bedava veriyle uygulanabilir mi: evet (hesap kolay). Anlamlı kural için aralık seçimi YORUM.
-- Kaynak güveni: birinci el (eğitim metinleri; Eğitim, G120/g1–g4). YORUM: bu katalogda paylaşılan eğitim materyali olarak okunur; üretici doğrulanmış değildir.
+- Kaynak güveni: yazarlığı belirsiz, ikinci el (eğitim metinleri; Eğitim, G120/g1–g4). YORUM: bu katalogda paylaşılan eğitim materyali olarak okunur; üretici doğrulanmış değildir.
 
 ---
 
@@ -684,7 +684,7 @@ Sıralama: 1 = en hazır. "Hazır" = oran, giriş, çıkış ve etiket Tansu'nun
    - Hazır: 0,618/0,786 düzeltme, 1,272/1,618 itiş (ikinci el).
    - Boşluk: toleranslar, çapa, giriş ve stop.
 9. Birleşik tarayıcı (talep + düşen direnç + Fibo + ABCD) (kural 13) ve kanal (kural 14).
-   - Hazır: çizgi temas = 3, lookback 20/30, EMA 5/8/13.
+   - Hazır: temas sayısı, lookback ve EMA parametreleri A §3 (parametre tablosu) sahibindedir.
    - Boşluk: talep bölgesi kuralı, delta verisi, eşikler, zorunlu katmanlar. Kodlanamaz.
 10. Çoklu aralık Fibonacci (kural 19), Fibonacci gün sayımı (kural 18), Siyah/Beyaz Kuğu (kural 13), CD şiddeti (kural 6).
     - Hazır değil: konsept, oran veya kural yok. Siyah ve Beyaz Kuğu oranları hiçbir yerde yok.

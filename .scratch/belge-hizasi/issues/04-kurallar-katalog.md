@@ -2,8 +2,8 @@
 
 **What to build:** KURALLAR.md, `docs/kurallar/A–E` ve `docs/sadakat.md` arasındaki eski aktarımlar ve tekrarlar
 giderilir; her bilgi sahip dosyada kalır, ötekiler atıf verir. Kapsam istisnası (04c, 14.10): iki yerel taslak
-(`docs/strateji-modulleri-taslak.md`, `docs/strateji-taslak/tasarim-8.md`) git dışı çalışma belleğidir, sahip tablosunda
-değildir ve başlarındaki geçerlilik notu sahibi A–E/KURALLAR/TASARIM olarak gösterir; sapma denetiminin dışındadır
+(`docs/strateji-modulleri-taslak.md`, `docs/strateji-taslak/tasarim-8.md`) git dışı çalışma belleğidir. Taslaklar AGENTS sahip tablosunda olgu sahibi olmayan öneriler olarak
+listelenir ve sapma denetiminin dışındadır; başlarındaki geçerlilik notu sahibi A–E/KURALLAR/TASARIM olarak gösterir
 (AGENTS "Documents and owners"). Taslaklardaki tekrar bulgu sayılmaz; yalnız geçerlilik notu olmayan bir taslak bulgu olur.
 
 **Blocked by:** 01, 02

@@ -65,7 +65,7 @@ Uyarı 4: 05.10 ön denemesi "4 ATR hedef" ve "kapanış EMA50 altı bozulma" ku
 - Tanım:
   1. Giriş günü: `stop = giriş_fiyatı − 2 × ATR` (ATR giriş kararında bilinen son tamamlanmış değer, YORUM).
   2. Her gün: `Low ≤ stop` ise çık (gün içi temas).
-  3. Gün düşüğü stopun altındaysa dolum fiyatı TASARIM 5.3'tedir (min(stop, AOF); projede açılış verisi yok, TASARIM 5.1); kaynak boşlukta dolumu açıklamaz (YORUM).
+  3. Gün düşüğü stopun altındaysa dolum fiyatı TASARIM 5.3'tedir; kaynak boşlukta dolumu açıklamaz (YORUM).
   4. Aynı gün hem stop hem hedef değerse stop önce (YORUM, muhafazakâr).
    5. YORUM: bizim seçimimiz giriş ATR'si değişse bile stopu sabit tutmaktır. Aktarım giriş−2ATR ile güncel Close−2ATR'yi birlikte verir; başlangıç stopu ile güncelleme politikası ayrımı açık değildir (Aktarım, tweet-atr-risk-butcesi-position-sizing-stop-loss:22).
 - Parametreler:
@@ -78,7 +78,7 @@ Uyarı 4: 05.10 ön denemesi "4 ATR hedef" ve "kapanış EMA50 altı bozulma" ku
 | ATR periyodu | yok | YORUM (14) |
 | ATR sabit mi, hareketli mi | kaynak genel güncelleme politikası vermiyor | YORUM: girişte sabit bizim seçimimiz; başlangıç/güncelleme ayrımı belirsiz (Aktarım, tweet-atr-risk-butcesi-position-sizing-stop-loss:22) |
 | tetik fiyatı: Low mu, son işlem mi | yok | YORUM (günlük Low) |
-| boşlukta dolum | yok | YORUM (TASARIM 5.3: min(stop, AOF)) |
+| boşlukta dolum | yok | YORUM (TASARIM 5.3) |
 | stop fiyatına limit emir mi, piyasa emri mi | yok | YORUM (piyasa) |
 
 - Belirsiz kalanlar: G-125 etiketindeki stop sayısı giriş − 2×ATR midir? Rakamlar okunamadığı ve giriş fiyatı grafikte okunmadığı için sınanamaz. G-125 etiketi soldadır, yani giriş anında yazılmış stop gibi görünür; bunu doğrulayan metin yok. Stop long için yazılmış; short için Tansu bir şey demedi.
@@ -92,7 +92,7 @@ Uyarı 4: 05.10 ön denemesi "4 ATR hedef" ve "kapanış EMA50 altı bozulma" ku
 - Tansu'nun ifadesi: NotebookLM örneği SMA250 altında kapanışta çıkışı gösterir (NotebookLM, G115/g1). Aktarımda ortalama seçimi okura bırakılır (Aktarım, G115:20); SMA200, EMA200, EMA250 alternatifleri vardır. YORUM: SMA250'yi kesin giriş filtresi olarak seçmek bizim kararıdır; giriş karşılaştırması kaynakta yoktur.
 - Tanım:
   1. Her gün kapanışında `Close < SMA250` ise çıkış sinyali.
-  2. Çıkış zamanı ve fiyatı TASARIM 5.5'tedir (ertesi günün AOF'u, YORUM). Tansu "gün sonu" der; kapanışta emir mi, ertesi gün mü belirtmedi.
+  2. Çıkış zamanı ve fiyatı TASARIM 5.5'tedir (YORUM). Tansu "gün sonu" der; kapanışta emir mi, ertesi gün mü belirtmedi.
   3. K2 acil stop bundan bağımsız ve önceliklidir (YORUM; infografik iki kuralı yan yana verir, öncelik sırasını yazmaz).
 - Parametreler:
 
@@ -102,7 +102,7 @@ Uyarı 4: 05.10 ön denemesi "4 ATR hedef" ve "kapanış EMA50 altı bozulma" ku
 | alternatifler | SMA200, EMA200, EMA250 | not G-115 |
 | tetik | kapanış < ortalama | görsel G-115 |
 | tampon/histerezis | yok | YORUM (0) |
-| çıkış zamanı | yok | YORUM (ertesi günün AOF'u, TASARIM 5.5) |
+| çıkış zamanı | yok | YORUM (TASARIM 5.5) |
 | fiyat bazı: düzeltilmiş mi, ham mı | yok | YORUM (düzeltilmiş) |
 
 - Belirsiz kalanlar: Seçim kuralı (hangi ortalama?). Giriş de SMA250 üstü mü gerektirir (not: giriş bileşenlerinden biri; geri kalan bileşenler verilmedi). 250 gün veri yoksa ne olacak (YORUM: sinyal yok).
@@ -227,7 +227,7 @@ Uyarı 4: 05.10 ön denemesi "4 ATR hedef" ve "kapanış EMA50 altı bozulma" ku
 ## K12. Gartley takip tablosu: stop ve TP1/TP2 (G-123) ve SAYAS aracı
 
 - Sahibi: C §7 (G-123 tablosu, SAYAS, iki ayrı TP1 tanımı, stop seçenekleri, SAYAS doğrulaması). Burada tekrar edilmez. (bilet 04, 14.10)
-- Risk/çıkış yönünden okuma: tek genel TP1 ve tek genel stop seçimi yoktur (C §7); girişte R/R eşiği K23'tedir.
+- Risk/çıkış yönünden okuma: tek genel TP1 ve tek genel stop seçimi yoktur (C §7); Gartley girişinin R/R eşiği C §7'dedir (K23 günlük işlem 5 kapısıdır).
 
 ## K13. Kırılım, FVG, retest, teyit kartı (AKFIS): ENTRY, STOP, TP1-3
 
@@ -354,7 +354,7 @@ Uyarı 4: 05.10 ön denemesi "4 ATR hedef" ve "kapanış EMA50 altı bozulma" ku
   - 5 kapı ve kabul eşiği örneği: sahibi B §20. (bilet 04, 14.10)
 - Tanım: `R/R = (hedef − giriş) / (giriş − stop)`; eşik B §20'dedir.
 - Parametreler: R/R eşiği ve beş kapının ölçüleri B §20'dedir.
-- YORUM: bizim sıra seçimimiz önce teknik geçersizlik stopu, sonra R/R hesabı ve yetersiz işlemi reddetmektir. Günlük işlem metni ile Gartley farklı bağlamlardır; bu sıra bütün sistemler için Tansu kuralı değildir, genel uygulanma kapsamı açık değildir (Aktarım, tweet-yuksek-ihtimalli-gunluk-islem-bes-kapi:48–49; G123:42–49).
+- YORUM: bizim sıra seçimimiz önce teknik geçersizlik stopu, sonra R/R hesabı ve yetersiz işlemi reddetmektir. Günlük işlem metni ile Gartley farklı bağlamlardır (Gartley için R/R eşiği C §7); bu sıra bütün sistemler için Tansu kuralı değildir, genel uygulanma kapsamı açık değildir (Aktarım, tweet-yuksek-ihtimalli-gunluk-islem-bes-kapi:48–49; G123:42–49).
 - Tansu'nun kanıtı: G-109'un R/R'si (0,20-0,32) bu eşiğin altında kalır (C §11). Tansu bunu kendi paylaştığı çıktıda açıklamıyor.
 - Bedava günlük veri: Evet.
 - Kaynak güveni: İKİNCİ EL. Orta.
@@ -428,7 +428,7 @@ Eksik (Tansu söylemedi), hepsi YORUM ile doldurulmalı ve YORUM etiketli kalmal
 12. Short taraf için hiçbir ATR kuralı verilmedi (yalnız not "short için tersi").
 13. Açık noktalar: (i) TP1 AD×0,382 (eğitim) ve 1:1 R/R (SAYAS) için genel seçim. (ii) Stop/R:R sırasının strateji kapsamı. (iii) Fırsat anlatısı işlem tetiği veya şok frenine istisna vermez. (iv) 10 gün ile 20 barın ortak politikası.
 
-Bizim kanıt kapımız: Bu paketin hiçbir parçası için Tansu'nun gerçek işlem sonucu veya tam örneklemli backtest'i yok. Yalnız tek hisse, seçilmiş örnekler (SMRTG 7/10, ISKPL 5/5, GUBRF, BALAT, AKFIS) ve ML 9/13 var.
+Bizim kanıt kapımız: Bu paketin hiçbir parçası için Tansu'nun gerçek işlem sonucu veya tam örneklemli backtest'i yok. Yalnız tek hisse ve seçilmiş örnekler var (sonuç sayıları sahibinde: C §7 ve ilgili bölümler).
 
 # (b) Tansu'nun değerlendirme ilkeleri: bizim backtest için kontrol listesi
 
@@ -452,7 +452,7 @@ Grup 3. Risk (K1-K5, K23, G-118)
 - [ ] Lot stop mesafesinden hesaplanır; %1 / 2 ATR paylaşılan NotebookLM örneğidir, genel risk oranı seçimi YORUM'dur (NotebookLM, G115/g1).
 - [ ] Aileye özgü çıkış ve risk yöntemini raporla. YORUM: bu kontrol listesinde ayrı stop kullanımı aranır; rotasyon grafiği genel stop politikasını açıklamaz (Aktarım, G125:20; Araç, Rota/g2; Eğitim, G118/g1). İstisna: seçilmiş çift rotasyonu bölmesi stopsuzdur, çıkışı karşı uçta geçiştir (TASARIM §5.5–5.6; KURALLAR §3); bu madde o bölmeye uygulanmaz. (bilet 04, 14.10)
 - [ ] Planlanan kayıp ve gerçekleşen kaybı kıyasla (boşluk etkisi).
-- [ ] YORUM: bizim sıra seçimimiz teknik geçersizlik stopu, sonra R/R 1:2 veya 1:3 kapısıdır; bütün sistemlerde ortak Tansu sırası açık değildir (Aktarım, tweet-yuksek-ihtimalli-gunluk-islem-bes-kapi:48–49; G123:42–49).
+- [ ] YORUM: bizim sıra seçimimiz teknik geçersizlik stopu, sonra R/R kapısıdır (eşik B §20); bütün sistemlerde ortak Tansu sırası açık değildir (Aktarım, tweet-yuksek-ihtimalli-gunluk-islem-bes-kapi:48–49; G123:42–49).
 - [ ] Plana sadakat: kural dışı çıkış/giriş yok.
 
 Grup 4. Doğruluk ve baz oran (K24, K20)

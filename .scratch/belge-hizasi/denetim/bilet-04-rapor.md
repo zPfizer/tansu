@@ -178,3 +178,13 @@ Kök neden: yazıcı kısmi taramayla "kopya kalmadı" dedi; getiri kontrolü ra
 ## 04b denetim tur 3 (Codex, 14.10): KALDI; yeniden tanım 04c
 
 Kök neden: taslaklar A–E'nin okunmasından türeyen çalışma belleğidir; her turda yeni "eşdeğer formül" bulunur, atıfla bitmez. Yeniden tanım (04c): açık kapsam istisnası. AGENTS sahip tablosuna satır eklendi (taslaklar olgu sahibi değil, sapma denetimi dışı); `hiza-c-istem.md` kapsamından çıkarıldı; bilet 04 metni güncellendi. Taslaklardaki formül kopyaları bu kararla bulgu değildir; iki taslağın geçerlilik notu sahibi gösterir. Not: dalda başka bir oturumun commit'i var (e3d27e9, AGENTS ve PR şablonu, 2 satır).
+
+## 04c denetim tur 1 (Codex, 14.10): KALDI
+
+- Kapsam cümlesi tek: düzeltildi (`hiza-c-istem.md:36`, bilet `04-kurallar-katalog.md:5–6`, `spec.md:42–43`); hepsi "taslaklar AGENTS sahip tablosunda olgu sahibi olmayan öneriler olarak listelenir, sapma denetimi dışındadır".
+- ÇELİŞKİ B:312, B:393, C:641 ↔ GLOSSARY:11–12: düzeltildi (B:312, B:393 "ikinci el, aktarılan tweet"; C:641 "yazarlığı belirsiz, ikinci el").
+- ÇELİŞKİ E:230, E:354–357 ↔ C:241, C:266: düzeltildi (E:230 ve E:357 Gartley R/R eşiği için C §7'ye atıf).
+- TEKRAR C:687 ↔ A:85–88: düzeltildi (C:687 A §3 atfı).
+- TEKRAR E:68, 81, 95, 105 ↔ TASARIM:304, 363: düzeltildi (yalnız TASARIM 5.3 ve 5.5 atfı kaldı).
+- TEKRAR E:431 ↔ C:187–188; E:455 ↔ B:328–329: düzeltildi (sonuç sayıları kaldırıldı; E:455 eşik için B §20 atfı).
+- Denetim onay kutusu işaretsiz; tur 2 bekliyor.
