@@ -69,3 +69,9 @@ Tek değişiklik: "Definition of Done" başlığı altına bir satır: ölçütl
 ## Levent'e sorular
 
 Yok. Kararlar (Status değerleri, eşdeğer aday) kodu ve davranışı değiştirmez; "(bilet 05, 14.10)" ile etiketlendi.
+
+## Denetim tur 2 (Codex, 14.10)
+
+- A2 düzeltildi: `issue-tracker.md` `done (kısa not)`; dal adı isteğe bağlı; bilet 06 örnek.
+- A4 düzeltildi: `AGENTS.md` Git maddesi yalnız-ekleme kuralını tekrar etmez; TASARIM §5.11 atfı. Tur 1 satırı a-26 "düzeltildi" iddiası buna bağlıydı.
+- A10 düzeltildi: `KURALLAR.md` eşdeğer aday cümlesindeki ölçüm rakamları kaldırıldı; `docs/sadakat.md` EMA tablosuna atıf.

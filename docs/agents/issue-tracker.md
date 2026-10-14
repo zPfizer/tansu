@@ -18,7 +18,7 @@ This file owns the contract of the `Status:` line. `triage-labels.md` owns only 
 - `claimed`: work started. Set it and save before any work.
 - `in-review`: the work is on its branch and waits for the independent audit or the PR review.
 - `done (PR #N, hash)`: merged. The parentheses name the PR and the merge commit.
-- `done (dal, kısa not)`: delivered on its branch, not merged. The parentheses name the branch and one short note (what is delivered, what moved elsewhere). When the merge happens, the value becomes `done (PR #N, hash)`.
+- `done (kısa not)`: delivered, not merged. The parentheses hold one short note: what is delivered and what moved elsewhere; the branch name is optional (example: ticket 06 of `belge-hizasi`). When the merge happens, the value becomes `done (PR #N, hash)`.
 - `resolved`: the closing value of a wayfinder child ticket (see "Wayfinding operations").
 
 A ticket is closed when its value starts with `done` or `resolved`. (bilet 05, 14.10)

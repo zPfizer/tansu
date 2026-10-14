@@ -41,8 +41,7 @@ first. Write the reason. Then write the code.
 - **Do not look at the return (Getiriye bakma):** See `docs/KURALLAR.md` §4.
 - **Git (this repository only):** Do not use `rebase`, `--amend`, `--force` (and `--force-with-lease`), `reset --hard`, `clean -f`, `branch -D`,
   `checkout .`, `restore .`, `git add .`, or `git add -A` (for Claude, a permission deny blocks them: `permissions.deny` global and `.claude/settings.json`). Add files
-  by name. Data (`veri/`) and report output (`rapor/`) do not go into git. Do not delete `veri/`. `kayit/` goes into git (the git history is the
-  proof that the log only gets appended; the log rules are in TASARIM §5.11). In a commit, leave the `kayit/` files only added, not
+  by name. Data (`veri/`) and report output (`rapor/`) do not go into git. Do not delete `veri/`. `kayit/` goes into git; the log rules (append only, git as proof) are in TASARIM §5.11. In a commit, leave the `kayit/` files only added, not
   modified. This rule covers this repository only. The global Stop hook runs `git add -A -- receipts "*850-Companion*"` in the brain repository (`YONETIM/beyin`). That is outside this Tansu rule.
 - **Task Scheduler (Görev Zamanlayıcı):** Two tasks are installed and enabled on this machine since the first official run (ticket 15, 06.10):
   `TansuGunluk` (`kurulum/tansu-gunluk.xml`, `python -m tansu gunluk`) and `TansuAylik` (`kurulum/tansu-aylik.xml`, `python -m tansu evren-indir`).
