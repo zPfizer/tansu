@@ -10,7 +10,8 @@ Okuma kuralları:
 - **YORUM:** kaynakta olmayan, bizim doldurduğumuz değer. Tansu'nun fikirleri esastır: YORUM yalnız Tansu'nun o konuda
   fikri yoksa geçerlidir. Tansu'nun fikri varsa ona uyulur; uygulanamıyorsa (ör. veride açılış yok) neden yazılır (Levent
   10.10). Bir YORUM'un sınamada denenen her değeri yeni
-  deneme sayılır. Sadakat kontrolünde denenen aday formüller deneme sayısına girmez, p üretmez; seçilen
+  deneme sayılır; istisna: önceden yazılmış sağlamlık ızgarasının hücreleri ve masraf senaryoları deneme sayısına
+  girmez (TASARIM 5.10, 5.11; İ: 09-056). Sadakat kontrolünde denenen aday formüller deneme sayısına girmez, p üretmez; seçilen
   formül kural kaydına girer (TASARIM 5.11, İ: 10-033, 04-090).
 
 ## 1. Ana bulgular
@@ -104,7 +105,7 @@ yapılır.
    - Giriş (YORUM): dönem bittikten sonraki 10 gün içinde kapanış, dönemdeki en yüksek gün yükseğinin
      üstüne çıkarsa ertesi gün. Dönem başına tek giriş. Stop ve çıkış: risk paketi. Hedef yok.
    - Not: Tansu'nun ICBCT "Pre Signal"i sıkışma sürerken çıkıyor; bizim tetik bitişten sonra (YORUM).
-   - K1 ön şartı: sıkışma dönemi bitmiş ve 10 günlük pencere açık günler. Ek kol: sıkışmasız aynı kırılım (kapanış önceki 20 günün en yüksek yükseğinin üstünde, sıkışma penceresinde değil; 20 YORUM, TASARIM 5.7).
+   - K1 ön şartı: (a) türünde sıkışma dönemi bitmiş ve 10 günlük pencere açık günler; (b) türünde sıkışma penceresi şartı aranmaz, yalnız hisse düzeyi şartlar (kapanış ≥ SMA250, ısınma, evren, karantina) aranır (TASARIM 5.7; bilet 03). Ek kol: sıkışmasız aynı kırılım (kapanış önceki 20 günün en yüksek yükseğinin üstünde, sıkışma penceresinde değil; 20 YORUM, TASARIM 5.7).
    - Sağlamlık ızgarası (TASARIM 5.10, YORUM): eşik {%1,0; %1,2; %1,5}, en az gün {2; 3; 5}, giriş
      penceresi {5; 10; 20}. (İ: 06-072)
 
