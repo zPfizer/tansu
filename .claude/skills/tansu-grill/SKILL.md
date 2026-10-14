@@ -1,9 +1,9 @@
 ---
 name: tansu-grill
-description: Tansu'da bir fikri ya da tasarımı sorgulayan görüşme. Matt'in grilling ve domain-modeling skill'lerini Tansu'nun ölçütleriyle çalıştırır. Tansu'da yeni bir kural, parametre, veri kaynağı ya da davranış değişikliği konuşulurken kullan.
+description: Tansu'da bir fikri ya da tasarımı sorgulayan görüşme. `mattpocock-skills:grilling` ve `mattpocock-skills:domain-modeling` skill'lerini Tansu'nun ölçütleriyle çalıştırır. Tansu'da yeni bir kural, parametre, veri kaynağı ya da davranış değişikliği konuşulurken kullan.
 ---
 
-Skill aracını iki kez çağır: "grilling" ve "domain-modeling". Görüşme boyunca ayrıca şu üç ölçütü uygula.
+Skill aracını iki kez çağır: `mattpocock-skills:grilling` ve `mattpocock-skills:domain-modeling`. Görüşme boyunca ayrıca şu üç ölçütü uygula.
 Kuralların metni sahip dosyalarındadır; bu skill yalnız ne zaman bakılacağını söyler.
 
 ## 1. Tansu önce gelir
