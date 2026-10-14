@@ -4,9 +4,9 @@ Kaynak: beyindeki Tansu havuzu (14.10 sayımı: 258 not, 228 görsel). Ayrıntı
 bu belge onların dizini ve seçimidir. Her kuralın kaynağı, parametresi ve "YORUM" etiketi orada.
 
 Okuma kuralları:
-- **Birinci el:** Tansu'nun aracının görsel çıktısı (başlık, etiket, tablo, kod).
-- **İkinci el:** notlardaki Claude özeti ya da aktarılan tweet. Kural olarak tek başına kullanılmaz.
-- **NotebookLM:** Tansu'nun paylaştığı ama kendi aracından çıkmayan infografikler. Ayrı işaretlenir.
+- **Birinci el** (GLOSSARY): kuralın dayanağı bu kaynaktır. Not ile görsel çelişirse görsel geçerlidir (§1 madde 3).
+- **İkinci el** (GLOSSARY): kural olarak tek başına kullanılmaz.
+- **NotebookLM** (GLOSSARY): ayrı işaretlenir.
 - **YORUM:** kaynakta olmayan, bizim doldurduğumuz değer. Tansu'nun fikirleri esastır: YORUM yalnız Tansu'nun o konuda
   fikri yoksa geçerlidir. Tansu'nun fikri varsa ona uyulur; uygulanamıyorsa (ör. veride açılış yok) neden yazılır (Levent
   10.10). Bir YORUM'un sınamada denenen her değeri yeni
@@ -24,21 +24,21 @@ Okuma kuralları:
 
 ## 2. Dizin
 
-Hazırlık: **H** = birinci elden kodlanabilir, az YORUM · **K** = kısmen, önemli YORUM · **X** = kodlanamaz.
+Hazırlık sütunu: H, K ve X anlamı için GLOSSARY "Hazırlık" maddesine bakın.
 
 ### Giriş aileleri
 | Kural | Dosya | Hazırlık | Birinci el olan | Eksik (YORUM) | Tansu'nun kanıtı |
 |---|---|---|---|---|---|
-| Çift rotasyonu (z-skor ±2, ΔZ dönüşü, T+1 açılış, hep yatırımda) | D | **K** | ±2, ΔZ tanımı = Z_t − Z_{t−1} (rakamla doğrulandı), yön, T+1 | sapma formülü (40.560 adayla bulunamadı), pencere, tek gün ΔZ yeterliliği, çift seçimi. Ham fiyat bizim seçimimiz (YORUM). Örnek ham fiyatla uyumlu. Genel düzeltme politikası açık değil. | VAKBN–GARAN +%52,9 (B&H +%20,9, MaxDD −%27,4); CIMSA–OYAKC +%49,2; bağı kopan çift ≈−%21 |
-| AB=CD + hedef merdiveni | C | **K** | D = C + r(B−A), r 1,0/1,27; BC ≤ AB; hedef D + {0,618; 1; 1,618}(A−D) (rakamla doğrulandı) | yön (SMRTG işlemleri aşağı yönlü), pivot ayarı, oran toleransı, stop | SMRTG 12 kalıp (7 hedef, 3 stop) +%305; ISKPL 5/5 +%610; tek hisse, masrafsız, C fiyatından giriş |
+| Çift rotasyonu (z-skor ±2, ΔZ dönüşü, T+1 açılış, hep yatırımda) | D | **K** | ±2, ΔZ tanımı = Z_t − Z_{t−1} (rakamla doğrulandı), yön, T+1 | sapma formülü (sadakat turlarında bulunamadı, §4), pencere, tek gün ΔZ yeterliliği, çift seçimi. Ham fiyat bizim seçimimiz (YORUM). Örnek ham fiyatla uyumlu. Genel düzeltme politikası açık değil. | VAKBN–GARAN ve CIMSA–OYAKC raporları, bağı kopan çift (rakamlar D "Tansu'nun kanıtı"nda) |
+| AB=CD + hedef merdiveni | C | **K** | D = C + r(B−A), r 1,0/1,27; hedef D + {0,618; 1; 1,618}(A−D) (rakamla doğrulandı). BC ≤ AB ikinci eldir (not; C §3), birinci el sayılmaz | yön (SMRTG işlemleri aşağı yönlü), pivot ayarı, oran toleransı, stop | SMRTG ve ISKPL sonuçları C §5'te; tek hisse, masrafsız, C fiyatından giriş |
 | EMA sıkışması (KRDMD) | B | **H** | EMA20/50/100/200, tolerans %1,2, en az 3 gün; oran formülü sadakatle çözüldü (§4) | giriş tetiği | Tek örnek (sıkışmadan sonra yükseliş) |
 | Yükselen kanal alt bant teması (AEFES) | A | **K** | Lookback 120, 3/3 temas, Low-Bant %, Kapanış-Bant % | kanal çizim yöntemi, tolerans, stop/hedef | Tek örnek, sonuç yok |
-| Kırılım + range retest + FVG (AKFIS A+) | A, E | **K** | Sıra: konsolidasyon → kırılım → FVG → geri test → teyit → giriş; stop FVG altı; 3 hedef (~1/1,5/2R ölçüm) | kutu süresi, FVG ve geri test toleransı, puan | 2 seçilmiş olumlu örnek |
-| Gartley | C, E | **K** | AB/XA 0,618; BC/AB 0,382–0,886; D 0,786 XA; stop X | tolerans; D formülü tabloda ters; TP kaynakları çelişiyor | Yok |
-| BOS + Fib altın bölge (0,618–0,786) + FVG/OB | A, C | **K** | Fib seviyeleri; stop Fib 1; TP1 Fib 0 (ikinci el) | BOS, FVG, OB tanımı | Tek örnek |
+| Kırılım + range retest + FVG (AKFIS A+) | A §1 | **K** | Sıra: konsolidasyon → kırılım → FVG → geri test → teyit → giriş; stop FVG altı; 3 hedef (~1/1,5/2R ölçüm) | kutu süresi, FVG ve geri test toleransı, puan | 2 seçilmiş olumlu örnek |
+| Gartley | C §7 | **K** | AB/XA 0,618; BC/AB 0,382–0,886; D 0,786 XA; stop X | tolerans; D formülü tabloda ters; TP kaynakları çelişiyor | Yok |
+| BOS + Fib altın bölge (0,618–0,786) + FVG/OB | A §10 | **K** | Fib seviyeleri; stop Fib 1; TP1 Fib 0 (ikinci el) | BOS, FVG, OB tanımı | Tek örnek |
 | Elliott 2. dalga (BRYAT) | C | **K** | Başlık şablonu; kurallar ikinci el (%10 itki, 0,50–0,786) | dalga sayımı | Sonuçsuz |
 | Düşen direnç kırılımı + talep (LIDER/BALAT) | A, C | **K** | Temas 3, Lookback 20/30, EMA5/8/13 | talep bölgesi, kümülatif delta (veri yok) | LIDER olumlu, BALAT başarısız |
-| Fincan-kulp (GUBRF) | B, E | **K** | hedef = kırılım + derinlik; R/R 1:2,27 | dedektör, stop | Tek örnek |
+| Fincan-kulp (GUBRF) | B §21 | **K** | hedef = kırılım + derinlik; R/R 1:2,27 | dedektör, stop | Tek örnek |
 | Gizli pozitif uyumsuzluk | B | **K** | Swing=15 sol, MinGap=15 | osilatör gizli | Seçilmiş |
 | A/D–EMA(3) (ISCTR) | B | **K** | Strateji %19,1, B&H %10,8, Sharpe 0,67 | operatör yönü | Tek hisse |
 | Bullish engulfing | B | H (tetik) | Kod birebir | bağlam, stop | Yok |
@@ -48,10 +48,10 @@ Hazırlık: **H** = birinci elden kodlanabilir, az YORUM · **K** = kısmen, ön
 ### Risk ve çıkış (E)
 | Kural | Hazırlık | Not |
 |---|---|---|
-| Örnekte %1 risk, lot = risk / (2 ATR) | H | NotebookLM, G115/g1 (Tansu paylaştı) |
+| Örnekte %1 risk, lot adedi = risk / (2 ATR) | H | NotebookLM, G115/g1 (Tansu paylaştı) |
 | Acil stop: giriş − 2 ATR, gün içi dokunuşta çık | H | Ad: aktarım, tweet-atr-risk-butcesi-position-sizing-stop-loss:22; hesap: NotebookLM, G115/g1 |
 | Gün sonu stopu: kapanış < SMA250 | H | Ad: aktarım, tweet-atr-risk-butcesi-position-sizing-stop-loss:22; çıkış örneği: NotebookLM, G115/g1; SMA250 seçimi: YORUM (TASARIM 5.5) |
-| İz süren stop (+1,5 ATR), kısmi kâr, önceki gün dibi altı %50 | K | ikinci el; görselde yalnız "STOP 184.54 / ATR 4.62" |
+| İz süren stop (+1,5 ATR), kısmi kâr, önceki gün dibi altı %50 | K | ikinci el; görselde yalnız bir STOP / ATR etiketi, rakamlar okunamaz (E K2) |
 | Harmonik hedef merdivenleri (Excel %38,2 / SAYAS 1:1 ve %61,8) | K | kaynaklar çelişiyor |
 | Durum etiketleri: AKTİF, TAMAMLANDI, TEPKİ_VERDİ, BOZULDU | H (ad) | eşikleri yok |
 | Tepki penceresi: D sonrası 20 mum (görsel) / 10 gün (not) | K | çelişki |
@@ -60,7 +60,7 @@ Hazırlık: **H** = birinci elden kodlanabilir, az YORUM · **K** = kısmen, ön
 | Kural | Hazırlık | Not |
 |---|---|---|
 | Piyasanın Nabzı 4/5 (ilk 5 kutudan 4'ü olumlu) | K | NotebookLM; SMA 18/35 ile 20/50 çelişiyor |
-| BIST + VIX 5 adım (SMA20/50, Heikin Ashi, VIX RSI200/SMA10) | K | NotebookLM; "VIX" = ABD VIX, Yahoo'da bedava |
+| BIST + VIX 5 adım (SMA20/50, Heikin Ashi, VIX RSI200/SMA10) | K | NotebookLM; "VIX" = ABD VIX (YORUM: kaynak yalnız VIX der, D "Hangi VIX?"); Yahoo/FRED'de bedava |
 | Sektör liderleri 30/60/90 gün, \|30g\| > %50 anomali temizliği | H | birinci el konsol çıktısı |
 | Volatilite şoku freni | X | eşik yok |
 
@@ -78,15 +78,14 @@ Hazırlık: **H** = birinci elden kodlanabilir, az YORUM · **K** = kısmen, ön
 | 1 | Çift rotasyonu | 4 ölçütün hepsi; Tansu'nun en güçlü rakamları | sapma formülü ve pencere |
 | 2 | EMA sıkışması | parametreler ve oran formülü birinci el | giriş tetiği |
 
-AB=CD ilk sürümden çıktı (Sorgu 3, TASARIM §3): Tansu'nun SMRTG işlemleri aşağı yönlü kalıplar ve C
-fiyatından giriş; bireysel yatırımcı BIST'te açığa satamaz. İkinci dalgada geometri sadakati yönsüz
-yapılır.
+Sürüm kapsamının sahibi TASARIM §3'tür. AB=CD ilk sürümde yoktur (gerekçe TASARIM §3, Sorgu 3). İkinci dalgada
+geometri sadakati yönsüz yapılır. (bilet 04, 14.10)
 
 **Ailelerin işlem kuralları (ilk sürüm):**
 
 1. **Çift rotasyonu** (birinci el: giriş eşiği, ΔZ tanımı, yön, zaman). Ham fiyat bizim seçimimiz (YORUM). Örnek ham fiyatla uyumlu. Genel düzeltme politikası açık değil.
-   - Sapma: log(Y) − log(X), ortalama ve standart sapma son 60 günden (YORUM; Tansu'nun Z'si 40.560
-     aday formülle üretilemedi; bilet 06 sadakati, §4, 1564 adayla yine üretemedi; 10.10 ek turu 6256 adayla da üretemedi: YORUM kalıcıdır). Sabit terim (α) yok; ortalama çıkarıldığı için Z aynıdır.
+   - Sapma: log(Y) − log(X), ortalama ve standart sapma son 60 günden, standart sapma ddof 1 (YORUM; Tansu'nun Z'si
+     üç sadakat turunda üretilemedi, §4 ve `docs/sadakat.md`: YORUM kalıcıdır). Sabit terim (α) yok; ortalama çıkarıldığı için Z aynıdır. (ddof: TASARIM 5.6; bilet 04, 14.10)
    - Z ≤ −2 ve ΔZ > 0 → ertesi gün Y'ye geç. Z ≥ +2 ve ΔZ < 0 → ertesi gün X'e geç. Tek günlük ΔZ
      yeterlidir (YORUM; Tansu'nun raporundaki tek örnek +0,30).
    - İlk sinyale kadar nakit; sonra hep bir hissede (YORUM; genel nakit politikası kaynakta açık değil,
@@ -97,8 +96,8 @@ yapılır.
      {0,01; 0,05; 0,10}. (İ: 04-089)
 2. **EMA sıkışması kırılımı** (Tansu'nun sayısal iddiası yok; bu ailenin getiri iddiası bizim
    hipotezimizdir, İ: 10-002)
-   - Oran: (en büyük EMA − en küçük EMA) / EMA200; EMA20/50/100/200, `ewm(adjust=False)` (birinci el,
-     sadakatle çözüldü, §4).
+   - Oran: (en büyük EMA − en küçük EMA) / EMA200; EMA20/50/100/200, `ewm(adjust=False)` (KRDMD rakamlarıyla eşleşen formül, sadakatle çözüldü, §4;
+     düşüş trendinde paydanın EMA200 mü en küçük EMA mı olduğu açıktır, TASARIM §8 madde 6; bilet 04, 14.10).
    - Sıkışma dönemi: oranın ≤ %1,2 olduğu art arda en az 3 gün; oranın eşiği aştığı ilk gün dönemi
      bitirir. Tansu'nun %1,2 ve 3 günü "örnekteki değer"dir.
    - Giriş (YORUM): dönem bittikten sonraki 10 gün içinde kapanış, dönemdeki en yüksek gün yükseğinin
@@ -108,14 +107,12 @@ yapılır.
    - Sağlamlık ızgarası (TASARIM 5.10, YORUM): eşik {%1,0; %1,2; %1,5}, en az gün {2; 3; 5}, giriş
      penceresi {5; 10; 20}. (İ: 06-072)
 
-AEFES kanal, AKFIS kurulumu ve AB=CD ikinci dalgadadır. Diğerleri dizinde kalır; kaynak çıktıkça yükselir.
+İkinci dalga ve kapsam dışı olanlar TASARIM §3'tedir. Diğer kurallar dizinde kalır; kaynak çıktıkça yükselir.
 
-VAKBN–GARAN paneli T+1 açılış gösterir (araç, Rota/g2, işlem paneli). "Ertesi gün" sınamada ertesi günün
-AOF'u olarak modellenir; uygulanamaz: mevcut veride açılış yok (TASARIM 5.3).
+"Ertesi gün" sınamada nasıl modellendiği (Tansu'nun T+1 açılışı uygulanamaz): TASARIM 5.3.
 
-**Risk paketi:** %1 risk (NotebookLM örneği), 2 ATR acil stop, SMA250 altı kapanışta gün sonu stopu (EMA sıkışması; çift rotasyonu
-hariç, onun kendi çıkışı karşı uçta geçiştir). Pozisyon tavanı %10 (YORUM, bizim; çoğu işlemde %1
-riskten daha bağlayıcıdır).
+**Risk paketi:** sahibi TASARIM §5.5–5.6'dır; kaynak notları E K1–K3'tedir. Çift rotasyonu bölmesi bu pakete tabi
+değildir, çıkışı karşı uçta geçiştir (yukarıda aile 1).
 
 ## 4. Sadakat kontrolü (sınamadan önce)
 
@@ -129,30 +126,17 @@ serbesttir; bu performans değil, kuralın doğru okunduğunun kanıtıdır.
 | AB=CD (ikinci dalga) | KRPLS, MARKA #13, SMRTG tablosu | D = 11,29 / 10,05 / 70,25; SMRTG hedef getirileri | pivot ayarı, yön |
 | Kanal (ikinci dalga) | AEFES 03.09.2026 | alt bant 17,76; temas 3/3; genişlik +%15,3 | kanal çizim yöntemi |
 
-Sonuçlar (Sorgu 3, 05.10.2026):
-- **EMA sıkışması çözüldü:** (en büyük EMA − en küçük EMA) / EMA200, ham kapanıştan `ewm(adjust=False)`.
-  - Dönem ortalaması %0,638.
-  - 09.04.2026 EMA değerleri lejantla birebir.
-  - Grafik sonu ve Mart tepesi görselle ±0,3 içinde.
-- **EMA sıkışması, bilet 05 ölçümü (İş Yatırım ham seri, `docs/sadakat.md`):** yukarıdaki "birebir" Yahoo
-  serisiyle ölçülmüştü; İş serisinde EMA200 sıkı toleransı geçmiyor. Karar: sonuç **gevşek bantla üretildi**.
-  - Dönemi, gün sayısını ve ortalamayı tam tutan tek aday "son 3 yıl" (son 2 yıl da tutuyor; ikisi aynı
-    sonucu veriyor).
-  - Bu adayda EMA20/50/100 sıkı toleransta; EMA200 28,4366 (Tansu 28,43), gevşek bantta (±0,05).
-  - Neden: EMA200 uzun belleklidir; Tansu'nun veri başlangıcı bilinmiyor. Oran formülü değişmez.
-  - Bütün geçmişle dönem bir gün erken başlıyor (21 gün, %0,665). Sınamada veri başlangıcı sabit
-    tutulur ve rapora yazılır (İ: 06-014).
-- **Çift Z'si üretilemedi** (40.560 aday). VAKBN–GARAN örneğinin fiyatları ham okumayla uyumludur
-  (araç, Rota/g2); genel fiyat düzeltme politikası açık değildir (TASARIM 5.1).
-- **Çift Z'si, bilet 06 ölçümü (İş Yatırım ham seri, `docs/sadakat.md`):** 1564 aday (log oran ve β'lı
-  kalıntı × pencere 10–400 × ddof {0; 1}), bütün işlem günleri. Sıkı toleransta (±0,0005) eşleşme yok.
-  Gevşek bantta (±0,05) 534 aday eşleşti: tek aday kalmadığı için gevşek bant kullanılmadı.
-  Sonuç: **üretilemedi; YORUM kalır** (log oran, 60 gün). Beta, korelasyon, piyasada kalma ve
-  Mart–Mayıs 2025 kontrolleri formül olmadığı için yapılmadı.
-- **Çift Z'si, ek tur (10.10.2026, `docs/sadakat.md`):** Tansu'nun kendi kaynaklarından üç aday ailesi, aday listesi
-  koşudan önce commit edildi (bf79a28): fiyat düzeyinde OLS spread (X403), log fark − hareketli ortalama ve sabit
-  standart sapma (X404), bugünü dışlayan pencere. 6256 aday (Z ve −Z), bütün günler. Sıkı toleransta eşleşme yok;
-  gevşek bantta 1393 aday, tek aday kalmadı. Sonuç: **üretilemedi; YORUM kalıcıdır** (log oran, 60 gün). Yeni tur açılmaz.
+Sonuçlar. Ölçülen değerler, aday sayıları ve toleranslar `docs/sadakat.md`'dedir (Sorgu 3 ölçümü: `docs/sorgu/sonuc-3-4.md`); burada yalnız karar durur.
+- **EMA sıkışması çözüldü:** (en büyük EMA − en küçük EMA) / EMA200, ham kapanıştan `ewm(adjust=False)`. Yahoo
+  serisiyle (Sorgu 3, tek Yahoo ölçümü; `docs/sadakat.md`'de yoktur) dönem ortalaması %0,638, 09.04.2026 EMA değerleri
+  lejantla birebir, grafik sonu ve Mart tepesi görselle ±0,3 içindeydi. İş Yatırım ham serisinde (bilet 05) EMA200 sıkı
+  toleransı geçmez; karar: sonuç **gevşek bantla üretildi**. Dönemi, günü ve ortalamayı tam tutan aday "son 3 yıl"dır
+  (son 2 yıl da tutar; ikisi aynı sonucu verir). Neden: EMA200 uzun belleklidir; Tansu'nun veri başlangıcı
+  bilinmiyor. Oran formülü değişmez. Sınamada veri başlangıcı sabit tutulur ve rapora yazılır (İ: 06-014).
+- **Çift Z'si üretilemedi:** Sorgu 3, bilet 06 ve 10.10.2026 ek turu (aday listesi koşudan önce commit edildi, bf79a28)
+  Tansu'nun Z'sini üretemedi (ayrıntı `docs/sadakat.md`). Karar: **YORUM kalıcıdır** (log oran, 60 gün); yeni tur açılmaz. VAKBN–GARAN
+  örneğinin fiyatları ham okumayla uyumludur (araç, Rota/g2); genel fiyat düzeltme politikası açık değildir (TASARIM 5.1).
+  Beta, korelasyon, piyasada kalma ve Mart–Mayıs 2025 kontrolleri formül olmadığı için yapılmadı.
 
 Veri: Tansu `yfinance` kullanıyor, ama Yahoo ham kapanışı İş Yatırım ham serisiyle aynı. Kontrol İş Yatırım
 ham seriyle yapılır.

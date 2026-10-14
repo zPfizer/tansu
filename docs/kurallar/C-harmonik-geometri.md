@@ -31,8 +31,8 @@ Not: YORUM: bu katalogda ekranlar Tansu'ya atfedilen araç çıktıları olarak 
 - Kaynak: `gorsel-paket-01` (görsel 03), `gorsel-paket-03` (görsel 01), `kaynak-doas-kelebek` (doas-kelebek.webp), `gorsel-paket-60-hidden-bullish-divergence` (görsel 01), `gorsel-paket-34` ve `-45` (başlıklar). Notlar: `tweet-abcd-geometrik-gecerlilik-kurallari`, `gorsel-paket-39`, `tweet-trend-cizgisi-swing-pivot-regresyon-zarf`.
 - Tansu'nun ifadesi (birinci el, görsel etiketleri):
   - Lejant (KRPLS, SMRTG): `Swing Low` (mavi ▲), `Swing High` (turuncu ▼), `Swing Yapısı (HH/HL/LH/LL)`, `Swing (X -> A)`, `AB=CD Paterni`.
-  - Başka bir aracın (gizli pozitif uyumsuzluk) üst etiketi: `... | Swing=15 sol-only | MinGap=15`.
-  - Düşen direnç taramasının başlığı: `Kırılım: 2026-05-18 | Temas: 3 | Lookback: 20` (LIDER); `Temas: 3 | Lookback: 30` (BALAT).
+  - Gizli pozitif uyumsuzluk aracının üst etiketi (`Swing=15 sol-only | MinGap=15`): B §9'dadır. (bilet 04, 14.10)
+  - Düşen direnç taramasının başlıkları (`Kırılım`, `Temas`, `Lookback`): A §3'tedir.
 - Tanım (görselden okunan davranış):
   1. İki ölçek var. Küçük ölçek: mum üstünde mavi ▲ (Swing Low) ve turuncu ▼ (Swing High) işaretleri. Büyük ölçek: kalın zikzak çizgi `Swing (X -> A)`. Zikzak köşeleri küçük işaretlerden azdır. Yani zikzak daha geniş bir eşikle üretiliyor. (ölçüm)
   2. Her zikzak köşesinin üstünde veya altında bir yapı etiketi var: `HH`, `HL`, `LH`, `LL`. Etiket, köşenin aynı türdeki önceki köşeye göre yüksek mi alçak mı olduğunu gösteriyor. DOAS örneği: X=`HL`, A=`LH`, B=`HL` (178,45 > X 170,10), C=`LH` (C < A 209,10). Bu okuma tutarlı. (ölçüm)
@@ -42,16 +42,14 @@ Not: YORUM: bu katalogda ekranlar Tansu'ya atfedilen araç çıktıları olarak 
 
 | parametre | değer | kaynak |
 | --- | --- | --- |
-| Swing penceresi (diverjans aracı) | `Swing=15`, `sol-only` | görsel (gorsel-paket-60/01). Harmonik tarayıcıya ait olduğu KANITLANMADI. |
-| MinGap | 15 | aynı görsel |
-| Lookback (düşen direnç tarayıcısı) | 20 (LIDER), 30 (BALAT) | Araç, G34/g1 ve G45/g1; YORUM: çizgi arama penceresi okuması bizim seçimimiz, etiket anlamı açık değil |
-| Temas sayısı | 3 | görsel (trend çizgisi) |
+| Swing penceresi ve MinGap (diverjans aracı) | B §9 | B §9; harmonik tarayıcıya ait olduğu KANITLANMADI |
+| Lookback ve temas sayısı (düşen direnç tarayıcısı) | A §3 | A §3 |
 | Harmonik tarayıcının pivot penceresi L/R | bilinmiyor | YORUM |
 | Zikzak eşiği (yüzde, ATR) | bilinmiyor | YORUM |
 
 - Giriş / stop / hedef: yok (altyapı kuralı).
 - Belirsiz kalanlar:
-  - YORUM: bizim `sol-only` pivot seçimi soldaki 15 mumla `low[i] <= min(low[i-15..i-1])` karşılaştırmasıdır; sağ teyit yoktur. Kaynak etiket eşitliği, pivot yenilemeyi ve seçim algoritmasını açıklamaz (Araç, G60/g1, üst etiket).
+  - Bizim `sol-only` pivot seçimi (YORUM): B §9 madde 4.
   - `Swing=15`'in sayı birimi bar mı? Zaman dilimi? Bilinmiyor.
   - Harmonik tarayıcı aynı `Swing=15`'i mi kullanıyor? Görselden çıkmıyor.
   - Notlardaki `L/R` pencereli formül (`pivot_known_at = i + R`, alternatif high/low, min bar mesafesi, ATR belirginliği) Claude'un şablonudur. Tansu'nun kaynak metni sadece "lokal pivotları bulun" diyor, parametre vermiyor (`gorsel-paket-39`, ikinci el).
@@ -281,7 +279,8 @@ Not: YORUM: bu katalogda ekranlar Tansu'ya atfedilen araç çıktıları olarak 
   - TP1: eğitim tablosunda AD×0,382; SAYAS'ta 1:1 R/R (Eğitim, G123/g1; Araç, SAYAS görseli). Tek genel TP1 doğrulanmaz. TP2 SAYAS'ta 0,618 AD, BALAT'ta 0,618 CD'dir.
   - MAKIM "Yükseliş Gartley" etiketi: `X->A: 2.11`, `A->B: -1.43`, `B->C: 0.68` (0,68 mi 0,88 mi belirsiz), `C->D: -1.25`. Fiyat farkı okumasında AB/XA = 0,678 ve 0,618'den sapma %9,7; CD/BC = 1,84 (ölçüm). YORUM: yaklaşık %10 tolerans bizim aday seçimimizdir; MAKIM bacakları genel tarayıcı toleransını vermez (Aktarım, G123:49; Araç, G122/g1).
   - Tolerans oran mı fiyat mı? Tablo formülü fiyat farkını `Tolerans` ile kıyaslıyor. Metin "%3–5" diyor.
-- Tansu'nun kanıtı: LUKSK (TEPKI_VERDI), SOKE (aktif), SAYAS (uzun grafik). Başarı oranı yok.
+- SAYAS Fib okuması ve doğrulama (E K12'den buraya taşındı, bilet 04, 14.10): Fib etiketleri (XA bacağı, büyütülerek okundu, son rakamlar bulanık): 0.000 = 144.25; 0.236 = 115.03; 0.382 = 96.98; 0.5 = 82.41; 0.618 = 67.82; 0.786 = 47.05; 1.000 = 20.65. D = 47,05, X = 20,65, A = 144,25 ile TP1 = 47,05 + 26,40 = 73,45 ve TP2 = 47,05 + 0,618 × 97,20 = 107,12 (benim hesabım; piksel konumlarıyla kontrol edildi). Çizili iki yeşil noktalı çizgi ≈73 ve ≈107'dedir; TP 0,382 AD (≈84,2) çizilmemiş. Yani SAYAS'ta TP1 = 1:1 R/R doğrulandı. SAYAS'ta D = fib 0,786 çizgisidir (A'dan aşağı 0,786 ölçülmüş); Excel örneğindeki bullish D = X + (A−X)×0,786 ifadesi bu yüzden örnek yazımda ters (yukarıdaki yön hatası kanıtı).
+- Tansu'nun kanıtı: LUKSK (TEPKI_VERDI), SOKE (aktif), SAYAS (uzun grafik). Başarı oranı yok. SAYAS'ta fiyat D'den sonra uzun süre yatay, TP'lere gitmemiş görünür (2023–2026; ~47 üstünde dolaşır, 73'e yakın bir tepe var; sonuç etiketi yok), Tansu'nun "Gartley her zaman çalışmaz" mesajıyla uyumlu (E K12'den taşındı, bilet 04).
 - Günlük bedava veriyle uygulanabilir mi: evet. En iyi tanımlı harmonik kural seti (oranlar, giriş, stop, TP). Tolerans ve pivot kararı gerekir.
 - Kaynak güveni: tablo birinci el. Tolerans ve R:R ikinci el.
 
@@ -370,7 +369,7 @@ Not: YORUM: bu katalogda ekranlar Tansu'ya atfedilen araç çıktıları olarak 
 | Birim (takvim / seans / bar) | bilinmiyor | YORUM |
 
 - Belirsiz kalanlar: aktarımdaki on gün D'den başlar (Aktarım, tweet-gartley-d-tepki-penceresi-10-gun:21); takvim/seans birimi açık değildir. KAPLM'deki 20 bar ve "son 10 gün" ayrı etiketlerdir; ortak politika açıklanmaz (Araç, KAPLM üst notu).
-- Tansu'nun kanıtı: yok. Örnekler tek.
+- Tansu'nun kanıtı: yok. Örnekler tek. KAPLM başarısız örnektir (D'de tepki yok); Tansu bunu kendisi paylaştı (E K15'ten taşındı, bilet 04).
 - Günlük bedava veriyle uygulanabilir mi: evet. Eşik YORUM.
 - Kaynak güveni: 20 bar etiketi birinci el. 10 gün ikinci el.
 
@@ -380,11 +379,11 @@ Not: YORUM: bu katalogda ekranlar Tansu'ya atfedilen araç çıktıları olarak 
 
 - Kaynak: `gorsel-paket-109` (01-balat-siyah-kugu-harmonik-tp.png).
 - Tansu'nun ifadesi (birinci el, grafik): başlık `BALAT.IS - Siyah Kuğu & HEDEFLER`. Etiketler: `TP4 (1.272): 92.98`, `TP3 (C Tepe): 90.50`, `TP2: 87.02`, `TP1: 84.88`, `STOP: 64.00`. Alt paneller: RSI, ADX, MACD. Lejant: `Harmonik`.
-  - Metin (not, Levent iletisi, ikinci el): TP1 `0,382`'de kısmi kâr ve stop'u girişe çek; TP2 `0,618` güçlü/hacimli aşılırsa trend hedeflerine geç; stop bullish yapılarda X altı, bazı derin pattern'lerde XA `1,13/1,27`.
+  - Metin (not, Levent iletisi, ikinci el): TP1 `0,382`'de kısmi kâr ve stop'u girişe çek; TP2 `0,618` güçlü/hacimli aşılırsa trend hedeflerine geç; stop bullish yapılarda X altı, bazı derin pattern'lerde XA `1,13/1,27`. Notta TP2 "en güvenilir hedef" diye anılır (kaynak görüşü; E K11'den taşındı, bilet 04).
 - Tanım (ölçüm, not'un D çıkarımı ile doğrulandı):
   - `TP(r) = D + r*(C − D)`. TP1: r=0,382; TP2: r=0,618; TP3: r=1,000 (= C); TP4: r=1,272 (veya 1,618).
   - Görselde D yazılı değil. TP1 ve C'den: `D = (84,88 − 0,382*90,50)/0,618 ≈ 81,40`. `CD = 9,10`. Kontrol: `81,40 + 9,10*0,618 = 87,02` ✓; `81,40 + 9,10*1,272 = 92,98` ✓. Aritmetik tutarlı.
-   - Stop 64,00 = X (görsel, ilk pivot). Risk ≈ 17,40; TP1 ödülü ≈ 3,48; R:R ≈ 0,20 (ölçüm). YORUM: bu katalogda kural 7'nin R:R ≥ 1,5 eşiğiyle karşılaştırılır; kaynaklar ortak varyant veya seçim politikası vermez (Aktarım, G109:35; ilgili araç görselleri).
+   - Stop 64,00 = X (görsel, ilk pivot). Risk ≈ 17,40; TP1 ödülü ≈ 3,48 (0,20 R), TP2 ödülü ≈ 5,62 (0,32 R) (ölçüm). YORUM: bu katalogda kural 7'nin R:R ≥ 1,5 eşiğiyle karşılaştırılır; kaynaklar ortak varyant veya seçim politikası vermez (Aktarım, G109:35; ilgili araç görselleri).
 - Parametreler:
 
 | parametre | değer | kaynak |
@@ -434,7 +433,7 @@ Not: YORUM: bu katalogda ekranlar Tansu'ya atfedilen araç çıktıları olarak 
 
 - Kaynak: `gorsel-paket-32` (01-gartley-abcd-talep-dusen-kirilimi.jpg), `-34` (01-lider-siyah-kugu-talep-run.png), `-35` (01-beyaz-kugu-sell-abcd-dusen-kirilimi.png), `-38` (AKCNS haftalık), `-40` (haftalık), `-42`, `-43`, `-45`, `tweet-haftalik-bullish-gartley-talep-alani-tarama`, `tweet-formasyon-arz-talep-confluence-kapisi`.
 - Tansu'nun ifadesi:
-  - Birinci el (başlıklar): `LIDER | Düşen Direnci Kıran + Talep + Fibo + ABCD | Harmonik: Siyah Kuğu | Fiyat: 127.40 | Kırılım: 2026-05-18 | Temas: 3 | Lookback: 20`. `BALAT | Düşen Direnç Kıran + Talep + Fibo + ABCD | Fiyat: 75.95 | Kırılım: 2026-05-1x | Temas: 3 | Lookback: 30` (tarih okunurluk sınırlı; not 2026-05-19 yazıyor). `AKCNS | HAFTALIK ABCD FORMASYONU + Talep + EMA | Fiyat: 213.60`. Lejant (32): `Fiyat, EMA5, EMA8, EMA13, Direnç TL, ABCD (BUY), Harmonik (Gartley), Hacim, Kum. Delta`.
+  - Birinci el (başlıklar): LIDER ve BALAT başlıkları A §3'tedir (temas, lookback, kırılım tarihi, lejant). `AKCNS | HAFTALIK ABCD FORMASYONU + Talep + EMA | Fiyat: 213.60`. Lejant (32): `Fiyat, EMA5, EMA8, EMA13, Direnç TL, ABCD (BUY), Harmonik (Gartley), Hacim, Kum. Delta`.
   - Metin alıntıları (not, "Levent tarafından ... ifadesiyle iletildi"; Tansu'ya atfı doğrulanamadı, ikinci el):
     - 34: "Kuğuyu talep toplama bölgesinde yakalarsanız böyle RUN olur grafiğiniz."
     - 35: "Düşeni kırmış, SELL yönlü AB=CD'yi tamamlamış, Beyaz Kuğu da oluşmuş; bunu yolculamayalım mı?"
@@ -453,8 +452,7 @@ Not: YORUM: bu katalogda ekranlar Tansu'ya atfedilen araç çıktıları olarak 
 
 | parametre | değer | kaynak |
 | --- | --- | --- |
-| Çizgi temas sayısı | 3 | görsel |
-| Çizgi lookback | 20 (LIDER), 30 (BALAT) | Araç, G34/g1 ve G45/g1; YORUM: çizgi arama penceresi okuması bizim seçimimiz, arama/izleme ayrımı açık değil |
+| Çizgi temas sayısı ve lookback (LIDER, BALAT) | A §3 | A §3 |
 | EMA'lar | 5, 8, 13 (lejant / başlık) | görsel (32, 45), 38 pencereleri okunmadı |
 | Talep bölgesi üretimi | bilinmiyor (proximal / distal, taze mi) | YORUM |
 | Haftalık / günlük | AKCNS ve 40 haftalık; diğerleri belirtilmemiş | görsel |

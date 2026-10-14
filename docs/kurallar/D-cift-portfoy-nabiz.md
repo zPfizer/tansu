@@ -236,14 +236,8 @@ Genel uyarı: Tansu kod, formül, pencere, maliyet, OOS vermiyor. Görseller dü
 - **Güven:** Gösterge tanımı orta, kural yok.
 
 ## SETUP x/100, YAPI (XU100 1 ve 2 Eylül)
-- **Kaynak:** kaynak-xu100-1-eylul (gunluk.webp, 4-saat.webp); kaynak-xu100-bekle-teyit (gunluk.webp, 4-saat.webp).
-- **İfade (GÖRSEL başlıklar):** "XU100.IS | GÜNLÜK 14229.01 | DEMAND: 4 | SUPPLY: 2 | BULL FVG AKTİF: 11 | BEAR FVG AKTİF: 2 | YAPI: GEÇİŞ / BULLISH CHoCH | SETUP: 45/100 | GÖRSEL: ODAK"; 4 saatlik: "14226.96 | … BULL FVG 12 | BEAR FVG 6 | YAPI: GEÇİŞ / BEARISH CHoCH | SETUP: 35/100". 2 Eylül günlük: "14050.56 … SSL/BSL: 0/4 | YAPI: GEÇİŞ / BULLISH CHoCH SEVİYESİ KAYBEDİLDİ | SETUP: 7/100"; 4 saatlik "14054.50 … BEARISH CHoCH AKTİF | SETUP 13/100". Göstergeler: "WMA Close 21", "MACD 12 26 9", "RSI 14 | 70 / 30", "WT 10 21 | 60 53 -53 -60" (WaveTrend). Tweet metni (NOT): fiyat aşağı eğimli WMA21 altında, dönüş teyidi yok; WMA21 geri alma eşiği 14.443,45; teknik uyum 35/100 "ZAYIF"; 2 Eylül: tepki yükselişi trend dönüşü değil, "bekle, fiyat teyidi ara", ilk olumlu eşik ≈14.722.
-- **Tanım:** SETUP puanı formülü yok. Bileşen adayları: yapı (HH/HL/LH/LL, BOS/CHoCH), talep/arz bölgesi sayısı, FVG sayısı, WMA21, MACD, RSI, WT. Ağırlık bilinmiyor (YORUM). Aynı veri farklı zaman diliminde farklı puan (45 vs 35).
-- **Parametreler:** WMA 21; MACD 12/26/9; RSI 14 (70/30); WT 10/21 (60,53,−53,−60) — hepsi GÖRSEL. Puan formülü yok.
-- **Giriş/çıkış:** "WMA21 üstüne geri alma = olumlu eşik" (NOT, aktarım); "bekle ve teyit". Sayısal kural yok.
-- **Kanıt:** yok (önce/sonra değerler: 45→7 gibi puan düşüşü var).
-- **Bedava veri:** WMA, MACD, RSI, WT hesabı evet; SETUP puanı yeniden üretilemez; 4 saatlik BIST verisi yfinance'te sınırlı (YORUM).
-- **Güven:** Gösterge parametreleri yüksek, puan düşük.
+- **Sahibi:** A §5 (XU100 başlıkları, puanlar, gösterge parametreleri, tweet metni, puan formülünün yokluğu). Burada tekrar edilmez. (bilet 04, 14.10)
+- **Piyasa durumu yönünden okuma:** SETUP puanı formülsüzdür ve yeniden üretilemez; piyasa durumu etiketi olarak kullanılamaz (TASARIM §3: etiket YORUM'dur).
 
 ## FROTO / Volatilite şoku (yeni alım freni) / Trend rejimi
 - **Tansu'nun fikri:** oynaklık şokunda yeni alımı durdurup mevcut riski yönetmektir (Aktarım, tweet-volatilite-piyasa-soku-yeni-alim-freni:21); uygulanamaz: kaynak hesaplanabilir tanım vermiyor.
