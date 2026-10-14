@@ -151,6 +151,11 @@ def test_ek_aday_ara_isaret_cevirerek_ara_gunde_cifti_bulur():
     assert sonuc == [("dun_pencere", "log_oran", 3, 1, -1, gunler[4])]
 
 
+class _Anlik:
+    kimlik = "sahte"
+    fiyat = pd.DataFrame({"sembol": ["KRDMD"]})
+
+
 def _olcum(ort, ema200, bas="2025-12-17"):
     d = {
         "bas": pd.Timestamp(bas),
@@ -161,30 +166,45 @@ def _olcum(ort, ema200, bas="2025-12-17"):
     return {"donemler": [d], "emalar": [31.92, 30.74, 29.58, ema200]}
 
 
-def test_esdeger_aday_tek_aday_sayilir_ve_secilen_yazilir():
-    # KURALLAR §4: aynı dönem ve gün, ölçülen değerler en çok 0,005 ayrı: tek aday; seçilen ilk (en uzun) aday.
-    metin = "\n".join(
-        sadakat._esdeger_bolumu(
-            [
-                ("bütün geçmiş", _olcum(0.665, 28.4352, bas="2025-12-16")),
-                ("son 3 yıl", _olcum(0.641, 28.4366)),
-                ("son 2 yıl", _olcum(0.642, 28.4370)),
-            ]
-        )
+def _rapor(monkeypatch, bes_yil, uc_yil, iki_yil):
+    sonuc = {None: bes_yil, 3: uc_yil, 2: iki_yil}
+    monkeypatch.setattr(
+        sadakat, "ema_sikismasi", lambda anlik, gecmis_yil=None: sonuc[gecmis_yil]
     )
-    assert "son 3 yıl, son 2 yıl" in metin
-    assert "±0,005" in metin and "tek aday sayılır" in metin
-    assert "Seçilen aday: son 3 yıl" in metin
+    return sadakat.rapor_metni(_Anlik())
 
 
-def test_esdeger_olmayan_adaylar_tek_aday_sayilmaz():
-    metin = "\n".join(
-        sadakat._esdeger_bolumu(
-            [
-                ("son 3 yıl", _olcum(0.641, 28.4366)),
-                ("son 2 yıl", _olcum(0.70, 28.4370)),
-            ]
-        )
+def test_rapor_esdeger_adaylar_tek_aday_sayilir_ve_tansuya_en_yakin_secilir(
+    monkeypatch,
+):
+    # KURALLAR §4: aynı dönem ve gün, ölçülen değerler en çok 0,005 ayrı: tek aday; seçilen Tansu'nun rakamına en yakın.
+    # Mutlak fark toplamı: son 3 yıl 0,001 + 0,004 = 0,005; son 2 yıl 0,002 + 0,000 = 0,002.
+    metin = _rapor(
+        monkeypatch,
+        _olcum(0.665, 28.4352, bas="2025-12-16"),
+        _olcum(0.641, 28.4340),
+        _olcum(0.642, 28.4300),
+    )
+    assert "Eşdeğer adaylar: son 3 yıl, son 2 yıl. Tek aday sayılır." in metin
+    assert "Seçilen aday: son 2 yıl (" in metin and "eşitlikte ilk aday" in metin
+
+
+def test_rapor_esitlikte_ilk_aday_secilir(monkeypatch):
+    metin = _rapor(
+        monkeypatch,
+        _olcum(0.665, 28.4352, bas="2025-12-16"),
+        _olcum(0.641, 28.4340),
+        _olcum(0.641, 28.4340),
+    )
+    assert "Seçilen aday: son 3 yıl (" in metin
+
+
+def test_rapor_esdeger_olmayan_adaylar_tek_aday_sayilmaz(monkeypatch):
+    metin = _rapor(
+        monkeypatch,
+        _olcum(0.665, 28.4352, bas="2025-12-16"),
+        _olcum(0.641, 28.4366),
+        _olcum(0.70, 28.4370),
     )
     assert "tek aday sayılmaz" in metin and "Seçilen aday" not in metin
 

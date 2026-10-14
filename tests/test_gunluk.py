@@ -17,7 +17,7 @@ import os
 import pandas as pd
 import pytest
 
-from tansu import aileler, gunluk, kayit, rapor
+from tansu import aileler, gunluk, kayit, rapor, veri
 from tansu.kaynak import KaynakHatasi
 from tests.test_veri import SahteKaynak, satir
 
@@ -366,20 +366,42 @@ def test_kart_durumlari_ve_kapanan_kart_yalniz_kapandigi_gun_gorunur(
             ]
 
 
-def test_acik_hisseler_eski_ve_yeni_anahtarli_satirlari_okur():
-    # Yalnız-ekleme günlükte eski satırlar eski büyük harfli anahtarla kalır (bilet 07a).
-    yol = kayit.KAYIT_DIZINI / "kartlar.jsonl"
-    yol.parent.mkdir(parents=True, exist_ok=True)
-    eski = {"tarih": "2026-10-05", "kartlar": [{"Hisse": "AAAA", "Durum": "AKTİF"}]}
-    yeni = {
-        "tarih": "2026-10-06",
+class Kayitli(Sayacli):
+    def __init__(self, *a):
+        super().__init__(*a)
+        self.istenen = []
+
+    def fiyat(self, sembol, bas, son):
+        self.istenen.append(sembol)
+        return super().fiyat(sembol, bas, son)
+
+
+@pytest.mark.parametrize(
+    "anahtarlar", [("Hisse", "Durum"), ("hisse", "durum")], ids=["eski", "yeni"]
+)
+def test_dunku_acik_kart_hissesi_eski_ve_yeni_anahtarla_bugun_de_indirilir(
+    tmp_path, anahtarlar
+):
+    # TASARIM 5.2: evrenden çıksa da açık pozisyonun hissesi izlenir. Kart günlüğü yalnız eklenir (bilet 07a).
+    k = Kayitli(
+        {"XXXX": fiyatlar(), "YYYY": fiyatlar(), "ZZZZ": fiyatlar()},
+        {"XXXX": [], "YYYY": [], "ZZZZ": []},
+    )
+    veri.indir(
+        ["XXXX"], tmp_path, k, simdi=dt.datetime(2026, 10, 4, 19, 30)
+    )  # evren tabanı
+    k.istenen.clear()
+    hisse, durum = anahtarlar
+    satir = {
+        "tarih": "2026-10-02",
+        "anlik": "20261002-1930",
         "kartlar": [
-            {"hisse": "BBBB", "durum": "AKTİF"},
-            {"hisse": "CCCC", "durum": "STOP"},
+            {hisse: "YYYY", durum: "AKTİF"},
+            {hisse: "ZZZZ", durum: "STOP"},
         ],
     }
-    yol.write_text(json.dumps(eski) + "\n", encoding="utf-8")
-    assert gunluk._acik_hisseler() == {"AAAA"}
-    with yol.open("a", encoding="utf-8") as f:
-        f.write(json.dumps(yeni) + "\n")
-    assert gunluk._acik_hisseler() == {"BBBB"}
+    yol = kayit.KAYIT_DIZINI / "kartlar.jsonl"
+    yol.parent.mkdir(parents=True, exist_ok=True)
+    yol.write_text(json.dumps(satir) + "\n", encoding="utf-8")
+    gunluk.gunluk(TARIH, tmp_path, simdi=SIMDI, kaynak=k, p=P, atr_n=2)
+    assert "YYYY" in k.istenen and "ZZZZ" not in k.istenen

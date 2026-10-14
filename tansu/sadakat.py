@@ -118,8 +118,13 @@ def _esdeger_bolumu(olcumler) -> list:
             f"Dönemi ve günü tutan adaylar ({adlar}) birbirinden ±{TOLERANS} dışında ayrılıyor: tek aday sayılmaz.",
             "",
         ]
+    hedef = [ORTALAMA_YUZDE, *EMALAR]
+    en_yakin = min(  # eşitlikte min ilk adayı verir
+        tutan, key=lambda a: sum(abs(b - h) for b, h in zip(a[1], hedef))
+    )[0]
     return baslik + [
-        f"Eşdeğer adaylar: {adlar}. Tek aday sayılır. Seçilen aday: {tutan[0][0]} (en uzun geçmiş).",
+        f"Eşdeğer adaylar: {adlar}. Tek aday sayılır. Seçilen aday: {en_yakin} "
+        "(Tansu'nun rakamlarına en yakın, mutlak farkların toplamı; eşitlikte ilk aday).",
         "",
     ]
 
