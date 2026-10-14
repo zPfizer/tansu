@@ -1,6 +1,6 @@
 # Kural kataloğu (05.10.2026)
 
-Kaynak: beyindeki Tansu havuzu (238 not, 214 görsel). Ayrıntılar `docs/kurallar/A–E` dosyalarındadır;
+Kaynak: beyindeki Tansu havuzu (14.10 sayımı: 258 not, 228 görsel). Ayrıntılar `docs/kurallar/A–E` dosyalarındadır;
 bu belge onların dizini ve seçimidir. Her kuralın kaynağı, parametresi ve "YORUM" etiketi orada.
 
 Okuma kuralları:

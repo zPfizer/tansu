@@ -12,5 +12,5 @@ giderilir; her bilgi sahip dosyada kalır, ötekiler atıf verir.
 - [ ] `hiza-c.md` 23–40 ve `hiza-b.md` 16–20, 22 tekrarları atıfa çevrildi.
 - [ ] `hiza-c-istem.md` yeniden koştu; ÇELİŞKİ, ESKİ ve TEKRAR bulgusu yok.
 - [ ] KURALLAR okuma kurallarındaki birinci el, ikinci el ve NotebookLM tanımları GLOSSARY'ye atıf verir; KURALLAR yalnız nasıl kullanıldıklarını söyler. Aynı biçimde KURALLAR §2'deki H/K/X tanımı ("birinci elden") GLOSSARY "Hazırlık" maddesine atıf verir.
-- [ ] Havuz kapsamı: beyindeki Tansu havuzunun 257 notundan 136'sı (10.10 sayımı) A–E ve KURALLAR'da hiç geçmiyor. Her biri okunur; kural içeriyorsa ilgili A–E dosyasına işlenir, içermiyorsa A–E'deki "kural içermez" listesine gerekçesiyle yazılır. KURALLAR başlığındaki havuz sayısı (238 not, 214 görsel) güncellenir.
+- [ ] Havuz kapsamı: beyindeki Tansu havuzunun 257 (14.10: 258) notundan 136'sı (10.10 sayımı) A–E ve KURALLAR'da hiç geçmiyor. Her biri okunur; kural içeriyorsa ilgili A–E dosyasına işlenir, içermiyorsa A–E'deki "kural içermez" listesine gerekçesiyle yazılır. KURALLAR başlığındaki havuz sayısı güncellenir (14.10: 258 not, 228 görsel, bilet 09).
 - [ ] KURALLAR §2 risk satırında "lot" hesaplanan miktar anlamında: "lot adedi" diye yazılır (GLOSSARY "Adet, lot").

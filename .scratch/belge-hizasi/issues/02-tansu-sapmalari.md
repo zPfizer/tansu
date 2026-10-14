@@ -6,7 +6,7 @@ denetlenir: Tansu'nun fikri varsa kural ona çevrilir; uygulanamıyorsa nedeni K
 
 **Blocked by:** 01
 
-**Status:** ready-for-agent
+**Status:** done (PR #5, ce0fe60)
 
 - [ ] KURALLAR, TASARIM ve `docs/kurallar/A–E`'deki her YORUM listelendi. Her biri için Tansu havuzunda (not ve görsel) o konuda fikir arandı;
       sonuç üç sınıftan biri: Tansu sessiz (YORUM kalır) · Tansu'nun fikri var (kural Tansu'ya çevrilir) · Tansu'nun fikri var ama
@@ -22,3 +22,8 @@ denetlenir: Tansu'nun fikri varsa kural ona çevrilir; uygulanamıyorsa nedeni K
       Kod değişikliği gerekiyorsa bilet 07 gibi ele alınır (önce davranışı gösteren test).
 - [ ] Levent'e yalnız Tansu'nun fikrinin okunuşu belirsiz kalan yerler soruldu.
 - [ ] Bağımsız denetçi aynı listeyi havuza karşı yeniden okudu; Tansu'nun fikri olduğu halde YORUM kalan yer yok.
+
+## Comments
+
+- 14.10: Status, commit ce0fe60 (PR #5, 10.10) ile eşlendi. Kutular madde madde doğrulanmadı; kanıt `denetim/tansu-sapma.md` ve
+  `denetim/tansu-sapma-dogrulama.md`. Bulgu: YONETIM uygunluk denetimi 14.10 (bilet 09).
