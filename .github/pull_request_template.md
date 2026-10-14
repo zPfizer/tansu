@@ -9,6 +9,8 @@ _Kutuları Claude kanıtıyla işaretler; Levent'in sohbetteki isteği onaydır.
 
 ## Definition of Done (Claude ve denetçi kontrol eder, kanıtıyla)
 
+_Ölçütlerin sahibi `DEFINITION_OF_DONE.md`'dir (genel bölüm ve `## Tansu`). Aşağıdaki satırlar yalnız kanıt alanıdır._
+
 - [ ] Doğruluk: kabul ölçütlerinin hepsi karşılandı — kanıt: 
 - [ ] Doğruluk: gerçek veriyle çalıştırıldı (yerel koşu çıktısı aşağıda) — kanıt: 
 - [ ] Doğruluk: yeni davranışın testi var; değişiklik olmadan kırmızı, değişiklikle yeşil — kanıt: 

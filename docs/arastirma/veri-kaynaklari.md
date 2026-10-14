@@ -139,19 +139,23 @@ Sonuç: ±%10 tüm dönem için DOĞRU DEĞİL. 2015-11-30 - 2020-03-12 arası m
 
 ## 7. Öneri
 
-1. Birincil fiyat kaynağı: İş Yatırım `HisseTekil` (ham `HG_*` + düzeltilmiş `HGDG_*`, 2015'ten, anahtarsız). İkincil/çapraz kontrol: borsapy `Ticker.history` (TradingView, bölünme düzeltmeli, temettüsüz). Yahoo `.IS` KULLANMA (olay günlerinde sahte %-90..+%72 sıçramalar; kanıt Bölüm 2).
-2. Kurumsal işlem kaynağı: İş Yatırım `GetSermayeArttirimlari` (ham yanıt, borsapy filtresi DEĞİL). Tüm `SHT_KODU` kodlarını sakla (01,02,03,04,09,78 ve diğerleri), `SHHE_FIYAT_AYAR_OR` çarpanını kullan, ham ve düzeltilmiş fiyatla çapraz doğrula. Doğrulama kuralı: ham kapanış günlük >|%25| sıçrıyorsa ve kayıt yoksa uyar.
-3. Evren: BIST100 geçmiş üyeliğini KAP "Dönemsel Endeks Değişiklikleri" PDF'lerinden kur (2016'dan 2026'ya ~40 bildirim, 2015 kapsama doğrulanmadı) ve bugünkü CSV'den geriye doğru çapraz kontrol et. Hayatta kalma yanlılığını azaltmak için o dönemde işlem gören ama bugün listede olmayan hisseleri (İş Yatırım `HisseTekil` yine döner mi sınanmadı) dahil et. Alternatif: DataStore (ücret/kapsam bilinmiyor).
-4. Marj kuralı: dönemsel parametre (2015-11-30 - 2020-03-12 ±%20, sonrası ±%10; öncesi ve 2020-10'dan sonraki pazar bazlı ayrım doğrulanmadı).
-5. Faiz: günlük risksiz oran için 2019-06'ya kadar TLREF yok. Politika faizi basamak serisi (TCMB sayfası) + EVDS `TP.APIFON4`/`bie_onrepof` (anahtarla sınanmalı).
+Bu bölüm 05.10.2026 tarihli öneridir. Güncel kararların sahibi TASARIM'dır; geri çekilen öneriler satırında işaretlidir. (bilet 05, 14.10)
+
+1. Birincil fiyat kaynağı: İş Yatırım `HisseTekil` (ham `HG_*` + düzeltilmiş `HGDG_*`, 2015'ten, anahtarsız). İkincil/çapraz kontrol: borsapy `Ticker.history` (TradingView, bölünme düzeltmeli, temettüsüz). Yahoo `.IS` KULLANMA (olay günlerinde sahte %-90..+%72 sıçramalar; kanıt Bölüm 2). **Geri çekildi (ikincil/çapraz kontrol kısmı), yerine: TASARIM §4 "TradingView kaynaklı veri kullanılmaz" ve §5.1 "İkinci kaynak yok". Birincil kaynak ve Yahoo kararı geçerli (TASARIM §4).**
+2. Kurumsal işlem kaynağı: İş Yatırım `GetSermayeArttirimlari` (ham yanıt, borsapy filtresi DEĞİL). Tüm `SHT_KODU` kodlarını sakla (01,02,03,04,09,78 ve diğerleri), `SHHE_FIYAT_AYAR_OR` çarpanını kullan, ham ve düzeltilmiş fiyatla çapraz doğrula. Doğrulama kuralı: ham kapanış günlük >|%25| sıçrıyorsa ve kayıt yoksa uyar. **Geri çekildi (sabit %25 eşiği), yerine: TASARIM §5.1 "Olay denetimi" (çarpanlı ham seri ile `HGDG` farkı %0,5'i aşarsa uyarı) ve "Karantina" (o günkü limit + %0,5). Kaynak ve çarpan kararı geçerli.**
+3. Evren: BIST100 geçmiş üyeliğini KAP "Dönemsel Endeks Değişiklikleri" PDF'lerinden kur (2016'dan 2026'ya ~40 bildirim, 2015 kapsama doğrulanmadı) ve bugünkü CSV'den geriye doğru çapraz kontrol et. Hayatta kalma yanlılığını azaltmak için o dönemde işlem gören ama bugün listede olmayan hisseleri (İş Yatırım `HisseTekil` yine döner mi sınanmadı) dahil et. Alternatif: DataStore (ücret/kapsam bilinmiyor). **Geri çekildi (ana evreni KAP üyeliğinden kurma), yerine: TASARIM §5.2 "Evren kuralı" (ay başı piyasa değeri en büyük 100, likidite eleği). KAP çalışması yalnız ek karşılaştırmadır (TASARIM §5.2 "Gerçek BIST100", §8.2).**
+4. Marj kuralı: dönemsel parametre (2015-11-30 - 2020-03-12 ±%20, sonrası ±%10; öncesi ve 2020-10'dan sonraki pazar bazlı ayrım doğrulanmadı). **Karar: TASARIM §5.1 "Fiyat limiti".**
+5. Faiz: günlük risksiz oran için 2019-06'ya kadar TLREF yok. Politika faizi basamak serisi (TCMB sayfası) + EVDS `TP.APIFON4`/`bie_onrepof` (anahtarla sınanmalı). **Geri çekildi (EVDS ve alternatif seriler), yerine: TASARIM §4 "Faiz" (tek seri, TCMB "1 Hafta Repo") ve §8.9 (seri türü doğrulandı). Fonlama farkı belirsizliği §8.9'da açık kalır.**
 
 ## 8. Kalan bilinmeyenler
 
-1. İş Yatırım ve TradingView için resmi kullanım şartları, istek limiti. Toplu çekimin (~500 hisse x 11 yıl) engellenip engellenmediği sınanmadı.
-2. `SHHE_TARIH` nakit temettü kayıtlarında ex-date mi ödeme tarihi mi; temettü düzeltmesi HGDG'de hangi tarihle uygulanıyor.
+05.10.2026 tarihli liste. Cevaplananlar işaretlidir; açık sorular TASARIM §8'dedir. (bilet 05, 14.10)
+
+1. İş Yatırım ve TradingView için resmi kullanım şartları, istek limiti. Toplu çekimin (~500 hisse x 11 yıl) engellenip engellenmediği sınanmadı. **Cevaplandı (bilet 01): TASARIM §4 "Kullanım koşulları"; açık kalan: hız sınırı, TASARIM §8.1.**
+2. `SHHE_TARIH` nakit temettü kayıtlarında ex-date mi ödeme tarihi mi; temettü düzeltmesi HGDG'de hangi tarihle uygulanıyor. **Cevaplandı: TASARIM §4 "Şirket olayları" (tarih hak kullanım günüdür).**
 3. Diğer `SHT_KODU` kodlarının (07, 79, 90, 99) anlamı. 78 = Sermaye Azaltılması. Birleşme/bölünme (spin-off) olayları nasıl kodlanıyor.
 4. Önceki ABCD dönemi (2014-12 - 2015-11-27) marjı. Pay bazında devre kesici 2017-07-17 değişikliğinin içeriği. VBTS içeriği.
-5. 2015-2016 KAP endeks değişikliği bildirimlerinin varlığı; PDF eklerinin makinece okunabilirliği.
-6. EVDS: anahtarla gerçek veri başlangıcı, politika faizi serisi kodu, 2015-2018 gecelik faiz seri kodu.
+5. 2015-2016 KAP endeks değişikliği bildirimlerinin varlığı; PDF eklerinin makinece okunabilirliği. **Cevaplandı (bilet 16): TASARIM §8.2 (2015 ve 2016 ilk yarı KAP'ta yok).**
+6. EVDS: anahtarla gerçek veri başlangıcı, politika faizi serisi kodu, 2015-2018 gecelik faiz seri kodu. **Geçersiz (EVDS kullanılmıyor): TASARIM §4 "Faiz", §8.9.**
 7. Yahoo AYGAZ 0.5566 çarpanının nedeni.
 8. DataStore endeks üyeliği ürünü ve ücreti.

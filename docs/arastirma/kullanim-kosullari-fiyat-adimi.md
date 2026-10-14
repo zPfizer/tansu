@@ -19,6 +19,9 @@ Her satırda doğrulama durumu yazılıdır.
 
 ## 2. Karar (Claude, 05.10.2026)
 
+Tarihsel gerekçe. Güncel politikanın sahibi TASARIM §4 ("Kaynaklar", "Kullanım koşulları") ve §5.1 ("İkinci kaynak yok");
+çelişkide onlar geçerlidir. (bilet 05, 14.10)
+
 1. **TradingView kaynaklı veri kullanılmaz.** borsapy'nin TradingView üzerinden gelen fiyat ve endeks verisi
    sistemden çıkar. Bunun sonuçları:
    - **İkinci kaynak karşılaştırması (TASARIM 5.1) kalkar.** Veri doğruluğunu iki denetim taşır:
@@ -54,18 +57,7 @@ Her satırda doğrulama durumu yazılıdır.
 - **2016–03.11.2023:** FROTO, TUPRS ve PGSUS'un 250 TL üstü 954 kapanışının hepsi 0,10'un katı. 605'i 0,25'in
   katı değil. Yani 06.11.2023'ten önce 100 TL üstünde adım 0,10'du.
 
-**Tablo** (TASARIM 5.1'e işlendi):
-
-| Fiyat (TL) | 06.11.2023 öncesi | 06.11.2023 ve sonrası |
-|---|---|---|
-| < 20 | 0,01 | 0,01 |
-| 20–50 | 0,02 | 0,02 |
-| 50–100 | 0,05 | 0,05 |
-| 100–250 | 0,10 | 0,10 |
-| 250–500 | 0,10 | 0,25 |
-| 500–1.000 | 0,10 | 0,50 |
-| 1.000–2.500 | 0,10 | 1,00 |
-| ≥ 2.500 | 0,10 | 2,50 |
+**Tablo:** tek kopya TASARIM §5.1 "Fiyat adımı"dadır; yukarıdaki doğrulama o tabloyu destekler. (bilet 05, 14.10)
 
 Doğrulanmayanlar:
 - 2.500 TL üstü bant (veride örnek yok).

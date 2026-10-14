@@ -68,7 +68,7 @@ PDF'ler `pdftotext` ile okundu; 4 PDF'in (sütun kayması) alınan/çıkarılan 
   yok; 40 ekli duyurudan yalnız 2'sinde XU100 geçiyor ve sütunlar ayrıştırılamadı.
 - Sonuç: geriye yürütülen üye sayısı 99–106 arasında sapıyor (gerçek hep 100). 11 hissede (BERA, IPEKE, EFORC,
   KONTR, BAGFS, ECZYT, ADANA, GUSGR, DGATE, KLGYO, HURGZ) giriş/çıkış kaydı birbirini tutmuyor; bu
-  satırlar `bosluk.csv`'de duyuru tarihinden bugüne "belirsiz" işaretli.
+  satırlar `docs/arastirma/bist100_kap_bosluk.csv`'de duyuru tarihinden bugüne "belirsiz" işaretli.
 - EFORC → EFOR kod değişimi olabilir (doğrulanmadı).
 
 **Açık işler.** (1) 07 bitince yıl bazında örtüşme oranı. (2) Dönem içi değişiklikler için ikinci kaynak

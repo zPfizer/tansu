@@ -6,7 +6,7 @@ denetlenir: Tansu'nun fikri varsa kural ona çevrilir; uygulanamıyorsa nedeni K
 
 **Blocked by:** 01
 
-**Status:** done (PR #5, ce0fe60)
+**Status:** done (PR #5, 4c3199e)
 
 - [ ] KURALLAR, TASARIM ve `docs/kurallar/A–E`'deki her YORUM listelendi. Her biri için Tansu havuzunda (not ve görsel) o konuda fikir arandı;
       sonuç üç sınıftan biri: Tansu sessiz (YORUM kalır) · Tansu'nun fikri var (kural Tansu'ya çevrilir) · Tansu'nun fikri var ama
