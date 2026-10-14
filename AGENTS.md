@@ -12,7 +12,7 @@ Her bilginin tek sahip dosyası vardır; öteki dosyalar yalnız atıf verir. Ok
 | `docs/TASARIM.md` | sayı, formül, davranış ve kararlar; §7 uygulama sırası |
 | `docs/KURALLAR.md` | aile kuralları ve YORUM'lar (§3–4) |
 | beyin: `kisisel/300-Projects/Tansu X Veri Havuzu/` (depo dışı) | Tansu'nun ham paylaşımları: not ve görsel. Ham kaynaktır, değiştirilmez |
-| `docs/kurallar/A-yapi-bolge.md` … `E-risk-cikis-surec.md` (yerel, git dışı) | havuzun okuması: Tansu'nun ne dediği. Kural: havuzdaki her not burada atıflı ya da "kural içermez" listesinde olmalı |
+| `docs/kurallar/A-yapi-bolge.md` … `E-risk-cikis-surec.md` | havuzun okuması: Tansu'nun ne dediği. Kural: havuzdaki her not burada atıflı ya da "kural içermez" listesinde olmalı |
 | `docs/sadakat.md` | sadakat ölçümü |
 | `AGENTS.md` | çalışma kuralı ve iş akışı |
 | `CODING_STANDARDS.md`, `DEFINITION_OF_DONE.md` | kod biçimi ve bitiş ölçütü (`## Tansu`) |
