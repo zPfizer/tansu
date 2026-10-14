@@ -7,4 +7,4 @@ Komut: `python -m tansu denetim` (TASARIM 5.12). Boş dünya 200 tekrar, etkili 
 | EMA sıkışması | %0,00 (0/200) | %0,00 (0/200) | %25,00 (5/20) / %25,00 (5/20) | %100,00 (20/20) / %100,00 (20/20) |
 | Çift rotasyonu | %0,00 (0/200) | %0,00 (0/200) | %20,00 (4/20) / %0,00 (0/20) | %45,00 (9/20) / %0,00 (0/20) |
 
-Yanlış kabul: boş dünyada ölçüt 1–4 geçen oran (örneklem ve sağlamlık şartı aranmaz; Kâğıt bunun alt kümesidir). Güç: etkili dünyada aynı oran.
+Yanlış kabul ve güç tanımı: TASARIM 5.12, "Boru hattı denetimi". "Ölçüt 1–4" sütunları o tanımın kendisidir (ölçüt 1–4 Geçti ve portföy kuralı reddetmedi); "Kâğıt" sütunları ayrıca örneklem ve sağlamlık şartını arar. (bilet 05, 14.10)

@@ -38,9 +38,8 @@ first. Write the reason. Then write the code.
   - If a test is wrong, first write the reason in the document.
   - Calculate the expected values by hand. Do not calculate them again the way the code does.
   - Write the constants in a test as literals.
-- **Do not look at the return (Getiriye bakma):** Do not calculate the return (getiri) result in the fidelity check (sadakat kontrolü). Do not calculate it when you select a YORUM.
-- **Trial log (Deneme günlüğü):** Each backtest run (sınama koşusu) writes to `kayit/deneme.jsonl`. Only append to the log.
-  Do not edit it. Do not delete it.
+- **Do not look at the return (Getiriye bakma):** The rule is in `docs/KURALLAR.md` §4. Do not calculate the return (getiri) result in the fidelity check (sadakat kontrolü) or when you select a YORUM.
+- **Trial log (Deneme günlüğü):** The log `kayit/deneme.jsonl` and its rules are in TASARIM §5.11. Do not edit it. Do not delete it.
 - **Git (this repository only):** Do not use `rebase`, `--amend`, `--force` (and `--force-with-lease`), `reset --hard`, `clean -f`, `branch -D`,
   `checkout .`, `restore .`, `git add .`, or `git add -A` (for Claude, a permission deny blocks them: `permissions.deny` global and `.claude/settings.json`). Add files
   by name. Data (`veri/`) and report output (`rapor/`) do not go into git. Do not delete `veri/`. `kayit/` goes into git (the git history is the

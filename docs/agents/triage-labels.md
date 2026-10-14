@@ -12,4 +12,6 @@ The skills speak in terms of five canonical triage roles. This file maps those r
 
 When a skill mentions a role (e.g. "apply the AFK-ready triage label"), use the corresponding label string from this table.
 
+The role string is one possible value of the `Status:` line. The other values (`claimed`, `in-review`, `done`, `resolved`) and the rules for the line are in `issue-tracker.md`, section "Status field".
+
 Edit the right-hand column to match whatever vocabulary you actually use.
