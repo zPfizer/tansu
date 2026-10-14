@@ -140,7 +140,7 @@ Karar: KALDI (tur 2). Tur 1 tamamlanma iddiaları düzeltildi: A12 ve A13 tam ka
 | 5 | düzeltildi: EMA oran formülü yalnız §3 aile 2'de; §4 satırı atıf. Tur 1 raporundaki "tek yerde" iddiası A13 satırında düzeltildi |
 | 6 | düzeltildi (yerel M): T5 Clenow formülü (B §15); D1 oran formülü, D2 pk123 oranları, C3 OBV tanımı, formül satırı (OBV, pivot, realize vol), Trident ve Fib merdiveni oranları atıfa çevrildi; kalan taramada başka A–E formül kopyası bulunmadı |
 | 7 | düzeltildi: E K5 madde 5: dolum YORUM; TASARIM kısmi kârı ve iz süren stopu erteledi (TASARIM:373) |
-| 8 | düzeltildi: B:54 ve B §2'deki "%5" ifadesi ("bir günlük sert hareket"; rakam yok); B:57 ve kanıt satırı da rakamsız |
+| 8 | düzeltildi: B:54 ve B §2'deki bir günlük hareket yüzdesi kaldırıldı ("bir günlük sert hareket"; rakam yok); B:57 ve kanıt satırı da rakamsız |
 
 **AÇIK (kapanmadı):**
 - TASARIM çift satırları (bilet 03/07 işi; bu dalda değişmez): `docs/TASARIM.md:437–438`, `:535–537`, `:550–552`.
@@ -148,3 +148,10 @@ Karar: KALDI (tur 2). Tur 1 tamamlanma iddiaları düzeltildi: A12 ve A13 tam ka
 
 Kapı: ruff, pytest, kapsam ve LF sonuçları commit sonrası nihai yanıttadır.
 
+## Denetim tur 3 (Codex, 14.10): KALDI; yeniden tanım 04b
+
+Kök neden: yazıcı kısmi taramayla "kopya kalmadı" dedi; getiri kontrolü raporun kendisine uygulanmadı.
+- M:418 stop formülü → C §6 atfı (yerel taslak).
+- Rapor madde 8 satırındaki rakam kaldırıldı.
+- K E risk tablosu: K1–K3 notu tablonun altına alındı; satırlar 61–63 tabloya döndü.
+- Açık kalan: TASARIM tekrar satırları (bilet 03/07 takibi); ICBCT etiketi ve G-125 rakamı okunamıyor.

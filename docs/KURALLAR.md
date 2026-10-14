@@ -57,10 +57,11 @@ dizin kaynak değerini yinelemez.
 | Gün sonu stopu | E K3 | K |
 | İz süren stop, kısmi kâr | E K4, K5 | K |
 
-E K1–K3: kaynakları NotebookLM'dir (ikinci el), bu yüzden H değil K'dir. İkinci el kaynak tek başına kural olmaz (yukarıdaki okuma kuralı); bu üç kural, birinci el kaynak bulunana dek bizim okumamız (YORUM) olarak benimsenir.
 | Harmonik hedef merdivenleri | C §4, §11 (E K11) | K |
 | Durum etiketleri | C §2 (E K15) | H (ad) |
 | Tepki penceresi | C §10 (E K15) | K |
+
+E K1–K3: kaynakları NotebookLM'dir (ikinci el), bu yüzden H değil K'dir. İkinci el kaynak tek başına kural olmaz (yukarıdaki okuma kuralı); bu üç kural, birinci el kaynak bulunana dek bizim okumamız (YORUM) olarak benimsenir.
 
 ### Piyasa durumu (D)
 | Kural | Bölüm | Hazırlık |
