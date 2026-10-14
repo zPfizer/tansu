@@ -16,4 +16,4 @@ anlatır; geri çekilmiş öneriler işaretlidir.
 
 ## Comments
 
-2026-10-14: skill adları, ADR anlatımı ve tek sahip düzeltmeleri harness hizasında yapıldı (.scratch/harness-hizasi-1410/plan.md, tur 2 ve 3; commit a229003); Status sözleşmesi, docs/denetim.md, araştırma notları ve 05.10 raporu açık.
+2026-10-14: skill adları, ADR anlatımı ve tek sahip düzeltmeleri harness hizasında yapıldı (.scratch/arsiv/harness-hizasi-1410/plan.md, tur 2 ve 3; commit a229003); Status sözleşmesi, docs/denetim.md, araştırma notları ve 05.10 raporu açık.
