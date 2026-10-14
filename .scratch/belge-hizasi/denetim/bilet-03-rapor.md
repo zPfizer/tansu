@@ -25,7 +25,7 @@ parametresi değişmedi; getiriye bakılmadı. `docs/sorgu/` yerel (git dışı)
 | e-13 `Kaynak` ve yorum uyarısı | 6.5 (Bilet 14) Tarih/Kaynak | izleme-17 17-087 | düzeltildi: aynı hücre "Tansu'dan esinlenen yorum · İş Yatırım <kimlik>". Kod: bilet 07'ye |
 | e-14 `sema` alanı | 5.11 Alanlar | izleme-15 15-046 | düzeltildi: `sema` (şimdilik 1). Kod: bilet 07'ye (`kayit.py` yazmıyor) |
 | e-15 okuma zaman aşımı | 4 `kaynak` | izleme-01 01-057 | düzeltildi: (5, 120) sn; kod uyumlu (`kaynak.py:57`) |
-| e-16 test yüzleri | 4 yeni "Test yüzleri" | izleme-12 12-018, izleme-17 17-093 | düzeltildi: tek liste (C-9 + göstergeler + rapor). Rapor testi (17-093) yok: bilet 07'ye/06'ya not |
+| e-16 test yüzleri | 4 yeni "Test yüzleri" | izleme-12 12-018, izleme-17 17-093 | düzeltildi: tek liste (C-9 + göstergeler + rapor). `tests/test_simulator.py:222` rapor başlığını, uyarıyı, yasaklı sözcükleri ve işlem CSV sütunlarını zaten sınıyor. Boşluk: 17-093 "ilk satır cümlesi" ve "sabit durum listesi" (kart durumları) için test görünmüyor (bilet 06/07) |
 | e-17 olay denetimi vakaları | 5.1 Olay denetimi | izleme-02 02-093 | düzeltildi: üç sınama vakası eklendi |
 | e-18 kod seçiminde 60 gün hacim | 5.2 Evren kuralı | izleme-03 03-004 | düzeltildi: 60 günlük medyan TL hacim; K2'de çift ağırlık yok. Kod uyumlu (`evren.py`) |
 | e-19 evren-indir elle | 6.2 Veri | AGENTS Task Scheduler | zaten düzeltildi (bilet 09): `TansuAylik` metni var |
@@ -64,8 +64,9 @@ düzeltildi 27 · çürütüldü 1 · zaten düzeltildi 2 · Levent'e soru 0 (ik
 4. `tansu/gunluk.py:SUTUNLAR`: başlıklar ASCII olur (e-11). `kayit/kartlar.jsonl` anahtarları bu adlardan gelir; yalnız-ekleme günlükte anahtar adı değişir, eski satırlar eski adla kalır.
 5. `tansu/gunluk.py:_kart` `Kaynak` hücresi: "Tansu'dan esinlenen yorum · İş Yatırım <kimlik>" (e-13).
 6. `tansu/kayit.py`: günlük satırlarına `sema: 1` (e-14; yalnız-ekleme, geriye dönük değişmez).
-7. 17-093 rapor testi (sütun listesi, yasaklı kelime) yok (e-16).
+7. 17-093 kalan boşluk: "ilk satır cümlesi" ve "sabit durum listesi" denetimi (sütun listesi, uyarı ve yasaklı sözcük `tests/test_simulator.py:222`'de var) (e-16).
 8. `tansu/denetim.py:38` docstring "β" → "piyasa yükü" (yalnız ad).
+9. `tansu/gunluk.py:_kanit`: kanıt satırı "rastgele kurala göre işlem başına fazla getiri" yazıyor; işlem düzeyi fazla getiri sepete göredir (5.7), ifade "sepete göre" olur (denetim tur 1, A3).
 
 ## Levent'e sorular (cevaplandı: vekil kararı 14.10, Threads 37; aşağıdaki iki soru karara bağlandı ve uygulandı)
 
@@ -86,3 +87,13 @@ düzeltildi 27 · çürütüldü 1 · zaten düzeltildi 2 · Levent'e soru 0 (ik
 - Tansu denetimi: 5.12 ve 5.8 yukarıdaki ad ve not (parametre optimize eden ileri yürüme değildir).
 - 6. tur: 5.9 çift bölmesinde geçiş sayısı = tutuş dönemi sayısı, nakitten ilk giriş dahil (`ciftbolme.py:444` ile doğrulandı); sentetik dünyanın "β"sı 5.12'de "piyasa yükü" (GLOSSARY:89 "β iki anlamı vardır" satırı bu adı henüz anmıyor; sözlük sahibine not).
 - 10. tur: 5.7 K1 "düşer" düzeltildi; 5.13'te yalnız hacmi farklı tekrar satır = yapısal ihlal, indirme durur (`veri.py:200` `drop_duplicates` hacmi dahil eder).
+
+## Denetim tur 1 düzeltmeleri (14.10)
+
+- A1: TASARIM §8 madde 5 "sinyal günleri 01.12.2015'ten sayılır, rejim başı 30.11.2015; 5.1".
+- A2: TASARIM 5.7 Tekrar sayısı: 200·m duyarlılık payıdır, zorunluluk değil; B = 1.000, m ≤ 50 örneğiyle uyumlu.
+- A3: TASARIM 6.5 Kanıt örneği "sepete göre"; kod ifadesi bilet 07 madde 9.
+- A4: TASARIM 4 Test yüzleri "ilk satır cümlesi" geri geldi.
+- A5: TASARIM 5.1 Karantina olay eşleştirmesi ±1 işlem günü (02-024) açıkça bağlandı.
+- A6: TASARIM 6.4 CSV yokluğu "koşu çalışmadı" demez; `durum.txt` ayırt eder.
+- Koruma: Kanıt örneğinde getiri rakamı yok (`+%x,x`).

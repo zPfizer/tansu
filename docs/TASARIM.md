@@ -156,7 +156,7 @@ gelir, bu yüzden `kayit` `rapor`'dan sonra gelir. Önceki sıra `kayit` → `ra
 
 **Test yüzleri:** testler yalnız bu yüzlere yazılır: Adım, Motor, Simülatör, İstatistik, Evren, veri kapıları, aileler, kayıt
 (sonuc C-9), göstergeler (Wilder ATR ve EMA için elle hesaplı 5 satırlık örnek; İ: 12-018) ve rapor (sahte sonuçtan rapor ve
-CSV: sütun listesi, sabit durum listesi, yasaklı kelime AL, SAT, ÖNERİ, "Tansu'nun sistemi"; İ: 17-093). (bilet 03)
+CSV: sütun listesi, ilk satır cümlesi, sabit durum listesi, yasaklı kelime AL, SAT, ÖNERİ, "Tansu'nun sistemi"; İ: 17-093). (bilet 03)
 
 Takvim, fiyat günlerinden çıkar (İş Yatırım XU100 günleri). Maliyet tek bir sabittir.
 
@@ -247,7 +247,8 @@ hatasından** ayırmak.
   Sınama vakası: KONTR 08.07.2026. (İ: 01-023, 02-056, 05-043)
 - **Karantina:**
   - Kapanıştan kapanışa o günkü limiti (+%0,5) aşan ve şirket olayıyla açıklanmayan her gün karantinaya
-    girer.
+    girer. "Olayla açıklanan" eşleştirmesi de olay denetimindeki gibi tablo tarihinin ±1 işlem günü penceresinde yapılır
+    (HEKTS 26.11.2015). (İ: 02-024)
   - O hisse 250 gün yeni sinyal üretmez.
   - Açık pozisyon son temiz AOF'ta kapanır ve sayılır.
   - Fiyat yamanmaz.
@@ -513,10 +514,10 @@ serisinin kaynağını ve son değişim tarihini yazar; seri boşsa koşu SORUNL
   - Bu karşılaştırma yalnız Z zamanlamasını ölçer; çift seçiminin değeri K2 ile okunur.
   (Sorgu S12, İ: 09-015)
 - **Tekrar sayısı:**
-  - B ≥ max(1.000, 200·m); m = deneme sayısı (5.11'de tek tanım). Daha azıyla p tabanı Holm eşiğini
-    aşamaz. Sabit B = 1.000 ile en küçük p 1/1.001 ≈ 0,000999'dur; m = 50'de en küçük düzeltilmiş p
-    50/1.001 ≈ 0,04995 < 0,05 olduğundan kabul mümkündür, m > 50'de imkânsızdır (cevaplar-15'teki "m ≥ 50 imkânsız"
-    yanlıştır; sonuc O14 doğrudur). B ≥ 200·m bu sınırı kaldırır.
+  - B ≥ max(1.000, 200·m); m = deneme sayısı (5.11'de tek tanım). 200·m bir duyarlılık payıdır, matematiksel zorunluluk
+    değildir: p tabanı 1/(B+1) olduğundan B = 1.000 ile m ≤ 50 için kabul hâlâ mümkündür (m = 50'de en küçük düzeltilmiş
+    p 50/1.001 ≈ 0,04995 < 0,05; m > 50'de imkânsız; cevaplar-15'teki "m ≥ 50 imkânsız" yanlıştır, sonuc O14 doğrudur).
+    B ≥ 200·m ile p tabanı eşiğin çok altında kalır, yani Holm eşiği p tabanıyla değil veriyle belirlenir.
   - Geliştirmede 200 tekrar; bu p'ler günlükteki Holm listesine girmez, m'yi artırmaz; rapor yalnız varsayımsal bir
     Holm p'si gösterir (5.11).
   (B-14, İ: 15-078, 19-068, 09-009; bilet 03)
@@ -853,7 +854,7 @@ Getiri görülmeden yazılır; kural kaydına girer. (B-7, İ: 19-015)
    - Kâğıt ve Canlı ailelerin sinyalleri her gün yeni bir CSV dosyasına yazılır:
      `rapor/kartlar-YYYYMMDD.csv` (`;` ayraç, ondalık virgül, UTF-8 BOM).
    - Deneme aileleri gösterilmez.
-   - Sinyal yoksa yalnız başlık satırı yazılır. CSV hiç yoksa koşu çalışmamıştır. CSV'nin ilk satırı her zaman başlıktır; veri bilgisi (anlık görüntü, son çubuk, sembol sayısı) `durum.txt`'te ve raporun başlığındadır. (İ: 17-050, 17-087; İ: 13-082'nin CSV kısmı reddedildi: karar.md:32, bilet 03)
+   - Sinyal yoksa yalnız başlık satırı yazılır. CSV'nin yokluğu tek başına "koşu çalışmadı" demez: başarısız koşu da kart yazmaz. Koşunun çalışıp çalışmadığını ve neden başarısız olduğunu `durum.txt` söyler (6.7). CSV'nin ilk satırı her zaman başlıktır; veri bilgisi (anlık görüntü, son çubuk, sembol sayısı) `durum.txt`'te ve raporun başlığındadır. (İ: 17-050, 17-087; İ: 13-082'nin CSV kısmı reddedildi: karar.md:32, bilet 03)
    - Raporda başlık altında sabit uyarı: "Tansu'dan esinlenen yorum".
 5. **Kart içeriği** (P1, P2, B-20, İ: 17-041, 01-079, 07-090, 08-009, 08-098, 09-041, 17-010, 10-051):
    - **Sabit sütunlar** (CSV başlıkları Türkçe ASCII, `AGENTS.md` Adlar kuralı; İ: 11-051): `tarih`; `hisse`; `aile`; `durum`;
@@ -877,8 +878,8 @@ Getiri görülmeden yazılır; kural kaydına girer. (B-7, İ: 19-015)
      düzeyinde portföy fazla getirisinin (K2'ye göre) yıllık blok bootstrap %95 aralığı, birimi ve yöntemiyle. Aralık
      sıfırı içeriyorsa "ayırt edilemiyor" yazar. Kâğıt dönem = ilk Kâğıt `durum` satırından geçen gün // 30, ölçüt 6 için
      gereken 6 aya bölünerek yazılır. p, Holm p ve toplam deneme sayısı raporun "Ayrıntı" bölümündedir.
-   - **Kanıt örneği** (Kâğıt aile): "Kâğıt · 148 işlem · rastgele kurala göre işlem başına fazla getiri +%0,9 (%0,3
-     masraf) · portföy fazla getirisi (K2'ye göre, yıllık, blok bootstrap %95 aralık +%2,1 ile +%6,3) · kâğıt dönem 3/6 ay".
+   - **Kanıt örneği** (Kâğıt aile): "Kâğıt · 148 işlem · sepete göre işlem başına fazla getiri +%x,x (%0,3
+     masraf) · portföy fazla getirisi (K2'ye göre, yıllık, blok bootstrap %95 aralık +x,x ile +x,x) · kâğıt dönem 3/6 ay".
 6. **Açık kartlar ayrıca saklanmaz:** her gün sinyal gününden itibaren Adım ile yeniden hesaplanır. Günün
    kart çıktısı `kayit/kartlar.jsonl`'e yalnız eklenir; kâğıt üstü dönem geriye dönük değişmez. (C-5)
 7. **`rapor/durum.txt`** (İ: 16-036, 16-070, 13-082, 17-048):
@@ -938,12 +939,12 @@ Adım 1–9 tamamlandı (MVP biletleri `.scratch/arsiv/tansu-mvp/issues/`, 05–
    birincil) kod, tarih ve bazen açıklama verir. Tamlığı doğrulanmadı (KAP "üyeliği sona erenler" sayfasına
    ulaşılamadı).
 5. 13.03.2020 öncesinde limit bütün paylarda ±%20 mi, bazı pazarlarda ±%15 mi (ikincil kaynak)? Limit
-   fiyatı adıma içe mi yuvarlanıyor? Bilet 03'te veriyle ölçülür. (±%10 döneminde taban = önceki
+   fiyatı adıma içe mi yuvarlanıyor? Bilet 03'te veriyle ölçülür. (±%10 döneminde baz fiyat = önceki
    kapanış doğrulandı.) Bilet 07, yalnız ikincil haber kaynağı (borsaningundemi.com, hurriyet.com.tr
    "Borsa İstanbul'dan marjlara tedbir", 13.03.2020): 30.11.2015 öncesi iki seansta ±%10, 30.11.2015'te
    BISTECH ile ±%20; 13.03.2020'de ±%20 ya da ±%15'ten ±%10'a. Birincil kaynak (Borsa İstanbul duyurusu,
-   Pay Piyasası Prosedürü) açılamadı. Kod 2010–2015 için ±%20 kullanır (karantina gevşek kalır; ilk sinyal
-   30.11.2015) ve ±%15 grubunu bilmez; birincil kaynak bulunana dek değişmedi.
+   Pay Piyasası Prosedürü) açılamadı. Kod 2010–2015 için ±%20 kullanır (karantina gevşek kalır; sinyal günleri
+   01.12.2015'ten sayılır, rejim başı 30.11.2015; 5.1) ve ±%15 grubunu bilmez; birincil kaynak bulunana dek değişmedi.
 6. Sıkışma oranının paydası düşüş trendinde EMA200 mü en küçük EMA mı? KRDMD'de ikisi aynı.
 7. Bireysel yatırımcı için vergi.
 8. `HACIM` toptan ya da çapraz işlemleri içeriyor mu? İçeriyorsa medyan şişkin olabilir. (İ: 08-027)
