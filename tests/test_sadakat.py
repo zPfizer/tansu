@@ -54,6 +54,7 @@ def test_komut_iki_kosuda_ayni_rakamlari_verir_ve_deneme_gunlugune_yazar(tmp_pat
     satirlar = [json.loads(s) for s in gunluk.read_text(encoding="utf-8").splitlines()]
     assert [s["tur"] for s in satirlar] == ["sadakat", "sadakat"]
     assert all(s["anlik"] == kimlik for s in satirlar)
+    assert all(s["sema"] == 1 for s in satirlar)
 
 
 def test_sadakat_gunlugunun_her_satirinda_olay_var(tmp_path):
@@ -148,3 +149,50 @@ def test_ek_aday_ara_isaret_cevirerek_ara_gunde_cifti_bulur():
         y, x, hedef=(-0.4364357804719848, -3.0), pencereler=range(3, 4)
     )
     assert sonuc == [("dun_pencere", "log_oran", 3, 1, -1, gunler[4])]
+
+
+def _olcum(ort, ema200, bas="2025-12-17"):
+    d = {
+        "bas": pd.Timestamp(bas),
+        "bit": pd.Timestamp("2026-01-14"),
+        "gun": 20,
+        "ortalama": ort / 100,
+    }
+    return {"donemler": [d], "emalar": [31.92, 30.74, 29.58, ema200]}
+
+
+def test_esdeger_aday_tek_aday_sayilir_ve_secilen_yazilir():
+    # KURALLAR §4: aynı dönem ve gün, ölçülen değerler en çok 0,005 ayrı: tek aday; seçilen ilk (en uzun) aday.
+    metin = "\n".join(
+        sadakat._esdeger_bolumu(
+            [
+                ("bütün geçmiş", _olcum(0.665, 28.4352, bas="2025-12-16")),
+                ("son 3 yıl", _olcum(0.641, 28.4366)),
+                ("son 2 yıl", _olcum(0.642, 28.4370)),
+            ]
+        )
+    )
+    assert "son 3 yıl, son 2 yıl" in metin
+    assert "±0,005" in metin and "tek aday sayılır" in metin
+    assert "Seçilen aday: son 3 yıl" in metin
+
+
+def test_esdeger_olmayan_adaylar_tek_aday_sayilmaz():
+    metin = "\n".join(
+        sadakat._esdeger_bolumu(
+            [
+                ("son 3 yıl", _olcum(0.641, 28.4366)),
+                ("son 2 yıl", _olcum(0.70, 28.4370)),
+            ]
+        )
+    )
+    assert "tek aday sayılmaz" in metin and "Seçilen aday" not in metin
+
+
+def test_rapor_metni_ucuncu_satir_kurallar_4e_atif_verir(tmp_path):
+    metin = sadakat.rapor_metni(veri.oku(hazirla(tmp_path), tmp_path))
+    satirlar = metin.splitlines()
+    assert satirlar[2].startswith("Kural: KURALLAR §4")
+    assert "Getiriye bakılmaz." not in metin
+    assert "(±0,005)" in satirlar[2]
+    assert "Eşdeğer adaylar" in metin

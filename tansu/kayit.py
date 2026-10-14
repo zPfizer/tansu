@@ -55,6 +55,7 @@ HASH_DISI = [
     "rapor.py",
     "sadakat.py",
 ]
+SEMA = 1  # TASARIM 5.11: günlük şema sürümü
 IZGARA = saglamlik.IZGARA  # KURALLAR §3 (YORUM): her ailenin önceden yazılmış ızgarası
 
 
@@ -95,7 +96,7 @@ def _yaz(satir: dict) -> None:
     yol = KAYIT_DIZINI / "deneme.jsonl"
     yol.parent.mkdir(parents=True, exist_ok=True)
     with yol.open("a", encoding="utf-8") as f:  # yalnız ekleme
-        f.write(_json(satir) + "\n")
+        f.write(_json({**satir, "sema": SEMA}) + "\n")
 
 
 def _oku() -> list:

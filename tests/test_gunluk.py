@@ -27,18 +27,18 @@ P = aileler.Parametre(
 TARIH = dt.date(2026, 10, 5)
 SIMDI = dt.datetime(2026, 10, 5, 19, 30)
 BASLIK = [
-    "Tarih",
-    "Hisse",
-    "Aile",
-    "Durum",
-    "Referans",
-    "Stop",
-    "Pozisyon %",
-    "Adet",
-    "Fiili risk",
-    "Likidite sınırı TL",
-    "Kanıt",
-    "Kaynak",
+    "tarih",
+    "hisse",
+    "aile",
+    "durum",
+    "referans",
+    "stop",
+    "pozisyon_yuzde",
+    "adet",
+    "fiili_risk",
+    "likidite_siniri_tl",
+    "kanit",
+    "kaynak",
 ]
 
 
@@ -124,7 +124,7 @@ def test_tamam_kart_csv_ve_durum(tmp_path):
     assert ham.startswith(b"\xef\xbb\xbf")
     satirlar = list(csv.reader(ham.decode("utf-8-sig").splitlines(), delimiter=";"))
     kanit = (
-        "Kâğıt · 148 işlem · rastgele kurala göre işlem başına fazla getiri +%0,90 (%0,3 masraf) · "
+        "Kâğıt · 148 işlem · sepete göre işlem başına fazla getiri +%0,90 (%0,3 masraf) · "
         "portföy fazla getirisi (K2'ye göre, yıllık, blok bootstrap %95 aralık +%0,20 ile +%1,60) · kâğıt dönem 3/6 ay"
     )
     assert satirlar == [
@@ -141,7 +141,7 @@ def test_tamam_kart_csv_ve_durum(tmp_path):
             "%0,35",
             "80000",
             kanit,
-            "İş Yatırım 20261005-1930",
+            "Tansu'dan esinlenen yorum · İş Yatırım 20261005-1930",
         ],
     ]
 
@@ -170,7 +170,7 @@ def test_kart_gunlugu_yalniz_eklenir_ve_gun_basina_bir_satir(tmp_path):
         and s["tarih"] == "2026-10-05"
         and s["anlik"] == "20261005-1930"
     )
-    assert [k["Hisse"] for k in s["kartlar"]] == ["XXXX"]
+    assert [k["hisse"] for k in s["kartlar"]] == ["XXXX"]
 
 
 def test_bugun_basarili_kosu_varsa_hicbir_sey_yapmadan_cikar(tmp_path):
@@ -361,6 +361,25 @@ def test_kart_durumlari_ve_kapanan_kart_yalniz_kapandigi_gun_gorunur(
         if durum is None:
             assert kartlar == []
         else:
-            assert [(k["Hisse"], k["Tarih"], k["Durum"]) for k in kartlar] == [
+            assert [(k["hisse"], k["tarih"], k["durum"]) for k in kartlar] == [
                 ("XXXX", "2026-10-05", durum)
             ]
+
+
+def test_acik_hisseler_eski_ve_yeni_anahtarli_satirlari_okur():
+    # Yalnız-ekleme günlükte eski satırlar eski büyük harfli anahtarla kalır (bilet 07a).
+    yol = kayit.KAYIT_DIZINI / "kartlar.jsonl"
+    yol.parent.mkdir(parents=True, exist_ok=True)
+    eski = {"tarih": "2026-10-05", "kartlar": [{"Hisse": "AAAA", "Durum": "AKTİF"}]}
+    yeni = {
+        "tarih": "2026-10-06",
+        "kartlar": [
+            {"hisse": "BBBB", "durum": "AKTİF"},
+            {"hisse": "CCCC", "durum": "STOP"},
+        ],
+    }
+    yol.write_text(json.dumps(eski) + "\n", encoding="utf-8")
+    assert gunluk._acik_hisseler() == {"AAAA"}
+    with yol.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(yeni) + "\n")
+    assert gunluk._acik_hisseler() == {"BBBB"}

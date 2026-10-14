@@ -7,7 +7,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from tansu import cift, gostergeler, veri
+from tansu import cift, gostergeler, kayit, veri
 
 # Tansu'nun KRDMD ekranı (docs/kurallar/B-momentum-sikisma.md §1). Tolerans: gösterilen son hanenin yarısı.
 SEMBOL = "KRDMD"
@@ -50,9 +50,11 @@ def ema_sikismasi(anlik, sembol=SEMBOL, rapor=RAPOR_TARIHI, gecmis_yil=None) -> 
     }
 
 
-def _bolum(anlik, gecmis_yil) -> list:
-    s = ema_sikismasi(anlik, gecmis_yil=gecmis_yil)
-    ad = "bütün geçmiş" if gecmis_yil is None else f"son {gecmis_yil} yıl"
+def _aday_adi(gecmis_yil) -> str:
+    return "bütün geçmiş" if gecmis_yil is None else f"son {gecmis_yil} yıl"
+
+
+def _bolum(ad, s) -> list:
     satirlar = [
         f"### Aday: {ad}",
         "",
@@ -85,6 +87,41 @@ def _bolum(anlik, gecmis_yil) -> list:
             f"Pencerede {len(s['donemler'])} dönem bulundu; ilki karşılaştırıldı.",
         ]
     return satirlar + [""]
+
+
+def _tuttu(s) -> bool:
+    """Aday Tansu'nun dönemini ve gün sayısını tam tutuyor mu?"""
+    d = next(iter(s["donemler"]), None)
+    return bool(d) and (d["bas"], d["bit"]) == DONEM and d["gun"] == DONEM_GUN
+
+
+def _olculer(s) -> list:
+    return [s["donemler"][0]["ortalama"] * 100, *s["emalar"]]
+
+
+def _esdeger_bolumu(olcumler) -> list:
+    """KURALLAR §4 eşdeğer aday kuralı; `olcumler`: [(aday adı, ema_sikismasi sonucu)], uzun geçmişten kısaya."""
+    baslik = [
+        "### Eşdeğer adaylar",
+        "",
+        "Aynı dönemi ve gün sayısını veren adaylarda ölçülen değerler (ortalama, EMA'lar) birbirinden en çok "
+        f"±{str(TOLERANS).replace('.', ',')} ayrılıyorsa adaylar eşdeğerdir ve tek aday sayılır (KURALLAR §4).",
+        "",
+    ]
+    tutan = [(ad, _olculer(s)) for ad, s in olcumler if _tuttu(s)]
+    if not tutan:
+        return baslik + ["Dönemi ve günü tam tutan aday yok.", ""]
+    adlar = ", ".join(ad for ad, _ in tutan)
+    kolonlar = list(zip(*(o for _, o in tutan)))
+    if any(max(k) - min(k) > TOLERANS for k in kolonlar):
+        return baslik + [
+            f"Dönemi ve günü tutan adaylar ({adlar}) birbirinden ±{TOLERANS} dışında ayrılıyor: tek aday sayılmaz.",
+            "",
+        ]
+    return baslik + [
+        f"Eşdeğer adaylar: {adlar}. Tek aday sayılır. Seçilen aday: {tutan[0][0]} (en uzun geçmiş).",
+        "",
+    ]
 
 
 def cift_ara(
@@ -259,8 +296,8 @@ def rapor_metni(anlik) -> str:
     satirlar = [
         "# Sadakat kontrolü",
         "",
-        "Getiriye bakılmaz. Komut: `python -m tansu sadakat`. Tolerans önceden yazılıdır: gösterilen son "
-        f"hanenin yarısı (±{TOLERANS}); tarih ve gün tam eşleşir.",
+        "Kural: KURALLAR §4. Komut: `python -m tansu sadakat`. Tolerans önceden yazılıdır: gösterilen son "
+        f"hanenin yarısı (±{str(TOLERANS).replace('.', ',')}); tarih ve gün tam eşleşir.",
         "",
         f"## EMA sıkışması ({SEMBOL})",
         "",
@@ -269,8 +306,12 @@ def rapor_metni(anlik) -> str:
         f"rapor tarihi {RAPOR_TARIHI.date()}.",
         "",
     ]
-    for gecmis in GECMIS_ADAYLARI:
-        satirlar += _bolum(anlik, gecmis)
+    olcumler = [
+        (_aday_adi(g), ema_sikismasi(anlik, gecmis_yil=g)) for g in GECMIS_ADAYLARI
+    ]
+    for ad, s in olcumler:
+        satirlar += _bolum(ad, s)
+    satirlar += _esdeger_bolumu(olcumler)
     if {CIFT_Y, CIFT_X} <= set(anlik.fiyat["sembol"]):
         satirlar += _cift_bolumu(anlik)
         satirlar += _ek_aday_bolumu(anlik)
@@ -286,6 +327,7 @@ def calistir(kimlik, kok, rapor_yolu, gunluk_yolu) -> str:
     satir = {
         "olay": "sadakat",
         "tur": "sadakat",
+        "sema": kayit.SEMA,
         "tarih": dt.datetime.now(dt.timezone.utc).isoformat(),
         "anlik": kimlik,
     }
