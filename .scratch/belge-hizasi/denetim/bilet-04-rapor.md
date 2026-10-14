@@ -159,4 +159,18 @@ Kök neden: yazıcı kısmi taramayla "kopya kalmadı" dedi; getiri kontrolü ra
 ## 04b denetim tur 1 (Codex, 14.10): KALDI
 
 - (a) M:418 atfı C §7 oldu. (d) Rapor satır 117'deki yüzde kaldırıldı.
-- (c) Taslaklardaki 13 formül kopyası (M, T8): çürütüldü. İki taslak git dışıdır (`.gitignore`), AGENTS "Belgeler ve sahipleri" tablosunda yoktur ve başlarındaki "Geçerlilik (bilet 04, 14.10)" notu sahibin A–E olduğunu söyler. `hiza-c-istem.md:36`: "A draft that differs is a finding only if no file says which one is valid." Sahip belirtildiği için bulgu değildir; taslaklar bilet 04'ün kapsamı dışında bırakıldı. Taslaklardaki formüller A–E ile aynıdır (denetçi: literal/equivalent), çelişki yoktur.
+- (c) 04b tur 2 (KALDI) sonrası düzeltildi: M ve T8'deki 13 formül kopyası ve ek taramada bulunanlar sahip bölüme atıf oldu (liste aşağıda). Satır numaraları düzeltme öncesi hâlidir; taslaklar git dışıdır.
+  - `Close < zone_low`: M:132; T8:270, 315–316 → A §9.
+  - `CD = 1.27 AB`: M:338 → C §12 (Trident formülüyle karşılaştırma).
+  - A/D platform ifadesi: M:350; T8:427 → B §12.
+  - Clenow yıllıklandırma ifadeleri: T8:100 → B §15.
+  - ΔZ formülü: M:421, 436–437 → D "Çift sistemi çekirdeği" 2b (D başlıklarında numara yok).
+  - Risk boyutu ve acil stop: M:373 → E K1–K2.
+  - Bullish FVG eşitsizliği: M:414; T8:150, 288 → A §1, §10.
+  - Gartley D formülü (ters yön): M:432 → C §7.
+  - Gartley AD hedefleri: M:459; T8:188–189 → C §7.
+  - Trident D: T8:142 → C §12.
+  - CD hedef merdiveni: T8:143–144, 188 → C §11.
+  - Fincan hedefi: T8:172, 193, 421 → B §21.
+  - APO: T8:427 → B §13.
+  - Ek tarama: AB=CD D formülü ve 1,272 CD uzantısı T8:122–123 → C §3, §3–4; Kelebek B/D oranları T8:125 → C §8; Gartley B/C/D oranları T8:128 → C §7.
