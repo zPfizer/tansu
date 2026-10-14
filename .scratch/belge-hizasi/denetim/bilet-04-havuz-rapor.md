@@ -38,7 +38,7 @@ Ek: `tweet-talep-bolgesi-volume-profile-momentum-confluence` taramada yoktu (A:3
 | tweet-konveks-rotasyon-stratejisi-makro-dongu | KURAL | KURAL | D (sektör rotasyonu, "Konveks rotasyon"): 5 adım, eşiksiz | görsel yok |
 | tweet-sektor-rotasyonu-hacim-tuzagi-sabit-tl-esigi | KURAL | KURAL | D ("Hacim filtresi"): TL hacmi, 20/60 gün, 10 milyon TL, alt %25; E K10'a işaret | görsel yok |
 | tweet-rsi30-giris-iki-asamali-cikis | KURAL | KURAL | E K5 sonu: RSI(14) 30 girişi, RSI70 reddi %50, önceki gün dibi altı kalan %50 | görsel yok (notta grafik yok) |
-| gorsel-paket-97-iv-sd-expected-move-bantlari | KURAL | YOK | listede. Neden: Sentez "yazarı belirsiz ders metni, Tansu'nun kuralı olarak okunmamalı"; opsiyon IV (TASARIM §3). Tansu'nun cümlesi yalnız "şöyle biraz istatistik çalışalım" | evet |
+| gorsel-paket-97-iv-sd-expected-move-bantlari | KURAL | KURAL (PR #10 bot yorumu, 14.10) | A §16, "yazarlığı belirsiz, ikinci el; YORUM"; listeden çıkarıldı. Eski karar: listede. Neden: Sentez "yazarı belirsiz ders metni, Tansu'nun kuralı olarak okunmamalı"; opsiyon IV (TASARIM §3). Tansu'nun cümlesi yalnız "şöyle biraz istatistik çalışalım" | evet |
 | tweet-aylik-getiri-mevsimsellik-piyasa-hafizasi | KURAL | YOK | listede. Neden: aynı yazarı belirsiz ders metni; "%80 / %30 kasa" Tansu'nun kuralı değil | görsel yok |
 | gorsel-paket-04-tsla-implied-move | KANIT | YOK | listede. Neden: ABD opsiyon örneği, desteklediği kural yok (TASARIM §3 opsiyon). Önerilen hedef gp-97 YOK oldu | evet (2) |
 | gorsel-paket-112-confluence-kesisim-bagimsiz-kanit | KANIT | KANIT | A §16 confluence satırı. Görselde "NotebookLM" imzası: Tansu'nun görseli değil | evet |
@@ -55,7 +55,7 @@ Ek: `tweet-talep-bolgesi-volume-profile-momentum-confluence` taramada yoktu (A:3
 | tweet-dea-vza-sektor-rotasyonu-malmquist-projesi | YOK | YOK | listede (okuyucu ajan KURAL dedi: "3-4 sektör, skor 1"; ben YOK tuttum: proje fikri, yazarı belirsiz ders metni (Sentez), aylık/çeyreklik) | görsel yok |
 | diğer 63 tarama-YOK notu (KURALLAR listesinde tek tek) | YOK | YOK | `docs/KURALLAR.md` "Kural içermeyen notlar": değerleme, haber, eğitim, proje fikri, araç tercihi, vaat, görüş; `tweet-arz-talep-bolgesinde-formasyon-bekleyisi` = tekrar (`tweet-formasyon-arz-talep-confluence-kapisi` ham kaydı, status eskidi) | görsel açılmadı (kararlar metne dayanır) |
 
-Kural sayısı: A 6 yeni kayıt satırı (fiili dolaşım, pivot, imbalance, FVG ticaret, denge/dengesizlik, POC/VAH/VWAP) + confluence kanıt satırı; B 5 (VRP, varyans kesişimi, DMA, gövde-hacim, ikili dip); C 2 (gp-132 filtre, OBO bölümü); D 2 (konveks rotasyon, hacim filtresi); E 2 (RSI30, lojistik/R-R). Toplam 17 kural.
+Kural sayısı: A 7 yeni kayıt satırı (fiili dolaşım, pivot, imbalance, FVG ticaret, denge/dengesizlik, POC/VAH/VWAP; IV/SD bantları PR #10 bot yorumuyla 14.10 eklendi) + confluence kanıt satırı; B 5 (VRP, varyans kesişimi, DMA, gövde-hacim, ikili dip); C 2 (gp-132 filtre, OBO bölümü); D 2 (konveks rotasyon, hacim filtresi); E 2 (RSI30, lojistik/R-R). Toplam 17 kural.
 Kanıt satırı: A 3 (§4, §10, confluence), C 2 (§4, §16), D 1.
 
 ## Adım 5 ve 6

@@ -171,7 +171,6 @@ Kural:
 Havuzdaki her not A–E dosyalarında ya da bu belgede geçer. Aşağıdaki notlar işlem kuralı (giriş, çıkış, filtre, eşik) içermiyor. Yazarı belirsiz bir metindeki kural "kural içermez" sayılmaz; A–E'de "yazarlığı belirsiz, ikinci el" etiketiyle yazılır (ör. DEA/VZA ve aylık mevsimsellik notları: D, "Sektör rotasyonu"). Okuma derinliği: kısa notlar baştan sona; uzun değerleme notlarında Ham, Sentez ve teknik başlıklar. Biçim: dosya adı · gerekçe. "Kapsam dışı: TASARIM §3": TASARIM 3 (değerleme, opsiyon).
 
 gorsel-paket-04-tsla-implied-move · kapsam dışı: TASARIM §3 (opsiyon); ABD örneği, kural yok
-gorsel-paket-97-iv-sd-expected-move-bantlari · kapsam dışı: TASARIM §3 (opsiyon IV); yazarı belirsiz ders metni, Tansu'nun kuralı değil
 gorsel-paket-108-beta-risk-pusulasi · değerleme: beta tanımı, eşiksiz rejim görüşü
 gorsel-paket-130-piyasa-evreleri-birikim-dagitim-semasi · kavram şeması, sayı yok
 gorsel-paket-133-medyan-kanal-kullanimi · gösterge fikri, parametre yok (medyan: B §28)
