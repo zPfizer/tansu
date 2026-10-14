@@ -1,19 +1,28 @@
 # 09: Belgeler bugünkü kodu ve durumu anlatır (uygunluk denetimi 14.10)
 
-**What to build:** YONETIM uygunluk denetiminin (14.10, `YONETIM/.scratch/tansu-uygunluk-1410/`) doğrulanan bulguları
-giderilir. TASARIM §7 ve §4 kodla eşlenir; bilet 02 durumu commit'e uyar; AGENTS görev metni ve KURALLAR havuz sayısı
-bugünü anlatır; "hafta içi 19:30" tek sahibe (TASARIM §6) atıf olur.
+**What to build:** Bir ajan TASARIM, AGENTS ve KURALLAR'ı açtığında, uygulama sırasının hangi adımlarının bittiğini,
+komut girişinin hangi komutları tanıdığını, iki zamanlanmış görevin durumunu ve havuz sayısını bugünkü haliyle okur.
+Her olgu tek sahibinde durur; öteki yerler atıf verir. Kaynak: YONETIM uygunluk denetimi (14.10), Tansu oturumunda
+doğrulanan bulgular 1–5 (bulgu 6–8 düştü).
 
 **Blocked by:** None (can start immediately)
 
 **Status:** done (pr/09-uygunluk-1410)
 
-- [x] TASARIM §7: adım 2–9 ilgili MVP biletiyle "tamamlandı"; adım 10 bilet 16 sonucuna atıf. §6 "`evren-indir` elle yapılır" satırı `TansuAylik` görevine uyar.
-- [x] TASARIM §4: `__main__` satırı koddaki 7 komutu sayar; `sadakat` satırı var; bölüm→kod tablosunda §3 satırı var. `tansu/__main__.py` docstring aynı 7 komutu sayar.
-- [x] Bilet 02 `Status: done (PR #5, ce0fe60)`.
-- [x] AGENTS "Task Scheduler": iki görev kurulu ve etkin (bilet 15, 06.10); saat için TASARIM §6'ya atıf; kapalı kurulum ve "bilet 15'te etkinleştir" metni yok. XML açıklamalarındaki "etkinleştirme bilet 15" notu kalkar.
-- [x] KURALLAR satır 3 havuz sayısı 14.10 sayımı: 258 not, 228 görsel (63 jpg, 145 png, 19 webp, 1 pdf).
-- [x] Test kapısı yeşil; `tests/test_standartlar.py` dahil.
+- [x] Uygulama sırası (TASARIM §7): adım 2–9 bitmiş MVP biletine atıfla "tamamlandı"; adım 9 ilk resmi koşunun sonucunu
+      (iki aile Deneme, kâğıt üstü dönem başlamadı, iki görev etkin) doğru anlatır; adım 10 bilet 16 sonucuna atıf.
+- [x] Modül tablosu (TASARIM §4): komut girişi satırı koddaki yedi komutu sayar; sadakat modülünün satırı var; bölüm→kod
+      tablosu yalnız koddaki atıflardan türer (§3 ve sadakat satırları atıfla desteklenir).
+- [x] Aylık taban yenilemesi (TASARIM §6) "elle" değil, aylık görevle yapılır.
+- [x] Havuz sayısı tek sahipte (KURALLAR başlığı, 14.10 sayımı: 258 not, 228 görsel); TASARIM §2 ona atıf verir.
+- [x] AGENTS görev metni: iki görev kurulu ve etkin (bilet 15, 06.10); saat TASARIM §6'da; XML açıklamaları AGENTS'a atıf.
+- [x] Bilet 02 durumu commit'e uyar (done, PR #5).
+- [x] Test kapısı ve ruff yeşil; bağımsız denetçi GEÇTİ.
 
-Dışarıda bırakılan (gerekçe): `test_gelecek` ve değişmez kural satırları CODING_STANDARDS'ta kural, DoD'de kanıt maddesidir; çift kayıt değil.
+Dışarıda bırakılan: `test_gelecek` ve değişmez kural satırları standartta kural, DoD'de kanıt maddesidir; çift kayıt değil.
 Bilet 02'nin kutuları madde madde doğrulanmadı; kanıt `denetim/tansu-sapma-dogrulama.md`.
+
+## Comments
+
+- 14.10 denetim tur 1 (Codex): KALDI. Bulgular: adım 9 "kâğıt üstü izleme başladı" yanlıştı; sadakat §4 satırı kod atfı olmadan
+  eklendi; TASARIM §2 havuz sayısı eski kaldı; bilet elle yazıldı. Dördü düzeltildi (bilet `to-tickets` şablonuyla yeniden yazıldı).

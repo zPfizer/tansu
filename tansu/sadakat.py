@@ -1,4 +1,4 @@
-"""Sadakat kontrolü: Tansu'nun kendi çıktı rakamlarını ham seriden yeniden üretir (KURALLAR §4). Getiriye bakılmaz."""
+"""Sadakat kontrolü: Tansu'nun kendi çıktı rakamlarını ham seriden yeniden üretir (KURALLAR §4, TASARIM 4). Getiriye bakılmaz."""
 
 import datetime as dt
 import json

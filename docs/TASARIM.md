@@ -63,7 +63,7 @@ normal çıktısıdır.
 
 ## 2. Tansu'nun düşünce yapısı
 
-Kaynak: beyindeki 238 not, 214 görsel. Notların çoğu Claude özetidir; birinci el kaynak görsellerdir.
+Kaynak: beyindeki Tansu havuzu (sayı `KURALLAR.md` başlığında). Notların çoğu Claude özetidir; birinci el kaynak görsellerdir.
 Tansu kodunu ve parametrelerini paylaşmaz. Bu yüzden her aile **Tansu'dan esinlenen bizim
 yorumumuzdur**; ekranda "Tansu'nun sistemi" diye sunulmaz. (P5)
 
@@ -889,8 +889,8 @@ Adım 1–9 tamamlandı (MVP biletleri `.scratch/arsiv/tansu-mvp/issues/`, 05–
 6. **Motor sınamaları** (5.3) → Adım + Motor: tamamlandı (bilet 08).
 7. **Simülatör** (iki bölme) + faiz + K2: tamamlandı (bilet 10, 11).
 8. **K1 + istatistik + deneme günlüğü;** boru hattı denetimi (5.12): tamamlandı (bilet 12, 13).
-9. **İki aileyi koş; rapor.** Kâğıt üstü izleme ve Görev Zamanlayıcı başlar: tamamlandı (bilet 14, 15; ilk resmi
-   koşu 05–06.10, iki aile Deneme; `TansuGunluk` ve `TansuAylik` etkin).
+9. **İki aileyi koş; rapor.** Kâğıt üstü izleme ve Görev Zamanlayıcı başlar: koşu ve görevler tamamlandı (bilet 14, 15;
+   ilk resmi koşu 05–06.10, `TansuGunluk` ve `TansuAylik` etkin). İki aile de Deneme; kâğıt üstü dönem başlamadı.
 10. **Gerçek BIST100** KAP endeks değişikliklerinden (paralel iş): bilet 16 (05.10), kısmi; sonuç §8 madde 2.
 
 ## 8. Açık sorular
