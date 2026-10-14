@@ -67,10 +67,11 @@ Tailor the list to the project once, then reuse it unchanged. A Definition of Do
 - "Done" declared before human review on changes that need it.
 
 ## Tansu
-Genel listeye ektir. PR şablonundaki "Tansu:" satırları bu maddelerin kanıt alanlarıdır.
-- Değişen komut kaydedilmiş gerçek anlık görüntüyle baştan sona koşar; çıktısı PR'a konur.
-- `tests/test_gelecek.py` yeşil; yeni hesap kapsamında.
-- Değişikliğin dokunduğu her TASARIM değişmez kuralının kodu ve testi var.
-- Sadakat kontrolünde ve YORUM seçiminde getiriye bakılmadı; deneme günlüğü yalnız eklendi; kural parametresi
-  yeni deneme olarak kaydedildi (`AGENTS.md` çalışma kuralları).
-- Davranış değiştiyse TASARIM aynı commit'te güncellendi.
+This section adds to the general list. The "Tansu:" lines in the PR template are the proof fields of these items.
+- The changed command runs from start to end on a real recorded snapshot (anlık görüntü). Its output goes into the PR.
+- `tests/test_gelecek.py` is green. The new calculation is in its scope.
+- Each TASARIM invariant rule (değişmez kural) that the change touches has code and a test.
+- In the fidelity check (sadakat kontrolü) and in the YORUM selection, nobody looked at the return (getiri). The trial
+  log (deneme günlüğü) only got new lines. A rule parameter change has a record as a new trial (deneme) (`AGENTS.md`
+  "Çalışma kuralları").
+- If the behavior changed, the same commit updates TASARIM.

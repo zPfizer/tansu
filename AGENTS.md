@@ -1,71 +1,72 @@
 # TANSU
 
-Tansu'dan esinlenen BIST günlük sinyal ve sınama sistemi. Kod belgelere uyar; belge değişmeden davranış
-değişmez.
+TANSU is a daily signal and backtest (sınama) system for BIST. Tansu inspired it. The code follows the documents.
+The behavior does not change before a document changes.
 
-## Belgeler ve sahipleri
-Her bilginin tek sahip dosyası vardır; öteki dosyalar yalnız atıf verir. Okuma sırası tablonun sırasıdır.
+## Documents and owners (Belgeler ve sahipleri)
+Each fact has one owner file. The other files only give a reference to it. Read the files in the order of the table.
 
-| Dosya | Sahibi olduğu bilgi |
+| File | Fact that the file owns |
 |---|---|
-| `GLOSSARY.md` | terimlerin anlamı |
-| `docs/TASARIM.md` | sayı, formül, davranış ve kararlar; §7 uygulama sırası |
-| `docs/KURALLAR.md` | aile kuralları ve YORUM'lar (§3–4) |
-| beyin: `kisisel/300-Projects/Tansu X Veri Havuzu/` (depo dışı) | Tansu'nun ham paylaşımları: not ve görsel. Ham kaynaktır, değiştirilmez |
-| `docs/kurallar/A-yapi-bolge.md` … `E-risk-cikis-surec.md` | havuzun okuması: Tansu'nun ne dediği. Kural: havuzdaki her not burada atıflı ya da "kural içermez" listesinde olmalı |
-| `docs/sadakat.md` | sadakat ölçümü |
-| `AGENTS.md` | çalışma kuralı ve iş akışı |
-| `CODING_STANDARDS.md`, `DEFINITION_OF_DONE.md` | kod biçimi ve bitiş ölçütü (`## Tansu`) |
-| `docs/sorgu/sonuc-3-4.md`, `docs/sorgu/izleme/karar.md` (yerel, git dışı) | kararların gerekçesi (gerekirse okunur) |
+| `GLOSSARY.md` | the meaning of the terms |
+| `docs/TASARIM.md` | numbers, formulas, behavior, and decisions. §7 is the order of implementation |
+| `docs/KURALLAR.md` | the family (aile) rules and the YORUM entries (§3–4) |
+| brain (beyin): `kisisel/300-Projects/Tansu X Veri Havuzu/` (outside the repository) | the raw posts of Tansu: notes and images. This is a raw source. Do not change it |
+| `docs/kurallar/A-yapi-bolge.md` … `E-risk-cikis-surec.md` | the reading of the pool (havuz): what Tansu said. Rule: each note in the pool must have a reference here or must be in the "kural içermez" list |
+| `docs/sadakat.md` | the fidelity (sadakat) measurement |
+| `AGENTS.md` | the working rules and the work flow |
+| `CODING_STANDARDS.md`, `DEFINITION_OF_DONE.md` | the code format and the done criteria (`## Tansu`) |
+| `docs/sorgu/sonuc-3-4.md`, `docs/sorgu/izleme/karar.md` (local, not in git) | the reasons for the decisions (read them when necessary) |
 
-Bu dosyaların hepsi drift denetimindedir: biri ötekiyle çelişirse, eski bilgi taşırsa ya da başka dosyanın
-bilgisini kopyalarsa düzeltilir.
+The drift check covers all these files. Correct a file when it contradicts another file, contains old information,
+or copies a fact of another file.
 
-Belge ile kod çelişirse ya da belge sessizse dur: belgeyi önce düzelt, gerekçesini yaz, sonra kodu yaz.
+If a document and the code contradict, or if the document says nothing about the case, stop. Correct the document
+first. Write the reason. Then write the code.
 
-## Çalışma kuralları
-- Ortam: Windows, PowerShell. Python `.venv\Scripts\python.exe`. Ana dal `master`; uzak depo `kaynak` (GitHub, özel), başka yedek yok.
-- Kurulum: `py -3.14 -m venv .venv`, sonra `.venv\Scripts\python.exe -m pip install -r requirements.lock.txt -e ".[dev]"`.
-- **Adlar:** kod, dosya, sütun ve CSV başlığı adları Türkçe ASCII (`aile`, `adim`, `evren`); rapor ve kart
-  metni Türkçe karakterli. Yollar `pathlib`; her dosya açıkça `encoding="utf-8"` ile açılır (CSV
+## Working rules (Çalışma kuralları)
+- Environment: Windows, PowerShell. Python is `.venv\Scripts\python.exe`. The main branch is `master`. The remote repository is `kaynak` (GitHub, private). There is no other backup.
+- Setup: `py -3.14 -m venv .venv`, then `.venv\Scripts\python.exe -m pip install -r requirements.lock.txt -e ".[dev]"`.
+- **Names (Adlar):** Code, file, column, and CSV header names are Turkish ASCII (`aile`, `adim`, `evren`). Report and card
+  text uses Turkish characters. Use `pathlib` for paths. Open each file with an explicit `encoding="utf-8"` (for CSV,
   `utf-8-sig`).
-- **Test kapısı:** commit öncesi `.venv\Scripts\python.exe -m pytest -q` yeşil olmalı. Testler ağa
-  çıkmaz ve gerçek `kayit/` dosyalarına yazmaz (`tests/conftest.py` yolu `tmp_path`'e yönlendirir).
-- **Önce test:** önce kırmızı test, sonra en az kod. Testler yalnız TASARIM'daki yüzlerden.
-- **Testi gevşetme yasak:** assert silmek, toleransı büyütmek, `skip`/`xfail` eklemek, beklenen değeri
-  koda göre değiştirmek yasak.
-  - Test yanlışsa önce gerekçeyi belgeye yaz.
-  - Beklenen değerler elle hesaplanır, kodun yaptığı gibi yeniden hesaplanmaz.
-  - Testte sabitler literal yazılır.
-- **Getiriye bakma:** sadakat kontrolünde ya da YORUM seçerken getiri sonucu hesaplanmaz.
-- **Deneme günlüğü:** her sınama koşusu `kayit/deneme.jsonl`'e yazılır. Günlük yalnız eklenir;
-  düzenlenmez ve silinmez.
-- **Git (this repository only):** `rebase`, `--amend`, `--force` (ve `--force-with-lease`), `reset --hard`, `clean -f`, `branch -D`,
-  `checkout .`, `restore .`, `git add .` ve `git add -A` yok (Claude için izin reddi engeller: `permissions.deny` global ve `.claude/settings.json`); dosyalar adıyla
-  eklenir. Veri (`veri/`) ve rapor çıktısı (`rapor/`) git'e girmez; `veri/` silinmez. `kayit/` git'e girer (günlüğün
-  yalnız eklendiğinin kanıtı git geçmişidir); `kayit/` dosyalarını commit'te değiştirilmiş değil, yalnız
-  eklenmiş olarak bırak. This rule covers this repository only. The global Stop hook runs `git add -A -- receipts "*850-Companion*"` in the brain repository (`YONETIM/beyin`). That is outside this Tansu rule.
-- **Görev Zamanlayıcı:** tanım `kurulum/tansu-gunluk.xml` (hafta içi 19:30, `python -m tansu gunluk`). Kurulum, bir kez, PowerShell
-  (`schtasks /create /xml` UTF-8 XML'i okuyamaz): `Register-ScheduledTask -TaskName TansuGunluk -Xml (Get-Content -Raw -Encoding utf8 kurulum\tansu-gunluk.xml)`.
-  Tanım kapalı kurulur (`<Enabled>false</Enabled>`); ilk resmi koşudan sonra `schtasks /change /tn TansuGunluk /enable`
-  (bilet 15). Kaldırma: `schtasks /delete /tn TansuGunluk /f`. Yollar bu makinedeki ana depoya (`C:\Users\levent\Desktop\TANSU`) bağlıdır.
-  Aylık taban aynı yolla: `kurulum/tansu-aylik.xml` (ayın son günü 20:45, `python -m tansu evren-indir`), görev adı `TansuAylik`,
-  kapalı kurulur, bilet 15'te `TansuGunluk` ile birlikte açılır.
-- **Kural parametresi:** yalnız TASARIM/KURALLAR değişikliğiyle ve yeni deneme olarak değişir.
-- **Bağımlılık:** yeni paket eklemeden önce TASARIM §4 ve stdlib'e bak. Eklenen paket `pyproject.toml`'a
-  `==` ile yazılır.
+- **Test gate (Test kapısı):** Before a commit, `.venv\Scripts\python.exe -m pytest -q` must be green. The tests do not
+  access the network and do not write to the real `kayit/` files (`tests/conftest.py` changes the path to `tmp_path`).
+- **Test first (Önce test):** Write a red test first. Then write the minimum code. Write tests only against the interfaces (yüzler) in TASARIM.
+- **Do not loosen a test (Testi gevşetme yasak):** Do not delete an assert. Do not increase a tolerance. Do not add `skip`/`xfail`.
+  Do not change an expected value to match the code.
+  - If a test is wrong, first write the reason in the document.
+  - Calculate the expected values by hand. Do not calculate them again the way the code does.
+  - Write the constants in a test as literals.
+- **Do not look at the return (Getiriye bakma):** Do not calculate the return (getiri) result in the fidelity check (sadakat kontrolü). Do not calculate it when you select a YORUM.
+- **Trial log (Deneme günlüğü):** Each backtest run (sınama koşusu) writes to `kayit/deneme.jsonl`. Only append to the log.
+  Do not edit it. Do not delete it.
+- **Git (this repository only):** Do not use `rebase`, `--amend`, `--force` (and `--force-with-lease`), `reset --hard`, `clean -f`, `branch -D`,
+  `checkout .`, `restore .`, `git add .`, or `git add -A` (for Claude, a permission deny blocks them: `permissions.deny` global and `.claude/settings.json`). Add files
+  by name. Data (`veri/`) and report output (`rapor/`) do not go into git. Do not delete `veri/`. `kayit/` goes into git (the git history is the
+  proof that the log only gets appended). In a commit, leave the `kayit/` files only added, not
+  modified. This rule covers this repository only. The global Stop hook runs `git add -A -- receipts "*850-Companion*"` in the brain repository (`YONETIM/beyin`). That is outside this Tansu rule.
+- **Task Scheduler (Görev Zamanlayıcı):** The definition is `kurulum/tansu-gunluk.xml` (weekdays 19:30, `python -m tansu gunluk`). Install it one time, in PowerShell
+  (`schtasks /create /xml` cannot read UTF-8 XML): `Register-ScheduledTask -TaskName TansuGunluk -Xml (Get-Content -Raw -Encoding utf8 kurulum\tansu-gunluk.xml)`.
+  Install the definition disabled (`<Enabled>false</Enabled>`). After the first official run, run `schtasks /change /tn TansuGunluk /enable`
+  (ticket 15). To delete the task: `schtasks /delete /tn TansuGunluk /f`. The paths point to the main repository on this machine (`C:\Users\levent\Desktop\TANSU`).
+  The monthly base (taban) uses the same method: `kurulum/tansu-aylik.xml` (last day of the month 20:45, `python -m tansu evren-indir`), task name `TansuAylik`.
+  Install it disabled. In ticket 15, enable it together with `TansuGunluk`.
+- **Rule parameter (Kural parametresi):** A rule parameter changes only with a TASARIM/KURALLAR change and as a new trial (deneme).
+- **Dependency (Bağımlılık):** Before you add a new package, check TASARIM §4 and the stdlib. Write an added package in `pyproject.toml`
+  with `==`.
 
-## Standartlar
-`CODING_STANDARDS.md` ve `DEFINITION_OF_DONE.md` Levent'in genel standardıyla başlar; altlarındaki `## Tansu` bölümü
-Tansu'nun ekidir. `tests/test_standartlar.py` genel kısmın YONETIM'deki asılla aynı kaldığını denetler.
+## Standards (Standartlar)
+`CODING_STANDARDS.md` and `DEFINITION_OF_DONE.md` start with the general standard of Levent. The `## Tansu` section at the end of each file
+is the Tansu addition. `tests/test_standartlar.py` checks that the general part stays the same as the original in YONETIM.
 The review step (AKIS flow A, step 12) reads both files. The CI without YONETIM skips the test. The check is in the local test gate.
 
-## İş akışı
+## Work flow (İş akışı)
 The work flow is in `C:\Users\levent\Desktop\YONETIM\AKIS.md` (flow A for code work). The Tansu additions:
 
-**Geliştirme durdu:** belgeler drift, eski bilgi ve çelişkiden arınana kadar Tansu'nun davranışını değiştiren yeni
-geliştirme yapılmaz; `.scratch/belge-hizasi/` biletleri ve çalışma düzeni işleri (`.scratch/yazilim-fabrikasi/`) yürür
-(Levent 10.10). Bilet 08 bitince bu satır kalkar.
+**Geliştirme durdu (development stopped):** Do not do new development that changes the behavior of Tansu
+until the documents have no drift, no old information, and no contradiction. The tickets of `.scratch/belge-hizasi/` and the work-setup jobs
+(`.scratch/yazilim-fabrikasi/`) continue (Levent 10.10). When ticket 08 is complete, delete this line.
 
 - **Fikir (idea):** In the step of flow A that sharpens the plan (AKIS flow A, step 4), call `/tansu-grill`. It is the Tansu version of the skill of that step. Tansu comes first. It scans the risk and shows the text that will change.
 - **Fikir, kayıt (record):** Write a settled term to `GLOSSARY.md` at once. Write a decision to `docs/TASARIM.md`. Read TASARIM and `docs/sorgu/` first. Do not ask again for a decision that exists.
@@ -75,7 +76,7 @@ geliştirme yapılmaz; `.scratch/belge-hizasi/` biletleri ve çalışma düzeni 
 - **PR, birleştirme (merge):** CI is green (`ci`: ruff, pytest. `dod`: PR body). An independent review says "geçti". The merge request of Levent is the approval. Merge with `gh pr merge --merge`.
 - **Kapanış (close):** Move the spec and the tickets of a finished job to `.scratch/arsiv/`. Only GLOSSARY and TASARIM stay for good.
 
-**Hata kaydı (error log):** The rules for recording agent errors are in `CODING_STANDARDS.md`, section "Mistakes"; the session review that finds missed errors is AKIS flow B, step 12 and flow I, step 3. A reasoning error goes to `CODING_STANDARDS.md` under `## Tansu`.
+**Hata kaydı (error log):** The rules for recording agent errors are in `CODING_STANDARDS.md`, section "Mistakes". The session review that finds missed errors is AKIS flow B, step 12 and flow I, step 3. A reasoning error goes to `CODING_STANDARDS.md` under `## Tansu`.
 
 If Levent says "anlamadım", the agent calls `mattpocock-skills:wait-what`. The agent explains the answer again with the GLOSSARY terms and plain words.
 

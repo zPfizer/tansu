@@ -16,7 +16,7 @@ to `GLOSSARY.md` and a decision, with its reason, to the related section of `doc
 
 When your output names a domain concept (an issue title, a refactor proposal, a hypothesis, a test name), use the
 term as `GLOSSARY.md` defines it. Do not drift to synonyms the glossary avoids. A missing term is a signal: you
-invent language the project does not use, or there is a real gap; note it for `mattpocock-skills:domain-modeling`.
+invent language the project does not use, or there is a real gap. Note it for `mattpocock-skills:domain-modeling`.
 
 ## Flag decision conflicts
 

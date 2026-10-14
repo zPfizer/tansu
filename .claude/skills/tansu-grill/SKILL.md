@@ -1,28 +1,28 @@
 ---
 name: tansu-grill
-description: Tansu'da bir fikri ya da tasarımı sorgulayan görüşme. `mattpocock-skills:grilling` ve `mattpocock-skills:domain-modeling` skill'lerini Tansu'nun ölçütleriyle çalıştırır. Tansu'da yeni bir kural, parametre, veri kaynağı ya da davranış değişikliği konuşulurken kullan.
+description: An interview that questions an idea or a design in Tansu. It runs the `mattpocock-skills:grilling` and `mattpocock-skills:domain-modeling` skills with the criteria of Tansu. Use it when a discussion in Tansu is about a new rule, parameter, data source, or behavior change.
 ---
 
-Skill aracını iki kez çağır: `mattpocock-skills:grilling` ve `mattpocock-skills:domain-modeling`. Görüşme boyunca ayrıca şu üç ölçütü uygula.
-Kuralların metni sahip dosyalarındadır; bu skill yalnız ne zaman bakılacağını söyler.
+Call the Skill tool two times: `mattpocock-skills:grilling` and `mattpocock-skills:domain-modeling`. During the interview, also apply the three criteria below.
+The text of the rules is in their owner files. This skill only tells when to check them.
 
-## 1. Tansu önce gelir
+## 1. Tansu comes first
 
-Bir kural, değer ya da davranış önermeden önce KURALLAR "Okuma kuralları"nı uygula: Tansu havuzunda ve kural
-dosyalarında Tansu'nun o konudaki fikrini ara, sonucu öneride göster.
+Before you propose a rule, a value, or a behavior, apply KURALLAR "Okuma kuralları". Search the Tansu pool and the rule
+files for his view on that subject, and show the result in the proposal.
 
-## 2. Risk taraması
+## 2. Risk scan
 
-Her kararda AGENTS.md "Çalışma kuralları"na ve TASARIM'a karşı şu soruları sor ve cevabını yaz:
-- Veri kaynağının kullanım koşullarına uyuyor mu? (TASARIM §4)
-- Deneme günlüğü ve `veri/` kuralı korunuyor mu?
-- Kural kaydından sonra değişen kural yeni deneme sayılıyor mu? (TASARIM §5.8)
-- Geleceği görme riski var mı? (TASARIM §5.12)
-- Para kararı Levent'te mi kalıyor? (TASARIM §5.12)
+For each decision, ask these questions against AGENTS.md "Çalışma kuralları" and TASARIM. Write the answer:
+- Does the decision obey the terms of use of the data source? (TASARIM §4)
+- Does the decision keep the trial log (deneme günlüğü) rule and the `veri/` rule?
+- After the rule record (kural kaydı), does a changed rule count as a new trial (deneme)? (TASARIM §5.8)
+- Is there a look-ahead (geleceği görme) risk? (TASARIM §5.12)
+- Does the money decision stay with Levent? (TASARIM §5.12)
 
-## 3. Değişeceği metni göster
+## 3. Show the text that will change
 
-Karar verilecek her yerde değişecek TASARIM, KURALLAR ya da GLOSSARY metnini önceki ve sonraki hâliyle göster. Kod
-değişecekse değişecek fonksiyonun bugünkü ve önerilen hâlini kısa göster.
+At each decision point, show the TASARIM, KURALLAR, or GLOSSARY text that will change, before and after the change. If
+code will change, show a short form of the current and the proposed function.
 
-Levent'e yalnız kaynağın ve karar kayıtlarının cevap vermediği yön kararını sor.
+Ask Levent only the direction decision that the source and the decision records do not answer.

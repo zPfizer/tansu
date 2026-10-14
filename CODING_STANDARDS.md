@@ -21,19 +21,24 @@ This file starts short. It grows from real mistakes.
 - **Wire it and run it:** Connect each new hook, command, or module to the live path in the same change. Show one real run through that path. (07.10: a new hook was not in `settings.json`. 05.10: the Tansu CLI read result keys that the change removed.)
 
 ## Tansu
-Genel standarda ektir. Davranış kuralının sahibi `docs/TASARIM.md`'dir; burada kod yazarken uygulanış biçimi durur.
-- **Geleceği görmeme:** yeni ya da değişen her hesap `tests/test_gelecek.py` kapsamına eklenir (TASARIM §5.12).
-- **Tek kod:** sınama ve canlı koşu aynı fonksiyonu kullanır; ayrı kopya yazılmaz (TASARIM §4).
-- **Sessiz düzeltme yok:** eksik değer TASARIM §5.1'deki gibi boş kalır; tahminle doldurma, sessiz kırpma ve sessiz
-  atlama yok. Beklenmeyen durum hata verir.
-- **Belgeye bağlılık:** yeni ya da değişen her davranış kodda `TASARIM <bölüm>` atfı taşır.
-- **Değişmez kural:** TASARIM'da bir şeyin hiç olmayacağını ya da hep olacağını söyleyen her hükmün (örnek:
-  "anlık görüntü değişmez", "ileri doldurulmaz", "indirme durur") kodda bir uygulayıcısı ve bir testi vardır.
-  Yeni hüküm ikisiyle birlikte gelir.
-- **Tansu önce gelir:** bir kural, değer ya da tanım yazmadan önce Tansu havuzunda o konudaki fikrine bakılır. Fikri
-  varken YORUM yazılmaz; uyulamıyorsa "uygulanamaz" ve nedeni yazılır (KURALLAR "Okuma kuralları"). (10.10: sözlükte
-  11 yerde Tansu'nun fikri varken bizim seçimimiz Tansu'nunmuş gibi yazılmıştı.)
-- **Atıf ver, kopyalama:** sahip dosyası başka olan sayı, formül ya da kural ikinci dosyaya yazılmaz; atıf verilir
-  (AGENTS.md "Belgeler ve sahipleri"). (10.10: sözlük TASARIM'ın formüllerini yeniden yazmıştı.)
-- **Olmayanı var gibi yazma:** belgeler yalnız bugün var olanı anlatır. Planlanan iş spec ve bilette durur; kurulunca
-  belgeye girer.
+This section adds to the general standard. `docs/TASARIM.md` owns the behavior rules. This section holds how to apply
+them when you write code.
+- **No look-ahead (Geleceği görmeme):** Add each new or changed calculation to the scope of `tests/test_gelecek.py`
+  (TASARIM §5.12).
+- **One code (Tek kod):** The backtest (sınama) and the live run use the same function. Do not write a separate copy
+  (TASARIM §4).
+- **No silent correction (Sessiz düzeltme yok):** A missing value stays empty, as in TASARIM §5.1. Do not fill it with
+  an estimate. Do not clip silently. Do not skip silently. An unexpected condition gives an error.
+- **Follow the document (Belgeye bağlılık):** Each new or changed behavior has a `TASARIM <bölüm>` reference in the code.
+- **Invariant rule (Değişmez kural):** TASARIM has statements that say a thing never happens or always happens
+  (examples: "anlık görüntü değişmez", "ileri doldurulmaz", "indirme durur"). For each such statement, the code has one
+  enforcer and one test. A new statement comes with both.
+- **Tansu comes first (Tansu önce gelir):** Before you write a rule, a value, or a definition, check the Tansu pool for his
+  view on that subject. If Tansu has an idea, do not write a YORUM. If you cannot follow the idea, write
+  "uygulanamaz" and the reason (KURALLAR "Okuma kuralları"). (10.10: in 11 places in the glossary, Tansu had an idea,
+  but the glossary showed our choice as the choice of Tansu.)
+- **Give a reference, do not copy (Atıf ver, kopyalama):** Do not write a number, a formula, or a rule that another
+  file owns into a second file. Give a reference (AGENTS.md "Belgeler ve sahipleri"). (10.10: the glossary wrote the
+  formulas of TASARIM again.)
+- **Do not write a missing thing as if it exists (Olmayanı var gibi yazma):** The documents describe only what exists
+  today. Planned work stays in the spec and the ticket. When the work is in place, it goes into the document.
