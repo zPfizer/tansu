@@ -27,6 +27,7 @@ _Ölçütlerin sahibi `DEFINITION_OF_DONE.md`'dir (genel bölüm ve `## Tansu`).
 ## Bağımsız inceleme
 
 Denetçi: 
+<!-- CI accepts only the exact text "Sonuç: geçti". Write NOTLU GEÇTİ in the body, not here. -->
 Sonuç: 
 
 ## Gerçek veri kanıtı
