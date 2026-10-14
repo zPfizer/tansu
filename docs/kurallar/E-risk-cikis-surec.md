@@ -6,7 +6,7 @@ Hazırlanma: 2026-10-05. Yalnız okuma araştırması. Hiçbir parametre uydurul
 
 Kaynak kökü: `C:\Users\levent\Desktop\YONETIM\beyin\kisisel\300-Projects\Tansu X Veri Havuzu\`. Görseller `assets\<klasör>\` altında. Kısaltma: G = gorsel-paket, T = tweet-, K = kaynak-.
 
-Kaynak türü tanımları (birinci el, ikinci el, NotebookLM, YORUM) GLOSSARY'dedir. Bu dosyadaki etiketler: BİRİNCİ EL = Tansu aracının çıktısı (grafik etiketi, tablo, kod); NOTEBOOKLM = Tansu'nun paylaştığı NotebookLM infografiği; Tansu'nun kendi aracı değildir, metni yapay zekâ özetidir, ikinci el sayılır; İKİNCİ EL = yalnız not (*.md) içinde olan metin, notlar çoğunlukla Claude yazımıdır ("Levent ... belirtti" cümleleri aktarılan tweet metninin özetidir); YORUM = Tansu söylemedi, ben veya notlardaki Claude önerdi.
+Kaynak türü ve YORUM tanımları GLOSSARY'dedir. Bu dosyada etiketler BİRİNCİ EL, NOTEBOOKLM (ikinci el sayılır), İKİNCİ EL ve YORUM olarak yazılır; notlardaki "Levent ... belirtti" cümleleri aktarılan metnin özetidir.
 
 Uyarı 1: Notlarda "Levent" sözcüğü aktarılan tweet metnini anlatan kişiyi gösterir. Çoğu notta tweet URL'si yok. Yazarın Tansu olduğu havuz bağlamından gelir. Havuz ana notu "Levent'in X paylaşımlarından derlediği" der. Yani yazar atfı çoğu not için doğrulanmış değil. Tek istisna: `not-backtest-giris-sadeligi-risk-islem-gunlugu.md` (URL: x.com/The_Tansu_/status/2095213493133713664, 2 Eylül 2026) ve K-akfis (3 Eylül 2026).
 
@@ -144,7 +144,7 @@ Uyarı 4: 05.10 ön denemesi "4 ATR hedef" ve "kapanış EMA50 altı bozulma" ku
   2. TP1: "%10" (anlamı belirsiz, aşağıda).
   3. TP2 (ikinci satış): ayrıntıları belirtilmemiş.
   4. Fiyat ≥ giriş + 1,5 ATR: trailing aktif (K4).
-   5. Aktivasyon geçildikten sonraki barlardan ilk `Close[t] < Low[t−1]` kapanışında %50 satış sinyali oluşur (Aktarım, tweet-statik-dinamik-iz-suren-stop-atr:20); dolum ertesi günün AOF'udur (TASARIM 5.5, YORUM).
+   5. Aktivasyon geçildikten sonraki barlardan ilk `Close[t] < Low[t−1]` kapanışında %50 satış sinyali oluşur (Aktarım, tweet-statik-dinamik-iz-suren-stop-atr:20); kısmi satışın dolumu YORUM'dur; TASARIM kısmi kârı ve iz süren stopu erteledi (TASARIM 5.5, "İz süren stop ve kısmi kâr" maddesi, :373).
   6. 2 ATR emergency stop: kalan tamamını kapat (girişten itibaren aktif, YORUM).
 - Parametreler:
 

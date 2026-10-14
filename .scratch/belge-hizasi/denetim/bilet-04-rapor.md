@@ -101,7 +101,7 @@ Karar: KALDI (tur 1). Düzeltmeler bu bölümdedir; kutu 10, 11, 12 ve 13 duruml
 | A10 K ve T tekrarı | TASARIM değişmedi; K aile kuralını tutar. "TASARIM'a" listesi aşağıda |
 | A11 tanımlar | düzeltildi: KURALLAR okuma kuralları, A:3, B:10–13, C:10–17, D:4, E:9–16: tanım tabloları GLOSSARY atfına ve kullanım cümlesine çevrildi |
 | A12 dizin ve hedefler | düzeltildi: KURALLAR §2 dizin üç tablosu "Kural, Bölüm, Hazırlık" üç sütuna indi (kaynak değer yok); §4 hedef tablosu değer yerine A–E bölümü verir |
-| A13 formül ve sadakat | kısmen çürütüldü: Yahoo ölçümü S'ye taşınamadı. `docs/sadakat.md` `python -m tansu sadakat` tarafından baştan yazılır (`tansu/sadakat.py:283`); elle eklenen bölüm bir sonraki koşuda silinir. Ölçüm zaten `docs/sorgu/sonuc-3-4.md` O9'dadır; KURALLAR §4'ten ölçüm kaldırıldı, O9'a atıf verir. KURALLAR §3 formül yinelemesi A2 ile tek yere indi |
+| A13 formül ve sadakat | kısmen çürütüldü: Yahoo ölçümü S'ye taşınamadı. `docs/sadakat.md` `python -m tansu sadakat` tarafından baştan yazılır (`tansu/sadakat.py:283`); elle eklenen bölüm bir sonraki koşuda silinir. Ölçüm zaten `docs/sorgu/sonuc-3-4.md` O9'dadır; KURALLAR §4'ten ölçüm kaldırıldı, O9'a atıf verir. KURALLAR §3 formül yinelemesi A2 ile tek yere indi (tur 2: §3 ve §4'te iki kez duruyordu; §4 artık atıf) |
 | A14 çapraz kopyalar | düzeltildi: C:34, C:449, C:479, C:542 (A §1 / A §3 / B §9 atfı); B:436 (D atfı); E:218 (D atfı); E:362–363 ve E K23 "R/R eşiği" (B §20 atfı); E "Tansu risk ve çıkış paketi" tablosu 15 satır Sahibi sütununa indi; E K11–K14 "risk yönünden okuma" paragrafları; A:278 (E K18 atfı) |
 | A15 taslaklar | düzeltildi (yerel): M:296–375 tablolarında 50 satırın "Sadakat hedefi" sütunu A–E bölüm atfına çevrildi (boş "yok" olanlar kaldı); T8:355–366 hedef listesi atıf listesine; M:418 "ATR: 4.62" kaldırıldı; M:419 ICBCT ilk EMA; T8:165 |
 
@@ -126,4 +126,25 @@ Karar: KALDI (tur 1). Düzeltmeler bu bölümdedir; kutu 10, 11, 12 ve 13 duruml
 ### Kapı
 
 `ruff check .`: All checks passed. `pytest -q` (yazılabilir `--basetemp` ile): 310 passed. Kapsam kontrolü: 258 / 258 havuz notu KURALLAR ya da A–E içinde. Satır sonu: değişen dosyalar `i/lf`.
+
+## 9. Denetim tur 2 (Codex)
+
+Karar: KALDI (tur 2). Tur 1 tamamlanma iddiaları düzeltildi: A12 ve A13 tam kapanmamıştı (K:55–58 ve :66–68 değer taşıyordu; formül KURALLAR'da iki yerde durdu, "tek yer" iddiası yanlıştı); A15 tam kapanmamıştı (M:319 ve birkaç formül kopyası kalmıştı).
+
+| # | Sonuç |
+|---|---|
+| 1 | düzeltildi: KURALLAR E K1–K3 satırları H → K (kaynak NotebookLM, GLOSSARY "Hazırlık" birinci el ister); dizin altına "ikinci el tek başına kural olmaz; bizim okumamız (YORUM) olarak benimsenir, birinci el kaynak bulunana dek" cümlesi |
+| 2 | düzeltildi: E:9 "tanımlar GLOSSARY'de" ve etiket kullanımı |
+| 3 | düzeltildi: KURALLAR dizininde değerler (lot formülü, SMA250, 2 ATR, %50, VIX açıklaması) kaldırıldı; satırlar kural adı, A–E bölümü, Hazırlık |
+| 4 | düzeltildi: §4 AB=CD hedefi "C §3, §5" |
+| 5 | düzeltildi: EMA oran formülü yalnız §3 aile 2'de; §4 satırı atıf. Tur 1 raporundaki "tek yerde" iddiası A13 satırında düzeltildi |
+| 6 | düzeltildi (yerel M): T5 Clenow formülü (B §15); D1 oran formülü, D2 pk123 oranları, C3 OBV tanımı, formül satırı (OBV, pivot, realize vol), Trident ve Fib merdiveni oranları atıfa çevrildi; kalan taramada başka A–E formül kopyası bulunmadı |
+| 7 | düzeltildi: E K5 madde 5: dolum YORUM; TASARIM kısmi kârı ve iz süren stopu erteledi (TASARIM:373) |
+| 8 | düzeltildi: B:54 ve B §2'deki "%5" ifadesi ("bir günlük sert hareket"; rakam yok); B:57 ve kanıt satırı da rakamsız |
+
+**AÇIK (kapanmadı):**
+- TASARIM çift satırları (bilet 03/07 işi; bu dalda değişmez): `docs/TASARIM.md:437–438`, `:535–537`, `:550–552`.
+- Okunamayan iki görsel: ICBCT ilk EMA etiketi (20 ya da 30) ve G-125 stop sayısı. Bilet kutuları 11 ve 12 ile hiza-c-istem işaretsiz kalır.
+
+Kapı: ruff, pytest, kapsam ve LF sonuçları commit sonrası nihai yanıttadır.
 

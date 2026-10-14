@@ -52,10 +52,12 @@ dizin kaynak değerini yinelemez.
 ### Risk ve çıkış (E)
 | Kural | Bölüm | Hazırlık |
 |---|---|---|
-| %1 risk, lot adedi = risk / (2 ATR) | E K1 | H |
-| Acil stop: giriş − 2 ATR | E K2 | H |
-| Gün sonu stopu: kapanış < SMA250 | E K3 (SMA250 seçimi YORUM, TASARIM 5.5) | H |
-| İz süren stop, kısmi kâr, önceki gün dibi altı %50 | E K4, K5 | K |
+| Risk bütçesi ve lot | E K1 | K |
+| Acil stop | E K2 | K |
+| Gün sonu stopu | E K3 | K |
+| İz süren stop, kısmi kâr | E K4, K5 | K |
+
+E K1–K3: kaynakları NotebookLM'dir (ikinci el), bu yüzden H değil K'dir. İkinci el kaynak tek başına kural olmaz (yukarıdaki okuma kuralı); bu üç kural, birinci el kaynak bulunana dek bizim okumamız (YORUM) olarak benimsenir.
 | Harmonik hedef merdivenleri | C §4, §11 (E K11) | K |
 | Durum etiketleri | C §2 (E K15) | H (ad) |
 | Tepki penceresi | C §10 (E K15) | K |
@@ -64,7 +66,7 @@ dizin kaynak değerini yinelemez.
 | Kural | Bölüm | Hazırlık |
 |---|---|---|
 | Piyasanın Nabzı 4/5 (NotebookLM) | D, "Piyasanın Nabzı" | K |
-| BIST + VIX 5 adım (NotebookLM; "VIX" = ABD VIX, YORUM: D "Hangi VIX?") | D, "BIST VIX long: 5 adım kontrol listesi" | K |
+| BIST + VIX 5 adım (NotebookLM) | D, "Hangi VIX?"; "BIST VIX long: 5 adım kontrol listesi" | K |
 | Sektör liderleri 30/60/90 gün + anomali temizleme | D, "Sektör rotasyonu" | H |
 | Volatilite şoku freni | E K8 | X |
 
@@ -128,12 +130,11 @@ serbesttir; bu performans değil, kuralın doğru okunduğunun kanıtıdır.
 |---|---|---|---|
 | Çift rotasyonu | VAKBN–GARAN raporu | D, "Tansu'nun kanıtı" ve "Çift sistemi çekirdeği" | sapma formülü ve pencere |
 | EMA sıkışması | KRDMD | B §1 | oran formülü |
-| AB=CD (ikinci dalga) | KRPLS, MARKA #13, SMRTG tablosu | C §5 | pivot ayarı, yön |
+| AB=CD (ikinci dalga) | KRPLS, MARKA #13, SMRTG tablosu | C §3, §5 | pivot ayarı, yön |
 | Kanal (ikinci dalga) | AEFES 03.09.2026 | A §2 | kanal çizim yöntemi |
 
 Sonuçlar. Ölçülen değerler, aday sayıları ve toleranslar `docs/sadakat.md`'dedir (Sorgu 3 ölçümü: `docs/sorgu/sonuc-3-4.md`); burada yalnız karar durur.
-- **EMA sıkışması çözüldü** (KRDMD örneğinde; KRDMD dışında doğrulanmadı): (en büyük EMA − en küçük EMA) / EMA200, ham
-  kapanıştan `ewm(adjust=False)`. İş Yatırım ham serisinde (bilet 05) EMA200 sıkı toleransı geçmez; karar: sonuç **gevşek
+- **EMA sıkışması çözüldü** (KRDMD örneğinde; KRDMD dışında doğrulanmadı): oran formülü §3 aile 2'dedir. İş Yatırım ham serisinde (bilet 05) EMA200 sıkı toleransı geçmez; karar: sonuç **gevşek
   bantla üretildi**; veri başlangıcı olarak "son 3 yıl" seçildi (ölçümler ve aday sonuçları `docs/sadakat.md`). Neden: EMA200
   uzun belleklidir; Tansu'nun veri başlangıcı bilinmiyor. Oran formülü değişmez. Sınamada veri başlangıcı sabit tutulur ve
   rapora yazılır (İ: 06-014).
