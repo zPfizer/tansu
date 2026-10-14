@@ -188,3 +188,9 @@ Kök neden: taslaklar A–E'nin okunmasından türeyen çalışma belleğidir; h
 - TEKRAR E:68, 81, 95, 105 ↔ TASARIM:304, 363: düzeltildi (yalnız TASARIM 5.3 ve 5.5 atfı kaldı).
 - TEKRAR E:431 ↔ C:187–188; E:455 ↔ B:328–329: düzeltildi (sonuç sayıları kaldırıldı; E:455 eşik için B §20 atfı).
 - Denetim onay kutusu işaretsiz; tur 2 bekliyor.
+
+## 04c denetim tur 2 (Codex, 14.10): KALDI
+
+- B:316 görsel birinci el, tweet metni ikinci el diye ayrıldı.
+- C:620 "yazarlığı belirsiz, ikinci el" (C:641 ile aynı sınıf).
+- E:431 sayımlar sahibine: SMRTG/ISKPL C §5; makine öğrenmesi E K24.

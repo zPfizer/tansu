@@ -313,7 +313,7 @@ Görsel kökü: `...\assets\<klasör>\`. Not dosyaları kökte. Aşağıda "gp-N
 | Rolling alpha penceresi, benchmark | yok | BELİRSİZ |
 
 - Giriş kuralı: yok (risk/etiket katmanı). Alpha için hiçbir kural yok.
-- Uygulanabilir mi: skewness EVET (63 günlük rolling skewness günlük kapanıştan); alpha KISMEN (benchmark YORUM). Güven: skewness birinci el (X + görsel); alpha ikinci el.
+- Uygulanabilir mi: skewness EVET (63 günlük rolling skewness günlük kapanıştan); alpha KISMEN (benchmark YORUM). Güven: skewness görseli birinci el, tweet metni ikinci el (aktarılan tweet); alpha ikinci el.
 
 ## 19. Momentum x faaliyet nakit akışı 5x5 portföy
 

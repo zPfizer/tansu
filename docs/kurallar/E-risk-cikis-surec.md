@@ -428,7 +428,7 @@ Eksik (Tansu söylemedi), hepsi YORUM ile doldurulmalı ve YORUM etiketli kalmal
 12. Short taraf için hiçbir ATR kuralı verilmedi (yalnız not "short için tersi").
 13. Açık noktalar: (i) TP1 AD×0,382 (eğitim) ve 1:1 R/R (SAYAS) için genel seçim. (ii) Stop/R:R sırasının strateji kapsamı. (iii) Fırsat anlatısı işlem tetiği veya şok frenine istisna vermez. (iv) 10 gün ile 20 barın ortak politikası.
 
-Bizim kanıt kapımız: Bu paketin hiçbir parçası için Tansu'nun gerçek işlem sonucu veya tam örneklemli backtest'i yok. Yalnız tek hisse ve seçilmiş örnekler var (sonuç sayıları sahibinde: C §7 ve ilgili bölümler).
+Bizim kanıt kapımız: Bu paketin hiçbir parçası için Tansu'nun gerçek işlem sonucu veya tam örneklemli backtest'i yok. Yalnız tek hisse ve seçilmiş örnekler var (sonuç sayıları sahibinde: SMRTG/ISKPL sayımı C §5; makine öğrenmesi sayımı E K24).
 
 # (b) Tansu'nun değerlendirme ilkeleri: bizim backtest için kontrol listesi
 

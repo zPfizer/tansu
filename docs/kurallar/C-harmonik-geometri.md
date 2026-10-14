@@ -617,7 +617,7 @@ Not: YORUM: bu katalogda ekranlar Tansu'ya atfedilen araç çıktıları olarak 
 ## 19. Çoklu aralık Fibonacci konfluansı
 
 - Kaynak: `gorsel-paket-120` (dört görsel, CAT örneği).
-- Tansu'nun ifadesi (birinci el, görsel başlıkları ve metinleri):
+- Metin (yazarlığı belirsiz, ikinci el; görsel başlıkları ve metinleri, bkz. C:641):
   - `Geleneksel Yaklaşım: Çoğu Yatırımcının Fibonacci'yi Kullanma Şekli`: A (Start) ve B (End), seviyeler `38.2%`, `50.0%`, `61.8%`.
   - `Kaçınılmaz Başarısızlık: Piyasa Standart Seviyeleri Neden Görmezden Gelir?`: Caterpillar C noktasında "ilk destek seviyesine ($29 civarı) asla ulaşmadı"; "sorun metodolojinin kendisinde değil, onun statik ve tek boyutlu uygulanışındadır".
   - `Piyasanın Nabzını Ölçmek: Genişleme ve Daralmayı Tespit Etme`: 1. Aralık d: en güçlü salınımı seç, %50'sini (A çizgisi) belirle. 2. Aralık e: aralığı genişlet, yeni %50 (B çizgisi). B > A genişleme. 3. Aralık f: %50 (C çizgisi) daha yukarı kayar.
