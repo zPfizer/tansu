@@ -32,5 +32,5 @@ Output format (Markdown):
 (what you could not check, and why)
 
 Your scope:
-- docs/KURALLAR.md, docs/kurallar/A-yapi-bolge.md, docs/kurallar/B-momentum-sikisma.md, docs/kurallar/C-harmonik-geometri.md, docs/kurallar/D-cift-portfoy-nabiz.md, docs/kurallar/E-risk-cikis-surec.md, docs/strateji-modulleri-taslak.md, docs/strateji-taslak/tasarim-8.md.
-- KURALLAR.md says it is the index of A-E. Check that the index matches A-E. Check where strateji-modulleri-taslak.md and tasarim-8.md (newer drafts) conflict with KURALLAR.md, A-E or docs/TASARIM.md. A draft that differs is a finding only if no file says which one is valid.
+- docs/KURALLAR.md, docs/kurallar/A-yapi-bolge.md, docs/kurallar/B-momentum-sikisma.md, docs/kurallar/C-harmonik-geometri.md, docs/kurallar/D-cift-portfoy-nabiz.md, docs/kurallar/E-risk-cikis-surec.md. (04c, 14.10: the two local drafts docs/strateji-modulleri-taslak.md and docs/strateji-taslak/tasarim-8.md are out of scope; see the next line.)
+- KURALLAR.md says it is the index of A-E. Check that the index matches A-E. The two local drafts (strateji-modulleri-taslak.md, tasarim-8.md) are proposals that wait for approval, outside git and outside the AGENTS owner table. Report a draft only if it has no validity note at its top that names the owner files. Do not report a repeated or equivalent formula inside a draft.

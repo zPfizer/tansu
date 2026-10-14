@@ -15,6 +15,7 @@ Each fact has one owner file. The other files only give a reference to it. Read 
 | `docs/kurallar/A-yapi-bolge.md` … `E-risk-cikis-surec.md` | the reading of the pool (havuz): what Tansu said. Rule: each note in the pool must have a reference here or must be in the "kural içermez" list |
 | `docs/sadakat.md` | the fidelity (sadakat) measurement |
 | `AGENTS.md` | the working rules and the work flow |
+| `docs/strateji-taslak/`, `docs/strateji-modulleri-taslak.md` (local, not in git) | proposals that wait for approval. They own no fact. They are outside the drift check (04c, 14.10) |
 | `CODING_STANDARDS.md`, `DEFINITION_OF_DONE.md` | the code format and the done criteria (`## Tansu`) |
 | `docs/sorgu/sonuc-3-4.md`, `docs/sorgu/izleme/karar.md` (local, not in git) | the reasons for the decisions (read them when necessary) |
 

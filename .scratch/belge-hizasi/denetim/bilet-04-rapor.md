@@ -174,3 +174,7 @@ Kök neden: yazıcı kısmi taramayla "kopya kalmadı" dedi; getiri kontrolü ra
   - Fincan hedefi: T8:172, 193, 421 → B §21.
   - APO: T8:427 → B §13.
   - Ek tarama: AB=CD D formülü ve 1,272 CD uzantısı T8:122–123 → C §3, §3–4; Kelebek B/D oranları T8:125 → C §8; Gartley B/C/D oranları T8:128 → C §7.
+
+## 04b denetim tur 3 (Codex, 14.10): KALDI; yeniden tanım 04c
+
+Kök neden: taslaklar A–E'nin okunmasından türeyen çalışma belleğidir; her turda yeni "eşdeğer formül" bulunur, atıfla bitmez. Yeniden tanım (04c): açık kapsam istisnası. AGENTS sahip tablosuna satır eklendi (taslaklar olgu sahibi değil, sapma denetimi dışı); `hiza-c-istem.md` kapsamından çıkarıldı; bilet 04 metni güncellendi. Taslaklardaki formül kopyaları bu kararla bulgu değildir; iki taslağın geçerlilik notu sahibi gösterir. Not: dalda başka bir oturumun commit'i var (e3d27e9, AGENTS ve PR şablonu, 2 satır).
