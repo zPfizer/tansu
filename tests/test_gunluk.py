@@ -392,16 +392,25 @@ def test_dunku_acik_kart_hissesi_eski_ve_yeni_anahtarla_bugun_de_indirilir(
     )  # evren tabanı
     k.istenen.clear()
     hisse, durum = anahtarlar
-    satir = {
+    eski_satir = {
+        "tarih": "2026-10-01",
+        "anlik": "20261001-1930",
+        "kartlar": [{hisse: "YYYY", durum: "AKTİF"}],
+    }
+    son_satir = {
         "tarih": "2026-10-02",
         "anlik": "20261002-1930",
         "kartlar": [
-            {hisse: "YYYY", durum: "AKTİF"},
-            {hisse: "ZZZZ", durum: "STOP"},
+            {hisse: "ZZZZ", durum: "AKTİF"},
+            {hisse: "YYYY", durum: "STOP"},
         ],
     }
     yol = kayit.KAYIT_DIZINI / "kartlar.jsonl"
     yol.parent.mkdir(parents=True, exist_ok=True)
-    yol.write_text(json.dumps(satir) + "\n", encoding="utf-8")
+    yol.write_text(
+        "".join(json.dumps(x) + "\n" for x in (eski_satir, son_satir)),
+        encoding="utf-8",
+    )
     gunluk.gunluk(TARIH, tmp_path, simdi=SIMDI, kaynak=k, p=P, atr_n=2)
-    assert "YYYY" in k.istenen and "ZZZZ" not in k.istenen
+    # En son kayıt öncekini geçersiz kılar: yalnız ZZZZ açık.
+    assert "ZZZZ" in k.istenen and "YYYY" not in k.istenen
