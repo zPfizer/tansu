@@ -56,7 +56,6 @@ dizin kaynak değerini yinelemez.
 | Acil stop | E K2 | K |
 | Gün sonu stopu | E K3 | K |
 | İz süren stop, kısmi kâr | E K4, K5 | K |
-
 | Harmonik hedef merdivenleri | C §4, §11 (E K11) | K |
 | Durum etiketleri | C §2 (E K15) | H (ad) |
 | Tepki penceresi | C §10 (E K15) | K |
