@@ -9,7 +9,7 @@ Geçmiş:
 - Taslak 7: bütün cevapların izlenmesi (`docs/sorgu/izleme/`). 1.561 madde tek tek taslak 6 ile
   karşılaştırıldı; 185 yeni madde karara bağlandı (`izleme/karar.md`). Etiket "İ: NN-NNN".
 
-Bu belge koddan önce gelir. Kod bu belgeye uyar; belge değişmeden davranış değişmez.
+Çalışma kuralı (belge koddan önce gelir): `AGENTS.md`.
 Terimler `GLOSSARY.md`'dedir.
 
 **05.10 ön denemesi (ilk kod ve `rapor/kanit-20261005.md`) bu belgeden önce yazıldı. Kanıt değildir;
