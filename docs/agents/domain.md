@@ -1,57 +1,25 @@
 # Domain Docs
 
-How the engineering skills should consume this repo's domain documentation when exploring the codebase.
+How the engineering skills consume the domain documentation of this repo.
 
 ## Before exploring, read these
 
-- **`GLOSSARY.md`** at the repo root, or
-- **`GLOSSARY-MAP.md`** at the repo root if it exists: it points at one `GLOSSARY.md` per context. Read each one relevant to the topic.
-- **`docs/adr/`**: read ADRs that touch the area you're about to work in. In multi-context repos, also check `src/<context>/docs/adr/` for context-scoped decisions.
+- `GLOSSARY.md` at the repo root: the meaning of every term (single context, no `GLOSSARY-MAP.md`).
+- `docs/TASARIM.md`: the decision record. Tansu has no ADR folder and no ADR files.
+- `docs/sorgu/`: the reasons behind the decisions (local, not in git).
 
-If any of these files don't exist, **proceed silently**. Don't flag their absence; don't suggest creating them upfront. The `/domain-modeling` skill (reached via `/grill-with-docs` and `/improve-codebase-architecture`) creates them lazily when terms or decisions actually get resolved.
-
-## File structure
-
-Single-context repo (most repos):
-
-```
-/
-├── GLOSSARY.md
-├── docs/adr/
-│   ├── 0001-event-sourced-orders.md
-│   └── 0002-postgres-for-write-model.md
-└── src/
-```
-
-Multi-context repo (presence of `GLOSSARY-MAP.md` at the root):
-
-```
-/
-├── GLOSSARY-MAP.md
-├── docs/adr/                          ← system-wide decisions
-└── src/
-    ├── ordering/
-    │   ├── GLOSSARY.md
-    │   └── docs/adr/                  ← context-specific decisions
-    └── billing/
-        ├── GLOSSARY.md
-        └── docs/adr/
-```
+Do not create an ADR folder. The `mattpocock-skills:domain-modeling` skill (reached from
+`mattpocock-skills:grill-with-docs` and `mattpocock-skills:improve-codebase-architecture`) writes a settled term
+to `GLOSSARY.md` and a decision, with its reason, to the related section of `docs/TASARIM.md`.
 
 ## Use the glossary's vocabulary
 
-When your output names a domain concept (in an issue title, a refactor proposal, a hypothesis, a test name), use the term as defined in `GLOSSARY.md`. Don't drift to synonyms the glossary explicitly avoids.
+When your output names a domain concept (an issue title, a refactor proposal, a hypothesis, a test name), use the
+term as `GLOSSARY.md` defines it. Do not drift to synonyms the glossary avoids. A missing term is a signal: you
+invent language the project does not use, or there is a real gap; note it for `mattpocock-skills:domain-modeling`.
 
-If the concept you need isn't in the glossary yet, that's a signal: either you're inventing language the project doesn't use (reconsider) or there's a real gap (note it for `/domain-modeling`).
+## Flag decision conflicts
 
-## Flag ADR conflicts
+If your output contradicts a decision in `docs/TASARIM.md`, say so explicitly instead of overriding it:
 
-If your output contradicts an existing ADR, surface it explicitly rather than silently overriding:
-
-> _Contradicts ADR-0007 (event-sourced orders), but worth reopening because…_
-
-## Tansu düzeni
-
-Tansu'da `docs/adr/` yoktur. Karar kaydı `docs/TASARIM.md`'dir; gerekçeler `docs/sorgu/` altındadır. Bir skill ADR
-yazacağı zaman kararı gerekçesiyle TASARIM'ın ilgili bölümüne yazar. "Flag ADR conflicts" kuralı TASARIM kararları için
-geçerlidir.
+> _Contradicts TASARIM §5.1 (empty value stays empty), but worth reopening because…_
