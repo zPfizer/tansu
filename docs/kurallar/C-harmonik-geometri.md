@@ -158,6 +158,7 @@ Not: YORUM: bu katalogda ekranlar Tansu'ya atfedilen araç çıktıları olarak 
 - Giriş / stop: görselde yok. 42 ve RYSAS'ta "ALIM SİNYALİ" yazıyor ama giriş fiyatı ve stop çizilmemiş.
 - Belirsiz kalanlar: hangi hedefte ne kadar pozisyon kapatılır? Stop nerede? Hedef temas mı kapanış mı? Hepsi YORUM.
 - Tansu'nun kanıtı: yok (hedefler çizilmiş, sonuç yok). RYSAS "taze D". 42 D'de bitiyor.
+- Ek örnek (KANIT, bilet 04, 14.10): `tweet-fibonacci-extension-abcd-kullanimi` (Tansu: "FIBO extension'ları öğrenin ve ABCD ile nasıl kullanılacağını"; görsel birinci el, A1CAP). Görsel okundu: A ≈ 15,3 (Mayıs başı), B ≈ 9,1, C ≈ 12,3; kırmızı noktalı D projeksiyonu ≈ 6'ya iner. Ölçüm (YORUM): `C + 1,0*(B−A)` ≈ 6,1, görselle uyumlu. Yatay Fibonacci merdiveni A–B bacağının değil C'den sonraki bacağın (0,000: 12,30; 1,000: 9,57) uzantısıdır: 1,272 = 8,83; 1,618 = 7,88; 2,000 = 6,84 (görsel, küçük yazı). Bu merdiven bu kuralın 0,618/1,000/1,618 hedef merdiveninden farklı çapa kullanır. Başlıktaki "Harmonik sayı: 6.31 TL" tanımsız. Tek hisse, sonuç yok; notun oran listeleri ve uygulama akışı Claude'a aittir (YORUM).
 - Günlük bedava veriyle uygulanabilir mi: evet. Formül tam.
 - Kaynak güveni: birinci el.
 
@@ -561,6 +562,8 @@ Not: YORUM: bu katalogda ekranlar Tansu'ya atfedilen araç çıktıları olarak 
 - Tansu'nun kanıtı: yüzde 8 örneği kullanıcı beyanı (110), önceden listede olduğu doğrulanmadı. BRYAT bekleyen kurulum, sonuç yok. CWENE tweet'inde sonuç yok.
 - Günlük bedava veriyle uygulanabilir mi: evet (fiyat, FVG, retracement). Pivot ve %10 eşiği net.
 - Kaynak güveni: başlıklar birinci el. Strateji ikinci el.
+- Ek örnek (KANIT, bilet 04, 14.10): `gorsel-paket-131-alka-elliott-wave2-fvg-temas` (Tansu'nun metni, ikinci el; görsel okundu). Başlık `ALKA - FVG TEMAS (0.00%) | BULLISH | ELLIOTT WAVE 2 (Düzeltme: -39.3%)`; lejant BB (14), EMA(9), RSI(14), EN YAKIN FVG (BRYAT ile aynı araç şablonu). Mavi 0→1 hamlesi, kırmızı kesik A-B-C, C noktası sarı FVG kutusuna (yaklaşık 9,6–10) değiyor. Metindeki "ters çekiç mumu" iddiası görselde seçilemedi (mumlar küçük): doğrulanmadı, görsel metinden önce gelir. Ölçüm (piksel, yaklaşık, YORUM): 0 ≈ 7,5, 1 ≈ 16,1, C ≈ 9,8 → geri alım ≈ 0,73, yani BRYAT bölgesi 0,50–0,786 içinde; başlıktaki "Düzeltme: -39.3%" zirveden düşüş yüzdesi gibi okunur ve BRYAT başlığındaki "Fibo: %64.3" ile aynı alan değildir (kaynak anlamı vermiyor). Giriş, stop, hedef, sonuç yok.
+- FVG alımı öncesi yükselen dip filtresi (`gorsel-paket-132-fvg-yukselen-dipler-wave3-abc-duzeltme`; Tansu'nun metni, ikinci el; iki görsel okundu; bilet 04, 14.10): FVG alımı, önceki Lower Low (LL) sonrası Higher Low (HL) oluşmuş (ayı yapısı kırılmış, "Market Structure Shift") bir yükselişte, düzeltmenin yükselen diplerin üstündeki talep/FVG bölgesine inmesiyle daha güvenilirdir. Görsel 1: 0, 1, HH, A-B-C, HL, LH, LL etiketleri ve sarı FVG kutusu; görsel 2: 0-1-2-3 mavi yol, HH, HL, kırmızı kesik A-B-C, FVG ve talep kutuları; ikisinde fiyat/tarih değeri yok. Bu bir filtredir: giriş, stop, hedef yok. HL'nin tanımı (pivot ayarı) yok (YORUM); filtrenin başarı oranı ölçülmemiş. Sembol ve zaman dilimi yok.
 
 ---
 
@@ -704,3 +707,14 @@ Ortak boşluklar (hepsi YORUM; kod öncesi karar):
 5. Siyah ve Beyaz Kuğu oran tanımı.
 
 Küçük sonraki adım: kural 3 ve 4 için kendi pivot kararınızı yazın (L, R), sonra KRPLS D=11,29 ve D=10,05 değerlerini fiyat verisinden yeniden üretin.
+
+---
+
+## 22. Omuz-baş-omuz (OBO), kısa kayıt (bilet 04, 14.10)
+
+- Kaynak: `gorsel-paket-121-obo-neckline-hacim-hedef` (yalnız görsel, metin yok; infografik okundu, kaynak imzası yok). Sıralı kısa listede (§21) yoktur.
+- Tansu'nun ifadesi (görsel, birinci el): `4 Adımda Omuz Baş Omuz (OBO) Formasyonu`. (1) Üç tepeyi tespit et: sol omuz, daha yüksek baş, daha alçak sağ omuz. (2) Boyun çizgisini çiz: omuzlar ile başın taban dip noktalarını birleştiren destek çizgisi. (3) Kırılımı onayla: fiyat boyun çizgisini hacimli bir mumla aşağı kırarsa formasyon onaylanır. (4) Hedef: baş tepesi ile boyun çizgisi arasındaki mesafe kadar düşüş beklenir. "Hacmi kontrol et": sağ omuz oluşurken hacmin azalması güvenilirliği artırır.
+- Tanım: hedef = boyun çizgisi − (baş − boyun çizgisi) (kırılım noktasından aşağı).
+- Parametreler: yok. Pivot ayarı, omuz benzerlik toleransı, "hacimli" eşiği, kırılım tamponu, stop yok (YORUM).
+- Tansu'nun kanıtı: yok (şema; piyasa örneği yok). Bu kural aşağı yönlü dönüş formasyonudur; BIST'te açığa satış pratik değil (TASARIM 3).
+- Günlük bedava veriyle uygulanabilir mi: evet (OHLCV). Kaynak güveni: düşük (şema).

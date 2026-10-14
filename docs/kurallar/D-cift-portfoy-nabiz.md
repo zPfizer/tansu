@@ -79,6 +79,7 @@ Genel uyarı: Tansu kod, formül, pencere, maliyet, OOS vermiyor. Görseller dü
 - **Tansu'nun kanıtı:** p=0,048 tek sayı. 53 negatif sonuç (yukarıda).
 - **Bedava veri:** hesap yapılabilir; kaynak fikri pencere, sıklık, eşik ve eylem vermediğinden tam kapı olarak uygulanamaz (Aktarım, tweet-rolling-cointegration-iliski-bozulma-kapisi:21).
 - **Kaynak güveni:** fikir ikinci el aktarımdır; hesaplanabilir kapı tanımı yoktur.
+- **Ek kanıt (KANIT, bilet 04, 14.10):** `tweet-korelasyon-yuksek-istatistiksel-arbitraj-garanti-degil` (Ham Tansu'nun metni; ikinci el özet): yüksek korelasyon istatistiksel arbitraj için yetmez; "Arbitraj için Cointegration (Eşbütünleşme) şarttır"; eşbütünleşme olmadan açılan işlemlerde "büyük zararlar". Yani çift seçiminde eşbütünleşme ön koşuldur. Test yöntemi, pencere, eşik, sayısal zarar örneği yok.
 
 ## 150 bin kombinasyon tarama
 - **Kaynak:** tweet-istatistiksel-arbitraj-150bin-esbutunlesme-taramasi (NOT, ikinci el). Görsel yok.
@@ -257,6 +258,8 @@ Genel uyarı: Tansu kod, formül, pencere, maliyet, OOS vermiyor. Görseller dü
 - **Belirsiz:** sektör evreni/sınıflandırması (ad "Petrol", "Demir Çelik" vb. — KAP/BIST sektör listesi gibi), N gün tanımı, anomali eşiği diğer pencerelerde, sektör başına minimum hisse sayısı, getirinin düzeltmeli fiyatla mı hesaplandığı, hangi pencere "lider" sayılacak (üç pencerenin ortak lideri yok: Petrol 30/60, Demir Çelik 60/90).
 - **Bedava veri:** Evet (yfinance `.IS` günlük kapanış; sektör üyeliği için ücretsiz tam liste: KAP/Borsa İstanbul sayfaları, elle derleme gerekir — YORUM).
 - **Güven:** Hesap kuralı yüksek (30/60/90, basit ortalama, |30g|>%50). Evren düşük.
+- **Hacim filtresi (bilet 04, 14.10):** `tweet-sektor-rotasyonu-hacim-tuzagi-sabit-tl-esigi` (Ham Tansu'nun metni; ikinci el özet). Sektör rotasyonunda hacim filtresi BIST100 ortalamasına göre kurulmaz (büyük hacimli hisseler ortalamayı yükseltir, orta ölçekli şirketleri haksız eler). Tanım: günlük TL hacmi = kapanış fiyatı × işlem adedi; 20 günlük (1 ay) veya 60 günlük (3 ay) hareketli ortalama; sonra eşik. Yöntem A (sabit): 20 günlük ortalama hacmi 10 milyon TL altındaki hisseler listeye girmez. Yöntem B (dinamik): sektör içinde hacimde en alttaki %25 atılır. Sektör ayrımı sektörün kendi içinde yapılır ("80'e yakın sektör", Tansu'nun tahmini). Parametre: 20/60 gün (Tansu); 10 milyon TL ve %25 örnek değerdir, gerekçe ve test yok. Likidite kapısı eşiğiyle ilişki: E K10. Günlük bedava veriyle: evet. Güven: ikinci el.
+- **Konveks rotasyon (bilet 04, 14.10):** `tweet-konveks-rotasyon-stratejisi-makro-dongu` (Ham Tansu'nun metni; ikinci el özet; "çok fazla detayı olan" daha büyük bir projenin adımlarından biri). Beş adım: (1) makro ve döngü analizi (ekonomik döngünün aşaması rotasyon yönünü belirler; örnek: faiz indirimi beklentisi, bankacılık); (2) konveksite filtresi (F/K tarihsel ortalamanın altında, makro beklentisi güçlü sektör); (3) erken aşama: dipten uzaklık düşük, sektör BIST100'e veya sektör endeksine göre yeni ayrışıyor; (4) negatif konveksiteli sektörden pozitif konveksiteliye sermaye kaydırma; (5) her rotasyon hamlesine zarar kes kriteri. Eşik, zarar kes düzeyi, test yok; "konveksite" burada ölçülmeyen yarı-sezgisel bir terimdir (YORUM). F/K ve makro adımı değerleme ve makro verisi ister (TASARIM 3: değerleme kapsam dışı). Uygulanabilir mi: HAYIR (eşiksiz çerçeve).
 
 ---
 

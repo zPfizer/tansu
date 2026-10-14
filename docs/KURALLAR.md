@@ -158,3 +158,137 @@ Kural:
   (aynı sektör: YORUM, TASARIM 5.6; oluşum penceresinde eşbütünleşme). Onun çiftleri ayrıca gösterilir. AGROT–GARAN
   rotasyon değildir (iki bacak + nakit) ve borsapy'ye göre farklı sektördedir.
 - NotebookLM infografikleri Tansu'nun kendi kuralı olmayabilir.
+
+## Kural içermeyen notlar (bilet 04, 14.10)
+
+Havuzdaki her not A–E dosyalarında ya da bu belgede geçer. Aşağıdaki notlar işlem kuralı (giriş, çıkış, filtre, eşik) içermiyor. Okuma derinliği: kısa notlar baştan sona; uzun değerleme notlarında Ham, Sentez ve teknik başlıklar. Biçim: dosya adı · gerekçe. "Kapsam dışı: TASARIM §3": TASARIM 3 (değerleme, opsiyon).
+
+gorsel-paket-04-tsla-implied-move · kapsam dışı: TASARIM §3 (opsiyon); ABD örneği, kural yok
+gorsel-paket-97-iv-sd-expected-move-bantlari · kapsam dışı: TASARIM §3 (opsiyon IV); yazarı belirsiz ders metni, Tansu'nun kuralı değil
+gorsel-paket-108-beta-risk-pusulasi · değerleme: beta tanımı, eşiksiz rejim görüşü
+gorsel-paket-130-piyasa-evreleri-birikim-dagitim-semasi · kavram şeması, sayı yok
+gorsel-paket-133-medyan-kanal-kullanimi · gösterge fikri, parametre yok (medyan: B §28)
+gorsel-paket-14-isletme-analizi-kriterleri · değerleme, kapsam dışı: TASARIM §3
+gorsel-paket-16-temel-momentum-ters-faz · proje fikri, metrik ve eşik yok
+gorsel-paket-19-eurtry-forward-monte-carlo · kur forward çalışması, kapsam dışı
+gorsel-paket-22-hisse-karar-destek-pipeline · süreç şeması, eşik yok
+gorsel-paket-23-froto-ppe-fiyat · değerleme, kapsam dışı: TASARIM §3
+gorsel-paket-24-merton-modeli · değerleme, kapsam dışı: TASARIM §3
+gorsel-paket-25-degerleme-agirliklandirma · değerleme, kapsam dışı: TASARIM §3
+gorsel-paket-27-asuzu-fk-ex-ante-zaman-cizgisi · değerleme, kapsam dışı: TASARIM §3
+gorsel-paket-28-proje-bugunku-deger-ve-teknik-kapi · değerleme, kapsam dışı: TASARIM §3; teknik kapı parametresiz
+gorsel-paket-29-uc-yontem-rs-wacc-dcf-girdileri · değerleme, kapsam dışı: TASARIM §3
+gorsel-paket-30-fed-beklenti-altin-fiyatlama · haber: makro tablo
+gorsel-paket-72-hbk-fiyat-bilanco-katalizoru · haber: bilanço; teknik teyit parametresiz
+gorsel-paket-73-asuzu-finansal-borc-buyume-kalitesi · değerleme, kapsam dışı: TASARIM §3
+gorsel-paket-77-asuzu-bottom-up-adet-degerleme · değerleme, kapsam dışı: TASARIM §3
+gorsel-paket-79-arclk-aradonem-manuel-degerleme · değerleme, kapsam dışı: TASARIM §3
+gorsel-paket-80-froto-basit-fk-fdfavok-degerleme · değerleme, kapsam dışı: TASARIM §3
+gorsel-paket-81-froto-basit-fk-ileri-hedef-outcome · değerleme, kapsam dışı: TASARIM §3
+gorsel-paket-82-eregli-dcf-10y-ic-deger · değerleme, kapsam dışı: TASARIM §3
+gorsel-paket-83-eregli-tek-tus-dcf-konsol · değerleme, kapsam dışı: TASARIM §3
+gorsel-paket-84-dcf-varsayim-riski-sensitivity-reverse-mos · değerleme, kapsam dışı: TASARIM §3
+gorsel-paket-86-fcff-fcfe-ddm-coklu-degerleme · değerleme, kapsam dışı: TASARIM §3
+gorsel-paket-87-cost-of-equity-total-beta · değerleme, kapsam dışı: TASARIM §3
+gorsel-paket-88-basit-capm-coe-python · değerleme, kapsam dışı: TASARIM §3
+gorsel-paket-89-fcff-fcfe-ddm-yontem-secim-matrisi · değerleme, kapsam dışı: TASARIM §3
+gorsel-paket-90-ebit-vergi-forecast-bilesik-buyume · değerleme, kapsam dışı: TASARIM §3
+gorsel-paket-91-dcf-fcff-adim-adim-degerleme · değerleme, kapsam dışı: TASARIM §3
+gorsel-paket-94-ham-fiyat-getiri-risk-portfoy · eğitim
+gorsel-paket-95-capm-portfoy-agirlik-risk-mutabakat · değerleme, kapsam dışı: TASARIM §3
+kaynak-cme-group-volatilite-opsiyon-veri-araclari · kapsam dışı: TASARIM §3 (opsiyon veri aracı tanıtımı)
+kaynak-ekonometri-hangi-soru-hangi-yontem-haritasi · eğitim: yöntem haritası
+kaynak-stefan-jansen-ml-algo-trading · eğitim: kitap önerisi
+tansu-calisma-kurallari · süreç notu, işlem kuralı değil
+tweet-9aydan-yilsonu-satis-net-kar-tahmini · değerleme, kapsam dışı: TASARIM §3
+tweet-arima-hiperparametre-acf-pacf-grid-search · eğitim: model seçimi
+tweet-arz-talep-bolgesinde-formasyon-bekleyisi · sohbet; tekrar: tweet-formasyon-arz-talep-confluence-kapisi ham kaydı
+tweet-asuzu-coklu-degerleme-tutarliligi · değerleme, kapsam dışı: TASARIM §3
+tweet-aylik-getiri-mevsimsellik-piyasa-hafizasi · yazarı belirsiz ders metni, Tansu'nun kuralı değil; eşiksiz (planlı mevsimsellik: D)
+tweet-beklenen-fk-coklu-regresyon-modeli · değerleme, kapsam dışı: TASARIM §3
+tweet-birikim-sureci-kotu-haber-akilli-para · sohbet: Wyckoff anlatısı, kural yok
+tweet-bist-hft-colocation-quant-rekabet-kod-ogrenin · görüş
+tweet-cari-oran-likidite-acigi-bedelli-sermaye-artirimi · değerleme, kapsam dışı: TASARIM §3
+tweet-convex-hull-dea-sektor-rotasyonu-projesi · proje fikri
+tweet-dea-vza-sektor-rotasyonu-malmquist-projesi · proje fikri; yazarı belirsiz ders metni; aylık ya da çeyreklik
+tweet-excel-degerleme-calismasi-koda-donusumu · değerleme, kapsam dışı: TASARIM §3
+tweet-fcfe-ddm-capraz-kontrol-degerleme-motoru · değerleme, kapsam dışı: TASARIM §3
+tweet-fiyat-grafigi-otesi-makro-bakis · haber: makro eğitim
+tweet-froto-nakit-piyasa-degeri-18-89 · değerleme, kapsam dışı: TASARIM §3
+tweet-gordon-buyume-modeli-temettu-degerleme · değerleme, kapsam dışı: TASARIM §3
+tweet-nihai-hedef-tek-tus-temel-teknik-degerleme-llm-nlp · vaat: hedef beyanı
+tweet-optimal-momentum-plus-simulasyon-tamamlandi · vaat
+tweet-ozkaynak-artisi-varlik-finansman-yatirim-verimliligi · değerleme, kapsam dışı: TASARIM §3
+tweet-pddd-roe-sektor-tarihsel-value-trap-filtresi · değerleme, kapsam dışı: TASARIM §3
+tweet-pine-script-python-gorev-ayrimi-veri-backtest-icra · araç tercihi
+tweet-python-ai-stratejik-yonetim-vizyon-misyon-kodlama · kurumsal proje, kapsam dışı
+tweet-python-finans-verisi-ogrenme-yol-haritasi · eğitim
+tweet-regresyon-ml-rasyolardan-piyasa-degeri-sapmasi · değerleme, kapsam dışı: TASARIM §3
+tweet-relatif-degerleme-piyasa-norm-bantlari · değerleme, kapsam dışı: TASARIM §3
+tweet-roc-nopat-yatirilan-sermaye-hesabi · değerleme, kapsam dışı: TASARIM §3
+tweet-sirket-degerlendirme-sektor-isletme-finansal-degerleme-kontrol-listesi · değerleme, kapsam dışı: TASARIM §3
+tweet-topsis-cok-kriterli-hisse-siralama-motoru · görüş: sıralama yöntemi, eşik yok
+tweet-topsis-hisse-secimi-yaklasan-proje · proje fikri
+tweet-ttrak-pddd-primi-carpan-sikismasi · değerleme, kapsam dışı: TASARIM §3
+
+## Kısa atıfların tam adları (bilet 04, 14.10)
+
+A–E dosyaları bazı notlara kısa adla atıf verir: `gorsel-paket-NN` notuna gp-NN, G-NN, GNN veya -NN; `tweet-X` notuna T-X; `kaynak-X-<tweet no>` notuna kaynak-X. Tam dosya adları (ad denetimi için):
+
+gorsel-paket-01-harmonik-formasyon-tarama
+gorsel-paket-02-coklu-sistem-provenance
+gorsel-paket-03-smrtg-abcd-backtest
+gorsel-paket-06-sektor-getiri-liderleri
+gorsel-paket-07-sektor-anomali-temizleme
+gorsel-paket-12-doas-advance-block
+gorsel-paket-21-confluence-alan-taramasi
+gorsel-paket-32-gartley-abcd-talep-dusen-kirilimi
+gorsel-paket-33-min-vol-max-sharpe-dey-bist100
+gorsel-paket-35-beyaz-kugu-sell-abcd-dusen-kirilimi
+gorsel-paket-37-gunluk-rebalancing-aktif-pasif
+gorsel-paket-38-akcns-haftalik-abcd-talep-ema
+gorsel-paket-39-abcd-detector-fibo-talep-tepki
+gorsel-paket-40-haftalik-abcd-talep-tepki
+gorsel-paket-42-buy-abcd-yukselen-destek-hedefler
+gorsel-paket-43-rysas-buy-abcd-kanal-baglamı (dosya adında ASCII dışı "ı" var)
+gorsel-paket-47-lindsay-trident-abc-b-kirilimi-d
+gorsel-paket-50-bist100-bist-volatilite-gulumsemesi
+gorsel-paket-51-cimsa-oyakc-rotatif-zskor-portfoy
+gorsel-paket-52-agrot-garan-duygusuz-disiplin-mtm
+gorsel-paket-53-stat-arb-bag-kopusu-negatif-backtest
+gorsel-paket-54-stat-arb-pairs-trading-kanonik-aciklama
+gorsel-paket-55-volatilite-arbitraj-otonom-sistem-tercihi
+gorsel-paket-57-tektu-eregl-agirlik-duyarliligi
+gorsel-paket-59-buyhold-sinyal-risk-scorecard
+gorsel-paket-62-froto-corwin-schultz-spread-sigma
+gorsel-paket-69-przma-bullish-fvg-revisit-ote
+gorsel-paket-96-momentum-161700-uclu-portfoy-aramasi
+gorsel-paket-98-piyasanin-nabzi-teknik-rapor
+gorsel-paket-99-klmsn-momentum-multitimeframe-bos-demand-fibo
+gorsel-paket-101-avod-demand-bearish-fvg-supply-ema
+gorsel-paket-102-enjsa-elliott-wave5-hikkake-fvg-outcome
+gorsel-paket-107-bryat-smc-elliott-wave2-fvg-wave3
+gorsel-paket-109-balat-harmonik-tp-cd-retracement
+gorsel-paket-110-elliott-wave2-fib-fvg-yuzde8
+gorsel-paket-111-elliott-5plus3-fibonacci-islem-gunleri
+gorsel-paket-113-bist-vix-long-bes-adim-kontrol
+gorsel-paket-114-bist-vix-python-master-analiz
+gorsel-paket-115-position-sizing-yuzde1-2atr-sma250
+gorsel-paket-116-veriden-sinyale-algoritmik-trader-gelistirme
+gorsel-paket-118-yatirimci-basarisizlik-surec-risk-kontrol
+gorsel-paket-120-fibonacci-coklu-aralik-konfluans
+gorsel-paket-122-makim-gartley-fvg-momentum
+gorsel-paket-123-gartley-algoritmik-takip-formul-mutabakati
+gorsel-paket-125-kismi-kar-trailing-prev-low-emergency-stop
+gorsel-paket-126-bist-order-book-derinlik-bmp-fit
+gorsel-paket-127-aztek-istatistiksel-uc-kapitulasyon-obi-ayi-tuzagi
+kaynak-kointegrasyon-sinirlari-2093658795700338821
+kaynak-xu100-corwin-schultz-2096145981062475910
+tweet-algoritma-tasarimi-temelleri-trading-sistemleri
+tweet-garch-standart-sapma-volatilite-risk-minimizasyonu
+tweet-kagit-kalem-matematik-once-kod-sonra
+tweet-kendini-yenileyen-algoritma-ana-frekans
+tweet-kitap-model-sentezi-backtest-forward-test-kod-mimarisi
+tweet-likit-hisseler-etf-islem-derinligi-slippage-kapasite
+tweet-piyasa-dilinde-kesinlik-olasilik-risk-yol-haritasi
+tweet-volatilite-ters-orantili-position-sizing-sermaye-koruma

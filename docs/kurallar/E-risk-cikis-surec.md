@@ -171,6 +171,7 @@ Uyarı 4: 05.10 ön denemesi "4 ATR hedef" ve "kapanış EMA50 altı bozulma" ku
 - Tansu'nun kanıtı: Tek seçilmiş grafik. Backtest yok, dolum yok, tam-çıkış kıyaslaması yok.
 - Bedava günlük veri: Evet (Low[t−1], Close, ATR). Önceki gün dibi günlük mumdan hesaplanır.
 - Kaynak güveni: Düşük. Yalnız özet metin ve okunmayan grafik. TP1/TP2 ve %50 kimlikleri çözülmeden uygulanamaz.
+- RSI 30 girişi ve iki aşamalı çıkış (`tweet-rsi30-giris-iki-asamali-cikis`; Ham Tansu'nun metni, ikinci el özet; grafik notta yok; bilet 04, 14.10): giriş: RSI(14) 30'un altından yukarı kesip üzerinde kapanış yapar. Kâr alma: RSI(14) 70'in üzerindeyken 70'in altında kapanırsa (RSI 70 reddi) pozisyonun %50'si satılır; kalan %50, bir önceki günün low'unun altında kapanışta satılır ve işlem biter. Tansu'nun cümlesi: "Üst paneldeki mumlar sırası ile giriş noktası, trailling noktası, ilk %50 kar aldığımız RSI70 reddi ve ikinci %50 kar aldığımız önceki mumun en düşüğünün altında kapanış." Parametre: RSI(14), 30, 70, %50 + %50 (not). Belirsiz: başlangıç ("sıkı") stop yok; "risk/ödül hedefi" ile "SMA 50 / RSI 50 dirençleri" ilişkisi belli değil; trailing noktası tanımsız; backtest yok. K5 ile fark: K5'te önceki gün dibi altı kapanış ilk %50'yi satar ve kalanı 2 ATR acil stop kapatır; bu notta aynı kapanış kalan %50'yi (tam çıkışı) satar, ilk %50'yi RSI 70 reddi satar. İkisi ayrı Tansu notudur; çözülmedi, K5 değişmedi.
 
 ## K6. Volatiliteyle ters orantılı pozisyon (kavram) ve GARCH sözü
 
@@ -214,7 +215,7 @@ Uyarı 4: 05.10 ön denemesi "4 ATR hedef" ve "kapanış EMA50 altı bozulma" ku
 
 - Kaynak: T-likit-hisseler-etf-islem-derinligi-slippage-kapasite (not).
 - Tansu'nun ifadesi (İKİNCİ EL): Trade'i ciddiye alan yeni yatırımcılar derinliği olmayan alanlar ve sığ hisseler yerine ETF'lere ve likit hisselere odaklanmalı. Gerekçe: istenen zamanda ve makul fiyatta girip çıkabilmek, sermayeyi düşük likiditede kilitlememek.
-- Tanım: Eşik yok. Notun `quantity_liquidity` kuralı Claude'a ait (YORUM).
+- Tanım: Eşik yok. Notun `quantity_liquidity` kuralı Claude'a ait (YORUM). Sektör rotasyonu bağlamında Tansu'nun hacim filtresi örnekleri (TL hacmi, 20/60 gün ortalaması, 10 milyon TL, sektör içi alt %25): sahibi D, "Hacim filtresi". (bilet 04, 14.10)
 - Parametreler: Yok (ADV, spread, katılım oranı verilmedi).
 - Belirsiz kalanlar: "Likit" tanımı, hangi ETF'ler (BIST'te sınırlı).
 - Tansu'nun kanıtı: Yok.
@@ -274,7 +275,7 @@ Uyarı 4: 05.10 ön denemesi "4 ATR hedef" ve "kapanış EMA50 altı bozulma" ku
   4. Riski merkeze koy: "Güzel setup tek işlemde büyük sermaye riski için gerekçe değil." Pozisyon büyüklüğü stop mesafesine göre. Belirli risk yüzdesi önerilmiyor.
   5. İşlem günlüğü: "aday tarihi → giriş → giriş gerekçesi → invalidation → TP → sonuç → MFE/MAE". Birkaç aylık kayıtla gerçek istatistik.
   6. Yalnız katkı sağlayanı tut: göstergeleri ve filtreleri sonuçlara katkısına göre ölç; katkısı olmayanı sadeleştirme adayı yap.
-  - Ek paylaşım (2 Eylül 2026, 20:24, not özeti): "Analize indikatörün AL sinyaliyle başlanmıyor." İnceleme sırası: bölge → kırılımlar → likidite hareketleri → 4 saatlik teyit.
+  - Ek paylaşım (`kaynak-tansu-2095201144544846208`, 2 Eylül 2026, 20:24, not özeti): "Analize indikatörün AL sinyaliyle başlanmıyor." İnceleme sırası: bölge → kırılımlar → likidite hareketleri → 4 saatlik teyit.
 - Tanım (bizim backtest için çıkan):
   1. Her aday için sinyal tarihi t0 kaydet. Sonuç: getiri(t0+1), (t0+3), (t0+5) işlem günü (gün tanımı belirsiz, aşağıda).
   2. Aday sonrası fiyat değişimi ile uygulanabilir giriş/çıkış sonucunu ayrı ölç (not, Cevo sentezi, YORUM).
@@ -377,6 +378,7 @@ Uyarı 4: 05.10 ön denemesi "4 ATR hedef" ve "kapanış EMA50 altı bozulma" ku
 - Parametreler: ML için eşik %70 "yüksek" (Tansu'nun yargısı, not). Başka eşik yok.
 - Belirsiz kalanlar: G-59'da dönem, rf, işlem maliyeti, strateji kuralı, zaman-piyasada oranı yok. ML'de label tanımı ve dönem yok.
 - Tansu'nun kanıtı: Küçük örneklem (13), seçilmiş pencere (G-53, G-59).
+- Lojistik regresyon filtresi ve R/R koşulu (`gorsel-paket-129-doas-lojistik-regresyon-hacim-rsi-filtreli-strateji`; Ham Tansu'nun metni, görsel birinci el; bilet 04, 14.10): hacim ve RSI verisiyle lojistik regresyon modeli; doğruluk %55,00, kesinlik %55,31, duyarlılık %45,44; Tansu: finansal piyasada %70 harika, %90 mümkün değil; modeli "yeni yazılmış, üzerinde hiç çalışılmamış" diye anlatır. Kural cümlesi (birebir): "%55 başarı oranıyla para kazanmak için, her işlemde Risk/Ödül oranını en az 1:1.5 (örneğin %2 Stop, %3 Kar Al) olarak ayarlamak gerekir." Görsel: `DOAS.IS - ML + Hacim + RSI Filtreli Strateji`; EMA 21, RSI paneli (30, 70 çizgileri, "Trend Ayrımı (50)"), "SAT" ve "Güçlü AL (Vol+RSI)" işaretleri; doğruluk sayıları görselde yok, özellik ve hedef değişken tanımı yok, örneklem dışı doğrulama yok. R/R ≥ 1:1,5 eşiği K23'teki 1:2 veya 1:3 eşiğinden farklıdır; bağlamlar ayrı (K23 günlük işlem 5 kapısı, bu not ML isabet oranı); çözülmedi, K23 değişmedi.
 - Bedava günlük veri: Evet.
 - Kaynak güveni: Görseller BİRİNCİ EL (yüksek). Yorumlar İKİNCİ EL.
 
