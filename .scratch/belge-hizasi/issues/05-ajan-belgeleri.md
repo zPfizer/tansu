@@ -13,3 +13,7 @@ anlatır; geri çekilmiş öneriler işaretlidir.
 - [ ] `hiza-d.md` 40–45, 48–50: araştırma önerileri "geri çekildi, yerine: TASARIM §…" diye işaretlendi; `rapor/kanit-20261005.md`
       başına "geçersiz ön deneme" notu kondu; fiyat adımı tablosu tek kopya.
 - [ ] `hiza-a-istem.md` yeniden koştu; bulgu yok.
+
+## Comments
+
+2026-10-14: skill adları, ADR anlatımı ve tek sahip düzeltmeleri harness hizasında yapıldı (.scratch/harness-hizasi-1410/plan.md, tur 2 ve 3; commit a229003); Status sözleşmesi, docs/denetim.md, araştırma notları ve 05.10 raporu açık.
