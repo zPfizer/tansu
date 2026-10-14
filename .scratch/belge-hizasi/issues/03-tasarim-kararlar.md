@@ -5,7 +5,7 @@ kaydına göre düzeltilir. Kayıt sessizse Levent'e kısa soru sorulur.
 
 **Blocked by:** 01, 02
 
-**Status:** done (pr/03-tasarim-kararlar)
+**Status:** done (PR #8, c8a1d42)
 
 - [x] `denetim/hiza-e.md` ÇELİŞKİ ve ESKİ satırları (1–21, 27) karara göre işlendi; her düzeltme karar etiketini gösterir.
       Kanıt: 22 madde işlendi; e-6 ve e-7 vekil kararıyla (14.10, Threads 37) uygulandı, `denetim/bilet-03-rapor.md`.

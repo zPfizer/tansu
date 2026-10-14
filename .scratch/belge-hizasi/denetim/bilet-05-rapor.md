@@ -75,3 +75,8 @@ Yok. Kararlar (Status değerleri, eşdeğer aday) kodu ve davranışı değişti
 - A2 düzeltildi: `issue-tracker.md` `done (kısa not)`; dal adı isteğe bağlı; bilet 06 örnek.
 - A4 düzeltildi: `AGENTS.md` Git maddesi yalnız-ekleme kuralını tekrar etmez; TASARIM §5.11 atfı. Tur 1 satırı a-26 "düzeltildi" iddiası buna bağlıydı.
 - A10 düzeltildi: `KURALLAR.md` eşdeğer aday cümlesindeki ölçüm rakamları kaldırıldı; `docs/sadakat.md` EMA tablosuna atıf.
+
+## Denetim tur 3 (Codex, 14.10): KALDI; yeniden tanım 05b
+
+- A4: `AGENTS.md` Git maddesi artık hangi klasörün izlendiğini söylemez; TASARIM §5.11'e bırakır. Kalan: yalnız git komut yasakları, `veri/` silinmez, `kayit/` commit'te yalnız eklenir.
+- Status: bilet 02 → `done (PR #5, 4c3199e)`, bilet 03 → `done (PR #8, c8a1d42)`, bilet 09 → `done (PR #7, 76a4da8)` (birleşme hash'leri `gh pr view`).

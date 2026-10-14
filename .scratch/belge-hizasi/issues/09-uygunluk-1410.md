@@ -7,7 +7,7 @@ doğrulanan bulgular 1–5 (bulgu 6–8 düştü).
 
 **Blocked by:** None (can start immediately)
 
-**Status:** done (pr/09-uygunluk-1410)
+**Status:** done (PR #7, 76a4da8)
 
 - [x] Uygulama sırası (TASARIM §7): adım 2–9 bitmiş MVP biletine atıfla "tamamlandı"; adım 9 ilk resmi koşunun sonucunu
       (iki aile Deneme, kâğıt üstü dönem başlamadı, iki görev etkin) doğru anlatır; adım 10 bilet 16 sonucuna atıf.
