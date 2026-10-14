@@ -7,14 +7,7 @@ Durum: araştırma çıktısı. Kod yazılmadı. Tarih: 2026-10-05.
 Klasör: `C:\Users\levent\Desktop\YONETIM\beyin\kisisel\300-Projects\Tansu X Veri Havuzu\` (kısaltma: `HAVUZ`).
 Görsel klasörü: `HAVUZ\assets\<klasör>\`. Not dosyası: `HAVUZ\<not>.md`.
 
-Güven etiketleri:
-
-| Etiket | Anlam |
-| --- | --- |
-| birinci el | Görseldeki başlık, etiket, tablo veya kod. Görseli açıp doğruladım. |
-| ikinci el | Yalnız not dosyasında. Notlar çoğunlukla Claude özetidir. Tansu'nun metni "Levent iletisi" olarak aktarılmıştır; kelimesi kelimesine olduğu kanıtlanmadı. |
-| ölçüm | Görsel etiketlerinden veya pikselden ben hesapladım. Hata payı var. |
-| YORUM | Kaynakta yok. Boşluk. Kod yazmadan önce karar gerekir. |
+Güven etiketleri: birinci el, ikinci el ve YORUM tanımları GLOSSARY'dedir. Bu dosyada ek etiket: **ölçüm** = görsel etiketlerinden veya pikselden hesaplanan değer (hata payı var). Notlar çoğunlukla Claude özetidir; Tansu'nun metni "Levent iletisi" olarak aktarılmıştır ve kelimesi kelimesine olduğu kanıtlanmamıştır.
 
 Not: YORUM: bu katalogda ekranlar Tansu'ya atfedilen araç çıktıları olarak okunur; üretici ve bütün iç yöntemler doğrulanmış değildir (Araç, G01–G02; Aktarım, G02:27). Kod veya ham veri yok. Hiçbir görselde işlem maliyeti, ham OHLC veya pivot parametresi görünmüyor.
 
@@ -31,7 +24,7 @@ Not: YORUM: bu katalogda ekranlar Tansu'ya atfedilen araç çıktıları olarak 
 - Kaynak: `gorsel-paket-01` (görsel 03), `gorsel-paket-03` (görsel 01), `kaynak-doas-kelebek` (doas-kelebek.webp), `gorsel-paket-60-hidden-bullish-divergence` (görsel 01), `gorsel-paket-34` ve `-45` (başlıklar). Notlar: `tweet-abcd-geometrik-gecerlilik-kurallari`, `gorsel-paket-39`, `tweet-trend-cizgisi-swing-pivot-regresyon-zarf`.
 - Tansu'nun ifadesi (birinci el, görsel etiketleri):
   - Lejant (KRPLS, SMRTG): `Swing Low` (mavi ▲), `Swing High` (turuncu ▼), `Swing Yapısı (HH/HL/LH/LL)`, `Swing (X -> A)`, `AB=CD Paterni`.
-  - Gizli pozitif uyumsuzluk aracının üst etiketi (`Swing=15 sol-only | MinGap=15`): B §9'dadır. (bilet 04, 14.10)
+  - Gizli pozitif uyumsuzluk aracının üst etiketi: B §9'dadır. (bilet 04, 14.10)
   - Düşen direnç taramasının başlıkları (`Kırılım`, `Temas`, `Lookback`): A §3'tedir.
 - Tanım (görselden okunan davranış):
   1. İki ölçek var. Küçük ölçek: mum üstünde mavi ▲ (Swing Low) ve turuncu ▼ (Swing High) işaretleri. Büyük ölçek: kalın zikzak çizgi `Swing (X -> A)`. Zikzak köşeleri küçük işaretlerden azdır. Yani zikzak daha geniş bir eşikle üretiliyor. (ölçüm)
@@ -446,7 +439,7 @@ Not: YORUM: bu katalogda ekranlar Tansu'ya atfedilen araç çıktıları olarak 
 - Tanım (kombinasyon, çok katmanlı filtre):
   1. Harmonik veya AB=CD geometrisi (kural 3, 7, 8).
   2. Talep bölgesi (yeşil kutu): D veya C bu bölgenin içinde (BUY, 38/40 görsellerinde D bölge içinde). 39 SELL görselinde D bölgede değil, D sonrası düşüşte bölgeye iniyor.
-  3. Düşen direnç çizgisi kırılımı: `Temas: 3` (çizgi en az 3 temas), `Lookback: 20` veya `30`, `Kırılım: tarih`.
+  3. Düşen direnç çizgisi kırılımı (başlık değerleri ve parametreler: A §3).
   4. Fibonacci merdiveni (D çevresi).
   5. EMA5/8/13 toparlanması, hacim, kümülatif delta (katılım).
 - Parametreler:
@@ -476,7 +469,7 @@ Not: YORUM: bu katalogda ekranlar Tansu'ya atfedilen araç çıktıları olarak 
 - Kaynak: `gorsel-paket-43` (kanal), `gorsel-paket-45` (01-balat-abcd-negatif-kumulatif-delta.jpg).
 - Tansu'nun ifadesi (birinci el):
   - RYSAS: başlık `Kanal Durumu: KANAL İÇİ NÖTR | Taze D Noktası (Alış) Tespit Edildi!`. Kırmızı kesikli yükselen üst kanal, yeşil kesikli yükselen alt kanal. D alt kanalda.
-  - BALAT: üç panel. Ana grafik EMA5/8/13 + `Direnç TL`. İkinci panel `Hacim`. Üçüncü panel `Kum. Delta`. Fiyat 75,95, D etiketi `D(CD=1.27AB)`, Fibonacci `1.000: 99.45`, `0.786: 94.00`, `0.618: 89.73`, `0.500: 86.72`, `0.382: 83.72`, `0.236: 80.01`, `0.000: 74.00`. Kümülatif delta uzun süre negatif ve kırmızı barlar büyüyor. Fiyat D'den sonra da düşmeye devam ediyor (görselin sonunda hâlâ 75–76).
+  - BALAT: üç panel. Ana grafik EMA5/8/13 + `Direnç TL`. İkinci panel `Hacim`. Üçüncü panel `Kum. Delta`. Başlık değerleri, D etiketi ve Fibonacci seviyeleri: A §3. Kümülatif delta uzun süre negatif ve kırmızı barlar büyüyor. Fiyat D'den sonra da düşmeye devam ediyor (görselin sonunda hâlâ 75–76).
   - Metin (ikinci el): "ikinci alt grafiğe dikkat".
 - Tanım:
   - Kanal: üst ve alt çizgi (paralel veya ayrı). `Kanal Durumu` etiketleri: `KANAL İÇİ NÖTR` (diğer etiket değerleri görsellerde yok).
@@ -539,7 +532,7 @@ Not: YORUM: bu katalogda ekranlar Tansu'ya atfedilen araç çıktıları olarak 
 - Tanım (BRYAT, not'tan hesaplanabilir):
   1. `P0` = itki başı (dip), `P1` = itki tepesi. `W1 = P1 − P0`. Koşul: `P1/P0 − 1 >= 0,10`.
   2. Düzeltme: `Fib(r) = P1 − r*W1`. Alım bölgesi `Fib(0,786) <= fiyat <= Fib(0,50)`. Golden Pocket `Fib(0,65)..Fib(0,618)`.
-   3. Bölgede taze bullish FVG: `high[t−2] < low[t]`; daha önce doldurulmamış olmalıdır (Aktarım, G107:47–48 ve G107:48–50). Kısmi/tam dolum sınırı açık değildir.
+   3. Bölgede taze bullish FVG (üç mum boşluğu; formül A §1 parametre tablosunda); daha önce doldurulmamış olmalıdır (Aktarım, G107:47–48 ve G107:48–50). Kısmi/tam dolum sınırı açık değildir.
   4. Giriş: FVG üst bandı veya Fib 0,618'de limit.
   5. Stop: `P0 − tampon`. Wave 2, P0'ı aşağı geçmemeli (Elliott kuralı).
   6. TP1 = `P1`. TP2 = `C + 1,618*W1` (C = düzeltme sonu).
@@ -563,7 +556,7 @@ Not: YORUM: bu katalogda ekranlar Tansu'ya atfedilen araç çıktıları olarak 
 - Günlük bedava veriyle uygulanabilir mi: evet (fiyat, FVG, retracement). Pivot ve %10 eşiği net.
 - Kaynak güveni: başlıklar birinci el. Strateji ikinci el.
 - Ek örnek (KANIT, bilet 04, 14.10): `gorsel-paket-131-alka-elliott-wave2-fvg-temas` (Tansu'nun metni, ikinci el; görsel okundu). Başlık `ALKA - FVG TEMAS (0.00%) | BULLISH | ELLIOTT WAVE 2 (Düzeltme: -39.3%)`; lejant BB (14), EMA(9), RSI(14), EN YAKIN FVG (BRYAT ile aynı araç şablonu). Mavi 0→1 hamlesi, kırmızı kesik A-B-C, C noktası sarı FVG kutusuna (yaklaşık 9,6–10) değiyor. Metindeki "ters çekiç mumu" iddiası görselde seçilemedi (mumlar küçük): doğrulanmadı, görsel metinden önce gelir. Ölçüm (piksel, yaklaşık, YORUM): 0 ≈ 7,5, 1 ≈ 16,1, C ≈ 9,8 → geri alım ≈ 0,73, yani BRYAT bölgesi 0,50–0,786 içinde; başlıktaki "Düzeltme: -39.3%" zirveden düşüş yüzdesi gibi okunur ve BRYAT başlığındaki "Fibo: %64.3" ile aynı alan değildir (kaynak anlamı vermiyor). Giriş, stop, hedef, sonuç yok.
-- FVG alımı öncesi yükselen dip filtresi (`gorsel-paket-132-fvg-yukselen-dipler-wave3-abc-duzeltme`; Tansu'nun metni, ikinci el; iki görsel okundu; bilet 04, 14.10): FVG alımı, önceki Lower Low (LL) sonrası Higher Low (HL) oluşmuş (ayı yapısı kırılmış, "Market Structure Shift") bir yükselişte, düzeltmenin yükselen diplerin üstündeki talep/FVG bölgesine inmesiyle daha güvenilirdir. Görsel 1: 0, 1, HH, A-B-C, HL, LH, LL etiketleri ve sarı FVG kutusu; görsel 2: 0-1-2-3 mavi yol, HH, HL, kırmızı kesik A-B-C, FVG ve talep kutuları; ikisinde fiyat/tarih değeri yok. Bu bir filtredir: giriş, stop, hedef yok. HL'nin tanımı (pivot ayarı) yok (YORUM); filtrenin başarı oranı ölçülmemiş. Sembol ve zaman dilimi yok.
+- FVG alımı öncesi yükselen dip filtresi (`gorsel-paket-132-fvg-yukselen-dipler-wave3-abc-duzeltme`; metin ikinci el, yazarlığı belirsiz: kaynak notu metnin bir yapay zekâ yanıtından alınmış olabileceğini söyler, bu bir çıkarımdır; iki görsel okundu; bilet 04, 14.10): FVG alımı, önceki Lower Low (LL) sonrası Higher Low (HL) oluşmuş (ayı yapısı kırılmış, "Market Structure Shift") bir yükselişte, düzeltmenin yükselen diplerin üstündeki talep/FVG bölgesine inmesiyle daha güvenilirdir. Görsel 1: 0, 1, HH, A-B-C, HL, LH, LL etiketleri ve sarı FVG kutusu; görsel 2: 0-1-2-3 mavi yol, HH, HL, kırmızı kesik A-B-C, FVG ve talep kutuları; ikisinde fiyat/tarih değeri yok. Bu bir filtredir: giriş, stop, hedef yok. HL'nin tanımı (pivot ayarı) yok (YORUM); filtrenin başarı oranı ölçülmemiş. Sembol ve zaman dilimi yok.
 
 ---
 
@@ -598,7 +591,7 @@ Not: YORUM: bu katalogda ekranlar Tansu'ya atfedilen araç çıktıları olarak 
 ## 18. Elliott 5+3 ve Fibonacci gün sayımı
 
 - Kaynak: `gorsel-paket-111` (01-elliott-5plus3-fibonacci-islem-gunleri.jpg).
-- Tansu'nun ifadesi (birinci el, infografik; alt köşede `NotebookLM` damgası, yani üretici bir yapay zekâ aracı; Tansu'nun kendi çıktısı olmayabilir):
+- Görsel metni (NotebookLM infografiği, ikinci el; alt köşede `NotebookLM` damgası, yani üretici bir yapay zekâ aracı; Tansu'nun kendi çıktısı olmayabilir):
   - `Borsanın Ritmi: Elliott Dalga ve Fibonacci Sırları`. `5+3 DALGA PRENSİBİ`: "Piyasalar, 5 dalgalık bir ana trend (itki) ve ardından gelen 3 dalgalık bir düzeltme ile hareket eder."
   - `Matematiksel Uyum: Fibonacci Dizisi`: "Döngüdeki toplam dalga sayıları (3, 5, 8, 13, 21, 34...) daima Fibonacci dizisini takip eder."
   - `ZAMAN ANALİZİ: GÜN SAYMA KURALI`: "Bir trendin tepe veya dip noktalarında genellikle Fibonacci günlerinde (5., 8., 13., 21. gün vb.) test edilir."
@@ -617,7 +610,7 @@ Not: YORUM: bu katalogda ekranlar Tansu'ya atfedilen araç çıktıları olarak 
 - Belirsiz kalanlar: tolerans, pivot çapası, "test edilir" ne demek (pivot oluşumu mu, dönüş mü), hangi zaman diliminde. Hiçbir sembol veya sonuç yok.
 - Tansu'nun kanıtı: yok. Eğitim infografiği.
 - Günlük bedava veriyle uygulanabilir mi: sayma evet. Anlamlılığı test edilmeden kural sayılmaz.
-- Kaynak güveni: birinci el (metin). Tansu'ya atfı belirsiz (NotebookLM damgası).
+- Kaynak güveni: NotebookLM, ikinci el. Tansu'ya atfı belirsiz (NotebookLM damgası).
 
 ---
 
@@ -713,7 +706,7 @@ Küçük sonraki adım: kural 3 ve 4 için kendi pivot kararınızı yazın (L, 
 ## 22. Omuz-baş-omuz (OBO), kısa kayıt (bilet 04, 14.10)
 
 - Kaynak: `gorsel-paket-121-obo-neckline-hacim-hedef` (yalnız görsel, metin yok; infografik okundu, kaynak imzası yok). Sıralı kısa listede (§21) yoktur.
-- Tansu'nun ifadesi (görsel, birinci el): `4 Adımda Omuz Baş Omuz (OBO) Formasyonu`. (1) Üç tepeyi tespit et: sol omuz, daha yüksek baş, daha alçak sağ omuz. (2) Boyun çizgisini çiz: omuzlar ile başın taban dip noktalarını birleştiren destek çizgisi. (3) Kırılımı onayla: fiyat boyun çizgisini hacimli bir mumla aşağı kırarsa formasyon onaylanır. (4) Hedef: baş tepesi ile boyun çizgisi arasındaki mesafe kadar düşüş beklenir. "Hacmi kontrol et": sağ omuz oluşurken hacmin azalması güvenilirliği artırır.
+- Görsel metni (imzasız infografik; yazarlığı belirsiz, ikinci el): `4 Adımda Omuz Baş Omuz (OBO) Formasyonu`. (1) Üç tepeyi tespit et: sol omuz, daha yüksek baş, daha alçak sağ omuz. (2) Boyun çizgisini çiz: omuzlar ile başın taban dip noktalarını birleştiren destek çizgisi. (3) Kırılımı onayla: fiyat boyun çizgisini hacimli bir mumla aşağı kırarsa formasyon onaylanır. (4) Hedef: baş tepesi ile boyun çizgisi arasındaki mesafe kadar düşüş beklenir. "Hacmi kontrol et": sağ omuz oluşurken hacmin azalması güvenilirliği artırır.
 - Tanım: hedef = boyun çizgisi − (baş − boyun çizgisi) (kırılım noktasından aşağı).
 - Parametreler: yok. Pivot ayarı, omuz benzerlik toleransı, "hacimli" eşiği, kırılım tamponu, stop yok (YORUM).
 - Tansu'nun kanıtı: yok (şema; piyasa örneği yok). Bu kural aşağı yönlü dönüş formasyonudur; BIST'te açığa satış pratik değil (TASARIM 3).

@@ -6,14 +6,7 @@ Hazırlanma: 2026-10-05. Yalnız okuma araştırması. Hiçbir parametre uydurul
 
 Kaynak kökü: `C:\Users\levent\Desktop\YONETIM\beyin\kisisel\300-Projects\Tansu X Veri Havuzu\`. Görseller `assets\<klasör>\` altında. Kısaltma: G = gorsel-paket, T = tweet-, K = kaynak-.
 
-Kaynak türleri:
-
-| Etiket | Anlam |
-|---|---|
-| BİRİNCİ EL | Görseli ben açıp okudum: Tansu aracının çıktısı, grafik etiketi, tablo, kod. |
-| BİRİNCİ EL (infografik) | NotebookLM infografiği. Tansu paylaştı. Tansu'nun kendi aracı değil. Metni yapay zekâ özeti. |
-| İKİNCİ EL | Yalnız not (*.md) içinde var. Notlar çoğunlukla Claude yazımı. "Levent ... belirtti" cümleleri aktarılan tweet metninin özetidir. |
-| YORUM | Tansu söylemedi. Ben veya notlardaki Claude önerdi. |
+Kaynak türü tanımları (birinci el, ikinci el, NotebookLM, YORUM) GLOSSARY'dedir. Bu dosyadaki etiketler: BİRİNCİ EL = Tansu aracının çıktısı (grafik etiketi, tablo, kod); NOTEBOOKLM = Tansu'nun paylaştığı NotebookLM infografiği; Tansu'nun kendi aracı değildir, metni yapay zekâ özetidir, ikinci el sayılır; İKİNCİ EL = yalnız not (*.md) içinde olan metin, notlar çoğunlukla Claude yazımıdır ("Levent ... belirtti" cümleleri aktarılan tweet metninin özetidir); YORUM = Tansu söylemedi, ben veya notlardaki Claude önerdi.
 
 Uyarı 1: Notlarda "Levent" sözcüğü aktarılan tweet metnini anlatan kişiyi gösterir. Çoğu notta tweet URL'si yok. Yazarın Tansu olduğu havuz bağlamından gelir. Havuz ana notu "Levent'in X paylaşımlarından derlediği" der. Yani yazar atfı çoğu not için doğrulanmış değil. Tek istisna: `not-backtest-giris-sadeligi-risk-islem-gunlugu.md` (URL: x.com/The_Tansu_/status/2095213493133713664, 2 Eylül 2026) ve K-akfis (3 Eylül 2026).
 
@@ -31,7 +24,7 @@ Uyarı 4: 05.10 ön denemesi "4 ATR hedef" ve "kapanış EMA50 altı bozulma" ku
 
 - Kaynak: G-115 (`assets/gorsel-paket-115-position-sizing-1pct-2atr-sma250/01-position-sizing-yuzde1-2atr-sma250-stop.jpg`), T-atr-risk-butcesi (not), T-volatilite-ters-orantili (not).
 - Tansu'nun ifadesi:
-  - Görsel, verbatim (BİRİNCİ EL infografik): "Risk Tutarınızı Belirleyin: Toplam sermayenizin en fazla %1'ini kaybetmeyi göze alın." "Hisse Adedini Hesaplayın: Belirlediğiniz risk tutarını, hissenin 2 ATR (Ortalama Gerçek Aralık) değerine bölün." "Örnek Hesaplama: 100.000$ sermaye ve 14.30$ 2 ATR için: 1.000$ / 14.30$ = ~70 hisse."
+  - Görsel, verbatim (NOTEBOOKLM, ikinci el): "Risk Tutarınızı Belirleyin: Toplam sermayenizin en fazla %1'ini kaybetmeyi göze alın." "Hisse Adedini Hesaplayın: Belirlediğiniz risk tutarını, hissenin 2 ATR (Ortalama Gerçek Aralık) değerine bölün." "Örnek Hesaplama: 100.000$ sermaye ve 14.30$ 2 ATR için: 1.000$ / 14.30$ = ~70 hisse."
   - G-115 notu (İKİNCİ EL, paraphrase): SMA250 yerine SMA200, EMA200 veya EMA250 seçilebilir. İşlemde kaç lot alınacağını bilmek yatırımcılığın en önemli konularından biridir.
   - T-atr notu (İKİNCİ EL, paraphrase): "Hayat kalitesini bozmayacak sermaye", işlem başına TL risk bütçesi. Örnek: "Göze alınan kayıp 500 TL / 2 ATR değeri 2 TL = 250 lot". Python satırı: `Close[-1] - 2*ATR[-1]`.
   - T-volatilite-ters-orantili (İKİNCİ EL): Volatilitesi yüksek hissede pozisyon büyüklüğü küçülür. Ana amaç sermayeyi korumak. "Uygun zamanda oyuna zaten girilir."
@@ -40,7 +33,7 @@ Uyarı 4: 05.10 ön denemesi "4 ATR hedef" ve "kapanış EMA50 altı bozulma" ku
   2. `stop_mesafesi = 2 × ATR` (hisse başına, fiyat birimi).
   3. `lot_ham = risk_tutarı / stop_mesafesi`.
    4. Lot = tam sayı. Aşağı yuvarlama YORUM'dur; yaklaşık 70 hisse paylaşılan NotebookLM örneğidir, yuvarlama talimatı yoktur (NotebookLM, G115/g1, örnek hesap). 1000/14,30 = 69,93; 70 × 14,30 = 1001 > %1.
-  5. Görsel metni "2 ATR değeri" der. 14,30 = 2 ATR mesafesi okunur (BİRİNCİ EL). T-atr örneğinde "2 TL" için aynı okuma doğru olursa 250 lot. ATR = 2 TL olsaydı 125 lot olurdu. Metin 250 diyor. Yani payda = 2×ATR mesafesi (görselde açık, T-atr'de çıkarım).
+  5. Görsel metni "2 ATR değeri" der. 14,30 = 2 ATR mesafesi okunur (NOTEBOOKLM). T-atr örneğinde "2 TL" için aynı okuma doğru olursa 250 lot. ATR = 2 TL olsaydı 125 lot olurdu. Metin 250 diyor. Yani payda = 2×ATR mesafesi (görselde açık, T-atr'de çıkarım).
 - Parametreler:
 
 | parametre | değer | kaynak |
@@ -59,20 +52,20 @@ Uyarı 4: 05.10 ön denemesi "4 ATR hedef" ve "kapanış EMA50 altı bozulma" ku
 - Belirsiz kalanlar: ATR uzunluğu ve yumuşatma türü. Sermayenin tanımı (anlık özkaynak mı, başlangıç mı). Birden fazla açık pozisyonda toplam açık risk sınırı var mı (Tansu söylemedi). Lot üst sınırı (nakit aşımı). Aynı anda açık pozisyon sayısı. Örnekte giriş fiyatı yok, yani 70 × fiyat sermayeyi aşar mı bilinmiyor.
 - Tansu'nun kanıtı: Tek örnek hesap. Performans, backtest, sembol yok. Sonuç: aritmetik tutarlı, edge kanıtı yok.
 - Bedava günlük veriyle uygulanabilir mi: Evet. ATR günlük High/Low/Close ile hesaplanır. Lot bölünebilirliği (BIST 1 lot) için ek veri gerekmez.
-- Kaynak güveni: Formül BİRİNCİ EL (infografik). Örnek kullanım "gerçek Tansu işlemi" değil. ATR detayı yok. Orta.
+- Kaynak güveni: Formül NOTEBOOKLM (ikinci el). Örnek kullanım "gerçek Tansu işlemi" değil. ATR detayı yok. Orta.
 
 ## K2. Acil stop (giriş − 2 ATR, gün içi anında çıkış)
 
 - Kaynak: G-115 (NotebookLM görseli), G-125 (`assets/gorsel-paket-125-kismi-kar-trailing-stop/01-kismi-kar-trailing-prev-low-emergency-stop.jpg`), T-atr (not). Acil Stop ve Gün Sonu Stop adları aktarılan metinde vardır (Aktarım, tweet-atr-risk-butcesi-position-sizing-stop-loss:22).
 - Tansu'nun ifadesi:
-  - Görsel G-115, verbatim (BİRİNCİ EL infografik): "Acil Durum Stop'u: Giriş fiyatının 2 ATR değeri kadar altına bir stop noktası koyun." "Anında Çıkış Kuralı: Fiyat gün içinde acil durum stop seviyesine düşerse, anında pozisyonu kapatın."
+  - Görsel G-115, verbatim (NOTEBOOKLM, ikinci el): "Acil Durum Stop'u: Giriş fiyatının 2 ATR değeri kadar altına bir stop noktası koyun." "Anında Çıkış Kuralı: Fiyat gün içinde acil durum stop seviyesine düşerse, anında pozisyonu kapatın."
   - G-125 notu (İKİNCİ EL, paraphrase): "2ATR emergency stop ile kalan tüm pozisyonun kapatılması".
   - G-125 görsel (BİRİNCİ EL): Sol uçta kırmızı kutu etiketi "STOP" ve "ATR" satırları. Bilet 04 (14.10) görseli açıp büyüterek inceledi (dosya: `assets/gorsel-paket-125-kismi-kar-trailing-stop/01-kismi-kar-trailing-prev-low-emergency-stop.jpg`, 680×147 piksel; etiket yazısı yaklaşık 3 piksel yüksekliğinde). Rakamlar **okunamaz**: önceki iki okuma çelişir ("184.54 / 4.62" bu dosyada ve havuz notunda; "104.34 / 4.62" taslak M ve taslak parçalarında), ikisi de doğrulanamaz. Hiçbir kural bu sayıya dayanmaz. Bu çelişkinin tek kaydı burasıdır; başka dosyalar sayı yazmaz, buraya atıf verir. (bilet 04, 14.10; yazıcı kararı)
   - T-atr notu (İKİNCİ EL): "İlk stop fiyatın 2 ATR altı, acil stop intraday temasla".
 - Tanım:
   1. Giriş günü: `stop = giriş_fiyatı − 2 × ATR` (ATR giriş kararında bilinen son tamamlanmış değer, YORUM).
   2. Her gün: `Low ≤ stop` ise çık (gün içi temas).
-  3. Açılış stopun altındaysa (boşluk) dolum = açılış fiyatı veya daha kötüsü (YORUM; Tansu kaynaklarında yok).
+  3. Gün düşüğü stopun altındaysa dolum fiyatı TASARIM 5.3'tedir (min(stop, AOF); projede açılış verisi yok, TASARIM 5.1); kaynak boşlukta dolumu açıklamaz (YORUM).
   4. Aynı gün hem stop hem hedef değerse stop önce (YORUM, muhafazakâr).
    5. YORUM: bizim seçimimiz giriş ATR'si değişse bile stopu sabit tutmaktır. Aktarım giriş−2ATR ile güncel Close−2ATR'yi birlikte verir; başlangıç stopu ile güncelleme politikası ayrımı açık değildir (Aktarım, tweet-atr-risk-butcesi-position-sizing-stop-loss:22).
 - Parametreler:
@@ -85,13 +78,13 @@ Uyarı 4: 05.10 ön denemesi "4 ATR hedef" ve "kapanış EMA50 altı bozulma" ku
 | ATR periyodu | yok | YORUM (14) |
 | ATR sabit mi, hareketli mi | kaynak genel güncelleme politikası vermiyor | YORUM: girişte sabit bizim seçimimiz; başlangıç/güncelleme ayrımı belirsiz (Aktarım, tweet-atr-risk-butcesi-position-sizing-stop-loss:22) |
 | tetik fiyatı: Low mu, son işlem mi | yok | YORUM (günlük Low) |
-| boşlukta dolum | yok | YORUM (açılış) |
+| boşlukta dolum | yok | YORUM (TASARIM 5.3: min(stop, AOF)) |
 | stop fiyatına limit emir mi, piyasa emri mi | yok | YORUM (piyasa) |
 
 - Belirsiz kalanlar: G-125 etiketindeki stop sayısı giriş − 2×ATR midir? Rakamlar okunamadığı ve giriş fiyatı grafikte okunmadığı için sınanamaz. G-125 etiketi soldadır, yani giriş anında yazılmış stop gibi görünür; bunu doğrulayan metin yok. Stop long için yazılmış; short için Tansu bir şey demedi.
 - Tansu'nun kanıtı: Yok (kural anlatımı). G-125 grafiği seçilmiş tek örnek.
-- Bedava günlük veriyle uygulanabilir mi: Evet, günlük High/Low ile. Gün içi sıra bilinmediği için aynı gün stop+hedef çatışması çözülemez (stop önce varsayımı). Açılış boşluğu günlük Open ile modellenir.
-- Kaynak güveni: Kural BİRİNCİ EL (infografik). Orta-yüksek. Uygulama ayrıntıları yok.
+- Bedava günlük veriyle uygulanabilir mi: Evet, günlük High/Low ile. Gün içi sıra bilinmediği için aynı gün stop+hedef çatışması çözülemez (stop önce varsayımı). Projede Open yoktur (TASARIM 5.1); açılış boşluğu TASARIM 5.3'te AOF ile modellenir.
+- Kaynak güveni: Kural NOTEBOOKLM (ikinci el). Orta-yüksek. Uygulama ayrıntıları yok.
 
 ## K3. Gün sonu (kapanış) stopu: SMA250
 
@@ -99,7 +92,7 @@ Uyarı 4: 05.10 ön denemesi "4 ATR hedef" ve "kapanış EMA50 altı bozulma" ku
 - Tansu'nun ifadesi: NotebookLM örneği SMA250 altında kapanışta çıkışı gösterir (NotebookLM, G115/g1). Aktarımda ortalama seçimi okura bırakılır (Aktarım, G115:20); SMA200, EMA200, EMA250 alternatifleri vardır. YORUM: SMA250'yi kesin giriş filtresi olarak seçmek bizim kararıdır; giriş karşılaştırması kaynakta yoktur.
 - Tanım:
   1. Her gün kapanışında `Close < SMA250` ise çıkış sinyali.
-  2. Çıkış ertesi seans açılışında (YORUM; Tansu "gün sonu" der, yani kapanışta emir mi, ertesi gün mü belirtmedi).
+  2. Çıkış zamanı ve fiyatı TASARIM 5.5'tedir (ertesi günün AOF'u, YORUM). Tansu "gün sonu" der; kapanışta emir mi, ertesi gün mü belirtmedi.
   3. K2 acil stop bundan bağımsız ve önceliklidir (YORUM; infografik iki kuralı yan yana verir, öncelik sırasını yazmaz).
 - Parametreler:
 
@@ -109,13 +102,13 @@ Uyarı 4: 05.10 ön denemesi "4 ATR hedef" ve "kapanış EMA50 altı bozulma" ku
 | alternatifler | SMA200, EMA200, EMA250 | not G-115 |
 | tetik | kapanış < ortalama | görsel G-115 |
 | tampon/histerezis | yok | YORUM (0) |
-| çıkış zamanı | yok | YORUM (ertesi açılış) |
+| çıkış zamanı | yok | YORUM (ertesi günün AOF'u, TASARIM 5.5) |
 | fiyat bazı: düzeltilmiş mi, ham mı | yok | YORUM (düzeltilmiş) |
 
 - Belirsiz kalanlar: Seçim kuralı (hangi ortalama?). Giriş de SMA250 üstü mü gerektirir (not: giriş bileşenlerinden biri; geri kalan bileşenler verilmedi). 250 gün veri yoksa ne olacak (YORUM: sinyal yok).
 - Tansu'nun kanıtı: Yok.
 - Bedava günlük veri: Evet. 250 gün geçmiş gerekir (yeni halka arzlar elenir).
-- Kaynak güveni: Kural BİRİNCİ EL (infografik). Orta-yüksek.
+- Kaynak güveni: Kural NOTEBOOKLM (ikinci el). Orta-yüksek.
 
 ## K4. İz süren stop (trailing)
 
@@ -151,7 +144,7 @@ Uyarı 4: 05.10 ön denemesi "4 ATR hedef" ve "kapanış EMA50 altı bozulma" ku
   2. TP1: "%10" (anlamı belirsiz, aşağıda).
   3. TP2 (ikinci satış): ayrıntıları belirtilmemiş.
   4. Fiyat ≥ giriş + 1,5 ATR: trailing aktif (K4).
-   5. Aktivasyon geçildikten sonraki barlardan ilk `Close[t] < Low[t−1]` kapanışında %50 satış sinyali oluşur (Aktarım, tweet-statik-dinamik-iz-suren-stop-atr:20); ertesi açılış dolumu YORUM'dur.
+   5. Aktivasyon geçildikten sonraki barlardan ilk `Close[t] < Low[t−1]` kapanışında %50 satış sinyali oluşur (Aktarım, tweet-statik-dinamik-iz-suren-stop-atr:20); dolum ertesi günün AOF'udur (TASARIM 5.5, YORUM).
   6. 2 ATR emergency stop: kalan tamamını kapat (girişten itibaren aktif, YORUM).
 - Parametreler:
 
@@ -215,7 +208,7 @@ Uyarı 4: 05.10 ön denemesi "4 ATR hedef" ve "kapanış EMA50 altı bozulma" ku
 
 - Kaynak: T-likit-hisseler-etf-islem-derinligi-slippage-kapasite (not).
 - Tansu'nun ifadesi (İKİNCİ EL): Trade'i ciddiye alan yeni yatırımcılar derinliği olmayan alanlar ve sığ hisseler yerine ETF'lere ve likit hisselere odaklanmalı. Gerekçe: istenen zamanda ve makul fiyatta girip çıkabilmek, sermayeyi düşük likiditede kilitlememek.
-- Tanım: Eşik yok. Notun `quantity_liquidity` kuralı Claude'a ait (YORUM). Sektör rotasyonu bağlamında Tansu'nun hacim filtresi örnekleri (TL hacmi, 20/60 gün ortalaması, 10 milyon TL, sektör içi alt %25): sahibi D, "Hacim filtresi". (bilet 04, 14.10)
+- Tanım: Eşik yok. Notun `quantity_liquidity` kuralı Claude'a ait (YORUM). Sektör rotasyonu bağlamında Tansu'nun hacim filtresi örnekleri: sahibi D, "Hacim filtresi". (bilet 04, 14.10)
 - Parametreler: Yok (ADV, spread, katılım oranı verilmedi).
 - Belirsiz kalanlar: "Likit" tanımı, hangi ETF'ler (BIST'te sınırlı).
 - Tansu'nun kanıtı: Yok.
@@ -229,22 +222,22 @@ Uyarı 4: 05.10 ön denemesi "4 ATR hedef" ve "kapanış EMA50 altı bozulma" ku
 ## K11. Harmonik hedef merdiveni (BALAT, CD geri alımı)
 
 - Sahibi: C §11 (kaynak G-109, TP merdiveni, doğrulama, parametreler, belirsizlikler). Burada tekrar edilmez. (bilet 04, 14.10)
-- Risk/çıkış yönünden okuma: TP1'de kısmi kâr ve stop girişe çekme, stop X altı; hepsi ikinci el ve genel kural değil. R/R eşiği K23'tedir.
+- Risk/çıkış yönünden okuma: kısmi kâr, stop taşıma ve stop seçimi ikinci el ve genel kural değildir (C §11). R/R eşiği K23'tedir.
 
 ## K12. Gartley takip tablosu: stop ve TP1/TP2 (G-123) ve SAYAS aracı
 
 - Sahibi: C §7 (G-123 tablosu, SAYAS, iki ayrı TP1 tanımı, stop seçenekleri, SAYAS doğrulaması). Burada tekrar edilmez. (bilet 04, 14.10)
-- Risk/çıkış yönünden okuma: tek genel TP1 ve tek genel stop seçimi yoktur (X, XA 1,13, X − 2 ATR); girişte R/R eşiği K23'tedir.
+- Risk/çıkış yönünden okuma: tek genel TP1 ve tek genel stop seçimi yoktur (C §7); girişte R/R eşiği K23'tedir.
 
 ## K13. Kırılım, FVG, retest, teyit kartı (AKFIS): ENTRY, STOP, TP1-3
 
 - Sahibi: A §1 (görsel etiketleri, piksel okumaları, parametreler). Burada tekrar edilmez. (bilet 04, 14.10)
-- Risk/çıkış yönünden okuma: stop ve TP kuralları tamamen belirsizdir; TP sayısı 3'tür, fiyat veya oran yoktur.
+- Risk/çıkış yönünden okuma: stop ve TP kuralları tamamen belirsizdir (A §1).
 
 ## K14. Fincan-kulp hedef ve R/R (GUBRF)
 
 - Sahibi: B §21 (görsel etiketleri, hedef formülü, R/R doğrulaması). Burada tekrar edilmez. (bilet 04, 14.10)
-- Risk/çıkış yönünden okuma: hedef formülü var (kırılım + fincan derinliği); stop ve giriş fiyatı yoktur.
+- Risk/çıkış yönünden okuma: hedef formülü vardır; stop ve giriş fiyatı yoktur (B §21).
 
 ## K15. Durum etiketleri ve geçersizlik (AKTİF, TAMAMLANDI, TEPKİ_VERDİ, BOZULDU, TAMAM, belirsiz)
 
@@ -341,7 +334,7 @@ Uyarı 4: 05.10 ön denemesi "4 ATR hedef" ve "kapanış EMA50 altı bozulma" ku
 
 - Kaynak: T-kitap-model-sentezi, T-algoritma-tasarimi-temelleri, T-kendini-yenileyen-algoritma-ana-frekans, T-kagit-kalem-matematik-once-kod-sonra (hepsi not), G-116 (`assets/gorsel-paket-116-veriden-sinyale-algo-sureci/01-veriden-sinyale-algoritmik-trader-gelistirme.jpg`).
 - Tansu'nun ifadesi:
-  - G-116 (BİRİNCİ EL infografik, verbatim başlık): "Veriden Sinyale: Algoritmik Trader'ın Geliştirme Süreci". Dört adım: "1. Teknoloji ve Analitik Araçlar: Sürecin temeli Python ve veri analitiği araçları ile atılır." "2. Otomasyon ve Modelleme: Teknik analiz göstergeleri ve istatistiksel modeller Borsa İstanbul için otomatikleştirilir." "3. Geriye Dönük Test (Backtest): Geliştirilen sistemlerin başarısı geçmiş veriler üzerinde titizlikle test edilir." "4. Optimizasyon ve Sinyal Tasarımı: Risk/getiri oranı optimize edilmiş, kod tabanlı sinyal mekanizmaları tasarlanır."
+  - G-116 (NOTEBOOKLM, ikinci el, verbatim başlık): "Veriden Sinyale: Algoritmik Trader'ın Geliştirme Süreci". Dört adım: "1. Teknoloji ve Analitik Araçlar: Sürecin temeli Python ve veri analitiği araçları ile atılır." "2. Otomasyon ve Modelleme: Teknik analiz göstergeleri ve istatistiksel modeller Borsa İstanbul için otomatikleştirilir." "3. Geriye Dönük Test (Backtest): Geliştirilen sistemlerin başarısı geçmiş veriler üzerinde titizlikle test edilir." "4. Optimizasyon ve Sinyal Tasarımı: Risk/getiri oranı optimize edilmiş, kod tabanlı sinyal mekanizmaları tasarlanır."
   - T-kitap (İKİNCİ EL): Kitaplar vizyon geliştirir, fakat hazır modelleri aynen uygulamak başarı getirmez. Başarı farklı kaynaklardan öğrenilen modelleri sentezlemek, sonra sabırla backtest ve forward test yürütmek. Bilgiyi işleme, modele dönüştürme ve kod mimarisi asıl ayırıcı.
   - T-algoritma (İKİNCİ EL): Amaç açık olmalı. Zaman ve bellek verimli. İstatistik/ML doğru problemde. "Backtest gerçek maliyet ve likiditeyi içermeli." Risk kontrolleri ve beklenmedik durum planları. Tasarım-test-iyileştirme sürekli döngü. Birkaç satırlık yüzeysel kod orta-uzun vadede risk.
   - T-kendini-yenileyen (İKİNCİ EL): Sistem her döngüde güçlenen, verinin ince katmanlarını işleyen olmalı; "ana frekans" araması; hata payını azaltan, kendini yenileyen matematiksel yapı.
@@ -351,16 +344,16 @@ Uyarı 4: 05.10 ön denemesi "4 ATR hedef" ve "kapanış EMA50 altı bozulma" ku
 - Belirsiz kalanlar: Forward test uzunluğu. "Ana frekans" bir yöntem mi, metafor mu belirsiz.
 - Tansu'nun kanıtı: Yok.
 - Bedava günlük veri: Evet.
-- Kaynak güveni: G-116 BİRİNCİ EL (genel). Notlar İKİNCİ EL. Kâğıt-kalem notu düşük.
+- Kaynak güveni: G-116 NOTEBOOKLM (ikinci el; genel). Notlar İKİNCİ EL. Kâğıt-kalem notu düşük.
 
 ## K23. Kesinlik dili, 5 kapı ve R/R eşiği
 
 - Kaynak: T-piyasa-dilinde-kesinlik-olasilik-risk-yol-haritasi, T-yuksek-ihtimalli-gunluk-islem-bes-kapi (not).
 - Tansu'nun ifadesi (İKİNCİ EL):
   - Kesinlik: "kesin gidecek/uçacak/tavan" söylemi kaçma sinyali; olasılık, risk-ödül, koşul ve invalidation dili profesyonel yaklaşım.
-  - 5 kapı ve kabul eşiği örneği (1:2 veya 1:3 risk/ödül; stop bu orana göre): sahibi B §20. (bilet 04, 14.10)
-- Tanım: `R/R = (hedef − giriş) / (giriş − stop) ≥ 2` (veya 3).
-- Parametreler: R/R 1:2 veya 1:3 (not, ikinci el). Volatilite, momentum formülleri yok.
+  - 5 kapı ve kabul eşiği örneği: sahibi B §20. (bilet 04, 14.10)
+- Tanım: `R/R = (hedef − giriş) / (giriş − stop)`; eşik B §20'dedir.
+- Parametreler: R/R eşiği ve beş kapının ölçüleri B §20'dedir.
 - YORUM: bizim sıra seçimimiz önce teknik geçersizlik stopu, sonra R/R hesabı ve yetersiz işlemi reddetmektir. Günlük işlem metni ile Gartley farklı bağlamlardır; bu sıra bütün sistemler için Tansu kuralı değildir, genel uygulanma kapsamı açık değildir (Aktarım, tweet-yuksek-ihtimalli-gunluk-islem-bes-kapi:48–49; G123:42–49).
 - Tansu'nun kanıtı: G-109'un R/R'si (0,20-0,32) bu eşiğin altında kalır (C §11). Tansu bunu kendi paylaştığı çıktıda açıklamıyor.
 - Bedava günlük veri: Evet.
@@ -373,14 +366,14 @@ Uyarı 4: 05.10 ön denemesi "4 ATR hedef" ve "kapanış EMA50 altı bozulma" ku
   - ML (not, İKİNCİ EL): ML ile trade yaklaşımını sevmediğini, modeli ara sıra incelediğini, finans için %70 doğruluğu yüksek gördüğünü belirtti. Görsel (BİRİNCİ EL, verbatim): "Toplam sinyal üretilen gün : 14; AL sinyali : 1; SAT sinyali : 13; Sonucu bilinen gün sayısı : 13; Tutarlı (Hit) : 9; Tutarsız (Miss) : 4; Tutarlılık Oranı (Hit Rate): 69.23%". 9/13 = 69,23% (doğrulandı). Wilson %95 aralığı ≈ 42-87% (benim hesabım, 13 örnek). 13/14 sinyal SAT: baz oran etkisi (piyasa düşüyorsa isabet modelden gelmez, YORUM).
   - G-59 (B&H ile sinyal bazlı strateji scorecard): sahibi D, "B&H vs sinyal bazlı strateji scorecard" bölümü. Burada tekrar edilmez. (bilet 04, 14.10)
   - G-53 (bağı kopan stat-arb çifti, negatif örnek): sahibi D, "Tansu'nun kanıtı" (AGROT/GARAN, madde c). Tansu'nun açıklaması (not, İKİNCİ EL, tırnaklı): "Her arbitraj fırsatı çalışmaz; mutlaka backtest etmek lazım; görünmez bağ kopmuş olabilir."
-  - G-118 (BİRİNCİ EL infografik, verbatim): "Yatırımcılar Neden Başarısız Olur?" Üç aile, dokuz madde: Bilgi ve Hazırlık Eksikliği (Ticaret Planının Olmaması: "Sağlam bir metodoloji olmadan, anlık kararlarla işlem yaparlar."; Yetersiz Bilgi; Uzman Desteği Aramamak). Disiplin ve Psikoloji (Duygusal Kararlar; Hatalardan Ders Almamak; Plana Sadık Kalmamak). Sermaye ve Risk Yönetimi Zafiyeti (Yetersiz Sermaye: "Küçük sermaye genellikle para kaybeder ve kaldıraç riskini anlamazlar."; Zayıf Para Yönetimi; "'Zarar Durdur' Emri Kullanmamak: Bu, küçük bir kaybı büyük bir kayba dönüştüren bir numaralı yoldur.").
+  - G-118 (NOTEBOOKLM, ikinci el, verbatim): "Yatırımcılar Neden Başarısız Olur?" Üç aile, dokuz madde: Bilgi ve Hazırlık Eksikliği (Ticaret Planının Olmaması: "Sağlam bir metodoloji olmadan, anlık kararlarla işlem yaparlar."; Yetersiz Bilgi; Uzman Desteği Aramamak). Disiplin ve Psikoloji (Duygusal Kararlar; Hatalardan Ders Almamak; Plana Sadık Kalmamak). Sermaye ve Risk Yönetimi Zafiyeti (Yetersiz Sermaye: "Küçük sermaye genellikle para kaybeder ve kaldıraç riskini anlamazlar."; Zayıf Para Yönetimi; "'Zarar Durdur' Emri Kullanmamak: Bu, küçük bir kaybı büyük bir kayba dönüştüren bir numaralı yoldur.").
 - Tanım: Sonuç raporunda isabet, sinyal dağılımı, örneklem büyüklüğü ve baz oran birlikte raporlanır. Strateji, B&H ile risk ve çekilme bazında kıyaslanır. Negatif sonuç saklanmaz.
 - Parametreler: ML için eşik %70 "yüksek" (Tansu'nun yargısı, not). Başka eşik yok.
 - Belirsiz kalanlar: G-59'da dönem, rf, işlem maliyeti, strateji kuralı, zaman-piyasada oranı yok. ML'de label tanımı ve dönem yok.
 - Tansu'nun kanıtı: Küçük örneklem (13), seçilmiş pencere (G-53, G-59).
 - Lojistik regresyon filtresi ve R/R koşulu (`gorsel-paket-129-doas-lojistik-regresyon-hacim-rsi-filtreli-strateji`; Ham Tansu'nun metni, görsel birinci el; bilet 04, 14.10): hacim ve RSI verisiyle lojistik regresyon modeli; doğruluk %55,00, kesinlik %55,31, duyarlılık %45,44; Tansu: finansal piyasada %70 harika, %90 mümkün değil; modeli "yeni yazılmış, üzerinde hiç çalışılmamış" diye anlatır. Kural cümlesi (birebir): "%55 başarı oranıyla para kazanmak için, her işlemde Risk/Ödül oranını en az 1:1.5 (örneğin %2 Stop, %3 Kar Al) olarak ayarlamak gerekir." Görsel: `DOAS.IS - ML + Hacim + RSI Filtreli Strateji`; EMA 21, RSI paneli (30, 70 çizgileri, "Trend Ayrımı (50)"), "SAT" ve "Güçlü AL (Vol+RSI)" işaretleri; doğruluk sayıları görselde yok, özellik ve hedef değişken tanımı yok, örneklem dışı doğrulama yok. R/R ≥ 1:1,5 eşiği K23'teki 1:2 veya 1:3 eşiğinden farklıdır; bağlamlar ayrı (K23 günlük işlem 5 kapısı, bu not ML isabet oranı); çözülmedi, K23 değişmedi.
 - Bedava günlük veri: Evet.
-- Kaynak güveni: Görseller BİRİNCİ EL (yüksek). Yorumlar İKİNCİ EL.
+- Kaynak güveni: G-118 NOTEBOOKLM (ikinci el); diğer görseller BİRİNCİ EL (yüksek). Yorumlar İKİNCİ EL.
 
 ---
 
@@ -401,23 +394,23 @@ Uyarı 4: 05.10 ön denemesi "4 ATR hedef" ve "kapanış EMA50 altı bozulma" ku
 
 Bu paket yalnız Tansu'nun söylediklerini birleştirir. Her boşluk etiketli.
 
-| # | adım | Tansu'nun söylediği | etiket |
+| # | adım | Sahibi | etiket |
 |---|---|---|---|
-| 1 | Evren/likidite | ETF ve likit hisse. Sığ hisse yok. | İKİNCİ EL; eşik YORUM |
-| 2 | Piyasa izni | Tansu'nun fikri şokta yeni alımı durdurmaktır (Aktarım, tweet-volatilite-piyasa-soku-yeni-alim-freni:21); uygulanamaz: kaynak hesaplanabilir tanım vermiyor. | İKİNCİ EL |
-| 3 | Hisse rejimi | G48 olayında pozisyon kapanır; Tam/Defansif genel üretim koşulu açık değil | İKİNCİ EL (Aktarım, G48:21); 0,0 çizgisi GÖRSEL, 1/0 çarpan seçimi YORUM |
-| 4 | Giriş | Setup bazlı (Bölüm 2). Kırılım+FVG+retest+teyit veya D'de limit. | kural eşiği YORUM |
-| 5 | İlk stop | Giriş − 2 ATR (harmonikte X veya XA 1,13 veya X − 2 ATR) | BİRİNCİ EL (infografik, tablo) |
-| 6 | Lot | %1 sermaye / (2 ATR mesafesi), paylaşılan örnek | BİRİNCİ EL (NotebookLM, G115/g1); genel risk oranı ve yuvarlama YORUM |
-| 7 | Acil çıkış | Gün içinde stopa temas = anında kapat | BİRİNCİ EL (infografik) |
-| 8 | Gün sonu çıkış | Kapanış SMA250 altı = çık (SMA200/EMA200/EMA250 alternatif) | BİRİNCİ EL + not |
-| 9 | Kısmi kâr | Excel (G-123): TP1'de %50 sat. TP2'de kalanı sat. G125: ilk satışta "%10". İkinci satışın ayrıntıları belirtilmemiş. | Excel BİRİNCİ EL; G125 İKİNCİ EL (Aktarım, G125:20); "%10" anlamı ve %50 paydası belirsiz |
-| 10 | Hedef | CD/AD geri alımı 0,382/0,618/C/1,272; SAYAS: TP1 = 1:1, TP2 = 0,618 AD; kırılım formasyonu: derinlik kadar | BİRİNCİ EL seviyeler |
-| 11 | Stop taşıma | TP1 sonrası stop entry'ye (G-109 notu); trailing +1,5 ATR sonrası aktif | İKİNCİ EL; formül YORUM |
-| 12 | Önceki gün dibi | Aktivasyon geçildikten sonraki barlarda ilk kapanış < önceki gün Low: %50 satış sinyali | İKİNCİ EL (Aktarım, tweet-statik-dinamik-iz-suren-stop-atr:20); payda açık değil |
-| 13 | Geçersizlik | A ihlali ve ilk Close < zone_low yapı geçersizliğidir; reaksiyon pencereleri ayrı alanlardır | İKİNCİ EL (Aktarım, tweet-abcd-geometrik-gecerlilik-kurallari:21; G13:21); A fiyat alanı ve 10 gün/20 bar ortak politikası açık değil |
-| 14 | Min R/R | 1:2 veya 1:3 (günlük setup); Gartley bağlamından ayrı | İKİNCİ EL; genel stop/R:R sırası YORUM (Aktarım, tweet-yuksek-ihtimalli-gunluk-islem-bes-kapi:48–49; G123:42–49) |
-| 15 | Günlük | aday → giriş → gerekçe → invalidation → TP → sonuç → MFE/MAE | İKİNCİ EL (URL'li tweet) |
+| 1 | Evren/likidite | K10 | İKİNCİ EL; eşik YORUM |
+| 2 | Piyasa izni | K8 | İKİNCİ EL; uygulanamaz |
+| 3 | Hisse rejimi | B §8 | İKİNCİ EL; çarpan eşlemesi YORUM |
+| 4 | Giriş | A §1; C §7 | kural eşiği YORUM |
+| 5 | İlk stop | K2; C §7 | K2: NOTEBOOKLM (ikinci el) |
+| 6 | Lot | K1 | NOTEBOOKLM (ikinci el); genel risk oranı ve yuvarlama YORUM |
+| 7 | Acil çıkış | K2 | NOTEBOOKLM (ikinci el) |
+| 8 | Gün sonu çıkış | K3 | NOTEBOOKLM (ikinci el) ve not |
+| 9 | Kısmi kâr | K5; C §7 | İKİNCİ EL; "%10" anlamı ve %50 paydası belirsiz |
+| 10 | Hedef | C §4, §7, §11; B §21 | seviyeler formasyona göre |
+| 11 | Stop taşıma | K4; C §11 | İKİNCİ EL; formül YORUM |
+| 12 | Önceki gün dibi | K4, K5 | İKİNCİ EL; payda açık değil |
+| 13 | Geçersizlik | C §3, §10; A §9 | İKİNCİ EL; ortak politika açık değil |
+| 14 | Min R/R | K23; B §20 | İKİNCİ EL; genel stop/R:R sırası YORUM |
+| 15 | Günlük | K18 | İKİNCİ EL (URL'li tweet) |
 
 Eksik (Tansu söylemedi), hepsi YORUM ile doldurulmalı ve YORUM etiketli kalmalı:
 
@@ -478,4 +471,4 @@ Grup 5. Süreç (K21, K22)
 Grup 6. Dil (K23)
 - [ ] Çıktıda kesinlik dili yok: koşul, olasılık, invalidation, risk/ödül.
 
-Bir sonraki küçük adım: K1-K3'ü (ATR periyodu 14 Wilder YORUM) günlük BIST verisinde tek bir kural olarak kodla ve planlanan ile gerçekleşen kayıp farkını ölç.
+Uygulama sırası ve durumu: TASARIM §7 (K1–K3 tamamlandı).

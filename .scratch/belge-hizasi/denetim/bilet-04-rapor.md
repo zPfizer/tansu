@@ -19,7 +19,7 @@ Not: A–E'nin satır numaraları 10.10'dan beri değişmedi (tek kayıt `f20a06
 | 9 | M:370; E:70, 84; K:52 | aynı | düzeltildi (bkz. bölüm 4): doğru sayı okunamıyor; tek kayıt E K2; K ve M sayı yazmıyor |
 | 10 | M:299 | M:299 (yerel) | düzeltildi: "skor toplama kuralı yok" → ilk beş kutu sayılır, ADX ve Hacim girmez (D, Piyasanın Nabzı) |
 | 11 | M:318 | M:318 (yerel) | düzeltildi: "ağırlık yok" → eşit ağırlık (B §14, ikinci el) |
-| 12 | M:343, 417; T8:163 | aynı | düzeltildi (bkz. bölüm 4): ilk EMA = EMA20; tek yer B §2; M ve T8 atıf veriyor, T8'deki EMA30 düzeltildi |
+| 12 | M:343, 417; T8:163 | aynı | bölüm 4 ve tur 1: ilk EMA etiketi görselden belirlenemedi (20 ya da 30); tek yer B §2; M ve T8 atıf veriyor |
 | 13 | M:252–253 | M:252–253 (yerel) | düzeltildi: TAMAMLANDI'nın kaynak anlamı C §2'ye bağlandı (fiyat D hedefine ulaştı; kâr hedefi değil); "önerilen işlem durumu" ayrıldı |
 | 14 | M:65, 125, 358 | aynı (yerel) | düzeltildi: R245–R263 metinlerinin 06.10'da çekildiği (`ham-yapistirmalar-3.md`) ve "metin yok / yalnız bağlantı" hükümlerinin eski olduğu yazıldı; R255 metninde retest sorusu gerçekten var |
 | 15 | T8:140–141 / M:117, 120 | T8:140–141 (yerel) | düzeltildi: ham R090 (`ham-yapistirmalar.md:983`) okundu; "D oluşumunu teyit etmek için B noktası kırılımı gerekir" cümlesi satış yönlü paragraftadır; T8'e "alışa aktarılması YORUM" yazıldı |
@@ -37,7 +37,7 @@ Yöntem: ikincil kopya, sahibinde eksik olan tek bir gerçek varsa o gerçek sah
 
 | # | Sahip | İkincil kopya, bugünkü yer | Yapılan |
 |---|---|---|---|
-| 23 | S (`docs/sadakat.md`) | KURALLAR §4 sonuçlar | düzeltildi: aday sayıları, tolerans sonuçları ve ölçülen değerler çıkarıldı; yalnız karar kaldı, S'ye atıf. Sorgu 3 Yahoo ölçümü (%0,638 vb.) S'de olmadığı için KURALLAR'da kaldı |
+| 23 | S (`docs/sadakat.md`) | KURALLAR §4 sonuçlar | düzeltildi: aday sayıları, tolerans sonuçları ve ölçülen değerler çıkarıldı; yalnız karar kaldı, S'ye atıf. Sorgu 3 Yahoo ölçümü (%0,638 vb.) S'de olmadığı için KURALLAR'da kalmıştı (tur 1'de kaldırıldı, bkz. A13) |
 | 24 | KURALLAR §3 | TASARIM 5.6 "Sinyal" | TASARIM'a (bölüm 5). KURALLAR'a `ddof 1` eklendi |
 | 25 | TASARIM 5.3–5.6 | KURALLAR "Risk paketi" ve AOF paragrafı | düzeltildi: ikisi TASARIM atfına çevrildi |
 | 26 | TASARIM §3 | KURALLAR "AB=CD ilk sürümden çıktı", "ikinci dalgadadır" cümleleri | düzeltildi: TASARIM §3 atfı; seçim tablosu (gerekçe + YORUM) kaldı |
@@ -64,7 +64,7 @@ Satır satır çevrilmedi. Her ikisine "Geçerlilik (bilet 04, 14.10)" paragraf�
 
 **G-125 stop etiketi.** Açılan dosya: `Tansu X Veri Havuzu\assets\gorsel-paket-125-kismi-kar-trailing-stop\01-kismi-kar-trailing-prev-low-emergency-stop.jpg` (680×147 piksel). Etiket yazısı yaklaşık 3 piksel yüksekliğinde; 12x, 16x ve 30x büyütmede ve piksel döküm ASCII çıktısında rakamlar ayırt edilemedi. Yani 184,54 ile 104,34 okumalarından hangisinin doğru olduğu görselden **çıkarılamaz** (ATR 4,62 de kesin değil). Hiçbir kural bu sayıya dayanmıyor. Karar (yazıcı kararı, bilet 04): tek yer E K2 (satır 70, "G-125 görsel" maddesi): "okunamaz; iki okuma çelişir". E K2 tablosu, E K2 "belirsiz kalanlar", E K5 (satır 148), KURALLAR:54 ve M:370 sayı yazmıyor, E K2'ye atıf veriyor. 193,78 çıkarımı kaldırıldı.
 
-**ICBCT ilk EMA.** Açılan dosya: `Tansu X Veri Havuzu\assets\gorsel-paket-65-ema-sikisma-pre-signal\01-icbct-ema-sikisma-pre-signal.png`. 8 kat büyütmede lejant: `EMA20 (14.44)`, `EMA50 (14.29)`, `EMA100 (14.31)`, `EMA200 (14.42)`. İlk ad **EMA20**; EMA30 değil (T8'deki 30 yanlış, M'deki 20 doğru). Okuma tek başına harf biçimine dayanıyor ve bulanık; destek: aynı aracın KRDMD lejantı EMA20/50/100/200, ve (14,44 − 14,29) / 14,42 = %1,04, Sorgu 3 cevaplayıcısının bulduğu bantla aynı. Tek yer: B §2 (satır 54). M:343 ve T8:163 buna atıf veriyor.
+**ICBCT ilk EMA.** Açılan dosya: `Tansu X Veri Havuzu\assets\gorsel-paket-65-ema-sikisma-pre-signal\01-icbct-ema-sikisma-pre-signal.png`. 8 kat büyütmede lejant: `EMA20 (14.44)`, `EMA50 (14.29)`, `EMA100 (14.31)`, `EMA200 (14.42)`. Yazar ilk adı EMA20 okudu; denetçi EMA30 okudu. Çözünürlük ikisini ayırmaya yetmez (tur 1). Karar: B §2 (satır 54) "ilk EMA etiketi okunamıyor (20 ya da 30)" yazar; KRDMD ayarı 20/50/100/200; hiçbir kural bu etikete dayanmaz. M ve T8 buna atıf verir.
 
 ## 5. TASARIM'a (bilet 03/07)
 
@@ -80,3 +80,50 @@ Yok. Karar gerektiren iki nokta (G-125 sayısı okunamıyor; ICBCT ilk EMA) kura
 ## 7. Ek: kutu 7
 
 KURALLAR §2 risk satırı: "lot = risk / (2 ATR)" → "lot adedi = risk / (2 ATR)" (GLOSSARY "Adet, lot"). Kutu 7 bu bilet kapsamında yazılmadı ama tek satırdı; yapıldı.
+
+## 8. Denetim tur 1 (Codex)
+
+Karar: KALDI (tur 1). Düzeltmeler bu bölümdedir; kutu 10, 11, 12 ve 13 durumları bilet dosyasında. Yerel gitignore dosyaları M (`docs/strateji-modulleri-taslak.md`) ve T8 (`docs/strateji-taslak/tasarim-8.md`) diskte düzeltildi; commit'te görünmez.
+
+### Bölüm A
+
+| # | Sonuç |
+|---|---|
+| A1 ADX | düzeltildi: B:76 "ADX için periyot, eşik yok" kaldırıldı; ADX14 ve eşik 20 sahibi A §12'ye atıf |
+| A2 EMA formülü | düzeltildi: KURALLAR §3 formülü seçen yer ("görselde yok; KRDMD dışında doğrulanmadı"); B §1 (adım 2, parametre tablosu, güven, sıralı özet B ve D), KURALLAR §2 seçim tablosu ve §4, M:345 aynı sınırı taşır; "birinci el", "çözüldü" ve "YORUM değil" sözleri kaldırıldı |
+| A3 AKFIS stopu | düzeltildi: KURALLAR dizini artık A §1'e atıf verir, stop formülü yazmaz; A §1'in YORUM nitelemesi korundu |
+| A4 ham fiyat | düzeltildi: KURALLAR §2 satırı ve §3 aile 1: sinyal düzeltilmiş seriden, ham seri yalnız sadakat kontrolünde (TASARIM 5.1) |
+| A5 çıkış dolumu | düzeltildi: E K3 madde 2 ve tablo, E K2 madde 3 ve tablo, E K5 madde 5: "ertesi seans açılışı" yerine TASARIM 5.5 / 5.3 (AOF, min(stop, AOF)) |
+| A6 menşe | düzeltildi: E:14 (NotebookLM = ikinci el; E içindeki 11 "BİRİNCİ EL (infografik)" kullanımı dahil), C §18 (gp-111, NotebookLM), C:716 (gp-121, imzasız, yazarlığı belirsiz ikinci el), A:281 (gp-17), B §23 (gp-104), B:301 (gp-119), B:13, C:566 (gp-132: yapay zekâ yanıtı kuşkusu korundu), A:172 (gp-15), D (gp-98, gp-113 NotebookLM). GLOSSARY "İkinci el" satırına "imzasız ders şeması ve yazarlığı belirsiz metin" eklendi |
+| A7 veri durumu | düzeltildi: B:18, D (çift bedava veri maddesi, Nabız ve BIST-VIX veri maddeleri), E K2 (Open yok): "hesaplama düzeyinde evet" ile projenin güncel veri durumu (İş Yatırım, Yahoo yok, açılış yok; TASARIM 5.1) ayrıldı |
+| A8 sınırlama | düzeltildi: A "Okunmayanlar" bölümündeki "orijinal metinler yok" yerine "Ham" bölümlerinin varlığı (havuzda 258 notun 257'sinde "Ham" var) |
+| A9 sonraki adım | düzeltildi: E sonu "Uygulama sırası ve durumu: TASARIM §7 (K1–K3 tamamlandı)" |
+| A10 K ve T tekrarı | TASARIM değişmedi; K aile kuralını tutar. "TASARIM'a" listesi aşağıda |
+| A11 tanımlar | düzeltildi: KURALLAR okuma kuralları, A:3, B:10–13, C:10–17, D:4, E:9–16: tanım tabloları GLOSSARY atfına ve kullanım cümlesine çevrildi |
+| A12 dizin ve hedefler | düzeltildi: KURALLAR §2 dizin üç tablosu "Kural, Bölüm, Hazırlık" üç sütuna indi (kaynak değer yok); §4 hedef tablosu değer yerine A–E bölümü verir |
+| A13 formül ve sadakat | kısmen çürütüldü: Yahoo ölçümü S'ye taşınamadı. `docs/sadakat.md` `python -m tansu sadakat` tarafından baştan yazılır (`tansu/sadakat.py:283`); elle eklenen bölüm bir sonraki koşuda silinir. Ölçüm zaten `docs/sorgu/sonuc-3-4.md` O9'dadır; KURALLAR §4'ten ölçüm kaldırıldı, O9'a atıf verir. KURALLAR §3 formül yinelemesi A2 ile tek yere indi |
+| A14 çapraz kopyalar | düzeltildi: C:34, C:449, C:479, C:542 (A §1 / A §3 / B §9 atfı); B:436 (D atfı); E:218 (D atfı); E:362–363 ve E K23 "R/R eşiği" (B §20 atfı); E "Tansu risk ve çıkış paketi" tablosu 15 satır Sahibi sütununa indi; E K11–K14 "risk yönünden okuma" paragrafları; A:278 (E K18 atfı) |
+| A15 taslaklar | düzeltildi (yerel): M:296–375 tablolarında 50 satırın "Sadakat hedefi" sütunu A–E bölüm atfına çevrildi (boş "yok" olanlar kaldı); T8:355–366 hedef listesi atıf listesine; M:418 "ATR: 4.62" kaldırıldı; M:419 ICBCT ilk EMA; T8:165 |
+
+### Bölüm B
+
+| Madde | Sonuç |
+|---|---|
+| ICBCT (B:54) | düzeltildi: "görselde ilk EMA etiketi okunamıyor (20 ya da 30); KRDMD ayarı 20/50/100/200; sadakat ölçümü 20 ile uyuştu (S)"; ikisi de iddia edilmez. Lejant listesinde ilk ad `EMA??` yazıldı |
+| G-125 | düzeltildi: iki aday okuma yalnız E K2'de; M:372 (Y3) sayısız, "E K4, K5; G-125 etiket rakamları yalnız E K2"; M:418 sayı iddia etmez. KURALLAR, A–D, M ve T8'de başka yerde 184,54, 104,34 ya da 4,62 yok (`docs/strateji-taslak/` altındaki diğer çalışma dosyaları kapsam dışı, değişmedi) |
+| POC/VWAP (A:284) | düzeltildi: kaynak koşulu "VWAP hâlâ üstteyken" geri yazıldı (`tweet-poc-vah-val-vwap-auction-state-machine` Ham satır 45'te "VWAP hala yukarıda kaldığında") |
+| DEA notu (K:214) | düzeltildi: "kural içermez" listesinden çıkarıldı; D "Sektör rotasyonu"na "yazarlığı belirsiz, ikinci el; YORUM" ve tek satır kuralla yazıldı |
+| Ek bulgu (örnekleme dışı) | `tweet-aylik-getiri-mevsimsellik-piyasa-hafizasi` "eşiksiz" diye dışlanmıştı; Ham metinde %70 eşiği ve 10–20 yıl var. DEA ile aynı gerekçeyle listeden çıkarıldı ve D'ye yazıldı. `gorsel-paket-97` kapsam dışı (TASARIM §3, opsiyon IV) olduğu için listede kaldı. Liste 67 → 65 not |
+| B:54 "%5" cümlesi | çürütüldü: kaynak notun bir günlük hareketi anlatan eski cümlesi, hesaplanmış getiri değil; değiştirilmedi ve rakam eklenmedi |
+| Bölüm B satırları 23–40 | A14 ve A15 düzeltmeleriyle aynı işlem; BALAT çürütmesi (satır 34) değişmedi |
+| Bilet kutuları 10–12 | kutu 11 ve 12 işaretsiz, açık kısım bilet dosyasında; kutu 10 işaretli (22 maddenin tamamı kayıtlı); kutu 13 işaretsiz |
+
+### TASARIM'a: atfa çevrilecek satırlar (bilet 03/07; bu dalda değişmedi)
+
+- `docs/TASARIM.md:437–438` (5.6 "Sinyal"): `Z ≤ −2 ve ΔZ > 0` / `Z ≥ +2 ve ΔZ < 0` KURALLAR §3 aile 1 ile aynı; "KURALLAR §3'teki sinyal" demeli.
+- `docs/TASARIM.md:535–537` (5.7 "Ön şartlı gün (EMA)", "Tür (a)") ve `:550–552` ("Ek kol"): sıkışma bitti, 10 günlük pencere, kapanış ≥ SMA250 ve önceki 20 günün en yüksek yükseği koşulları KURALLAR §3 aile 2 K1 ön şartı ile aynı; yalnız örnekleme ve raporlama TASARIM'da kalmalı.
+
+### Kapı
+
+`ruff check .`: All checks passed. `pytest -q` (yazılabilir `--basetemp` ile): 310 passed. Kapsam kontrolü: 258 / 258 havuz notu KURALLAR ya da A–E içinde. Satır sonu: değişen dosyalar `i/lf`.
+

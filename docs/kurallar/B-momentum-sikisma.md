@@ -7,15 +7,15 @@ Kapsam: Tansu X Veri Havuzu notları ve görselleri. Tarih: 05.10.2026.
 Kaynak kökü: `C:\Users\levent\Desktop\YONETIM\beyin\kisisel\300-Projects\Tansu X Veri Havuzu\`
 Görsel kökü: `...\assets\<klasör>\`. Not dosyaları kökte. Aşağıda "gp-NN" = `gorsel-paket-NN-*.md` + `assets/gorsel-paket-NN-*/`.
 
-1. Birinci el = görseldeki başlık, etiket, tablo, kod. Bu belgede her görsel Read ile açıldı ve parametreler görselden doğrulandı.
-2. İkinci el = notlardaki Claude özeti, "Levent şunu belirtti" cümleleri, formül önerileri. Notlardaki bölümlerin çoğu ("Cevo çıkarımı", "state machine", "backtest matrisi") Tansu'nun sözü DEĞİLDİR. Bu belgeye alınmadı.
+1. Kaynak türü tanımları GLOSSARY'dedir. Bu belgede her görsel Read ile açıldı ve parametreler görselden doğrulandı.
+2. Notlardaki Claude özeti, "Levent şunu belirtti" cümleleri ve formül önerileri ikinci eldir. Notlardaki bölümlerin çoğu ("Cevo çıkarımı", "state machine", "backtest matrisi") Tansu'nun sözü DEĞİLDİR. Bu belgeye alınmadı.
 3. Atıf belirsizliği: notlar aktaran kişiyi "Levent" diye yazar. Aktarılan metnin Tansu'dan birebir olduğu yalnız şu notlarda doğrulanabilir: `tweet-bollinger-kuyruklari...` (X bağlantısı, yazar @The_Tansu_), `tweet-medyan-temelli...` (X bağlantısı), `kaynak-cwene-skewness-...` (iki X bağlantısı). Diğer notlarda "Tansu'nun ifadesi" = ikinci el aktarım. YORUM: Tansu'nun görselleri olduğu varsayımı not başlıklarından gelir.
-4. Üç görsel NotebookLM filigranı taşır: gp-98, gp-104, gp-113. Bunlar yapay zekâ infografiğidir. Tansu'nun kendi aracının çıktısı değildir. Güveni "birinci el (infografik)" diye ayrıldı.
+4. Üç görsel NotebookLM filigranı taşır: gp-98, gp-104, gp-113. Bunlar yapay zekâ infografiğidir; Tansu'nun kendi aracının çıktısı değildir. Bu belgede ikinci el sayılır (GLOSSARY); gp-98 ve gp-113 için sahip D'dir.
 5. Hiçbir notta Tansu'nun kodu yok. Yalnız: bullish engulfing kodu (görsel), realized vol kodu (gp-124, görsel), mum gölge kodu (gp-76, görsel). Clenow ve HalfTrend kodu notta metin olarak var, görselde yok (ikinci el).
 6. Gizli göstergeler: gp-46/48/49 mavi/turuncu çizgiler, gp-65 alt paneller, gp-74 özel subplot, gp-31 üç alt panel. Adları bilinçli kapatılmış. Uydurulmadı.
 7. Tansu'nun kanıtı hemen her yerde seçilmiş örnektir. Sistematik backtest tablosu bu kapsamda yok. İstisna: gp-75 (tek sembol, tek dönem, Strateji %19.1 / B&H %10.8 / Sharpe 0.67) ve gp-63 (yalnız DEY tablosu).
 
-Günlük bedava veri = Yahoo/yfinance günlük OHLCV (BIST `.IS`). Gün içi, emir defteri, bilanço (CFO) dışarıda.
+"Günlük OHLCV yeter" ifadesi hesaplanabilirlik ölçüsüdür: kaynak Yahoo/yfinance günlük OHLCV (BIST `.IS`) varsayar. Projenin güncel veri durumu ayrıdır: İş Yatırım, Yahoo yok, açılış yok (TASARIM 5.1). Gün içi, emir defteri, bilanço (CFO) dışarıdadır.
 
 ---
 
@@ -25,7 +25,7 @@ Günlük bedava veri = Yahoo/yfinance günlük OHLCV (BIST `.IS`). Gün içi, em
 - Tansu'nun ifadesi (görsel başlığı, birebir): `KRDMD | Son 130 Mum | EMA Sıkışması | Tolerans %1.2 | Min 3 gün | 1 periyot`; üst satır: `Tespit edilen sıkışma periyodu: 1` / `1. 2025-12-17 -> 2026-01-14 (20 gün) Ort.Ratio: %0.64`. Sarı kutu etiketi `20g %0.64`. Alt panel `Ratio %`, kesikli kırmızı çizgi `Eşik %1.2`. Lejant: EMA20 (31.92), EMA50 (30.74), EMA100 (29.58), EMA200 (28.43). Sağ üst `Son Kapanış: 36.68`. Metin (ikinci el): "sıkışma zamanı iyi tespit edilirse ve aynı alanda formasyon varsa güçlü kâr fırsatı"; ratio ve süre eşiği "tasarımcının tecrübesine kalmış".
 - Tanım (görselden okunan + boşluk):
   1. Günlük close'tan EMA20, EMA50, EMA100, EMA200 hesapla. (görsel)
-  2. Her bar için bir `Ratio %` hesapla. FORMÜL GÖRSELDE YOK. Sadakat kontrolü formülü çözdü: (en büyük EMA − en küçük EMA) / EMA200; sonuç ve toleranslar `docs/sadakat.md`'de, kural KURALLAR §3 ve §4'te. (bilet 04, 14.10)
+  2. Her bar için bir `Ratio %` hesapla. FORMÜL GÖRSELDE YOK. Seçilen formül ve sadakat sonucu KURALLAR §3 ve §4'tedir (KRDMD dışında doğrulanmadı); ölçümler `docs/sadakat.md`'dedir. (bilet 04, 14.10)
    3. Örnekte `Ratio <= %1.2` olan ardışık barlar sıkışma adayıdır; genel eşik seçimi YORUM'dur (Aktarım + araç, G67:21, g1; G65:21).
    4. Örnekte ardışık bar sayısı >= 3 ise dönem "tespit edilen" olur; genel süre seçimi YORUM'dur (Aktarım + araç, G67:21, g1; G65:21).
   5. Tarama penceresi son 130 mum. (görsel)
@@ -38,20 +38,20 @@ Günlük bedava veri = Yahoo/yfinance günlük OHLCV (BIST `.IS`). Gün içi, em
 | Tolerans | %1.2 (örnek ayarı) | görsel (başlık + eşik çizgisi); genel eşik YORUM |
 | Minimum süre | 3 gün (örnek ayarı) | görsel (başlık); genel süre YORUM |
 | Pencere | son 130 mum | görsel |
-| Ratio formülü | kaynakta yok; sadakat kontrolüyle çözüldü (`docs/sadakat.md`, KURALLAR §4) | YORUM değil, sadakatle doğrulandı (bilet 04, 14.10) |
+| Ratio formülü | görselde yok; KURALLAR §3 seçti | YORUM (sadakatle seçildi; KRDMD dışında doğrulanmadı; KURALLAR §4, `docs/sadakat.md`) |
 | "gün" = bar mı takvim günü mü | 2025-12-17..2026-01-14 = 28 takvim günü, "20 gün" yazıyor; bar sayısı olması olası | YORUM |
 | Ratio adayları (aralık/medyan, CV, ATR-normal) | notta üç aday | not (ikinci el), Tansu'nun değil |
 
 - Giriş / stop / hedef / bozulma: YOK. Görsel yalnız tespit ve sonraki fiyat yolunu gösterir (sıkışmadan sonra 36.68). Not: "giriş zamanı, yön tetikleyicisi verilmedi".
-- Belirsiz: sıkışma sonrası yön ve giriş; "1 periyot" yalnız sayaç. (Ratio formülü artık belirsiz değil; yukarıdaki 2. adım.)
+- Belirsiz: sıkışma sonrası yön ve giriş; "1 periyot" yalnız sayaç. (Ratio formülü: görselde yok, KURALLAR §3'te seçildi; yukarıdaki 2. adım.)
 - Kanıt: tek KRDMD örneği, seçilmiş pozitif. Sistematik tablo yok. Ratio sıkışma boyunca ~0.5-1, sonra %10+ (görsel okuması).
-- Günlük bedava veriyle uygulanabilir mi: EVET (sıkışma dedektörü); giriş kuralı yok. Parametreler (4 EMA, %1.2, 3 gün) ve sadakatle çözülen oran formülü günlük veriyle hesaplanır (bilet 04, 14.10).
-- Kaynak güveni: parametreler birinci el; giriş yok; ratio formülü kaynakta yok, sadakatle çözüldü.
+- Günlük bedava veriyle uygulanabilir mi: EVET (sıkışma dedektörü); giriş kuralı yok. Parametreler (4 EMA, %1.2, 3 gün) ve KURALLAR §3'ün seçtiği oran formülü günlük kapanışla hesaplanır (bilet 04, 14.10).
+- Kaynak güveni: parametreler birinci el; giriş yok; ratio formülü kaynakta yok (YORUM; KRDMD'de sadakatle eşleşti).
 
 ## 2. EMA sıkışma "Pre Signal" (ICBCT)
 
 - Kaynak: `gorsel-paket-65-ema-sikisma-pre-signal-bir-gun-yuzde5.md`; `assets/gorsel-paket-65-ema-sikisma-pre-signal/01-icbct-ema-sikisma-pre-signal.png`, `02-matrix-sonraki-mum.png`.
-- Tansu'nun ifadesi: görsel başlığı (düşük çözünürlük, okunabildiği kadarıyla): `ICBCT | Son Kapanış: 14.55 | Son 130 Mum | [kapalı alan] | 1 periyot | ▲1 BULL ▼0 BEAR ⚡0 CONFLICT`; mavi kutuda `▲ AKTİF 3g`; yeşil üçgen "Pre Sig" etiketli; EMA lejantı 4 çizgi: `EMA20 (14.44)`, `EMA50 (14.29)`, `EMA100 (14.31)`, `EMA200 (14.42)`. Bilet 04 (14.10) görseli açıp 8 kat büyüterek okudu (dosya: `assets/gorsel-paket-65-ema-sikisma-pre-signal/01-icbct-ema-sikisma-pre-signal.png`): ilk ad EMA20, EMA30 değil; harfler düşük çözünürlükte bulanık olduğundan okuma kesin değildir, ama aynı aracın KRDMD lejantı EMA20/50/100/200 ve (14,44 − 14,29) / 14,42 = %1,04 Sorgu 3 okumasıyla aynıdır. Doğru okuma tek yerde burada durur; taslaklar (M, T8) buna atıf verir. Üç alt panel; adları beyaz kutuyla kapatılmış. Metin (ikinci el): "EMA sıkışması stratejisi bir günde %5 sonuç verdi; parametreleri açıklayamam, ana fikri verdim, geliştirilebilir."
+- Tansu'nun ifadesi: görsel başlığı (düşük çözünürlük, okunabildiği kadarıyla): `ICBCT | Son Kapanış: 14.55 | Son 130 Mum | [kapalı alan] | 1 periyot | ▲1 BULL ▼0 BEAR ⚡0 CONFLICT`; mavi kutuda `▲ AKTİF 3g`; yeşil üçgen "Pre Sig" etiketli; EMA lejantı 4 çizgi: `EMA?? (14.44)` (ilk etiket okunamıyor, aşağıya bakın), `EMA50 (14.29)`, `EMA100 (14.31)`, `EMA200 (14.42)`. Görselde ilk EMA etiketi okunamıyor (20 ya da 30); KRDMD ayarı 20/50/100/200; sadakat ölçümü 20 ile uyuştu (S). Bu belirsizlik tek yerde burada durur; taslaklar (M, T8) buna atıf verir, hiçbir kural bu etikete dayanmaz. Üç alt panel; adları beyaz kutuyla kapatılmış. Metin (ikinci el): "EMA sıkışması stratejisi bir günde %5 sonuç verdi; parametreleri açıklayamam, ana fikri verdim, geliştirilebilir."
 - Tanım: hesaplanamaz. Yalnız: 4 EMA yakın, kutu `AKTİF 3g` (sıkışma 3 gündür aktif okuması), BULL/BEAR/CONFLICT sayacı (sinyal sayımı). Alt panel kimlikleri bilinmiyor.
 - Parametreler: hepsi gizli. Tablo: `AKTİF 3g` (görsel, anlamı belirsiz); 130 mum (görsel); geri kalan YOK.
 - Giriş/stop/hedef: yok. "%5" = ikinci el iddia, görselde doğrulanmadı. `02-matrix-sonraki-mum.png` yalnız sonraki mumu gösterir (yeşil mum, hacim artışı, iki çizgili alt osilatör).
@@ -73,7 +73,7 @@ Günlük bedava veri = Yahoo/yfinance günlük OHLCV (BIST `.IS`). Gün içi, em
 ## 4. EMA5/8/13 dizilimi + yükselen destek tepkisi / retest (AKSGY, gp-117, gp-103, gp-64)
 
 - Sahipleri: A §12 (gp-117 ve gp-103: lejant, başlık, temas sayısı, parametreler, Tansu'nun yorumu) ve A §4 (gp-64: düşen trend kırılımı + talep + hacim + EMA5/8/13). Burada tekrar edilmez. (bilet 04, 14.10)
-- Momentum yönünden okuma: EMA5/8/13 dizilimi tarayıcı etiketidir, giriş kuralı değildir; MACD ve ADX için periyot, eşik ve sinyal koşulu yoktur.
+- Momentum yönünden okuma: EMA5/8/13 dizilimi tarayıcı etiketidir, giriş kuralı değildir; MACD için periyot, eşik ve sinyal koşulu yoktur; ADX periyodu ve eşiği A §12'dedir.
 
 ## 5. Dragonfly Doji + EMA sıkışması çıkışı (gp-71)
 
@@ -298,7 +298,7 @@ Günlük bedava veri = Yahoo/yfinance günlük OHLCV (BIST `.IS`). Gün içi, em
 - Tanım: `slope = MA_t - MA_{t-K}` negatiften pozitife dönünce uyarı; kesişim teyit. Formüller Cevo.
 - Parametreler: MA türü, periyot, K, eşik YOK. "%5-10" = iddia, kanıtsız.
 - Uygulanabilir mi: KISMEN (fikir; sayılar YORUM). Güven: ikinci el.
-- DMA kanal eğimi (`gorsel-paket-119-dma-kanal-egim-evre-gecis`; yalnız görsel, metin yok; bilet 04, 14.10): infografik `DMA Kanal Analizi: Trendin Gücünü Anlamak`: kanal eğimi ne kadar dikse yükseliş o kadar güçlüdür; eğim mevcut trendin gidişatını ve gücünü izler; mevcut evre sonraki evrenin tonunu etkiler (zayıf yükseliş, sert düşüş habercisi; hafif düşüş, güçlü yükseliş habercisi). Görselde kaynak imzası yok. "DMA" açılımı, formül, periyot, eşik, sembol yok: kural tanımsız. Uygulanabilir mi: HAYIR (DMA tanımsız; eğim fikri yukarıdaki §17 ile aynı türdendir).
+- DMA kanal eğimi (`gorsel-paket-119-dma-kanal-egim-evre-gecis`; yalnız görsel, metin yok; bilet 04, 14.10): infografik `DMA Kanal Analizi: Trendin Gücünü Anlamak`: kanal eğimi ne kadar dikse yükseliş o kadar güçlüdür; eğim mevcut trendin gidişatını ve gücünü izler; mevcut evre sonraki evrenin tonunu etkiler (zayıf yükseliş, sert düşüş habercisi; hafif düşüş, güçlü yükseliş habercisi). Görselde kaynak imzası yok (yazarlığı belirsiz, ikinci el). "DMA" açılımı, formül, periyot, eşik, sembol yok: kural tanımsız. Uygulanabilir mi: HAYIR (DMA tanımsız; eğim fikri yukarıdaki §17 ile aynı türdendir).
 
 ## 18. Rolling alpha ve rolling skewness (momentum listesine katman)
 
@@ -354,7 +354,7 @@ Günlük bedava veri = Yahoo/yfinance günlük OHLCV (BIST `.IS`). Gün içi, em
 - Tansu'nun ifadesi: NotebookLM infografiği (Tansu'nun aracı değil). Başlık `OBV Göstergesi ile Piyasayı Anlamak: Trend Onayı`; `Fiyat ve OBV Senkronizasyonu = Yüksek Güven`; `Yükseliş Senaryosu: Güçlü Alım Baskısı` (yükselen OBV + yükselen fiyat); `Düşüş Senaryosu: Güçlü Satış Baskısı`.
 - Tanım: fiyat ve OBV aynı yönde ise trend onaylı. OBV = hacmin kapanış yönüyle işaretli kümülatif toplamı (standart).
 - Parametreler: yok (pencere, eğim eşiği yok). Giriş/stop yok. Kanıt yok.
-- Uygulanabilir mi: KISMEN (OBV günlük veriyle; "yön" tanımı YORUM). Güven: birinci el (infografik), kural genel bilgi.
+- Uygulanabilir mi: KISMEN (OBV günlük veriyle; "yön" tanımı YORUM). Güven: NotebookLM, ikinci el; kural genel bilgi.
 
 ## 24. Gerçekleşen volatilite (DOAS)
 
@@ -429,11 +429,11 @@ Günlük bedava veri = Yahoo/yfinance günlük OHLCV (BIST `.IS`). Gün içi, em
 
 ### B. Kısmen tanımlı (sayı var, bir parça eksik)
 
-1. EMA sıkışması (kural 1): EMA20/50/100/200, %1.2, 3 gün, 130 mum. EKSİK: giriş (ratio formülü sadakatle çözüldü, bilet 04).
+1. EMA sıkışması (kural 1): EMA20/50/100/200, %1.2, 3 gün, 130 mum. EKSİK: giriş (oran formülü KURALLAR §3'te YORUM olarak seçildi, bilet 04).
 2. Gizli pozitif uyumsuzluk (kural 9): Swing=15 sol-only, MinGap=15. EKSİK: osilatör, trend filtresi, tetik, stop.
 3. 12 aylık momentum decile (kural 14): 12 ay, 10 dilim, 1 ay, eşit ağırlık. EKSİK: skip-month, düzeltme, evren (ikinci el).
 4. A/D EMA(3) (kural 12): EMA=3. EKSİK: operatör yönü, walk-forward ızgarası (ikinci el).
-5. BIST/VIX izin listesi (kural 29): SMA20/50, 30 günlük korelasyon, VIX RSI(200)/SMA(10). EKSİK: AO ve bant kuralları, 2-of-4.
+5. BIST/VIX izin listesi (kural 29): sahibi D; parametreler ve eksikler orada.
 6. APO 10/40 (kural 13): eşik ve sinyal yok.
 7. XU100 EMA 50/100/200 + KDE (kural 25): KDE parametresi yok.
 8. Fincan-kulp hedef formülü (kural 21): dedektör yok.
@@ -446,5 +446,5 @@ Günlük bedava veri = Yahoo/yfinance günlük OHLCV (BIST `.IS`). Gün içi, em
 ### D. En önemli boşluklar
 
 1. Hiçbir giriş kuralı için tam (giriş, stop, hedef) üçlüsü yok. Tansu'nun gösterdiği tek hedef formülü fincan-kulptur.
-2. Kural 1 için giriş tetiği en yüksek değerli boşluktur (ratio formülü sadakatle çözüldü, KURALLAR §4; bilet 04, 14.10).
+2. Kural 1 için giriş tetiği en yüksek değerli boşluktur (oran formülü KURALLAR §3'te YORUM olarak seçildi; bilet 04, 14.10).
 3. Hiçbir kuralın sistematik, maliyetli backtest sonucu yok. Kanıt seçilmiş örnektir.
