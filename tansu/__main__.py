@@ -1,4 +1,4 @@
-"""Komut girişi: `python -m tansu sadakat | kayit | sinama | denetim | evren-indir | gunluk [tarih] [--kok veri] [--kimlik KIMLIK] [--resmi] [--son]` (TASARIM 3)."""
+"""Komut girişi: `python -m tansu sadakat | kayit | sinama | denetim | evren-indir | sektor-indir | gunluk [tarih] [--kok veri] [--kimlik KIMLIK] [--resmi] [--son]` (TASARIM 3)."""
 
 import argparse
 import datetime as dt

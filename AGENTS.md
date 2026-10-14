@@ -46,12 +46,12 @@ first. Write the reason. Then write the code.
   by name. Data (`veri/`) and report output (`rapor/`) do not go into git. Do not delete `veri/`. `kayit/` goes into git (the git history is the
   proof that the log only gets appended). In a commit, leave the `kayit/` files only added, not
   modified. This rule covers this repository only. The global Stop hook runs `git add -A -- receipts "*850-Companion*"` in the brain repository (`YONETIM/beyin`). That is outside this Tansu rule.
-- **Task Scheduler (Görev Zamanlayıcı):** The definition is `kurulum/tansu-gunluk.xml` (weekdays 19:30, `python -m tansu gunluk`). Install it one time, in PowerShell
-  (`schtasks /create /xml` cannot read UTF-8 XML): `Register-ScheduledTask -TaskName TansuGunluk -Xml (Get-Content -Raw -Encoding utf8 kurulum\tansu-gunluk.xml)`.
-  Install the definition disabled (`<Enabled>false</Enabled>`). After the first official run, run `schtasks /change /tn TansuGunluk /enable`
-  (ticket 15). To delete the task: `schtasks /delete /tn TansuGunluk /f`. The paths point to the main repository on this machine (`C:\Users\levent\Desktop\TANSU`).
-  The monthly base (taban) uses the same method: `kurulum/tansu-aylik.xml` (last day of the month 20:45, `python -m tansu evren-indir`), task name `TansuAylik`.
-  Install it disabled. In ticket 15, enable it together with `TansuGunluk`.
+- **Task Scheduler (Görev Zamanlayıcı):** Two tasks are installed and enabled on this machine since the first official run (ticket 15, 06.10):
+  `TansuGunluk` (`kurulum/tansu-gunluk.xml`, `python -m tansu gunluk`) and `TansuAylik` (`kurulum/tansu-aylik.xml`, `python -m tansu evren-indir`).
+  The times are in TASARIM §6. The paths point to the main repository on this machine (`C:\Users\levent\Desktop\TANSU`).
+  To install a definition again, use PowerShell (`schtasks /create /xml` cannot read UTF-8 XML):
+  `Register-ScheduledTask -TaskName TansuGunluk -Xml (Get-Content -Raw -Encoding utf8 kurulum\tansu-gunluk.xml)`. The definition comes
+  disabled (`<Enabled>false</Enabled>`); enable it with `schtasks /change /tn TansuGunluk /enable`. To delete a task: `schtasks /delete /tn TansuGunluk /f`.
 - **Rule parameter (Kural parametresi):** A rule parameter changes only with a TASARIM/KURALLAR change and as a new trial (deneme).
 - **Dependency (Bağımlılık):** Before you add a new package, check TASARIM §4 and the stdlib. Write an added package in `pyproject.toml`
   with `==`.

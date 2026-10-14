@@ -20,7 +20,8 @@ Bir bölümün kodunu bulmak için: `grep -n "TASARIM 5.7" tansu/*.py`.
 
 | Bölüm | Modüller |
 |---|---|
-| 4 Modüller | `kaynak`, `veri`, `kayit` |
+| 3 Kapsam | `__main__`, `cift`, `gostergeler` |
+| 4 Modüller | `kaynak`, `veri`, `kayit`, `sadakat` |
 | 5.1 Veri | `veri`, `aileler`, `motor` |
 | 5.2 Evren | `evren`, `veri`, `simulator`, `ciftbolme`, `gunluk` |
 | 5.3 İşlem kuralları | `motor` |
@@ -62,7 +63,7 @@ normal çıktısıdır.
 
 ## 2. Tansu'nun düşünce yapısı
 
-Kaynak: beyindeki 238 not, 214 görsel. Notların çoğu Claude özetidir; birinci el kaynak görsellerdir.
+Kaynak: beyindeki Tansu havuzu (sayı `KURALLAR.md` başlığında). Notların çoğu Claude özetidir; birinci el kaynak görsellerdir.
 Tansu kodunu ve parametrelerini paylaşmaz. Bu yüzden her aile **Tansu'dan esinlenen bizim
 yorumumuzdur**; ekranda "Tansu'nun sistemi" diye sunulmaz. (P5)
 
@@ -128,7 +129,8 @@ Her modülün dışarıya küçük bir yüzü var. İçi değişse de dışı de
 | `rapor` | sonuçlar → HTML + CSV + `durum.txt` | Ayrıntı 6. bölümde. |
 | `denetim` | sentetik boş ve etkili dünya → yanlış kabul, güç | Boru hattı denetimi (5.12). Hash dışı: kuralı değil sınamanın doğruluğunu ölçer; sonucu günlükte kod hash'iyle durur. (bilet 13) |
 | `gunluk` | `gunluk(tarih)`: günlük indirme, kapılar, kartlar, `durum.txt` | Bilet 14; 6. bölüm. `rapor`'dan sonra, `__main__`'dan önce. |
-| `__main__` | `python -m tansu gunluk \| sinama \| sadakat \| kayit \| denetim` | Ayrıntı aşağıda. (İ: 16-001, 16-008, 14-084, 16-062) |
+| `sadakat` | ham seri → Tansu'nun gösterdiği rakamlar yeniden üretilir | `KURALLAR.md` §4; getiriye bakılmaz; sonuç `docs/sadakat.md`. 7. bölüm adım 3. |
+| `__main__` | `python -m tansu sadakat \| kayit \| sinama \| denetim \| evren-indir \| sektor-indir \| gunluk` | Ayrıntı aşağıda. (İ: 16-001, 16-008, 14-084, 16-062) |
 
 **`veri` ayrıntısı** (İ: 01-094, 02-026, 11-044, 13-006, 13-011, 13-015):
 - Anlık görüntü tek klasördür. İçinde:
@@ -810,7 +812,8 @@ Getiri görülmeden yazılır; kural kaydına girer. (B-7, İ: 19-015)
      hisseleridir (~100). Sebep: bütün evren (716 sembol) bilet 07'de ~3 sa 10 dk sürdü; görev sınırı 1 saat. 100 sembol
      ≈ 30 dk; istekler arası 1 sn bekleme aynen kalır. Günlük anlık görüntü `veri/gunluk/ag/` altına yazılır (tam
      anlık görüntüler `veri/ag/`'da kalır; `sinama` onları kullanır), faiz ve sektör içermez (kart bunlara bakmaz;
-     KAP'a ~100 istek atılmaz). Tabanın aylık yenilenmesi (`evren-indir`) elle yapılır.
+     KAP'a ~100 istek atılmaz). Tabanın aylık yenilenmesi (`evren-indir`) `TansuAylik` göreviyle ayın son günü 20:45'te yapılır
+     (`kurulum/tansu-aylik.xml`).
    - (Bilet 14) Günlük koşunun veri kapıları, evren üyesi hisse-günlerde (5.13) hesaplanır; geçmişteki kaynak günü
      hataları eksik gün olarak zaten işlenir, yalnız bugünün kaynak günü hatası kartı durdurur.
    - Koşu 18:15'ten önce başlarsa kart üretilmez (yarım çubuk riski).
@@ -872,20 +875,23 @@ Getiri görülmeden yazılır; kural kaydına girer. (B-7, İ: 19-015)
 
 ## 7. Uygulama sırası
 
+Adım 1–9 tamamlandı (MVP biletleri `.scratch/arsiv/tansu-mvp/issues/`, 05–06.10). Durum 14.10 ile eşlendi.
+
 1. **Temizlik:** tamamlandı (05.10).
 2. **Veri deposu:** `kaynak` + `veri`.
    - Kullanım koşulları ve fiyat adımı: tamamlandı (bilet 01, 05.10).
-   - İş Yatırım ham ve düzeltilmiş fiyat, XU100 kapanışı, olay tablosu, olay denetimi.
-   - Veri kapıları, anlık görüntü, borsapy faiz ve sektör tabloları.
+   - İş Yatırım ham ve düzeltilmiş fiyat, XU100 kapanışı, olay tablosu, olay denetimi: tamamlandı (bilet 02).
+   - Veri kapıları, anlık görüntü, borsapy faiz ve sektör tabloları: tamamlandı (bilet 03, 04).
 3. **Sadakat kontrolü** (`KURALLAR.md` §4): ham seriyle; getiriye bakılmaz. Sonuç `docs/sadakat.md`'ye
-   yazılır.
-4. **Evren** (5.2) ve **göstergeler**.
-5. **Kural kaydı ve hash** (5.8).
-6. **Motor sınamaları** (5.3) → Adım + Motor.
-7. **Simülatör** (iki bölme) + faiz + K2.
-8. **K1 + istatistik + deneme günlüğü;** boru hattı denetimi (5.12).
-9. **İki aileyi koş; rapor.** Kâğıt üstü izleme ve Görev Zamanlayıcı başlar.
-10. **Gerçek BIST100** KAP endeks değişikliklerinden (paralel iş).
+   yazılır. Tamamlandı (bilet 05, 06).
+4. **Evren** (5.2) ve **göstergeler**: tamamlandı (bilet 05, 07).
+5. **Kural kaydı ve hash** (5.8): tamamlandı (bilet 09).
+6. **Motor sınamaları** (5.3) → Adım + Motor: tamamlandı (bilet 08).
+7. **Simülatör** (iki bölme) + faiz + K2: tamamlandı (bilet 10, 11).
+8. **K1 + istatistik + deneme günlüğü;** boru hattı denetimi (5.12): tamamlandı (bilet 12, 13).
+9. **İki aileyi koş; rapor.** Kâğıt üstü izleme ve Görev Zamanlayıcı başlar: koşu ve görevler tamamlandı (bilet 14, 15;
+   ilk resmi koşu 05–06.10, `TansuGunluk` ve `TansuAylik` etkin). İki aile de Deneme; kâğıt üstü dönem başlamadı.
+10. **Gerçek BIST100** KAP endeks değişikliklerinden (paralel iş): bilet 16 (05.10), kısmi; sonuç §8 madde 2.
 
 ## 8. Açık sorular
 1. İş Yatırım: kullanım sözleşmesi bulunamadı; robots.txt `/_layouts/`'u yasaklıyor (bilinen risk, 4).
