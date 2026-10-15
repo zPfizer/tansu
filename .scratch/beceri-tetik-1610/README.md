@@ -68,6 +68,10 @@ Sayılar: 5 akış × 8 olumlu sorgu, 17 `yok` sorgusu, toplam 57. Kaynak: 19 ge
 Dökümlerde Levent'in gerçek bir Tansu özellik ya da hata isteği yok. Gerçek Tansu mesajları durum sorusu, onay, birleştirme ve devirdir. Yeni iş ve hata sorgularının hepsi bu yüzden yazılıdır.
 `tansu-grill` açıklaması yeni kural, veri kaynağı ve davranış değişikliğini de kapsar. Bu yüzden 3 satırda ayrıca doğru beceridir.
 
+Set denetimi: YONETIM oturumu onayladı (16.10, d6192e5). Set bundan sonra değişmez. Bilinen sınırlar:
+- Yeni iş ve hata gruplarının olumlu satırlarının hepsi yazılıdır. Bu iki grubun oranı diğer gruplardan daha zayıf kanıttır.
+- 53. satır ("karar ver") ve 57. satır ("sıfır veren sinyal") zor olumsuzlardır. Bu satırlarda `tansu-karar` ya da `tansu-hata` yüklenirse yanlış tetiktir. Sonuçta adlarıyla raporlanır.
+
 Setten çıkan sorgular ve sebepleri:
 - "Günlük koşu dün çıkış kodu 1 verdi": zamanlanmış günlük görev kurulu değil. Elle `python -m tansu gunluk` koşusu olarak yeniden yazıldı.
 - "TASARIM §5.8'deki hash kapsamı": §5.8 dönemleri anlatır. Bölüm numarası olmadan yazıldı.
