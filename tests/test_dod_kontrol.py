@@ -220,6 +220,25 @@ def test_kural_7_ikinci_akis_satiri_reddedilir(ek):
     assert hatalar(GECERLI + ek) == [AKIS_HATASI]
 
 
+GIZLI_AKIS = [
+    "<!--\nAkış: tansu-hata\n-->\n",
+    "<!--\nAkış: tansu-hata\n",
+    "```text\nAkış: tansu-hata\n```\n",
+    "~~~\nAkış: tansu-hata\n~~~\n",
+]
+
+
+@pytest.mark.parametrize("gizli", GIZLI_AKIS)
+def test_kural_7_gizli_akis_satiri_sayilmaz(gizli):
+    govde = GECERLI.replace(AKIS_SATIRI, gizli)
+    assert hatalar(govde.replace("\n", "\r\n")) == [AKIS_HATASI]
+
+
+@pytest.mark.parametrize("gizli", GIZLI_AKIS)
+def test_kural_7_gizli_ikinci_akis_satiri_sayilmaz(gizli):
+    assert hatalar((GECERLI + gizli).replace("\n", "\r\n")) == []
+
+
 def test_kural_5_sonuc_sablon_yorumu_satir_sayilmaz():
     yorum = '<!-- CI accepts only the exact text "Sonuç: geçti". -->\n'
     govde = GECERLI.replace("Sonuç: GEÇTİ", yorum + "Sonuç: GEÇTİ")
