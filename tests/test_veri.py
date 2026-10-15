@@ -465,22 +465,25 @@ BOLUNME = [
 ]
 
 
-@pytest.mark.parametrize("olay_gunu", [dt.date(2024, 1, 4), dt.date(2024, 1, 8)])
-def test_olayla_aciklanan_gun_tablo_tarihinin_bir_gun_oncesi_ya_da_sonrasinda_da_karantinaya_girmez(
-    tmp_path, olay_gunu
-):
-    # TASARIM 5.1 karantina: olay eşleştirmesi ±1 işlem günü. Gerçek adım 05.01'de (51 / 102 = 0,5);
-    # tablo 04.01 ya da 08.01 yazsa da baz fiyat 05.01'de 102 × 0,5 = 51, tavan 51 × 1,10 = 56,1.
-    olay = [
-        {
-            "SHT_KODU": "02",
-            "SHHE_TARIH": epoch(olay_gunu),
-            "SHHE_FIYAT_AYAR_OR": 0.5,
-        }
-    ]
-    a = anlik(tmp_path, fiyat=BOLUNME, olay=olay)
+def _bolunme_olayi(gun):
+    return [{"SHT_KODU": "02", "SHHE_TARIH": epoch(gun), "SHHE_FIYAT_AYAR_OR": 0.5}]
+
+
+@pytest.mark.parametrize("olay_gunu", [dt.date(2024, 1, 4), dt.date(2024, 1, 5)])
+def test_adimi_t_eksi_1_ya_da_t_tarihli_olay_aciklar_karantina_yok(tmp_path, olay_gunu):
+    # TASARIM 5.1 karantina: t = 05.01 (51 / 102 = 0,5); olay 04.01 (t-1) ya da 05.01 (t) yazılsa da
+    # baz fiyat 05.01'de 102 × 0,5 = 51, tavan 51 × 1,10 = 56,1.
+    a = anlik(tmp_path, fiyat=BOLUNME, olay=_bolunme_olayi(olay_gunu))
     assert _karantina(a) == [False] * 5
     assert a.gun_tablosu["tavan"].iloc[3] == pytest.approx(56.1)
+
+
+def test_t_arti_1_tarihli_olay_adimi_aciklamaz_adim_gunu_karantinaya_girer(tmp_path):
+    # TASARIM 5.1 (vekil kararı 15.10, 07e-4): olay 08.01 (t+1), adım 05.01. Baz 102, taban 102 × 0,9 = 91,8;
+    # kapanış 51 taban altında: karantina. 08.01 (aday yalnız 08.01): baz 51 × 0,5 = 25,5, kapanış 52 üstünde: karantina.
+    a = anlik(tmp_path, fiyat=BOLUNME, olay=_bolunme_olayi(dt.date(2024, 1, 8)))
+    assert _karantina(a) == [False, False, False, True, True]
+    assert a.gun_tablosu["taban"].iloc[3] == pytest.approx(91.8)
 
 
 def test_bozuk_satir_baz_fiyat_olmaz_baz_onceki_tutarli_gunun_ham_kapanisidir(tmp_path):

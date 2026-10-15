@@ -138,3 +138,43 @@ def zemin_(tam, kes_, t):
 def test_t_den_sonrasi_veri_t_oncesi_ciktiyi_degistirmez(tam, bilesen, kesim):
     t = pd.Timestamp(kesim)
     bilesen(tam, kes(tam, t), t)
+
+
+def _karantina_(ham, duz, olay_tarihi, son):
+    """Tek sembol, 02.01.2024'ten başlayan iş günleri; çarpan 0,5; tablo tarihi `olay_tarihi`; seri `son`'da kesilir."""
+    gun = pd.bdate_range("2024-01-02", periods=len(ham))
+    f = pd.DataFrame(
+        {"sembol": "XXXX", "tarih": gun, "ham_kapanis": ham, "kapanis": duz}
+    )
+    for s in ("aof", "yuksek", "dusuk"):
+        f[s], f[f"ham_{s}"] = f["kapanis"], f["ham_kapanis"]
+    for s in ("hacim", "pd", "hao_pd", "sermaye", "xu100"):
+        f[s] = 1.0
+    f = f[f["tarih"] <= son]
+    olay = pd.DataFrame(
+        {"sembol": ["XXXX"], "tarih": [pd.Timestamp(olay_tarihi)], "carpan": [0.5]}
+    )
+    a = veri.Anlik("k", f, olay, pd.DataFrame({"tarih": gun[:1], "faiz": 0.0}), {})
+    return a.gun_tablosu.set_index("tarih")["karantina"]
+
+
+@pytest.mark.parametrize(
+    "ham, duz, olay, beklenen",
+    [
+        # Adım 03.01 (51 / 100); olay 04.01 (t+1) onu açıklamaz: 03.01 karantina (baz 100, taban 90, kapanış 51). 04.01: baz 51 × 0,5, kapanış 52, karantina.
+        ([100, 51, 52], [50, 51, 52], "2024-01-04", [False, True, True]),
+        # Adım 05.01'de (51 / 102); olay 04.01 (t-1) ya da 05.01 (t) açıklar: karantina yok.
+        ([100, 101, 102, 51, 52], [50, 50.5, 51, 51, 52], "2024-01-04", [False] * 5),
+        ([100, 101, 102, 51, 52], [50, 50.5, 51, 51, 52], "2024-01-05", [False] * 5),
+    ],
+)
+def test_olay_penceresi_onek_degismez_t_den_sonraki_tablo_t_oncesi_karantinayi_degistirmez(
+    ham, duz, olay, beklenen
+):
+    # TASARIM 5.1 karantina (vekil kararı 15.10, 07e-4) ve 5.12: seriyi her günde kes; kesilmiş serinin
+    # çıktısı tam serinin kesim gününden önceki günlerine eşit olmalı (kesim günü t dahil değil).
+    tam = _karantina_(ham, duz, olay, pd.Timestamp("2024-12-31"))
+    assert tam.tolist() == beklenen
+    for son in tam.index:
+        kesik = _karantina_(ham, duz, olay, son)
+        assert kesik.iloc[:-1].tolist() == tam.loc[:son].iloc[:-1].tolist(), son

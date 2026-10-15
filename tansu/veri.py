@@ -370,9 +370,12 @@ def _olay_tarihi(ms) -> pd.Timestamp:
     return pd.Timestamp(dt.datetime.fromtimestamp(ms / 1000, ISTANBUL).date())
 
 
-def _olay_konumu(oran, i, carpan) -> int:
-    """Tablo tarihinin konumu `i`; ±1 işlem günü içinde düzeltme oranı sıçraması çarpana en yakın olan gün (TASARIM 5.1)."""
-    adaylar = [j for j in (i - 1, i, i + 1) if 1 <= j < len(oran)]
+def _olay_konumu(oran, i, carpan, kayma=(-1, 0, 1)) -> int:
+    """Tablo tarihinin konumu `i`; `i + kayma` günleri arasında düzeltme oranı sıçraması çarpana en yakın olan gün.
+
+    Olay denetimi ±1 işlem günü (varsayılan); karantina eşleştirmesi yalnız t-1 ve t tarihli olayı sayar, yani
+    adım günü `i` ya da `i+1` (`kayma=(0, 1)`): t+1 tarihli olay t'yi açıklamaz (TASARIM 5.1, önek değişmezliği 5.12)."""
+    adaylar = [i + k for k in kayma if 1 <= i + k < len(oran)]
     with np.errstate(all="ignore"):
         fark = {j: abs(oran[j - 1] / oran[j] / carpan - 1) for j in adaylar}
     return min(adaylar, key=lambda j: np.nan_to_num(fark[j], nan=np.inf), default=i)
@@ -460,7 +463,9 @@ def _gunler(fiyat, olaylar, takvim):
         i = gunler.searchsorted(tarih)  # olay gününe eşit ya da sonraki işlem günü
         if i < len(gunler):
             c = grup["carpan"].prod()
-            carpan[gunler[_olay_konumu(oran, i, c)]] *= c  # ±1 işlem günü (5.1)
+            carpan[gunler[_olay_konumu(oran, i, c, (0, 1))]] *= (
+                c  # t-1 ve t penceresi (5.1)
+            )
     limit = pd.Series(np.where(f.index >= LIMIT_DEGISIM, 0.10, 0.20), index=f.index)
     ref = onceki * carpan
     tavan, taban, kapanis = ref * (1 + limit), ref * (1 - limit), f["ham_kapanis"]

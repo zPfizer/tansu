@@ -219,8 +219,8 @@ hatasından** ayırmak.
 - **Olay denetimi:**
   - Olay tablosu çarpanı (`SHHE_FIYAT_AYAR_OR`) ham seriye uygulanır ve `HGDG` ile karşılaştırılır.
     Fark %0,5'i aşan gün uyarıdır; `HGDG` geçerli kalır.
-  - Olay eşleştirmesi tablo tarihinin ±1 işlem günü penceresinde yapılır.
-  - Sınama vakaları (veri birim testi): çarpan > 1 (sentetik), aynı güne iki kayıt (çarpanlar çarpılır), ±1 gün
+  - Olay denetimi istatistiğinde eşleştirme tablo tarihinin ±1 işlem günü penceresinde yapılır (karantina eşleştirmesi daha dardır, bkz. Karantina).
+  - Sınama vakaları (veri birim testi): çarpan > 1 (sentetik), aynı güne iki kayıt (çarpanlar çarpılır), ±1 gün (denetim istatistiği)
     kayması (HEKTS 26.11.2015). CCOLA temettü formülü alınmadı.
   (B1, B-2, İ: 02-024, 02-093)
 - **Fiyat limiti:**
@@ -248,8 +248,10 @@ hatasından** ayırmak.
   Sınama vakası: KONTR 08.07.2026. (İ: 01-023, 02-056, 05-043)
 - **Karantina:**
   - Kapanıştan kapanışa o günkü limiti (+%0,5) aşan ve şirket olayıyla açıklanmayan her gün karantinaya
-    girer. "Olayla açıklanan" eşleştirmesi de olay denetimindeki gibi tablo tarihinin ±1 işlem günü penceresinde yapılır
-    (HEKTS 26.11.2015). (İ: 02-024)
+    girer. "Olayla açıklanan" eşleştirmesi tablo tarihinin t−1 ve t işlem günü penceresinde yapılır: t günündeki adımı,
+    t−1 ya da t tarihli olay açıklar; t+1 tarihli olay açıklamaz (gelecek bilgisi yok, önek değişmezliği 5.12: t'den önceki günler değişmez). Adım,
+    düzeltme oranı sıçraması olay çarpanına en yakın olan gündür. Olay denetimi
+    istatistiği ±1 işlem günü penceresinde kalır. (HEKTS 26.11.2015) (vekil kararı 15.10, bilet 07e) (İ: 02-024)
   - O hisse 250 gün yeni sinyal üretmez.
   - Açık pozisyon son temiz AOF'ta kapanır ve sayılır.
   - Fiyat yamanmaz.
