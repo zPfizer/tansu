@@ -81,6 +81,16 @@ def test_aralik_her_harfi_denetler_eksik_ara_sahip_yakalanir(tmp_path):
     ]
 
 
+def test_aralik_sahip_harfi_buyuk_kucuk_harf_duyarli(tmp_path):
+    (tmp_path / "AGENTS.md").write_text(TABLO, encoding="utf-8")
+    # C sahibi yalnız küçük harfli
+    for ad in ("A-x.md", "B-b.md", "c-x.md", "D-d.md", "E-y.md"):
+        _yaz(tmp_path, f"docs/kurallar/{ad}", "x")
+    depo, _ = sahip_tablosu(tmp_path / "AGENTS.md")
+    assert "docs/kurallar/C-*.md" in depo
+    assert "docs/kurallar/c-x.md" not in depo
+
+
 DEPO_YOLLARI = sahip_tablosu(KOK / "AGENTS.md")[0]
 # Yerel dosyalar (.gitignore kökleri) CI'da yoktur: her biri kendi testinde, yoksa adıyla atlanır.
 YEREL_YOLLAR = [y for y in DEPO_YOLLARI if yerel_kok_adi(KOK, y)]

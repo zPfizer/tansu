@@ -267,7 +267,7 @@ def sahip_tablosu(agents):
             ara = []
             for kod in range(ord(ilk.rsplit("/", 1)[1][0]) + 1, ord(son[0])):
                 desen = f"{chr(kod)}-*.md"
-                bulunan = sorted((kok / klasor).glob(desen))
+                bulunan = sorted((kok / klasor).glob(desen, case_sensitive=True))
                 ara += [f"{klasor}/{d.name}" for d in bulunan] or [f"{klasor}/{desen}"]
             depo += [ilk, f"{klasor}/{son}", *ara, klasor]
             continue
