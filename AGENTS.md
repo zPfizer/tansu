@@ -36,7 +36,7 @@ If a document and the code contradict, or if the document says nothing about the
 first. Write the reason. Then write the code.
 
 ## Work flow (İş akışı)
-Before each job, read `AKIS.md`. Follow its flow: A for new work, B for a bug fix.
+Before each job, read `AKIS.md`. Follow the flow that fits the work.
 Refer to an AKIS step by its title, not by its number.
 
 ## Working rules (Çalışma kuralları)
