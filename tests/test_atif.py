@@ -31,7 +31,9 @@ def _belgeler(kok):
     docs = kok / "docs"
     docs.mkdir()
     (docs / "TASARIM.md").write_text(
-        "## 5. Sınama\n### 5.1 Veri\n## 6. Günlük\n1. bir\n2. iki\n", encoding="utf-8"
+        "## 5. Sınama\n### 5.1 Veri\nHash\nkapsamı burada.\n### 5.2 Kural kaydı\ngövde\n"
+        "## 6. Günlük\n1. bir terim\n2. iki\n",
+        encoding="utf-8",
     )
     (docs / "KURALLAR.md").write_text("## 1. Ana bulgular\n", encoding="utf-8")
     return docs
@@ -57,6 +59,47 @@ def test_bolum_numaralari_baslik_ve_madde(tmp_path):
     ],
 )
 def test_kirik_bolum_atifi_yakalanir(tmp_path, metin, beklenen):
+    _belgeler(tmp_path)
+    (tmp_path / "not.md").write_text(metin, encoding="utf-8")
+    assert atif_kirikleri(tmp_path, [tmp_path / "not.md"]) == beklenen
+
+
+@pytest.mark.parametrize(
+    ("metin", "beklenen"),
+    [
+        ('TASARIM 5.1 "Hash kapsamı" ve TASARIM §5.2 “Kural kaydı”', []),
+        (
+            'TASARIM 5.2 ‘kural KAYDI’ ve TASARIM 5.2: **Kural kaydı** ve TASARIM 5.1 ("Veri")',
+            [],
+        ),
+        ('TASARIM 5 "Hash kapsamı" (üst bölüm alt bölümü içerir)', []),
+        ('TASARIM 5.1, "Hash kapsamı" ve "Hash kapsamı"', []),
+        ('TASARIM 6.1 "bir terim"', []),
+        (
+            'TASARIM 5.2 "Hash kapsamı"',
+            ['not.md:1: TASARIM 5.2 "Hash kapsamı" bölümde yok'],
+        ),
+        (
+            "a\nTASARIM §5.2 “Hash kapsamı”",
+            ['not.md:2: TASARIM §5.2 "Hash kapsamı" bölümde yok'],
+        ),
+        (
+            "TASARIM 5.1 ve ‘Kural kaydı’",
+            ['not.md:1: TASARIM 5.1 "Kural kaydı" bölümde yok'],
+        ),
+        (
+            "TASARIM 5.1 **Kural kaydı**",
+            ['not.md:1: TASARIM 5.1 "Kural kaydı" bölümde yok'],
+        ),
+        (
+            'TASARIM 5.2 ("Hash kapsamı")',
+            ['not.md:1: TASARIM 5.2 "Hash kapsamı" bölümde yok'],
+        ),
+        ('TASARIM 6.2 "bir terim"', ['not.md:1: TASARIM 6.2 "bir terim" bölümde yok']),
+        ('TASARIM 9 "Veri"', ["not.md:1: TASARIM 9"]),
+    ],
+)
+def test_atiftan_sonraki_alinti_atif_yapilan_bolumde_aranir(tmp_path, metin, beklenen):
     _belgeler(tmp_path)
     (tmp_path / "not.md").write_text(metin, encoding="utf-8")
     assert atif_kirikleri(tmp_path, [tmp_path / "not.md"]) == beklenen

@@ -10,9 +10,13 @@ from pathlib import Path
 KOK = Path(__file__).resolve().parents[1]
 
 # Bu iki test dosyası bilerek kırık atıf örneği taşır; taramaya girmez.
-HARIC = {"tests/test_atif.py", "tests/test_sahipler.py"}
+HARIC = {"tests/test_atif.py", "tests/test_sahipler.py", "tests/atif_araclari.py"}
 
 ATIF = re.compile(r"(TASARIM|KURALLAR) §?(\d+(?:\.\d+)*)")
+# Atıfın hemen ardından gelen alıntı başlık ya da kalın terim: TASARIM 5.8 "Kural kaydı"
+ALINTI = re.compile(
+    r"""(?:,| ve|:)? ?\(?(?:"([^"\n]+)"|“([^”\n]+)”|‘([^’\n]+)’|\*\*([^*\n]+)\*\*)"""
+)
 BASLIK = re.compile(r"#{2,4} (\d+(?:\.\d+)*)\.?\s")
 # B-n ve C-n: sonuc-3-4.md kararı; S2-n: sorgu-2.md sorusu. "B-n" gibi şablonlar rakamsızdır, eşleşmez.
 ETIKET = re.compile(r"(?<![\w-])(?:([BC])-(\d+)|(S2)-(\d+))(?![\w-])")
@@ -33,40 +37,74 @@ def izlenen_dosyalar(kok):
     return [kok / ad for ad in adlar if ad.endswith((".py", ".md")) and ad not in HARIC]
 
 
-def bolum_numaralari(yol):
-    """Belgenin numaralı başlıkları: '## 5. ...' -> '5', '### 5.1 ...' -> '5.1'.
+def bolum_metinleri(yol):
+    """Belgenin numaralı bölümleri ve metinleri: {'5': ..., '5.1': ...}.
 
-    Numaralı alt başlığı olmayan bölümde (TASARIM 6, 7, 8) '6.2' o bölümün 2. maddesidir.
+    Bölüm metni başlık satırından aynı ya da üst düzeydeki sonraki başlığa kadardır.
+    Numaralı alt başlığı olmayan bölümde (TASARIM 6, 7, 8) '6.2' o bölümün 2. maddesidir;
+    madde metni sonraki maddeye ya da bölüm sonuna kadardır.
     """
-    numaralar = set()
-    maddeler = set()
+    satirlar = yol.read_text(encoding="utf-8").splitlines()
+    basliklar = []  # (satır sırası, düzey, numara)
+    maddeler = []  # (satır sırası, bölüm numarası, madde no)
     bolum = None
-    for satir in yol.read_text(encoding="utf-8").splitlines():
+    for sira, satir in enumerate(satirlar):
         if eslesme := BASLIK.match(satir):
-            numaralar.add(eslesme.group(1))
-            if satir.startswith("## "):
-                bolum = eslesme.group(1)
+            basliklar.append((sira, satir.index(" "), eslesme.group(1)))
+        if satir.startswith("## "):
+            bolum = eslesme.group(1) if eslesme else None
         elif bolum and (madde := re.match(r"(\d+)\. ", satir)):
-            maddeler.add(f"{bolum}.{madde.group(1)}")
-    alt_var = {numara.split(".")[0] for numara in numaralar if "." in numara}
-    return numaralar | {m for m in maddeler if m.split(".")[0] not in alt_var}
+            maddeler.append((sira, bolum, madde.group(1)))
+    metinler = {}
+    for yer, (sira, duzey, numara) in enumerate(basliklar):
+        son = next((s for s, d, _ in basliklar[yer + 1 :] if d <= duzey), len(satirlar))
+        metinler[numara] = "\n".join(satirlar[sira:son])
+    alt_var = {numara.split(".")[0] for numara in metinler if "." in numara}
+    for yer, (sira, bolum, madde) in enumerate(maddeler):
+        if bolum in alt_var:
+            continue
+        sonraki = maddeler[yer + 1][0] if yer + 1 < len(maddeler) else len(satirlar)
+        ust_son = next(
+            (s for s, d, _ in basliklar if s > sira and d <= 2), len(satirlar)
+        )
+        metinler[f"{bolum}.{madde}"] = "\n".join(satirlar[sira : min(sonraki, ust_son)])
+    return metinler
+
+
+def bolum_numaralari(yol):
+    """Belgenin numaralı başlıkları ve alt başlıksız bölümlerin maddeleri."""
+    return set(bolum_metinleri(yol))
+
+
+def _duz(metin):
+    # Türkçe büyük/küçük harf: İ, I, ı hepsi i olur; satır sonları ve girintiler tek boşluk olur.
+    for harf in "İIı":
+        metin = metin.replace(harf, "i")
+    return " ".join(metin.split()).casefold()
 
 
 def atif_kirikleri(kok, dosyalar):
-    """`TASARIM <n>`, `TASARIM §<n>`, `KURALLAR §<n>` atıflarından başlığı olmayanlar: 'dosya:satır: atıf'."""
+    """Bölüm atıflarından sorunlu olanlar: 'dosya:satır: atıf'.
+
+    Sorun: başlık yok (`TASARIM 9`) ya da atıfın ardındaki alıntı terim (`TASARIM 5.8 "Kural kaydı"`)
+    atıf yapılan bölümün metninde geçmiyor.
+    """
     var = {
-        ad: bolum_numaralari(kok / "docs" / f"{ad}.md")
-        for ad in ("TASARIM", "KURALLAR")
+        ad: bolum_metinleri(kok / "docs" / f"{ad}.md") for ad in ("TASARIM", "KURALLAR")
     }
     kirik = []
     for yol in dosyalar:
         metin = yol.read_text(encoding="utf-8")
         for eslesme in ATIF.finditer(metin):
-            if eslesme.group(2) not in var[eslesme.group(1)]:
-                satir = metin.count("\n", 0, eslesme.start()) + 1
-                kirik.append(
-                    f"{yol.relative_to(kok).as_posix()}:{satir}: {eslesme.group(0)}"
-                )
+            bolumler = var[eslesme.group(1)]
+            satir = metin.count("\n", 0, eslesme.start()) + 1
+            yer = f"{yol.relative_to(kok).as_posix()}:{satir}: {eslesme.group(0)}"
+            if eslesme.group(2) not in bolumler:
+                kirik.append(yer)
+            elif alinti := ALINTI.match(metin, eslesme.end()):
+                terim = next(parca for parca in alinti.groups() if parca)
+                if _duz(terim.rstrip(".…")) not in _duz(bolumler[eslesme.group(2)]):
+                    kirik.append(f'{yer} "{terim}" bölümde yok')
     return kirik
 
 

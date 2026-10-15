@@ -48,3 +48,6 @@
     atıfı kaldırılınca test o notu söyleyerek kırılır.
   - Kapı: `pytest` 403 geçti, 1 kaldı (`test_kodlama_standartlari_genel_standartla_baslar`: YONETIM `CODING_STANDARDS.md` 15.10 satırı
     Tansu kopyasında yok; master'da da kırmızı, bu işten değil). `ruff check`, `ruff format --check`, `git diff --check` temiz.
+- 08 ek (15.10): atıf testi, atıfın hemen ardındaki alıntı başlığı ya da kalın terimi (`TASARIM 5.8 "Kural kaydı"`; `"…"`, `“…”`, `‘…’`, `**…**`; arada `,`, `:`, ` ve`, `(`) atıf yapılan bölümün metninde de arar
+  (başlıktan aynı ya da üst düzeydeki sonraki başlığa kadar; alt başlıksız bölümde madde metni; Türkçe i/ı/İ katlanır). Neden: `TASARIM 5.11 "Hash kapsamı"` (`tansu/kayit.py:42`, metin 5.8'de) bölüm var diye geçmişti.
+  Tarama: alıntılı 29 atıftan 1 uyuşmazlık, o da `kayit.py:42`; 07f dalında 5.8'e düzeltildi, bu dalda bırakıldı, birleştirmeyle gelir (o zamana kadar `test_bolum_atiflari_var_olan_basliga_gider` bu dalda kırmızı).
