@@ -389,7 +389,7 @@ def test_kod_hashi_yorum_ve_bosluktan_etkilenmez(tmp_path, monkeypatch):
 def test_masraf_sabiti_degisince_kod_hashi_degisir(
     tmp_path, monkeypatch, dosya, eski, yeni
 ):
-    # TASARIM 5.11 "Hash dışı": masraf senaryoları ve K1 masrafı kural sabitidir, hash içindedir (bilet 07f).
+    # TASARIM 5.8 "Kural kaydı", "Hash dışı": masraf senaryoları ve K1 masrafı kural sabitidir, hash içindedir (bilet 07f).
     paket = tmp_path / "paket"
     paket.mkdir()
     for ad in kayit.KOD_DOSYALARI:

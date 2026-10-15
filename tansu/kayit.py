@@ -39,7 +39,7 @@ KOD_DOSYALARI = [
     "saglamlik.py",
     "simulator.py",
     "veri.py",
-]  # kural TASARIM 5.11 "Hash kapsamı"
+]  # kural TASARIM 5.8 "Kural kaydı", "Hash kapsamı"
 GELISTIRME, TAM_TABAN, TAM_CARPAN = (
     200,
     1000,
