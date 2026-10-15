@@ -9,7 +9,7 @@ How the engineering skills consume the domain documentation of this repo.
 - `docs/sorgu/`: the reasons behind the decisions (local, not in git).
 
 Do not create an ADR folder. Where a settled term and a decision go (also when `mattpocock-skills:domain-modeling`
-writes them): `AGENTS.md`, "Fikir, kayıt".
+writes them): AKIS A "Document first" (in `AKIS.md`).
 
 ## Use the glossary's vocabulary
 
