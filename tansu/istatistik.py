@@ -32,7 +32,7 @@ class EmaK1:
         kirilim = kirilim or aileler.KIRILIM_GUN
         xu = anlik.fiyat.groupby("tarih")["xu100"].first()
         durum = gostergeler.piyasa_durumu(xu[xu > 0])
-        uye_gun = uye.groupby("sembol")["tarih"].agg(pd.DatetimeIndex)
+        uye_gun = uye.groupby("sembol")["tarih"].agg(list)
         self.zincir, self.gercek, self.sayi = {}, {}, Counter()
         self.havuz = {"a": defaultdict(list), "ek": defaultdict(list)}
         self.komsu, self.komsusuz = (

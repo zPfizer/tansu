@@ -324,6 +324,10 @@ def yaz(sim, bilgi, cift=None, dizin=None, kabul=None) -> tuple:
     ]
     yol = dizin / f"rapor-{bilgi['kosu_id']}.html"
     csv = dizin / f"islemler-{bilgi['kosu_id']}.csv"
+    cift_csv = dizin / f"cift-islemler-{bilgi['kosu_id']}.csv"
+    for eski in (yol, csv, cift_csv):  # TASARIM 6.8: rapor dosyası üstüne yazılmaz
+        if eski.exists():
+            raise FileExistsError(f"Rapor dosyası var, üstüne yazılmaz: {eski}")
     yol.write_text(
         '<!DOCTYPE html><html lang="tr"><head><meta charset="utf-8"><title>TANSU</title></head><body>'
         + "\n".join(govde)
@@ -333,8 +337,6 @@ def yaz(sim, bilgi, cift=None, dizin=None, kabul=None) -> tuple:
     m3["islemler"].to_csv(csv, index=False, encoding="utf-8")
     if cift:
         cift["masraf"][0.003]["islemler"].to_csv(
-            dizin / f"cift-islemler-{bilgi['kosu_id']}.csv",
-            index=False,
-            encoding="utf-8",
+            cift_csv, index=False, encoding="utf-8"
         )
     return yol, csv

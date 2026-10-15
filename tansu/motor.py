@@ -234,9 +234,7 @@ def sinama(
     `uye`: (sembol, tarih) tablosu (`simulator.uyeler`); verilirse yalnız o hisse-günlerdeki sinyaller motora girer,
     yani simülatörün alabileceği sinyaller (TASARIM 5.6 evren süzgeci)."""
     parcalar, dusen = [], 0
-    gunler = (
-        None if uye is None else uye.groupby("sembol")["tarih"].agg(pd.DatetimeIndex)
-    )
+    gunler = None if uye is None else uye.groupby("sembol")["tarih"].agg(list)
     for s in anlik.fiyat["sembol"].unique():
         if gunler is not None and s not in gunler.index:
             continue

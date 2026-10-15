@@ -136,3 +136,18 @@ def test_varsayilan_izgara_kurallar_madde_3_ile_ayni():
         "z_esik": [1.5, 2.0, 2.5],
         "p_esik": [0.01, 0.05, 0.10],
     }
+
+
+@pytest.mark.parametrize("gunler", [["2026-02-02"], ["2026-02-02", "2026-02-03"]])
+def test_ema_izgarasi_tek_gunluk_ve_iki_gunluk_uyelik_sinyal_gunu_alinir(
+    tmp_path, gunler
+):
+    # Bilet 07b: tek üyelik günü olan sembolde `agg(DatetimeIndex)` Timestamp döndürüp `isin`i kırıyordu.
+    # A yalnız 02.02 (ya da 02.02 ve 03.02) üye; sinyal 02.02: bir işlem, fazla getiri +0,0465108 (dosya başındaki elle hesap).
+    anlik, evr, b, _ = kur(tmp_path)
+    uye = pd.DataFrame({"sembol": "A", "tarih": pd.to_datetime(gunler)})
+    h = saglamlik.ema(
+        anlik, b, P, ATR_N, uye, {"esik": [0.005], "min_gun": [3], "pencere": [3]}
+    )
+    assert (h[0]["islem"], h[0]["pozitif"]) == (1, True)
+    assert h[0]["fazla"] == pytest.approx(0.0465108, abs=1e-6)
