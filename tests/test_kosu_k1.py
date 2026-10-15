@@ -270,7 +270,9 @@ def test_yarida_kalan_resmi_basladi_denetim_kapisini_acmaz_tamamlanan_acar(
     )
     with pytest.raises(kayit.KayitHatasi, match="denetim"):
         kos(tmp_path, kimlik, resmi=True)
-    assert kayit.deneme_sayisi() == 1  # yarıda kalan koşu hâlâ deneme
+    assert (
+        kayit.deneme_sayisi() == 2
+    )  # yarıda kalan resmi koşu m'ye girer: kural "eski" × iki aile (TASARIM 5.11)
     deneme("eski", "ema_sikismasi", 0.5)  # tamamlanmış resmi koşu
     kos(tmp_path, kimlik, resmi=True)  # kapı açıldı: denetim aranmaz
 
@@ -302,7 +304,9 @@ def test_izgara_hucreleri_destek_olarak_yazilir_holm_m_ye_girmez_ve_olcut_5_e_ba
         "p_esik",
     } == set(d[-1]["hucre"])
     assert all(r["pozitif"] == (r["fazla"] is not None and r["fazla"] > 0) for r in d)
-    assert kayit.deneme_sayisi() == 1  # destek satırları m'ye girmez
+    assert (
+        kayit.deneme_sayisi() == 0
+    )  # destek satırları ve geliştirme koşusu m'ye girmez
     for aile, n in (("ema_sikismasi", 27), ("cift_rotasyonu", 18)):
         ham = s["kabul"][aile]["satirlar"][4][
             "ham"

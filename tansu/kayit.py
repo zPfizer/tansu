@@ -132,9 +132,23 @@ def denetim_yaz(sonuc, p=aileler.Parametre(), atr_n=motor.ATR_N) -> None:
     )
 
 
+def _yarim_ciftler() -> set:
+    """Yarıda kalan (`bitti` satırı olmayan) resmi `deneme` koşularının sınadığı (kural_id, aile) çiftleri (TASARIM 5.11)."""
+    bitti = {s["kosu_id"] for s in _oku() if s["olay"] == "bitti"}
+    return {
+        (s["kural_id"], aile)
+        for s in _oku()
+        if s["olay"] == "basladi"
+        and s["tur"] == "deneme"
+        and s.get("resmi")
+        and s["kosu_id"] not in bitti
+        for aile in AILELER
+    }
+
+
 def deneme_sayisi() -> int:
-    """Holm'un m'si: başlamış her `deneme` koşusu; `bitti` satırı aranmaz."""
-    return sum(s["olay"] == "basladi" and s["tur"] == "deneme" for s in _oku())
+    """m, tek tanım (TASARIM 5.11): resmi koşuların sınadığı (kural_id, aile) çiftleri; yarıda kalan resmi koşu dahil, geliştirme koşusu hariç."""
+    return len(set(_ilk_p()) | _yarim_ciftler())
 
 
 def _ilk_p() -> dict:
@@ -168,6 +182,10 @@ def holm_hesapla(kural_id, ps, resmi) -> dict:
     tum = dict(mevcut)
     for aile, p in ps.items():
         tum.setdefault((kural_id, aile), p)
+    for (
+        cift
+    ) in _yarim_ciftler():  # yarım koşunun p'si yok: en kötü durum p = 1, m'ye sayılır
+        tum.setdefault(cift, 1.0)
     duzeltilmis = dict(zip(tum, istatistik.holm(list(tum.values()))))
     sonuc = {}
     for aile in ps:
@@ -205,7 +223,7 @@ def tekrar_sayisi(son, p=aileler.Parametre(), atr_n=motor.ATR_N) -> int:
         return GELISTIRME
     mevcut = _ilk_p()
     kural_id = _kural(p, atr_n)["kural_id"]
-    m = len(mevcut) + sum((kural_id, a) not in mevcut for a in AILELER)
+    m = len(set(mevcut) | _yarim_ciftler() | {(kural_id, a) for a in AILELER})
     return max(TAM_TABAN, TAM_CARPAN * m)
 
 
@@ -417,7 +435,7 @@ def kosu(
         raise KayitHatasi(
             "Kural hash'i kayıtla uyuşmuyor: kod ya da parametre değişti; yeni kayıt ve yeni deneme gerekir."
         )
-    if resmi and 0 < tekrar < tekrar_sayisi(True, p, atr_n):
+    if resmi and tekrar < tekrar_sayisi(True, p, atr_n):
         raise KayitHatasi(
             f"Resmi koşu tam tekrar ister: tekrar {tekrar} < {tekrar_sayisi(True, p, atr_n)}; "
             "`sinama --son --resmi` kullan."

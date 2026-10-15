@@ -118,7 +118,15 @@ def test_temiz_agacta_resmi_kirli_agacta_resmi_degil(tmp_path):
     kayit.denetim_yaz(
         {"gecti": True}, P, ATR_N
     )  # ilk resmi koşu için geçen boru hattı denetimi şart (TASARIM 5.12)
-    calistir(tmp_path, kimlik, resmi=True, git=TEMIZ)
+    calistir(
+        tmp_path,
+        kimlik,
+        resmi=True,
+        git=TEMIZ,
+        tekrar=kayit.tekrar_sayisi(
+            True, P, ATR_N
+        ),  # resmi koşu tam tekrar ister (TASARIM 5.7)
+    )
     calistir(
         tmp_path, kimlik, resmi=False, git=KIRLI
     )  # kirli ağaçta resmi istenirse koşu durur (TASARIM 5.11)
@@ -131,19 +139,69 @@ def test_temiz_agacta_resmi_kirli_agacta_resmi_degil(tmp_path):
     ]
 
 
-def test_bitti_satiri_olmayan_basladi_deneme_sayilir(tmp_path, monkeypatch):
+def coker(*a, **k):
+    raise RuntimeError("koşu yarıda")
+
+
+def test_gelistirme_kosusu_deneme_sayisina_girmez(tmp_path, monkeypatch):
+    # TASARIM 5.11: geliştirme koşusu m'yi artırmaz; yarıda kalan geliştirme koşusu da saymaz.
     kimlik = anlik_hazirla(tmp_path)
     kayit.kayitla(P, ATR_N)
     calistir(tmp_path, kimlik)
-
-    def coker(*a, **k):
-        raise RuntimeError("koşu yarıda")
-
     monkeypatch.setattr(motor, "sinama", coker)
     with pytest.raises(RuntimeError):
         calistir(tmp_path, kimlik)
     assert [s["olay"] for s in satirlar()][-1] == "basladi"
-    assert kayit.deneme_sayisi() == 2  # kayıt satırı ve destek koşuları sayılmaz
+    assert kayit.deneme_sayisi() == 0
+
+
+def test_yarida_kalan_resmi_kosu_m_ye_girer_ve_deneme_sayisi_B_ve_holm_ayni_m_yi_kullanir(
+    tmp_path, monkeypatch
+):
+    # TASARIM 5.11: m = resmi koşuların sınadığı (kural, aile) çiftleri, yarıda kalan dahil; B = max(1.000, 200·m).
+    # Üç kural, her biri iki aile ve yarıda kalmış resmi koşu: m = 6 -> B = max(1.000, 1.200) = 1.200.
+    # Bu kuralın iki p'si 0,01 ve öteki dört çift p yok (yarım) -> en kötü durum p = 1: sıralı [0,01; 0,01; 1; 1; 1; 1],
+    # Holm 0,01·6 = 0,06 ve max(0,06; 0,01·5) = 0,06; holm_m = 6.
+    kimlik = anlik_hazirla(tmp_path)
+    kayit.denetim_yaz({"gecti": True}, P, ATR_N)
+    monkeypatch.setattr(motor, "sinama", coker)
+    ps = [
+        aileler.Parametre(
+            periyotlar=(1, 2), esik=e, min_gun=3, pencere=3, isinma=4, sma_n=2
+        )
+        for e in (0.005, 0.006, 0.007)
+    ]
+    for p in ps:
+        kayit.kayitla(p, ATR_N)
+        with pytest.raises(RuntimeError):
+            kayit.kosu(
+                kimlik,
+                tmp_path,
+                p=p,
+                atr_n=ATR_N,
+                resmi=True,
+                tekrar=kayit.tekrar_sayisi(True, p, ATR_N),
+                git=TEMIZ,
+            )
+    assert kayit.deneme_sayisi() == 6
+    assert kayit.tekrar_sayisi(True, ps[0], ATR_N) == 1200
+    kural_id = kayit._kural(ps[0], ATR_N)["kural_id"]
+    h = kayit.holm_hesapla(kural_id, {a: 0.01 for a in kayit.AILELER}, True)
+    assert [(h[a]["holm_m"], h[a]["holm_p"]) for a in kayit.AILELER] == [
+        (6, pytest.approx(0.06)),
+        (6, pytest.approx(0.06)),
+    ]
+
+
+def test_resmi_kosu_tekrar_0_ile_reddedilir_gunluge_satir_yazmaz(tmp_path):
+    # TASARIM 5.7: resmi koşuda B ≥ max(1.000, 200·m); tekrar 0 (K1 yok) bu şartı sağlamaz.
+    kimlik = anlik_hazirla(tmp_path)
+    kayit.kayitla(P, ATR_N)
+    kayit.denetim_yaz({"gecti": True}, P, ATR_N)
+    once = (kayit.KAYIT_DIZINI / "deneme.jsonl").read_text(encoding="utf-8")
+    with pytest.raises(kayit.KayitHatasi, match="tekrar"):
+        calistir(tmp_path, kimlik, resmi=True, tekrar=0)
+    assert (kayit.KAYIT_DIZINI / "deneme.jsonl").read_text(encoding="utf-8") == once
 
 
 def test_ayni_tohum_ve_ayni_anlik_goruntu_ayni_ozeti_verir(tmp_path):

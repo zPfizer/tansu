@@ -312,6 +312,15 @@ def test_uc_masraf_duzeyi_kosulur_ve_yillik_tablo_yazilir(tmp_path):
     assert yil.loc[2026, "kural"] == pytest.approx(0.000358453, abs=1e-9)
 
 
+def test_yillik_fazla_getiri_gunluk_fazla_getirilerin_yillik_toplamidir(tmp_path):
+    # TASARIM 5.8: yıllık fazla = o yıldaki günlük (kural - K2) getirilerin toplamı; iki yıllık getirinin farkı değil.
+    # Özkaynak 1.000.000; 999.700,168; 1.000.358,453 -> günlük getiri -0,000299832 ve 658,285/999.700,168 = +0,000658482.
+    # K2 1.000.000; 1.000.970,62112; aynı -> günlük 0,00097062112 ve 0. Fazla = 0,00035865 - 0,00097062112 = -0,00061197.
+    # (Farkla hesap -0,00061217 verir; 2e-7 fark toleransın üstündedir.)
+    _, s = kos(tmp_path, {"A": sinyalli()})
+    assert sim(s)["yillik"].loc[2026, "fazla"] == pytest.approx(-0.00061197, abs=2e-9)
+
+
 def bolme(islemler, hacimler=None):
     """Simülatörün dış girdisi: dört gün sabit fiyat, faizsiz anlık görüntü."""
     gunler = pd.bdate_range("2026-02-02", periods=4)
