@@ -9,6 +9,7 @@ BASLIKLAR = (
     "## Bağımsız inceleme",
     "## Gerçek veri kanıtı",
 )
+AKISLAR = ("tansu-yeni-is", "tansu-hata", "tansu-belge", "tansu-karar", "tansu-eval")
 
 
 def _bolum(satirlar, baslik):
@@ -112,6 +113,18 @@ def hatalar(govde: str) -> list[str]:
     if kanit is not None and not _kod_kaniti(kanit):
         sonuc.append(
             "Kural 6: ## Gerçek veri kanıtı bölümünde içi dolu bir kod bloğu olmalı."
+        )
+    ad = "|".join(AKISLAR)
+    akis = re.findall(r"^Akış:.*$", govde, re.MULTILINE)
+    if len(akis) != 1 or not re.fullmatch(
+        rf"Akış:[ \t]*(`({ad})`|({ad}))[ \t\r]*", akis[0]
+    ):
+        sonuc.append(
+            "Kural 7: PR gövdesinde Akış: <ad> satırı olmalı; <ad> "
+            + ", ".join(AKISLAR[:-1])
+            + " ya da "
+            + AKISLAR[-1]
+            + " olmalı."
         )
     return sonuc
 

@@ -1,0 +1,44 @@
+tansu-yeni-is	Günlük rapora sektör bazında bir özet tablo ekleyelim.
+tansu-yeni-is	Tansu'ya yeni bir aile kuralı eklemek istiyorum: hacim patlaması sinyali.
+tansu-yeni-is	Yeni bir veri kaynağı bağlayalım, KAP duyurularını da çekelim.
+tansu-yeni-is	Kartlara stop seviyesini gösteren yeni bir sütun gelsin.
+tansu-yeni-is	Sınama motoruna komisyon maliyetini ekleyen bir özellik yapalım.
+tansu-yeni-is	Haftalık özet raporu üreten yeni bir komut lazım: python -m tansu haftalik.
+tansu-yeni-is	Evreni BIST100 yerine BIST TÜM yapacak bir davranış değişikliği istiyorum.
+tansu-yeni-is	HTML rapora her ailenin işlem sayısını gösteren bir grafik ekleyelim.
+tansu-hata	Günlük koşu dün çıkış kodu 1 verdi, kart üretmedi.
+tansu-hata	test_motor.py kırmızı, dün geçiyordu.
+tansu-hata	Rapordaki kazanç oranı yanlış: elle bakınca %40 çıkıyor, raporda %62 yazıyor.
+tansu-hata	evren-indir komutu UnicodeDecodeError ile çöküyor.
+tansu-hata	kartlar.jsonl'a aynı kart iki kez yazılmış.
+tansu-hata	Sinyal tarihi bir gün kaymış görünüyor, cuma sinyali pazartesi gibi duruyor.
+tansu-hata	CI'da driftlint hata veriyor ama yerelde geçiyor.
+tansu-hata	Simülatör bazen sonsuz döngüye giriyor, koşu bitmiyor.
+tansu-belge	GLOSSARY.md'deki 'deneme' tanımını güncelleyelim, metin eski kalmış.
+tansu-belge	TASARIM §5.8'deki hash kapsamı cümlesi eski kalmış, düzeltelim.
+tansu-belge	AGENTS.md'deki çalışma kurallarına yeni bir git kuralı yazalım.
+tansu-belge	KURALLAR.md'ye yeni bir YORUM girdisi ekleyelim.
+tansu-belge	CODING_STANDARDS.md'ye bu hatayı 'Seen once' olarak kaydet.
+tansu-belge	tansu-grill becerisinin açıklamasını daha net yazalım.
+tansu-belge	docs/kurallar/B-momentum-sikisma.md dosyasını İngilizceye çevir.
+tansu-belge	vekil ajanının talimatlarını sadeleştirelim.
+tansu-karar	Veri kaynağı olarak İş Yatırım mı Yahoo mu kullanalım, karşılaştır.
+tansu-karar	Kâğıt üstü döneme ne zaman başlayalım, bir plan yap.
+tansu-karar	Holm düzeltmesi yerine Benjamini-Hochberg'e geçmek mantıklı mı?
+tansu-karar	Pandas yerine polars'a geçmeye değer mi?
+tansu-karar	plan yap: önümüzdeki iki haftanın Tansu işleri.
+tansu-karar	veri/ klasörünü SQLite'a taşımak geri alınabilir bir karar mı, değerlendir.
+tansu-karar	İki seçenek var: kartları her gün baştan üret ya da yalnız değişeni yaz. Hangisi?
+tansu-karar	Sinyal eşiğini 0,6 mı 0,7 mi yapalım, karar verelim.
+tansu-eval	Vekil ajanının cevaplarını ölçen bir eval kuralım.
+tansu-eval	LLM hakeminin etiketlerle uyumunu kontrol edelim.
+tansu-eval	Oturum dökümlerinde ajan hata türlerini bulalım.
+tansu-eval	Codex denetçisinin bulgularını değerlendiren bir hakem istemi yazalım.
+tansu-eval	Eval vakalarımız güvenilir mi, denetleyelim.
+tansu-eval	Ajanın kural ihlallerini kodla ölçen bir değerlendirici yazalım.
+tansu-eval	Eval için az veri var, sentetik örnek üretelim.
+tansu-eval	Okuyucu ajanın özet doğruluğunu ölçen bir vaka seti kuralım.
+yok	TASARIM'da hash kapsamı hangi bölümde anlatılıyor?
+yok	Bugün hangi PR'lar birleşti?
+yok	Şu linki sakla: https://example.com/makale
+yok	Bu oturumu yeni bir oturuma devret.

@@ -9,7 +9,7 @@ This file starts short. It grows from real mistakes.
 - For a judgement mistake, add one short rule here. Put a Tansu-only rule, also a reasoning mistake, under "## Tansu".
 - **Rule of two:** A judgement rule needs two recorded occurrences. Record the first as a dated line under "## Seen once" without a rule. Exceptions: a direct order from Levent, and a risk to data, security, or privacy. These become a rule at once.
 - Write corrections to behavior or communication in the brain Kurallar, not here.
-- At the end of a difficult session, AKIS B "Lesson" finds the mistakes that nobody recorded.
+- At the end of a difficult session, `tansu-hata` "Lesson" finds the mistakes that nobody recorded.
 
 ## Rules
 - **Fail loud:** Stop with an error and a non-zero exit when the code cannot complete the requested operation. Do not continue in a weaker mode. (05.10: Tansu `kayit.py` changed an official run to a development run on a dirty tree. 07.10: a hook exited 0 on errors. 07.10: an eval script ignored a subprocess exit code.)
@@ -22,6 +22,7 @@ This file starts short. It grows from real mistakes.
 
 ## Seen once
 - 15.10: 9 writer and 11 reader subagents cut note bodies (`head -c`, `cut -c`, `x[:400]`) and still reported "Notes read: N". The Codex auditor found it in round 2. A reader prompt names a full-print command and the main agent checks the reported line and character counts with a script.
+- 16.10: a skill trigger eval ran `claude -p` with `--allowedTools` only and assumed the sessions were read only. They acted on the queries and edited `.claude/agents/vekil.md`, `.claude/skills/tansu-grill/SKILL.md`, and the brain Threads. Rule in `tansu-eval` "Skill trigger eval".
 
 ## Tansu
 This section adds to the general standard. `docs/TASARIM.md` owns the behavior rules. This section holds how to apply

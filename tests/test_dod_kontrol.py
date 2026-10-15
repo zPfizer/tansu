@@ -30,7 +30,13 @@ Sonuç: GEÇTİ
 ```text
 Gerçek koşu çıktısı
 ```
+Akış: tansu-yeni-is
 """
+AKIS_SATIRI = "Akış: tansu-yeni-is\n"
+AKIS_HATASI = (
+    "Kural 7: PR gövdesinde Akış: <ad> satırı olmalı; "
+    "<ad> tansu-yeni-is, tansu-hata, tansu-belge, tansu-karar ya da tansu-eval olmalı."
+)
 
 
 def test_gecerli():
@@ -53,9 +59,9 @@ def test_kural_1_baslik_eksik(baslik):
 
 
 def test_kural_2_isaretsiz_kutu():
-    assert hatalar(GECERLI + "  - [ ] Bekliyor\n") == [
-        "Kural 2: işaretsiz kutu var; satır: 21."
-    ]
+    assert hatalar(
+        GECERLI.replace(AKIS_SATIRI, "  - [ ] Bekliyor\n" + AKIS_SATIRI)
+    ) == ["Kural 2: işaretsiz kutu var; satır: 21."]
 
 
 def test_kural_3_kabul_kutusu_yok():
@@ -173,6 +179,45 @@ def test_kural_5_sonuc_satiri_tek_olmali(ek):
     assert hatalar(govde) == [
         "Kural 5: ## Bağımsız inceleme bölümünde Sonuç: satırı tek olmalı (2 satır var)."
     ]
+
+
+@pytest.mark.parametrize(
+    "ad",
+    ["tansu-yeni-is", "tansu-hata", "tansu-belge", "tansu-karar", "tansu-eval"],
+)
+@pytest.mark.parametrize("sarmal", ["{}", "`{}`"])
+def test_kural_7_akis_adi_kabul_edilir(ad, sarmal):
+    satir = "Akış: " + sarmal.format(ad) + "\n"
+    assert hatalar(GECERLI.replace(AKIS_SATIRI, satir)) == []
+
+
+@pytest.mark.parametrize(
+    "yeni",
+    [
+        "",
+        "Akış: \n",
+        "Akış:\n",
+        "Akış: tansu-bilinmeyen\n",
+        "Akış: yeni-is\n",
+        "Akış: `tansu-yeni-is\n",
+        "Akış: tansu-yeni-is tansu-hata\n",
+        "Akış: tansu-yeni-is, tansu-hata\n",
+        "Akis: tansu-yeni-is\n",
+    ],
+)
+def test_kural_7_akis_satiri_eksik_ya_da_yanlis(yeni):
+    assert hatalar(GECERLI.replace(AKIS_SATIRI, yeni)) == [AKIS_HATASI]
+
+
+@pytest.mark.parametrize(
+    "ek",
+    [
+        "Akış: tansu-hata\n",
+        "Akış: tansu-bilinmeyen\n",
+    ],
+)
+def test_kural_7_ikinci_akis_satiri_reddedilir(ek):
+    assert hatalar(GECERLI + ek) == [AKIS_HATASI]
 
 
 def test_kural_5_sonuc_sablon_yorumu_satir_sayilmaz():

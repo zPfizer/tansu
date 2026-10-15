@@ -15,7 +15,7 @@ göstermek ölçüm değildir; o, Definition of Done'ın parçasıdır ve her ad
 4. [ ] Mimari belge: her katmanın girdisi, çıktısı, kurallar ve kaynakları; veri akışı; Levent'in akşam ekranı.
        Yorumlar tek yerde toplanır. → Levent onaylar.
 5. [ ] Eksik katmanları sırayla kur. Her katman Definition of Done ile kapanır.
-       - Kodu hiç olmayan sekiz karar (`.scratch/belge-hizasi/denetim/tasarim-kod.md` §1, bilet 08, 15.10), ilgili katmanla
+       - Kodu hiç olmayan sekiz karar (`.scratch/arsiv/belge-hizasi/denetim/tasarim-kod.md` §1, bilet 08, 15.10), ilgili katmanla
          birlikte kurulur: (1) kayıt, sadakat kontrolünden sonra; (2) kâğıt dönemi en az 6 ay ve 30 işlem, 12 ayda
          dolmazsa Ölçülemedi; (3) canlı durumu; (4) karantina maskesi K2'ye de; (5) `duzeltme` satırı asıl satırı
          değiştirmez; (6) yakalanmayan istisna günlüğe yazılır; (7) ölçüt değişirse ayrılmış dönemler sıfırlanır;
