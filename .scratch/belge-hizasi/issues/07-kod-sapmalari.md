@@ -8,10 +8,10 @@ TASARIM gerekçesiyle güncellenir.
 **Status:** ready-for-agent
 
 - [ ] `denetim/tasarim-kod.md` §3'ün her maddesi `/diagnosing-bugs` ile ele alındı: davranışı gösteren test, sonra karar.
-- [ ] Öncelik: `gunluk.py` yalnız AKTİF kartları indirir (STOP/BOZULDU açık pozisyon izlenmeyebilir).
+- [x] Öncelik: `gunluk.py` yalnız AKTİF kartları indirir (STOP/BOZULDU açık pozisyon izlenmeyebilir).
 - [ ] Kod değişikliği gerektiren her madde kendi PR'ıyla kapandı; belge değişikliği TASARIM'da karar etiketiyle.
 - [x] Bilet 06'da bulunanlar (10.10): `motor.sinama` tek satırlı üyelik tablosunda düşer (`groupby(...).agg(pd.DatetimeIndex)` tek günde Timestamp döndürür, `isin` TypeError); `rapor.py` aynı koşu kimliğinde HTML ve CSV'yi üstüne yazar (TASARIM §6.8 "üstüne yazılmaz").
-- [ ] Bilet 02'den (10.10, `denetim/tansu-sapma-dogrulama.md` #6, #19): kart etiketi `BOZULDU` Tansu'nun "bozulma"sı (formasyonun geçersizleşmesi) değildir. SMA250 çıkışı, karantina çıkışı ve giriş iptali tek etikette toplanıyor; ayrı etiket (ör. `GÜN SONU STOPU`, `KARANTİNA ÇIKIŞI`, `GİRİŞ İPTAL`) ve `Durum` sütununun `Pozisyon durumu` olması karara bağlanır. Etiket CSV çıktısını değiştirir: önce test.
+- [x] Bilet 02'den (10.10, `denetim/tansu-sapma-dogrulama.md` #6, #19): kart etiketi `BOZULDU` Tansu'nun "bozulma"sı (formasyonun geçersizleşmesi) değildir. SMA250 çıkışı, karantina çıkışı ve giriş iptali tek etikette toplanıyor; ayrı etiket (ör. `GÜN SONU STOPU`, `KARANTİNA ÇIKIŞI`, `GİRİŞ İPTAL`) ve `Durum` sütununun `Pozisyon durumu` olması karara bağlanır. Etiket CSV çıktısını değiştirir: önce test.
 
 ## Rapor aynı koşu kimliğinde öncekinin üstüne yazar (TASARIM 6.8)
 
@@ -81,3 +81,11 @@ Kanıt, kırmızı koşu (ilk commit 25ce53d'den önce, dört dosyada `python -m
 - İstatistik tarafında tek gün düzeltmeden sonra tasarlanmış `K1Hatasi` verir (tür (b): ±20 günde başka uygun gün yok, TASARIM 5.7 "sessizce kırpılmaz"); test bu yüzden ikiye bölündü: `test_ema_k1_iki_gunluk_uyelik_sinyal_gunu_gercege_girer` ve `test_ema_k1_tek_gunluk_uyelik_typeerror_degil_k1_hatasi_verir`.
 - Yeşil: saglamlik iki vaka (işlem 1, fazla 0,0465108), istatistik iki test; tam kapı `318 passed`; `test_gelecek.py` ve `test_standartlar.py` `21 passed`; ruff temiz.
 - Ek dosyalar: `tansu/istatistik.py`, `tansu/saglamlik.py`, `tests/test_istatistik.py`, `tests/test_saglamlik.py`.
+
+07c (15.10): kart dilimi (`pr/07c-kartlar`; vekil kararları 15.10, Threads 64). Önce belge: TASARIM 6.2 (dünkü her kartın hissesi indirilir), 6.6 (Durum: beş etiket, eski kayıtta BOZULDU), GLOSSARY "Kart durumu". (1) `_acik_hisseler` AKTİF süzgecini kaldırdı. (2) `_durum` BOZULDU yerine `GÜN SONU STOPU` / `KARANTİNA ÇIKIŞI` / `GİRİŞ İPTAL` yazar (`ETIKET` sözlüğü); `durum` sütun adı ve STOP aynen; eski `BOZULDU` satırları hâlâ okunur (test). (3) `_temizle` yalnız `_gecici*` klasörlerini siler; `SAKLA_GUN` ve 30 gün silmesi kalktı (TASARIM bilet 03'te değişmişti: 5.11 silme yasağı).
+Testler (`tests/test_gunluk.py`): `test_dunku_kartin_hissesi_durumundan_bagimsiz_indirilir` (5 etiket, eski BOZULDU dahil), `test_dunku_acik_kart_hissesi_eski_ve_yeni_anahtarla_bugun_de_indirilir` (STOP kartın hissesi artık istenir; eski beklenti "YYYY istenmez" eski kuraldı, TASARIM 6.2 değişince yeni kurala çevrildi, `WWWW` eski satırın geçersiz kılındığını korur), `test_kart_durumlari_ve_kapanan_kart_yalniz_kapandigi_gun_gorunur[sma250|giris_iptali|karantina]` (CSV hücre değerleri yeni etiket), `test_gunluk_anlik_goruntuler_yaslari_ne_olursa_olsun_silinmez` (eski `..._30_gun_sonra_silinir_...` testi bu kuralla değiştirildi: gerekçe TASARIM 5.11/6.2, bilet 03).
+Kırmızı: `python -m pytest -q tests/test_gunluk.py` -> `11 failed, 13 passed` (ör. `assert 'YYYY' in ['XXXX']`). Yeşil: aynı komut sonra tam takım `322 passed`; `test_gelecek` + `test_standartlar` `21 passed`; ruff check ve format --check temiz.
+Dosyalar: `docs/TASARIM.md`, `GLOSSARY.md`, `tansu/gunluk.py`, `tests/test_gunluk.py`, bu bilet. Açık kalan: "Bilet 02'den ... BOZULDU" kutusu işaretlenmedi; `Durum` sütununun `Pozisyon durumu` adı alıp almayacağı yazılı karar değil (sütun adı `durum` kaldı). `kod_hash` değişmedi (denetim tur 1, 15.10: `gunluk.py` hash dışıdır, taban ve uç hash aynı); 07c için `denetim` yeniden koşusu gerekmez.
+- 07c (15.10) karar: sütun adı `durum` kalır (vekil kararı 15.10, Threads 64: ASCII ad zaten var; yeniden adlandırma ikinci bir değişiklik eklerdi). Üç etiket TASARIM 6.6 ve GLOSSARY'de; kutu kapandı.
+- 07c denetim tur 1 (Codex, 15.10): KALDI (GLOSSARY satırında karar etiketi yoktu; hash/yeniden koşu iddiası yanlıştı). İkisi düzeltildi.
+- 07c denetim tur 2 (15.10): Codex sanal alanı üç denemede açılmadı (CreateProcessWithLogonW 1909); AKIS küçük fark kuralıyla bağımsız denetçi Sonnet alt ajanı: GEÇTİ (iki dosya, kod yok; HASH_DISI'de gunluk.py doğrulandı).
