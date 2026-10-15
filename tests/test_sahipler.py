@@ -40,16 +40,55 @@ Metin | `yok.md` | tablo dışı
 
 def test_tablo_yollari_ayiklanir(tmp_path):
     (tmp_path / "AGENTS.md").write_text(TABLO, encoding="utf-8")
-    assert sahip_tablosu(tmp_path / "AGENTS.md") == (
-        [
-            "a.md",
-            "docs/kurallar/A-x.md",
-            "docs/kurallar/E-y.md",
-            "docs/kurallar",
-            "docs/taslak/",
-        ],
-        ["kisisel/300-Projects/Tansu X Veri Havuzu/"],
+    assert (
+        sahip_tablosu(tmp_path / "AGENTS.md")
+        == (
+            [
+                "a.md",
+                "docs/kurallar/A-x.md",
+                "docs/kurallar/E-y.md",
+                "docs/kurallar/B-*.md",  # aradaki harfin dosyası yok: eksik olarak raporlanır
+                "docs/kurallar/C-*.md",
+                "docs/kurallar/D-*.md",
+                "docs/kurallar",
+                "docs/taslak/",
+            ],
+            ["kisisel/300-Projects/Tansu X Veri Havuzu/"],
+        )
     )
+
+
+def test_aralik_her_harfi_denetler_eksik_ara_sahip_yakalanir(tmp_path):
+    (tmp_path / "AGENTS.md").write_text(TABLO, encoding="utf-8")
+    for ad in ("A-x.md", "B-b.md", "B-b2.md", "D-d.md", "E-y.md"):  # C yok
+        _yaz(tmp_path, f"docs/kurallar/{ad}", "x")
+    depo, _ = sahip_tablosu(tmp_path / "AGENTS.md")
+    assert depo == [
+        "a.md",
+        "docs/kurallar/A-x.md",
+        "docs/kurallar/E-y.md",
+        "docs/kurallar/B-b.md",
+        "docs/kurallar/B-b2.md",
+        "docs/kurallar/C-*.md",
+        "docs/kurallar/D-d.md",
+        "docs/kurallar",
+        "docs/taslak/",
+    ]
+    assert [y for y in depo if not (tmp_path / y).exists()] == [
+        "a.md",  # tmp depoda yok
+        "docs/kurallar/C-*.md",
+        "docs/taslak/",
+    ]
+
+
+def test_aralik_sahip_harfi_buyuk_kucuk_harf_duyarli(tmp_path):
+    (tmp_path / "AGENTS.md").write_text(TABLO, encoding="utf-8")
+    # C sahibi yalnız küçük harfli
+    for ad in ("A-x.md", "B-b.md", "c-x.md", "D-d.md", "E-y.md"):
+        _yaz(tmp_path, f"docs/kurallar/{ad}", "x")
+    depo, _ = sahip_tablosu(tmp_path / "AGENTS.md")
+    assert "docs/kurallar/C-*.md" in depo
+    assert "docs/kurallar/c-x.md" not in depo
 
 
 DEPO_YOLLARI = sahip_tablosu(KOK / "AGENTS.md")[0]
