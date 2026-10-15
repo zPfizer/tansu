@@ -7,7 +7,7 @@ Choose flow A or B by the work type. Call each skill by the exact name in backti
 ## 0. Every job
 1. Write the intent of Levent and the flow (A or B) in one line at the top of the first reply.
 2. Read AGENTS.md "Current state" (Şimdiki durum).
-3. Send a design or technical question that needs the preference of Levent to the `vekil` subagent first. Levent gets only these: direction of the project, money, outgoing work, secrets, delete, and work that cannot be undone.
+3. Send a design or technical question that needs the preference of Levent to the `vekil` subagent first. Levent gets only these: direction of the project, money, outgoing work, secrets, and delete. Levent also gets a Task Scheduler change and work that cannot be undone.
 4. Before you write an instruction or a prompt: `asd-ste100`.
 5. If you cannot show a source for a claim: `thinking-circle-of-competence`.
 6. If the problem type or the method is unclear: `thinking-cynefin`, then `thinking-model-router`.
@@ -21,7 +21,7 @@ Choose flow A or B by the work type. Call each skill by the exact name in backti
 5. **Branch:** Use one branch `pr/NN-<ad>` from `master` for each ticket. Give it its own worktree: `git worktree add ../TANSU-bNN -b pr/NN-<ad> master`. Clear the context between tickets.
 6. **Build:** For one ticket: `mattpocock-skills:implement`. For a full spec: `mattpocock-skills:implement-spec`. AGENTS.md "Önce test" owns the red-test rule. The skill is `mattpocock-skills:tdd`. While you write code: `ponytail:ponytail`. A subagent writes the code. A writer subagent writes only inside its own worktree. Apply the Observability item of DEFINITION_OF_DONE.md "Ship-readiness".
 7. **Test gate:** Run these from the main venv `C:\Users\levent\Desktop\TANSU\.venv\Scripts\python.exe`: `-m pytest -q`, `-m ruff check .`, and `-m ruff format --check .`. Run `git diff --check`. All must be green before each commit.
-8. **Review:** Merge `master` into the branch first. Then run `mattpocock-skills:code-review` (a Claude subagent). Then run the Codex audit (subagent type `codex`) and add the text of the code-review skill to the auditor prompt. After a change in a calculation, search all prose in the changed modules that states the formula (docstrings, comments, report text, HTML). Tie each one to its TASARIM sentence. When the coverage of a test changes, update the owning TASARIM sentence in the same commit.
+8. **Review:** Merge `master` into the branch first. Then run `mattpocock-skills:code-review` (a Claude subagent). Then run the Codex audit (subagent type `codex`) and add the text of the code-review skill to the auditor prompt. Both reviews read `CODING_STANDARDS.md` and `DEFINITION_OF_DONE.md`. After a change in a calculation, search all prose in the changed modules that states the formula (docstrings, comments, report text, HTML). Tie each one to its TASARIM sentence. When the coverage of a test changes, update the owning TASARIM sentence in the same commit.
 9. **Proof:** `verification-before-completion`, and the `## Tansu` items of `DEFINITION_OF_DONE.md`.
 10. **Pull request:** Push the branch to `kaynak`. `mattpocock-skills:pr` and `.github/pull_request_template.md` write the PR body together.
 11. **Merge:** Merge when two things are true. CI is green (`ci`: ruff and pytest. `dod`: the PR body). The audit verdict is GEÇTİ or NOTLU GEÇTİ. Claude merges with `gh pr merge --merge`. Levent gets only the completion note (Levent 15.10).

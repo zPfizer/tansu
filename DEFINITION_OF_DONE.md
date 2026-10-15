@@ -49,7 +49,6 @@ The depth behind these items lives in `mattpocock-skills:code-review` (standards
 - [ ] Observability in place for new critical paths (logs, metrics, traces)
 - [ ] Rollback path exists for anything risky (see `mattpocock-skills:pr` and `verification-before-completion`)
 - [ ] An independent auditor approves before merge (AKIS A "Merge")
-- [ ] Levent approves before a deploy (for Tansu: the install or change of a Task Scheduler task)
 
 ## How to Apply
 
@@ -77,3 +76,4 @@ This section adds to the general list. The "Tansu:" lines in the PR template are
   log (deneme günlüğü) only got new lines. A rule parameter change has a record as a new trial (deneme) (`AGENTS.md`
   "Çalışma kuralları").
 - If the behavior changed, the same commit updates TASARIM.
+- Levent approved the install or change of a Task Scheduler task before it was done.

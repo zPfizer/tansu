@@ -3,7 +3,7 @@
 Değişikliği bir veya iki cümleyle açıklayın.
 
 ## Kabul ölçütleri
-_Kutuları Claude kanıtıyla işaretler; Levent'in sohbetteki isteği onaydır. İşaretsiz kutu varsa PR birleşmez._
+_Kutuları Claude kanıtıyla işaretler. Birleştirme koşulu yeşil CI ve denetçi sonucudur (GEÇTİ veya NOTLU GEÇTİ, AKIS A "Merge"). İşaretsiz kutu varsa PR birleşmez._
 
 - [ ]
 
