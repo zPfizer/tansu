@@ -15,7 +15,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest==9.1.1", "ruff==0.17.0", "markdown-it-py==4.2.0"]
+dev = ["pytest==9.1.1", "ruff==0.17.0"]
 
 [tool.setuptools]
 packages = ["tansu"]
