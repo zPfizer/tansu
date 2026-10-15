@@ -1,6 +1,6 @@
 # Tansu mimarisi: önce sistem, en son ölçüm
 
-Status: blocked (AGENTS.md "Geliştirme durdu")
+Status: needs-triage
 
 Levent 10.10: "İlk önce sistemi kuracağız. Ölçümleri en sona bırakacağız." Yavaş ve sırayla ilerlenir.
 "Ölçüm" burada getiri sınamasıdır (geçmiş veride kural işe yarar mı). Bir parçanın çalıştığını gerçek veriyle
@@ -15,6 +15,12 @@ göstermek ölçüm değildir; o, Definition of Done'ın parçasıdır ve her ad
 4. [ ] Mimari belge: her katmanın girdisi, çıktısı, kurallar ve kaynakları; veri akışı; Levent'in akşam ekranı.
        Yorumlar tek yerde toplanır. → Levent onaylar.
 5. [ ] Eksik katmanları sırayla kur. Her katman Definition of Done ile kapanır.
+       - Kodu hiç olmayan sekiz karar (`.scratch/belge-hizasi/denetim/tasarim-kod.md` §1, bilet 08, 15.10), ilgili katmanla
+         birlikte kurulur: (1) kayıt, sadakat kontrolünden sonra; (2) kâğıt dönemi en az 6 ay ve 30 işlem, 12 ayda
+         dolmazsa Ölçülemedi; (3) canlı durumu; (4) karantina maskesi K2'ye de; (5) `duzeltme` satırı asıl satırı
+         değiştirmez; (6) yakalanmayan istisna günlüğe yazılır; (7) ölçüt değişirse ayrılmış dönemler sıfırlanır;
+         (8) "Uyarı yok" satırı ve bulunamayan sembollerin uyarısı. §1'in 9. maddesi (blok uzunluğu ve masraf
+         senaryoları günlükte ayrı alan) 07f ile kapandı (TASARIM 5.8): blok uzunluğu çıktıdır, günlük alanı değildir.
 6. [ ] En son: ölçüm. Bütün hat ve her katman geçmiş veride sınanır.
 7. [x] Kod biçimi: `ruff format` uygulandı (6f1012f). Kalan: geniş ruff kural seti (115 uyarı, ölçüm tarihi ve kural seti yazılmamış); ayrı bir PR.
 

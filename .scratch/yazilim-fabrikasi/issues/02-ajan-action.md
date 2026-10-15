@@ -6,6 +6,8 @@
 
 **Status:** ready-for-agent
 
+**Donduruldu (frozen):** Levent 15.10. Do not start, push, or merge this ticket. The branch `pr/f02-ajan-action` keeps the work.
+
 - [ ] Ajan iş akışı dosyası `anthropics/claude-code-action` ile, etiket tetiğiyle kurulu; `yerel` etiketi koşuyu atlar.
 - [ ] Ajan `pr/NN-<ad>` dalı açar, AGENTS.md ve iki standart dosyasını okur, PR gövdesini PR şablonuyla yazar.
 - [ ] Deneme issue'su (yalnız belge değişikliği) etiketlendi; PR açıldı, CI koştu. Actions çalıştırma bağlantısı PR'da.

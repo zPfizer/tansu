@@ -11,6 +11,26 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      # kayit/ dosyaları PR'da yalnız satır ekler (TASARIM 5.11). veri/ git'te değil (.gitignore), bu yüzden burada denetlenmez.
+      - name: kayit/ yalnız eklenir
+        if: github.event_name == 'pull_request'
+        env:
+          BASE: ${{ github.base_ref }}
+        run: |
+          set -eu
+          set -o pipefail
+          if ! git rev-parse --verify --quiet "origin/$BASE^{commit}" > /dev/null; then
+            echo "HATA: origin/$BASE bulunamadı; kayit/ denetimi yapılamadı."
+            exit 1
+          fi
+          silinen=$(git diff --numstat --no-renames "origin/$BASE...HEAD" -- kayit | awk '$2 == "-" { s += 1; next } { s += $2 } END { print s + 0 }')
+          if [ "$silinen" -ne 0 ]; then
+            echo "HATA: kayit/ altında $silinen satır silinmiş ya da değişmiş. kayit/ dosyaları yalnız satır ekler."
+            git diff --numstat --no-renames "origin/$BASE...HEAD" -- kayit
+            exit 1
+          fi
       - uses: actions/setup-python@v5
         with:
           python-version: "3.14"
@@ -20,3 +40,9 @@ jobs:
       - run: ruff check tansu tests .github
       - run: ruff format --check tansu tests .github
       - run: pytest -q
+      # driftlint yalnız talimat dosyalarını bulur (AGENTS.md, CLAUDE.md, .claude/skills); .scratch/ arşivi .driftlintrc.json ile dışarıda.
+      # docs/agents/*.md dosyalarını bulmaz; onların ölü yolları tests/test_sahipler.py denetler.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24.19.0"
+      - run: npx --yes @alifurkangokce/driftlint@0.19.0 .

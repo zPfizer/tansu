@@ -22,7 +22,7 @@ GECERLI = """## Kabul ölçütleri (Levent kontrol eder)
 - [x] Ölü kod — kanıt: çıktı
 - [x] Kalite — kanıt: çıktı
 - [x] Entegrasyon — kanıt: çıktı
-- [x] Belgeleme — kanıt: çıktı
+- [x] Tansu: `## Tansu` maddeleri — kanıt: çıktı
 ## Bağımsız inceleme
 Denetçi: Ayşe
 Sonuç: GEÇTİ
@@ -81,7 +81,7 @@ def test_kural_4_dod_eksik(eski, yeni, ayrinti):
     ("eski", "yeni", "ayrinti"),
     [
         ("Denetçi: Ayşe", "Denetçi: ", "Denetçi: alanı boş veya eksik"),
-        ("Sonuç: GEÇTİ", "Sonuç: kaldı", "Sonuç: geçti satırı eksik"),
+        ("Sonuç: GEÇTİ", "Sonuç: kaldı", "Sonuç: geçti ya da NOTLU GEÇTİ satırı eksik"),
     ],
 )
 def test_kural_5_inceleme_eksik(eski, yeni, ayrinti):
@@ -105,6 +105,77 @@ def test_bos_govde(govde):
         "Kural 2: gövde boş; işaretsiz kutu kontrolü yapılamadı.",
         "Kural 3: ## Kabul ölçütleri bölümünde işaretli kutu yok.",
         "Kural 4: ## Definition of Done bölümünde 10 kanıtlı işaretli satır yok.",
-        "Kural 5: ## Bağımsız inceleme bölümünde Denetçi: ve Sonuç: geçti yok.",
+        "Kural 5: ## Bağımsız inceleme bölümünde Denetçi: ve Sonuç: geçti ya da NOTLU GEÇTİ yok.",
         "Kural 6: ## Gerçek veri kanıtı bölümünde içi dolu bir kod bloğu yok.",
     ]
+
+
+@pytest.mark.parametrize("karar", ["geçti", "GEÇTİ", "NOTLU GEÇTİ"])
+def test_kural_5_kabul_edilen_kararlar(karar):
+    assert hatalar(GECERLI.replace("Sonuç: GEÇTİ", "Sonuç: " + karar)) == []
+
+
+@pytest.mark.parametrize(
+    "karar",
+    ["KALDI", "kaldı", "notlu geçti", "Notlu Geçti", "NOTLU", "Geçti", "NOTLU GEÇTI"],
+)
+def test_kural_5_reddedilen_kararlar(karar):
+    assert hatalar(GECERLI.replace("Sonuç: GEÇTİ", "Sonuç: " + karar)) == [
+        "Kural 5: ## Bağımsız inceleme bölümünde Sonuç: geçti ya da NOTLU GEÇTİ satırı eksik."
+    ]
+
+
+TANSU_HATASI = "Tansu: satırı işaretli ve kanıtlı olmalı"
+TANSU_SATIRI = "- [x] Tansu: `## Tansu` maddeleri — kanıt: çıktı\n"
+
+
+@pytest.mark.parametrize(
+    ("yeni", "ayrinti"),
+    [
+        ("- [x] Belgeleme — kanıt: çıktı\n", TANSU_HATASI),
+        (
+            "- [x] Tansu: `## Tansu` maddeleri — kanıt: \n",
+            "kanıt eksik; satır: 13; " + TANSU_HATASI,
+        ),
+        ("- [x] Tansu `## Tansu` maddeleri — kanıt: çıktı\n", TANSU_HATASI),
+    ],
+)
+def test_kural_4_tansu_satiri_isaretli_ve_kanitli(yeni, ayrinti):
+    assert hatalar(GECERLI.replace(TANSU_SATIRI, yeni)) == [
+        "Kural 4: ## Definition of Done bölümünde " + ayrinti + "."
+    ]
+
+
+def test_kural_4_tansu_satiri_isaretsiz():
+    govde = GECERLI.replace(
+        TANSU_SATIRI, "- [ ] Tansu: `## Tansu` maddeleri — kanıt: çıktı\n"
+    )
+    assert hatalar(govde) == [
+        "Kural 2: işaretsiz kutu var; satır: 13.",
+        "Kural 4: ## Definition of Done bölümünde en az 10 işaretli satır olmalı; "
+        + TANSU_HATASI
+        + ".",
+    ]
+
+
+@pytest.mark.parametrize(
+    "ek",
+    [
+        "Sonuç: KALDI\nSonuç: GEÇTİ",
+        "Sonuç: kaldı\nSonuç: geçti",
+        "Sonuç: GEÇTİ\nSonuç: GEÇTİ",
+        "Sonuç: GEÇTİ\n  Sonuç: NOTLU GEÇTİ",
+        "Sonuç: GEÇTİ\nSonuç:",
+    ],
+)
+def test_kural_5_sonuc_satiri_tek_olmali(ek):
+    govde = GECERLI.replace("Sonuç: GEÇTİ", ek)
+    assert hatalar(govde) == [
+        "Kural 5: ## Bağımsız inceleme bölümünde Sonuç: satırı tek olmalı (2 satır var)."
+    ]
+
+
+def test_kural_5_sonuc_sablon_yorumu_satir_sayilmaz():
+    yorum = '<!-- CI accepts only the exact text "Sonuç: geçti". -->\n'
+    govde = GECERLI.replace("Sonuç: GEÇTİ", yorum + "Sonuç: GEÇTİ")
+    assert hatalar(govde) == []

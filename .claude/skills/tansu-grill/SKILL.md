@@ -15,7 +15,7 @@ files for his view on that subject, and show the result in the proposal.
 
 For each decision, ask these questions against AGENTS.md "Çalışma kuralları" and TASARIM. Write the answer:
 - Does the decision obey the terms of use of the data source? (TASARIM §4)
-- Does the decision keep the trial log (deneme günlüğü) rule and the `veri/` rule?
+- Does the decision keep the trial log (deneme günlüğü) rule and the `veri/` rule? <!-- driftlint-ignore: veri/ is gitignored local data, absent in CI -->
 - After the rule record (kural kaydı), does a changed rule count as a new trial (deneme)? (TASARIM §5.8)
 - Is there a look-ahead (geleceği görme) risk? (TASARIM §5.12)
 - Does the money decision stay with Levent? (TASARIM §5.12)
