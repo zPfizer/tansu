@@ -1,6 +1,6 @@
 ---
 name: tansu-yeni-is
-description: "Use when the user asks for new work in Tansu: a new feature, rule, data source, module, report, or behavior change that needs a spec, tickets, a branch, and a pull request. Also use it when a Tansu job needs the steps Branch, Test gate, Review, Proof, Pull request, Merge, or Close. It runs flow A (Yeni geliştirme) in order: Sharpen, Document first, Spec, Tickets, Branch, Build, Test gate, Review, Proof, Pull request, Merge, Close."
+description: "Use when the user asks for new work in Tansu: a new feature, rule, data source, module, report, or behavior change that needs a spec, tickets, a branch, and a pull request. It runs flow A (Yeni geliştirme) in order: Sharpen, Document first, Spec, Tickets, Branch, Build, Test gate, Review, Proof, Pull request, Merge, Close."
 ---
 
 # New work (Yeni geliştirme), flow A
