@@ -28,7 +28,7 @@ Choose the flow by the work type. The flows are A (new work), B (bug fix), C (ru
 9. **Proof:** `verification-before-completion`, and the `## Tansu` items of `DEFINITION_OF_DONE.md`.
 10. **Pull request:** Push the branch to `kaynak`. `mattpocock-skills:pr` and `.github/pull_request_template.md` write the PR body together.
 11. **Merge:** Merge when two things are true. CI is green (`ci`: ruff and pytest. `dod`: the PR body). The independent verdict is GEÇTİ or NOTLU GEÇTİ. For code, it is the verdict of the Codex audit. For documents only, it is the verdict of the `mattpocock-skills:code-review` pass. Claude merges with `gh pr merge --merge`. Levent gets only the completion note (Levent 15.10).
-12. **Close:** Move the spec and the tickets of a finished job to `.scratch/arsiv/`. Only GLOSSARY and TASARIM stay for good. Write the result to the brain with the `beyin` skill (Threads and a receipt). After the merge, remove the worktree of the merged branch with `git worktree remove <path>`. Do not use `--force`. If git refuses, stop and tell Levent.
+12. **Close:** Move the spec and the tickets of a finished job to `.scratch/arsiv/`. Only GLOSSARY and TASARIM stay for good. Write the result to the brain with the `beyin` skill (Threads and a receipt). If a branch merged, remove its worktree with `git worktree remove <path>`. Do not use `--force`. If git refuses, stop and tell Levent.
 
 Task scope skips Sharpen, Spec, and Tickets. It runs Build, Test gate, and Proof. Task scope has no auditor (section "Scope"). For a locked file, "Who writes" sets the review.
 
@@ -151,7 +151,7 @@ Task scope skips Sharpen, Spec, and Tickets. It runs Build, Test gate, and Proof
 - One file, under 20 lines, no code: the orchestrator writes it itself.
 - A locked file, at any size: a subagent writes it. One `mattpocock-skills:code-review` pass by a Sonnet subagent checks the diff (A "Review"). Exception (Levent 14.10): Levent approves the change in chat.
   - One added line has task scope. The orchestrator writes it and searches the other files for a second copy of the rule. No auditor.
-  - A change of 2 to 3 lines gets the `mattpocock-skills:code-review` pass. The orchestrator may write it.
+  - A change of 2 to 3 lines gets the `mattpocock-skills:code-review` pass.
   - A change of more than 3 lines needs a writer subagent and the `mattpocock-skills:code-review` pass.
 - Code: a subagent writes it. The Codex audit checks it (A "Review").
 
@@ -161,7 +161,7 @@ Task scope skips Sharpen, Spec, and Tickets. It runs Build, Test gate, and Proof
 - The auditor also checks that the writer followed the steps of `AKIS.md`.
 - The auditor of a delete or archive job checks the final file list and the links. It also checks the changes outside the scope.
 - The verdicts are GEÇTİ, NOTLU GEÇTİ, and KALDI. NOTLU GEÇTİ: low-risk test gaps and style notes. KALDI: a false claim, a broken behavior, a missed instruction, or a security or privacy risk. An audit without a verdict counts as KALDI. The prompt of a `mattpocock-skills:code-review` pass asks for a verdict in the same words.
-- Every audit prompt states the goal of the job. When the goal is to simplify, a deliberately deleted line is not a finding. The auditor then checks only that no needed rule was lost without a reason.
+- Every audit prompt and every code-review pass prompt states the goal of the job. When the goal is to simplify, a deliberately deleted line is not a finding. The auditor then checks only that no needed rule was lost without a reason.
 - Code change at feature and outgoing scope: at most 3 Codex audit rounds. Every audit prompt names the round number. The auditor gives the round number with the verdict.
 - If round 3 returns KALDI (failed): stop the job. Do not open a fourth round. Find the root cause and define the job again. Send Levent the root cause in one line.
 - A documents-only change gets one `mattpocock-skills:code-review` pass. If it returns KALDI, fix the findings and run one more pass. If that pass returns KALDI, stop and send Levent the root cause in one line.
