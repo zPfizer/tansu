@@ -28,18 +28,18 @@ KAGIT_AY = 6  # TASARIM 5.8: en az kâğıt dönem
 BASARILI = ("TAMAM", "BUGÜN ÇUBUK YOK")
 KARTLI = ("Kâğıt", "Canlı")
 SUTUNLAR = [
-    "Tarih",
-    "Hisse",
-    "Aile",
-    "Durum",
-    "Referans",
-    "Stop",
-    "Pozisyon %",
-    "Adet",
-    "Fiili risk",
-    "Likidite sınırı TL",
-    "Kanıt",
-    "Kaynak",
+    "tarih",
+    "hisse",
+    "aile",
+    "durum",
+    "referans",
+    "stop",
+    "pozisyon_yuzde",
+    "adet",
+    "fiili_risk",
+    "likidite_siniri_tl",
+    "kanit",
+    "kaynak",
 ]
 AILE_ADI = {simulator.AILE: "EMA sıkışması"}
 
@@ -71,7 +71,7 @@ def _kanit(aile, tarih) -> str:
         else f"{_isaretli(alt)} ile {_isaretli(ust)}"
     )
     return (
-        f"{satirlar[-1]['durum']} · {k['islem']} işlem · rastgele kurala göre işlem başına fazla getiri "
+        f"{satirlar[-1]['durum']} · {k['islem']} işlem · sepete göre işlem başına fazla getiri "
         f"{_isaretli(k['fazla'])} (%0,3 masraf) · portföy fazla getirisi (K2'ye göre, yıllık, blok bootstrap "
         f"%95 aralık {aralik}) · kâğıt dönem {ay}/{KAGIT_AY} ay"
     )
@@ -123,7 +123,7 @@ def _kart(anlik, s, m, p, kanit) -> list:
         rapor.yuzde(adet * max(0.0, ref - stop) / ozk),
         f"{simulator.LIKIDITE * lq:.0f}",
         kanit,
-        f"İş Yatırım {anlik.kimlik}",
+        f"Tansu'dan esinlenen yorum · İş Yatırım {anlik.kimlik}",
     ]
 
 
@@ -185,6 +185,11 @@ def _kart_gunlugu(tarih, kimlik, kartlar) -> None:
         )
 
 
+def _alan(kart, ad):
+    """Kart günlüğü yalnız eklenir: eski satırlar büyük harfli anahtarla (`Hisse`) kalır (bilet 07a)."""
+    return kart[ad] if ad in kart else kart[ad.capitalize()]
+
+
 def _acik_hisseler() -> set:
     """Dünkü açık kartların hisseleri: evrenden çıksalar da pozisyon açık kalır (TASARIM 5.2)."""
     yol = kayit.KAYIT_DIZINI / "kartlar.jsonl"
@@ -193,9 +198,9 @@ def _acik_hisseler() -> set:
     satirlar = [s for s in yol.read_text(encoding="utf-8").splitlines() if s]
     return (
         {
-            k["Hisse"]
+            _alan(k, "hisse")
             for k in json.loads(satirlar[-1])["kartlar"]
-            if k["Durum"] == "AKTİF"
+            if _alan(k, "durum") == "AKTİF"
         }
         if satirlar
         else set()
