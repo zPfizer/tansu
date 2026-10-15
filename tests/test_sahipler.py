@@ -16,7 +16,8 @@ from atif_araclari import (
     beyin_kirikleri,
     sahip_dosyalari,
     sahip_tablosu,
-    yerel_mi,
+    yerel_kok_yok,
+    yol_kirikleri,
 )
 
 TABLO = """# X
@@ -51,16 +52,78 @@ def test_tablo_yollari_ayiklanir(tmp_path):
 
 def test_tablodaki_depo_yollari_var():
     depo, _ = sahip_tablosu(KOK / "AGENTS.md")
-    eksik = [y for y in depo if not (KOK / y).exists() and not yerel_mi(KOK, y)]
+    eksik = [y for y in depo if not (KOK / y).exists() and not yerel_kok_yok(KOK, y)]
     assert eksik == []
 
 
-def test_yerel_yol_ile_yazim_hatasi_ayrilir(tmp_path):
-    assert yerel_mi(KOK, "docs/sorgu/sonuc-3-4.md")
-    assert not yerel_mi(KOK, "docs/TASARIM.md")
-    assert not yerel_mi(
-        tmp_path, "docs/sorgu/sonuc-3-4.md"
-    )  # git deposu değil: yerel sayılmaz
+def test_tablodaki_dosyalarin_ve_docs_agents_in_depo_yollari_var():
+    # driftlint docs/agents/*.md dosyalarını bulmaz; ölü yol denetimi bu testle yapılır.
+    depo, _ = sahip_tablosu(KOK / "AGENTS.md")
+    dosyalar = sahip_dosyalari(KOK, depo + ["docs/agents"])
+    assert any(y.parent.name == "agents" for y in dosyalar)
+    assert yol_kirikleri(KOK, dosyalar) == []
+
+
+def test_yerel_kok_yalniz_kok_yoksa_atlar(tmp_path):
+    (tmp_path / ".gitignore").write_text(
+        "/docs/sorgu/\n/veri/\n*.pyc\n", encoding="utf-8"
+    )
+    assert yerel_kok_yok(tmp_path, "docs/sorgu/sonuc-3-4.md")  # kök yok: CI
+    assert yerel_kok_yok(tmp_path, "veri/")
+    assert not yerel_kok_yok(tmp_path, "docs/TASARIM.md")  # yerel kök değil
+    (tmp_path / "docs" / "sorgu").mkdir(parents=True)
+    assert not yerel_kok_yok(
+        tmp_path, "docs/sorgu/olmayan.md"
+    )  # kök var: eksik dosya hata
+
+
+def _depo(kok):
+    (kok / "tansu").mkdir()
+    (kok / "tansu" / "kayit.py").write_text("x", encoding="utf-8")
+    (kok / "docs").mkdir()
+    (kok / "docs" / "TASARIM.md").write_text("x", encoding="utf-8")
+    (kok / "GLOSSARY.md").write_text("x", encoding="utf-8")
+    (kok / ".gitignore").write_text("/docs/sorgu/\n/rapor/\n", encoding="utf-8")
+
+
+@pytest.mark.parametrize(
+    ("metin", "beklenen"),
+    [
+        (
+            "`tansu/kayit.py` `tansu/kayit.py:42` `tansu/kayit.py::test_x` `tansu/kayit.py (açıklama)` "
+            "`tansu/` `GLOSSARY.md` `TASARIM.md` `docs/TASARIM.md`",
+            [],
+        ),
+        ("`tansu/olmayan_denetim.py`", ["not.md:1: tansu/olmayan_denetim.py"]),
+        ("a\n`tansu/olmayan.py:7`", ["not.md:2: tansu/olmayan.py"]),
+        (
+            "`tests/test_yok.py` `docs/yok.md`",
+            ["not.md:1: tests/test_yok.py", "not.md:1: docs/yok.md"],
+        ),
+        ("`KURALLAR.md`", ["not.md:1: KURALLAR.md"]),
+        (
+            "`tansu/*.py` `tests/test_<modül>.py` `docs/kurallar/A–E` `rapor/rapor-x.html`",
+            [],
+        ),
+        ("`rapor/durum.txt` `veri/anlik/` `gunluk/x.log`", []),
+        ("`durum.txt` `manifest.json` `kartlar.jsonl` `kaynak-x.md` `Levent`", []),
+        ("`AKIS.md` `TODO.md` `GLOSSARY-MAP.md`", []),
+        ("`docs/sorgu/sonuc-3-4.md`", []),  # yerel kök yok: CI
+    ],
+)
+def test_depo_yolu_denetimi(tmp_path, metin, beklenen):
+    _depo(tmp_path)
+    (tmp_path / "not.md").write_text(metin, encoding="utf-8")
+    assert yol_kirikleri(tmp_path, [tmp_path / "not.md"]) == beklenen
+
+
+def test_yerel_kok_varken_eksik_dosya_hatadir(tmp_path):
+    _depo(tmp_path)
+    (tmp_path / "docs" / "sorgu").mkdir()
+    (tmp_path / "not.md").write_text("`docs/sorgu/olmayan.md`", encoding="utf-8")
+    assert yol_kirikleri(tmp_path, [tmp_path / "not.md"]) == [
+        "not.md:1: docs/sorgu/olmayan.md"
+    ]
 
 
 def test_tablodaki_dosyalarin_bolum_atiflari_var_olana_gider():

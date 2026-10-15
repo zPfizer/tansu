@@ -32,7 +32,9 @@ def _belgeler(kok):
     docs.mkdir()
     (docs / "TASARIM.md").write_text(
         "## 5. Sınama\n### 5.1 Veri\nHash\nkapsamı burada.\n### 5.2 Kural kaydı\ngövde\n"
-        "## 6. Günlük\n1. bir terim\n2. iki\n",
+        "```\n# kod yorumu başlık değil\n```\nfence-sonrası terim\n"
+        "## 6. Günlük\n1. bir terim\n2. iki\n"
+        "## 8. Açık\n1. a\n2. b\n## Ek A: Eleştiri\nKüçükler burada\n",
         encoding="utf-8",
     )
     (docs / "KURALLAR.md").write_text("## 1. Ana bulgular\n", encoding="utf-8")
@@ -56,6 +58,24 @@ def test_bolum_numaralari_baslik_ve_madde(tmp_path):
         ("a\nTASARIM §5.7 yok", ["not.md:2: TASARIM §5.7"]),
         ("TASARIM 6.3 madde yok", ["not.md:1: TASARIM 6.3"]),
         ("KURALLAR §5.1 yok", ["not.md:1: KURALLAR §5.1"]),
+        ("TASARIM §5.1, §99", ["not.md:1: TASARIM §99"]),
+        (
+            "TASARIM 5.1, 5.99 ve §98",
+            ["not.md:1: TASARIM §5.99", "not.md:1: TASARIM §98"],
+        ),
+        ("TASARIM §5.1–5.99", ["not.md:1: TASARIM §5.99"]),
+        ("TASARIM §5.99–5.1", ["not.md:1: TASARIM §5.99"]),
+        ("TASARIM 5.1/5.99", ["not.md:1: TASARIM §5.99"]),
+        ("KURALLAR §1 ve §9", ["not.md:1: KURALLAR §9"]),
+        ("TASARIM.md §99", ["not.md:1: TASARIM.md §99"]),
+        ("`docs/TASARIM.md` §99", ["not.md:1: TASARIM.md` §99"]),
+        ("`docs/KURALLAR.md` §5.1", ["not.md:1: KURALLAR.md` §5.1"]),
+        ("TASARIM §5.1–5.2, §6 ve 5.1 / 5.2 ve `TASARIM.md` §6", []),
+        ("TASARIM 5.1, 6 gün ve TASARIM 5.2 - 3 gün", []),
+        ('TASARIM 8 "Küçükler"', ['not.md:1: TASARIM 8 "Küçükler" bölümde yok']),
+        ('TASARIM 8.2 "Küçükler"', ['not.md:1: TASARIM 8.2 "Küçükler" bölümde yok']),
+        ('TASARIM 8 "açık"', []),
+        ('TASARIM 5.2 "fence-sonrası terim"', []),
     ],
 )
 def test_kirik_bolum_atifi_yakalanir(tmp_path, metin, beklenen):

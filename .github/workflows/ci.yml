@@ -35,6 +35,7 @@ jobs:
       - run: ruff format --check tansu tests .github
       - run: pytest -q
       # driftlint yalnız talimat dosyalarını bulur (AGENTS.md, CLAUDE.md, .claude/skills); .scratch/ arşivi .driftlintrc.json ile dışarıda.
+      # docs/agents/*.md dosyalarını bulmaz; onların ölü yolları tests/test_sahipler.py denetler.
       - uses: actions/setup-node@v4
         with:
           node-version: "24.19.0"

@@ -51,3 +51,19 @@
 - 08 ek (15.10): atıf testi, atıfın hemen ardındaki alıntı başlığı ya da kalın terimi (`TASARIM 5.8 "Kural kaydı"`; `"…"`, `“…”`, `‘…’`, `**…**`; arada `,`, `:`, ` ve`, `(`) atıf yapılan bölümün metninde de arar
   (başlıktan aynı ya da üst düzeydeki sonraki başlığa kadar; alt başlıksız bölümde madde metni; Türkçe i/ı/İ katlanır). Neden: `TASARIM 5.11 "Hash kapsamı"` (`tansu/kayit.py:42`, metin 5.8'de) bölüm var diye geçmişti.
   Tarama: alıntılı 29 atıftan 1 uyuşmazlık, o da `kayit.py:42`; 07f dalında 5.8'e düzeltildi, bu dalda bırakıldı, birleştirmeyle gelir (o zamana kadar `test_bolum_atiflari_var_olan_basliga_gider` bu dalda kırmızı).
+- 08 denetim tur 1 (15.10, Codex KALDI; 6 madde düzeltildi, her biri geçici kopyada kırmızı sonra yeşil):
+  1. Atıf listesi, aralık ve dosya biçimi: `TASARIM §5.1, §99`, `5.5 ve §6`, `§5.1–5.99` (iki uç), `5.1/5.99`, `TASARIM.md §99`, `` `docs/TASARIM.md` §99 `` her numarayı denetler.
+     Virgüllü liste öğesi `§` ya da noktalı olmalı; düz sayı yalnız `–` aralığında (`§2–3`) sayılır (`TASARIM 5.1, 6 gün` liste değil). Kırmızı: `docs/sadakat.md` kopyasına eklenen
+     `TASARIM §5.1, §99 ve TASARIM §5.1–5.99 ve docs/TASARIM.md §98` için `§99`, `§5.99`, `TASARIM.md` §98` üç hata.
+  2. Bölüm numarasız başlıkta da biter (`## Ek A`); kod bloğundaki `#` satırı başlık sayılmaz. Kırmızı: `TASARIM 8 "Eleştiri bulguları"` (metin Ek A başlığında) hata verir.
+     Örnekleme: yeni kuralla bozuk atıf 1: `tansu/istatistik.py:258` `TASARIM 5.10, 5.12.4` (5.12.4 başlık değil; kastedilen 5.12 ölçüt 4, yılların %60'ı, `YIL_ESIK`). Metin `TASARIM 5.10, 5.12 ölçüt 4` yapıldı
+     (yorum; `ast.dump` hash'i yorumu görmez). Denetçinin `TASARIM 8 "Küçükler"` ve `8.10` örnekleri depoda yok, birim testlerde (`## Ek A` kuralı) kırmızı.
+  3. Sahip dosyalarının içindeki yollar: `yol_kirikleri` (`tansu/`, `tests/`, `docs/`, `.github/`, `kurulum/`, `kayit/`, `.claude/`, `.scratch/`, `arsiv/` ile başlayan ve `GLOSSARY.md`, `TASARIM.md`, `pyproject.toml` gibi kök dosya adları).
+     Örnekleme: 104 yol benzeri belirteç, 23 eksik; hepsi yol değil: çalışma çıktısı klasörleri (`veri/`, `rapor/`, `gunluk/`: `.gitignore`'da, her koşuda oluşur, taranmaz) ve şablon/aralık işareti taşıyanlar
+     (`<`, `*`, `…`, `YYYY`, `–`, `NN`). Gerçek ölü yol 0. Üç bare ad adlandırılmış istisna: `AKIS.md` (YONETIM), `TODO.md` (reddedilen fikir, karar.md 20-031), `GLOSSARY-MAP.md` (domain.md "yok" der).
+     Kırmızı: `GLOSSARY.md` kopyasına `tansu/olmayan_denetim.py` hata verir.
+  4. Yerel yol atlama: `.gitignore`'daki sabit kökün (`docs/sorgu`, `docs/strateji-taslak`, ...) kendisi yoksa atlanır; kök varsa eksik dosya hatadır (`git check-ignore` kaldırıldı). Kırmızı: `docs/sorgu` varken `docs/sorgu/olmayan.md` hata verir.
+  5. Havuz kısa atıfları: her kısa atıf tek nota çözülür (tam ad varsa o); birden çok nota giden atıf `belirsiz atıf ...` hatası; çözülmeyen yok sayılır. Gerçek havuzda belirsiz atıf 0, atıfsız 0.
+     Kırmızı (havuzun geçici kopyası): `tweet-atr-yeni-not.md` eklenince `belirsiz atıf tweet-atr: ...` ve `tweet-atr-yeni-not`; `gorsel-paket-01-yeni-not.md` eklenince `belirsiz atıf gorsel-paket-01` ve `gorsel-paket-01-yeni-not`.
+  6. `docs/agents/*.md` driftlint'in bulduğu dosya türü değil; ölü yolları madde 3'ün taramasıyla `test_sahipler.py::test_tablodaki_dosyalarin_ve_docs_agents_in_depo_yollari_var` denetler (ölü komut denetimi yok).
+     driftlint çevrimiçi, depo kopyasında: `driftlint: 0 errors, 0 warnings, 1 info across 3 context files` (çıkış kodu 0).

@@ -6,13 +6,13 @@ Havuz yalnız okunur; test hiçbir şey yazmaz.
 
 import pytest
 
-from atif_araclari import HAVUZ, KOK, kapsanmayan_notlar
+from atif_araclari import HAVUZ, KOK, havuz_sorunlari
 
 
 def test_havuzdaki_her_not_atifli_ya_da_kural_icermez_listesinde():
     if not HAVUZ.exists():
         pytest.skip("Evde beyin havuzu yok.")
-    assert kapsanmayan_notlar(KOK, HAVUZ) == []
+    assert havuz_sorunlari(KOK, HAVUZ) == []
 
 
 def _depo(kok, kurallar, a):
@@ -49,15 +49,15 @@ def test_her_atif_bicimi_notu_kapsar(tmp_path):
         "## Kısa atıfların tam adları\n\n" + "\n".join(NOTLAR) + "\n",
         "G12, gp-13, G-14, gorsel-paket-15, T-atr, kaynak-akfis-retest, `not-bir.md`, x -16 (`a.png`)\n",
     )
-    assert kapsanmayan_notlar(tmp_path, _havuz(tmp_path, NOTLAR)) == []
+    assert havuz_sorunlari(tmp_path, _havuz(tmp_path, NOTLAR)) == []
 
 
 def test_yeni_not_gelince_kirmizi_olur(tmp_path):
     _depo(tmp_path, "## Kural içermeyen notlar\n", "G12\n")
     havuz = _havuz(tmp_path, NOTLAR[:1])
-    assert kapsanmayan_notlar(tmp_path, havuz) == []
+    assert havuz_sorunlari(tmp_path, havuz) == []
     (havuz / "gorsel-paket-99-yeni.md").write_text("not", encoding="utf-8")
-    assert kapsanmayan_notlar(tmp_path, havuz) == ["gorsel-paket-99-yeni"]
+    assert havuz_sorunlari(tmp_path, havuz) == ["gorsel-paket-99-yeni"]
 
 
 def test_tam_ad_listesi_tek_basina_atif_sayilmaz(tmp_path):
@@ -66,7 +66,7 @@ def test_tam_ad_listesi_tek_basina_atif_sayilmaz(tmp_path):
         "## Kısa atıfların tam adları\n\ngorsel-paket-12-ad-bir\n",
         "G13\n",
     )
-    assert kapsanmayan_notlar(tmp_path, _havuz(tmp_path, NOTLAR[:2])) == [
+    assert havuz_sorunlari(tmp_path, _havuz(tmp_path, NOTLAR[:2])) == [
         "gorsel-paket-12-ad-bir"
     ]
 
@@ -77,4 +77,31 @@ def test_kisa_ad_uzun_adin_basi_degilse_kapsamaz(tmp_path):
     havuz = _havuz(
         tmp_path, ["tweet-atr", "tweet-atr-risk-butcesi", "gorsel-paket-12-a"]
     )
-    assert kapsanmayan_notlar(tmp_path, havuz) == ["tweet-atr"]
+    assert havuz_sorunlari(tmp_path, havuz) == ["tweet-atr"]
+
+
+def test_belirsiz_kisa_ad_hatadir(tmp_path):
+    # `T-atr` iki tweet notunun başı: hiçbirini kapsamaz, belirsiz atıf hatasıdır.
+    _depo(tmp_path, "## X\n", "T-atr\n")
+    havuz = _havuz(tmp_path, ["tweet-atr-risk-butcesi", "tweet-atr-yeni-not"])
+    assert havuz_sorunlari(tmp_path, havuz) == [
+        "belirsiz atıf tweet-atr: tweet-atr-risk-butcesi, tweet-atr-yeni-not",
+        "tweet-atr-risk-butcesi",
+        "tweet-atr-yeni-not",
+    ]
+
+
+def test_ayni_numarali_iki_not_belirsizdir(tmp_path):
+    _depo(tmp_path, "## X\n", "G12 gorsel-paket-12-ad-bir\n")
+    havuz = _havuz(tmp_path, ["gorsel-paket-12-ad-bir", "gorsel-paket-12-yeni-not"])
+    assert havuz_sorunlari(tmp_path, havuz) == [
+        "belirsiz atıf gorsel-paket-12: gorsel-paket-12-ad-bir, gorsel-paket-12-yeni-not",
+        "gorsel-paket-12-yeni-not",
+    ]
+
+
+def test_tam_ad_belirsiz_kisa_adi_cozer(tmp_path):
+    # Tam ad ya da tam kısa ad (`tweet-atr` adlı not var) tek nota gider.
+    _depo(tmp_path, "## X\n", "tweet-atr tweet-atr-risk-butcesi\n")
+    havuz = _havuz(tmp_path, ["tweet-atr", "tweet-atr-risk-butcesi"])
+    assert havuz_sorunlari(tmp_path, havuz) == []

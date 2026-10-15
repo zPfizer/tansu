@@ -12,7 +12,11 @@ KOK = Path(__file__).resolve().parents[1]
 # Bu iki test dosyası bilerek kırık atıf örneği taşır; taramaya girmez.
 HARIC = {"tests/test_atif.py", "tests/test_sahipler.py", "tests/atif_araclari.py"}
 
-ATIF = re.compile(r"(TASARIM|KURALLAR) §?(\d+(?:\.\d+)*)")
+_NO = r"\d+(?:\.\d+)*"
+# `TASARIM 5.1`, `TASARIM §5.1`, `docs/TASARIM.md` §5.1
+ATIF = re.compile(rf"(TASARIM|KURALLAR)(?:\.md`?)? §?({_NO})")
+# Atıf listesi ya da aralığı: `, §99`, ` ve §4`, `–5.6`, `/5.3`
+ATIF_DEVAMI = re.compile(rf"(\s*[–-]\s*|,\s*|\s+ve\s+|\s*/\s*)(§)?({_NO})")
 # Atıfın hemen ardından gelen alıntı başlık ya da kalın terim: TASARIM 5.8 "Kural kaydı"
 ALINTI = re.compile(
     r"""(?:,| ve|:)? ?\(?(?:"([^"\n]+)"|“([^”\n]+)”|‘([^’\n]+)’|\*\*([^*\n]+)\*\*)"""
@@ -40,25 +44,35 @@ def izlenen_dosyalar(kok):
 def bolum_metinleri(yol):
     """Belgenin numaralı bölümleri ve metinleri: {'5': ..., '5.1': ...}.
 
-    Bölüm metni başlık satırından aynı ya da üst düzeydeki sonraki başlığa kadardır.
+    Bölüm metni başlık satırından aynı ya da üst düzeydeki sonraki başlığa kadardır; numarasız başlık
+    (`## Ek A`) da bölümü bitirir. Kod bloklarındaki `#` satırları başlık sayılmaz.
     Numaralı alt başlığı olmayan bölümde (TASARIM 6, 7, 8) '6.2' o bölümün 2. maddesidir;
     madde metni sonraki maddeye ya da bölüm sonuna kadardır.
     """
     satirlar = yol.read_text(encoding="utf-8").splitlines()
-    basliklar = []  # (satır sırası, düzey, numara)
+    basliklar = []  # (satır sırası, düzey, numara ya da None)
     maddeler = []  # (satır sırası, bölüm numarası, madde no)
     bolum = None
+    kodda = False
     for sira, satir in enumerate(satirlar):
-        if eslesme := BASLIK.match(satir):
-            basliklar.append((sira, satir.index(" "), eslesme.group(1)))
-        if satir.startswith("## "):
-            bolum = eslesme.group(1) if eslesme else None
+        if satir.lstrip().startswith(("```", "~~~")):
+            kodda = not kodda
+        if kodda:
+            continue
+        if baslik := re.match(r"(#{1,6}) ", satir):
+            numara = BASLIK.match(satir)
+            basliklar.append((sira, len(baslik.group(1)), numara and numara.group(1)))
+            if len(baslik.group(1)) == 2:
+                bolum = numara and numara.group(1)
         elif bolum and (madde := re.match(r"(\d+)\. ", satir)):
             maddeler.append((sira, bolum, madde.group(1)))
     metinler = {}
     for yer, (sira, duzey, numara) in enumerate(basliklar):
-        son = next((s for s, d, _ in basliklar[yer + 1 :] if d <= duzey), len(satirlar))
-        metinler[numara] = "\n".join(satirlar[sira:son])
+        if numara:
+            son = next(
+                (s for s, d, _ in basliklar[yer + 1 :] if d <= duzey), len(satirlar)
+            )
+            metinler[numara] = "\n".join(satirlar[sira:son])
     alt_var = {numara.split(".")[0] for numara in metinler if "." in numara}
     for yer, (sira, bolum, madde) in enumerate(maddeler):
         if bolum in alt_var:
@@ -83,11 +97,34 @@ def _duz(metin):
     return " ".join(metin.split()).casefold()
 
 
+def atif_numaralari(metin):
+    """Metindeki bölüm atıfları: (belge, numara, başlangıç, ilk numaranın bitişi, liste var mı).
+
+    `TASARIM §5.1, §99`, `TASARIM 5.5, 5.6`, `KURALLAR §3 ve §4` ve `TASARIM §5.5–5.6` her numarayı verir.
+    Aralıkta iki uç da denetlenir. Listede virgülle gelen numara `§` taşımalı ya da noktalı olmalıdır
+    (`TASARIM 5.1, 6 gün` bir atıf listesi değildir). `TASARIM.md §5` dosya biçimi de bir atıftır.
+    """
+    for eslesme in ATIF.finditer(metin):
+        belge = eslesme.group(1)
+        sonuc = [(belge, eslesme.group(2), eslesme.start(), eslesme.end(), False)]
+        konum = eslesme.end()
+        while devam := ATIF_DEVAMI.match(metin, konum):
+            ayrac, isaret, numara = devam.groups()
+            aralik = (
+                ayrac.strip() == "–"
+            )  # `§2–3`; tireyle (`5.2 - 3 gün`) yalnız noktalı numara sayılır
+            if not (isaret or "." in numara or aralik):
+                break
+            sonuc.append((belge, numara, eslesme.start(), devam.end(), True))
+            konum = devam.end()
+        yield from sonuc
+
+
 def atif_kirikleri(kok, dosyalar):
     """Bölüm atıflarından sorunlu olanlar: 'dosya:satır: atıf'.
 
-    Sorun: başlık yok (`TASARIM 9`) ya da atıfın ardındaki alıntı terim (`TASARIM 5.8 "Kural kaydı"`)
-    atıf yapılan bölümün metninde geçmiyor.
+    Sorun: başlık yok (`TASARIM 9`, listedeki ya da aralıktaki her numara dahil) ya da atıfın ardındaki
+    alıntı terim (`TASARIM 5.8 "Kural kaydı"`) atıf yapılan bölümün metninde geçmiyor.
     """
     var = {
         ad: bolum_metinleri(kok / "docs" / f"{ad}.md") for ad in ("TASARIM", "KURALLAR")
@@ -95,15 +132,20 @@ def atif_kirikleri(kok, dosyalar):
     kirik = []
     for yol in dosyalar:
         metin = yol.read_text(encoding="utf-8")
-        for eslesme in ATIF.finditer(metin):
-            bolumler = var[eslesme.group(1)]
-            satir = metin.count("\n", 0, eslesme.start()) + 1
-            yer = f"{yol.relative_to(kok).as_posix()}:{satir}: {eslesme.group(0)}"
-            if eslesme.group(2) not in bolumler:
+        for belge, numara, basla, bitis, listede in atif_numaralari(metin):
+            bolumler = var[belge]
+            satir = metin.count("\n", 0, basla) + 1
+            yer = f"{yol.relative_to(kok).as_posix()}:{satir}: "
+            if listede:
+                if numara not in bolumler:
+                    kirik.append(f"{yer}{belge} §{numara}")
+                continue
+            yer += metin[basla:bitis]
+            if numara not in bolumler:
                 kirik.append(yer)
-            elif alinti := ALINTI.match(metin, eslesme.end()):
+            elif alinti := ALINTI.match(metin, bitis):
                 terim = next(parca for parca in alinti.groups() if parca)
-                if _duz(terim.rstrip(".…")) not in _duz(bolumler[eslesme.group(2)]):
+                if _duz(terim.rstrip(".…")) not in _duz(bolumler[numara]):
                     kirik.append(f'{yer} "{terim}" bölümde yok')
     return kirik
 
@@ -261,22 +303,45 @@ def _havuz_metni(kok):
     return "\n".join(parcalar)
 
 
-def kapsanmayan_notlar(kok, havuz):
-    """Havuz notlarından belgede atıfı olmayanlar.
+def havuz_sorunlari(kok, havuz):
+    """Havuz notlarından belgede atıfı olmayanlar ve belirsiz kısa atıflar.
 
-    Atıf: tam ad; ad başı (`kaynak-x`, `gorsel-paket-17-ad`); `T-x` (tweet-x'in başı); gorsel-paket
-    numarası (`gorsel-paket-NN`, `gp-NN`, `G-NN`, `GNN`, listede `-NN`). 'Kural içermeyen notlar'
-    listesi de tam addır. `-NN` biçimi gevşektir: `-60)` gibi eksi bir sayı da o numaralı notu sayar.
+    Her kısa atıf tek bir nota çözülmelidir: tam ad; ad başı (`kaynak-x`, `gorsel-paket-17-ad`); `T-x`
+    (tweet-x'in başı); gorsel-paket numarası (`gorsel-paket-NN`, `gp-NN`, `G-NN`, `GNN`, listede `-NN`).
+    Birden çok nota çözülen atıf 'belirsiz atıf ...' hatasıdır (tam adı dururken kısa ad aynı kalır);
+    hiçbirine çözülmeyen kısa atıf yok sayılır (beyin yolu denetimi onu ayrıca yakalar).
+    'Kural içermeyen notlar' listesi tam addır. `-NN` biçimi gevşektir: `-60)` gibi eksi bir sayı da
+    o numaralı notu sayar.
     """
     metin = _havuz_metni(kok)
-    adlar = {
-        m.group(1).rstrip("-")
-        for m in re.finditer(r"(?<![\w-])((?:gorsel-paket|kaynak|tweet)-[\w-]*)", metin)
+    notlar = sorted(yol.stem for yol in havuz.glob("*.md"))
+    kapsanan, sorunlar = set(), []
+
+    def coz(belirtec, adaylar):
+        if len(adaylar) == 1:
+            kapsanan.add(adaylar[0])
+        elif adaylar:
+            sorunlar.append(f"belirsiz atıf {belirtec}: {', '.join(adaylar)}")
+
+    kapsanan |= {
+        ad for ad in notlar if re.search(rf"(?<![\w-]){re.escape(ad)}(?![\w-])", metin)
     }
-    adlar |= {
+    onekler = {
+        m.group(1).rstrip("-")
+        for m in re.finditer(
+            r"(?<![\w-])((?:gorsel-paket|kaynak|tweet)-\w[\w-]*)", metin
+        )
+    }
+    onekler |= {
         "tweet-" + m.group(1).rstrip("-")
         for m in re.finditer(r"(?<![\w-])T-([a-z0-9][\w-]*)", metin)
     }
+    for onek in sorted(onekler):
+        coz(
+            onek,
+            [n for n in notlar if n == onek]
+            or [n for n in notlar if n.startswith(onek + "-")],
+        )
     numaralar = {
         int(m.group(1))
         for m in re.finditer(r"(?<![\w-])(?:gp-|G-?|gorsel-paket-)(\d+)(?!\d)", metin)
@@ -285,14 +350,84 @@ def kapsanmayan_notlar(kok, havuz):
         int(m.group(1))
         for m in re.finditer(r"(?<![\w.,/-])-(\d{2,3})(?![\d.,%/])", metin)
     }
-    kapsanmayan = []
-    for ad in sorted(yol.stem for yol in havuz.glob("*.md")):
-        if re.search(rf"(?<![\w-]){re.escape(ad)}(?![\w-])", metin):
-            continue
-        if any(ad == on or ad.startswith(on + "-") for on in adlar):
-            continue
-        numara = re.match(r"gorsel-paket-(\d+)", ad)
-        if numara and int(numara.group(1)) in numaralar:
-            continue
-        kapsanmayan.append(ad)
-    return kapsanmayan
+    for numara in sorted(numaralar):
+        coz(
+            f"gorsel-paket-{numara}",
+            [n for n in notlar if re.match(rf"gorsel-paket-0*{numara}(-|$)", n)],
+        )
+    return sorunlar + [n for n in notlar if n not in kapsanan]
+
+
+# Depo yolu sayılan klasör kökleri. veri/, rapor/, gunluk/ (.gitignore'da) her koşuda oluşan çalışma
+# çıktısı klasörleridir; belgeler henüz olmayan çıktı dosyalarını anar, bu yüzden taranmaz.
+KOKLER = (
+    "tansu",
+    "tests",
+    "docs",
+    ".github",
+    "kurulum",
+    "kayit",
+    ".claude",
+    ".scratch",
+    "arsiv",
+)
+# Şablon ya da aralık işareti taşıyan belirteç yol değildir: `rapor-<koşu>.html`, `tansu/*.py`, `A–E`.
+SABLON = ("<", "*", "…", "YYYY", "–", "NN")
+# Kök dizin dosyaları ve docs/ belgeleri bare adla anılır (`GLOSSARY.md`, `TASARIM.md`, `pyproject.toml`).
+KOK_DOSYASI = re.compile(r"[A-Z][A-Z_-]*\.md|pyproject\.toml|requirements\.lock\.txt")
+# Yol gibi görünen ama depo dosyası olmayan adlar (ad: neden).
+ISTISNA_ADLARI = {
+    "AKIS.md": "YONETIM klasörünün dosyası, depoda değil",
+    "TODO.md": "reddedilen fikir (docs/sorgu/izleme/karar.md 20-031)",
+    "GLOSSARY-MAP.md": "docs/agents/domain.md bu dosyanın olmadığını söyler",
+}
+
+
+def yerel_koklar(kok):
+    """.gitignore'daki sabitlenmiş (başı '/') yol girişleri; yerelde var olan, CI'da olmayan dosyalar."""
+    koklar = []
+    for satir in (kok / ".gitignore").read_text(encoding="utf-8").splitlines():
+        if satir.startswith("/") and "*" not in satir:
+            koklar.append(satir.strip("/"))
+    return sorted(koklar, key=len)
+
+
+def yerel_kok_yok(kok, yol):
+    """Yol .gitignore'daki yerel bir kökün altındaysa ve o kök bu makinede yoksa True (CI'da atlanır).
+
+    Kök varsa False döner: dosya eksikse yazım hatasıdır, atlanmaz.
+    """
+    yol = yol.strip("/")
+    for giris in yerel_koklar(kok):
+        if yol == giris or yol.startswith(giris + "/"):
+            return not (kok / giris).exists()
+    return False
+
+
+def yol_kirikleri(kok, dosyalar):
+    """Dosyalardaki `tansu/...`, `tests/...`, `docs/...`, `.github/...` gibi depo yolları ve kök dosya adları.
+
+    Var olmayan yol 'dosya:satır: yol' olarak döner. Yerel kökün (docs/sorgu, docs/strateji-taslak)
+    kendisi yoksa yol atlanır. `:satır` ve `::test` eki ile ardındaki açıklama yol sayılmaz.
+    """
+    kirik = []
+    for yol in dosyalar:
+        metin = yol.read_text(encoding="utf-8")
+        for eslesme in re.finditer(r"`([^`\n]+)`", metin):
+            belirtec = eslesme.group(1).strip()
+            ad = re.split(r"[:\s]", belirtec)[0]
+            if any(isaret in belirtec for isaret in SABLON):
+                continue
+            if "/" in ad:
+                if ad.split("/")[0] not in KOKLER:
+                    continue
+                adaylar = [ad]
+            elif KOK_DOSYASI.fullmatch(ad) and ad not in ISTISNA_ADLARI:
+                adaylar = [ad, f"docs/{ad}"]
+            else:
+                continue
+            if any((kok / aday).exists() for aday in adaylar) or yerel_kok_yok(kok, ad):
+                continue
+            satir = metin.count("\n", 0, eslesme.start()) + 1
+            kirik.append(f"{yol.relative_to(kok).as_posix()}:{satir}: {ad}")
+    return kirik
