@@ -23,7 +23,6 @@ from tansu import (
 )
 
 ERKEN = dt.time(18, 15)  # TASARIM 6.2: bundan önce çubuk yarım olabilir
-SAKLA_GUN = 30  # TASARIM 6.2: günlük anlık görüntü ömrü
 KAGIT_AY = 6  # TASARIM 5.8: en az kâğıt dönem
 BASARILI = ("TAMAM", "BUGÜN ÇUBUK YOK")
 KARTLI = ("Kâğıt", "Canlı")
@@ -77,11 +76,19 @@ def _kanit(aile, tarih) -> str:
     )
 
 
+ETIKET = {
+    "stop": "STOP",
+    "sma250": "GÜN SONU STOPU",
+    "karantina": "KARANTİNA ÇIKIŞI",
+    "iptal": "GİRİŞ İPTAL",
+}
+
+
 def _durum(p) -> str:
-    """AKTİF: bekleyen giriş ya da açık pozisyon. STOP: stop değdi. BOZULDU: SMA250 altı, karantina ya da iptal."""
+    """AKTİF: bekleyen giriş ya da açık pozisyon. STOP: stop değdi. Öteki üçü: SMA250 altı, karantina, iptal (TASARIM 6.6)."""
     if p.durum == "kapali":
-        return "STOP" if p.neden == "stop" else "BOZULDU"
-    return {"stop": "STOP", "sma250": "BOZULDU"}.get(p.bekleyen, "AKTİF")
+        return ETIKET[p.neden]
+    return ETIKET.get(p.bekleyen, "AKTİF")
 
 
 def _kart(anlik, s, m, p, kanit) -> list:
@@ -191,17 +198,13 @@ def _alan(kart, ad):
 
 
 def _acik_hisseler() -> set:
-    """Dünkü açık kartların hisseleri: evrenden çıksalar da pozisyon açık kalır (TASARIM 5.2)."""
+    """Dünkü her kartın hissesi, durumundan bağımsız: evrenden çıksa da pozisyon açık kalır (TASARIM 5.2, 6.2)."""
     yol = kayit.KAYIT_DIZINI / "kartlar.jsonl"
     if not yol.exists():
         return set()
     satirlar = [s for s in yol.read_text(encoding="utf-8").splitlines() if s]
     return (
-        {
-            _alan(k, "hisse")
-            for k in json.loads(satirlar[-1])["kartlar"]
-            if _alan(k, "durum") == "AKTİF"
-        }
+        {_alan(k, "hisse") for k in json.loads(satirlar[-1])["kartlar"]}
         if satirlar
         else set()
     )
@@ -219,22 +222,14 @@ def _semboller(kok: Path, tarih) -> list:
     return sorted(set(evren.evren(taban, ay)) | _acik_hisseler())
 
 
-def _temizle(kok: Path, simdi) -> None:
-    """30 günden eski günlük anlık görüntüler silinir; deneme günlüğünde adı geçenler silinmez (TASARIM 6.2)."""
+def _temizle(kok: Path) -> None:
+    """Yarım kalmış geçici indirme klasörleri silinir; anlık görüntüler silinmez (TASARIM 5.11, 6.2)."""
     ag = kok / "gunluk" / "ag"
     if not ag.exists():
         return
-    yol = kayit.KAYIT_DIZINI / "deneme.jsonl"
-    metin = yol.read_text(encoding="utf-8") if yol.exists() else ""
     for d in ag.iterdir():
         if d.name.startswith("_gecici"):
             shutil.rmtree(d, ignore_errors=True)
-        elif d.name[:8].isdigit():
-            yas = (
-                simdi.date() - dt.datetime.strptime(d.name[:8], "%Y%m%d").date()
-            ).days
-            if yas > SAKLA_GUN and d.name not in metin:
-                shutil.rmtree(d, ignore_errors=True)
 
 
 def _kapi_sorunlari(anlik, son) -> list:
@@ -295,7 +290,7 @@ def gunluk(
                 "VERİ YOK",
                 "Koşu 18:15'ten önce başladı, kart üretilmedi (çubuk yarım olabilir). 18:15'ten sonra yeniden çalıştır.",
             )
-        _temizle(kok, simdi)
+        _temizle(kok)
         semboller = semboller or _semboller(kok, tarih)
         kimlik = veri.indir(
             semboller, kok / "gunluk", kaynak or kaynak_modulu.IsYatirim(), simdi=simdi
