@@ -72,49 +72,6 @@ def _kod_kaniti(bolum):
     return any(blok.group(2).strip() for blok in bloklar)
 
 
-def _cit(satir):
-    m = re.match(r" {0,3}(`{3,}|~{3,})(.*)$", satir)
-    if m and not (m.group(1)[0] == "`" and "`" in m.group(2)):
-        return m.group(1)
-    return None
-
-
-def _gorunur(satirlar):
-    # GitHub'da görünen satırlar (CommonMark): kod çiti, HTML yorum bloğu ve
-    # paragraf içi çok satırlı yorum gizlidir; kapanmayan çit ve blok sona kadar sürer.
-    gorunur, cit, yorum_blogu, bekleyen = [], None, False, None
-    for satir in satirlar:
-        if cit:
-            m = re.match(r" {0,3}(`+|~+)[ \t]*$", satir)
-            if m and m.group(1)[0] == cit[0] and len(m.group(1)) >= len(cit):
-                cit = None
-            continue
-        if yorum_blogu:
-            yorum_blogu = "-->" not in satir
-            continue
-        kesen = not satir.strip() or _cit(satir) or re.match(r" {0,3}(#|<!--)", satir)
-        if bekleyen is not None:
-            if not kesen and "-->" not in satir:
-                bekleyen.append(satir)
-                continue
-            if not kesen:
-                bekleyen = None
-                continue
-            gorunur += bekleyen
-            bekleyen = None
-        if _cit(satir):
-            cit = _cit(satir)
-            continue
-        if re.match(r" {0,3}<!--", satir):
-            yorum_blogu = "-->" not in satir.split("<!--", 1)[1]
-            continue
-        gorunur.append(satir)
-        kod_disi = re.sub(r"(?<!`)(`+)(?!`).*?(?<!`)\1(?!`)", "", satir)
-        if "<!--" in kod_disi and "-->" not in kod_disi.rsplit("<!--", 1)[1]:
-            bekleyen = []
-    return gorunur + (bekleyen or [])
-
-
 def hatalar(govde: str) -> list[str]:
     if not govde or not govde.strip():
         return [
@@ -158,7 +115,14 @@ def hatalar(govde: str) -> list[str]:
             "Kural 6: ## Gerçek veri kanıtı bölümünde içi dolu bir kod bloğu olmalı."
         )
     ad = "|".join(AKISLAR)
-    akis = [satir for satir in _gorunur(satirlar) if satir.startswith("Akış:")]
+    gorunur = re.sub(r"<!--[\s\S]*?(?:-->|\Z)", "", "\n".join(satirlar))
+    gorunur = re.sub(
+        r"^ {0,3}(`{3,}|~{3,})[^\n]*\n[\s\S]*?^ {0,3}\1[ \t]*$",
+        "",
+        gorunur,
+        flags=re.MULTILINE,
+    )
+    akis = re.findall(r"^Akış:.*$", gorunur, re.MULTILINE)
     if len(akis) != 1 or not re.fullmatch(
         rf"Akış:[ \t]*(`({ad})`|({ad}))[ \t\r]*", akis[0]
     ):

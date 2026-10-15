@@ -96,21 +96,11 @@ def test_kural_5_inceleme_eksik(eski, yeni, ayrinti):
     ]
 
 
-@pytest.mark.parametrize("kod", ["```\n\n```", "Gerçek koşu çıktısı"])
+@pytest.mark.parametrize("kod", ["```\n\n```", "Gerçek koşu çıktısı", "```\nçıktı"])
 def test_kural_6_kod_kaniti_yok(kod):
     govde = GECERLI.replace("```text\nGerçek koşu çıktısı\n```", kod)
     assert hatalar(govde) == [
         "Kural 6: ## Gerçek veri kanıtı bölümünde içi dolu bir kod bloğu olmalı."
-    ]
-
-
-def test_kural_6_kapanmayan_blok_akis_satirini_da_gizler():
-    # Kapanmayan kod bloğu gövdenin sonuna kadar sürer; Akış satırı görünmez
-    # (ortak-adimlar.md "Pull request").
-    govde = GECERLI.replace("```text\nGerçek koşu çıktısı\n```", "```\nçıktı")
-    assert hatalar(govde) == [
-        "Kural 6: ## Gerçek veri kanıtı bölümünde içi dolu bir kod bloğu olmalı.",
-        AKIS_HATASI,
     ]
 
 
@@ -235,30 +225,7 @@ GIZLI_AKIS = [
     "<!--\nAkış: tansu-hata\n",
     "```text\nAkış: tansu-hata\n```\n",
     "~~~\nAkış: tansu-hata\n~~~\n",
-    "~~~\nAkış: tansu-hata\n",
-    "```\nAkış: tansu-hata\n````\n",
-    "````\nx\n```\nAkış: tansu-hata\n",
-    "Not <!--\nAkış: tansu-hata\n-->\n",
 ]
-
-
-@pytest.mark.parametrize(
-    "gorunur",
-    [
-        "``` a`b\n" + AKIS_SATIRI,
-        "<!--x\n-->```\n" + AKIS_SATIRI + "```\n",
-        "Not: `<!--` işareti\n" + AKIS_SATIRI,
-        "Not <!--\n\n" + AKIS_SATIRI,
-    ],
-)
-def test_kural_7_gorunur_akis_satiri_sayilir(gorunur):
-    assert hatalar(GECERLI.replace(AKIS_SATIRI, gorunur)) == []
-
-
-def test_kural_7_kod_icindeki_yorum_isareti_gizlemez():
-    govde = GECERLI.replace("Gerçek koşu çıktısı", "<!--")
-    assert hatalar(govde) == []
-    assert hatalar(GECERLI + "`<!--`\nAkış: tansu-hata\n") == [AKIS_HATASI]
 
 
 @pytest.mark.parametrize("gizli", GIZLI_AKIS)

@@ -22,7 +22,6 @@ Run `verification-before-completion`. Check the `## Tansu` items of `DEFINITION_
 Push the branch to `kaynak`. `mattpocock-skills:pr` and `.github/pull_request_template.md` write the PR body together.
 
 The PR body has an `Akış:` line with the flow skill used. The auditor checks the steps of that skill (AGENTS.md "Auditor and rounds").
-The `Akış:` line must be visible on GitHub. CI does not count a line in an HTML comment or in a code fence. An unclosed comment or fence hides the text to the end of the body (CommonMark). (Reason, 16.10: a hidden `Akış:` line passed the check. GitHub Codex P2 on PR 27.)
 
 ## Merge
 Merge when two things are true.
