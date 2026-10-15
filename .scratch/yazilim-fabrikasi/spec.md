@@ -34,8 +34,8 @@ veriye ya da beyne ihtiyaç duyan bilet `yerel` etiketiyle bu makinede kalır.
   taşınır; tek takip yeri olur (iki takip yeri drift doğurur).
 - Etiketler: Matt'in beş durum etiketi (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`)
   ve `yerel` (bulutta koşamaz: beyin havuzu, `veri/` ya da gerçek anlık görüntü gerekir).
-- Ajan: `anthropics/claude-code-action`. Tetik: issue'ya `ready-for-agent` etiketi (girdi `label_trigger`), `yerel`
-  etiketli issue atlanır. Ajan `pr/NN-<ad>` dalı açar, AGENTS.md iş akışının 3–4. adımlarını uygular, PR açar.
+- Ajan: `anthropics/claude-code-action`. Tetik: issue'ya `ready-for-agent` etiketi (`issues: labeled` ve iş `if:` koşulu; `label_trigger`
+  girdisi kullanılmaz, `prompt` ile birleşimi doğrulanmadı; vekil 15.10), `yerel` etiketli issue atlanır (kayıtta "skipped"). Ajan `pr/NN-<ad>` dalı açar, AGENTS.md iş akışının 3–4. adımlarını uygular, PR açar.
 - Kimlik: Levent'in Claude aboneliği (Levent 10.10: "a"). Claude Code OAuth jetonu `claude setup-token` ile alınır,
   depo sırrı `CLAUDE_CODE_OAUTH_TOKEN` olur; ek ücret yok, abonelik kullanım hakkından harcar. Sırrı Levent kendisi
   girer; ajan jeton görmez ve yazmaz.
