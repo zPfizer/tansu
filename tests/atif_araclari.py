@@ -199,8 +199,9 @@ BEYIN = Path.home() / "Desktop" / "YONETIM" / "beyin"
 HAVUZ = BEYIN / "kisisel" / "300-Projects" / "Tansu X Veri Havuzu"
 
 # Taslak dosyalar AGENTS.md tablosunda "hiçbir olguya sahip değil, kayma denetimi dışında" der;
-# havuz notlarına çalışma adlarıyla atıf verirler. Beyin kaynak yolu denetimine girmezler.
-BEYIN_HARIC = ("docs/strateji-taslak", "docs/strateji-modulleri-taslak.md")
+# havuz notlarına çalışma adlarıyla atıf verirler ve kazınmış üçüncü taraf Markdown içerirler. Beyin kaynak
+# yolu ve Markdown bağlantı denetimine girmezler.
+TASLAKLAR = ("docs/strateji-taslak", "docs/strateji-modulleri-taslak.md")
 
 _NOT_ADI = re.compile(
     r"(gorsel-paket-\d[\w-]*|kaynak-[a-z0-9][\w-]*|tweet-[a-z0-9][\w-]*?)(\.md)?"
@@ -263,11 +264,13 @@ def beyin_kirikleri(kok, dosyalar, havuz):
     kirik = []
     for yol in dosyalar:
         goreli = yol.relative_to(kok).as_posix()
-        if goreli.startswith(BEYIN_HARIC):
+        if goreli.startswith(TASLAKLAR):
             continue
         metin = yol.read_text(encoding="utf-8")
         for eslesme in re.finditer(r"`([^`\n]+)`", metin):
-            belirtec = eslesme.group(1).strip()
+            belirtec = re.split(r"[:\s#]", eslesme.group(1).strip())[
+                0
+            ]  # açıklama, :satır yol değil
             if any(isaret in belirtec for isaret in ("...", "…", "<", "*", "NN")):
                 continue
             var = None
@@ -326,6 +329,9 @@ def havuz_sorunlari(kok, havuz):
     kapsanan |= {
         ad for ad in notlar if re.search(rf"(?<![\w-]){re.escape(ad)}(?![\w-])", metin)
     }
+    # Tam adlar kısa atıf olarak yeniden okunmaz (`gorsel-paket-01-ad` içindeki `01` bir numara atfı değildir).
+    for ad in kapsanan:
+        metin = re.sub(rf"(?<![\w-]){re.escape(ad)}(?![\w-])", " ", metin)
     onekler = {
         m.group(1).rstrip("-")
         for m in re.finditer(
@@ -371,16 +377,25 @@ KOKLER = (
     ".scratch",
     "arsiv",
 )
-# Şablon ya da aralık işareti taşıyan belirteç yol değildir: `rapor-<koşu>.html`, `tansu/*.py`, `A–E`.
+# Şablon ya da aralık işareti taşıyan yol yol değildir: `rapor-<koşu>.html`, `tansu/*.py`, `A–E`.
+# Yalnız ayrıştırılmış yola bakılır; sondaki açıklama (`yol (NN numaralı bölüm)`) şablon sayılmaz.
 SABLON = ("<", "*", "…", "YYYY", "–", "NN")
 # Kök dizin dosyaları ve docs/ belgeleri bare adla anılır (`GLOSSARY.md`, `TASARIM.md`, `pyproject.toml`).
 KOK_DOSYASI = re.compile(r"[A-Z][A-Z_-]*\.md|pyproject\.toml|requirements\.lock\.txt")
-# Yol gibi görünen ama depo dosyası olmayan adlar (ad: neden).
+# Yol gibi görünen ama depo dosyası olmayan adlar. Her istisna tek bir dosyaya ve o dosyadaki tek bir
+# anışa bağlıdır: ad ancak o dosyada, belirtilen metnin hemen ardından gelirse atlanır (ad: (dosya, öncesi)).
 ISTISNA_ADLARI = {
-    "AKIS.md": "YONETIM klasörünün dosyası, depoda değil",
-    "TODO.md": "reddedilen fikir (docs/sorgu/izleme/karar.md 20-031)",
-    "GLOSSARY-MAP.md": "docs/agents/domain.md bu dosyanın olmadığını söyler",
+    # YONETIM klasörünün dosyası, depoda değil
+    "AKIS.md": ("CODING_STANDARDS.md", "the session review in "),
+    # reddedilen fikir (docs/sorgu/izleme/karar.md 20-031)
+    "TODO.md": ("docs/sorgu/izleme/karar.md", "yerine "),
+    # domain.md bu dosyanın olmadığını söyler
+    "GLOSSARY-MAP.md": ("docs/agents/domain.md", "no "),
 }
+# Markdown bağlantı hedefi: [metin](hedef "başlık") ve [kimlik]: hedef
+BAGLANTI = re.compile(r"\[[^\]\n]*\]\(\s*<?([^)\s>]+)>?(?:\s+\"[^\"]*\")?\s*\)")
+BAGLANTI_TANIMI = re.compile(r"^\s{0,3}\[[^\]\n]+\]:\s*<?(\S+?)>?\s*$", re.MULTILINE)
+DIS_BAGLANTI = re.compile(r"(?:[a-z][a-z0-9+.-]*:|#|//)", re.IGNORECASE)
 
 
 def yerel_koklar(kok):
@@ -404,30 +419,65 @@ def yerel_kok_yok(kok, yol):
     return False
 
 
-def yol_kirikleri(kok, dosyalar):
-    """Dosyalardaki `tansu/...`, `tests/...`, `docs/...`, `.github/...` gibi depo yolları ve kök dosya adları.
+def _istisna_mi(goreli, metin, baslangic, ad):
+    """Ad, ISTISNA_ADLARI'nda bu dosya ve bu anış için tanımlı mı? (anış: backtick'in hemen öncesindeki metin)."""
+    if ad not in ISTISNA_ADLARI:
+        return False
+    dosya, oncesi = ISTISNA_ADLARI[ad]
+    return goreli == dosya and metin[:baslangic].endswith(oncesi)
 
-    Var olmayan yol 'dosya:satır: yol' olarak döner. Yerel kökün (docs/sorgu, docs/strateji-taslak)
-    kendisi yoksa yol atlanır. `:satır` ve `::test` eki ile ardındaki açıklama yol sayılmaz.
+
+def yol_kirikleri(kok, dosyalar):
+    """Dosyalardaki depo yolları, kök dosya adları ve Markdown bağlantı hedefleri.
+
+    Backtick içinde `tansu/...`, `tests/...`, `docs/...`, `.github/...` gibi yollar ve kök dosya adları
+    denetlenir; `\\` ayracı `/` sayılır (`docs\\X.md`). `:satır`, `::test`, `#bölüm` eki ile ardındaki
+    açıklama yol sayılmaz. Markdown bağlantı hedefi, bağlantıyı taşıyan dosyaya göre çözülür
+    (`http(s):`, `mailto:`, `#bağlantı` atlanır, `#parça` ve `?sorgu` atılır).
+    Var olmayan hedef 'dosya:satır: yol' olarak döner. Yerel kökün (docs/sorgu, docs/strateji-taslak)
+    kendisi yoksa yol atlanır; kök varsa eksik dosya hatadır.
     """
     kirik = []
+
+    def kontrol(goreli, metin, konum, var, ad):
+        if var or yerel_kok_yok(kok, ad):
+            return
+        satir = metin.count("\n", 0, konum) + 1
+        kirik.append(f"{goreli}:{satir}: {ad}")
+
     for yol in dosyalar:
+        goreli = yol.relative_to(kok).as_posix()
         metin = yol.read_text(encoding="utf-8")
         for eslesme in re.finditer(r"`([^`\n]+)`", metin):
-            belirtec = eslesme.group(1).strip()
-            ad = re.split(r"[:\s]", belirtec)[0]
-            if any(isaret in belirtec for isaret in SABLON):
+            belirtec = eslesme.group(1).strip().replace("\\", "/")
+            ad = re.split(r"[:\s#]", belirtec)[0]
+            if any(isaret in ad for isaret in SABLON):
                 continue
             if "/" in ad:
                 if ad.split("/")[0] not in KOKLER:
                     continue
                 adaylar = [ad]
-            elif KOK_DOSYASI.fullmatch(ad) and ad not in ISTISNA_ADLARI:
+            elif KOK_DOSYASI.fullmatch(ad) and not _istisna_mi(
+                goreli, metin, eslesme.start(), ad
+            ):
                 adaylar = [ad, f"docs/{ad}"]
             else:
                 continue
-            if any((kok / aday).exists() for aday in adaylar) or yerel_kok_yok(kok, ad):
+            var = any((kok / aday).exists() for aday in adaylar)
+            kontrol(goreli, metin, eslesme.start(), var, ad)
+        if goreli.startswith(TASLAKLAR):
+            continue  # üçüncü taraf Markdown içerir (kazınmış README bağlantıları)
+        for eslesme in [*BAGLANTI.finditer(metin), *BAGLANTI_TANIMI.finditer(metin)]:
+            hedef = eslesme.group(1).replace("\\", "/")
+            if DIS_BAGLANTI.match(hedef):
                 continue
-            satir = metin.count("\n", 0, eslesme.start()) + 1
-            kirik.append(f"{yol.relative_to(kok).as_posix()}:{satir}: {ad}")
+            hedef = re.split(r"[#?]", hedef)[0]
+            if not hedef:
+                continue
+            cozulmus = (yol.parent / hedef).resolve()
+            try:
+                goreli_hedef = cozulmus.relative_to(kok.resolve()).as_posix()
+            except ValueError:
+                goreli_hedef = hedef  # depo dışına çıkan hedef de var olmalı
+            kontrol(goreli, metin, eslesme.start(), cozulmus.exists(), goreli_hedef)
     return kirik

@@ -16,7 +16,7 @@
       (`gorsel-paket-*`, `kaynak-*`, `assets/…`) beyinde vardır (CI'da beyin yoksa bu kısım atlanır, yerel test kapısı
       denetler). Çalışma çıktısı adları (`durum.txt`, `manifest.json`, `kartlar.jsonl`) yol sayılmaz.
 - [x] `dod_kontrol.py` "Tansu:" satırının işaretli ve kanıtlı olmasını ister.
-- [x] Kodu hiç olmayan dokuz karar (`tasarim-kod.md` §1) mimari işinin (`.scratch/tansu-mimari/spec.md`) 5. adımına bağlandı.
+- [x] Kodu hiç olmayan sekiz karar (`tasarim-kod.md` §1; 9. madde 07f ile kapandı, TASARIM 5.8) mimari işinin (`.scratch/tansu-mimari/spec.md`) 5. adımına bağlandı.
 - [ ] AGENTS.md "Geliştirme durdu" satırı kaldırıldı; mimari spec'in `Status` satırı `needs-triage`'a döndü.
 - [x] Havuz testi: beyindeki Tansu havuzunun her notu A–E'de atıflı ya da "kural içermez" listesinde; havuza yeni not gelince test kırmızı olur (CI'da beyin yoksa atlanır, yerel test kapısı denetler).
 
@@ -67,3 +67,19 @@
      Kırmızı (havuzun geçici kopyası): `tweet-atr-yeni-not.md` eklenince `belirsiz atıf tweet-atr: ...` ve `tweet-atr-yeni-not`; `gorsel-paket-01-yeni-not.md` eklenince `belirsiz atıf gorsel-paket-01` ve `gorsel-paket-01-yeni-not`.
   6. `docs/agents/*.md` driftlint'in bulduğu dosya türü değil; ölü yolları madde 3'ün taramasıyla `test_sahipler.py::test_tablodaki_dosyalarin_ve_docs_agents_in_depo_yollari_var` denetler (ölü komut denetimi yok).
      driftlint çevrimiçi, depo kopyasında: `driftlint: 0 errors, 0 warnings, 1 info across 3 context files` (çıkış kodu 0).
+- 08 denetim tur 2 (15.10, Codex KALDI; 5 madde düzeltildi; her biri için kardeş mutasyonlar arandı):
+  1. Şablon işareti (`<`, `*`, `…`, `YYYY`, `–`, `NN`) yalnız ayrıştırılmış yola bakar; sondaki açıklama yolu gizlemez. Kırmızı: `tansu/audit_missing.py (NN numaralı bölüm)` GLOSSARY kopyasında hata verir.
+     Kardeşler (hepsi yakalandı): `tests/yok.py:3 (NN)`, `docs/yok.md (açıklama * <x>)`, `.github/yok.yml (YYYY)`, `tansu/yok.py (A–E)`, `tansu/yok.py …`. Kaçan kardeş: `beyin_kirikleri` (havuz belirteci) aynı açıklama
+     boşluğunu taşıyordu (`` `gorsel-paket-999-yok (açıklama)` `` geçerdi); yalnız ad (`:satır`, `#parça`, açıklama atılır) denetlenir oldu, 3 birim test.
+  2. Ad istisnaları dosyaya ve anışa bağlandı: `AKIS.md` yalnız `CODING_STANDARDS.md` içinde "the session review in " ardından; `TODO.md` yalnız `docs/sorgu/izleme/karar.md` içinde "yerine " ardından;
+     `GLOSSARY-MAP.md` yalnız `docs/agents/domain.md` içinde "no " ardından. Kırmızı: domain.md'nin `GLOSSARY.md` okuma yolu `TODO.md` olunca ve `GLOSSARY-MAP.md` olunca hata verir.
+     Kardeşler (hepsi yakalandı): AGENTS.md'de `AKIS.md`; CODING_STANDARDS.md'de `TODO.md` ve `GLOSSARY-MAP.md`; triage-labels.md'de `GLOSSARY-MAP.md`; karar.md'de başka satırda `TODO.md`; domain.md'de istisna cümlesinin ilk anışı.
+  3. Windows yolları (`\` → `/`) ve Markdown bağlantı hedefleri (`[m](hedef "başlık")`, `![r](hedef)`, `<hedef>`, `[kimlik]: hedef`; bağlantıyı taşıyan dosyaya göre çözülür; `http(s):`, `mailto:`, `#bağlantı` atlanır; `#parça`, `?sorgu` atılır;
+     depo dışına çıkan hedef de var olmalı). Örnekleme: sahip dosyaları ve docs/agents içinde 520 bağlantı; hepsi `docs/strateji-taslak/` altında (kazınmış üçüncü taraf README'leri); gerçek ölü bağlantı 0. `docs/strateji-*`
+     bağlantı taramasından hariç (kural belgesi değil, kayma denetimi dışı; adlandırılmış istisna `TASLAKLAR`). Kırmızı: `` `docs\AUDIT_MISSING.md` `` ve `[x](../../docs/AUDIT_MISSING.md)` hata verir.
+     Kardeşler (hepsi yakalandı): `tests\yok.py`, `.github\workflows\yok.yml`, `kayit\yok.jsonl:7`, `[x](docs/yok.md#a)`, `![i](docs/yok.png "t")`, `[x](<docs/yok.md>)`, `[x](..\yok.md)`, `[ref]: docs/yok.md`, docs/agents içinde `[x](./yok.md)`.
+  4. Tam gorsel-paket adları kısa numara olarak yeniden okunmaz (tam ad eşleşmeleri kısa atıf taramasından önce metinden çıkarılır). Kırmızı: `gorsel-paket-1-ad-a` ve `gorsel-paket-01-ad-b` yalnız tam adla anılınca eski kod `belirsiz atıf` verirdi, şimdi temiz.
+     Kardeşler (zaten doğru çalışıyordu, testle sabitlendi): `kaynak-x-123`/`kaynak-x-456` tam adlar; `tweet-atr` ile `tweet-atr-risk` tam adlar; `assets/gorsel-paket-12-ad/...` yolu; tam ad + `-13-ad` biçimi. Gerçek belirsizlik hâlâ hata: tam ad + aynı numaraya `G12`.
+  5. Mimari spec 5. adım: 9. karar (blok uzunluğu ve masraf senaryoları günlükte ayrı alan) 07f ile kapandı (TASARIM 5.8: blok uzunluğu çıktıdır; masraf düzeyi başına sonuç `masraf_sonuc`). Listeden çıkarıldı; "dokuz" her yerde "sekiz":
+     `.scratch/tansu-mimari/spec.md`, bu biletin 6. kutusu, `.scratch/belge-hizasi/spec.md`; `tasarim-kod.md` §1'in 9. maddesine "Kapandı (07f)" notu. Kalan sekiz maddenin koda karşı bugünkü durumu elle bakıldı: sadakat sonrası kayıt, `duzeltme`, "Uyarı yok", K2 karantina,
+     Canlı durumu için kodda karşılık hâlâ yok.

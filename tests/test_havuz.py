@@ -105,3 +105,34 @@ def test_tam_ad_belirsiz_kisa_adi_cozer(tmp_path):
     _depo(tmp_path, "## X\n", "tweet-atr tweet-atr-risk-butcesi\n")
     havuz = _havuz(tmp_path, ["tweet-atr", "tweet-atr-risk-butcesi"])
     assert havuz_sorunlari(tmp_path, havuz) == []
+
+
+@pytest.mark.parametrize(
+    ("notlar", "metin"),
+    [
+        # tam adlardaki numara kısa atıf sayılmaz (aynı sayısal değer: 1 ve 01)
+        (
+            ["gorsel-paket-1-ad-a", "gorsel-paket-01-ad-b"],
+            "gorsel-paket-1-ad-a gorsel-paket-01-ad-b",
+        ),
+        (["kaynak-x-123", "kaynak-x-456"], "`kaynak-x-123.md` `kaynak-x-456.md`"),
+        (["tweet-atr", "tweet-atr-risk"], "tweet-atr, tweet-atr-risk"),
+        (["gorsel-paket-12-ad-bir"], "assets/gorsel-paket-12-ad-bir/g.png"),
+        (
+            ["gorsel-paket-12-ad-bir", "gorsel-paket-13-ad-iki"],
+            "gorsel-paket-12-ad-bir -13-ad",
+        ),
+    ],
+)
+def test_tam_adlar_kisa_atif_olarak_yeniden_okunmaz(tmp_path, notlar, metin):
+    _depo(tmp_path, "## X\n", metin + "\n")
+    assert havuz_sorunlari(tmp_path, _havuz(tmp_path, notlar)) == []
+
+
+def test_tam_ad_ve_ayni_numaraya_kisa_atif_belirsizdir(tmp_path):
+    _depo(tmp_path, "## X\n", "gorsel-paket-12-ad-bir G12\n")
+    havuz = _havuz(tmp_path, ["gorsel-paket-12-ad-bir", "gorsel-paket-012-yeni"])
+    assert havuz_sorunlari(tmp_path, havuz) == [
+        "belirsiz atıf gorsel-paket-12: gorsel-paket-012-yeni, gorsel-paket-12-ad-bir",
+        "gorsel-paket-012-yeni",
+    ]

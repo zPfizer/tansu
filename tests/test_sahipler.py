@@ -79,6 +79,7 @@ def test_yerel_kok_yalniz_kok_yoksa_atlar(tmp_path):
 
 def _depo(kok):
     (kok / "tansu").mkdir()
+    (kok / ".scratch").mkdir()
     (kok / "tansu" / "kayit.py").write_text("x", encoding="utf-8")
     (kok / "docs").mkdir()
     (kok / "docs" / "TASARIM.md").write_text("x", encoding="utf-8")
@@ -107,7 +108,10 @@ def _depo(kok):
         ),
         ("`rapor/durum.txt` `veri/anlik/` `gunluk/x.log`", []),
         ("`durum.txt` `manifest.json` `kartlar.jsonl` `kaynak-x.md` `Levent`", []),
-        ("`AKIS.md` `TODO.md` `GLOSSARY-MAP.md`", []),
+        (
+            "`AKIS.md` `TODO.md` `GLOSSARY-MAP.md`",
+            ["not.md:1: AKIS.md", "not.md:1: TODO.md", "not.md:1: GLOSSARY-MAP.md"],
+        ),
         ("`docs/sorgu/sonuc-3-4.md`", []),  # yerel kök yok: CI
     ],
 )
@@ -158,6 +162,10 @@ def test_tablodaki_dosyalarin_beyin_yollari_havuzda_var():
         ("a\n`kaynak-a-c.md`", ["not.md:2: kaynak-a-c.md"]),
         ("`tweet-y`", ["not.md:1: tweet-y"]),
         ("`assets/gorsel-paket-09/g.png`", ["not.md:1: assets/gorsel-paket-09/g.png"]),
+        # sondaki açıklama, satır eki ve parça şablon ya da yol sayılmaz; yalnız ad denetlenir
+        ("`gorsel-paket-02 (NN numaralı not)`", ["not.md:1: gorsel-paket-02"]),
+        ("`kaynak-a-c.md:12 <açıklama> *`", ["not.md:1: kaynak-a-c.md"]),
+        ("`tweet-y#bolum` `tweet-x-y.md:3` `kaynak-a-b (NN)`", ["not.md:1: tweet-y"]),
         (
             "`assets/gorsel-paket-01/yok.png`",
             ["not.md:1: assets/gorsel-paket-01/yok.png"],
@@ -183,3 +191,93 @@ def test_taslak_dosyalar_beyin_denetimine_girmez(tmp_path):
     taslak = tmp_path / "docs" / "strateji-taslak" / "t.md"
     taslak.write_text("`gorsel-paket-26`", encoding="utf-8")
     assert beyin_kirikleri(tmp_path, [taslak], tmp_path) == []
+
+
+def _yaz(kok, goreli, metin):
+    yol = kok / goreli
+    yol.parent.mkdir(parents=True, exist_ok=True)
+    yol.write_text(metin, encoding="utf-8")
+    return yol
+
+
+@pytest.mark.parametrize(
+    ("goreli", "metin", "beklenen"),
+    [
+        # bağlı istisna: doğru dosya, doğru anış
+        ("CODING_STANDARDS.md", "the session review in `AKIS.md` (flows)", []),
+        ("docs/agents/domain.md", "- `GLOSSARY.md` root (no `GLOSSARY-MAP.md`)", []),
+        ("docs/sorgu/izleme/karar.md", "`.scratch/` yerine `TODO.md`", []),
+        # başka dosyada aynı cümle istisna değildir
+        ("docs/x.md", "the session review in `AKIS.md`", ["docs/x.md:1: AKIS.md"]),
+        ("docs/x.md", "no `GLOSSARY-MAP.md`", ["docs/x.md:1: GLOSSARY-MAP.md"]),
+        ("docs/x.md", "yerine `TODO.md`", ["docs/x.md:1: TODO.md"]),
+        # doğru dosya, başka anış
+        ("CODING_STANDARDS.md", "bkz `AKIS.md`", ["CODING_STANDARDS.md:1: AKIS.md"]),
+        (
+            "docs/agents/domain.md",
+            "- `GLOSSARY-MAP.md` root (no `GLOSSARY-MAP.md`)",
+            ["docs/agents/domain.md:1: GLOSSARY-MAP.md"],
+        ),
+        (
+            "docs/agents/domain.md",
+            "- `TODO.md` root",
+            ["docs/agents/domain.md:1: TODO.md"],
+        ),
+        ("docs/agents/domain.md", "no `TODO.md`", ["docs/agents/domain.md:1: TODO.md"]),
+        # başka ada geçen istisna cümlesi
+        (
+            "CODING_STANDARDS.md",
+            "the session review in `TODO.md`",
+            ["CODING_STANDARDS.md:1: TODO.md"],
+        ),
+    ],
+)
+def test_ad_istisnasi_dosyaya_ve_anisa_baglidir(tmp_path, goreli, metin, beklenen):
+    _depo(tmp_path)
+    yol = _yaz(tmp_path, goreli, metin)
+    assert yol_kirikleri(tmp_path, [yol]) == beklenen
+
+
+@pytest.mark.parametrize(
+    ("metin", "beklenen"),
+    [
+        (
+            "`tansu/audit_missing.py (NN numaralı bölüm)`",
+            ["docs/agents/y.md:1: tansu/audit_missing.py"],
+        ),
+        (
+            "`tansu/audit_missing.py <açıklama> *` ve `tansu/…`",
+            ["docs/agents/y.md:1: tansu/audit_missing.py"],
+        ),
+        ("`tansu/kayit.py (NN numaralı bölüm)` `tansu/kayit.py#5`", []),
+        (r"`docs\AUDIT_MISSING.md`", ["docs/agents/y.md:1: docs/AUDIT_MISSING.md"]),
+        (r"`docs\TASARIM.md` `tansu\kayit.py:3`", []),
+        (r"`tansu\yok.py:3`", ["docs/agents/y.md:1: tansu/yok.py"]),
+        (r"`C:\Users\x\docs\AUDIT_MISSING.md` `\|Z\|`", []),
+        (
+            "[x](../../docs/AUDIT_MISSING.md)",
+            ["docs/agents/y.md:1: docs/AUDIT_MISSING.md"],
+        ),
+        (
+            "[x](../TASARIM.md) [y](../TASARIM.md#5) [z](../TASARIM.md?a=1) [w](<../TASARIM.md>)",
+            [],
+        ),
+        ('[x](../TASARIM.md "başlık")', []),
+        ("[x](https://a/b) [y](mailto:a@b.c) [z](#bolum) [w](http://a/yok.md)", []),
+        ("[x](../yok.md#5)", ["docs/agents/y.md:1: docs/yok.md"]),
+        (r"[x](..\yok.md)", ["docs/agents/y.md:1: docs/yok.md"]),
+        ("[x]: ../TASARIM.md\n[y]: ../yok.md", ["docs/agents/y.md:2: docs/yok.md"]),
+        ("[x](../../../disarida.md)", ["docs/agents/y.md:1: ../../../disarida.md"]),
+        ("![r](../yok.png)", ["docs/agents/y.md:1: docs/yok.png"]),
+    ],
+)
+def test_yol_bicimleri_ve_baglantilar(tmp_path, metin, beklenen):
+    _depo(tmp_path)
+    yol = _yaz(tmp_path, "docs/agents/y.md", metin)
+    assert yol_kirikleri(tmp_path, [yol]) == beklenen
+
+
+def test_taslak_dosyalarin_baglantilari_taranmaz(tmp_path):
+    _depo(tmp_path)
+    yol = _yaz(tmp_path, "docs/strateji-taslak/x.md", "[a](../SETUP.html)")
+    assert yol_kirikleri(tmp_path, [yol]) == []
