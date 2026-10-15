@@ -56,7 +56,7 @@ Task scope skips Sharpen, Spec, and Tickets. It runs Build, Test gate, and Proof
 4. **Test gate:** As A "Test gate".
 5. **Review:** As A "Review".
 6. **Proof:** As A "Proof".
-7. **Pull request and merge:** As A "Pull request" and A "Merge".
+7. **Pull request, merge, and close:** As A "Pull request", A "Merge", and A "Close".
 8. **Lesson:** `mattpocock-skills:retro`. Record the mistake as `CODING_STANDARDS.md` "Mistakes" says.
 
 | If | Then |
@@ -161,7 +161,7 @@ Task scope skips Sharpen, Spec, and Tickets. It runs Build, Test gate, and Proof
 - The auditor also checks that the writer followed the steps of `AKIS.md`.
 - The auditor of a delete or archive job checks the final file list and the links. It also checks the changes outside the scope.
 - The verdicts are GEÇTİ, NOTLU GEÇTİ, and KALDI. NOTLU GEÇTİ: low-risk test gaps and style notes. KALDI: a false claim, a broken behavior, a missed instruction, or a security or privacy risk. An audit without a verdict counts as KALDI. The prompt of a `mattpocock-skills:code-review` pass asks for a verdict in the same words.
-- Every audit prompt and every code-review pass prompt states the goal of the job. When the goal is to simplify, a deliberately deleted line is not a finding. The auditor then checks only that no needed rule was lost without a reason.
+- Every audit prompt and every code-review pass prompt states the goal of the job. When the goal is to simplify, a deliberately deleted line is not a finding. A deletion is a finding only if a needed rule was lost without a reason. The rest of the diff gets the full review.
 - Code change at feature and outgoing scope: at most 3 Codex audit rounds. Every audit prompt names the round number. The auditor gives the round number with the verdict.
 - If round 3 returns KALDI (failed): stop the job. Do not open a fourth round. Find the root cause and define the job again. Send Levent the root cause in one line.
 - A documents-only change gets one `mattpocock-skills:code-review` pass. If it returns KALDI, fix the findings and run one more pass. If that pass returns KALDI, stop and send Levent the root cause in one line.
