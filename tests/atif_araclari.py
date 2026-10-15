@@ -248,8 +248,10 @@ _ASSETS = re.compile(r"assets[/\\]([^/\\]+)(?:[/\\]([^/\\]+))?")
 def sahip_tablosu(agents):
     """AGENTS.md 'Belgeler ve sahipleri' tablosunun ilk sütunu: (depo yolları, beyin yolları).
 
-    'a.md … e.md' aralığı iki uç ve o klasördür.
+    'A-x.md … E-y.md' aralığı iki uç, aradaki her harfin dosyası (`<H>-*.md`, depo kökü AGENTS.md'nin klasörü;
+    eşleşen hepsi, yoksa `<H>-*.md` yolu: yok diye raporlanır) ve o klasördür.
     """
+    kok = agents.parent
     depo, beyin = [], []
     icinde = False
     for satir in agents.read_text(encoding="utf-8").splitlines():
@@ -262,7 +264,12 @@ def sahip_tablosu(agents):
         if "…" in hucre:
             ilk, son = yollar
             klasor = ilk.rsplit("/", 1)[0]
-            depo += [ilk, f"{klasor}/{son}", klasor]
+            ara = []
+            for kod in range(ord(ilk.rsplit("/", 1)[1][0]) + 1, ord(son[0])):
+                desen = f"{chr(kod)}-*.md"
+                bulunan = sorted((kok / klasor).glob(desen))
+                ara += [f"{klasor}/{d.name}" for d in bulunan] or [f"{klasor}/{desen}"]
+            depo += [ilk, f"{klasor}/{son}", *ara, klasor]
             continue
         for yol in yollar:
             (beyin if "300-Projects" in yol else depo).append(yol)
