@@ -61,7 +61,7 @@ olduğunu söyler; sayı, formül ve işleyiş, atıf verilen bölümdedir (TASA
 |---|---|
 | Aile | Bir kurulum türünü tanımlayan kural (KURALLAR §2–3, TASARIM §3). |
 | Sinyal | Ailenin kuralının sağlandığı gün. |
-| Düşen sinyal | Giriş günü olmadığı ya da tavanda kilitli olduğu için girilemeyen sinyal (TASARIM §5.3). |
+| Düşen sinyal | Girilemeden düşen sinyal; düşme koşulları TASARIM §5.3 "Düşen sinyal" maddesindedir. (bilet 07e, 15.10) |
 | Reddedilen sinyal | Pozisyon yeri, nakit ya da boyut sınırı yüzünden girilemeyen sinyal (TASARIM §5.3, §5.6). |
 | ATR | Ortalama gerçek aralık: bir hissenin günlük fiyat oynaklığı (TASARIM §5.5). |
 | EMA | Üssel hareketli ortalama: bir veri serisinin yakın günlere daha çok ağırlık veren ortalaması. |

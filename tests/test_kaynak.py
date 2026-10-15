@@ -360,3 +360,43 @@ def test_hicbir_modul_yahoo_yfinance_tradingview_ithal_etmez_ve_cagirmaz():
             else:
                 continue
             assert not any(yasak.search(ad) for ad in adlar), (yol.name, dugum.lineno)
+
+
+def test_sirket_kodlari_borsapy_sirket_listesinden_ticker_sutununu_dondurur(
+    monkeypatch,
+):
+    import borsapy
+
+    monkeypatch.setattr(
+        borsapy, "companies", lambda: pd.DataFrame({"ticker": ["AAA", "BBB"]})
+    )
+    assert list(kaynak.sirket_kodlari()) == ["AAA", "BBB"]
+
+
+def test_evren_indir_ag_icin_yalniz_kaynagi_kullanir_borsapyye_dogrudan_cikmaz(
+    monkeypatch, tmp_path
+):
+    # TASARIM 4: ağa çıkan tek yer `kaynak`. `__main__` şirket listesini `kaynak.sirket_kodlari` ile alır.
+    import borsapy
+
+    from tansu.__main__ import main
+    from tansu import veri
+
+    def yasak():
+        raise AssertionError("borsapy.companies doğrudan çağrıldı")
+
+    indirilen = []
+
+    def sahte_indir(semboller, kok, *a, **k):
+        indirilen.extend(semboller)
+        (kok / "ag" / "K1").mkdir(parents=True)
+        return "K1"
+
+    monkeypatch.setattr(borsapy, "companies", yasak)
+    monkeypatch.setattr(kaynak, "sirket_kodlari", lambda: pd.Series(["BBB", "AAA"]))
+    monkeypatch.setattr(
+        kaynak, "kapanan_kodlar", lambda: pd.DataFrame({"kod": ["CCC"]})
+    )
+    monkeypatch.setattr(veri, "indir", sahte_indir)
+    assert main(["evren-indir", "--kok", str(tmp_path)]) == 0
+    assert indirilen == ["AAA", "BBB", "CCC"]

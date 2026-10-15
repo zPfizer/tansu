@@ -433,3 +433,91 @@ def test_karantinaya_giren_fiyat_yamanmaz(tmp_path):
     assert yeniden.fiyat.loc[
         1, ["ham_kapanis", "ham_aof", "kapanis", "aof"]
     ].tolist() == [150.0, 150.0, 75.0, 75.0]
+
+
+def _karantina(a):
+    return a.gun_tablosu.set_index("tarih")["karantina"].tolist()
+
+
+def test_limit_bazi_onceki_gunun_ham_kapanisidir_karantinali_gun_de_baz_olur(tmp_path):
+    # TASARIM 5.1: baz fiyat = önceki ham kapanış. d2 150 (100'ün +%50'si) karantinaya girer; d3 tavanı 150 × 1,10 = 165,
+    # d3 kapanışı 160 limit içinde, karantina yok. (Önceki temiz kapanış 100 olsaydı tavan 110 olur, d3 karantinaya girerdi.)
+    a = anlik(
+        tmp_path,
+        fiyat=[
+            satir("2024-01-02", 100.0, 100.0),
+            satir("2024-01-03", 150.0, 150.0),
+            satir("2024-01-04", 160.0, 160.0),
+        ],
+        olay=[],
+    )
+    assert _karantina(a) == [False, True, False]
+    assert a.gun_tablosu["tavan"].iloc[2] == pytest.approx(165.0)
+
+
+# Ham 100, 101, 102, 51, 52; düzeltilmiş 50, 50,5, 51, 51, 52 (çarpan 0,5 gerçekte 05.01.2024'te işler).
+BOLUNME = [
+    satir("2024-01-02", 100.0, 50.0),
+    satir("2024-01-03", 101.0, 50.5),
+    satir("2024-01-04", 102.0, 51.0),
+    satir("2024-01-05", 51.0, 51.0),
+    satir("2024-01-08", 52.0, 52.0),
+]
+
+
+def _bolunme_olayi(gun):
+    return [{"SHT_KODU": "02", "SHHE_TARIH": epoch(gun), "SHHE_FIYAT_AYAR_OR": 0.5}]
+
+
+@pytest.mark.parametrize("olay_gunu", [dt.date(2024, 1, 4), dt.date(2024, 1, 5)])
+def test_adimi_t_eksi_1_ya_da_t_tarihli_olay_aciklar_karantina_yok(tmp_path, olay_gunu):
+    # TASARIM 5.1 karantina: t = 05.01 (51 / 102 = 0,5); olay 04.01 (t-1) ya da 05.01 (t) yazılsa da
+    # baz fiyat 05.01'de 102 × 0,5 = 51, tavan 51 × 1,10 = 56,1.
+    a = anlik(tmp_path, fiyat=BOLUNME, olay=_bolunme_olayi(olay_gunu))
+    assert _karantina(a) == [False] * 5
+    assert a.gun_tablosu["tavan"].iloc[3] == pytest.approx(56.1)
+    # 04.01 (olay günü ya da t-1) fiyat adımı değil (102 / 101): baz 101, tavan 101 × 1,10 = 111,1, karantina yok.
+    assert a.gun_tablosu["tavan"].iloc[2] == pytest.approx(111.1)
+
+
+def test_t_arti_1_tarihli_olay_adimi_aciklamaz_adim_gunu_karantinaya_girer(tmp_path):
+    # TASARIM 5.1 (vekil kararı 15.10, 07e-4): olay 08.01 (t+1), adım 05.01. Baz 102, taban 102 × 0,9 = 91,8;
+    # kapanış 51 taban altında: karantina. 08.01: 52 / 51 adım değil, çarpan almaz, baz 51, kapanış 52: temiz.
+    a = anlik(tmp_path, fiyat=BOLUNME, olay=_bolunme_olayi(dt.date(2024, 1, 8)))
+    assert _karantina(a) == [False, False, False, True, False]
+    assert a.gun_tablosu["taban"].iloc[3] == pytest.approx(91.8)
+
+
+def test_bozuk_satir_baz_fiyat_olmaz_baz_onceki_tutarli_gunun_ham_kapanisidir(tmp_path):
+    # TASARIM 5.1 (vekil kararı 15.10): d2'de ham düşük 200 > ham kapanış 150, satır ihlali, karantina.
+    # d3 tavanı bozuk d2'den değil d1'den çıkar: 100 × 1,10 = 110; d3 kapanışı 160 > 110 × 1,005, karantina.
+    bozuk = {**satir("2024-01-03", 150.0, 150.0), "ham_dusuk": 200.0}
+    a = anlik(
+        tmp_path,
+        fiyat=[
+            satir("2024-01-02", 100.0, 100.0),
+            bozuk,
+            satir("2024-01-04", 160.0, 160.0),
+        ],
+        olay=[],
+    )
+    assert _karantina(a) == [False, True, True]
+    assert a.gun_tablosu["tavan"].iloc[2] == pytest.approx(110.0)
+
+
+def test_adim_orani_onceki_tutarli_kapanisa_bakar_bozuk_satir_atlanir(tmp_path):
+    # TASARIM 5.1 adım (bilet 07e-b, 5.13): kapanışlar 100, 50, 50; 2. gün bozuk (ham düşük 200 > kapanış), 3. gün olay
+    # (çarpan 0,5). Oran 50 / 100 (önceki tutarlı kapanış) = 0,5: adım. Baz 100 × 0,5 = 50, taban 50 × 0,9 = 45,
+    # kapanış 50 içinde: karantina yok. 2. gün bozuk satır: karantina.
+    bozuk = {**satir("2024-01-03", 50.0, 50.0), "ham_dusuk": 200.0}
+    a = anlik(
+        tmp_path,
+        fiyat=[
+            satir("2024-01-02", 100.0, 100.0),
+            bozuk,
+            satir("2024-01-04", 50.0, 50.0),
+        ],
+        olay=_bolunme_olayi(dt.date(2024, 1, 4)),
+    )
+    assert _karantina(a) == [False, True, False]
+    assert a.gun_tablosu["taban"].iloc[2] == pytest.approx(45.0)
