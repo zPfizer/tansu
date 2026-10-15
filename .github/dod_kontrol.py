@@ -115,14 +115,7 @@ def hatalar(govde: str) -> list[str]:
             "Kural 6: ## Gerçek veri kanıtı bölümünde içi dolu bir kod bloğu olmalı."
         )
     ad = "|".join(AKISLAR)
-    gorunur = re.sub(r"<!--[\s\S]*?(?:-->|\Z)", "", "\n".join(satirlar))
-    gorunur = re.sub(
-        r"^ {0,3}(`{3,}|~{3,})[^\n]*\n[\s\S]*?^ {0,3}\1[ \t]*$",
-        "",
-        gorunur,
-        flags=re.MULTILINE,
-    )
-    akis = re.findall(r"^Akış:.*$", gorunur, re.MULTILINE)
+    akis = re.findall(r"^Akış:.*$", govde, re.MULTILINE)
     if len(akis) != 1 or not re.fullmatch(
         rf"Akış:[ \t]*(`({ad})`|({ad}))[ \t\r]*", akis[0]
     ):
