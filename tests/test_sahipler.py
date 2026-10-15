@@ -137,8 +137,8 @@ def _depo(kok):
         ("`rapor/durum.txt` `veri/anlik/` `gunluk/x.log`", []),
         ("`durum.txt` `manifest.json` `kartlar.jsonl` `kaynak-x.md` `Levent`", []),
         (
-            "`TODO.md` `GLOSSARY-MAP.md`",
-            ["not.md:1: TODO.md", "not.md:1: GLOSSARY-MAP.md"],
+            "`AKIS.md` `TODO.md` `GLOSSARY-MAP.md`",
+            ["not.md:1: AKIS.md", "not.md:1: TODO.md", "not.md:1: GLOSSARY-MAP.md"],
         ),
         ("`docs/sorgu/sonuc-3-4.md`", []),  # yerel kök yok: CI
     ],
@@ -272,6 +272,13 @@ def test_ad_istisnasi_dosyaya_ve_anisa_baglidir(tmp_path, goreli, metin, beklene
     _depo(tmp_path)
     yol = _yaz(tmp_path, goreli, metin)
     assert yol_kirikleri(tmp_path, [yol]) == beklenen
+
+
+def test_akis_istisnasi_kaldirildi_eksik_akis_md_hatadir(tmp_path):
+    # AKIS.md artık depodadır (kök belge); CODING_STANDARDS.md için eski istisna yoktur.
+    _depo(tmp_path)
+    yol = _yaz(tmp_path, "CODING_STANDARDS.md", "the session review in `AKIS.md`")
+    assert yol_kirikleri(tmp_path, [yol]) == ["CODING_STANDARDS.md:1: AKIS.md"]
 
 
 @pytest.mark.parametrize(
