@@ -70,5 +70,9 @@ HTML bayt 437'de, CSV bayt 188'de değişti. Bu testlerin 06'dan çıkarılması
 - Kırmızı (düzeltmeden önce): `test_simulator.py -k rapor_ayni` 2 failed (HTML ve CSV `assert yol.read_bytes() == once`); `test_motor.py::test_sinama_uyelik_tablosunda_tek_gunluk_ve_iki_gunluk_sembol[uye_gunleri0]` TypeError "only list-like objects are allowed to be passed to isin(), you passed a `Timestamp`"; iki günlük vaka yeşil.
 - Düzeltme: `tansu/rapor.py:325-330` ikinci yazım `FileExistsError` verir (HTML, CSV, çift CSV; dosyaya dokunmadan önce); `tansu/motor.py:237` `agg(list)`.
 - Yeşil: `4 passed` (iki rapor vakası, iki üyelik vakası); tam kapı `314 passed`; `test_gelecek.py` ve `test_standartlar.py` `21 passed`; ruff check ve format temiz.
-- Not: aynı `agg(pd.DatetimeIndex)` kalıbı `tansu/istatistik.py:35` ve `tansu/saglamlik.py:52` içinde var; 07b kapsamı dışı, dokunulmadı.
 - Hazırlanan dosyalar: `tansu/motor.py`, `tansu/rapor.py`, `tests/test_motor.py`, `tests/test_simulator.py`, `.scratch/belge-hizasi/issues/07-kod-sapmalari.md`.
+- 07b ek (kök neden, tüm çağıranlar): `tansu/istatistik.py:35` ve `tansu/saglamlik.py:52` `agg(list)`.
+- Kırmızı: `test_saglamlik.py::test_ema_izgarasi_tek_gunluk_ve_iki_gunluk_uyelik_sinyal_gunu_alinir[gunler0]` ve `test_istatistik.py::test_ema_k1_tek_gunluk_ve_iki_gunluk_uyelik_sinyal_gunu_gercege_girer[gunler0]` aynı TypeError ("only list-like objects ... you passed a `Timestamp`"); iki günlük vakalar yeşil.
+- İstatistik tarafında tek gün düzeltmeden sonra tasarlanmış `K1Hatasi` verir (tür (b): ±20 günde başka uygun gün yok, TASARIM 5.7 "sessizce kırpılmaz"); test bu yüzden ikiye bölündü: `test_ema_k1_iki_gunluk_uyelik_sinyal_gunu_gercege_girer` ve `test_ema_k1_tek_gunluk_uyelik_typeerror_degil_k1_hatasi_verir`.
+- Yeşil: saglamlik iki vaka (işlem 1, fazla 0,0465108), istatistik iki test; tam kapı `318 passed`; `test_gelecek.py` ve `test_standartlar.py` `21 passed`; ruff temiz.
+- Ek dosyalar: `tansu/istatistik.py`, `tansu/saglamlik.py`, `tests/test_istatistik.py`, `tests/test_saglamlik.py`.
