@@ -361,6 +361,29 @@ def test_kod_hashi_yorum_ve_bosluktan_etkilenmez(tmp_path, monkeypatch):
             "MASRAFLAR = (0.001, 0.003, 0.006)",
         ),
         ("istatistik.py", "K1_MASRAF = 0.005", "K1_MASRAF = 0.006"),
+        # B sabitleri (GELISTIRME, TAM_TABAN, TAM_CARPAN): kayit.py'de tek demet, sırayla.
+        (
+            "kayit.py",
+            "    200,\n    1000,\n    200,\n",
+            "    201,\n    1000,\n    200,\n",
+        ),
+        (
+            "kayit.py",
+            "    200,\n    1000,\n    200,\n",
+            "    200,\n    1001,\n    200,\n",
+        ),
+        (
+            "kayit.py",
+            "    200,\n    1000,\n    200,\n",
+            "    200,\n    1000,\n    201,\n",
+        ),
+    ],
+    ids=[
+        "MASRAFLAR",
+        "K1_MASRAF",
+        "GELISTIRME",
+        "TAM_TABAN",
+        "TAM_CARPAN",
     ],
 )
 def test_masraf_sabiti_degisince_kod_hashi_degisir(
@@ -372,12 +395,12 @@ def test_masraf_sabiti_degisince_kod_hashi_degisir(
     for ad in kayit.KOD_DOSYALARI:
         shutil.copyfile(kayit.PAKET / ad, paket / ad)
     monkeypatch.setattr(kayit, "PAKET", paket)
-    once = kayit._kural(P, ATR_N)
+    once = kayit.kayitla(P, ATR_N)
     yol = paket / dosya
     metin = yol.read_text(encoding="utf-8")
     assert metin.count(eski) == 1
     yol.write_text(metin.replace(eski, yeni), encoding="utf-8")
-    sonra = kayit._kural(P, ATR_N)
+    sonra = kayit.kayitla(P, ATR_N)
     assert sonra["kod_hash"] != once["kod_hash"]
     assert sonra["kural_id"] != once["kural_id"]
 
