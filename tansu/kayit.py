@@ -218,7 +218,7 @@ def denetim_gecti(kod_hash) -> bool:
 
 
 def tekrar_sayisi(son, p=aileler.Parametre(), atr_n=motor.ATR_N) -> int:
-    """K1 tekrar sayısı B: geliştirmede 200; `--son`da max(1.000, 200·m), m = günlükteki ilk resmi p'ler + bu kuralın yeni p'leri."""
+    """K1 tekrar sayısı B: geliştirmede 200; `--son`da max(1.000, 200·m), m tek tanım, `_yarim_ciftler` ve `_ilk_p` (TASARIM 5.11)."""
     if not son:
         return GELISTIRME
     mevcut = _ilk_p()

@@ -107,3 +107,6 @@ Dosyalar: `docs/TASARIM.md`, `GLOSSARY.md`, `tansu/gunluk.py`, `tests/test_gunlu
 - 07d-b denetim tur 1 (Codex, KALDI): iki bulgu 07c'nin dalda olmamasıydı; master birleştirildi (e326319). Tur 2 (Codex, KALDI): rapor
   metni "yıllık kural − yıllık K2" diyordu, hesap TASARIM 5.8 (günlük farkların yıllık toplamı). Önce kırmızı test
   (`test_simulator.py::test_rapor_baslik_...`), sonra `rapor.py` cümlesi düzeltildi. Yeni tur 3.
+- 07d-b denetim tur 3 (Codex, KALDI): `kayit.py:221` `tekrar_sayisi` açıklaması m'yi eski tanımla (yarım koşu hariç) anlatıyordu.
+  Yeniden tanım 07d-c. Kök neden: hesap güncellenirken düzyazı (docstring, rapor metni) taranmadı. Düzeltme: açıklama sahip
+  cümleye (TASARIM 5.11) bağlandı; `kayit.py`, `istatistik.py`, `simulator.py`, `rapor.py` formül anlatan düzyazısı tarandı, başka eski cümle yok.
