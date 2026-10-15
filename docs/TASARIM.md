@@ -619,12 +619,16 @@ Dolar bazı ilk sürümde yok.
     - **İki not:** `veri.py` indirmeyi de içerir ama kapı ve karantina mantığı (`Anlik.gun_tablosu`, `adim`) kuraldır;
       dosya bölünmediği için bütünüyle listededir. `kayit.py` Holm, kabul girdisi ve K1 tekrar sayısının (B)
       hesabını içerir; o da listededir (muhafazakâr: kayıt kodu değişince yeni kayıt gerekir). Bu, tekrar
-      sayısının değerinin hash dışı olmasıyla çelişmez: değer koşu parametresidir ve günlükte ayrı alandır; B'yi
-      hesaplayan kod ise kuraldır. (karar.md:28; bilet 03)
+      sayısının değerinin hash dışı olmasıyla çelişmez: günlükteki `tekrar` alanı koşuda kullanılan değerdir; B'yi
+      hesaplayan kod ve sabitleri (200, 1.000, 200·m) ise kuraldır. (karar.md:28; bilet 03)
     - Boru hattı denetimi (`denetim.py`) hash dışıdır.
   - **Kod hash'i** kaynağın `ast.dump` sha256'sıdır; yorum ve boşluk değişmez.
-  - **Hash dışı:** tekrar sayısı, tohum, blok uzunluğu, masraf senaryoları; günlükte ayrı alan olarak
-    yazılır.
+  - **Hash dışı:** tekrar sayısının koşuda kullanılan değeri ve tohum (koşu argümanı); günlükte ayrı alan olarak
+    yazılır. Blok uzunluğu argüman değil çıktıdır: ortalama tutma süresinden hesaplanır (`istatistik.blok_uzunlugu`,
+    5.9) ve günlükte ayrı alan değildir; hesabın kodu hash içindedir. Masraf senaryoları (`simulator.MASRAFLAR`),
+    K1 masrafı (`istatistik.K1_MASRAF`) ve B'nin sabitleri (`kayit.GELISTIRME`, `TAM_TABAN`, `TAM_CARPAN`) kural
+    sabitidir: p değerini ya da kabul kararını değiştirirler, o yüzden hash içindedir. Masraf düzeyi başına sonuç
+    günlükte ayrı alandır (`masraf_sonuc`). (bilet 07f, 15.10)
   - **Kapsam testi:** her `tansu/*.py` ya `KOD_DOSYALARI`'nda ya `HASH_DISI`'nda olmalı.
 - **Kâğıt üstü canlı dönem** (Sorgu S11, B-17, İ: 09-074):
   - En az 6 ay **ve** en az 30 kapanmış işlem; işlem sayısı dolana kadar uzar.
