@@ -22,9 +22,9 @@ This file starts short. It grows from real mistakes.
 - **Wire it and run it:** Connect each new hook, command, or module to the live path in the same change. Show one real run through that path. (07.10: a new hook was not in `settings.json`. 05.10: the Tansu CLI read result keys that the change removed.)
 
 ## Seen once
-- 15.10: 9 writer and 11 reader subagents cut note bodies (`head -c`, `cut -c`, `x[:400]`) and still reported "Notes read: N". The Codex auditor found it in round 2. A reader prompt names a full-print command and the main agent checks the reported line and character counts with a script.
-- 15.10: a label input for an eval showed "no tool call" for every block because the transcript stores tool_use blocks on separate lines from text blocks; the labeler judged 16 of 20 blocks wrong. Build label inputs with araclar/eval/_transkript.py (groups lines by message id).
-- 15.10: a blind label input for an old-versus-new eval showed the version in 98 of 120 items, through the run's copy folder name (`kum\eski-1`) in tool paths and answers. The Codex auditor found it in round 1. Mask run-specific paths and search the input for version strings before labeling.
+- 15.10: 9 writer and 11 reader subagents cut note bodies (`head -c`, `cut -c`, `x[:400]`). They still reported "Notes read: N". The Codex auditor found it in round 2. A reader prompt names a full-print command. The main agent checks the reported line and character counts with a script.
+- 15.10: a label input for an eval showed "no tool call" for every block. The cause: the transcript stores tool_use blocks on separate lines from text blocks. The labeler judged 16 of 20 blocks wrong. Build label inputs with araclar/eval/_transkript.py. This tool groups lines by message id.
+- 15.10: a blind label input for an old-versus-new eval showed the version in 98 of 120 items. The version appeared through the copy folder name of the run (`kum\eski-1`) in tool paths and answers. The Codex auditor found it in round 1. Mask run-specific paths and search the input for version strings before labeling.
 
 ## Tansu
 This section adds to the general standard. `docs/TASARIM.md` owns the behavior rules. This section holds how to apply
