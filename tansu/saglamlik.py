@@ -49,7 +49,7 @@ def ema(anlik, b, p, atr_n, uye, izgara=IZGARA["ema_sikismasi"]) -> list:
     """EMA ızgarası; `b`: `simulator.k1_baglam`, `uye`: `simulator.uyeler`. Mum tablosu ve tek işlem önbelleği hücreler arası paylaşılır."""
     hucreler = [dict(zip(izgara, v)) for v in itertools.product(*izgara.values())]
     parametreler = [replace(p, **h) for h in hucreler]
-    uye_gun = uye.groupby("sembol")["tarih"].agg(pd.DatetimeIndex)
+    uye_gun = uye.groupby("sembol")["tarih"].agg(list)
     parcalar = [[] for _ in hucreler]
     for s in sorted(uye_gun.index):
         m = motor.mumlar(anlik, s, p, atr_n)

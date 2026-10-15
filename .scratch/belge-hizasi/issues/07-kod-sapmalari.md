@@ -10,12 +10,12 @@ TASARIM gerekçesiyle güncellenir.
 - [ ] `denetim/tasarim-kod.md` §3'ün her maddesi `/diagnosing-bugs` ile ele alındı: davranışı gösteren test, sonra karar.
 - [ ] Öncelik: `gunluk.py` yalnız AKTİF kartları indirir (STOP/BOZULDU açık pozisyon izlenmeyebilir).
 - [ ] Kod değişikliği gerektiren her madde kendi PR'ıyla kapandı; belge değişikliği TASARIM'da karar etiketiyle.
-- [ ] Bilet 06'da bulunanlar (10.10): `motor.sinama` tek satırlı üyelik tablosunda düşer (`groupby(...).agg(pd.DatetimeIndex)` tek günde Timestamp döndürür, `isin` TypeError); `rapor.py` aynı koşu kimliğinde HTML ve CSV'yi üstüne yazar (TASARIM §6.8 "üstüne yazılmaz").
+- [x] Bilet 06'da bulunanlar (10.10): `motor.sinama` tek satırlı üyelik tablosunda düşer (`groupby(...).agg(pd.DatetimeIndex)` tek günde Timestamp döndürür, `isin` TypeError); `rapor.py` aynı koşu kimliğinde HTML ve CSV'yi üstüne yazar (TASARIM §6.8 "üstüne yazılmaz").
 - [ ] Bilet 02'den (10.10, `denetim/tansu-sapma-dogrulama.md` #6, #19): kart etiketi `BOZULDU` Tansu'nun "bozulma"sı (formasyonun geçersizleşmesi) değildir. SMA250 çıkışı, karantina çıkışı ve giriş iptali tek etikette toplanıyor; ayrı etiket (ör. `GÜN SONU STOPU`, `KARANTİNA ÇIKIŞI`, `GİRİŞ İPTAL`) ve `Durum` sütununun `Pozisyon durumu` olması karara bağlanır. Etiket CSV çıktısını değiştirir: önce test.
 
 ## Rapor aynı koşu kimliğinde öncekinin üstüne yazar (TASARIM 6.8)
 
-- [ ] Bilet 06'dan taşınan HTML ve CSV regresyonlarını test dosyasına geri koy; kod sapmasını düzeltip ikisini yeşile geçir.
+- [x] Bilet 06'dan taşınan HTML ve CSV regresyonlarını test dosyasına geri koy; kod sapmasını düzeltip ikisini yeşile geçir.
 
 ## Comments
 
@@ -70,3 +70,14 @@ HTML bayt 437'de, CSV bayt 188'de değişti. Bu testlerin 06'dan çıkarılması
 
 07a (14.10), denetim tur 1 düzeltmesi: (a) özel yardımcıları çağıran iki test kaldırıldı; yerine açık arayüzden giden `test_dunku_acik_kart_hissesi_eski_ve_yeni_anahtarla_bugun_de_indirilir` (`gunluk.gunluk`, eski ve yeni anahtarlı `kartlar.jsonl`) ve `test_rapor_*` (`sadakat.rapor_metni`) yazıldı. (b) Aday seçimi KURALLAR §4 "Tansu'nun rakamını en iyi üreten seçilir" ile hizalandı: eşdeğerlik (±0,005) yalnız kaç aday sayıldığını belirler (bir); temsilci, ölçülen değerlerin Tansu rakamından mutlak fark toplamı en küçük olan adaydır; eşitlikte ilk aday ("(eşitlikte ilk aday)" üretilen metinde yazar). KURALLAR §4'e eklendi (KURALLAR §4, commit c0ebea7; bilet 04 birleşti; "Tansu'nun rakamını en iyi üreten seçilir" cümlesinin sonuna): "En iyi: ölçülen değerlerin Tansu'nun rakamlarından mutlak farklarının toplamı en küçük olan aday; eşitlikte aday sırasındaki ilk aday (bilet 07a, 14.10)."
 Kanıt, kırmızı koşu (ilk commit 25ce53d'den önce, dört dosyada `python -m pytest -q --no-header tests/test_denetim.py tests/test_gunluk.py tests/test_kayit.py tests/test_sadakat.py`): `15 failed, 41 passed`. Hata iletileri: `AssertionError: assert ('(ölçüt 1–4 Geçti ve portföy kuralı reddetmedi)' in ...` (test_denetim.py:165); `assert [['Tarih', 'H...hmini)', ...]] == [['tarih', 'h...hmini)', ...]]` (test_gunluk.py:130); `assert ['Tarih;Hisse...Kanıt;Kaynak'] == ['tarih;hisse...kanit;kaynak']` (test_gunluk.py:157); `KeyError: 'hisse'` (test_gunluk.py:173, 364); `KeyError: 'Durum'` (gunluk.py:198); `KeyError: 'sema'` (test_kayit.py:299, test_sadakat.py:57); `AttributeError: module 'tansu.sadakat' has no attribute '_esdeger_bolumu'` (test_sadakat.py:167, 182); `AssertionError: assert False` (test_sadakat.py:192). Yeşil koşu: `python -m pytest -q --no-header` tam takım, `315 passed` (ilk commit); tur 1 düzeltmesinden sonra `317 passed`, `tests/test_gelecek.py` ayrıca `18 passed`. Dosyalar adıyla eklendi (`git add` ile, `-A` ve `.` kullanılmadı): `tansu/denetim.py`, `tansu/sadakat.py`, `tansu/gunluk.py`, `tansu/kayit.py`, `tests/test_denetim.py`, `tests/test_gunluk.py`, `tests/test_kayit.py`, `tests/test_sadakat.py`, `.scratch/belge-hizasi/issues/07-kod-sapmalari.md`.
+
+2026-10-15 (07b): rapor üstüne yazma ve `motor.sinama` tek günlük üyelik kapandı.
+- Kırmızı (düzeltmeden önce): `test_simulator.py -k rapor_ayni` 2 failed (HTML ve CSV `assert yol.read_bytes() == once`); `test_motor.py::test_sinama_uyelik_tablosunda_tek_gunluk_ve_iki_gunluk_sembol[uye_gunleri0]` TypeError "only list-like objects are allowed to be passed to isin(), you passed a `Timestamp`"; iki günlük vaka yeşil.
+- Düzeltme: `tansu/rapor.py:325-330` ikinci yazım `FileExistsError` verir (HTML, CSV, çift CSV; dosyaya dokunmadan önce); `tansu/motor.py:237` `agg(list)`.
+- Yeşil: `4 passed` (iki rapor vakası, iki üyelik vakası); tam kapı `314 passed`; `test_gelecek.py` ve `test_standartlar.py` `21 passed`; ruff check ve format temiz.
+- Hazırlanan dosyalar: `tansu/motor.py`, `tansu/rapor.py`, `tests/test_motor.py`, `tests/test_simulator.py`, `.scratch/belge-hizasi/issues/07-kod-sapmalari.md`.
+- 07b ek (kök neden, tüm çağıranlar): `tansu/istatistik.py:35` ve `tansu/saglamlik.py:52` `agg(list)`.
+- Kırmızı: `test_saglamlik.py::test_ema_izgarasi_tek_gunluk_ve_iki_gunluk_uyelik_sinyal_gunu_alinir[gunler0]` ve `test_istatistik.py::test_ema_k1_tek_gunluk_ve_iki_gunluk_uyelik_sinyal_gunu_gercege_girer[gunler0]` aynı TypeError ("only list-like objects ... you passed a `Timestamp`"); iki günlük vakalar yeşil.
+- İstatistik tarafında tek gün düzeltmeden sonra tasarlanmış `K1Hatasi` verir (tür (b): ±20 günde başka uygun gün yok, TASARIM 5.7 "sessizce kırpılmaz"); test bu yüzden ikiye bölündü: `test_ema_k1_iki_gunluk_uyelik_sinyal_gunu_gercege_girer` ve `test_ema_k1_tek_gunluk_uyelik_typeerror_degil_k1_hatasi_verir`.
+- Yeşil: saglamlik iki vaka (işlem 1, fazla 0,0465108), istatistik iki test; tam kapı `318 passed`; `test_gelecek.py` ve `test_standartlar.py` `21 passed`; ruff temiz.
+- Ek dosyalar: `tansu/istatistik.py`, `tansu/saglamlik.py`, `tests/test_istatistik.py`, `tests/test_saglamlik.py`.

@@ -13,7 +13,7 @@ import re
 import pandas as pd
 import pytest
 
-from tansu import aileler, kayit, simulator, veri
+from tansu import aileler, kayit, rapor, simulator, veri
 from tests.test_veri import SahteBorsapy, SahteKaynak, satir
 
 P = aileler.Parametre(
@@ -68,6 +68,28 @@ def kos(tmp_path, seriler, faiz=0.0, bas=BAS):
 
 def sim(sonuc, masraf=M3):
     return sonuc["sim"]["masraf"][masraf]
+
+
+@pytest.mark.parametrize("dosya", ["rapor", "csv"])
+def test_rapor_ayni_kosu_kimliginde_onceki_dosyanin_ustune_yazmaz(tmp_path, dosya):
+    # TASARIM 6.8: ikinci yazım reddedilebilir ya da yeni dosya kullanabilir; ilki değişmez.
+    _, ilk = kos(tmp_path / "ilk", {"A": sinyalli()})
+    yol = ilk[dosya]
+    once = yol.read_bytes()
+    fiyat = sinyalli()
+    fiyat[-1] = mum(pd.Timestamp("2026-02-04"), 106, 106.5, 105.5)
+    kimlik, ikinci = kos(tmp_path / "ikinci", {"A": fiyat})
+    # İki boş işlem listesi sahte yeşil vermez.
+    assert ikinci[dosya].read_bytes() != once
+    try:
+        rapor.yaz(
+            ikinci["sim"],
+            {"kosu_id": ilk["kosu_id"], "anlik": kimlik, "kod_hash": "abc123"},
+            cift=ikinci["cift"],
+        )
+    except FileExistsError:
+        pass  # Aynı kimlikte yazımı reddetmek sözleşmeye uygundur; dosya yine denetlenir.
+    assert yol.read_bytes() == once
 
 
 def test_tavan_baglar_ve_nakit_hesabi(tmp_path):
