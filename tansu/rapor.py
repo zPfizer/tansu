@@ -238,7 +238,7 @@ def _uyarilar(sim, bilgi) -> list:
         f"Karantina nedeniyle kapanan pozisyon (%0,3): {m['karantina_cikisi']}.",
         f"Bağlayıcı sınır (alınan {n} işlem, %0,3): tavan {pay('tavan')}, likidite {pay('likidite')}, "
         f"risk {pay('risk')}, nakit {pay('nakit')}. Ortalama planlanan risk / özkaynak {yuzde(m['ort_risk'])}.",
-        f"İptal edilen sinyal (kilitli tavan ya da giriş günü yok; tüm semboller): {b['iptal']}.",
+        f"İptal edilen sinyal (kilitli tavan, giriş günü karantinada ya da giriş günü yok; tüm semboller): {b['iptal']}.",
         f"Reddedilen sinyal (yer ya da nakit yetmedi; %0,3): {m['reddedilen']}.",
         f"İşlemi kapanan hisse sayısı {b['kapananlar']}. Kapanma nedeni bağlı değil: her kapanma −%100 sayılır; "
         f"bu kuralla kapanan işlem {b['kapanma']} (alınan {m['kapanma']}).",

@@ -21,10 +21,8 @@ def _kimlik_bul(kok: Path) -> str:
 def _evren_indir(kok: Path) -> str:
     """Bütün bugünkü paylar + işlemi kapanmış kodlar. Saatler sürer; yarıda kalırsa aynı gün yeniden
     çalıştırılınca `onbellek/<gün>` klasöründeki tamamlanan semboller tekrar istenmez."""
-    import borsapy
-
     kapanan = kaynak.kapanan_kodlar()
-    semboller = evren.tum_semboller(borsapy.companies()["ticker"], kapanan)
+    semboller = evren.tum_semboller(kaynak.sirket_kodlari(), kapanan)
     onbellek = kok / "onbellek" / dt.date.today().strftime("%Y%m%d")
     kimlik = veri.indir(
         semboller,

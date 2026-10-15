@@ -83,8 +83,8 @@ yorumumuzdur**; ekranda "Tansu'nun sistemi" diye sunulmaz. (P5)
 
 **Var:**
 - Günlük veri, BIST100 benzeri evren, yalnız alış yönü.
-- Piyasa durumu etiketi (YORUM, bizim). Motoru ve girişi etkilemez; K1(b) örneklemesinde ve rapor bölmesinde
-  kullanılır. (İ: 11-078)
+- Piyasa durumu etiketi (YORUM, bizim). Motoru ve girişi etkilemez; K1(b) örneklemesinde kullanılır, çıktıda görünmez.
+  (vekil kararı 15.10, bilet 07e; İ: 11-078)
   Tansu'nun şokta yeni alımı durdurma fikri (aktarım, tweet-volatilite-piyasa-soku-yeni-alim-freni:21) uygulanamaz: kaynak hesaplanabilir tanım vermiyor.
   Tansu'nun yeni pozisyon için piyasa teyidi bekleme fikri (metin, XU:35–47) uygulanamaz: kaynak hesaplanabilir tanım vermiyor.
 - **2 aile** (`KURALLAR.md` §3): çift rotasyonu ve EMA sıkışması.
@@ -114,7 +114,7 @@ Her modülün dışarıya küçük bir yüzü var. İçi değişse de dışı de
 
 | Modül | Girdi → çıktı | Not |
 |---|---|---|
-| `kaynak` | sembol, tarih aralığı → ham tablo | Ağa çıkan tek yer: İş Yatırım ve borsapy (yalnız faiz ve sektör). Ham alan adları (`HG_*`, `HGDG_*`) tek bir sözlükle proje adlarına çevrilir. İş Yatırım okuma zaman aşımı (5, 120) sn: ağır sorgular 40 ve 90 sn'de zaman aşımına uğradı; C-8'deki (5, 30) bu değerle değişti. (C-8, İ: 18-075, 01-057) |
+| `kaynak` | sembol, tarih aralığı → ham tablo | Ağa çıkan tek yer: İş Yatırım ve borsapy (yalnız faiz, sektör ve şirket listesi) (bilet 07e, 15.10). Ham alan adları (`HG_*`, `HGDG_*`) tek bir sözlükle proje adlarına çevrilir. İş Yatırım okuma zaman aşımı (5, 120) sn: ağır sorgular 40 ve 90 sn'de zaman aşımına uğradı; C-8'deki (5, 30) bu değerle değişti. (C-8, İ: 18-075, 01-057) |
 | `veri` | indirme → anlık görüntü; olay tablosu; veri kapıları | Ayrıntı aşağıda. (B2, B-2, B-7) |
 | `evren` | tarih → o gün yeni giriş için taranabilecek hisseler | 5.2. |
 | `gostergeler` | fiyat → EMA, SMA, ATR, piyasa durumu | Vektörel; sınamada ve canlıda aynı kod. Kütüphane yok. |
@@ -219,13 +219,14 @@ hatasından** ayırmak.
 - **Olay denetimi:**
   - Olay tablosu çarpanı (`SHHE_FIYAT_AYAR_OR`) ham seriye uygulanır ve `HGDG` ile karşılaştırılır.
     Fark %0,5'i aşan gün uyarıdır; `HGDG` geçerli kalır.
-  - Olay eşleştirmesi tablo tarihinin ±1 işlem günü penceresinde yapılır.
-  - Sınama vakaları (veri birim testi): çarpan > 1 (sentetik), aynı güne iki kayıt (çarpanlar çarpılır), ±1 gün
+  - Olay denetimi istatistiğinde eşleştirme tablo tarihinin ±1 işlem günü penceresinde yapılır (karantina eşleştirmesi daha dardır, bkz. Karantina).
+  - Sınama vakaları (veri birim testi): çarpan > 1 (sentetik), aynı güne iki kayıt (çarpanlar çarpılır), ±1 gün (denetim istatistiği)
     kayması (HEKTS 26.11.2015). CCOLA temettü formülü alınmadı.
   (B1, B-2, İ: 02-024, 02-093)
 - **Fiyat limiti:**
   - Limit hesabının baz fiyatı önceki gün ham kapanışıdır; tavan ve taban baz fiyatın ±L'sidir.
-  - Olay gününde baz fiyat = önceki ham kapanış × olay çarpanı. Kilit ve karantina bu baz fiyattan çıkan limitlerle
+  - Bozuk satır (satır ihlali, 5.13) baz fiyat olmaz; baz, önceki tutarlı işlem gününün ham kapanışıdır. (vekil kararı 15.10, bilet 07e)
+  - Olay çarpanını alan günde (adım günü, aşağıdaki karantina maddesi) baz fiyat = önceki ham kapanış × olay çarpanı. Kilit ve karantina bu baz fiyattan çıkan limitlerle
     yargılanır. Bilinmeyen olay kodu ya da çarpanı 1 olan kayıt istisna sayılmaz.
   - L = %20 (30.11.2015 – 12.03.2020), %10 (13.03.2020 sonrası). Baz fiyatın önceki ham kapanış olduğu ±%10 döneminde
     veriyle doğrulandı.
@@ -247,8 +248,12 @@ hatasından** ayırmak.
   Sınama vakası: KONTR 08.07.2026. (İ: 01-023, 02-056, 05-043)
 - **Karantina:**
   - Kapanıştan kapanışa o günkü limiti (+%0,5) aşan ve şirket olayıyla açıklanmayan her gün karantinaya
-    girer. "Olayla açıklanan" eşleştirmesi de olay denetimindeki gibi tablo tarihinin ±1 işlem günü penceresinde yapılır
-    (HEKTS 26.11.2015). (İ: 02-024)
+    girer. "Olayla açıklanan" eşleştirmesi gün başınadır ve yalnız o güne kadarki veriye dayanır (önek değişmezliği 5.12,
+    kesim günü dahil): t günündeki adım, tablo tarihi t−1 ya da t olan bir olayla açıklanır; başka güne bakılmaz, aday
+    seçimi yoktur. Aynı olay hem t−1 hem t günündeki adımı açıklayabilir; t+1 tarihli olay açıklamaz. Adım: o günün ham
+    kapanışının önceki tutarlı kapanışa oranı (bozuk satırlar limit bazındaki gibi atlanır, 5.13; bilet 07e, 15.10), olay çarpanına 1'den daha yakınsa (logaritmik) gün adımdır; adım olmayan gün
+    olay çarpanı almaz. Olay denetimi istatistiği ±1 işlem günü penceresinde kalır. (HEKTS 26.11.2015)
+    (vekil kararı 15.10, bilet 07e) (İ: 02-024)
   - O hisse 250 gün yeni sinyal üretmez.
   - Açık pozisyon son temiz AOF'ta kapanır ve sayılır.
   - Fiyat yamanmaz.
@@ -307,7 +312,7 @@ hatasından** ayırmak.
   - Kapanışı taban fiyatında olan gün çıkış ertesi güne kayar.
   - Duyarlılık sürümü: yalnız düşük = yüksek, hacim > 0 ve limit fiyatında olan gün.
   (M4, B-5, İ: 01-026, karar.md)
-- **Düşen sinyal:** giriş günü yoksa ya da kilitli tavansa sinyal düşer, sonraki güne kaymaz. Sayısı
+- **Düşen sinyal:** giriş günü yoksa, kilitli tavansa ya da karantinadaysa sinyal düşer, sonraki güne kaymaz (vekil kararı 15.10, bilet 07e). Sayısı
   raporda "iptal" olarak yazılır. Kayma yalnız çıkış dolumunda olur (kilitli taban, eksik gün; 5.13); giriş
   dolumu kaymaz. (İ: 05-044, 19-055)
 - **Aynı gün sırası:** aynı AOF gününde önce çıkışlar, sonra girişler işlenir. (İ: 08-015)
@@ -849,7 +854,7 @@ Getiri görülmeden yazılır; kural kaydına girer. (B-7, İ: 19-015)
    - Koşu 18:15'ten önce başlarsa kart üretilmez (yarım çubuk riski).
    - Kaynak erişilemezse sınama eski anlık görüntülerle sürer; yalnız canlı kart durur.
    - Günlük anlık görüntüler silinmez (`veri/` silinmez; 5.11 silme yasağı). (karar.md:24; İ: 11-061 reddedildi, karar.md:30; bilet 03)
-3. **Piyasa durumu etiketi:** kart kararını ve motoru etkilemez (kapı değil, bilgi); K1 (b) örneklemesinde ve rapor bölmesinde kullanılır (3, 5.7). XU100 kapanış > SMA50 (YORUM). (B-19, İ: 11-078; bilet 03)
+3. **Piyasa durumu etiketi:** kart kararını ve motoru etkilemez (kapı değil, bilgi); K1 (b) örneklemesinde kullanılır; raporda ve kartta görünmez (3, 5.7). (vekil kararı 15.10, bilet 07e) XU100 kapanış > SMA50 (YORUM). (B-19, İ: 11-078; bilet 03)
 4. **Kartlar** (P1, İ: 17-049, 17-050, 17-087):
    - Kâğıt ve Canlı ailelerin sinyalleri her gün yeni bir CSV dosyasına yazılır:
      `rapor/kartlar-YYYYMMDD.csv` (`;` ayraç, ondalık virgül, UTF-8 BOM).
