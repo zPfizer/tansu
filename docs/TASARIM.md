@@ -790,7 +790,8 @@ Genel "Geçti" yalnız hepsi sağlanınca yazılır. (İ: 17-079)
   kalır ama sinyaller boş dünyadan hesaplanır.
 - **Geleceği görmeme testi** (`tests/test_gelecek.py`, bilet 13): sentetik dünyada veri t'de kesilir (fiyat satırları
   ve faiz değişimleri t'den sonrası atılır); tam görüntünün t'ye kadarki çıktısı kesilmişle aynı olmalı. Tek parametrik
-  test, bileşen × üç kesim günü. Kapsam: evren (ay başı seçimi), göstergeler (EMA, SMA, Wilder ATR, sıkışma oranı,
+  test, bileşen × dört kesim günü: 2014-09-30, 2015-01-15, 2015-03-02 ve yılın son işlem günü 2014-12-31 (yıllık fazla
+  getiri için biten yılın karşılaştırılması; bilet 07d, 15.10). Kapsam: evren (ay başı seçimi), göstergeler (EMA, SMA, Wilder ATR, sıkışma oranı,
   piyasa durumu), EMA sinyali ve ön şart dizileri, çift Z ve hedef günleri, yıllık çift seçimi, likidite medyanı,
   faiz hizalaması (gecelik getiri dizisi) ve K2 sepeti.
 
