@@ -5,6 +5,8 @@ başlıklarına bakar. Karar etiketleri (İ:, B-, C-, S2-) yerel docs/sorgu/ kla
 git'te olmadığı için CI'da etiket testi atlanır, yerel test kapısı denetler.
 """
 
+import subprocess
+
 import pytest
 
 from atif_araclari import (
@@ -28,6 +30,9 @@ def test_tarama_kumesi_bilinen_dosyalari_icerir():
         "AGENTS.md",
         "CLAUDE.md",
         "GLOSSARY.md",
+        "AKIS.md",
+        "CODING_STANDARDS.md",
+        "DEFINITION_OF_DONE.md",
         "tansu/kayit.py",
         ".claude/skills/tansu-grill/SKILL.md",
         ".github/pull_request_template.md",
@@ -190,3 +195,17 @@ def test_kirik_karar_etiketi_yakalanir(tmp_path, metin, beklenen):
     sorgu = _sorgu(tmp_path)
     (tmp_path / "not.md").write_text(metin, encoding="utf-8")
     assert etiket_kirikleri(tmp_path, [tmp_path / "not.md"], sorgu) == beklenen
+
+
+@pytest.mark.parametrize(
+    "ad", ["AKIS.md", "CODING_STANDARDS.md", "DEFINITION_OF_DONE.md"]
+)
+def test_kok_belgelerinde_kirik_karar_etiketi_yakalanir(tmp_path, ad):
+    # Kök belgeler izlenen dosya kümesindedir; etiket taraması onları atlamaz.
+    sorgu = _sorgu(tmp_path)
+    (tmp_path / ad).write_text("Not\nB-99999\n", encoding="utf-8")
+    subprocess.run(["git", "-C", str(tmp_path), "init", "-q"], check=True)
+    subprocess.run(["git", "-C", str(tmp_path), "add", ad], check=True)
+    assert etiket_kirikleri(tmp_path, izlenen_dosyalar(tmp_path), sorgu) == [
+        f"{ad}:2: B-99999"
+    ]

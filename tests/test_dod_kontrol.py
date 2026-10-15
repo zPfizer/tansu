@@ -171,9 +171,7 @@ def test_kural_4_tansu_satiri_isaretsiz():
 def test_kural_5_sonuc_satiri_tek_olmali(ek):
     govde = GECERLI.replace("Sonuç: GEÇTİ", ek)
     assert hatalar(govde) == [
-        "Kural 5: ## Bağımsız inceleme bölümünde Sonuç: satırı tek olmalı ("
-        + str(len(ek.splitlines()))
-        + " satır var)."
+        "Kural 5: ## Bağımsız inceleme bölümünde Sonuç: satırı tek olmalı (2 satır var)."
     ]
 
 

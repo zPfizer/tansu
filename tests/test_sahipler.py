@@ -17,6 +17,7 @@ from atif_araclari import (
     beyin_kirikleri,
     sahip_dosyalari,
     sahip_tablosu,
+    yerel_kok_adi,
     yerel_kok_yok,
     yol_kirikleri,
 )
@@ -51,22 +52,44 @@ def test_tablo_yollari_ayiklanir(tmp_path):
     )
 
 
+DEPO_YOLLARI = sahip_tablosu(KOK / "AGENTS.md")[0]
+# Yerel dosyalar (.gitignore kökleri) CI'da yoktur: her biri kendi testinde, yoksa adıyla atlanır.
+YEREL_YOLLAR = [y for y in DEPO_YOLLARI if yerel_kok_adi(KOK, y)]
+GIT_YOLLARI = [y for y in DEPO_YOLLARI if y not in YEREL_YOLLAR]
+
+
+def _yerel_yoksa_atla(yol):
+    kok_adi = yerel_kok_adi(KOK, yol)
+    if not (KOK / kok_adi).exists():
+        pytest.skip(f"{yol}: yerel dosya bu makinede yok ({kok_adi} git'te değil).")
+
+
 def test_tablodaki_depo_yollari_var():
     depo, beyin = sahip_tablosu(KOK / "AGENTS.md")
     # Başlık ya da tablo biçimi değişirse ayrıştırma sessizce boşalmasın.
     assert "docs/TASARIM.md" in depo
     assert "docs/kurallar/A-yapi-bolge.md" in depo
     assert len(beyin) == 1
-    eksik = [y for y in depo if not (KOK / y).exists() and not yerel_kok_yok(KOK, y)]
-    assert eksik == []
+    assert [y for y in GIT_YOLLARI if not (KOK / y).exists()] == []
+
+
+@pytest.mark.parametrize("yol", YEREL_YOLLAR)
+def test_tablodaki_yerel_dosya_var(yol):
+    _yerel_yoksa_atla(yol)
+    assert (KOK / yol).exists()
 
 
 def test_tablodaki_dosyalarin_ve_docs_agents_in_depo_yollari_var():
     # driftlint docs/agents/*.md dosyalarını bulmaz; ölü yol denetimi bu testle yapılır.
-    depo, _ = sahip_tablosu(KOK / "AGENTS.md")
-    dosyalar = sahip_dosyalari(KOK, depo + ["docs/agents"])
+    dosyalar = sahip_dosyalari(KOK, GIT_YOLLARI + ["docs/agents"])
     assert any(y.parent.name == "agents" for y in dosyalar)
     assert yol_kirikleri(KOK, dosyalar) == []
+
+
+@pytest.mark.parametrize("yol", YEREL_YOLLAR)
+def test_tablodaki_yerel_dosyanin_depo_yollari_var(yol):
+    _yerel_yoksa_atla(yol)
+    assert yol_kirikleri(KOK, sahip_dosyalari(KOK, [yol])) == []
 
 
 def test_yerel_kok_yalniz_kok_yoksa_atlar(tmp_path):
@@ -114,8 +137,8 @@ def _depo(kok):
         ("`rapor/durum.txt` `veri/anlik/` `gunluk/x.log`", []),
         ("`durum.txt` `manifest.json` `kartlar.jsonl` `kaynak-x.md` `Levent`", []),
         (
-            "`AKIS.md` `TODO.md` `GLOSSARY-MAP.md`",
-            ["not.md:1: AKIS.md", "not.md:1: TODO.md", "not.md:1: GLOSSARY-MAP.md"],
+            "`TODO.md` `GLOSSARY-MAP.md`",
+            ["not.md:1: TODO.md", "not.md:1: GLOSSARY-MAP.md"],
         ),
         ("`docs/sorgu/sonuc-3-4.md`", []),  # yerel kök yok: CI
     ],
@@ -136,8 +159,13 @@ def test_yerel_kok_varken_eksik_dosya_hatadir(tmp_path):
 
 
 def test_tablodaki_dosyalarin_bolum_atiflari_var_olana_gider():
-    depo, _ = sahip_tablosu(KOK / "AGENTS.md")
-    assert atif_kirikleri(KOK, sahip_dosyalari(KOK, depo)) == []
+    assert atif_kirikleri(KOK, sahip_dosyalari(KOK, GIT_YOLLARI)) == []
+
+
+@pytest.mark.parametrize("yol", YEREL_YOLLAR)
+def test_tablodaki_yerel_dosyanin_bolum_atiflari_var_olana_gider(yol):
+    _yerel_yoksa_atla(yol)
+    assert atif_kirikleri(KOK, sahip_dosyalari(KOK, [yol])) == []
 
 
 def test_tablodaki_dosyalarin_beyin_yollari_havuzda_var():
@@ -215,15 +243,12 @@ def _yaz(kok, goreli, metin):
     ("goreli", "metin", "beklenen"),
     [
         # bağlı istisna: doğru dosya, doğru anış
-        ("CODING_STANDARDS.md", "the session review in `AKIS.md` (flows)", []),
         ("docs/agents/domain.md", "- `GLOSSARY.md` root (no `GLOSSARY-MAP.md`)", []),
         ("docs/sorgu/izleme/karar.md", "`.scratch/` yerine `TODO.md`", []),
         # başka dosyada aynı cümle istisna değildir
-        ("docs/x.md", "the session review in `AKIS.md`", ["docs/x.md:1: AKIS.md"]),
         ("docs/x.md", "no `GLOSSARY-MAP.md`", ["docs/x.md:1: GLOSSARY-MAP.md"]),
         ("docs/x.md", "yerine `TODO.md`", ["docs/x.md:1: TODO.md"]),
         # doğru dosya, başka anış
-        ("CODING_STANDARDS.md", "bkz `AKIS.md`", ["CODING_STANDARDS.md:1: AKIS.md"]),
         (
             "docs/agents/domain.md",
             "- `GLOSSARY-MAP.md` root (no `GLOSSARY-MAP.md`)",

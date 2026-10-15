@@ -47,11 +47,14 @@ DOSYA_KOKLERI = (
     "AGENTS.md",
     "CLAUDE.md",
     "GLOSSARY.md",
+    "AKIS.md",
+    "CODING_STANDARDS.md",
+    "DEFINITION_OF_DONE.md",
 )
 
 
 def izlenen_dosyalar(kok):
-    """tansu/, tests/, docs/, .claude/, .github/, AGENTS.md, CLAUDE.md, GLOSSARY.md altındaki git'e girmiş .py ve .md dosyaları.
+    """tansu/, tests/, docs/, .claude/, .github/, AGENTS.md, CLAUDE.md, GLOSSARY.md, AKIS.md, CODING_STANDARDS.md, DEFINITION_OF_DONE.md altındaki git'e girmiş .py ve .md dosyaları.
 
     `.scratch/` bilerek dışarıdadır: biletler ve arşiv tarihsel metindir, atıfları o günün TASARIM'ına göredir.
     """
@@ -416,8 +419,6 @@ KOK_DOSYASI = re.compile(r"[A-Z][A-Z_-]*\.md|pyproject\.toml|requirements\.lock\
 # Yol gibi görünen ama depo dosyası olmayan adlar. Her istisna tek bir dosyaya ve o dosyadaki tek bir
 # anışa bağlıdır: ad ancak o dosyada, belirtilen metnin hemen ardından gelirse atlanır (ad: (dosya, öncesi)).
 ISTISNA_ADLARI = {
-    # YONETIM klasörünün dosyası, depoda değil
-    "AKIS.md": ("CODING_STANDARDS.md", "the session review in "),
     # reddedilen fikir (docs/sorgu/izleme/karar.md 20-031)
     "TODO.md": ("docs/sorgu/izleme/karar.md", "yerine "),
     # domain.md bu dosyanın olmadığını söyler
@@ -438,16 +439,22 @@ def yerel_koklar(kok):
     return sorted(koklar, key=len)
 
 
+def yerel_kok_adi(kok, yol):
+    """Yol .gitignore'daki yerel bir kökün altındaysa o kökün yolu, değilse None."""
+    yol = yol.strip("/")
+    for giris in yerel_koklar(kok):
+        if yol == giris or yol.startswith(giris + "/"):
+            return giris
+    return None
+
+
 def yerel_kok_yok(kok, yol):
     """Yol .gitignore'daki yerel bir kökün altındaysa ve o kök bu makinede yoksa True (CI'da atlanır).
 
     Kök varsa False döner: dosya eksikse yazım hatasıdır, atlanmaz.
     """
-    yol = yol.strip("/")
-    for giris in yerel_koklar(kok):
-        if yol == giris or yol.startswith(giris + "/"):
-            return not (kok / giris).exists()
-    return False
+    giris = yerel_kok_adi(kok, yol)
+    return giris is not None and not (kok / giris).exists()
 
 
 def _istisna_mi(goreli, metin, baslangic, ad):
