@@ -1,5 +1,7 @@
 # Handoff: AKIS-to-skills job (PR #27), stopped at 80% context (16.10)
 
+**Superseded (16.10):** the isolation rules and the remaining steps below are done. Rules: `tansu-eval` "Isolation" (c9f0439; it uses `disableAllHooks`, not `--setting-sources`). Set 2 is approved (d6192e5). Do not redo the steps below. They are kept as a record only.
+
 Continue in a fresh Tansu session. Start with `/tansu-belge`. The worktree is `C:\Users\levent\Desktop\TANSU-beceri`, on branch `pr/akis-beceriler`. The PR is https://github.com/zPfizer/tansu-kaynak/pull/27. The PR body is in `C:\Users\levent\AppData\Roaming\Claude\side-session-notes\local_8e127142-fad6-4efa-9b14-70fa26c4ae31\pr-govde-beceri.md`.
 
 ## Committed on `pr/akis-beceriler`

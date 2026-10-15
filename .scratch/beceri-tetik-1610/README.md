@@ -1,13 +1,14 @@
-# Beceri tetik eval: ilk örnek koşular (16.10)
+# Beceri tetik eval: setler ve koşular (16.10)
 
-Kurallar kalıcıdır: `.claude/skills/tansu-eval/SKILL.md` "Skill trigger eval". Bu klasör ilk eval setini ve iki örnek koşuyu tutar.
-İki koşu da geçerli bir ölçü değildir. Sebepleri aşağıda.
+Kurallar kalıcıdır: `.claude/skills/tansu-eval/SKILL.md` "Skill trigger eval". Bu klasör ilk eval setini, iki geçersiz örnek koşuyu ve denetlenmiş ikinci seti tutar.
+İlk iki koşu geçerli bir ölçü değildir. Sebepleri aşağıda.
 
 ## Dosyalar
 
 - `sorgular.tsv`: 44 sorgu. Sütunlar: beklenen beceri, sorgu. Beceriler: `tansu-yeni-is`, `tansu-hata`, `tansu-belge`, `tansu-karar`, `tansu-eval` (her biri 8 sorgu) ve `yok` (4 sorgu, hiçbir beceri tetiklenmemeli).
 - `ornek-kosu-1.tsv`: koşu 1 sonucu, 44 satır. Sütunlar: no, beklenen, tetiklenen, sorgu.
 - `ornek-kosu-2.tsv`: koşu 2 sonucu, 42 satır (43 ve 44 numaralı sorgu yok). Aynı sütunlar.
+- `sorgular-2.tsv`: ikinci set, 57 sorgu, 4 sütun (aşağıda "Set 2").
 
 `tetiklenen` sütunu, oturumdaki ilk Skill aracı çağrısının beceri adıdır. Çağrı yoksa `yok`.
 
@@ -46,13 +47,13 @@ done < sorgular.tsv > ornek-kosu-2.tsv
 
 ## Olay (16.10)
 
-İki örnek koşu salt okuma değildi. `--allowedTools` diğer araçları engellemedi. Oturumlar sorguları iş olarak yaptı: 22. ve 24. sorgu `.claude/skills/tansu-grill/SKILL.md` ile `.claude/agents/vekil.md` dosyalarını değiştirdi (`git restore` ile geri alındı), beyin Threads'e sahte bir vekil satırı yazıldı (YONETIM oturumu sildi, beyin 391b890). Önlem: `tansu-eval` "Skill trigger eval", "Sample first".
+İki örnek koşu salt okuma değildi. `--allowedTools` diğer araçları engellemedi. Oturumlar sorguları iş olarak yaptı: 22. ve 24. sorgu `.claude/skills/tansu-grill/SKILL.md` ile `.claude/agents/vekil.md` dosyalarını değiştirdi (`git restore` ile geri alındı), beyin Threads'e sahte bir vekil satırı yazıldı (YONETIM oturumu sildi, beyin 391b890). Önlem: `tansu-eval` "Isolation".
 
 Koşu 2'de ek bir sorun daha var: döngüdeki `claude -p` sorgu dosyasının kalanını standart girdiden okudu ve isteğe ekledi. 43 ve 44 bu yüzden koşmadı. Önlem: `tansu-eval` "Runner" (`< /dev/null`).
 
 ## Yalıtılmış örnek (16.10, geçerli kurulum)
 
-- Ayar: `tansu-eval` "Isolation". Atılabilir kopya `git worktree add --detach` ile (`%TEMP%\tansu-eval-kopya`), kopyanın `hooks` anahtarı silindi, `--settings '{"disableAllHooks": true}' --include-hook-events --disallowedTools "Bash PowerShell Edit Write NotebookEdit Agent" --allowedTools "Skill Read Grep Glob" --permission-mode default --strict-mcp-config --no-session-persistence --model claude-opus-5-5 --max-turns 6`, her çağrıda `< /dev/null`.
+- Ayar (kuralın sahibi `tansu-eval` "Isolation"; bu satır bir koşuyu kaydeder): atılabilir kopya `git worktree add --detach` ile (`%TEMP%\tansu-eval-kopya`), kopyanın `hooks` anahtarı silindi, `--settings '{"disableAllHooks": true}' --include-hook-events --disallowedTools "Bash PowerShell Edit Write NotebookEdit Agent" --allowedTools "Skill Read Grep Glob" --permission-mode default --strict-mcp-config --no-session-persistence --model claude-opus-5-5 --max-turns 6`, her çağrıda `< /dev/null`.
 - Sorgu 22 (belge) ve 26 (karar), birer koşu. Araçlar: o22 Skill, Read, Skill, Skill; o26 Skill, Grep, Glob, Read×5, Grep. İlk beceri: `tansu-belge`, `tansu-karar` (ikisi de doğru).
 - Hook olayı 0. Oturum araç listesinde yasak araç ve `mcp__` aracı yok. Kopyanın ve beynin `git status --porcelain` ile `git log -1` değeri önce ve sonra aynı.
 
@@ -64,7 +65,7 @@ Bu sette 132 koşuluk ölçüm başladı ve YONETIM oturumu onu durdurdu (Levent
 
 Sütunlar: beklenen beceri, kaynak (`gercek`, `yazili` ya da `brif`), ayrıca doğru beceri (`-` ya da `tansu-grill`), sorgu. Gerçek istekler Levent'in Tansu ve YONETIM oturum dökümlerindeki kendi mesajlarıdır. Yazılanlar onun sesindedir: amaç söyler ya da hata yapıştırır. Teknik sorgular İngilizce ajan brifidir.
 
-Sayılar: 5 akış × 8 olumlu sorgu, 17 `yok` sorgusu, toplam 57. Kaynak: 19 gerçek, 34 yazılı, 4 brif. Olumlu sorgularda gerçek olan 3 tanedir (belge, karar, eval birer).
+Sayılar: 5 akış × 8 olumlu sorgu, 17 `yok` sorgusu, toplam 57. Kaynak: 19 gerçek, 34 yazılı, 4 brif. Olumlu sorgularda gerçek olan 3 tanedir (belge, karar, eval birer). Bir becerinin olumsuz sorguları, diğer becerilerin 32 olumlu sorgusu ile 17 `yok` sorgusudur.
 Dökümlerde Levent'in gerçek bir Tansu özellik ya da hata isteği yok. Gerçek Tansu mesajları durum sorusu, onay, birleştirme ve devirdir. Yeni iş ve hata sorgularının hepsi bu yüzden yazılıdır.
 `tansu-grill` açıklaması yeni kural, veri kaynağı ve davranış değişikliğini de kapsar. Bu yüzden 3 satırda ayrıca doğru beceridir.
 
