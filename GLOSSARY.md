@@ -130,7 +130,7 @@ olduğunu söyler; sayı, formül ve işleyiş, atıf verilen bölümdedir (TASA
 | Günlük koşu durumu | Günlük koşunun sonuç etiketi: TAMAM, SORUNLU, VERİ YOK, BUGÜN ÇUBUK YOK (TASARIM §6). |
 | Kart | Bir sinyalin günlük listedeki hâli: hisse, aile, referans fiyat, stop, büyüklük, fiili risk, durum, kanıt satırı (TASARIM §6). |
 | Referans fiyat | Sinyal günü kapanışı. |
-| Kart durumu | Kartın pozisyonla ilgili etiketi: AKTİF (giriş bekliyor ya da pozisyon açık), STOP (stop değdi), BOZULDU (bozulma, karantina çıkışı ya da giriş iptali) (TASARIM §6). |
+| Kart durumu | Kartın pozisyonla ilgili etiketi: AKTİF (giriş bekliyor ya da pozisyon açık), STOP (stop değdi), GÜN SONU STOPU (kapanış SMA250 altı), KARANTİNA ÇIKIŞI, GİRİŞ İPTAL. Eski kayıtlarda BOZULDU. (TASARIM §6; vekil kararı 15.10, bilet 07c). |
 | Kanıt satırı | Kartta ailenin sınama sonucunu özetleyen satır (TASARIM §6). |
 | Ayırt edilemiyor | Kanıt satırında, güven aralığı sıfırı içerdiğinde yazılan rapor etiketi. Kabul sonucu olan Ölçülemedi'den ayrıdır (TASARIM §6). |
 

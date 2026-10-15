@@ -842,7 +842,7 @@ Getiri görülmeden yazılır; kural kaydına girer. (B-7, İ: 19-015)
      üretilmez.
    - (Bilet 14) "Tam" = her sembolün bütün geçmişi (2010'dan); indirilen semboller bugünün evreni (en çok sembollü
      son tam anlık görüntüden; taban başka aydaysa tabanın son ayının evreni, YORUM) ve dünkü açık kartların
-     hisseleridir (~100). Sebep: indirilen bütün semboller (716; bilet 03, sözlük denetimi) bilet 07'de ~3 sa 10 dk sürdü; görev sınırı 1 saat. 100 sembol
+     hisseleridir (~100). Dünkü kartın hissesi durumundan bağımsız (AKTİF, STOP, bekleyen çıkış) indirilir; STOP ve bekleyen çıkış dolana kadar pozisyon açıktır ve dolum günün çubuğunu ister. (vekil kararı 15.10, bilet 07c) Sebep: indirilen bütün semboller (716; bilet 03, sözlük denetimi) bilet 07'de ~3 sa 10 dk sürdü; görev sınırı 1 saat. 100 sembol
      ≈ 30 dk; istekler arası 1 sn bekleme aynen kalır. Günlük anlık görüntü `veri/gunluk/ag/` altına yazılır (tam
      anlık görüntüler `veri/ag/`'da kalır; `sinama` onları kullanır), faiz ve sektör içermez (kart bunlara bakmaz;
      KAP'a ~100 istek atılmaz). Tabanın aylık yenilenmesi (`evren-indir`) `TansuAylik` göreviyle ayın son günü 20:45'te yapılır
@@ -867,10 +867,9 @@ Getiri görülmeden yazılır; kural kaydına girer. (B-7, İ: 19-015)
    - **Stop:** ham TL'dir: (düzeltilmiş referans − 2 ATR) × ham/düzeltilmiş oranı; ATR düzeltilmiş seride hesaplandığı
      için oran stopun tamamına uygulanır. "tahmini" etiketlidir. Gerçek stop, giriş dolunca Adım'da hesaplanır.
      (İ: 01-079; bilet 03)
-   - **Durum:** AKTİF / STOP / BOZULDU. (Bilet 14) AKTİF: giriş bekliyor ya da pozisyon açık. STOP: stop değdi
-     (çıkış bugün ya da kilitli taban yüzünden bekliyor). BOZULDU: SMA250 gün sonu stopu, karantina çıkışı ya da giriş
-     iptal. Kapanmış pozisyon kartı yalnız kapandığı günün CSV'sinde görünür.
-     Bunlar ilk sürümün pozisyon durumlarıdır, Tansu'nun formasyon durumları değildir; BOZULDU, Tansu'nun formasyon geçersizliği anlamındaki "bozulma"sı değildir (araç, G02/g1; aktarım, tweet-abcd-geometrik-gecerlilik-kurallari:21; G13:21).
+   - **Durum:** AKTİF / STOP / GÜN SONU STOPU / KARANTİNA ÇIKIŞI / GİRİŞ İPTAL. (Bilet 14) AKTİF: giriş bekliyor ya da pozisyon açık. STOP: stop değdi
+     (çıkış bugün ya da kilitli taban yüzünden bekliyor). GÜN SONU STOPU: kapanış SMA250'nin altına indi (5.5). KARANTİNA ÇIKIŞI: karantina nedeniyle çıkış. GİRİŞ İPTAL: bekleyen giriş iptal edildi. Kapanmış pozisyon kartı yalnız kapandığı günün CSV'sinde görünür.
+     Eski kayıtlarda bu üçü tek etiket BOZULDU olarak durur (kayıt yalnız eklenir). Bunlar pozisyon durumlarıdır; Tansu'nun formasyon bozulması değildir. (vekil kararı 15.10, bilet 07c) (araç, G02/g1; aktarım, tweet-abcd-geometrik-gecerlilik-kurallari:21; G13:21).
    - (Bilet 14) **Tarih** sinyal günüdür. **Kaynak** her satırda "Tansu'dan esinlenen yorum · İş Yatırım <anlık görüntü kimliği>": yorum uyarısı ve veri kaynağı aynı
      hücrededir (İ: 17-087, bilet 03). Büyüklük (Pozisyon %,
      Adet, Fiili risk, Likidite sınırı) 1.000.000 TL kâğıt özkaynağıyla ve sinyal gününün tahmini stopuyla hesaplanır

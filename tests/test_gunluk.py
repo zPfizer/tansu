@@ -238,15 +238,17 @@ def test_csv_excelde_aciksa_sorunlu_ve_kapatip_yeniden_calistir(tmp_path, monkey
     assert not (kayit.KAYIT_DIZINI / "kartlar.jsonl").exists()
 
 
-def test_gunluk_anlik_goruntuler_30_gun_sonra_silinir_denemede_gecenler_kalir(tmp_path):
+def test_gunluk_anlik_goruntuler_yaslari_ne_olursa_olsun_silinmez(tmp_path):
+    # TASARIM 5.11 ve 6.2: `veri/` altındaki hiçbir anlık görüntü silinmez (bilet 03 kararı; bilet 07c).
     ag = tmp_path / "gunluk" / "ag"
     for ad in ("20260801-1930", "20260802-1930", "20260904-1930", "20260906-1930"):
         (ag / ad).mkdir(parents=True)
     kayit._yaz({"tur": "deneme", "olay": "basladi", "anlik": "20260802-1930"})
     kos(tmp_path)
-    # 05.10 − 04.09 = 31 gün (silinir); 05.10 − 06.09 = 29 gün (kalır); 02.08 denemede geçiyor (kalır).
     assert sorted(p.name for p in ag.iterdir()) == [
+        "20260801-1930",
         "20260802-1930",
+        "20260904-1930",
         "20260906-1930",
         "20261005-1930",
     ]
@@ -295,17 +297,17 @@ def test_cift_ailesi_kagit_olursa_gunluk_kosu_sorunludur(tmp_path):
                 (101, 100.5, 101.5),
                 (102, 101.5, 102.5),
             ],
-            ["AKTİF", "AKTİF", "BOZULDU", "BOZULDU", None],
+            ["AKTİF", "AKTİF", "GÜN SONU STOPU", "GÜN SONU STOPU", None],
             0,
         ),
         (
             [(113.3, 112.8, 113.3), (113, 112.5, 113.5)],
-            ["AKTİF", "BOZULDU", None],
+            ["AKTİF", "GİRİŞ İPTAL", None],
             0,
         ),
         (
             [(104, 103.5, 104.5), (105, 200, 105.5), (106, 105.5, 106.5)],
-            ["AKTİF", "AKTİF", "BOZULDU", None],
+            ["AKTİF", "AKTİF", "KARANTİNA ÇIKIŞI", None],
             100,
         ),
     ],
@@ -384,8 +386,13 @@ def test_dunku_acik_kart_hissesi_eski_ve_yeni_anahtarla_bugun_de_indirilir(
 ):
     # TASARIM 5.2: evrenden çıksa da açık pozisyonun hissesi izlenir. Kart günlüğü yalnız eklenir (bilet 07a).
     k = Kayitli(
-        {"XXXX": fiyatlar(), "YYYY": fiyatlar(), "ZZZZ": fiyatlar()},
-        {"XXXX": [], "YYYY": [], "ZZZZ": []},
+        {
+            "XXXX": fiyatlar(),
+            "YYYY": fiyatlar(),
+            "ZZZZ": fiyatlar(),
+            "WWWW": fiyatlar(),
+        },
+        {"XXXX": [], "YYYY": [], "ZZZZ": [], "WWWW": []},
     )
     veri.indir(
         ["XXXX"], tmp_path, k, simdi=dt.datetime(2026, 10, 4, 19, 30)
@@ -395,7 +402,7 @@ def test_dunku_acik_kart_hissesi_eski_ve_yeni_anahtarla_bugun_de_indirilir(
     eski_satir = {
         "tarih": "2026-10-01",
         "anlik": "20261001-1930",
-        "kartlar": [{hisse: "YYYY", durum: "AKTİF"}],
+        "kartlar": [{hisse: "WWWW", durum: "AKTİF"}],
     }
     son_satir = {
         "tarih": "2026-10-02",
@@ -412,5 +419,27 @@ def test_dunku_acik_kart_hissesi_eski_ve_yeni_anahtarla_bugun_de_indirilir(
         encoding="utf-8",
     )
     gunluk.gunluk(TARIH, tmp_path, simdi=SIMDI, kaynak=k, p=P, atr_n=2)
-    # En son kayıt öncekini geçersiz kılar: yalnız ZZZZ açık.
-    assert "ZZZZ" in k.istenen and "YYYY" not in k.istenen
+    # En son kayıt öncekini geçersiz kılar; STOP kartın hissesi de indirilir (bilet 07c).
+    assert {"ZZZZ", "YYYY"} <= set(k.istenen) and "WWWW" not in k.istenen
+
+
+@pytest.mark.parametrize(
+    "durum",
+    ["STOP", "GÜN SONU STOPU", "KARANTİNA ÇIKIŞI", "GİRİŞ İPTAL", "BOZULDU"],
+)
+def test_dunku_kartin_hissesi_durumundan_bagimsiz_indirilir(tmp_path, durum):
+    # TASARIM 6.2 (vekil kararı 15.10, bilet 07c): STOP ve bekleyen çıkış dolana kadar pozisyon açıktır.
+    # BOZULDU eski kayıt etiketidir; eski satırlar okunmaya devam eder.
+    k = Kayitli({"XXXX": fiyatlar(), "YYYY": fiyatlar()}, {"XXXX": [], "YYYY": []})
+    veri.indir(["XXXX"], tmp_path, k, simdi=dt.datetime(2026, 10, 4, 19, 30))
+    k.istenen.clear()
+    yol = kayit.KAYIT_DIZINI / "kartlar.jsonl"
+    yol.parent.mkdir(parents=True, exist_ok=True)
+    satir_ = {
+        "tarih": "2026-10-02",
+        "anlik": "20261002-1930",
+        "kartlar": [{"hisse": "YYYY", "durum": durum}],
+    }
+    yol.write_text(json.dumps(satir_) + "\n", encoding="utf-8")
+    gunluk.gunluk(TARIH, tmp_path, simdi=SIMDI, kaynak=k, p=P, atr_n=2)
+    assert "YYYY" in k.istenen
