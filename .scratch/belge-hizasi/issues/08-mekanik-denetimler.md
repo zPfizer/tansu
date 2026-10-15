@@ -4,7 +4,7 @@
 
 **Blocked by:** 01, 02, 03, 04, 05, 06, 07
 
-**Status:** in-review
+**Status:** done (PR #23, de9af9c)
 
 - [x] Atıf testi: koddaki ve belgelerdeki `TASARIM <bölüm>` atıfları ve karar etiketleri (İ:, B-, C-, S2-) var olan bir bölüme ya da karara gider.
 - [x] `kayit/` dosyaları PR'da yalnız eklenmiş satır taşır (CI adımı: `git diff --numstat origin/<taban>...HEAD -- kayit`, silinen satır 0).
