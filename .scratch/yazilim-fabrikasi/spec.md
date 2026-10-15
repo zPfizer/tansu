@@ -40,7 +40,7 @@ veriye ya da beyne ihtiyaç duyan bilet `yerel` etiketiyle bu makinede kalır.
   depo sırrı `CLAUDE_CODE_OAUTH_TOKEN` olur; ek ücret yok, abonelik kullanım hakkından harcar. Sırrı Levent kendisi
   girer; ajan jeton görmez ve yazmaz.
 - Döngü: CI kırmızı bittiğinde bir `workflow_run` iş akışı etiketi koyar ve düzeltme ajanını aynı dalda çalıştırır (etiket durumu gösterir, tetik değildir; GITHUB_TOKEN ile konan etiket başka iş akışını tetiklemez); CI yeşil olunca etiket kalkar.
-  Bağımsız inceleme ikinci bir ajan koşusudur (`/code-review`); sonucu PR yorumu ve `inceleme-gecti` etiketidir.
+  Bağımsız inceleme ikinci bir ajan koşusudur (ölçütler isteğin içinde; runner'da `/code-review` komutuna güvenilmez); sonucu PR yorumu ve `inceleme-gecti` etiketidir.
 - Birleştirme: CI yeşil ve `inceleme-gecti` varsa. İlk sürümde birleştirmeyi yerel Claude yapar (Levent'in isteği onaydır);
   otomatik birleştirme ayrı bir karardır. Davranış değiştiren ya da kilitli dosyaya dokunan PR'da yerel Codex denetimi de şarttır; yalnız belge PR'ında bulut incelemesi yeterlidir.
 - Cron: Tansu'nun günlük koşusu yerelde kalır (TASARIM §6 Görev Zamanlayıcı; `veri/` git'te yok; İş Yatırım ayak izi).

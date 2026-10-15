@@ -1,0 +1,161 @@
+name: dongu
+
+# A workflow_run workflow runs the file on the default branch (master).
+# This file works only after it is merged to master. A copy on a PR branch does not run.
+on:
+  workflow_run:
+    workflows: [ci]
+    types: [completed]
+
+# Only a pull request of this repository, only a branch pr/*. The job runs with secrets.
+# A fork or another branch name does not start a run.
+jobs:
+  duzelt:
+    if: >-
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.head_repository.full_name == github.repository &&
+      startsWith(github.event.workflow_run.head_branch, 'pr/') &&
+      github.event.workflow_run.conclusion == 'failure'
+    # A fix run is never cancelled. A second red CI waits for the first fix run.
+    concurrency:
+      group: dongu-duzelt-${{ github.event.workflow_run.head_branch }}
+      cancel-in-progress: false
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      id-token: write
+      actions: read
+    steps:
+      # The label shows the state. It is not the trigger (GITHUB_TOKEN labels start no workflow).
+      # The marker counts the fix runs: 3 comments with the marker end the loop.
+      - id: pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          PR_YUKU: ${{ github.event.workflow_run.pull_requests[0].number }}
+          CI_LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}
+          DONGU_LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          nr="$PR_YUKU"
+          if [ -z "$nr" ]; then
+            nr=$(gh pr list --head "$HEAD_BRANCH" --state open --json number --jq '.[0].number // empty')
+          fi
+          if [ -z "$nr" ]; then
+            echo "No open pull request for branch $HEAD_BRANCH." >&2
+            exit 1
+          fi
+          echo "nr=$nr" >> "$GITHUB_OUTPUT"
+          sayi=$(gh pr view "$nr" --json comments --jq '[.comments[] | select(.body | contains("<!-- tansu-fix -->"))] | length')
+          if [ "$sayi" -ge 3 ]; then
+            gh pr edit "$nr" --add-label ready-for-human --remove-label ci-kirmizi
+            gh pr comment "$nr" --body "CI is still red after $sayi fix runs. The loop stops. A human must continue. Red CI run: $CI_LINK"
+            echo "devam=false" >> "$GITHUB_OUTPUT"
+          else
+            gh pr edit "$nr" --add-label ci-kirmizi
+            gh pr comment "$nr" --body "<!-- tansu-fix -->
+          CI is red. Fix run $((sayi + 1)) of 3 starts on this branch. Red CI run: $CI_LINK. Fix run: $DONGU_LINK"
+            echo "devam=true" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.pr.outputs.devam == 'true'
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_branch }}
+      - if: steps.pr.outputs.devam == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: requirements.lock.txt
+      - if: steps.pr.outputs.devam == 'true'
+        run: python -m pip install -r requirements.lock.txt -e ".[dev]"
+      - if: steps.pr.outputs.devam == 'true'
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            The CI of pull request #${{ steps.pr.outputs.nr }} is red. Fix it on the checked-out branch. Do only this.
+            1. Read AGENTS.md, CODING_STANDARDS.md, and DEFINITION_OF_DONE.md. Obey them.
+            2. Read the failed log: gh run view ${{ github.event.workflow_run.id }} --log-failed
+            3. Find the cause. Fix the cause in the code or the document. Do not loosen a test: do not delete an assert, do not increase a tolerance, do not add skip or xfail, do not change an expected value to match the code (AGENTS.md "Do not loosen a test"). If a test is wrong, write the reason in the document first.
+            4. Before each commit, run python -m pytest -q, ruff check tansu tests .github, and ruff format --check tansu tests .github. All must pass.
+            5. Add files by name. Never use git add . or git add -A.
+            6. In kayit/, only add new files or append lines. Never change or delete old lines. Never touch veri/.
+            7. Never use rebase, --amend, --force, reset --hard, or clean.
+            8. Commit and push to the same branch (git push). Do not create a new branch. Do not open a new pull request.
+            9. If you cannot fix it, comment the reason on the pull request: gh issue comment ${{ steps.pr.outputs.nr }} --body "<reason>". Do not push a failing test.
+          claude_args: |
+            --max-turns 20
+            --allowedTools "Edit,Write,Read,Glob,Grep,Bash(git add:*),Bash(git commit:*),Bash(git push:*),Bash(git status:*),Bash(git diff:*),Bash(git log:*),Bash(gh run view:*),Bash(gh issue view:*),Bash(gh issue comment:*),Bash(python -m pytest:*),Bash(ruff:*)"
+            --disallowedTools "Bash(git add .),Bash(git add . *),Bash(git add -A*),Bash(git add --all*),Bash(git rebase*),Bash(git commit* --amend*),Bash(git push* --force*),Bash(git push* -f*),Bash(git push* +*),Bash(git reset --hard*),Bash(git clean*)"
+
+  incele:
+    if: >-
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.head_repository.full_name == github.repository &&
+      startsWith(github.event.workflow_run.head_branch, 'pr/') &&
+      github.event.workflow_run.conclusion == 'success'
+    # A new push gives a new green CI and a new review. The older review run stops.
+    concurrency:
+      group: dongu-incele-${{ github.event.workflow_run.head_branch }}
+      cancel-in-progress: true
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+      id-token: write
+      actions: read
+    steps:
+      # The review reads the commit that the CI tested. The review job never runs PR code:
+      # no pip install, no pytest, no Bash tool except gh.
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+      # The label always shows the newest review run: remove both labels before the review.
+      - id: pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          PR_YUKU: ${{ github.event.workflow_run.pull_requests[0].number }}
+        run: |
+          nr="$PR_YUKU"
+          if [ -z "$nr" ]; then
+            nr=$(gh pr list --head "$HEAD_BRANCH" --state open --json number --jq '.[0].number // empty')
+          fi
+          if [ -z "$nr" ]; then
+            echo "No open pull request for branch $HEAD_BRANCH." >&2
+            exit 1
+          fi
+          echo "nr=$nr" >> "$GITHUB_OUTPUT"
+          gh pr edit "$nr" --remove-label ci-kirmizi --remove-label inceleme-gecti
+      - uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            Review pull request #${{ steps.pr.outputs.nr }}. You are an independent reviewer. You do not write code. You do not push.
+            1. Read AGENTS.md, CODING_STANDARDS.md, and DEFINITION_OF_DONE.md (including the section "## Tansu").
+            2. Read the pull request: gh pr view ${{ steps.pr.outputs.nr }} --json number,title,body,labels,comments
+               Read the diff: gh pr diff ${{ steps.pr.outputs.nr }}
+               Read the linked issue (the line "Closes #N" in the body): gh issue view N --json number,title,body,comments
+            3. Check the diff against the issue, AGENTS.md, CODING_STANDARDS.md, and DEFINITION_OF_DONE.md. Check each acceptance criterion of the issue. Check each claim in the PR body against the diff. Read the changed files when the diff is not enough.
+            4. Give one verdict:
+               - GEÇTİ: no finding.
+               - NOTLU GEÇTİ: only low-risk test gaps and style notes.
+               - KALDI: a false claim, a broken behavior, a missed instruction, or a security or privacy risk.
+            5. Post the review as one pull request comment: gh pr comment ${{ steps.pr.outputs.nr }} --body-file -
+               The first line is "Karar: GEÇTİ", "Karar: NOTLU GEÇTİ", or "Karar: KALDI". Then list each finding with the file and the line.
+            6. If the verdict is GEÇTİ or NOTLU GEÇTİ:
+               a. Add the label: gh pr edit ${{ steps.pr.outputs.nr }} --add-label inceleme-gecti
+               b. Update the pull request body. Keep every other line of the body the same. In the section "## Bağımsız inceleme", write these two lines exactly:
+                  Denetçi: Claude (bulut incelemesi, run ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+                  Sonuç: geçti
+                  For NOTLU GEÇTİ write "Sonuç: NOTLU GEÇTİ" (the CI check accepts "geçti", "GEÇTİ", and "NOTLU GEÇTİ" and rejects any other text). Keep the HTML comment line between the two lines.
+                  Send the whole new body on stdin: gh pr edit ${{ steps.pr.outputs.nr }} --body-file -
+            7. If the verdict is KALDI: do not add the label. Do not change the body.
+          claude_args: |
+            --max-turns 15
+            --allowedTools "Read,Glob,Grep,Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr comment:*),Bash(gh pr edit:*),Bash(gh issue view:*)"

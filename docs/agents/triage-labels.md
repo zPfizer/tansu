@@ -17,7 +17,7 @@ Three more labels belong to Tansu. They are not triage roles:
 | Label | Meaning |
 | --- | --- |
 | `yerel` | On an issue: the ticket needs the brain pool, `veri/`, or a real snapshot. The cloud agent skips it. Only a local session runs it. |
-| `ci-kirmizi` | On a PR: CI is red. The label starts the agent again on the same branch. |
+| `ci-kirmizi` | On a PR: CI is red. The label shows the state. It is not the trigger: the `dongu` workflow starts the fix agent on the same branch, at most 3 times. |
 | `inceleme-gecti` | On a PR: the independent review says "geçti". With a green CI, the PR can merge. |
 
 The role label is the triage state of an open ticket. How the labels, the assignee, the PR, and the issue state map to the old `Status:` line is in `issue-tracker.md`, section "State of a ticket".
