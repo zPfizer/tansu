@@ -6,12 +6,6 @@ The behavior does not change before a document changes.
 ## Current state (Şimdiki durum)
 This section holds temporary states only. Each line has a date and an owner. Delete a line when its end condition is true.
 
-**Geliştirme durdu (development stopped):** Do not do new development that changes the behavior of Tansu
-until the documents have no drift, no old information, and no contradiction. The tickets of `.scratch/belge-hizasi/` and the work-setup jobs
-(`.scratch/yazilim-fabrikasi/`) continue (Levent 10.10). The document structure, the work flow, and the own agents of Tansu come first (Levent 15.10).
-Delete this paragraph when three things are true. Ticket 08 of `.scratch/belge-hizasi/` is complete. The document-structure pull request is merged.
-The own agents of Tansu are merged.
-
 ## Documents and owners (Belgeler ve sahipleri)
 Each fact has one owner file. The other files only give a reference to it. Read the files in the order of the table.
 
@@ -36,7 +30,7 @@ If a document and the code contradict, or if the document says nothing about the
 first. Write the reason. Then write the code.
 
 ## Work flow (İş akışı)
-Before each job, read `AKIS.md`. Follow its flow: A for new work, B for a bug fix.
+Before each job, read `AKIS.md`. Follow the flow that fits the work.
 Refer to an AKIS step by its title, not by its number.
 
 ## Working rules (Çalışma kuralları)
