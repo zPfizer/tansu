@@ -30,11 +30,12 @@ def test_tarama_kumesi_bilinen_dosyalari_icerir():
         "AGENTS.md",
         "CLAUDE.md",
         "GLOSSARY.md",
-        "AKIS.md",
         "CODING_STANDARDS.md",
         "DEFINITION_OF_DONE.md",
         "tansu/kayit.py",
         ".claude/skills/tansu-grill/SKILL.md",
+        ".claude/skills/tansu-yeni-is/SKILL.md",
+        ".claude/skills/tansu-yeni-is/ortak-adimlar.md",
         ".github/pull_request_template.md",
     } <= adlar
     # .scratch tarihsel metindir (biletler, arşiv); bilerek dışarıda
@@ -198,7 +199,7 @@ def test_kirik_karar_etiketi_yakalanir(tmp_path, metin, beklenen):
 
 
 @pytest.mark.parametrize(
-    "ad", ["AKIS.md", "CODING_STANDARDS.md", "DEFINITION_OF_DONE.md"]
+    "ad", ["AGENTS.md", "CODING_STANDARDS.md", "DEFINITION_OF_DONE.md"]
 )
 def test_kok_belgelerinde_kirik_karar_etiketi_yakalanir(tmp_path, ad):
     # Kök belgeler izlenen dosya kümesindedir; etiket taraması onları atlamaz.

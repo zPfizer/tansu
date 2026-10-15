@@ -47,14 +47,13 @@ DOSYA_KOKLERI = (
     "AGENTS.md",
     "CLAUDE.md",
     "GLOSSARY.md",
-    "AKIS.md",
     "CODING_STANDARDS.md",
     "DEFINITION_OF_DONE.md",
 )
 
 
 def izlenen_dosyalar(kok):
-    """tansu/, tests/, docs/, .claude/, .github/, AGENTS.md, CLAUDE.md, GLOSSARY.md, AKIS.md, CODING_STANDARDS.md, DEFINITION_OF_DONE.md altındaki git'e girmiş .py ve .md dosyaları.
+    """tansu/, tests/, docs/, .claude/, .github/, AGENTS.md, CLAUDE.md, GLOSSARY.md, CODING_STANDARDS.md, DEFINITION_OF_DONE.md altındaki git'e girmiş .py ve .md dosyaları.
 
     `.scratch/` bilerek dışarıdadır: biletler ve arşiv tarihsel metindir, atıfları o günün TASARIM'ına göredir.
     """

@@ -314,7 +314,7 @@ def test_ad_istisnasi_dosyaya_ve_anisa_baglidir(tmp_path, goreli, metin, beklene
 
 
 def test_akis_istisnasi_kaldirildi_eksik_akis_md_hatadir(tmp_path):
-    # AKIS.md artık depodadır (kök belge); CODING_STANDARDS.md için eski istisna yoktur.
+    # AKIS.md depodan kalktı (16.10, becerilere taşındı); CODING_STANDARDS.md için eski istisna yoktur.
     _depo(tmp_path)
     yol = _yaz(tmp_path, "CODING_STANDARDS.md", "the session review in `AKIS.md`")
     assert yol_kirikleri(tmp_path, [yol]) == ["CODING_STANDARDS.md:1: AKIS.md"]

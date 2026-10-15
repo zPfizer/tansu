@@ -63,6 +63,6 @@ veriye ya da beyne ihtiyaç duyan bilet `yerel` etiketiyle bu makinede kalır.
 
 ## Further Notes
 
-Belge hizası işi (`.scratch/belge-hizasi/`) sürerken Tansu'da yeni geliştirme durur; bu iş Tansu'nun davranışını
+Belge hizası işi (`.scratch/arsiv/belge-hizasi/`) sürerken Tansu'da yeni geliştirme durur; bu iş Tansu'nun davranışını
 değiştirmez, çalışma düzenini değiştirir. Belge hizası biletlerinin çoğu beyin havuzuna ya da gerçek veriye bağlıdır
 (`yerel`).
