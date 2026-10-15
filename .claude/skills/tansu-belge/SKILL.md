@@ -17,7 +17,7 @@ Run AGENTS.md "Every job" first. Run the steps in order. Run an "If" row only wh
 | If | Then |
 |---|---|
 | the work is a workflow spec | `loop-me`. |
-| the work is a new skill | `anthropic-skills:skill-creator`. |
+| the work is a new skill | `anthropic-skills:skill-creator`, then `tansu-eval` "Skill trigger eval". |
 | the work is a Claude interface mode or hook | `plugin-authoring`. |
 | the document is long | `anthropic-skills:doc-coauthoring`. |
 | the change affects behavior | run `tansu-eval` "Add the case" and `tansu-eval` "Check the judge". |

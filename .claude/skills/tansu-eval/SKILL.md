@@ -18,3 +18,20 @@ Run AGENTS.md "Every job" first. Run the steps in order. Run an "If" row only wh
 | If | Then |
 |---|---|
 | data is scarce | `evals:generate-synthetic-data`. |
+
+## Skill trigger eval
+
+Use this part when you test whether a skill triggers on the right requests. The base is `anthropic-skills:skill-creator` "Description Optimization". These rules are permanent (Levent 16.10).
+
+1. **Query set:** Write about 20 queries per skill. 8–10 should trigger the skill. 8–10 should not. The should-not queries are near-misses from the neighbor Tansu flow skills. Each query is as full as a real Tansu request.
+2. **Runs:** Run each query 3 times. A skill counts as triggered when its rate is at least 0.5.
+3. **Model:** Pass `--model` with the model ID of real Tansu sessions.
+4. **Tuning:** When you tune a description, split the set: 60% train and 40% held-out. Judge only on the held-out part.
+5. **Sample first:** Run a small sample first. Read its distribution. Start the full run only if the setup is clean. A clean setup has three signs:
+   - No run stops because a tool is denied.
+   - No run is missing.
+   - No outside context is in the eval session. Global hooks and brain context are outside context.
+
+   (Reason, 16.10: in the first sample, global hooks put brain context into the eval sessions. 2 of 44 runs gave no result.)
+6. **Runner:** On Windows, the eval runner of skill-creator does not work. It reads pipes with `select()`. It also tests a temporary command copy that competes with the real skill. Use a runner that calls `claude -p` with the real project skills. It reads the first Skill tool call from `--output-format stream-json --verbose`.
+7. **Save:** Save the eval set, the exact command, and the results under `.scratch/<job>/` in the repository. The first set and two sample runs are in `.scratch/beceri-tetik-1610/`.
