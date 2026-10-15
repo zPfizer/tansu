@@ -22,6 +22,7 @@ This file starts short. It grows from real mistakes.
 
 ## Seen once
 - 15.10: 9 writer and 11 reader subagents cut note bodies (`head -c`, `cut -c`, `x[:400]`) and still reported "Notes read: N". The Codex auditor found it in round 2. A reader prompt names a full-print command and the main agent checks the reported line and character counts with a script.
+- 16.10: a skill trigger eval ran `claude -p` with `--allowedTools` only and assumed the sessions were read only. They acted on the queries and edited `.claude/agents/vekil.md`, `.claude/skills/tansu-grill/SKILL.md`, and the brain Threads. Rule in `tansu-eval` "Skill trigger eval".
 
 ## Tansu
 This section adds to the general standard. `docs/TASARIM.md` owns the behavior rules. This section holds how to apply

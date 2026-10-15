@@ -33,5 +33,6 @@ Use this part when you test whether a skill triggers on the right requests. The 
    - No outside context is in the eval session. Global hooks and brain context are outside context.
 
    (Reason, 16.10: in the first sample, global hooks put brain context into the eval sessions. 2 of 44 runs gave no result.)
+   - No run changes a file. `--allowedTools` does not block other tools. Pass `--disallowedTools` for Edit, Write, Bash, PowerShell, and NotebookEdit. After the run, check `git status` of the project and the brain. (16.10: eval sessions acted on the queries and edited two Tansu files and the brain Threads.)
 6. **Runner:** On Windows, the eval runner of skill-creator does not work. It reads pipes with `select()`. It also tests a temporary command copy that competes with the real skill. Use a runner that calls `claude -p` with the real project skills. It reads the first Skill tool call from `--output-format stream-json --verbose`.
 7. **Save:** Save the eval set, the exact command, and the results under `.scratch/<job>/` in the repository. The first set and two sample runs are in `.scratch/beceri-tetik-1610/`.
