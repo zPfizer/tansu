@@ -27,7 +27,7 @@ You only read. You change no file. You run no command that writes.
 
 ## Environment
 - Windows. Python: `py -3 -I -X utf8 <script.py>` or `-c "<code>"`. The `-I` flag ignores `PYTHONUTF8`. Without `-X utf8` a Turkish character or "→" raises `UnicodeEncodeError`. No stdin, no heredoc.
-- A worktree has no `.venv`. If a read needs a project package, use `C:/Users/levent/Desktop/TANSU/.venv/Scripts/python.exe -I -X utf8 -c "<code>"`. Do not write to `kayit/` or `veri/`.
+- A worktree has no `.venv`. If a read needs a project package, use `C:/Users/levent/Desktop/TANSU/.venv/Scripts/python.exe -I -X utf8 -c "<code>"`. Do not write to `kayit/` or `veri/`. <!-- driftlint-ignore: veri/ is gitignored local data, absent in CI -->
 - Open each text file as UTF-8. Open a CSV as `utf-8-sig`.
 - Temporary files: `D=$(mktemp -d -p "$TEMP")` once, then write under `$D`. Never write inside the repository. Parallel agents share `$TEMP`, so a fixed name is overwritten by another agent.
 - A path with a space breaks a shell loop. Use `pathlib` and `splitlines()` (a file can hold CRLF).
