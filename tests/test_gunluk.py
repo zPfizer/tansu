@@ -17,7 +17,7 @@ import os
 import pandas as pd
 import pytest
 
-from tansu import aileler, gunluk, kayit, rapor
+from tansu import aileler, gunluk, kayit, rapor, veri
 from tansu.kaynak import KaynakHatasi
 from tests.test_veri import SahteKaynak, satir
 
@@ -27,18 +27,18 @@ P = aileler.Parametre(
 TARIH = dt.date(2026, 10, 5)
 SIMDI = dt.datetime(2026, 10, 5, 19, 30)
 BASLIK = [
-    "Tarih",
-    "Hisse",
-    "Aile",
-    "Durum",
-    "Referans",
-    "Stop",
-    "Pozisyon %",
-    "Adet",
-    "Fiili risk",
-    "Likidite sınırı TL",
-    "Kanıt",
-    "Kaynak",
+    "tarih",
+    "hisse",
+    "aile",
+    "durum",
+    "referans",
+    "stop",
+    "pozisyon_yuzde",
+    "adet",
+    "fiili_risk",
+    "likidite_siniri_tl",
+    "kanit",
+    "kaynak",
 ]
 
 
@@ -124,7 +124,7 @@ def test_tamam_kart_csv_ve_durum(tmp_path):
     assert ham.startswith(b"\xef\xbb\xbf")
     satirlar = list(csv.reader(ham.decode("utf-8-sig").splitlines(), delimiter=";"))
     kanit = (
-        "Kâğıt · 148 işlem · rastgele kurala göre işlem başına fazla getiri +%0,90 (%0,3 masraf) · "
+        "Kâğıt · 148 işlem · sepete göre işlem başına fazla getiri +%0,90 (%0,3 masraf) · "
         "portföy fazla getirisi (K2'ye göre, yıllık, blok bootstrap %95 aralık +%0,20 ile +%1,60) · kâğıt dönem 3/6 ay"
     )
     assert satirlar == [
@@ -141,7 +141,7 @@ def test_tamam_kart_csv_ve_durum(tmp_path):
             "%0,35",
             "80000",
             kanit,
-            "İş Yatırım 20261005-1930",
+            "Tansu'dan esinlenen yorum · İş Yatırım 20261005-1930",
         ],
     ]
 
@@ -170,7 +170,7 @@ def test_kart_gunlugu_yalniz_eklenir_ve_gun_basina_bir_satir(tmp_path):
         and s["tarih"] == "2026-10-05"
         and s["anlik"] == "20261005-1930"
     )
-    assert [k["Hisse"] for k in s["kartlar"]] == ["XXXX"]
+    assert [k["hisse"] for k in s["kartlar"]] == ["XXXX"]
 
 
 def test_bugun_basarili_kosu_varsa_hicbir_sey_yapmadan_cikar(tmp_path):
@@ -361,6 +361,56 @@ def test_kart_durumlari_ve_kapanan_kart_yalniz_kapandigi_gun_gorunur(
         if durum is None:
             assert kartlar == []
         else:
-            assert [(k["Hisse"], k["Tarih"], k["Durum"]) for k in kartlar] == [
+            assert [(k["hisse"], k["tarih"], k["durum"]) for k in kartlar] == [
                 ("XXXX", "2026-10-05", durum)
             ]
+
+
+class Kayitli(Sayacli):
+    def __init__(self, *a):
+        super().__init__(*a)
+        self.istenen = []
+
+    def fiyat(self, sembol, bas, son):
+        self.istenen.append(sembol)
+        return super().fiyat(sembol, bas, son)
+
+
+@pytest.mark.parametrize(
+    "anahtarlar", [("Hisse", "Durum"), ("hisse", "durum")], ids=["eski", "yeni"]
+)
+def test_dunku_acik_kart_hissesi_eski_ve_yeni_anahtarla_bugun_de_indirilir(
+    tmp_path, anahtarlar
+):
+    # TASARIM 5.2: evrenden çıksa da açık pozisyonun hissesi izlenir. Kart günlüğü yalnız eklenir (bilet 07a).
+    k = Kayitli(
+        {"XXXX": fiyatlar(), "YYYY": fiyatlar(), "ZZZZ": fiyatlar()},
+        {"XXXX": [], "YYYY": [], "ZZZZ": []},
+    )
+    veri.indir(
+        ["XXXX"], tmp_path, k, simdi=dt.datetime(2026, 10, 4, 19, 30)
+    )  # evren tabanı
+    k.istenen.clear()
+    hisse, durum = anahtarlar
+    eski_satir = {
+        "tarih": "2026-10-01",
+        "anlik": "20261001-1930",
+        "kartlar": [{hisse: "YYYY", durum: "AKTİF"}],
+    }
+    son_satir = {
+        "tarih": "2026-10-02",
+        "anlik": "20261002-1930",
+        "kartlar": [
+            {hisse: "ZZZZ", durum: "AKTİF"},
+            {hisse: "YYYY", durum: "STOP"},
+        ],
+    }
+    yol = kayit.KAYIT_DIZINI / "kartlar.jsonl"
+    yol.parent.mkdir(parents=True, exist_ok=True)
+    yol.write_text(
+        "".join(json.dumps(x) + "\n" for x in (eski_satir, son_satir)),
+        encoding="utf-8",
+    )
+    gunluk.gunluk(TARIH, tmp_path, simdi=SIMDI, kaynak=k, p=P, atr_n=2)
+    # En son kayıt öncekini geçersiz kılar: yalnız ZZZZ açık.
+    assert "ZZZZ" in k.istenen and "YYYY" not in k.istenen

@@ -291,3 +291,17 @@ def test_kod_hashi_yorum_ve_bosluktan_etkilenmez(tmp_path, monkeypatch):
         metin.replace("def bekleyen(", "def yeni_bekleyen("), encoding="utf-8"
     )
     assert kayit.kayitla(P, ATR_N)["kod_hash"] != once["kod_hash"]
+
+
+def test_her_yeni_gunluk_satiri_sema_1_tasir_ve_okuyucu_sema_siz_satiri_okur(tmp_path):
+    kayit.kayitla(P, ATR_N)
+    kayit.denetim_yaz({"gecti": True}, P, ATR_N)
+    yol = kayit.KAYIT_DIZINI / "deneme.jsonl"
+    ham = [json.loads(s) for s in yol.read_text(encoding="utf-8").splitlines()]
+    assert [(s["tur"], s["sema"]) for s in ham] == [("kayit", 1), ("destek", 1)]
+    yol.write_text(
+        json.dumps({"tur": "destek", "olay": "denetim", "kod_hash": "k", "gecti": True})
+        + "\n",
+        encoding="utf-8",
+    )
+    assert kayit.denetim_gecti("k") is True

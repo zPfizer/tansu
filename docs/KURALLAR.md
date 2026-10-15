@@ -151,7 +151,9 @@ Kural:
   Aynı dönemi ve gün sayısını veren, ölçülen her değeri (ortalama, EMA'lar) birbirinden en çok `docs/sadakat.md` başındaki
   toleransla (gösterilen son hanenin yarısı, ±0,005) ayrılan adaylar eşdeğerdir ve tek aday sayılır. EMA'da son 3 yıl ve son
   2 yıl böyledir; ölçülen değerler `docs/sadakat.md` EMA tablosundadır. (bilet 05, 14.10)
-- Birden çok aday formül denenir; Tansu'nun rakamını en iyi üreten seçilir. Çift Z'si için aday
+- Birden çok aday formül denenir; Tansu'nun rakamını en iyi üreten seçilir.
+  En iyi: ölçülen değerlerin Tansu'nun rakamlarından mutlak farklarının toplamı en küçük olan aday; eşitlikte aday
+  sırasındaki ilk aday (bilet 07a, 14.10). Çift Z'si için aday
   kümesine standart sapmanın ddof'u {0; 1} de girer. (İ: 19-028)
 - Rapor tarihi bilinmiyorsa (Z_t, Z_{t−1}) çifti bütün işlem günlerinde aranır; eşleşen günler yazılır.
   (İ: 04-003)

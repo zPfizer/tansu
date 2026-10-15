@@ -162,6 +162,11 @@ def test_yaz_docs_ve_rapor_dosyalarini_yazar_yuzdeler_elle():
         and "EMA sıkışması" in metin
         and "Çift rotasyonu" in metin
     )
+    assert (
+        "(ölçüt 1–4 Geçti ve portföy kuralı reddetmedi)" in metin
+        and "TASARIM 5.12" in metin
+        and "alt kümesidir" not in metin
+    )
     assert "GEÇTİ" in denetim.yaz(sonuc_ornek(True))[0].read_text(encoding="utf-8")
     assert "Boru hattı denetimi" in html.read_text(encoding="utf-8")
 

@@ -54,6 +54,7 @@ def test_komut_iki_kosuda_ayni_rakamlari_verir_ve_deneme_gunlugune_yazar(tmp_pat
     satirlar = [json.loads(s) for s in gunluk.read_text(encoding="utf-8").splitlines()]
     assert [s["tur"] for s in satirlar] == ["sadakat", "sadakat"]
     assert all(s["anlik"] == kimlik for s in satirlar)
+    assert all(s["sema"] == 1 for s in satirlar)
 
 
 def test_sadakat_gunlugunun_her_satirinda_olay_var(tmp_path):
@@ -148,3 +149,70 @@ def test_ek_aday_ara_isaret_cevirerek_ara_gunde_cifti_bulur():
         y, x, hedef=(-0.4364357804719848, -3.0), pencereler=range(3, 4)
     )
     assert sonuc == [("dun_pencere", "log_oran", 3, 1, -1, gunler[4])]
+
+
+class _Anlik:
+    kimlik = "sahte"
+    fiyat = pd.DataFrame({"sembol": ["KRDMD"]})
+
+
+def _olcum(ort, ema200, bas="2025-12-17"):
+    d = {
+        "bas": pd.Timestamp(bas),
+        "bit": pd.Timestamp("2026-01-14"),
+        "gun": 20,
+        "ortalama": ort / 100,
+    }
+    return {"donemler": [d], "emalar": [31.92, 30.74, 29.58, ema200]}
+
+
+def _rapor(monkeypatch, bes_yil, uc_yil, iki_yil):
+    sonuc = {None: bes_yil, 3: uc_yil, 2: iki_yil}
+    monkeypatch.setattr(
+        sadakat, "ema_sikismasi", lambda anlik, gecmis_yil=None: sonuc[gecmis_yil]
+    )
+    return sadakat.rapor_metni(_Anlik())
+
+
+def test_rapor_esdeger_adaylar_tek_aday_sayilir_ve_tansuya_en_yakin_secilir(
+    monkeypatch,
+):
+    # KURALLAR §4: aynı dönem ve gün, ölçülen değerler en çok 0,005 ayrı: tek aday; seçilen Tansu'nun rakamına en yakın.
+    # Mutlak fark toplamı: son 3 yıl 0,001 + 0,004 = 0,005; son 2 yıl 0,002 + 0,000 = 0,002.
+    metin = _rapor(
+        monkeypatch,
+        _olcum(0.665, 28.4352, bas="2025-12-16"),
+        _olcum(0.641, 28.4340),
+        _olcum(0.642, 28.4300),
+    )
+    assert "Eşdeğer adaylar: son 3 yıl, son 2 yıl. Tek aday sayılır." in metin
+    assert "Seçilen aday: son 2 yıl (" in metin and "eşitlikte ilk aday" in metin
+
+
+def test_rapor_esitlikte_ilk_aday_secilir(monkeypatch):
+    metin = _rapor(
+        monkeypatch,
+        _olcum(0.665, 28.4352, bas="2025-12-16"),
+        _olcum(0.641, 28.4340),
+        _olcum(0.641, 28.4340),
+    )
+    assert "Seçilen aday: son 3 yıl (" in metin
+
+
+def test_rapor_esdeger_olmayan_adaylar_tek_aday_sayilmaz(monkeypatch):
+    metin = _rapor(
+        monkeypatch,
+        _olcum(0.665, 28.4352, bas="2025-12-16"),
+        _olcum(0.641, 28.4366),
+        _olcum(0.70, 28.4370),
+    )
+    assert "tek aday sayılmaz" in metin and "Seçilen aday" not in metin
+
+
+def test_rapor_metni_ucuncu_satir_kurallar_4e_atif_verir(tmp_path):
+    metin = sadakat.rapor_metni(veri.oku(hazirla(tmp_path), tmp_path))
+    satirlar = metin.splitlines()
+    assert satirlar[2].startswith("Kural: KURALLAR §4")
+    assert "Getiriye bakılmaz." not in metin
+    assert "(±0,005)" in satirlar[2]
+    assert "Eşdeğer adaylar" in metin

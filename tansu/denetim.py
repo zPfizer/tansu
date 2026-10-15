@@ -278,8 +278,9 @@ def yaz(sonuc, docs=None, rapor_dizini=None) -> tuple:
             "|" + "---|" * len(satirlar[0]),
             *("| " + " | ".join(s) + " |" for s in satirlar[1:]),
             "",
-            "Yanlış kabul: boş dünyada ölçüt 1–4 geçen oran (örneklem ve sağlamlık şartı aranmaz; Kâğıt bunun alt kümesidir). "
-            "Güç: etkili dünyada aynı oran.",
+            'Yanlış kabul ve güç tanımı: TASARIM 5.12, "Boru hattı denetimi". "Ölçüt 1–4" sütunları o tanımın kendisidir '
+            '(ölçüt 1–4 Geçti ve portföy kuralı reddetmedi); "Kâğıt" sütunları ayrıca örneklem ve sağlamlık şartını arar. '
+            "(bilet 05, 14.10)",
             "",
         ]
     )
