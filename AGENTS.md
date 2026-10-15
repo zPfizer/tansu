@@ -25,9 +25,9 @@ Each fact has one owner file. The other files only give a reference to it. Read 
 | `docs/sadakat.md` | the fidelity (sadakat) measurement |
 | `AGENTS.md` | the entry, the working rules, and the current state |
 | `AKIS.md` | the work flows, the skill placement, the scope, and the auditor rules |
-| `docs/strateji-taslak/`, `docs/strateji-modulleri-taslak.md` (local, not in git) | proposals that wait for approval. They own no fact. They are outside the drift check. These local files need not exist |
+| `docs/strateji-taslak/`, `docs/strateji-modulleri-taslak.md` (local, not in git) | proposals that wait for approval. They own no fact. They are outside the drift check. These local files need not exist <!-- driftlint-ignore: local-only, gitignored, absent in CI --> |
 | `CODING_STANDARDS.md`, `DEFINITION_OF_DONE.md` | the code format and the done criteria (`## Tansu`) |
-| `docs/sorgu/sonuc-3-4.md`, `docs/sorgu/izleme/karar.md` (local, not in git) | the reasons for the decisions (read them when necessary and when they exist) |
+| `docs/sorgu/sonuc-3-4.md`, `docs/sorgu/izleme/karar.md` (local, not in git) | the reasons for the decisions (read them when necessary and when they exist) <!-- driftlint-ignore: local-only, gitignored, absent in CI --> |
 
 The drift check covers all these files. Correct a file when it contradicts another file, contains old information,
 or copies a fact of another file.
@@ -56,7 +56,7 @@ Refer to an AKIS step by its title, not by its number.
 - **Do not look at the return (Getiriye bakma):** See `docs/KURALLAR.md` §4.
 - **Git (this repository only):** Do not use `rebase`, `--amend`, `--force` (and `--force-with-lease`), `reset --hard`, `clean -f`, `branch -D`,
   `checkout .`, `restore .`, `git add .`, or `git add -A` (for Claude, a permission deny blocks them: `permissions.deny` global and `.claude/settings.json`). Add files
-  by name. Which folders git tracks and the log rules are in TASARIM §5.11. Do not delete `veri/`. In a commit, leave the `kayit/` files only added, not
+  by name. Which folders git tracks and the log rules are in TASARIM §5.11. Do not delete `veri/`. In a commit, leave the `kayit/` files only added, not <!-- driftlint-ignore: veri/ is gitignored local data, absent in CI -->
   modified. This rule covers this repository only.
 - **Task Scheduler (Görev Zamanlayıcı):** Two tasks are installed and enabled on this machine:
   `TansuGunluk` (`kurulum/tansu-gunluk.xml`, `python -m tansu gunluk`) and `TansuAylik` (`kurulum/tansu-aylik.xml`, `python -m tansu evren-indir`).
@@ -66,7 +66,7 @@ Refer to an AKIS step by its title, not by its number.
   disabled (`<Enabled>false</Enabled>`); enable it with `schtasks /change /tn TansuGunluk /enable`. To delete a task: `schtasks /delete /tn TansuGunluk /f`.
 - **Rule parameter (Kural parametresi):** A rule parameter changes only with a TASARIM/KURALLAR change and as a new trial (deneme).
 - **Dependency (Bağımlılık):** Before you add a new package, check TASARIM §4 and the stdlib. Write an added package in `pyproject.toml`
-  with `==`.
+  with `==`. A CI tool outside Python is pinned to an exact version in the workflow file.
 
 ## Standards (Standartlar)
 `CODING_STANDARDS.md` and `DEFINITION_OF_DONE.md` are the standards of Tansu. Tansu keeps its own copy. No shared original exists since 15.10 (Levent 15.10).

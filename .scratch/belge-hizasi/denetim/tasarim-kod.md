@@ -15,7 +15,7 @@ Sayım: yaklaşık 95 değişmez kural; 67'sinde kod ve test var, 28'inde biri e
 6. Yakalanmayan istisna günlüğe yazılır (TASARIM:145). `__main__.py:178` yalnız iki istisna türünü yakalar.
 7. Ölçüt değişirse ayrılmış dönemler sıfırlanır (TASARIM:60). Sıfırlayan kod yok. Kısmi.
 8. Uyarı yoksa "Uyarı yok" yazılır; bulunamayan semboller uyarıya girer (TASARIM:849-850). `rapor.py:219-247`'de yok.
-9. Blok uzunluğu ve masraf senaryoları günlükte ayrı alan (TASARIM:580). `basladi` satırında blok yok. Kısmi.
+9. Blok uzunluğu ve masraf senaryoları günlükte ayrı alan (TASARIM:580). `basladi` satırında blok yok. Kısmi. **Kapandı (bilet 07f, 15.10; TASARIM 5.8):** blok uzunluğu çıktıdır, günlük alanı değildir; masraf düzeyi başına sonuç `masraf_sonuc` alanıdır.
 
 ## 2. Kodda var, testi yok
 - Aynı gün sırası çıkış, giriş, değerleme (TASARIM:297, 441): `simulator.py:103-124`. Kısmi.

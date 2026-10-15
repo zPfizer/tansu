@@ -61,7 +61,7 @@ denetlenebilen her kural bir teste ya da CI adımına bağlanır, böylece belge
 
 - Taslak 8'deki yeni kuralların (iz süren stop, şok freni, üç hipotez) TASARIM'a alınması: mimari işinin
   (`.scratch/tansu-mimari/spec.md`) kararıdır.
-- Kodu hiç olmayan dokuz kararın (Kâğıt dönemi, Canlı durumu vb.) yazılması: mimari işinin 5. adımıdır. Bu iş
+- Kodu hiç olmayan sekiz kararın (Kâğıt dönemi, Canlı durumu vb.; dokuzuncusu 07f ile kapandı) yazılması: mimari işinin 5. adımıdır. Bu iş
   yalnız listeyi oraya bağlar.
 - `docs/strateji-taslak/` ham kaynakları (defterler, ham yapıştırmalar): kural belgesi değildir.
 

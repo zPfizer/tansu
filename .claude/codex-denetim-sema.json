@@ -1,0 +1,24 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["round", "verdict", "findings", "summary"],
+  "properties": {
+    "round": { "type": "integer", "minimum": 1, "maximum": 3 },
+    "verdict": { "type": "string", "enum": ["GEÇTİ", "NOTLU GEÇTİ", "KALDI"] },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "line", "severity", "text"],
+        "properties": {
+          "path": { "type": "string" },
+          "line": { "type": "integer" },
+          "severity": { "type": "string", "enum": ["KALDI", "NOT"] },
+          "text": { "type": "string" }
+        }
+      }
+    },
+    "summary": { "type": "string" }
+  }
+}
