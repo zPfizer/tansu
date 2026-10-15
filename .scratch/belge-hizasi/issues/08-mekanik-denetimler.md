@@ -4,7 +4,7 @@
 
 **Blocked by:** 01, 02, 03, 04, 05, 06, 07
 
-**Status:** ready-for-agent
+**Status:** in-review
 
 - [x] Atıf testi: koddaki ve belgelerdeki `TASARIM <bölüm>` atıfları ve karar etiketleri (İ:, B-, C-, S2-) var olan bir bölüme ya da karara gider.
 - [x] `kayit/` dosyaları PR'da yalnız eklenmiş satır taşır (CI adımı: `git diff --numstat origin/<taban>...HEAD -- kayit`, silinen satır 0).
@@ -17,7 +17,7 @@
       denetler). Çalışma çıktısı adları (`durum.txt`, `manifest.json`, `kartlar.jsonl`) yol sayılmaz.
 - [x] `dod_kontrol.py` "Tansu:" satırının işaretli ve kanıtlı olmasını ister.
 - [x] Kodu hiç olmayan sekiz karar (`tasarim-kod.md` §1; 9. madde 07f ile kapandı, TASARIM 5.8) mimari işinin (`.scratch/tansu-mimari/spec.md`) 5. adımına bağlandı.
-- [ ] AGENTS.md "Geliştirme durdu" satırı kaldırıldı; mimari spec'in `Status` satırı `needs-triage`'a döndü.
+- [x] AGENTS.md "Geliştirme durdu" bitiş koşulu güncellendi, satır silinmedi (Levent 15.10: satır, bilet 08, belge yapısı PR'ı ve Tansu'nun kendi ajanları birleşince biter; PR 19 yazdı); mimari spec'in `Status` satırı `needs-triage`'a döndü. Kanıt: 15.10 notu.
 - [x] Havuz testi: beyindeki Tansu havuzunun her notu A–E'de atıflı ya da "kural içermez" listesinde; havuza yeni not gelince test kırmızı olur (CI'da beyin yoksa atlanır, yerel test kapısı denetler).
 
 - 14.10: CI `dod` kontrolü (`.github/dod_kontrol.py:49`) yalnız "Sonuç: geçti" kabul ediyor; AKIS sözlüğündeki NOTLU GEÇTİ kararını tanımıyor. PR gövdesinde "geçti" yazıldı, not Denetçi satırında. Kontrolün NOTLU GEÇTİ'yi tanıması bilet 08'e.
@@ -133,3 +133,4 @@
      iddiası için `tests/test_sinirlar.py` (48 durum) eklendi: okunmayan atıf biçimleri (11), okunan (5), okunmayan alıntı (4), okunmayan etiket (6), okunmayan yol (9), okunan yol (6), havuz sınırları (4) ve PR şablonu yorumu, CI araç sürümü sabitliği,
      driftlint yapılandırması. `tests/test_ci_kayit.py`'ye ikili dosya silme (exit 1) eklendi. Elle doğrulanan sayılar: tablo 14 depo yolu ve 1 beyin satırı, 17 `6.x/8.x` madde atfı, master'da `kayit/` 1 işlem ve 17 birleştirmede silinen satır 0,
      7 not yalnız `-NN` ile kapsanıyor (21, 35, 38, 40, 52, 54, 55), driftlint temiz klonda `0 errors, 0 warnings, 1 info across 3 context files`, çıkış 0.
+- 15.10 (master 9bad506 birleştirildi, PR 19): `AGENTS.md` ve `CODING_STANDARDS.md` çakıştı; AGENTS.md master yapısıyla alındı (Bağımlılık cümlesi ve var olan 4 satırdaki driftlint-ignore notları dalda kaldı), CODING_STANDARDS.md tamamen master'ın (YONETIM eşitlemesi 19d5309 ve 508929d düştü, orijinal arşivlendi); test değişikliği yok, kapı 614 geçti, `ruff` temiz, temiz klonda driftlint `0 errors, 0 warnings, 1 info`, çıkış 0 (eski "1 kaldı" notundaki `test_kodlama_standartlari_genel_standartla_baslar` master'da silindi). Kalıntı: `AKIS.md` ad istisnası (`tests/atif_araclari.py:420`) artık gereksiz (AKIS.md depoda, "the session review in" cümlesi gitti); testler yeşil, kaldırmak ayrı iş.
