@@ -6,6 +6,8 @@
 
 **Status:** ready-for-agent
 
+**Donduruldu (frozen):** Levent 15.10. Do not start, push, or merge this ticket. The branch `pr/f01-github-issues` keeps the work.
+
 - [ ] İş takibi belgesi GitHub Issues'u anlatır (Matt'in GitHub şablonu); AGENTS.md "Issue tracker" satırı buna göre değişir.
 - [ ] Etiketler depoda var: beş durum etiketi, `yerel`, `ci-kirmizi`, `inceleme-gecti`.
 - [ ] Belge hizası ve mimari işinin açık biletleri issue olarak taşındı; engel bağları issue numaralarıyla yazılı; beyin havuzu ya da gerçek veri gereken biletlerde `yerel` etiketi var.
