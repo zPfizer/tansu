@@ -52,9 +52,10 @@ Refer to an AKIS step by its title, not by its number.
   `checkout .`, `restore .`, `git add .`, or `git add -A` (for Claude, a permission deny blocks them: `permissions.deny` global and `.claude/settings.json`). Add files
   by name. Which folders git tracks and the log rules are in TASARIM §5.11. Do not delete `veri/`. In a commit, leave the `kayit/` files only added, not <!-- driftlint-ignore: veri/ is gitignored local data, absent in CI -->
   modified. This rule covers this repository only.
-- **Task Scheduler (Görev Zamanlayıcı):** Two tasks are installed and enabled on this machine:
+- **Task Scheduler (Görev Zamanlayıcı):** No task is installed on this machine (Levent 16.10: the project is still in design).
+  Two task definitions stay in the repository:
   `TansuGunluk` (`kurulum/tansu-gunluk.xml`, `python -m tansu gunluk`) and `TansuAylik` (`kurulum/tansu-aylik.xml`, `python -m tansu evren-indir`).
-  The times are in TASARIM §6. The paths point to the main repository on this machine (`C:\Users\levent\Desktop\TANSU`).
+  The times are in TASARIM §6. Install a task only after Levent approves it (DEFINITION_OF_DONE.md `## Tansu`). The paths point to the main repository on this machine (`C:\Users\levent\Desktop\TANSU`).
   To install a definition again, use PowerShell (`schtasks /create /xml` cannot read UTF-8 XML):
   `Register-ScheduledTask -TaskName TansuGunluk -Xml (Get-Content -Raw -Encoding utf8 kurulum\tansu-gunluk.xml)`. The definition comes
   disabled (`<Enabled>false</Enabled>`); enable it with `schtasks /change /tn TansuGunluk /enable`. To delete a task: `schtasks /delete /tn TansuGunluk /f`.
