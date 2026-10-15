@@ -105,5 +105,5 @@ def test_ema_k1_iki_gunluk_uyelik_sinyal_gunu_gercege_girer(tmp_path):
 def test_ema_k1_tek_gunluk_uyelik_typeerror_degil_k1_hatasi_verir(tmp_path):
     # Bilet 07b: tek üyelik günü olan sembolde `agg(DatetimeIndex)` Timestamp döndürüp `isin`i TypeError ile kırıyordu.
     # Tek gün: tür (b) için ±20 günde başka uygun gün yok; tasarlanmış hata K1Hatasi (TASARIM 5.7, sessizce kırpılmaz).
-    with pytest.raises(istatistik.K1Hatasi, match="tür \(b\)"):
+    with pytest.raises(istatistik.K1Hatasi, match=r"tür \(b\)"):
         _ema_k1_tek_hisse(tmp_path, ["2026-02-02"])
