@@ -20,7 +20,7 @@ The Codex sandbox cannot read the user's global git ignore file. Tell Codex whic
 
 The sandbox has no PyYAML and may lack other parsers. If a check needs a parser, the caller runs it on the host and puts the output in the prompt.
 
-A worktree has no `.venv`. Codex cannot read the packages of the global Python user folder. Tell Codex to run project code and tests with `C:/Users/levent/Desktop/TANSU/.venv/Scripts/python.exe`. Tell Codex to run pytest with `--basetemp=$D/pytest`, where `$D` is the job folder of step 1 (write its absolute path in the prompt). Pytest then writes no folder inside the repository.
+A worktree has no `.venv`. Codex cannot read the packages of the global Python user folder. Tell Codex to run project code and tests with `C:/Users/levent/Desktop/TANSU/.venv/Scripts/python.exe`. Tell Codex to run pytest with `--basetemp=$D/pytest`, where `$D` is the job folder of step 1. Write its absolute path in the prompt in Windows form: `cygpath -m "$D"` gives `C:/Users/...`. Windows Python reads the Bash form `/c/Users/...` as `C:/c/Users/...`. Pytest then writes no folder inside the repository.
 
 ## Steps
 1. Make a job folder: `D=$(mktemp -d -p "$TEMP")`. The job folder is under `$TEMP`, never inside the repository. Parallel Codex jobs share `$TEMP`, so a fixed name collides. Find the newest `codex.exe`: `C=(/c/Users/levent/AppData/Local/OpenAI/Codex/bin/*/codex.exe)`. Use the last item. Use only this full path. Do not use `~/.codex/.sandbox-bin`.
