@@ -349,3 +349,16 @@ def test_kagit_durumu_donar_ve_durum_oku_son_resmi_satiri_okur():
         }
     )  # geliştirme satırı sayılmaz
     assert kayit.durum_oku("cift_rotasyonu") == "Deneme"
+
+
+def test_gercek_istatistik_nan_ise_p_bir_gunluk_satiri_uyari_yazar_rapor_gosterir(
+    tmp_path,
+):
+    # TASARIM 5.7 "p değeri": bu veride çift bölmesi işlem yapmaz, gerçek istatistik NaN; p = 1, koşu durmaz.
+    kimlik = hazirla(tmp_path)
+    s = kos(tmp_path, kimlik)
+    assert s["k1"]["cift_rotasyonu"]["p"] == 1.0
+    bitti = [r for r in satirlar() if r["olay"] == "bitti"][-1]
+    assert bitti["uyari"] == "istatistik NaN"
+    html = s["rapor"].read_text(encoding="utf-8")
+    assert "Uyarı: istatistik NaN" in html

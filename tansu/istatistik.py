@@ -394,7 +394,9 @@ def p_deger(gercek, rastgele) -> float:
     if not np.isfinite(gercek):
         return 1.0
     r = np.asarray(rastgele, dtype=float)
-    return float((1 + np.sum(r >= gercek)) / (1 + len(r)))
+    return float(
+        (1 + np.sum(np.isnan(r) | (r >= gercek))) / (1 + len(r))
+    )  # NaN tekrar iyi sayılır (TASARIM 5.7)
 
 
 def saptanabilir_etki(g) -> float:

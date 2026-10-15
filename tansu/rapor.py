@@ -158,6 +158,8 @@ def _kabul(kabul, bilgi) -> list:
         )
         + ".</p>",
     ]
+    if bilgi.get("uyari"):
+        govde.append(f"<p>Uyarı: {_kac(bilgi['uyari'])}; p = 1 alındı.</p>")
     for aile, k in kabul.items():
         satirlar = [
             (

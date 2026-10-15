@@ -525,6 +525,8 @@ serisinin kaynağını ve son değişim tarihini yazar; seri boşsa koşu SORUNL
   - p = (1 + k) / (1 + B); k = gerçek kuraldan iyi ya da eşit rastgele tekrar sayısı.
   - Tek yönlü; istatistik işlem başına ortalama fazla getiridir.
   - Aile p'si iki türün büyüğüdür.
+  - Gerçek istatistik hesaplanamazsa (NaN, örneğin işlem yok) p = 1 olur; deneme günlüğü satırına `uyari: "istatistik NaN"` yazılır ve rapor bunu gösterir; koşu durmaz, çünkü p = 1 kabule yardım edemez. (vekil kararı 15.10, bilet 07d)
+  - Rastgele tekrarda istatistik hesaplanamazsa (NaN) o tekrar gerçeğe eşit ya da daha iyi sayılır (p'yi düşürmez). (vekil kararı 15.10, bilet 07d)
   (B-15, İ: 19-069)
 
 **K1 uygulama kuralları** (bilet 12; belge bu noktalarda sessizdi, kod bu okumayı uygular):
@@ -671,7 +673,7 @@ Parametreler ve ızgara önceden yazılır (`KURALLAR.md` §3). Kurallar:
 - **Deneme sayısı (m), tek tanım:** Holm'un ve K1 tekrar sayısının (B, 5.7) m'si; resmi koşuların sınadığı (kural
   kimliği, aile) çiftleri sayar. Yarıda kalan, yani `bitti` satırı olmayan resmi koşu da m'ye sayılır (İ: 15-044);
   geliştirme koşusu sayılmaz. Aynı çift yeniden koşulursa ilk resmi p kalır. Başka bölümler (5.7, 5.12 boru hattı
-  denetimi) m'yi yeniden tanımlamaz, buraya atıf verir. (bilet 03)
+  denetimi) m'yi yeniden tanımlamaz, buraya atıf verir. Yarıda kalan resmi koşunun (kural kimliği, aile) çifti Holm listesinde p = 1 ile yer alır; p = 1 sıralamada sona düşer, yani kabule yardım edemez, ve Holm ile B aynı tek m'yi kullanır. (bilet 03; vekil kararı 15.10, bilet 07d)
 - **Alanlar:**
   - tarih (UTC ISO), `kosu_id`, `kural_id`
   - `kod_hash`, `param_hash`

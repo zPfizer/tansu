@@ -77,9 +77,10 @@ def test_ek_kol_ailenin_p_degerine_girmez(tmp_path):
     k = istatistik.ema_k1(
         a, b, P, ATR_N, simulator.uyeler(a, evr, ilk), tekrar=20, tohum=7, kirilim=3
     )
-    # (b) her seferinde son gün alıp aynı gün çıkar: gerçeğin altında, k=0 -> 1/21.
+    # (b) 15 tekrar son gün alıp aynı gün çıkar: gerçeğin altında. Öteki 5 tekrarda istatistik NaN; eski sayım NaN'ı
+    # "kötü" sayıp k=0 (1/21) veriyordu. TASARIM 5.7 (vekil kararı 15.10): NaN tekrar iyi sayılır, k=5 -> 6/21.
     # Ek kol T1/T2'nin +3 trendidir: her tekrar gerçeğin üstünde, k=20 -> 1.
-    assert k["p_b"] == pytest.approx(0.047619047619047616)
+    assert k["p_b"] == pytest.approx(6 / 21)
     assert k["p_ek"] == 1.0
     assert k["p_b"] <= k["p_a"] < 1.0
     assert k["p"] == k["p_a"]
@@ -107,3 +108,8 @@ def test_ema_k1_tek_gunluk_uyelik_typeerror_degil_k1_hatasi_verir(tmp_path):
     # Tek gün: tür (b) için ±20 günde başka uygun gün yok; tasarlanmış hata K1Hatasi (TASARIM 5.7, sessizce kırpılmaz).
     with pytest.raises(istatistik.K1Hatasi, match=r"tür \(b\)"):
         _ema_k1_tek_hisse(tmp_path, ["2026-02-02"])
+
+
+def test_rastgele_tekrarda_nan_gercege_esit_ya_da_iyi_sayilir():
+    # TASARIM 5.7: NaN tekrar p'yi düşürmez. Gerçek 0,3; tekrarlar [NaN, 0,5, 0,1]: k = 1 (NaN) + 1 (0,5) = 2; p = (1+2)/(1+3) = 3/4.
+    assert istatistik.p_deger(0.3, [float("nan"), 0.5, 0.1]) == pytest.approx(0.75)

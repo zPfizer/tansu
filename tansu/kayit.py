@@ -485,6 +485,11 @@ def kosu(
     islemler, dusen, sim, cift, k1, kabul = (
         h[k] for k in ("islemler", "dusen", "sim", "cift", "k1", "kabul")
     )
+    uyari = (  # TASARIM 5.7 "p değeri": gerçek istatistik NaN ise p = 1, koşu durmaz
+        "istatistik NaN"
+        if k1 and any(np.isnan(k["gercek"]) for k in k1.values())
+        else None
+    )
     html, csv = rapor.yaz(
         sim,
         {
@@ -492,6 +497,7 @@ def kosu(
             "anlik": kimlik,
             "kod_hash": kural["kod_hash"],
             "holm_tarih": _simdi()[:10],
+            "uyari": uyari,
         },
         cift,
         kabul=kabul,
@@ -513,6 +519,7 @@ def kosu(
             **taban,
             "olay": "bitti",
             "tarih": _simdi(),
+            **({"uyari": uyari} if uyari else {}),
             "islem_sayisi": len(islemler),
             "dusen_sinyal": dusen,
             "tekrar": tekrar,
