@@ -248,10 +248,12 @@ hatasından** ayırmak.
   Sınama vakası: KONTR 08.07.2026. (İ: 01-023, 02-056, 05-043)
 - **Karantina:**
   - Kapanıştan kapanışa o günkü limiti (+%0,5) aşan ve şirket olayıyla açıklanmayan her gün karantinaya
-    girer. "Olayla açıklanan" eşleştirmesi tablo tarihinin t−1 ve t işlem günü penceresinde yapılır: t günündeki adımı,
-    t−1 ya da t tarihli olay açıklar; t+1 tarihli olay açıklamaz (gelecek bilgisi yok, önek değişmezliği 5.12: t'den önceki günler değişmez). Adım,
-    düzeltme oranı sıçraması olay çarpanına en yakın olan gündür. Olay denetimi
-    istatistiği ±1 işlem günü penceresinde kalır. (HEKTS 26.11.2015) (vekil kararı 15.10, bilet 07e) (İ: 02-024)
+    girer. "Olayla açıklanan" eşleştirmesi gün başınadır ve yalnız o güne kadarki veriye dayanır (önek değişmezliği 5.12,
+    kesim günü dahil): t günündeki adım, tablo tarihi t−1 ya da t olan bir olayla açıklanır; başka güne bakılmaz, aday
+    seçimi yoktur. Aynı olay hem t−1 hem t günündeki adımı açıklayabilir; t+1 tarihli olay açıklamaz. Adım: o günün ham
+    kapanışının önceki işlem gününe oranı, olay çarpanına 1'den daha yakınsa (logaritmik) gün adımdır; adım olmayan gün
+    olay çarpanı almaz. Olay denetimi istatistiği ±1 işlem günü penceresinde kalır. (HEKTS 26.11.2015)
+    (vekil kararı 15.10, bilet 07e) (İ: 02-024)
   - O hisse 250 gün yeni sinyal üretmez.
   - Açık pozisyon son temiz AOF'ta kapanır ve sayılır.
   - Fiyat yamanmaz.

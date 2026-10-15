@@ -476,13 +476,15 @@ def test_adimi_t_eksi_1_ya_da_t_tarihli_olay_aciklar_karantina_yok(tmp_path, ola
     a = anlik(tmp_path, fiyat=BOLUNME, olay=_bolunme_olayi(olay_gunu))
     assert _karantina(a) == [False] * 5
     assert a.gun_tablosu["tavan"].iloc[3] == pytest.approx(56.1)
+    # 04.01 (olay günü ya da t-1) fiyat adımı değil (102 / 101): baz 101, tavan 101 × 1,10 = 111,1, karantina yok.
+    assert a.gun_tablosu["tavan"].iloc[2] == pytest.approx(111.1)
 
 
 def test_t_arti_1_tarihli_olay_adimi_aciklamaz_adim_gunu_karantinaya_girer(tmp_path):
     # TASARIM 5.1 (vekil kararı 15.10, 07e-4): olay 08.01 (t+1), adım 05.01. Baz 102, taban 102 × 0,9 = 91,8;
-    # kapanış 51 taban altında: karantina. 08.01 (aday yalnız 08.01): baz 51 × 0,5 = 25,5, kapanış 52 üstünde: karantina.
+    # kapanış 51 taban altında: karantina. 08.01: 52 / 51 adım değil, çarpan almaz, baz 51, kapanış 52: temiz.
     a = anlik(tmp_path, fiyat=BOLUNME, olay=_bolunme_olayi(dt.date(2024, 1, 8)))
-    assert _karantina(a) == [False, False, False, True, True]
+    assert _karantina(a) == [False, False, False, True, False]
     assert a.gun_tablosu["taban"].iloc[3] == pytest.approx(91.8)
 
 

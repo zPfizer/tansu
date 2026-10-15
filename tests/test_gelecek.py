@@ -161,8 +161,8 @@ def _karantina_(ham, duz, olay_tarihi, son):
 @pytest.mark.parametrize(
     "ham, duz, olay, beklenen",
     [
-        # Adım 03.01 (51 / 100); olay 04.01 (t+1) onu açıklamaz: 03.01 karantina (baz 100, taban 90, kapanış 51). 04.01: baz 51 × 0,5, kapanış 52, karantina.
-        ([100, 51, 52], [50, 51, 52], "2024-01-04", [False, True, True]),
+        # Adım 03.01 (51 / 100); olay 04.01 (t+1) onu açıklamaz: 03.01 karantina (baz 100, taban 90, kapanış 51). 04.01: kapanış 52 / 51 adım değil, baz 51, temiz.
+        ([100, 51, 52], [50, 51, 52], "2024-01-04", [False, True, False]),
         # Adım 05.01'de (51 / 102); olay 04.01 (t-1) ya da 05.01 (t) açıklar: karantina yok.
         ([100, 101, 102, 51, 52], [50, 50.5, 51, 51, 52], "2024-01-04", [False] * 5),
         ([100, 101, 102, 51, 52], [50, 50.5, 51, 51, 52], "2024-01-05", [False] * 5),
@@ -172,9 +172,9 @@ def test_olay_penceresi_onek_degismez_t_den_sonraki_tablo_t_oncesi_karantinayi_d
     ham, duz, olay, beklenen
 ):
     # TASARIM 5.1 karantina (vekil kararı 15.10, 07e-4) ve 5.12: seriyi her günde kes; kesilmiş serinin
-    # çıktısı tam serinin kesim gününden önceki günlerine eşit olmalı (kesim günü t dahil değil).
+    # çıktısı tam serinin kesim günü dahil aynı günlerine eşit olmalı (TASARIM 5.12).
     tam = _karantina_(ham, duz, olay, pd.Timestamp("2024-12-31"))
     assert tam.tolist() == beklenen
     for son in tam.index:
         kesik = _karantina_(ham, duz, olay, son)
-        assert kesik.iloc[:-1].tolist() == tam.loc[:son].iloc[:-1].tolist(), son
+        assert kesik.tolist() == tam.loc[:son].tolist(), son
