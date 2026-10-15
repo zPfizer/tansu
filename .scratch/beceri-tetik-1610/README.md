@@ -62,7 +62,11 @@ Bu sette 132 koşuluk ölçüm başladı ve YONETIM oturumu onu durdurdu (Levent
 
 ## Set 2 (`sorgular-2.tsv`)
 
-Sütunlar: beklenen beceri, kaynak (`gercek` ya da `yazili`), sorgu. Gerçek istekler Levent'in Tansu ve YONETIM oturum dökümlerindeki kendi mesajlarıdır. Yazılanlar onun üslubundadır.
+Sütunlar: beklenen beceri, kaynak (`gercek`, `yazili` ya da `brif`), ayrıca doğru beceri (`-` ya da `tansu-grill`), sorgu. Gerçek istekler Levent'in Tansu ve YONETIM oturum dökümlerindeki kendi mesajlarıdır. Yazılanlar onun sesindedir: amaç söyler ya da hata yapıştırır. Teknik sorgular İngilizce ajan brifidir.
+
+Sayılar: 5 akış × 8 olumlu sorgu, 17 `yok` sorgusu, toplam 57. Kaynak: 19 gerçek, 34 yazılı, 4 brif. Olumlu sorgularda gerçek olan 3 tanedir (belge, karar, eval birer).
+Dökümlerde Levent'in gerçek bir Tansu özellik ya da hata isteği yok. Gerçek Tansu mesajları durum sorusu, onay, birleştirme ve devirdir. Yeni iş ve hata sorgularının hepsi bu yüzden yazılıdır.
+`tansu-grill` açıklaması yeni kural, veri kaynağı ve davranış değişikliğini de kapsar. Bu yüzden 3 satırda ayrıca doğru beceridir.
 
 Setten çıkan sorgular ve sebepleri:
 - "Günlük koşu dün çıkış kodu 1 verdi": zamanlanmış günlük görev kurulu değil. Elle `python -m tansu gunluk` koşusu olarak yeniden yazıldı.
@@ -75,5 +79,5 @@ Setten çıkan sorgular ve sebepleri:
 
 ## Açık iş
 
-1. Levent seti gözden geçirir (`tansu-eval` "Review the set").
-2. Onaydan sonra `sorgular-2.tsv` ile sorgu başına 3 koşu. Kural: `tansu-eval` "Skill trigger eval".
+1. Levent'i tanıyan bir Claude oturumu seti denetler (`tansu-eval` "Review the set"). Levent set okumaz (Levent 16.10).
+2. Denetçinin onayından sonra `sorgular-2.tsv` ile sorgu başına 3 koşu. Kural: `tansu-eval` "Skill trigger eval".

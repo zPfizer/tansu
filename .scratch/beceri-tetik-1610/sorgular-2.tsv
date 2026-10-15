@@ -1,46 +1,57 @@
-tansu-yeni-is	yazili	Abicim günlük rapora sektör bazında bir özet tablo ekleyelim. Hangi sektörde kaç kart çıkmış, ona bakmak istiyorum. Sektör verisi zaten sektor-indir ile geliyor, onu kullan. Bunu yeni özellik olarak baştan sona yap, PR'ı da aç.
-tansu-yeni-is	yazili	Evreni BIST100 benzeri listeden BIST TÜM'e genişletmek istiyorum, daha çok hisse taransın. Bu bir davranış değişikliği. Belgeyi de kodu da ona göre güncelle, bilet aç, PR'la gelsin.
-tansu-yeni-is	yazili	Kartlarda stop seviyesi görünmüyor. Her karta giriş fiyatının yanında stop seviyesini gösteren bir sütun gelsin. Yeni özellik olarak testleriyle beraber yapalım.
-tansu-yeni-is	yazili	HTML rapora her ailenin kaç işlem açtığını gösteren basit bir grafik ekleyelim. Çift rotasyonu ile EMA sıkışmasını yan yana göreyim. Getiriyle ilgili bir şey koyma, yalnız işlem sayısı olsun.
-tansu-yeni-is	yazili	Haftalık bir özet istiyorum. Cuma akşamı o haftanın kartlarını ve durumunu tek sayfada toplayan yeni bir komut yazalım: python -m tansu haftalik. Akışa göre baştan sona yap.
-tansu-yeni-is	yazili	Tansu'nun notlarında hacim patlaması diye bir kural var. Bunu üçüncü aile olarak ekleyelim. Önce kuralı belgeye yaz, sonra kodu ve testi yap, en son PR'ı aç.
-tansu-yeni-is	yazili	durum.txt dosyasına son veri tarihini ve evrendeki hisse sayısını da yazalım. Sabah açınca verinin güncel olup olmadığını hemen göreyim. Küçük bir özellik ama PR'la gelsin.
-tansu-yeni-is	yazili	Günlük koşu bittiğinde bana bir bildirim gelsin istiyorum. Kaç kart çıktığını ve bir sorun olup olmadığını tek satırda söylesin. Bunu yeni bir özellik olarak ekleyelim.
-tansu-hata	yazili	python -m tansu gunluk komutunu elle çalıştırdım, kart üretmeden çıkış kodu 1 ile bitti. Ekranda KeyError yazıyordu. Neden olduğunu bul ve düzelt.
-tansu-hata	yazili	test_motor.py dün geçiyordu, bugün kırmızı. Ben bir şey değiştirmedim. Hatanın sebebini bul, testini yaz, düzelt.
-tansu-hata	yazili	kartlar.jsonl dosyasında aynı hisse aynı gün için iki kez yazılmış. Kayıtta tekrar olmamalı. Hata nerede, bul ve düzelt.
-tansu-hata	yazili	evren-indir komutu UnicodeDecodeError ile çöküyor, Türkçe karakterli bir dosyada takılıyor galiba. Şunu çöz, bir daha olmasın.
-tansu-hata	yazili	Raporda cuma günü çıkan sinyal pazartesi tarihiyle görünüyor, tarih bir gün kaymış. Hata nerede, bul ve düzelt.
-tansu-hata	yazili	Sınama koşusu bazen bitmiyor, simülatör sonsuz döngüye giriyor gibi. Yarım saat bekledim, hâlâ dönüyordu. Sebebini bul ve düzelt.
-tansu-hata	yazili	CI'da driftlint hata veriyor ama bende yerelde geçiyor, PR birleşemiyor. Neden farklı sonuç veriyor, bul ve düzelt.
-tansu-hata	yazili	Rapordaki işlem sayısı kartlar dosyasıyla tutmuyor. Raporda 14 yazıyor, elle saydım 11 çıktı. Hangisi yanlış, bul ve düzelt.
-tansu-belge	gercek	In `docs/KURALLAR.md` at line 174 — review comment from chatgpt-codex-connector[bot]: Move the IV-band rule into an A–E source record. This note cannot be placed under “Kural içermeyen notlar”: the commit's own pool scan classifies it as a rule and records a concrete long entry.
-tansu-belge	yazili	GLOSSARY.md'deki 'deneme' tanımı eski kalmış. Şimdiki çalışma şekline göre güncelleyelim, başka belgelerle de çelişmesin.
-tansu-belge	yazili	TASARIM'da hash kapsamını anlatan cümle eski kalmış, kodla uyuşmuyor. Belgeyi düzelt, kod değişmesin.
-tansu-belge	yazili	docs/kurallar/B-momentum-sikisma.md dosyasını İngilizceye çevir. Çeviride hiçbir kural kaybolmasın, düşen kelimeleri de listele.
-tansu-belge	yazili	vekil ajanının talimatları çok uzun ve karışık. Sadeleştirelim ama kararları ve kuralları kaybetmeyelim.
-tansu-belge	yazili	AGENTS.md'deki çalışma kurallarına yeni bir git kuralı ekleyelim: kayit klasöründeki dosyalar hiçbir commit'te değiştirilmiş olarak girmesin.
-tansu-belge	yazili	tansu-grill becerisinin açıklaması belirsiz, ne zaman çalışacağı anlaşılmıyor. Açıklamayı daha net yazalım.
-tansu-belge	yazili	KURALLAR.md'ye yeni bir YORUM girdisi ekleyelim: piyasa durumu etiketi bizim yorumumuz, Tansu'nun kuralı değil. Kaynağıyla beraber yaz.
-tansu-karar	gercek	İlk önce bir detaylıca düşün. Yönetimde büyük bir refaktör oldu. Şu anki ilk denemeler olumlu gidiyor. Yönetim klasöründe. Tansı klasöründe de benzer bir akış yapabilirim. Bunun faydaları, zararları ne olur?
-tansu-karar	yazili	Holm düzeltmesi yerine Benjamini-Hochberg'e geçmek mantıklı mı? Artısını eksisini karşılaştır, bana bir öneri ver.
-tansu-karar	yazili	Kâğıt üstü döneme ne zaman başlayalım? Ölçütleri, süreyi ve riskleri hesaba katan bir plan yap.
-tansu-karar	yazili	Fiyat verisinde İş Yatırım'ı mı kullanalım, Yahoo'yu mu? İkisini karşılaştır, hangisi daha güvenilir, bir karar verelim.
-tansu-karar	yazili	veri klasörünü SQLite'a taşımak geri alınabilir bir karar mı? Değerlendir, maliyetini ve riskini söyle.
-tansu-karar	yazili	Kartları her gün baştan mı üretelim, yoksa yalnız değişeni mi yazalım? İki seçeneği karşılaştır, birini öner.
-tansu-karar	yazili	Pandas yerine polars'a geçmeye değer mi? Ömrü, riski ve geçiş maliyeti açısından değerlendir.
-tansu-karar	yazili	plan yap: önümüzdeki iki haftanın Tansu işleri. Hangisi önce, hangisi sonra, gerekçesiyle sırala.
-tansu-eval	gercek	Tansu'daki eval durumunu hiç bilmiyorum. Yani bu evaller düzgün mü yapılıyor, düzgün yapılmıyor mu? Yoksa skill'lere uygun mu, değil mi? Bak bu çok önemli yani. Eval uzun süren bir şey. Eval'in doğru yapılmaması bize inanılmaz fazla vakit kaybı olur.
-tansu-eval	yazili	Vekil ajanının verdiği kararlar ne kadar doğru, bunu ölçen bir eval kuralım.
-tansu-eval	yazili	Oturum dökümlerinde ajanların en sık yaptığı hata türlerini bulalım ve listeleyelim.
-tansu-eval	yazili	Codex denetçisinin bulgularını değerlendiren bir hakem istemi yazalım; doğru bulguyu yanlıştan ayırsın.
-tansu-eval	yazili	LLM hakeminin verdiği notlar benim etiketlerimle ne kadar uyuşuyor, bir kontrol edelim.
-tansu-eval	yazili	Okuyucu ajanın özetleri doğru mu, ölçmek için bir vaka seti kuralım.
-tansu-eval	yazili	Ajanın kural ihlallerini kodla ölçen bir değerlendirici yazalım: PR gövdesinde Akış satırı eksik mi, test atlanmış mı gibi.
-tansu-eval	yazili	Eval için elimizde az örnek var. Sentetik örnek üretelim ama gerçekçi olsun.
-yok	gercek	Şu anki durum nedir?
-yok	gercek	Hangi biletler var? Onları listele bana.
-yok	gercek	Şimdiye kadar ne yaptın? Ve şimdi ne yapacaksın?
-yok	gercek	Tansu'nun akış dosyasını göremedim. O nerede?
-yok	gercek	Handoff'u ver yeni oturumda yapalım bunları.
-yok	yazili	TASARIM'da hash kapsamı hangi bölümde anlatılıyor?
+tansu-yeni-is	yazili	-	Günlük rapora sektör bazında bir özet tablo ekleyelim. Hangi sektörde kaç kart çıkmış, ona bakmak istiyorum. Sektör verisi zaten sektor-indir ile geliyor, onu kullan. Bunu yeni özellik olarak baştan sona yap, PR'ı da aç.
+tansu-yeni-is	yazili	tansu-grill	Evreni BIST100 benzeri listeden BIST TÜM'e genişletmek istiyorum, daha çok hisse taransın. Bu bir davranış değişikliği. Belgeyi de kodu da ona göre güncelle, bilet aç, PR'la gelsin.
+tansu-yeni-is	yazili	-	Kartlarda stop seviyesi görünmüyor. Her karta giriş fiyatının yanında stop seviyesini gösteren bir sütun gelsin. Yeni özellik olarak testleriyle beraber yapalım.
+tansu-yeni-is	yazili	-	HTML rapora her ailenin kaç işlem açtığını gösteren basit bir grafik ekleyelim. Çift rotasyonu ile EMA sıkışmasını yan yana göreyim. Getiriyle ilgili bir şey koyma, yalnız işlem sayısı olsun.
+tansu-yeni-is	yazili	-	Haftalık bir özet istiyorum. Cuma akşamı o haftanın kartlarını ve durumunu tek sayfada toplayan yeni bir komut yazalım: python -m tansu haftalik. Akışa göre baştan sona yap.
+tansu-yeni-is	yazili	tansu-grill	Tansu'nun notlarında hacim patlaması diye bir kural var. Bunu üçüncü aile olarak ekleyelim. Önce kuralı belgeye yaz, sonra kodu ve testi yap, en son PR'ı aç.
+tansu-yeni-is	yazili	-	durum.txt dosyasına son veri tarihini ve evrendeki hisse sayısını da yazalım. Sabah açınca verinin güncel olup olmadığını hemen göreyim. Küçük bir özellik ama PR'la gelsin.
+tansu-yeni-is	yazili	-	Günlük koşu bittiğinde bana bir bildirim gelsin istiyorum. Kaç kart çıktığını ve bir sorun olup olmadığını tek satırda söylesin. Bunu yeni bir özellik olarak ekleyelim.
+tansu-hata	yazili	-	python -m tansu gunluk komutunu elle çalıştırdım, kart üretmeden çıkış kodu 1 ile bitti. Ekranda KeyError yazıyordu. Neden olduğunu bul ve düzelt.
+tansu-hata	yazili	-	test_motor.py dün geçiyordu, bugün kırmızı. Ben bir şey değiştirmedim. Hatanın sebebini bul, testini yaz, düzelt.
+tansu-hata	yazili	-	kartlar.jsonl dosyasında aynı hisse aynı gün için iki kez yazılmış. Kayıtta tekrar olmamalı. Hata nerede, bul ve düzelt.
+tansu-hata	yazili	-	evren-indir komutu UnicodeDecodeError ile çöküyor, Türkçe karakterli bir dosyada takılıyor galiba. Şunu çöz, bir daha olmasın.
+tansu-hata	yazili	-	Raporda cuma günü çıkan sinyal pazartesi tarihiyle görünüyor, tarih bir gün kaymış. Hata nerede, bul ve düzelt.
+tansu-hata	yazili	-	Sınama koşusu bazen bitmiyor, simülatör sonsuz döngüye giriyor gibi. Yarım saat bekledim, hâlâ dönüyordu. Sebebini bul ve düzelt.
+tansu-hata	yazili	-	PR'da kırmızı çarpı var, birleşmiyor. Şunu yazıyor: "driftlint: 2 errors, 0 warnings across 11 context files". Bende çalıştırınca geçiyormuş ama orada geçmiyor. Bunu bir hallet.
+tansu-hata	yazili	-	Rapordaki işlem sayısı kartlar dosyasıyla tutmuyor. Raporda 14 yazıyor, elle saydım 11 çıktı. Hangisi yanlış, bul ve düzelt.
+tansu-belge	gercek	-	In `docs/KURALLAR.md` at line 174 — review comment from chatgpt-codex-connector[bot]: Move the IV-band rule into an A–E source record. This note cannot be placed under “Kural içermeyen notlar”: the commit's own pool scan classifies it as a rule and records a concrete long entry.
+tansu-belge	yazili	-	GLOSSARY.md'deki 'deneme' tanımı eski kalmış. Şimdiki çalışma şekline göre güncelleyelim, başka belgelerle de çelişmesin.
+tansu-belge	yazili	-	TASARIM'da hash kapsamını anlatan cümle eski kalmış, kodla uyuşmuyor. Belgeyi düzelt, kod değişmesin.
+tansu-belge	yazili	-	docs/kurallar/B-momentum-sikisma.md dosyasını İngilizceye çevir. Çeviride hiçbir kural kaybolmasın, düşen kelimeleri de listele.
+tansu-belge	yazili	-	vekil ajanının talimatları çok uzun ve karışık. Sadeleştirelim ama kararları ve kuralları kaybetmeyelim.
+tansu-belge	yazili	-	AGENTS.md'deki çalışma kurallarına yeni bir git kuralı ekleyelim: kayit klasöründeki dosyalar hiçbir commit'te değiştirilmiş olarak girmesin.
+tansu-belge	yazili	-	tansu-grill becerisinin açıklaması belirsiz, ne zaman çalışacağı anlaşılmıyor. Açıklamayı daha net yazalım.
+tansu-belge	yazili	-	KURALLAR.md'ye yeni bir YORUM girdisi ekleyelim: piyasa durumu etiketi bizim yorumumuz, Tansu'nun kuralı değil. Kaynağıyla beraber yaz.
+tansu-karar	gercek	-	İlk önce bir detaylıca düşün. Yönetimde büyük bir refaktör oldu. Şu anki ilk denemeler olumlu gidiyor. Yönetim klasöründe. Tansı klasöründe de benzer bir akış yapabilirim. Bunun faydaları, zararları ne olur?
+tansu-karar	brif	-	Decision request for Tansu. TASARIM §5.11 uses the Holm correction for the trial log. Compare Holm with Benjamini-Hochberg: power, false discoveries, and the cost of the change. Recommend one option with reasons. Do not change a file before the decision.
+tansu-karar	yazili	-	Kâğıt üstü döneme ne zaman başlayalım? Ölçütleri, süreyi ve riskleri hesaba kat, bana bir yol haritası çıkar.
+tansu-karar	yazili	tansu-grill	Fiyat verisini nereden çektiğimizi açıkçası bilmiyorum. Bir yerde Yahoo diye bir şey gördüm, bir yerde İş Yatırım. Hangisi daha sağlam, hangisiyle devam edelim? Sen karar ver ama bana nedenini anlat.
+tansu-karar	yazili	-	Veriler klasörde dosya dosya duruyor ya, bunu bir veritabanına taşısak sonra pişman olur muyuz? Geri dönmek zor olur mu? Bir düşün, bana söyle.
+tansu-karar	yazili	-	Kartları her gün baştan mı üretelim, yoksa yalnız değişeni mi yazalım? İki seçeneği karşılaştır, birini öner.
+tansu-karar	brif	-	Decision request for Tansu: should the data code move from pandas to polars? Assess the life of both tools, the migration cost, and the risk to the test gate. Give one recommendation with reasons.
+tansu-karar	yazili	-	Önümüzdeki iki hafta Tansu'da ne yapacağımızı bilmiyorum. Hangi işler önce gelmeli, hangisi bekleyebilir? Bir sıra çıkar, nedenlerini de yaz.
+tansu-eval	gercek	-	Tansu'daki eval durumunu hiç bilmiyorum. Yani bu evaller düzgün mü yapılıyor, düzgün yapılmıyor mu? Yoksa skill'lere uygun mu, değil mi? Bak bu çok önemli yani. Eval uzun süren bir şey. Eval'in doğru yapılmaması bize inanılmaz fazla vakit kaybı olur.
+tansu-eval	yazili	-	Vekil ajanının verdiği kararlar ne kadar doğru, bunu ölçen bir eval kuralım.
+tansu-eval	yazili	-	Oturum dökümlerinde ajanların en sık yaptığı hata türlerini bulalım ve listeleyelim.
+tansu-eval	brif	-	Write a judge prompt for Tansu that grades the findings of the Codex auditor: a true finding against a false one. Use the audit rounds of past PRs as cases.
+tansu-eval	yazili	-	Hakem dediğimiz şey verdiği notlarda gerçekten doğru mu söylüyor, yoksa hep geçti mi diyor? Bunu bir ölçelim, ben anlamıyorum ama içim rahat etmiyor.
+tansu-eval	yazili	-	Okuyucu ajanın özetleri doğru mu, ölçmek için bir vaka seti kuralım.
+tansu-eval	yazili	-	Ajanın kural ihlallerini kodla ölçen bir değerlendirici yazalım: PR gövdesinde Akış satırı eksik mi, test atlanmış mı gibi.
+tansu-eval	brif	-	The Tansu eval for the vekil agent has only 6 cases. Generate synthetic cases from real Tansu decisions to reach about 30. Keep them realistic.
+yok	gercek	-	Şu anki durum nedir?
+yok	gercek	-	Hangi biletler var? Onları listele bana.
+yok	gercek	-	Şimdiye kadar ne yaptın? Ve şimdi ne yapacaksın?
+yok	gercek	-	Tansu'nun akış dosyasını göremedim. O nerede?
+yok	gercek	-	Handoff'u ver yeni oturumda yapalım bunları.
+yok	yazili	-	TASARIM'da hash kapsamı hangi bölümde anlatılıyor?
+yok	gercek	-	Evet git push yapalım.
+yok	gercek	-	Önerini uygula.
+yok	gercek	-	Yapılması gerekeni yap.
+yok	gercek	-	Birleştir. Daha sonra açık biletlerden devam et.
+yok	gercek	-	Sondurum nedir? Bir tane çalışan görev gözüküyor.
+yok	gercek	-	Benden ne istiyorsun?
+yok	gercek	-	Abicim ne yapacaksın bu PR'ları? Bir önce karar ver.
+yok	gercek	-	Açık PR'ları bittikten sonra dur ve durum analizi yapalım.
+yok	gercek	-	C:\Users\levent\AppData\Local\Temp\tansu-devir-1510.md Açık işler olarak neler var bu devir notunda?
+yok	gercek	-	Nasıl gidiyor Tansu'daki durum? Bir kontrol et bakayım.
+yok	gercek	-	Su da her akşam sıfır veren sinyal nedir? İlk defa duyuyorum.

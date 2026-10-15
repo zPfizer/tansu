@@ -24,10 +24,13 @@ Run AGENTS.md "Every job" first. Run the steps in order. Run an "If" row only wh
 Use this part when you test whether a skill triggers on the right requests. The base is `anthropic-skills:skill-creator` "Description Optimization". These rules are permanent (Levent 16.10).
 
 1. **Query set:** Write about 20 queries per skill. 8–10 should trigger the skill. 8–10 should not. The should-not queries are near-misses from the neighbor Tansu flow skills, plus a few queries that need no skill. Each query is as full as a real Tansu request.
-   - Use real requests first: Levent's own messages in the session transcripts (`~/.claude/projects/*TANSU*/*.jsonl` and `*YONETIM*`). Do not use tool results, system text, session briefs, or eval sessions. Write the other queries in his style.
-   - Give each row a source column: `gercek` (real) or `yazili` (written).
+   - Use real requests first: Levent's own messages in the session transcripts (`~/.claude/projects/*TANSU*/*.jsonl` and `*YONETIM*`). Do not use tool results, system text, session briefs, or eval sessions.
+   - Write the other queries in his voice: he states a goal or pastes an error, in long spoken sentences. He does not compare tools or name techniques. A technical query is an agent brief: write it in English STE, because other sessions send English briefs to Tansu.
+   - Most of his real messages are status questions, approvals, merges, and "continue". The no-skill group holds many of them. A flow that starts on "evet" or "birleştir" is the most costly false trigger.
+   - Columns: expected skill, source (`gercek` real, `yazili` written, `brif` agent brief), also-correct skill (`-` or a skill such as `tansu-grill` whose description also covers the query; a run that loads it is correct), query.
+   - Do not put a literal trigger phrase of a description into a query.
    - Remove each query that names a thing that does not exist now. Check AGENTS.md "Current state", TASARIM, and the code.
-2. **Review the set:** Before any run, show Levent a short Turkish summary: the count per skill, real and written counts, the removed queries with the reason, and 2 examples per skill. Start no run before his yes. (Reason, 16.10: the first set was written by a model, partly out of date, and not reviewed. skill-creator "Description Optimization" requires the user review.)
+2. **Review the set:** Before any run, a Claude session that knows Levent audits the set for fit to him: voice, distribution, current facts, label overlap. Levent does not review sets (Levent 16.10; brain note `levent-calisma-oruntuleri` item 2). Start no run before the auditor's go. (Reason, 16.10: the first set was written by a model, partly out of date, and not reviewed. skill-creator "Description Optimization" requires a review of the set.)
 3. **Runs:** Run each query 3 times. A skill counts as triggered when its rate is at least 0.5.
 4. **Model:** Pass `--model` with the model ID of real Tansu sessions.
 5. **Tuning:** When you tune a description, split the set: 60% train and 40% held-out. Judge only on the held-out part.
