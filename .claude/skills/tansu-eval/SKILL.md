@@ -23,16 +23,27 @@ Run AGENTS.md "Every job" first. Run the steps in order. Run an "If" row only wh
 
 Use this part when you test whether a skill triggers on the right requests. The base is `anthropic-skills:skill-creator` "Description Optimization". These rules are permanent (Levent 16.10).
 
-1. **Query set:** Write about 20 queries per skill. 8–10 should trigger the skill. 8–10 should not. The should-not queries are near-misses from the neighbor Tansu flow skills. Each query is as full as a real Tansu request.
-2. **Runs:** Run each query 3 times. A skill counts as triggered when its rate is at least 0.5.
-3. **Model:** Pass `--model` with the model ID of real Tansu sessions.
-4. **Tuning:** When you tune a description, split the set: 60% train and 40% held-out. Judge only on the held-out part.
-5. **Sample first:** Run a small sample first. Read its distribution. Start the full run only if the setup is clean. A clean setup has four signs:
+1. **Query set:** Write about 20 queries per skill. 8–10 should trigger the skill. 8–10 should not. The should-not queries are near-misses from the neighbor Tansu flow skills, plus a few queries that need no skill. Each query is as full as a real Tansu request.
+   - Use real requests first: Levent's own messages in the session transcripts (`~/.claude/projects/*TANSU*/*.jsonl` and `*YONETIM*`). Do not use tool results, system text, session briefs, or eval sessions. Write the other queries in his style.
+   - Give each row a source column: `gercek` (real) or `yazili` (written).
+   - Remove each query that names a thing that does not exist now. Check AGENTS.md "Current state", TASARIM, and the code.
+2. **Review the set:** Before any run, show Levent a short Turkish summary: the count per skill, real and written counts, the removed queries with the reason, and 2 examples per skill. Start no run before his yes. (Reason, 16.10: the first set was written by a model, partly out of date, and not reviewed. skill-creator "Description Optimization" requires the user review.)
+3. **Runs:** Run each query 3 times. A skill counts as triggered when its rate is at least 0.5.
+4. **Model:** Pass `--model` with the model ID of real Tansu sessions.
+5. **Tuning:** When you tune a description, split the set: 60% train and 40% held-out. Judge only on the held-out part.
+6. **Sample first:** Run a small sample first. Read its distribution. Start the full run only if the setup is clean. A clean setup has four signs:
    - No run stops because a tool is denied.
    - No run is missing.
-   - No outside context is in the eval session. Global hooks and brain context are outside context.
-   - No run changes a file. `--allowedTools` does not block other tools. Pass `--disallowedTools` for Edit, Write, Bash, PowerShell, and NotebookEdit. After the run, check `git status` of the project and the brain. (16.10: eval sessions acted on the queries and edited two Tansu files and the brain Threads.)
+   - No outside context is in the eval session. Item 7 removes the hooks.
+   - No run changes a file. Item 7 sets the controls.
 
-   (Reason, 16.10: in the first sample, global hooks put brain context into the eval sessions. 2 of 44 runs gave no result.)
-6. **Runner:** On Windows, the eval runner of skill-creator does not work. It reads pipes with `select()`. It also tests a temporary command copy that competes with the real skill. Use a runner that calls `claude -p` with the real project skills. It reads the first Skill tool call from `--output-format stream-json --verbose`.
-7. **Save:** Save the eval set, the exact command, and the results under `.scratch/<job>/` in the repository. The first set and two sample runs are in `.scratch/beceri-tetik-1610/`.
+   (Reason, 16.10: in the first sample, hooks put brain context into the eval sessions, and 2 of 44 runs gave no result. In the second sample, eval sessions acted on the queries and edited two Tansu files and the brain Threads.)
+7. **Isolation:** Every eval run obeys these rules. This machine runs in bypass permission mode. So `--allowedTools` only pre-approves tools and does not block other tools.
+   - Run in a disposable copy: `git worktree add --detach <temporary folder outside every Tansu worktree> <branch>`. The copy must hold the committed skill files under test. Remove the copy after the runs.
+   - Delete the `hooks` key in `<copy>/.claude/settings.json`. The user file `~/.claude/settings.json` also has hooks: pass `--settings '{"disableAllHooks": true}'` (bash quoting) to disable all hooks.
+   - Pass `--include-hook-events`. Check that each stream file has no hook event.
+   - Pass `--disallowedTools "Bash PowerShell Edit Write NotebookEdit Agent"`, `--allowedTools "Skill Read Grep Glob"`, `--permission-mode default`, and `--strict-mcp-config`.
+   - Before and after the runs, record `git status --porcelain` and `git log -1` of the copy and of `C:\Users\levent\Desktop\YONETIM\beyin`. Do this check also when the hooks are off. If a value changed, stop and find the cause. If an eval run caused the change, all runs are invalid.
+   - A run that tried to call a tool from the `--disallowedTools` list or an `mcp__` tool is invalid. A run without a `result` line is invalid. An invalid run is not a miss: run it again. Check the tool names in each stream file.
+8. **Runner:** On Windows, the eval runner of skill-creator does not work. It reads pipes with `select()`. It also tests a temporary command copy that competes with the real skill. Use a runner that calls `claude -p` with the real project skills and the flags of item 4 and item 7. It reads the first Skill tool call from `--output-format stream-json --verbose`. Give each `claude -p` call `< /dev/null`. (Reason, 16.10: in the second sample, `claude -p` read the rest of the query file from the loop's standard input. It added those lines to the prompt, and the last two queries did not run.)
+9. **Save:** Save the eval set, the exact command, and the results under `.scratch/<job>/` in the repository. The first set and two sample runs are in `.scratch/beceri-tetik-1610/`. The second set, from real requests, is `sorgular-2.tsv` there.
