@@ -5,7 +5,7 @@ TASARIM gerekçesiyle güncellenir.
 
 **Blocked by:** 03
 
-**Status:** ready-for-agent
+**Status:** done (PR #13–#18, 961902f)
 
 - [x] `denetim/tasarim-kod.md` §3'ün her maddesi `/diagnosing-bugs` ile ele alındı: davranışı gösteren test, sonra karar.
 - [x] Öncelik: `gunluk.py` yalnız AKTİF kartları indirir (STOP/BOZULDU açık pozisyon izlenmeyebilir).
