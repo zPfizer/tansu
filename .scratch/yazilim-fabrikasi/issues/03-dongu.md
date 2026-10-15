@@ -6,6 +6,8 @@
 
 **Status:** ready-for-agent
 
+**Donduruldu (frozen):** Levent 15.10. Do not start, push, or merge this ticket. The branch `pr/f03-dongu` keeps the work.
+
 - [ ] CI kırmızı olunca PR'a `ci-kirmizi` düşer; bu etiket ajanı aynı dalda yeniden çalıştırır; düzeltince etiket kalkar.
 - [ ] CI yeşil olunca inceleme ajanı `/code-review` koşar; sonucu PR yorumu, "geçti" ise `inceleme-gecti` etiketi.
 - [ ] Deneme PR'ında kırmızıdan yeşile döngü ve inceleme etiketi görüldü (Actions bağlantıları PR'da).

@@ -1,0 +1,74 @@
+diff --git a/AGENTS.md b/AGENTS.md
+index a3c1308..51409e5 100644
+--- a/AGENTS.md
++++ b/AGENTS.md
+@@ -55,26 +55,25 @@ first. Write the reason. Then write the code.
+   with `==`.
+ 
+ ## Standards (Standartlar)
+-`CODING_STANDARDS.md` and `DEFINITION_OF_DONE.md` start with the general standard of Levent. The `## Tansu` section at the end of each file
+-is the Tansu addition. `tests/test_standartlar.py` checks that the general part stays the same as the original in YONETIM.
+-The review step (AKIS flow A, step 12) reads both files. The CI without YONETIM skips the test. The check is in the local test gate.
++`CODING_STANDARDS.md` and `DEFINITION_OF_DONE.md` are the standards of Tansu. They started as a copy of a shared standard of Levent.
++That shared standard is not in use since 15.10 (Levent). The `## Tansu` section at the end of each file is the Tansu addition.
++The review step (`mattpocock-skills:code-review`) reads both files.
+ 
+ ## Work flow (İş akışı)
+-The work flow is in `C:\Users\levent\Desktop\YONETIM\AKIS.md` (flow A for code work). The Tansu additions:
+ 
+ **Geliştirme durdu (development stopped):** Do not do new development that changes the behavior of Tansu
+ until the documents have no drift, no old information, and no contradiction. The tickets of `.scratch/belge-hizasi/` and the work-setup jobs
+ (`.scratch/yazilim-fabrikasi/`) continue (Levent 10.10). When ticket 08 is complete, delete this line.
+ 
+-- **Fikir (idea):** In the step of flow A that sharpens the plan (AKIS flow A, step 4), call `/tansu-grill`. It is the Tansu version of the skill of that step. Tansu comes first. It scans the risk and shows the text that will change.
++- **Fikir (idea):** To sharpen the plan, call `/tansu-grill`. It is the Tansu version of `mattpocock-skills:grill-with-docs`. Tansu comes first. It scans the risk and shows the text that will change.
+ - **Fikir, kayıt (record):** Write a settled term to `GLOSSARY.md` at once. Write a decision to `docs/TASARIM.md`. Read TASARIM and `docs/sorgu/` first. Do not ask again for a decision that exists.
+-- **Plan:** The spec and the tickets follow the own ticket layout of Tansu (`docs/agents/issue-tracker.md`). Do not write a ticket by hand. If a new decision appears during the work, update the spec first. Then the ticket step (AKIS flow A, step 7) builds the tickets again in dependency order.
++- **Plan:** The spec and the tickets follow the own ticket layout of Tansu (`docs/agents/issue-tracker.md`). Do not write a ticket by hand. If a new decision appears during the work, update the spec first. Then `mattpocock-skills:to-tickets` builds the tickets again in dependency order.
+ - **Yapım (build):** Open a branch `pr/NN-<ad>` from `master` for each ticket. Commit to that branch. Clear the context between tickets.
+-- **PR:** Push the branch to `kaynak`. The pull request text step (AKIS flow A, step 17) and `.github/pull_request_template.md` write the PR body together. Do not merge the PR before two things are true.
++- **PR:** Push the branch to `kaynak`. `mattpocock-skills:pr` and `.github/pull_request_template.md` write the PR body together. Do not merge the PR before two things are true.
+ - **PR, birleştirme (merge):** CI is green (`ci`: ruff, pytest. `dod`: PR body). An independent review says "geçti". The merge request of Levent is the approval. Merge with `gh pr merge --merge`.
+ - **Kapanış (close):** Move the spec and the tickets of a finished job to `.scratch/arsiv/`. Only GLOSSARY and TASARIM stay for good.
+ 
+-**Hata kaydı (error log):** The rules for recording agent errors are in `CODING_STANDARDS.md`, section "Mistakes". The session review that finds missed errors is AKIS flow B, step 12 and flow I, step 3. A reasoning error goes to `CODING_STANDARDS.md` under `## Tansu`.
++**Hata kaydı (error log):** The rules for recording agent errors are in `CODING_STANDARDS.md`, section "Mistakes". The session review that finds missed errors is `mattpocock-skills:retro`. A reasoning error goes to `CODING_STANDARDS.md` under `## Tansu`.
+ 
+ If Levent says "anlamadım", the agent calls `mattpocock-skills:wait-what`. The agent explains the answer again with the GLOSSARY terms and plain words.
+ 
+diff --git a/tests/test_standartlar.py b/tests/test_standartlar.py
+index e4742b3..df5c14c 100644
+--- a/tests/test_standartlar.py
++++ b/tests/test_standartlar.py
+@@ -1,31 +1,6 @@
+ import ast
+ from pathlib import Path
+ 
+-import pytest
+-
+-
+-def _satirlar(yol):
+-    return yol.read_text(encoding="utf-8").splitlines()
+-
+-
+-def _genel_standart_basta(ad):
+-    kaynak = Path.home() / "Desktop" / "YONETIM" / ad
+-    if not kaynak.exists():
+-        pytest.skip(f"Evde {ad} yok.")
+-    genel = _satirlar(kaynak)
+-    kopya = _satirlar(Path(__file__).resolve().parents[1] / ad)
+-    assert kopya[: len(genel)] == genel
+-    ek = kopya[len(genel) :]
+-    assert ek == [] or (ek[0] == "" and ek[1] == "## Tansu")
+-
+-
+-def test_kodlama_standartlari_genel_standartla_baslar():
+-    _genel_standart_basta("CODING_STANDARDS.md")
+-
+-
+-def test_bitis_olcutleri_genel_standartla_baslar():
+-    _genel_standart_basta("DEFINITION_OF_DONE.md")
+-
+ 
+ def test_modul_bagimliliklari_tek_yonlu_geri_import_yok():
+     # TASARIM 4: bağımlılık sırasındaki modüller yalnız önceki katmanları ithal eder.
