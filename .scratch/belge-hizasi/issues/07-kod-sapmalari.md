@@ -104,3 +104,6 @@ Dosyalar: `docs/TASARIM.md`, `GLOSSARY.md`, `tansu/gunluk.py`, `tests/test_gunlu
 - 07c (15.10) karar: sütun adı `durum` kalır (vekil kararı 15.10, Threads 64: ASCII ad zaten var; yeniden adlandırma ikinci bir değişiklik eklerdi). Üç etiket TASARIM 6.6 ve GLOSSARY'de; kutu kapandı.
 - 07c denetim tur 1 (Codex, 15.10): KALDI (GLOSSARY satırında karar etiketi yoktu; hash/yeniden koşu iddiası yanlıştı). İkisi düzeltildi.
 - 07c denetim tur 2 (15.10): Codex sanal alanı üç denemede açılmadı (CreateProcessWithLogonW 1909); AKIS küçük fark kuralıyla bağımsız denetçi Sonnet alt ajanı: GEÇTİ (iki dosya, kod yok; HASH_DISI'de gunluk.py doğrulandı).
+- 07d-b denetim tur 1 (Codex, KALDI): iki bulgu 07c'nin dalda olmamasıydı; master birleştirildi (e326319). Tur 2 (Codex, KALDI): rapor
+  metni "yıllık kural − yıllık K2" diyordu, hesap TASARIM 5.8 (günlük farkların yıllık toplamı). Önce kırmızı test
+  (`test_simulator.py::test_rapor_baslik_...`), sonra `rapor.py` cümlesi düzeltildi. Yeni tur 3.

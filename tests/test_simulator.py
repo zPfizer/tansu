@@ -251,8 +251,10 @@ def test_rapor_baslik_uyari_yasakli_sozcuk_ve_csv_sutunlari(tmp_path):
         kod_hash,
         "Tansu'dan esinlenen yorum",
         "Yıllık fazla getiri",
+        "Fazla getiri = o yıldaki günlük fazla getirilerin (kural − K2) toplamı",
     ):
         assert beklenen in html
+    assert "yıllık kural getirisi − yıllık K2 getirisi" not in html
     assert html.count("<h2>Uyarılar</h2>") == 1
     assert not re.search(r"\b(AL|SAT|ÖNERİ)\b|Tansu'nun sistemi", html)
     csv = pd.read_csv(s["csv"], encoding="utf-8")
