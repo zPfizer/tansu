@@ -33,7 +33,7 @@ A worktree has no `.venv`. Codex cannot read the packages of the global Python u
      4. For an audit: `CODING_STANDARDS.md` and `DEFINITION_OF_DONE.md` of the project folder.
 
      Codex does not resolve `@` links. Resolve them yourself. Tell Codex to read the files first. Tell Codex to read every file as UTF-8. Without this line, Codex read Turkish text as mojibake.
-   - The text of each requested skill. A skill name can have a plugin part before `:` (for example `mattpocock-skills:code-review`). Use the part after `:` as `<skill>` and the part before `:` as `<plugin>`. Find the file with `find ~/.claude/plugins/cache -path "*/<plugin>/*/skills/*/<skill>/SKILL.md"` (without a plugin part: `-path "*/skills/*/<skill>/SKILL.md"`). Use the newest version. Paste the text into the prompt. If no file is found, report a failed run.
+   - The text of each requested skill. A skill name can have a plugin part before `:` (for example `mattpocock-skills:code-review`). Use the part after `:` as `<skill>` and the part before `:` as `<plugin>`. Find the newest file with `find ~/.claude/plugins/cache -path "*/<plugin>/*" -path "*/skills/*" -path "*/<skill>/SKILL.md" -not -path "*/.openclaw/*" | sort -V | tail -1`. Without a plugin part, omit `-path "*/<plugin>/*"`, and look first in `<project>/.claude/skills/<skill>/SKILL.md`. Paste the text into the prompt. If no file is found, stop before the Codex run and report a failed run (no log exists yet).
    - The job goal and, for an audit, the round number. Tell Codex that the auditor also checks that the writer followed the steps of `AKIS.md`.
    - The task from the caller.
 3. Map the model name to the id and the effort:
