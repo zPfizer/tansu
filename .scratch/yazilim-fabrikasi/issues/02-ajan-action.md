@@ -6,8 +6,12 @@
 
 **Status:** ready-for-agent
 
-- [ ] Ajan iş akışı dosyası `anthropics/claude-code-action` ile, etiket tetiğiyle kurulu; `yerel` etiketi koşuyu atlar.
+- [x] Ajan iş akışı dosyası `anthropics/claude-code-action` ile, etiket tetiğiyle kurulu; `yerel` etiketi koşuyu atlar.
 - [ ] Ajan `pr/NN-<ad>` dalı açar, AGENTS.md ve iki standart dosyasını okur, PR gövdesini PR şablonuyla yazar.
 - [ ] Deneme issue'su (yalnız belge değişikliği) etiketlendi; PR açıldı, CI koştu. Actions çalıştırma bağlantısı PR'da.
 - [ ] `yerel` etiketli deneme issue'su etiketlendi; Actions kaydında koşu atlandı.
-- [ ] AGENTS.md iş akışı 3. ve 4. adımlarında bulut yolu yazılı: etiket → ajan → PR; `yerel` bilet bu makinede yürür.
+- [x] AGENTS.md iş akışı 3. ve 4. adımlarında bulut yolu yazılı: etiket → ajan → PR; `yerel` bilet bu makinede yürür.
+
+## Comments
+
+f02 (15.10): İş akışı `.github/workflows/ajan.yml` yazıldı (dal `pr/f02-ajan-action`, push yok). Kutu 1 ve 5 işaretli. Kutu 2–4 canlı koşu ister; Levent'in iki adımına bağlı: Claude GitHub App kurulumu ve depo sırrı `CLAUDE_CODE_OAUTH_TOKEN`. İzin sözdizimi kaynağı: code.claude.com/docs/en/permissions; izin bloğu kaynağı: claude-code-action `examples/claude.yml`.

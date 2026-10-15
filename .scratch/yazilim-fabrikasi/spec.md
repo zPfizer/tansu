@@ -39,10 +39,10 @@ veriye ya da beyne ihtiyaç duyan bilet `yerel` etiketiyle bu makinede kalır.
 - Kimlik: Levent'in Claude aboneliği (Levent 10.10: "a"). Claude Code OAuth jetonu `claude setup-token` ile alınır,
   depo sırrı `CLAUDE_CODE_OAUTH_TOKEN` olur; ek ücret yok, abonelik kullanım hakkından harcar. Sırrı Levent kendisi
   girer; ajan jeton görmez ve yazmaz.
-- Döngü: CI kırmızıysa bir action PR'a `ci-kirmizi` etiketi koyar; bu etiket ajanı aynı dalda yeniden çalıştırır.
+- Döngü: CI kırmızı bittiğinde bir `workflow_run` iş akışı etiketi koyar ve düzeltme ajanını aynı dalda çalıştırır (etiket durumu gösterir, tetik değildir; GITHUB_TOKEN ile konan etiket başka iş akışını tetiklemez); CI yeşil olunca etiket kalkar.
   Bağımsız inceleme ikinci bir ajan koşusudur (`/code-review`); sonucu PR yorumu ve `inceleme-gecti` etiketidir.
 - Birleştirme: CI yeşil ve `inceleme-gecti` varsa. İlk sürümde birleştirmeyi yerel Claude yapar (Levent'in isteği onaydır);
-  otomatik birleştirme ayrı bir karardır.
+  otomatik birleştirme ayrı bir karardır. Davranış değiştiren ya da kilitli dosyaya dokunan PR'da yerel Codex denetimi de şarttır; yalnız belge PR'ında bulut incelemesi yeterlidir.
 - Cron: Tansu'nun günlük koşusu yerelde kalır (TASARIM §6 Görev Zamanlayıcı; `veri/` git'te yok; İş Yatırım ayak izi).
   Actions cron'u ilk sürümde yok.
 - Depo özel kalır. GitHub Free'de özel depoya ayda 2.000 Actions dakikası var (GitHub belgeleri, 10.10); açık depo
