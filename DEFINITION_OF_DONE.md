@@ -54,6 +54,7 @@ The depth behind these items lives in `mattpocock-skills:code-review` (standards
 
 - **Per task**: verify the Correctness and Quality sections before you mark the task done.
 - **Per feature**: verify Integration and Documentation before you consider the feature complete.
+- **Before "done"**: ListAgents shows no running agent. The clean-tree rule of Kurallar covers YONETIM and beyin. A job with reader subagents ran `py -3 araclar/kontrol.py --oturum <session id>`. A kesme finding on a reader whose prompt did not order the cut means a re-read. (Retro 15.10)
 - **Per release**: the full checklist is the floor. `mattpocock-skills:pr` and `verification-before-completion` add the deploy-specific gates on top.
 
 Tailor the list to the project once, then reuse it unchanged. A Definition of Done that the team renegotiates every sprint is not a Definition of Done.

@@ -17,11 +17,12 @@ This file starts short. It grows from real mistakes.
 - **A check needs the work:** Make the check fail when the required work is missing. (09.10: a PDF reading tool stored the answer codes in the manifest, so the check passed without opening the pages.)
 - **One path to outside services:** Send every text to an external service through the same masking function. Check that the response comes from the expected model. (08.10: a hook sent raw text to Jev, bypassed the shared masking function, and did not check the model.)
 - **Jev uses the official path only:** Call Jev only through the official TypeSafe service: provider `typesafe`, address `api.typesafe.ai`. Do not use Vercel, Laya, or another proxy. (Levent 14.10.)
-- **Read the target before you dictate a fact:** Read the file first. Then write a fact about it into a job prompt or a callout. Use the claim of the file. (14.10: a prompt dictated "version 3.0" for a note whose line 13 said "v3.5.1 + 12 commits". The auditor failed the round.)
+- **Read the target before you dictate a fact:** Read the file first. Then write a fact about it into a job prompt or a callout. Use the claim of the file. (14.10: a prompt dictated "version 3.0" for a note whose line 13 said "v3.5.1 + 12 commits". The auditor failed the round. 15.10: an audit prompt said 47 sampled lines. The records held 56.)
 - **Sample before the full run:** Before a batch job runs on all items, run it on a sample. Read the distribution of the output. Then run the full set. (14.10: a tag job flagged 251 of 503 notes because of a loose flag rule. A 25-note sample would have shown it.)
 - **Wire it and run it:** Connect each new hook, command, or module to the live path in the same change. Show one real run through that path. (07.10: a new hook was not in `settings.json`. 05.10: the Tansu CLI read result keys that the change removed.)
 
 ## Seen once
+- 15.10: 9 writer and 11 reader subagents cut note bodies (`head -c`, `cut -c`, `x[:400]`) and still reported "Notes read: N". The Codex auditor found it in round 2. A reader prompt names a full-print command and the main agent checks the reported line and character counts with a script.
 - 15.10: a label input for an eval showed "no tool call" for every block because the transcript stores tool_use blocks on separate lines from text blocks; the labeler judged 16 of 20 blocks wrong. Build label inputs with araclar/eval/_transkript.py (groups lines by message id).
 
 ## Tansu
