@@ -455,7 +455,7 @@ def _gunler(fiyat, olaylar, takvim):
     gunler = f.index[islem.to_numpy()]
     getiri = (
         f["ham_kapanis"] / onceki
-    ).to_numpy()  # günün ham kapanışı / önceki işlem günü
+    ).to_numpy()  # günün ham kapanışı / önceki tutarlı kapanış (5.13)
     for tarih, grup in olaylar.groupby("tarih"):
         if len(gunler) == 0 or tarih < gunler[0]:
             continue
