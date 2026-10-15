@@ -25,6 +25,7 @@ KESIM = [
     "2014-09-30",
     "2015-01-15",
     "2015-03-02",
+    "2014-12-31",  # yılın son işlem günü: biten yıl 2014 karşılaştırılır (yillik_fazla_)
 ]  # tam veri 2015-06'ya dek; ısınma (500 gün) 2013-11'de biter
 BAS = "2013-12-02"
 
@@ -148,7 +149,10 @@ def yillik_fazla_(tam, kes_, t):
         islemler, dusen = motor.sinama(a, uye=simulator.uyeler(a, evr, ilk))
         sim = simulator.calistir(a, islemler, dusen, BAS, evr=evr)
         sonuc.append(sim["masraf"][0.003]["yillik"])
-    biten = sonuc[1].index[sonuc[1].index < t.year]
+    yil_sonu = (
+        tam.gunler[tam.gunler.year == t.year][-1] == t
+    )  # t yılın son işlem günüyse t.year da biter
+    biten = sonuc[1].index[sonuc[1].index < t.year + int(yil_sonu)]
     assert len(biten) > 0  # sınama boş değil: t'den önce biten yıl var
     pd.testing.assert_frame_equal(sonuc[0].loc[biten], sonuc[1].loc[biten])
 
