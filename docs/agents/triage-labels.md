@@ -1,6 +1,6 @@
 # Triage Labels
 
-The skills speak in terms of five canonical triage roles. This file maps those roles to the actual label strings used in this repo's issue tracker.
+The skills speak in terms of five canonical triage roles. This file maps those roles to the actual label strings used in this repo's issue tracker (GitHub Issues, see `issue-tracker.md`).
 
 | Label in mattpocock/skills | Label in our tracker | Meaning                                  |
 | -------------------------- | -------------------- | ---------------------------------------- |
@@ -12,6 +12,12 @@ The skills speak in terms of five canonical triage roles. This file maps those r
 
 When a skill mentions a role (e.g. "apply the AFK-ready triage label"), use the corresponding label string from this table.
 
-The role string is one possible value of the `Status:` line. The contract of the line is in `issue-tracker.md`, section "Status field".
+Three more labels belong to Tansu. They are not triage roles:
 
-Edit the right-hand column to match whatever vocabulary you actually use.
+| Label | Meaning |
+| --- | --- |
+| `yerel` | On an issue: the ticket needs the brain pool, `veri/`, or a real snapshot. The cloud agent skips it. Only a local session runs it. |
+| `ci-kirmizi` | On a PR: CI is red. The label starts the agent again on the same branch. |
+| `inceleme-gecti` | On a PR: the independent review says "geçti". With a green CI, the PR can merge. |
+
+The role label is the triage state of an open ticket. How the labels, the assignee, the PR, and the issue state map to the old `Status:` line is in `issue-tracker.md`, section "State of a ticket".

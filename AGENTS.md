@@ -68,11 +68,11 @@ until the documents have no drift, no old information, and no contradiction. The
 
 - **Fikir (idea):** In the step of flow A that sharpens the plan (AKIS flow A, step 4), call `/tansu-grill`. It is the Tansu version of the skill of that step. Tansu comes first. It scans the risk and shows the text that will change.
 - **Fikir, kayıt (record):** Write a settled term to `GLOSSARY.md` at once. Write a decision to `docs/TASARIM.md`. Read TASARIM and `docs/sorgu/` first. Do not ask again for a decision that exists.
-- **Plan:** The spec and the tickets follow the own ticket layout of Tansu (`docs/agents/issue-tracker.md`). Do not write a ticket by hand. If a new decision appears during the work, update the spec first. Then the ticket step (AKIS flow A, step 7) builds the tickets again in dependency order.
+- **Plan:** The spec and the tickets are GitHub issues in `kaynak` (`docs/agents/issue-tracker.md`). `.scratch/` is an archive only. Create a ticket with the ticket step of the flow, not by hand. If a new decision appears during the work, update the spec first. Then the ticket step (AKIS flow A, step 7) builds the tickets again in dependency order.
 - **Yapım (build):** Open a branch `pr/NN-<ad>` from `master` for each ticket. Commit to that branch. Clear the context between tickets.
 - **PR:** Push the branch to `kaynak`. The pull request text step (AKIS flow A, step 17) and `.github/pull_request_template.md` write the PR body together. Do not merge the PR before two things are true.
 - **PR, birleştirme (merge):** CI is green (`ci`: ruff, pytest. `dod`: PR body). An independent review says "geçti". The merge request of Levent is the approval. Merge with `gh pr merge --merge`.
-- **Kapanış (close):** Move the spec and the tickets of a finished job to `.scratch/arsiv/`. Only GLOSSARY and TASARIM stay for good.
+- **Kapanış (close):** The merged PR closes the ticket issue (`Closes #N`). Close the spec issue when its last ticket is closed. Only GLOSSARY and TASARIM stay for good. The old files in `.scratch/` stay as an archive.
 
 **Hata kaydı (error log):** The rules for recording agent errors are in `CODING_STANDARDS.md`, section "Mistakes". The session review that finds missed errors is AKIS flow B, step 12 and flow I, step 3. A reasoning error goes to `CODING_STANDARDS.md` under `## Tansu`.
 
@@ -82,7 +82,7 @@ If Levent says "anlamadım", the agent calls `mattpocock-skills:wait-what`. The 
 
 ### Issue tracker
 
-See `docs/agents/issue-tracker.md`.
+GitHub Issues in `zPfizer/tansu-kaynak`. See `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 
