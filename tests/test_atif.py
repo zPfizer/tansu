@@ -77,6 +77,16 @@ def test_bolum_numaralari_baslik_ve_madde(tmp_path):
         ("TASARIM 6.3 madde yok", ["not.md:1: TASARIM 6.3"]),
         ("KURALLAR §5.1 yok", ["not.md:1: KURALLAR §5.1"]),
         ("TASARIM §5.1, §99", ["not.md:1: TASARIM §99"]),
+        # `ve n` ve `/n` düz sayı listeleri; sayıdan sonra sözcük gelirse nesnedir, atıf değil
+        ("TASARIM 5 ve 99", ["not.md:1: TASARIM §99"]),
+        ("TASARIM 5/99", ["not.md:1: TASARIM §99"]),
+        ("TASARIM 5 ve 99 ve 98)", ["not.md:1: TASARIM §99", "not.md:1: TASARIM §98"]),
+        ("TASARIM 5 ve 6.", []),
+        ("TASARIM 5/6;", []),
+        ("TASARIM 5.1 ve 99 gün", []),
+        ("TASARIM 5.1 / 99 gün", []),
+        ("TASARIM 5.1, 99 gün", []),
+        ("TASARIM 5 ve 99 ile", []),
         # `madde N`: bölümün N. maddesi
         ("KURALLAR §1 madde 2; TASARIM §6 madde 1; TASARIM 8 madde 2", []),
         ("TASARIM 6 madde 99", ["not.md:1: TASARIM §6.99"]),

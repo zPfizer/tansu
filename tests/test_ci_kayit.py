@@ -60,6 +60,7 @@ def klon(tmp_path):
     (kaynak / "kayit").mkdir()
     (kaynak / "kayit" / "x.jsonl").write_text("a\nb\n", encoding="utf-8", newline="\n")
     (kaynak / "kayit" / "bos.jsonl").write_text("", encoding="utf-8")
+    (kaynak / "kayit" / "ikili.bin").write_bytes(b"a\x00b\x00")
     _git(kaynak, "add", "kayit")
     _git(kaynak, "commit", "-q", "-m", "taban")
     hedef = tmp_path / "klon"
@@ -144,3 +145,10 @@ def test_bos_dosya_silmek_gecer_bilinen_sinir(klon):
     (klon / "kayit" / "bos.jsonl").unlink()
     _kaydet(klon)
     assert _kos(klon).returncode == 0
+
+
+def test_ikili_dosya_silmek_kirmizi(klon):
+    # numstat ikili dosyada `-` yazar; adım bunu 1 silinen satır sayar
+    (klon / "kayit" / "ikili.bin").unlink()
+    _kaydet(klon)
+    assert _kos(klon).returncode == 1

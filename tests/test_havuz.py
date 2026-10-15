@@ -18,7 +18,7 @@ def test_havuzdaki_her_not_atifli_ya_da_kural_icermez_listesinde():
 def _depo(kok, kurallar, a):
     (kok / "docs" / "kurallar").mkdir(parents=True)
     (kok / "docs" / "KURALLAR.md").write_text(kurallar, encoding="utf-8")
-    (kok / "docs" / "kurallar" / "A.md").write_text(a, encoding="utf-8")
+    (kok / "docs" / "kurallar" / "A-x.md").write_text(a, encoding="utf-8")
 
 
 def _havuz(kok, adlar):
@@ -154,3 +154,37 @@ def test_tam_ad_ve_ayni_numaraya_kisa_atif_belirsizdir(tmp_path):
 def test_kesik_kimlik_notu_kapsamaz(tmp_path, not_adi, metin):
     _depo(tmp_path, "## X\n", metin + "\n")
     assert havuz_sorunlari(tmp_path, _havuz(tmp_path, [not_adi])) == [not_adi]
+
+
+def _kurallar_depo(kok, kurallar, dosyalar):
+    (kok / "docs" / "kurallar").mkdir(parents=True)
+    (kok / "docs" / "KURALLAR.md").write_text(kurallar, encoding="utf-8")
+    for ad, metin in dosyalar.items():
+        (kok / "docs" / "kurallar" / ad).write_text(metin, encoding="utf-8")
+
+
+@pytest.mark.parametrize(
+    ("kurallar", "dosyalar", "kapsanir"),
+    [
+        # yalnız "Kural içermeyen notlar" bölümü sayılır
+        ("## Kural içermeyen notlar\n\nnot-bir · kural yok\n", {}, True),
+        ("## İnceleme bekliyor\n\nnot-bir\n", {}, False),
+        ("## Dizin\n\nnot-bir\n\n## Kural içermeyen notlar\n\nx\n", {}, False),
+        ("## Kural içermeyen notlar\n\nx\n\n## Sonraki bölüm\n\nnot-bir\n", {}, False),
+        ("## Kural içermeyen notlar\n\n### Alt başlık\n\nnot-bir\n", {}, True),
+        ("## Kural içermeyen notlar\n\nx\n\n## Sonraki\n", {"A-x.md": "not-bir"}, True),
+        # A–E dosyaları tamamen sayılır; başka dosyalar sayılmaz
+        ("## X\n", {"B-y.md": "# B\n\nnot-bir", "E-z.md": "x"}, True),
+        ("## X\n", {"Z-y.md": "not-bir"}, False),
+        ("## X\n", {"notlar.md": "not-bir"}, False),
+        ("## X\n", {"a-x.md": "not-bir"}, False),
+        # tam adlar bölümü (kısa atıf listesi) sayılmaz
+        ("## Kısa atıfların tam adları\n\nnot-bir\n", {}, False),
+    ],
+)
+def test_havuz_kapsami_yalniz_a_e_ve_kural_icermez_listesidir(
+    tmp_path, kurallar, dosyalar, kapsanir
+):
+    _kurallar_depo(tmp_path, kurallar, dosyalar)
+    sonuc = havuz_sorunlari(tmp_path, _havuz(tmp_path, ["not-bir"]))
+    assert sonuc == ([] if kapsanir else ["not-bir"])

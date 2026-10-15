@@ -1,6 +1,6 @@
 """Atıf denetimi araçları (bilet 08): bölüm atıfları ve karar etiketleri var olan yere gider.
 
-`tests/test_atif.py` ve `tests/test_sahipler.py` bu araçları kullanır. Ağa çıkmaz.
+`tests/test_atif.py`, `test_sahipler.py`, `test_havuz.py` ve `test_sinirlar.py` bu araçları kullanır. Ağa çıkmaz.
 """
 
 import re
@@ -9,8 +9,13 @@ from pathlib import Path
 
 KOK = Path(__file__).resolve().parents[1]
 
-# Bu iki test dosyası bilerek kırık atıf örneği taşır; taramaya girmez.
-HARIC = {"tests/test_atif.py", "tests/test_sahipler.py", "tests/atif_araclari.py"}
+# Bu dosyalar bilerek kırık atıf ve yol örneği taşır; taramaya girmez.
+HARIC = {
+    "tests/test_atif.py",
+    "tests/test_sahipler.py",
+    "tests/test_sinirlar.py",
+    "tests/atif_araclari.py",
+}
 
 _NO = r"\d+(?:\.\d+)*"
 # `TASARIM 5.1`, `TASARIM §5.1`, `docs/TASARIM.md` §5.1
@@ -20,6 +25,8 @@ MADDE = re.compile(
     r"\s+madde\s+(\d+)"
 )  # `KURALLAR §3 madde 2` = 3.2 (bölümün 2. maddesi)
 ATIF_DEVAMI = re.compile(rf"(\s*[–-]\s*|,\s*|\s+ve\s+|\s*/\s*)(§)?({_NO})")
+# Düz sayıdan sonra boşluk ve sözcük gelirse sayı atıf değil nesnedir: `TASARIM 5.1 ve 6 gün`
+SOZCUK_ARDINDAN = re.compile(r"\s+(?!ve\s+§?\d)[^\W\d_]")
 # Atıfın hemen ardından gelen alıntı başlık ya da kalın terim: TASARIM 5.8 "Kural kaydı"
 ALINTI = re.compile(
     r"""(?:,| ve|:)? ?\(?(?:"([^"\n]+)"|“([^”\n]+)”|‘([^’\n]+)’|\*\*([^*\n]+)\*\*)"""
@@ -119,7 +126,9 @@ def atif_numaralari(metin):
 
     `TASARIM §5.1, §99`, `TASARIM 5.5, 5.6`, `KURALLAR §3 ve §4` ve `TASARIM §5.5–5.6` her numarayı verir.
     Aralıkta iki uç da denetlenir. Listede virgülle gelen numara `§` taşımalı ya da noktalı olmalıdır
-    (`TASARIM 5.1, 6 gün` bir atıf listesi değildir). `TASARIM.md §5` dosya biçimi de bir atıftır.
+    (`TASARIM 5.1, 6 gün` bir atıf listesi değildir). ` ve ` ve `/` ardından düz sayı da okunur
+    (`TASARIM 5 ve 99`, `TASARIM 5/99`), ama sayıdan sonra boşluk ve sözcük gelirse okunmaz
+    (`TASARIM 5.1 ve 6 gün`). `TASARIM.md §5` dosya biçimi de bir atıftır.
     """
     for eslesme in ATIF.finditer(metin):
         belge = eslesme.group(1)
@@ -133,7 +142,10 @@ def atif_numaralari(metin):
             aralik = (
                 ayrac.strip() == "–"
             )  # `§2–3`; tireyle (`5.2 - 3 gün`) yalnız noktalı numara sayılır
-            if not (isaret or "." in numara or aralik):
+            duz_ve_ya_bolu = ayrac.strip() in ("ve", "/") and not SOZCUK_ARDINDAN.match(
+                metin, devam.end()
+            )
+            if not (isaret or "." in numara or aralik or duz_ve_ya_bolu):
                 break
             sonuc.append((belge, numara, eslesme.start(), devam.end(), True))
             konum = devam.end()
@@ -254,16 +266,6 @@ def sahip_tablosu(agents):
     return depo, beyin
 
 
-def yerel_mi(kok, yol):
-    """Yol .gitignore'da mı (yerel dosya; CI'da bulunmaz)?"""
-    return (
-        subprocess.run(
-            ["git", "-C", str(kok), "check-ignore", "-q", yol], capture_output=True
-        ).returncode
-        == 0
-    )
-
-
 def sahip_dosyalari(kok, yollar):
     """Tablodaki yollardan var olan .md dosyaları (klasörse içindekiler, 'a … e' aralığı dahil)."""
     dosyalar = []
@@ -279,7 +281,7 @@ def sahip_dosyalari(kok, yollar):
 def beyin_kirikleri(kok, dosyalar, havuz):
     """Havuz notu ve görsel yollarından havuzda olmayanlar: 'dosya:satır: belirteç'.
 
-    Kısa ad (`gorsel-paket-45`) not adının başıdır. `...`, `<ad>`, `*`, `NN` içeren belirteç şablondur.
+    Kısa ad (`gorsel-paket-45`) not adının başıdır (tire sınırında). `...`, `…`, `<`, `*`, `NN` içeren belirteç şablondur.
     """
     notlar = {yol.stem for yol in havuz.glob("*.md")}
     kirik = []
@@ -311,19 +313,27 @@ def beyin_kirikleri(kok, dosyalar, havuz):
 
 
 def _havuz_metni(kok):
-    """KURALLAR.md ve docs/kurallar/*.md; 'Kısa atıfların tam adları' bölümü hariç (o bölüm yalnız ad listesidir)."""
-    parcalar = []
-    for yol in [
-        kok / "docs" / "KURALLAR.md",
-        *sorted((kok / "docs" / "kurallar").glob("*.md")),
-    ]:
-        satirlar, atla = [], False
-        for satir in yol.read_text(encoding="utf-8").splitlines():
-            if satir.startswith("## "):
-                atla = satir.startswith("## Kısa atıfların tam adları")
-            if not atla:
-                satirlar.append(satir)
-        parcalar.append("\n".join(satirlar))
+    """Havuz atıflarının sayıldığı metin: docs/kurallar/A-…E-*.md'nin tamamı ve docs/KURALLAR.md'nin yalnız
+    'Kural içermeyen notlar' bölümü (başlıktan sonraki aynı düzey `## ` başlığa kadar).
+
+    KURALLAR.md'nin öbür bölümleri (Dizin, Seçim, 'Kısa atıfların tam adları', ...) ve başka dosyalar sayılmaz.
+    """
+    parcalar = [
+        yol.read_text(encoding="utf-8")
+        for yol in sorted((kok / "docs" / "kurallar").glob("*.md"))
+        if re.fullmatch(
+            r"[A-E]-.*\.md", yol.name
+        )  # glob Windows'ta büyük/küçük harfi ayırmaz
+    ]
+    liste, icinde = [], False
+    for satir in (
+        (kok / "docs" / "KURALLAR.md").read_text(encoding="utf-8").splitlines()
+    ):
+        if satir.startswith("## "):
+            icinde = satir.startswith("## Kural içermeyen notlar")
+        if icinde:
+            liste.append(satir)
+    parcalar.append("\n".join(liste))
     return "\n".join(parcalar)
 
 
