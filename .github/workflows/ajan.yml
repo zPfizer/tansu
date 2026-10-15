@@ -17,13 +17,11 @@ jobs:
       !contains(github.event.issue.labels.*.name, 'yerel')
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    # Permission block of the official example (examples/claude.yml of claude-code-action).
+    # Minimal GITHUB_TOKEN. The action pushes, opens the PR, and comments with the Claude App
+    # token (OIDC exchange, needs id-token: write). The steps below only need to read the repo.
     permissions:
-      contents: write
-      pull-requests: write
-      issues: write
+      contents: read
       id-token: write
-      actions: read
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -45,13 +43,15 @@ jobs:
             6. Add files by name. Never use git add . or git add -A.
             7. In kayit/, only add new files or append lines. Never change or delete old lines. Never touch veri/.
             8. Never use rebase, --amend, --force, reset --hard, or clean.
-            9. Push the branch. Write the PR body to /tmp/pr-body.md from the layout of .github/pull_request_template.md.
+            9. Push the branch: git push -u origin pr/${{ github.event.issue.number }}-<slug> (the branch name of step 3). Write the PR body to /tmp/pr-body.md from the layout of .github/pull_request_template.md.
                Add the line "Closes #${{ github.event.issue.number }}". Add this run link: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
                Leave the "Denetçi:" and "Sonuç:" lines empty.
+               Check a PR box only with real proof after "kanıt:". If you cannot prove it, leave the box unchecked.
+               Put the real pytest output in the code block under "Gerçek veri kanıtı". You have no veri/. Never invent proof.
                Open the PR: gh pr create --title "<title>" --body-file /tmp/pr-body.md
             10. Comment the PR link on the issue: gh issue comment ${{ github.event.issue.number }} --body "<link>"
             11. If you cannot finish, comment the reason on the issue. Do not open a PR with a failing test.
           claude_args: |
             --max-turns 40
-            --allowedTools "Edit,Write,Read,Glob,Grep,Bash(git checkout -b:*),Bash(git add:*),Bash(git commit:*),Bash(git push:*),Bash(git status:*),Bash(git diff:*),Bash(git log:*),Bash(gh pr create:*),Bash(gh issue view:*),Bash(gh issue comment:*),Bash(python -m pytest:*),Bash(ruff:*)"
-            --disallowedTools "Bash(git add .),Bash(git add . *),Bash(git add -A*),Bash(git add --all*),Bash(git rebase*),Bash(git commit* --amend*),Bash(git push* --force*),Bash(git push* -f*),Bash(git push* +*),Bash(git reset --hard*),Bash(git clean*)"
+            --allowedTools "Edit,Write,Read,Glob,Grep,Bash(git checkout -b:*),Bash(git add:*),Bash(git commit:*),Bash(git push -u origin pr/*),Bash(git push origin pr/*),Bash(git status:*),Bash(git diff:*),Bash(git log:*),Bash(gh pr create:*),Bash(gh issue view:*),Bash(gh issue comment:*),Bash(python -m pytest:*),Bash(ruff:*)"
+            --disallowedTools "Bash(git add .),Bash(git add . *),Bash(git add ./*),Bash(git add -A*),Bash(git add -u*),Bash(git add --all*),Bash(git -C*),Bash(git rebase*),Bash(git commit* --amend*),Bash(git commit* -a*),Bash(git push* --force*),Bash(git push* -f*),Bash(git push* +*),Bash(git push*master*),Bash(git push* :*),Bash(git reset --hard*),Bash(git clean*)"
