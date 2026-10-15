@@ -95,7 +95,7 @@ Each skill lives in `.claude/skills/<name>/SKILL.md` and owns the steps of its f
 ## Auditor and rounds
 - In this section, "auditor" means the Codex auditor (code) or the reviewer of the `mattpocock-skills:code-review` pass (documents only). `tansu-yeni-is` "Review" says which one runs. The Codex audit is only for code changes.
 - The auditor is a different agent from the writer.
-- The auditor also checks that the writer followed the steps of the flow skill (`tansu-yeni-is` and the other skills under `.claude/skills/`).
+- The auditor also checks that the writer followed the steps of the flow skill (`tansu-yeni-is` and the other skills under `.claude/skills/`). The auditor reads the `Akış:` line of the PR body. It checks the diff and the PR body against the steps of that skill. It names each step that has no trace.
 - The auditor of a delete or archive job checks the final file list and the links. It also checks the changes outside the scope.
 - The verdicts are GEÇTİ, NOTLU GEÇTİ, and KALDI. NOTLU GEÇTİ: low-risk test gaps and style notes. KALDI: a false claim, a broken behavior, a missed instruction, or a security or privacy risk. An audit without a verdict counts as KALDI. The prompt of a `mattpocock-skills:code-review` pass asks for a verdict in the same words.
 - Every audit prompt and every code-review pass prompt states the goal of the job. When the goal is to simplify, a deliberately deleted line is not a finding. A deletion is a finding only if a needed rule was lost without a reason. The rest of the diff gets the full review.

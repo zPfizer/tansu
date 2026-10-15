@@ -2,6 +2,8 @@
 
 Değişikliği bir veya iki cümleyle açıklayın.
 
+Akış:
+
 ## Kabul ölçütleri
 _Kutuları Claude kanıtıyla işaretler. Birleştirme için `tansu-yeni-is` "Merge" adımını uygulayın. İşaretsiz kutu varsa PR birleşmez._
 
