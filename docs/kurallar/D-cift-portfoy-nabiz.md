@@ -1,7 +1,7 @@
 # D. Çift (pairs) / Portföy / Piyasanın Nabzı — Kural Çıkarımı
 
 Kapsam: Tansu X Veri Havuzu notları + görseller. Görsel yolu kökü: `beyin/kisisel/300-Projects/Tansu X Veri Havuzu/assets/`.
-Etiketler: **GÖRSEL** = ilk el (görselde okundu), **NOT** = ikinci el (Claude özeti), **YORUM** = benim çıkarımım / boşluk. Hiçbir parametre sessizce uydurulmadı.
+Etiketler (kaynak türü tanımları GLOSSARY'dedir): **GÖRSEL** = görselde okundu (birinci el; gorsel-paket-98 ve -113 için NotebookLM görseli, ikinci el), **NOT** = ikinci el, **YORUM** = benim çıkarımım / boşluk. Hiçbir parametre sessizce uydurulmadı.
 
 Genel uyarı: Tansu kod, formül, pencere, maliyet, OOS vermiyor. Görseller düşük çözünürlüklü. Notların bir kısmı görselle çelişiyor (aşağıda "Not hataları" başlığında).
 
@@ -66,7 +66,7 @@ Genel uyarı: Tansu kod, formül, pencere, maliyet, OOS vermiyor. Görseller dü
   - CIMSA/OYAKC (grafik ~Oca 2025–May 2026): "Net: +49,245 TL (+49.2%)" (başlık, etiket; B&H sayısı yok, grafikte B&H çok altında).
   - AGROT/GARAN iki sürüm: (a) 2026-04-20: 100.000 → 113.436,14; +%13,44; B&H +%0,91; 3 olay; işlem 1 (kapalı, −7.645,35 TL / −%7,65, 66 gün) + nakit 21 gün + açık (+21.081,49 MTM, 42 gün). (b) 2025-04-01..2026-04-23: strateji +%8,76; B&H −%3,55; 3 işlem; güncel Z −0,91. (c) Negatif örnek (53): pair/dönem verilmemiş; strateji ≈79 bin TL'ye düşüp yatay (≈−%21, görsel tahmin); B&H ≈105–107 bin; Tansu sözü (NOT, aktarım): "Her arbitraj fırsatı çalışmaz; mutlaka backtest etmek lazım; görünmez bağ kopmuş olabilir."
   - Maliyet, komisyon, borç, OOS kanıtı yok. Tüm sonuçlar tek pair, tek dönem, seçilmiş.
-- **Bedava günlük veriyle uygulanabilir mi:** Evet, fiyat tarafı. yfinance `.IS` günlük adjusted close + statsmodels (`coint`, OLS). Açık/kapanış fiyatları var. Eksik: formül, eşikler. Short bacağı BIST perakende için zor (açığa satış listesi/kısıt); long-only rotasyon uygulanabilir ve Tansu'nun VAKBN/CIMSA sürümü zaten long-only (YORUM: rotasyon = ucuz olanı tut). İki bacaklı sürümün borç/finansman maliyeti verisi ücretsiz değil.
+- **Bedava günlük veriyle uygulanabilir mi:** Hesaplama düzeyinde evet: kaynak yfinance `.IS` günlük adjusted close + statsmodels (`coint`, OLS) varsayar. Projenin güncel veri durumu ayrıdır: İş Yatırım, Yahoo yok, açılış yok; T+1 açılış dolumu uygulanamaz (TASARIM 5.1, 5.3). Eksik: formül, eşikler. Short bacağı BIST perakende için zor (açığa satış listesi/kısıt); long-only rotasyon uygulanabilir ve Tansu'nun VAKBN/CIMSA sürümü zaten long-only (YORUM: rotasyon = ucuz olanı tut). İki bacaklı sürümün borç/finansman maliyeti verisi ücretsiz değil.
 - **Kaynak güveni:** Giriş ±2, Z-dönüşü=ΔZ ve yön etiketleri GÖRSEL'dedir. YORUM: long-only rotasyon ve ilk sinyale kadar nakit bu katalogdaki model seçimleridir; grafik genel nakit politikasını açıklamaz (Araç, Rota/g2). Spread/hedge/pencere/sağlık eşikleri açık değildir. Performans: tek örnek, doğrulanmamış.
 
 ## Çıkış / başarısız pair ve sağlık kapısı (Rolling cointegration)
@@ -79,6 +79,7 @@ Genel uyarı: Tansu kod, formül, pencere, maliyet, OOS vermiyor. Görseller dü
 - **Tansu'nun kanıtı:** p=0,048 tek sayı. 53 negatif sonuç (yukarıda).
 - **Bedava veri:** hesap yapılabilir; kaynak fikri pencere, sıklık, eşik ve eylem vermediğinden tam kapı olarak uygulanamaz (Aktarım, tweet-rolling-cointegration-iliski-bozulma-kapisi:21).
 - **Kaynak güveni:** fikir ikinci el aktarımdır; hesaplanabilir kapı tanımı yoktur.
+- **Ek kanıt (KANIT, bilet 04, 14.10):** `tweet-korelasyon-yuksek-istatistiksel-arbitraj-garanti-degil` (Ham Tansu'nun metni; ikinci el özet): yüksek korelasyon istatistiksel arbitraj için yetmez; "Arbitraj için Cointegration (Eşbütünleşme) şarttır"; eşbütünleşme olmadan açılan işlemlerde "büyük zararlar". Yani çift seçiminde eşbütünleşme ön koşuldur. Test yöntemi, pencere, eşik, sayısal zarar örneği yok.
 
 ## 150 bin kombinasyon tarama
 - **Kaynak:** tweet-istatistiksel-arbitraj-150bin-esbutunlesme-taramasi (NOT, ikinci el). Görsel yok.
@@ -150,7 +151,7 @@ Genel uyarı: Tansu kod, formül, pencere, maliyet, OOS vermiyor. Görseller dü
 - Bedava: CBOE VIX = yfinance `^VIX` veya FRED `VIXCLS`. Zaman farkı: BIST kapanışı ABD VIX kapanışından önce; önceki ABD günü kullanılmalı (YORUM; Tansu belirtmiyor).
 
 ## Piyasanın Nabzı (7 kutu, skor 4/5)
-- **Kaynak:** gorsel-paket-98 (01 jpg).
+- **Kaynak:** gorsel-paket-98 (01 jpg; NotebookLM infografiği, ikinci el).
 - **İfade (GÖRSEL):** başlık "Piyasanın Nabzı: Teknik Analiz Raporu"; "Yedi temel gösterge…". Kutular:
   1. Korelasyon (Borsa & VIX) — "Mevcut Korelasyon Değeri: −0.60" — "Yorum: SAĞLIKLI".
   2. Fiyat & Trend (SMA 18/35) — "MEVCUT FİYAT 11336.18; SMA Kısa (18) 11335.87; SMA Uzun (35) 11026.53" — "POZİTİF"; "Yükseliş Trendi (Boğa)".
@@ -178,11 +179,11 @@ Genel uyarı: Tansu kod, formül, pencere, maliyet, OOS vermiyor. Görseller dü
 
 - **Giriş/çıkış/kapı:** Rapor işlem sinyali değil, yeni pozisyon için ortam notu. "Stop koy, küçük pozisyon" (GÖRSEL). YORUM: hacim=0 için veri hatası bu katalogda açıklama adayıdır; kaynak nedenini ve eylemi açıklamaz (NotebookLM, G98/g1).
 - **Belirsiz:** korelasyonun serisi (seviye mi getiri mi; 114'te değerler −0,75…+0,65 arası: getiri korelasyonu gibi, YORUM), hangi hisse/endeks (BIST100 varsayımı; fiyat 11.336 ≈ XU100 değeri, çözünürlük/tarih yok), RSI/AO eşikleri, 4/5'in tüm bantları, hacim 0'ın nedeni, "ortalama hacim" penceresi.
-- **Kanıt:** yok (tek anlık görüntü; sonuç yok). **Bedava veri:** Evet (XU100.IS OHLCV, ^VIX; yfinance endeks hacmi güvenilir olmayabilir, YORUM).
+- **Kanıt:** yok (tek anlık görüntü; sonuç yok). **Bedava veri:** Hesaplama düzeyinde evet (kaynak XU100.IS OHLCV, ^VIX varsayar; yfinance endeks hacmi güvenilir olmayabilir, YORUM); projede XU100 yalnız kapanış verir (TASARIM 5.1).
 - **Güven:** Skor mantığı orta (görselden hesaplanır); eşikler düşük.
 
 ## BIST VIX long: 5 adım kontrol listesi + Python master analiz
-- **Kaynak:** gorsel-paket-113 (01 jpg), gorsel-paket-114 (01, 02 png).
+- **Kaynak:** gorsel-paket-113 (01 jpg; NotebookLM infografiği, ikinci el), gorsel-paket-114 (01, 02 png).
 - **İfade (GÖRSEL 113):** başlık "BIST 100 & VIX: Kusursuz Yükseliş (Long) Pozisyonu İçin 5 Adımlı Kontrol Listesi".
   - ADIM 1 Korelasyon Kontrolü: "BIST 100 yükselirken VIX'in düşmesi veya sakin kalması gerekir"; durum "GEÇERLİ".
   - ADIM 2 Disiplin ve Trend: "Heikin Ashi Mumlarını Kullan"; "GEÇERLİ".
@@ -217,7 +218,7 @@ Genel uyarı: Tansu kod, formül, pencere, maliyet, OOS vermiyor. Görseller dü
 - **Giriş/çıkış/kapı:** yukarıda. Korelasyon "sağlıklı" kapısı: < 0 (GÖRSEL); sıfırın altı eşik, ±0,5 çizgileri grafikte (kapı olarak kullanılıp kullanılmadığı belirsiz).
 - **Belirsiz:** VIX "düşük seviye" eşiği (98'deki 16,99?), ofset bant formülü, VIX AO'nun rolü, 2/4 listesi, VIX hizalama (aynı gün/önceki gün), yeşil HA tek mum mu ardışık mı, RSI(200) ısınması (≥200 gün veri gerekir; 114'te ocak 2025'ten başlıyor, öncesi gösterilmemiş).
 - **Kanıt:** yok (geriye dönük işlem sonucu yok). 114 notu tarihsel "tutma" snapshot'ı diyor (NOT). Snapshot 2025-12-14 (pazar) bitişli.
-- **Bedava veri:** Evet: XU100.IS OHLC, ^VIX/FRED; HA, SMA, RSI(200), AO, rolling corr pandas ile hesaplanır.
+- **Bedava veri:** Hesaplama düzeyinde evet: kaynak XU100.IS OHLC, ^VIX/FRED varsayar; HA, SMA, RSI(200), AO, rolling corr pandas ile hesaplanır. Projenin XU100 kaynağı yalnız kapanış verir (TASARIM 5.1); HA ve AO için açılış, yüksek, düşük yoktur, bu yüzden güncel durumda uygulanamaz (yukarıdaki Tanım).
 - **Kaynak güveni:** Giriş/çıkış mantığı orta-yüksek (görselde açık yazılı); VIX eşik/bant ve 2/4 düşük.
 
 ## Endeks 5/5 skor (NH-NL, Corwin–Schultz, likidite)
@@ -236,14 +237,8 @@ Genel uyarı: Tansu kod, formül, pencere, maliyet, OOS vermiyor. Görseller dü
 - **Güven:** Gösterge tanımı orta, kural yok.
 
 ## SETUP x/100, YAPI (XU100 1 ve 2 Eylül)
-- **Kaynak:** kaynak-xu100-1-eylul (gunluk.webp, 4-saat.webp); kaynak-xu100-bekle-teyit (gunluk.webp, 4-saat.webp).
-- **İfade (GÖRSEL başlıklar):** "XU100.IS | GÜNLÜK 14229.01 | DEMAND: 4 | SUPPLY: 2 | BULL FVG AKTİF: 11 | BEAR FVG AKTİF: 2 | YAPI: GEÇİŞ / BULLISH CHoCH | SETUP: 45/100 | GÖRSEL: ODAK"; 4 saatlik: "14226.96 | … BULL FVG 12 | BEAR FVG 6 | YAPI: GEÇİŞ / BEARISH CHoCH | SETUP: 35/100". 2 Eylül günlük: "14050.56 … SSL/BSL: 0/4 | YAPI: GEÇİŞ / BULLISH CHoCH SEVİYESİ KAYBEDİLDİ | SETUP: 7/100"; 4 saatlik "14054.50 … BEARISH CHoCH AKTİF | SETUP 13/100". Göstergeler: "WMA Close 21", "MACD 12 26 9", "RSI 14 | 70 / 30", "WT 10 21 | 60 53 -53 -60" (WaveTrend). Tweet metni (NOT): fiyat aşağı eğimli WMA21 altında, dönüş teyidi yok; WMA21 geri alma eşiği 14.443,45; teknik uyum 35/100 "ZAYIF"; 2 Eylül: tepki yükselişi trend dönüşü değil, "bekle, fiyat teyidi ara", ilk olumlu eşik ≈14.722.
-- **Tanım:** SETUP puanı formülü yok. Bileşen adayları: yapı (HH/HL/LH/LL, BOS/CHoCH), talep/arz bölgesi sayısı, FVG sayısı, WMA21, MACD, RSI, WT. Ağırlık bilinmiyor (YORUM). Aynı veri farklı zaman diliminde farklı puan (45 vs 35).
-- **Parametreler:** WMA 21; MACD 12/26/9; RSI 14 (70/30); WT 10/21 (60,53,−53,−60) — hepsi GÖRSEL. Puan formülü yok.
-- **Giriş/çıkış:** "WMA21 üstüne geri alma = olumlu eşik" (NOT, aktarım); "bekle ve teyit". Sayısal kural yok.
-- **Kanıt:** yok (önce/sonra değerler: 45→7 gibi puan düşüşü var).
-- **Bedava veri:** WMA, MACD, RSI, WT hesabı evet; SETUP puanı yeniden üretilemez; 4 saatlik BIST verisi yfinance'te sınırlı (YORUM).
-- **Güven:** Gösterge parametreleri yüksek, puan düşük.
+- **Sahibi:** A §5 (XU100 başlıkları, puanlar, gösterge parametreleri, tweet metni, puan formülünün yokluğu). Burada tekrar edilmez. (bilet 04, 14.10)
+- **Piyasa durumu yönünden okuma:** SETUP puanı formülsüzdür ve yeniden üretilemez; piyasa durumu etiketi olarak kullanılamaz (TASARIM §3: etiket YORUM'dur).
 
 ## FROTO / Volatilite şoku (yeni alım freni) / Trend rejimi
 - **Tansu'nun fikri:** oynaklık şokunda yeni alımı durdurup mevcut riski yönetmektir (Aktarım, tweet-volatilite-piyasa-soku-yeni-alim-freni:21); uygulanamaz: kaynak hesaplanabilir tanım vermiyor.
@@ -263,6 +258,10 @@ Genel uyarı: Tansu kod, formül, pencere, maliyet, OOS vermiyor. Görseller dü
 - **Belirsiz:** sektör evreni/sınıflandırması (ad "Petrol", "Demir Çelik" vb. — KAP/BIST sektör listesi gibi), N gün tanımı, anomali eşiği diğer pencerelerde, sektör başına minimum hisse sayısı, getirinin düzeltmeli fiyatla mı hesaplandığı, hangi pencere "lider" sayılacak (üç pencerenin ortak lideri yok: Petrol 30/60, Demir Çelik 60/90).
 - **Bedava veri:** Evet (yfinance `.IS` günlük kapanış; sektör üyeliği için ücretsiz tam liste: KAP/Borsa İstanbul sayfaları, elle derleme gerekir — YORUM).
 - **Güven:** Hesap kuralı yüksek (30/60/90, basit ortalama, |30g|>%50). Evren düşük.
+- **Hacim filtresi (bilet 04, 14.10):** `tweet-sektor-rotasyonu-hacim-tuzagi-sabit-tl-esigi` (Ham Tansu'nun metni; ikinci el özet). Sektör rotasyonunda hacim filtresi BIST100 ortalamasına göre kurulmaz (büyük hacimli hisseler ortalamayı yükseltir, orta ölçekli şirketleri haksız eler). Tanım: günlük TL hacmi = kapanış fiyatı × işlem adedi; 20 günlük (1 ay) veya 60 günlük (3 ay) hareketli ortalama; sonra eşik. Yöntem A (sabit): 20 günlük ortalama hacmi 10 milyon TL altındaki hisseler listeye girmez. Yöntem B (dinamik): sektör içinde hacimde en alttaki %25 atılır. Sektör ayrımı sektörün kendi içinde yapılır ("80'e yakın sektör", Tansu'nun tahmini). Parametre: 20/60 gün (Tansu); 10 milyon TL ve %25 örnek değerdir, gerekçe ve test yok. Likidite kapısı eşiğiyle ilişki: E K10. Günlük bedava veriyle: evet. Güven: ikinci el.
+- **Konveks rotasyon (bilet 04, 14.10):** `tweet-konveks-rotasyon-stratejisi-makro-dongu` (Ham Tansu'nun metni; ikinci el özet; "çok fazla detayı olan" daha büyük bir projenin adımlarından biri). Beş adım: (1) makro ve döngü analizi (ekonomik döngünün aşaması rotasyon yönünü belirler; örnek: faiz indirimi beklentisi, bankacılık); (2) konveksite filtresi (F/K tarihsel ortalamanın altında, makro beklentisi güçlü sektör); (3) erken aşama: dipten uzaklık düşük, sektör BIST100'e veya sektör endeksine göre yeni ayrışıyor; (4) negatif konveksiteli sektörden pozitif konveksiteliye sermaye kaydırma; (5) her rotasyon hamlesine zarar kes kriteri. Eşik, zarar kes düzeyi, test yok; "konveksite" burada ölçülmeyen yarı-sezgisel bir terimdir (YORUM). F/K ve makro adımı değerleme ve makro verisi ister (TASARIM 3: değerleme kapsam dışı). Uygulanabilir mi: HAYIR (eşiksiz çerçeve).
+- **DEA/VZA sektör seçimi (bilet 04, denetim tur 1; yazarlığı belirsiz, ikinci el; YORUM):** `tweet-dea-vza-sektor-rotasyonu-malmquist-projesi` (Ham metin Levent'in yapıştırdığı içeriktir; yalnız ilk cümle kısa ve birinci tekil, ders gövdesi uzun, başlıklı ve yazarı belirsiz). Kural, tek satır: her sektör bir karar birimidir; girdi (volatilite, beta, F/K, PD/DD) ve çıktı (getiri, alfa, temettü, momentum) üzerinden DEA etkinlik skoru (0–1) hesaplanır; skoru 1 olan ya da 1'e en yakın 3–4 sektör portföye girer, analiz aylık ya da çeyreklik tekrarlanır, skoru belirgin düşen sektörden çıkılır; Malmquist endeksi 1'in üstündeyse "güçlü al" sayılır. Parametre: yalnız 3–4 sektör, skor 1, Malmquist > 1; "belirgin düşüş", evren, dönem, yönelim ve ölçek varsayımı yok. Kanıt yok (proje aşamasında). Uygulanabilir mi: HAYIR (F/K ve PD/DD girdileri değerleme verisi ister, TASARIM 3; girdi kimlikleri ve çalıştırılmış sonuç yok). İlişkili proje fikri: `tweet-convex-hull-dea-sektor-rotasyonu-projesi` (kural içermez listesinde).
+- **Aylık mevsimsellik (bilet 04, denetim tur 1; yazarlığı belirsiz, ikinci el; YORUM):** `tweet-aylik-getiri-mevsimsellik-piyasa-hafizasi` (Ham metin Levent'in yapıştırdığı uzun, başlıklı ders metnidir; yazarı belirsiz). Kural, tek satır: enstrümanın son 10–20 yıllık aylık getirisinden, pozitif kapanış olasılığı %70 ve üzeri olan aylar "yüksek olasılık", düşüşün derinleştiği aylar "risk" sayılır; işlem ağırlığı bu takvime göre ayarlanır. Parametre: yalnız 10–20 yıl ve %70; "Ocak 10 yılın 8'i pozitif" örnek, kasa oranları (Nisan %80, Ağustos %30) örnektir, kural değildir. Maruziyete çevirme kuralı, test ve sonuç yok. Uygulanabilir mi: KISMEN (aylık kapanış yeter; yazarlığı belirsiz metin Tansu'nun kuralı değildir).
 
 ---
 

@@ -40,7 +40,7 @@ denetlenebilen her kural bir teste ya da CI adımına bağlanır, böylece belge
   vermediği karar sorulur.
 - Geliştirme durdu: AGENTS.md "Geliştirme durdu".
 - Geçerli tasarım TASARIM.md (taslak 7). Taslak 8 ve strateji modülleri taslağı onay bekleyen öneridir; onlardaki
-  farklar düzeltilmez, yalnız yanlış kaynak aktarımı düzeltilir.
+  farklar düzeltilmez. Taslaklar AGENTS sahip tablosunda olgu sahibi olmayan öneriler olarak listelenir ve sapma denetiminin dışındadır (04c, 14.10).
 - Karar kaydında cevabı olan çelişki o karara göre düzeltilir ve TASARIM'da karar etiketiyle (İ:, B-, C-, bilet) gösterilir.
 - Kaynak görselinden okunan iki çelişkili sayı (G-125 stop 104,34/184,54; ICBCT ilk EMA 20/30) görsel açılarak çözülür.
 - Kodun TASARIM'dan farklı davrandığı her yer `/diagnosing-bugs` ile ele alınır: önce davranışı kanıtlayan test, sonra

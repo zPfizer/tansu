@@ -9,7 +9,7 @@ olduğunu söyler; sayı, formül ve işleyiş, atıf verilen bölümdedir (TASA
 | Terim | Anlam |
 |---|---|
 | Birinci el | Tansu'nun kendi aracının görsel çıktısı: başlık, etiket, tablo, kod. Nasıl kullanıldığı KURALLAR'dadır. |
-| İkinci el | Tansu'dan aktarılan ama onun aracından çıkmayan metin: notlardaki özet ya da aktarılan tweet. |
+| İkinci el | Tansu'dan aktarılan ama onun aracından çıkmayan metin: notlardaki özet ya da aktarılan tweet. İmzasız ders şeması ve yazarlığı belirsiz metin de ikinci eldir ("yazarlığı belirsiz, ikinci el"). |
 | NotebookLM | Tansu'nun paylaştığı ama kendi aracından çıkmayan infografik. |
 | YORUM | Tansu'nun fikir ya da değer vermediği bir noktada bizim belirlediğimiz değer ya da kural (ör. Tansu'nun açıklamadığı parametre). Tansu'nun fikri olan noktada YORUM geçerli değildir; Tansu'ya uyulamıyorsa bu "uygulanamaz" diye nedeniyle yazılır. Deneme sayımına etkisi KURALLAR'dadır. |
 | Sadakat kontrolü | Bir kuralın kaynak ekrandaki rakamları yeniden üretip üretmediğinin denetimi. Sonuç türleri ve hangi toleransın üretim sayıldığı KURALLAR §4'tedir. |
