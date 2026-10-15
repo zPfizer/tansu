@@ -13,8 +13,6 @@ Merge `master` into the branch first. Then check the change by its type.
 - A change with code: run `mattpocock-skills:code-review` (a Claude subagent). Then run the Codex audit (subagent type `codex`). Add the text of the code-review skill to the auditor prompt.
 - A change to documents only (no code): run one `mattpocock-skills:code-review` pass by a Sonnet subagent on the diff. Run no Codex audit.
 
-The PR body has an `Akış:` line with the flow skill used. The auditor checks the steps of that skill (AGENTS.md "Auditor and rounds").
-
 Both checks read `CODING_STANDARDS.md` and `DEFINITION_OF_DONE.md`. After a change in a calculation, search the changed modules for prose that states the formula. This covers docstrings, comments, report text, and HTML. Tie each one to its TASARIM sentence. When the coverage of a test changes, update the owning TASARIM sentence in the same commit.
 
 ## Proof
@@ -22,6 +20,8 @@ Run `verification-before-completion`. Check the `## Tansu` items of `DEFINITION_
 
 ## Pull request
 Push the branch to `kaynak`. `mattpocock-skills:pr` and `.github/pull_request_template.md` write the PR body together.
+
+The PR body has an `Akış:` line with the flow skill used. The auditor checks the steps of that skill (AGENTS.md "Auditor and rounds").
 
 ## Merge
 Merge when two things are true.

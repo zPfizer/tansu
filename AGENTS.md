@@ -41,7 +41,7 @@ first. Write the reason. Then write the code.
 
 ## Work flow (İş akışı)
 Tansu has no flow F (memory) and no flow G (company output). They stay in the brain.
-Choose the flow by the work type. Call each skill by the exact name in backticks. Run the steps in order. Run an "If" row only when its condition is true.
+Choose the flow by the work type. Call each skill by the exact name in backticks. Open the skill of the flow before the first step. Run the steps in order. Run an "If" row only when its condition is true.
 
 | Work type | Flow | Skill |
 |---|---|---|
@@ -74,7 +74,7 @@ Each skill lives in `.claude/skills/<name>/SKILL.md` and owns the steps of its f
 7. **Token use:** `anthropic-skills:explain-usage`. Repeated task: `anthropic-skills:schedule`. Daily brief: `anthropic-skills:morning`.
 8. **Not understood:** Levent says "anlamadım": `mattpocock-skills:wait-what`. Then explain again with GLOSSARY terms and plain words.
 
-**Who names skills.** Only five places name skills. They are this file, `DEFINITION_OF_DONE.md`, `docs/agents/`, `.claude/skills/`, and `.claude/agents/`. In this file, only the sections "Every job", "Work flow", "Scope", "Who writes", and "Auditor and rounds" name them. Other files do not name a skill to run.
+**Who names skills.** Only five places name skills. They are this file, `DEFINITION_OF_DONE.md`, `docs/agents/`, `.claude/skills/`, and `.claude/agents/`. In this file, only the sections "Every job", "Work flow", "Scope", "Who writes", and "Auditor and rounds" name them. Other files do not name a skill to run. Any file may refer to a step by skill name plus step title.
 **How to refer to a step.** Refer to a step by the skill name and the step title, for example `tansu-yeni-is` "Review". Never refer to a step by its number.
 
 ## Scope
@@ -95,7 +95,7 @@ Each skill lives in `.claude/skills/<name>/SKILL.md` and owns the steps of its f
 ## Auditor and rounds
 - In this section, "auditor" means the Codex auditor (code) or the reviewer of the `mattpocock-skills:code-review` pass (documents only). `tansu-yeni-is` "Review" says which one runs. The Codex audit is only for code changes.
 - The auditor is a different agent from the writer.
-- The auditor also checks that the writer followed the steps of the flow skill (`tansu-yeni-is` and the other skills under `.claude/skills/`). The auditor reads the `Akış:` line of the PR body. It checks the diff and the PR body against the steps of that skill. It names each step that has no trace.
+- The auditor also checks that the writer followed the steps of the flow skill. The flow skills are `tansu-yeni-is` and the other skills under `.claude/skills/`. The auditor reads the `Akış:` line of the PR body. It checks the diff and the PR body against the steps of that skill. It names each step that has no trace.
 - The auditor of a delete or archive job checks the final file list and the links. It also checks the changes outside the scope.
 - The verdicts are GEÇTİ, NOTLU GEÇTİ, and KALDI. NOTLU GEÇTİ: low-risk test gaps and style notes. KALDI: a false claim, a broken behavior, a missed instruction, or a security or privacy risk. An audit without a verdict counts as KALDI. The prompt of a `mattpocock-skills:code-review` pass asks for a verdict in the same words.
 - Every audit prompt and every code-review pass prompt states the goal of the job. When the goal is to simplify, a deliberately deleted line is not a finding. A deletion is a finding only if a needed rule was lost without a reason. The rest of the diff gets the full review.

@@ -209,6 +209,17 @@ def test_kural_7_akis_satiri_eksik_ya_da_yanlis(yeni):
     assert hatalar(GECERLI.replace(AKIS_SATIRI, yeni)) == [AKIS_HATASI]
 
 
+@pytest.mark.parametrize(
+    "ek",
+    [
+        "Akış: tansu-hata\n",
+        "Akış: tansu-bilinmeyen\n",
+    ],
+)
+def test_kural_7_ikinci_akis_satiri_reddedilir(ek):
+    assert hatalar(GECERLI + ek) == [AKIS_HATASI]
+
+
 def test_kural_5_sonuc_sablon_yorumu_satir_sayilmaz():
     yorum = '<!-- CI accepts only the exact text "Sonuç: geçti". -->\n'
     govde = GECERLI.replace("Sonuç: GEÇTİ", yorum + "Sonuç: GEÇTİ")

@@ -115,7 +115,10 @@ def hatalar(govde: str) -> list[str]:
             "Kural 6: ## Gerçek veri kanıtı bölümünde içi dolu bir kod bloğu olmalı."
         )
     ad = "|".join(AKISLAR)
-    if not re.search(rf"^Akış:[ \t]*(`({ad})`|({ad}))[ \t\r]*$", govde, re.MULTILINE):
+    akis = re.findall(r"^Akış:.*$", govde, re.MULTILINE)
+    if len(akis) != 1 or not re.fullmatch(
+        rf"Akış:[ \t]*(`({ad})`|({ad}))[ \t\r]*", akis[0]
+    ):
         sonuc.append(
             "Kural 7: PR gövdesinde Akış: <ad> satırı olmalı; <ad> "
             + ", ".join(AKISLAR[:-1])
