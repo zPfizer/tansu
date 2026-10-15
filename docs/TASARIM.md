@@ -83,8 +83,8 @@ yorumumuzdur**; ekranda "Tansu'nun sistemi" diye sunulmaz. (P5)
 
 **Var:**
 - Günlük veri, BIST100 benzeri evren, yalnız alış yönü.
-- Piyasa durumu etiketi (YORUM, bizim). Motoru ve girişi etkilemez; K1(b) örneklemesinde ve rapor bölmesinde
-  kullanılır. (İ: 11-078)
+- Piyasa durumu etiketi (YORUM, bizim). Motoru ve girişi etkilemez; K1(b) örneklemesinde kullanılır, çıktıda görünmez.
+  (vekil kararı 15.10, bilet 07e; İ: 11-078)
   Tansu'nun şokta yeni alımı durdurma fikri (aktarım, tweet-volatilite-piyasa-soku-yeni-alim-freni:21) uygulanamaz: kaynak hesaplanabilir tanım vermiyor.
   Tansu'nun yeni pozisyon için piyasa teyidi bekleme fikri (metin, XU:35–47) uygulanamaz: kaynak hesaplanabilir tanım vermiyor.
 - **2 aile** (`KURALLAR.md` §3): çift rotasyonu ve EMA sıkışması.
@@ -225,6 +225,7 @@ hatasından** ayırmak.
   (B1, B-2, İ: 02-024, 02-093)
 - **Fiyat limiti:**
   - Limit hesabının baz fiyatı önceki gün ham kapanışıdır; tavan ve taban baz fiyatın ±L'sidir.
+  - Bozuk satır (satır ihlali, 5.13) baz fiyat olmaz; baz, önceki tutarlı işlem gününün ham kapanışıdır. (vekil kararı 15.10, bilet 07e)
   - Olay gününde baz fiyat = önceki ham kapanış × olay çarpanı. Kilit ve karantina bu baz fiyattan çıkan limitlerle
     yargılanır. Bilinmeyen olay kodu ya da çarpanı 1 olan kayıt istisna sayılmaz.
   - L = %20 (30.11.2015 – 12.03.2020), %10 (13.03.2020 sonrası). Baz fiyatın önceki ham kapanış olduğu ±%10 döneminde
@@ -307,7 +308,7 @@ hatasından** ayırmak.
   - Kapanışı taban fiyatında olan gün çıkış ertesi güne kayar.
   - Duyarlılık sürümü: yalnız düşük = yüksek, hacim > 0 ve limit fiyatında olan gün.
   (M4, B-5, İ: 01-026, karar.md)
-- **Düşen sinyal:** giriş günü yoksa ya da kilitli tavansa sinyal düşer, sonraki güne kaymaz. Sayısı
+- **Düşen sinyal:** giriş günü yoksa, kilitli tavansa ya da karantinadaysa sinyal düşer, sonraki güne kaymaz (vekil kararı 15.10, bilet 07e). Sayısı
   raporda "iptal" olarak yazılır. Kayma yalnız çıkış dolumunda olur (kilitli taban, eksik gün; 5.13); giriş
   dolumu kaymaz. (İ: 05-044, 19-055)
 - **Aynı gün sırası:** aynı AOF gününde önce çıkışlar, sonra girişler işlenir. (İ: 08-015)
@@ -849,7 +850,7 @@ Getiri görülmeden yazılır; kural kaydına girer. (B-7, İ: 19-015)
    - Koşu 18:15'ten önce başlarsa kart üretilmez (yarım çubuk riski).
    - Kaynak erişilemezse sınama eski anlık görüntülerle sürer; yalnız canlı kart durur.
    - Günlük anlık görüntüler silinmez (`veri/` silinmez; 5.11 silme yasağı). (karar.md:24; İ: 11-061 reddedildi, karar.md:30; bilet 03)
-3. **Piyasa durumu etiketi:** kart kararını ve motoru etkilemez (kapı değil, bilgi); K1 (b) örneklemesinde ve rapor bölmesinde kullanılır (3, 5.7). XU100 kapanış > SMA50 (YORUM). (B-19, İ: 11-078; bilet 03)
+3. **Piyasa durumu etiketi:** kart kararını ve motoru etkilemez (kapı değil, bilgi); K1 (b) örneklemesinde kullanılır; raporda ve kartta görünmez (3, 5.7). (vekil kararı 15.10, bilet 07e) XU100 kapanış > SMA50 (YORUM). (B-19, İ: 11-078; bilet 03)
 4. **Kartlar** (P1, İ: 17-049, 17-050, 17-087):
    - Kâğıt ve Canlı ailelerin sinyalleri her gün yeni bir CSV dosyasına yazılır:
      `rapor/kartlar-YYYYMMDD.csv` (`;` ayraç, ondalık virgül, UTF-8 BOM).

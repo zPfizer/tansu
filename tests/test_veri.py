@@ -481,3 +481,20 @@ def test_olayla_aciklanan_gun_tablo_tarihinin_bir_gun_oncesi_ya_da_sonrasinda_da
     a = anlik(tmp_path, fiyat=BOLUNME, olay=olay)
     assert _karantina(a) == [False] * 5
     assert a.gun_tablosu["tavan"].iloc[3] == pytest.approx(56.1)
+
+
+def test_bozuk_satir_baz_fiyat_olmaz_baz_onceki_tutarli_gunun_ham_kapanisidir(tmp_path):
+    # TASARIM 5.1 (vekil kararı 15.10): d2'de ham düşük 200 > ham kapanış 150, satır ihlali, karantina.
+    # d3 tavanı bozuk d2'den değil d1'den çıkar: 100 × 1,10 = 110; d3 kapanışı 160 > 110 × 1,005, karantina.
+    bozuk = {**satir("2024-01-03", 150.0, 150.0), "ham_dusuk": 200.0}
+    a = anlik(
+        tmp_path,
+        fiyat=[
+            satir("2024-01-02", 100.0, 100.0),
+            bozuk,
+            satir("2024-01-04", 160.0, 160.0),
+        ],
+        olay=[],
+    )
+    assert _karantina(a) == [False, True, True]
+    assert a.gun_tablosu["tavan"].iloc[2] == pytest.approx(110.0)
