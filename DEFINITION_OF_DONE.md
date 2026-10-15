@@ -46,15 +46,15 @@ The depth behind these items lives in `mattpocock-skills:code-review` (standards
 
 ### Ship-readiness
 - [ ] Security implications reviewed for any untrusted input, auth, or data handling (see `thinking-red-team`)
-- [ ] Observability in place for new critical paths (logs, metrics, traces) (see AKIS.md, flow A: log and measurement step)
+- [ ] Observability in place for new critical paths (logs, metrics, traces)
 - [ ] Rollback path exists for anything risky (see `mattpocock-skills:pr` and `verification-before-completion`)
-- [ ] The human reviews and approves before merge or deploy
+- [ ] An independent auditor approves before merge (AKIS A "Merge")
 
 ## How to Apply
 
 - **Per task**: verify the Correctness and Quality sections before you mark the task done.
 - **Per feature**: verify Integration and Documentation before you consider the feature complete.
-- **Before "done"**: ListAgents shows no running agent. The clean-tree rule of Kurallar covers YONETIM and beyin. A job with reader subagents ran `py -3 araclar/kontrol.py --oturum <session id>`. A kesme finding on a reader whose prompt did not order the cut means a re-read. (Retro 15.10)
+- **Before "done"**: ListAgents shows no running agent. The working tree of this repository is clean, except for added `kayit/` lines.
 - **Per release**: the full checklist is the floor. `mattpocock-skills:pr` and `verification-before-completion` add the deploy-specific gates on top.
 
 Tailor the list to the project once, then reuse it unchanged. A Definition of Done that the team renegotiates every sprint is not a Definition of Done.
@@ -65,7 +65,7 @@ Tailor the list to the project once, then reuse it unchanged. A Definition of Do
 - "Tests pass" used as a synonym for done while the team skips docs, regressions, or runtime verification.
 - A different bar applied depending on deadline pressure.
 - Acceptance criteria treated as the whole bar, with no standing quality floor.
-- "Done" declared before human review on changes that need it.
+- "Done" declared before the independent review on changes that need it.
 
 ## Tansu
 This section adds to the general list. The "Tansu:" lines in the PR template are the proof fields of these items.
@@ -76,3 +76,4 @@ This section adds to the general list. The "Tansu:" lines in the PR template are
   log (deneme günlüğü) only got new lines. A rule parameter change has a record as a new trial (deneme) (`AGENTS.md`
   "Çalışma kuralları").
 - If the behavior changed, the same commit updates TASARIM.
+- Levent approved the install or change of a Task Scheduler task before it was done.
