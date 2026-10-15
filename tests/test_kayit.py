@@ -171,8 +171,9 @@ def test_yarida_kalan_resmi_kosu_m_ye_girer_ve_deneme_sayisi_B_ve_holm_ayni_m_yi
         )
         for e in (0.005, 0.006, 0.007)
     ]
+    kural_idler = []
     for p in ps:
-        kayit.kayitla(p, ATR_N)
+        kural_idler.append(kayit.kayitla(p, ATR_N)["kural_id"])
         with pytest.raises(RuntimeError):
             kayit.kosu(
                 kimlik,
@@ -185,7 +186,7 @@ def test_yarida_kalan_resmi_kosu_m_ye_girer_ve_deneme_sayisi_B_ve_holm_ayni_m_yi
             )
     assert kayit.deneme_sayisi() == 6
     assert kayit.tekrar_sayisi(True, ps[0], ATR_N) == 1200
-    kural_id = kayit._kural(ps[0], ATR_N)["kural_id"]
+    kural_id = kural_idler[0]
     h = kayit.holm_hesapla(kural_id, {a: 0.01 for a in kayit.AILELER}, True)
     assert [(h[a]["holm_m"], h[a]["holm_p"]) for a in kayit.AILELER] == [
         (6, pytest.approx(0.06)),
