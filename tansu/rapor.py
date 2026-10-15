@@ -158,6 +158,8 @@ def _kabul(kabul, bilgi) -> list:
         )
         + ".</p>",
     ]
+    if bilgi.get("uyari"):
+        govde.append(f"<p>Uyarı: {_kac(bilgi['uyari'])}; p = 1 alındı.</p>")
     for aile, k in kabul.items():
         satirlar = [
             (
@@ -305,7 +307,7 @@ def yaz(sim, bilgi, cift=None, dizin=None, kabul=None) -> tuple:
         ),
         _egri(m3),
         "<h2>Yıllık fazla getiri</h2>",
-        "<p>Fazla getiri = yıllık kural getirisi − yıllık K2 getirisi (yüzde puan). "
+        "<p>Fazla getiri = o yıldaki günlük fazla getirilerin (kural − K2) toplamı (yüzde puan, TASARIM 5.8). "
         + ("p değerleri kabul tablosundadır." if kabul else "Henüz p değeri yoktur.")
         + "</p>",
         _tablo(

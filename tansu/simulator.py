@@ -166,14 +166,18 @@ def _alinanlar(t, alinan, masraf) -> pd.DataFrame:
 
 
 def _yillik(ozk, k2) -> pd.DataFrame:
-    """Yıl sonu özkaynaklarından yıllık getiri; ilk yıl SERMAYE'den (TASARIM 5.7)."""
+    """Yıl sonu özkaynaklarından yıllık getiri (bilgi sütunları; ilk yıl SERMAYE'den); `fazla` günlük (kural − K2) getirilerin yıllık toplamıdır (TASARIM 5.7, 5.8)."""
 
     def getiri(s):
         son = s.groupby(s.index.year).last()
         return son / son.shift(1, fill_value=SERMAYE) - 1
 
+    def gunluk(s):
+        return s / s.shift(1, fill_value=SERMAYE) - 1
+
     y = pd.DataFrame({"kural": getiri(ozk), "k2": getiri(k2)})
-    return y.assign(fazla=y["kural"] - y["k2"])
+    fark = gunluk(ozk) - gunluk(k2)
+    return y.assign(fazla=fark.groupby(fark.index.year).sum())
 
 
 def _paketle(t, days, g, rb, sepet, kural, masraf) -> dict:

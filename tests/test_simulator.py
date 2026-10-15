@@ -251,8 +251,10 @@ def test_rapor_baslik_uyari_yasakli_sozcuk_ve_csv_sutunlari(tmp_path):
         kod_hash,
         "Tansu'dan esinlenen yorum",
         "Yıllık fazla getiri",
+        "Fazla getiri = o yıldaki günlük fazla getirilerin (kural − K2) toplamı",
     ):
         assert beklenen in html
+    assert "yıllık kural getirisi − yıllık K2 getirisi" not in html
     assert html.count("<h2>Uyarılar</h2>") == 1
     assert not re.search(r"\b(AL|SAT|ÖNERİ)\b|Tansu'nun sistemi", html)
     csv = pd.read_csv(s["csv"], encoding="utf-8")
@@ -310,6 +312,15 @@ def test_uc_masraf_duzeyi_kosulur_ve_yillik_tablo_yazilir(tmp_path):
     yil = sim(s)["yillik"]
     assert list(yil.index) == [2026]
     assert yil.loc[2026, "kural"] == pytest.approx(0.000358453, abs=1e-9)
+
+
+def test_yillik_fazla_getiri_gunluk_fazla_getirilerin_yillik_toplamidir(tmp_path):
+    # TASARIM 5.8: yıllık fazla = o yıldaki günlük (kural - K2) getirilerin toplamı; iki yıllık getirinin farkı değil.
+    # Özkaynak 1.000.000; 999.700,168; 1.000.358,453 -> günlük getiri -0,000299832 ve 658,285/999.700,168 = +0,000658482.
+    # K2 1.000.000; 1.000.970,62112; aynı -> günlük 0,00097062112 ve 0. Fazla = 0,00035865 - 0,00097062112 = -0,00061197.
+    # (Farkla hesap -0,00061217 verir; 2e-7 fark toleransın üstündedir.)
+    _, s = kos(tmp_path, {"A": sinyalli()})
+    assert sim(s)["yillik"].loc[2026, "fazla"] == pytest.approx(-0.00061197, abs=2e-9)
 
 
 def bolme(islemler, hacimler=None):

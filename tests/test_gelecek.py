@@ -9,12 +9,23 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from tansu import aileler, cift, ciftbolme, denetim, evren, gostergeler, simulator, veri
+from tansu import (
+    aileler,
+    cift,
+    ciftbolme,
+    denetim,
+    evren,
+    gostergeler,
+    motor,
+    simulator,
+    veri,
+)
 
 KESIM = [
     "2014-09-30",
     "2015-01-15",
     "2015-03-02",
+    "2014-12-31",  # yılın son işlem günü: biten yıl 2014 karşılaştırılır (yillik_fazla_)
 ]  # tam veri 2015-06'ya dek; ısınma (500 gün) 2013-11'de biter
 BAS = "2013-12-02"
 
@@ -129,10 +140,35 @@ def zemin_(tam, kes_, t):
     )
 
 
+def yillik_fazla_(tam, kes_, t):
+    """Yıllık fazla getiri (TASARIM 5.8, günlük fazla getirilerin yıllık toplamı): t'den önce biten yıllar değişmez."""
+    sonuc = []
+    for a in (tam, kes_):
+        ilk = simulator.ilk_gun(a, BAS)
+        evr = simulator.evrenler(a, ilk, a.gunler[-1])
+        islemler, dusen = motor.sinama(a, uye=simulator.uyeler(a, evr, ilk))
+        sim = simulator.calistir(a, islemler, dusen, BAS, evr=evr)
+        sonuc.append(sim["masraf"][0.003]["yillik"])
+    yil_sonu = (
+        tam.gunler[tam.gunler.year == t.year][-1] == t
+    )  # t yılın son işlem günüyse t.year da biter
+    biten = sonuc[1].index[sonuc[1].index < t.year + int(yil_sonu)]
+    assert len(biten) > 0  # sınama boş değil: t'den önce biten yıl var
+    pd.testing.assert_frame_equal(sonuc[0].loc[biten], sonuc[1].loc[biten])
+
+
 @pytest.mark.parametrize("kesim", KESIM)
 @pytest.mark.parametrize(
     "bilesen",
-    [evren_, gostergeler_, ema_sinyal_, cift_sinyal_, cift_secimi_, zemin_],
+    [
+        evren_,
+        gostergeler_,
+        ema_sinyal_,
+        cift_sinyal_,
+        cift_secimi_,
+        zemin_,
+        yillik_fazla_,
+    ],
     ids=lambda f: f.__name__,
 )
 def test_t_den_sonrasi_veri_t_oncesi_ciktiyi_degistirmez(tam, bilesen, kesim):
