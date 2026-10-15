@@ -1,24 +1,25 @@
 # Work flows (İş akışı)
 
-This file owns the work flows of Tansu, the skill placement, the scope levels, who writes, and the auditor rules. Only `AKIS.md`, `DEFINITION_OF_DONE.md`, and the skill files under `.claude/skills/` name skills. Other files refer to an AKIS step by its title (for example AKIS A "Review"), never by its number.
+This file owns the work flows of Tansu, the skill placement, the scope levels, who writes, and the auditor rules. Only `AKIS.md`, `DEFINITION_OF_DONE.md`, `docs/agents/`, and the skill files under `.claude/skills/` name skills. Other files refer to an AKIS step by its title (for example AKIS A "Review"), never by its number.
 
 Choose flow A or B by the work type. Call each skill by the exact name in backticks. Run the steps in order. Run an "If" row only when its condition is true.
 
 ## 0. Every job
 1. Write the intent of Levent and the flow (A or B) in one line at the top of the first reply.
 2. Read AGENTS.md "Current state" (Şimdiki durum).
-3. Send a design or technical question that needs the preference of Levent to the `vekil` subagent first. Levent gets only direction decisions: money, outgoing work, delete, and the direction of the project.
+3. Send a design or technical question that needs the preference of Levent to the `vekil` subagent first. Levent gets only these: direction of the project, money, outgoing work, secrets, delete, and work that cannot be undone.
 4. Before you write an instruction or a prompt: `asd-ste100`.
 5. If you cannot show a source for a claim: `thinking-circle-of-competence`.
-6. Choose the scope (section "Scope").
+6. If the problem type or the method is unclear: `thinking-cynefin`, then `thinking-model-router`.
+7. Choose the scope (section "Scope").
 
 ## A. New work (Yeni geliştirme)
 1. **Sharpen:** `/tansu-grill` (the `vekil` subagent answers).
-2. **Document first:** Write a settled term to `GLOSSARY.md` at once. Write a decision to `docs/TASARIM.md`. Read TASARIM and `docs/sorgu/` first. Do not ask again for a decision that exists. If a document and the code contradict, or the document says nothing about the case, stop and correct the document first (AGENTS.md "Belgeler ve sahipleri" owns this rule).
+2. **Document first:** Write a settled term to `GLOSSARY.md` at once. Write a decision to `docs/TASARIM.md`. Read `docs/TASARIM.md` first. Read `docs/sorgu/` when it exists. It is local and not in git. Do not ask again for a decision that exists. For a document-code conflict, apply AGENTS.md "Belgeler ve sahipleri".
 3. **Spec:** `mattpocock-skills:to-spec`.
 4. **Tickets:** `mattpocock-skills:to-tickets`, then `mattpocock-skills:triage`. The layout is in `docs/agents/issue-tracker.md`. Do not write a ticket by hand. If a new decision appears during the work, update the spec first. Then build the tickets again in dependency order.
 5. **Branch:** Use one branch `pr/NN-<ad>` from `master` for each ticket. Give it its own worktree: `git worktree add ../TANSU-bNN -b pr/NN-<ad> master`. Clear the context between tickets.
-6. **Build:** For one ticket: `mattpocock-skills:implement`. For a full spec: `mattpocock-skills:implement-spec`. Red test first: `mattpocock-skills:tdd`. While you write code: `ponytail:ponytail`. A subagent writes the code. A writer subagent writes only inside its own worktree.
+6. **Build:** For one ticket: `mattpocock-skills:implement`. For a full spec: `mattpocock-skills:implement-spec`. AGENTS.md "Önce test" owns the red-test rule. The skill is `mattpocock-skills:tdd`. While you write code: `ponytail:ponytail`. A subagent writes the code. A writer subagent writes only inside its own worktree. Add logs and measurements for each new critical path (DEFINITION_OF_DONE.md "Ship-readiness").
 7. **Test gate:** Run these from the main venv `C:\Users\levent\Desktop\TANSU\.venv\Scripts\python.exe`: `-m pytest -q`, `-m ruff check .`, and `-m ruff format --check .`. Run `git diff --check`. All must be green before each commit.
 8. **Review:** Merge `master` into the branch first. Then run `mattpocock-skills:code-review` (a Claude subagent). Then run the Codex audit (subagent type `codex`) and add the text of the code-review skill to the auditor prompt. After a change in a calculation, search all prose in the changed modules that states the formula (docstrings, comments, report text, HTML). Tie each one to its TASARIM sentence. When the coverage of a test changes, update the owning TASARIM sentence in the same commit.
 9. **Proof:** `verification-before-completion`, and the `## Tansu` items of `DEFINITION_OF_DONE.md`.
@@ -26,7 +27,7 @@ Choose flow A or B by the work type. Call each skill by the exact name in backti
 11. **Merge:** Merge when two things are true. CI is green (`ci`: ruff and pytest. `dod`: the PR body). The audit verdict is GEÇTİ or NOTLU GEÇTİ. Claude merges with `gh pr merge --merge`. Levent gets only the completion note (Levent 15.10).
 12. **Close:** Move the spec and the tickets of a finished job to `.scratch/arsiv/`. Only GLOSSARY and TASARIM stay for good. Write the result to the brain with the `beyin` skill (Threads and a receipt).
 
-Task scope: skip Sharpen, Spec, and Tickets. Run `mattpocock-skills:implement`, then `verification-before-completion`.
+Task scope skips Sharpen, Spec, and Tickets. It runs Build, Test gate, and Proof. Task scope has no auditor (section "Scope"); for a locked file, "Who writes" sets the review.
 
 | If | Then |
 |---|---|
@@ -35,6 +36,9 @@ Task scope: skip Sharpen, Spec, and Tickets. Run `mattpocock-skills:implement`, 
 | the work is risky | `thinking-pre-mortem`. If it has side effects: `thinking-second-order`. |
 | an urge to add something | `thinking-via-negativa`. |
 | a step only a human can do | `mattpocock-skills:wizard`. |
+| the code has bloat | `ponytail:ponytail-review`. If a function is complex: `cyclomatic-complexity`. |
+| the work includes untrusted input (for example downloaded data) or permissions | `thinking-red-team`. |
+| the work changes an HTML report | show the proof with `anthropic-skills:built-in-browser`. |
 
 ## B. Bug fix (Hata düzeltme)
 1. **Diagnose:** `mattpocock-skills:diagnosing-bugs`.
@@ -52,10 +56,12 @@ Task scope: skip Sharpen, Spec, and Tickets. Run `mattpocock-skills:implement`, 
 | the fault repeats | `thinking-five-whys-plus`. |
 | there are several possible causes | `thinking-scientific-method`. |
 | a defect is selective | `thinking-kepner-tregoe`. |
+| the problem is slowness | `thinking-theory-of-constraints`. |
+| a fix breaks another part | `thinking-systems`. |
 
-## Scope (from the "How to Apply" part of DEFINITION_OF_DONE.md)
-- Task: Correctness and Quality. The agent gives its own proof. No auditor.
-- Feature: add Integration and Documentation. Run one independent auditor run.
+## Scope
+- Task: the "Per task" item of DEFINITION_OF_DONE.md "How to Apply". The agent gives its own proof. No auditor. AGENTS.md "Önce test" applies to every code change, also to a one-line change.
+- Feature (several jobs, a behavior, or an interface): the "Per feature" item of DEFINITION_OF_DONE.md "How to Apply", added to the task items. Run one independent auditor run.
 - Outgoing work (push, pull request, delete, archive): the full checklist. Use an auditor.
 - Work without code (`.scratch` notes): skip the code items. No auditor.
 - Locked files: `AGENTS.md`, `AKIS.md`, `CODING_STANDARDS.md`, and `DEFINITION_OF_DONE.md`. They have feature scope at any size, except as "Who writes" says.

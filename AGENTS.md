@@ -23,9 +23,9 @@ Each fact has one owner file. The other files only give a reference to it. Read 
 | `docs/sadakat.md` | the fidelity (sadakat) measurement |
 | `AGENTS.md` | the entry, the working rules, and the current state |
 | `AKIS.md` | the work flows, the skill placement, the scope, and the auditor rules |
-| `docs/strateji-taslak/`, `docs/strateji-modulleri-taslak.md` (local, not in git) | proposals that wait for approval. They own no fact. They are outside the drift check |
+| `docs/strateji-taslak/`, `docs/strateji-modulleri-taslak.md` (local, not in git) | proposals that wait for approval. They own no fact. They are outside the drift check. These local files need not exist |
 | `CODING_STANDARDS.md`, `DEFINITION_OF_DONE.md` | the code format and the done criteria (`## Tansu`) |
-| `docs/sorgu/sonuc-3-4.md`, `docs/sorgu/izleme/karar.md` (local, not in git) | the reasons for the decisions (read them when necessary) |
+| `docs/sorgu/sonuc-3-4.md`, `docs/sorgu/izleme/karar.md` (local, not in git) | the reasons for the decisions (read them when necessary and when they exist) |
 
 The drift check covers all these files. Correct a file when it contradicts another file, contains old information,
 or copies a fact of another file.
@@ -43,7 +43,7 @@ Refer to an AKIS step by its title, not by its number.
 - **Names (Adlar):** Code, file, column, and CSV header names are Turkish ASCII (`aile`, `adim`, `evren`). Report and card
   text uses Turkish characters. Use `pathlib` for paths. Open each file with an explicit `encoding="utf-8"` (for CSV,
   `utf-8-sig`).
-- **Test gate (Test kapısı):** Before a commit, `.venv\Scripts\python.exe -m pytest -q` must be green. The tests do not
+- **Test gate (Test kapısı):** Before a commit, AKIS A "Test gate" must be green. The tests do not
   access the network and do not write to the real `kayit/` files (`tests/conftest.py` changes the path to `tmp_path`).
 - **Test first (Önce test):** Write a red test first. Then write the minimum code. Write tests only against the interfaces (yüzler) in TASARIM.
 - **Do not loosen a test (Testi gevşetme yasak):** Do not delete an assert. Do not increase a tolerance. Do not add `skip`/`xfail`.

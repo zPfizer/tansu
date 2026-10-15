@@ -6,7 +6,7 @@ The general coding rules are in the global `~/.claude/CLAUDE.md`. This file hold
 This file starts short. It grows from real mistakes.
 - When an agent makes a meaningful coding mistake, record it before the task ends. A mistake is meaningful when Levent corrects it, or when a review or CI finds it.
 - For a mechanical mistake, use an existing tool first: `permissions.deny` or a git check. Write a new script only when the same mistake repeats and no existing tool covers it. Do not write a Claude hook. Do not add a rule here.
-- For a judgement mistake, add one short rule here. Put a rule for one project only in the `CODING_STANDARDS.md` of that project.
+- For a judgement mistake, add one short rule here. Put a Tansu-only rule, also a reasoning mistake, under "## Tansu".
 - **Rule of two:** A judgement rule needs two recorded occurrences. Record the first as a dated line under "## Seen once" without a rule. Exceptions: a direct order from Levent, and a risk to data, security, or privacy. These become a rule at once.
 - Write corrections to behavior or communication in the brain Kurallar, not here.
 - At the end of a difficult session, AKIS B "Lesson" finds the mistakes that nobody recorded.

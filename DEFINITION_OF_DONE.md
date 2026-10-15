@@ -46,8 +46,10 @@ The depth behind these items lives in `mattpocock-skills:code-review` (standards
 
 ### Ship-readiness
 - [ ] Security implications reviewed for any untrusted input, auth, or data handling (see `thinking-red-team`)
-- [ ] Observability in place for new critical paths (logs, metrics, traces)- [ ] Rollback path exists for anything risky (see `mattpocock-skills:pr` and `verification-before-completion`)
+- [ ] Observability in place for new critical paths (logs, metrics, traces)
+- [ ] Rollback path exists for anything risky (see `mattpocock-skills:pr` and `verification-before-completion`)
 - [ ] An independent auditor approves before merge (AKIS A "Merge")
+- [ ] Levent approves before a deploy (for Tansu: the install or change of a Task Scheduler task)
 
 ## How to Apply
 
