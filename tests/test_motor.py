@@ -389,6 +389,47 @@ def test_sinama_evren_disi_sinyal_pozisyon_acmaz_sonraki_gecerli_sinyal_gecikmez
     ) == (gun[5], gun[6], 104.0, gun[7], 105.0)
 
 
+@pytest.mark.parametrize("uye_gunleri", [slice(5, 6), slice(5, 7)])
+def test_sinama_uyelik_tablosunda_tek_gunluk_ve_iki_gunluk_sembol(
+    monkeypatch, uye_gunleri
+):
+    # Bilet 07b: tek üyelik günü olan sembolde `groupby.agg(DatetimeIndex)` Timestamp döndürüp `isin`i kırıyordu.
+    # Aynı seri ve sinyaller (28.01, 02.02); üye günü yalnız 02.02 (ya da 02.02 ve 03.02): sinyal 02.02 alınır,
+    # giriş 03.02 AOF 104, çıkış 04.02 veri sonu 105.
+    from tansu.veri import Anlik
+
+    gun = pd.bdate_range("2026-01-26", periods=8)
+    kap = [100.0] * 5 + [103.0, 104.0, 105.0]
+    f = pd.DataFrame(
+        {
+            "sembol": "XXXX",
+            "tarih": gun,
+            "yuksek": [k + 0.5 for k in kap],
+            "dusuk": [k - 0.5 for k in kap],
+            "kapanis": kap,
+            "aof": kap,
+            "hacim": 1e6,
+        }
+    )
+    for s in ("kapanis", "aof", "yuksek", "dusuk"):
+        f["ham_" + s] = f[s]
+    anlik = Anlik("t", f, pd.DataFrame(columns=["sembol", "tarih", "kod", "carpan"]))
+    monkeypatch.setattr(
+        aileler, "sinyal", lambda m, p: pd.DatetimeIndex([gun[2], gun[5]])
+    )
+    uye = pd.DataFrame({"sembol": "XXXX", "tarih": gun[uye_gunleri]})
+    islemler, dusen = motor.sinama(anlik, aileler.Parametre(sma_n=2), atr_n=2, uye=uye)
+    assert dusen == 0 and len(islemler) == 1
+    t = islemler.iloc[0]
+    assert (
+        t.sinyal_tarih,
+        t.giris_tarih,
+        t.giris_fiyat,
+        t.cikis_tarih,
+        t.cikis_fiyat,
+    ) == (gun[5], gun[6], 104.0, gun[7], 105.0)
+
+
 def test_piyasa_durumu_motoru_ve_girisi_etkilemez():
     # TASARIM 3: piyasa durumu etiketi motorun sinyalini ve girişini değiştirmez.
     from tests.test_simulator import P, mum, sinyalli
