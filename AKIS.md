@@ -19,7 +19,7 @@ Choose flow A or B by the work type. Call each skill by the exact name in backti
 3. **Spec:** `mattpocock-skills:to-spec`.
 4. **Tickets:** `mattpocock-skills:to-tickets`, then `mattpocock-skills:triage`. The layout is in `docs/agents/issue-tracker.md`. Do not write a ticket by hand. If a new decision appears during the work, update the spec first. Then build the tickets again in dependency order.
 5. **Branch:** Use one branch `pr/NN-<ad>` from `master` for each ticket. Give it its own worktree: `git worktree add ../TANSU-bNN -b pr/NN-<ad> master`. Clear the context between tickets.
-6. **Build:** For one ticket: `mattpocock-skills:implement`. For a full spec: `mattpocock-skills:implement-spec`. AGENTS.md "Önce test" owns the red-test rule. The skill is `mattpocock-skills:tdd`. While you write code: `ponytail:ponytail`. A subagent writes the code. A writer subagent writes only inside its own worktree. Add logs and measurements for each new critical path (DEFINITION_OF_DONE.md "Ship-readiness").
+6. **Build:** For one ticket: `mattpocock-skills:implement`. For a full spec: `mattpocock-skills:implement-spec`. AGENTS.md "Önce test" owns the red-test rule. The skill is `mattpocock-skills:tdd`. While you write code: `ponytail:ponytail`. A subagent writes the code. A writer subagent writes only inside its own worktree. Apply the Observability item of DEFINITION_OF_DONE.md "Ship-readiness".
 7. **Test gate:** Run these from the main venv `C:\Users\levent\Desktop\TANSU\.venv\Scripts\python.exe`: `-m pytest -q`, `-m ruff check .`, and `-m ruff format --check .`. Run `git diff --check`. All must be green before each commit.
 8. **Review:** Merge `master` into the branch first. Then run `mattpocock-skills:code-review` (a Claude subagent). Then run the Codex audit (subagent type `codex`) and add the text of the code-review skill to the auditor prompt. After a change in a calculation, search all prose in the changed modules that states the formula (docstrings, comments, report text, HTML). Tie each one to its TASARIM sentence. When the coverage of a test changes, update the owning TASARIM sentence in the same commit.
 9. **Proof:** `verification-before-completion`, and the `## Tansu` items of `DEFINITION_OF_DONE.md`.
@@ -27,7 +27,7 @@ Choose flow A or B by the work type. Call each skill by the exact name in backti
 11. **Merge:** Merge when two things are true. CI is green (`ci`: ruff and pytest. `dod`: the PR body). The audit verdict is GEÇTİ or NOTLU GEÇTİ. Claude merges with `gh pr merge --merge`. Levent gets only the completion note (Levent 15.10).
 12. **Close:** Move the spec and the tickets of a finished job to `.scratch/arsiv/`. Only GLOSSARY and TASARIM stay for good. Write the result to the brain with the `beyin` skill (Threads and a receipt).
 
-Task scope skips Sharpen, Spec, and Tickets. It runs Build, Test gate, and Proof. Task scope has no auditor (section "Scope"); for a locked file, "Who writes" sets the review.
+Task scope skips Sharpen, Spec, and Tickets. It runs Build, Test gate, and Proof. Task scope has no auditor (section "Scope"). For a locked file, "Who writes" sets the review.
 
 | If | Then |
 |---|---|
@@ -39,6 +39,7 @@ Task scope skips Sharpen, Spec, and Tickets. It runs Build, Test gate, and Proof
 | the code has bloat | `ponytail:ponytail-review`. If a function is complex: `cyclomatic-complexity`. |
 | the work includes untrusted input (for example downloaded data) or permissions | `thinking-red-team`. |
 | the work changes an HTML report | show the proof with `anthropic-skills:built-in-browser`. |
+| the work meets an operational limit or quota (for example a rate limit of a data source) | `thinking-margin-of-safety`. |
 
 ## B. Bug fix (Hata düzeltme)
 1. **Diagnose:** `mattpocock-skills:diagnosing-bugs`.
@@ -61,7 +62,7 @@ Task scope skips Sharpen, Spec, and Tickets. It runs Build, Test gate, and Proof
 
 ## Scope
 - Task: the "Per task" item of DEFINITION_OF_DONE.md "How to Apply". The agent gives its own proof. No auditor. AGENTS.md "Önce test" applies to every code change, also to a one-line change.
-- Feature (several jobs, a behavior, or an interface): the "Per feature" item of DEFINITION_OF_DONE.md "How to Apply", added to the task items. Run one independent auditor run.
+- Feature: several jobs, a behavior, or an interface. Add the "Per feature" item of DEFINITION_OF_DONE.md "How to Apply" to the task items. Run one independent auditor run.
 - Outgoing work (push, pull request, delete, archive): the full checklist. Use an auditor.
 - Work without code (`.scratch` notes): skip the code items. No auditor.
 - Locked files: `AGENTS.md`, `AKIS.md`, `CODING_STANDARDS.md`, and `DEFINITION_OF_DONE.md`. They have feature scope at any size, except as "Who writes" says.
