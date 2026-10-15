@@ -7,9 +7,9 @@ TASARIM gerekçesiyle güncellenir.
 
 **Status:** ready-for-agent
 
-- [ ] `denetim/tasarim-kod.md` §3'ün her maddesi `/diagnosing-bugs` ile ele alındı: davranışı gösteren test, sonra karar.
+- [x] `denetim/tasarim-kod.md` §3'ün her maddesi `/diagnosing-bugs` ile ele alındı: davranışı gösteren test, sonra karar.
 - [x] Öncelik: `gunluk.py` yalnız AKTİF kartları indirir (STOP/BOZULDU açık pozisyon izlenmeyebilir).
-- [ ] Kod değişikliği gerektiren her madde kendi PR'ıyla kapandı; belge değişikliği TASARIM'da karar etiketiyle.
+- [x] Kod değişikliği gerektiren her madde kendi PR'ıyla kapandı; belge değişikliği TASARIM'da karar etiketiyle.
 - [x] Bilet 06'da bulunanlar (10.10): `motor.sinama` tek satırlı üyelik tablosunda düşer (`groupby(...).agg(pd.DatetimeIndex)` tek günde Timestamp döndürür, `isin` TypeError); `rapor.py` aynı koşu kimliğinde HTML ve CSV'yi üstüne yazar (TASARIM §6.8 "üstüne yazılmaz").
 - [x] Bilet 02'den (10.10, `denetim/tansu-sapma-dogrulama.md` #6, #19): kart etiketi `BOZULDU` Tansu'nun "bozulma"sı (formasyonun geçersizleşmesi) değildir. SMA250 çıkışı, karantina çıkışı ve giriş iptali tek etikette toplanıyor; ayrı etiket (ör. `GÜN SONU STOPU`, `KARANTİNA ÇIKIŞI`, `GİRİŞ İPTAL`) ve `Durum` sütununun `Pozisyon durumu` olması karara bağlanır. Etiket CSV çıktısını değiştirir: önce test.
 
@@ -132,3 +132,11 @@ Dosyalar: `docs/TASARIM.md`, `GLOSSARY.md`, `tansu/gunluk.py`, `tests/test_gunlu
 - Sonuç: olay tablosu tarihli ama fiyat adımı göstermeyen gün çarpan almaz (TASARIM 5.1 "olay günü baz fiyat" cümlesi adım günü için okunur; `test_olay_gunu_tabani_carpanla_olcekli` adım içerir, yeşil).
 - Bedel (karar.md): yalnız t+1 tarihli olayla açıklanan adım karantinada kalır; olay tablosu tarihi düzeltilirse çözülür.
 - Denetim tur 3 (Codex, KALDI, 15.10): `veri.py` adım tespiti önceki tutarlı kapanışı kullanır, TASARIM 5.1 "önceki işlem günü" der. Yeniden tanım 07e-b; kök neden: limit bazı süzgeci adım tespitinde belgesiz kullanıldı. Düzeltme: TASARIM 5.1 adım cümlesi önceki tutarlı kapanış (bozuk satırlar limit bazındaki gibi atlanır, 5.13; satır 254). Kod aynı. Test `test_adim_orani_onceki_tutarli_kapanisa_bakar_bozuk_satir_atlanir` fb11a77 kodunda ilk koşuda yeşil (belge değişti, kod değil): kapanışlar [100, 50, 50], 2. gün bozuk, olay çarpanı 0,5 üçüncü günde: oran 50/100 = 0,5 adım, baz 50, taban 45, karantina `[F,T,F]`.
+
+07f (15.10): hash kapsamı dilimi (`pr/07f-hash-kapsami`, worktree `TANSU-b07f`); §3'ün son maddesi (`MASRAFLAR`, `K1_MASRAF`, `GELISTIRME` hash'e girer, TASARIM hash dışı sayar).
+- Karar (vekil, 15.10, seçenek 1, yalnız belge): sabitler hash'te kalır; p değerini ya da kabul kararını değiştirirler (`kayit._kabul` 0,003 ve 0,005 masraf anahtarlarını okur ve `istatistik.kabul`'a verir; `K1_MASRAF` `ema_k1`/`cift_k1` varsayılan masrafı ve `GIDIS_DONUS`'tur; B sabitleri p paydasını belirler). TASARIM 5.11 "Hash dışı" maddesi ve "İki not" cümlesi koda hizalandı. Kodda doğrulama: blok uzunluğu günlükte alan değil, `istatistik.blok_uzunlugu(tutma)` çıktısıdır; metin buna göre yazıldı (tekrar ve tohum günlükte alandır).
+- Dosyalar: `docs/TASARIM.md`, `tests/test_kayit.py`, bu bilet. Başka belgede (GLOSSARY, KURALLAR, `tansu/*.py` düzyazısı) masraf ya da tekrar için "hash dışı" cümlesi yok; KURALLAR/TASARIM "masraf senaryoları deneme sayısına girmez" Holm m ile ilgilidir, hash ile değil.
+- Test: `test_kayit.py::test_masraf_sabiti_degisince_kod_hashi_degisir[simulator.py-...|istatistik.py-...]` (tmp paket kopyasında sabit değişince `kod_hash` ve `kural_id` değişir). Mevcut davranışı sabitler: ilk koşuda yeşil, kırmızı yok (`3 passed` ile birlikte `test_kod_hashi_yorum_ve_bosluktan_etkilenmez`).
+- Kod hash'i değişmedi; kayitla ihtiyacı önceki değişikliklerden sürüyor (07d, 07e).
+- Kutu: "§3'ün her maddesi" işaretlendi. "Her kod maddesi kendi PR'ıyla" da işaretlendi (orkestratör, 15.10): kutunun amacı kod değişikliğinin başka işe karışmadan PR'la kapanmasıdır; 07a–07f her dilim kendi PR'ıdır (#13–#17 ve 07f), madde başına PR değil.
+- Aynı dalda ayrı commit: `CODING_STANDARDS.md` genel kısmı YONETIM'le eşitlendi (15.10 "Seen once" satırı); `test_standartlar` yerelde kırmızıydı (öncül #11, #12).

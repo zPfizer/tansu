@@ -352,6 +352,36 @@ def test_kod_hashi_yorum_ve_bosluktan_etkilenmez(tmp_path, monkeypatch):
     assert kayit.kayitla(P, ATR_N)["kod_hash"] != once["kod_hash"]
 
 
+@pytest.mark.parametrize(
+    "dosya, eski, yeni",
+    [
+        (
+            "simulator.py",
+            "MASRAFLAR = (0.001, 0.003, 0.005)",
+            "MASRAFLAR = (0.001, 0.003, 0.006)",
+        ),
+        ("istatistik.py", "K1_MASRAF = 0.005", "K1_MASRAF = 0.006"),
+    ],
+)
+def test_masraf_sabiti_degisince_kod_hashi_degisir(
+    tmp_path, monkeypatch, dosya, eski, yeni
+):
+    # TASARIM 5.11 "Hash dışı": masraf senaryoları ve K1 masrafı kural sabitidir, hash içindedir (bilet 07f).
+    paket = tmp_path / "paket"
+    paket.mkdir()
+    for ad in kayit.KOD_DOSYALARI:
+        shutil.copyfile(kayit.PAKET / ad, paket / ad)
+    monkeypatch.setattr(kayit, "PAKET", paket)
+    once = kayit._kural(P, ATR_N)
+    yol = paket / dosya
+    metin = yol.read_text(encoding="utf-8")
+    assert metin.count(eski) == 1
+    yol.write_text(metin.replace(eski, yeni), encoding="utf-8")
+    sonra = kayit._kural(P, ATR_N)
+    assert sonra["kod_hash"] != once["kod_hash"]
+    assert sonra["kural_id"] != once["kural_id"]
+
+
 def test_her_yeni_gunluk_satiri_sema_1_tasir_ve_okuyucu_sema_siz_satiri_okur(tmp_path):
     kayit.kayitla(P, ATR_N)
     kayit.denetim_yaz({"gecti": True}, P, ATR_N)
