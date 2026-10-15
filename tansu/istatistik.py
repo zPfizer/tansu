@@ -255,7 +255,7 @@ def cift_k1(h, b, tekrar, tohum=0, masraf=K1_MASRAF) -> dict:
 
 
 MIN_ISLEM, MIN_GUN = 100, 60  # TASARIM 5.9 örneklem şartı
-SAGLAMLIK_ESIK, YIL_ESIK = 0.60, 0.60  # TASARIM 5.10, 5.12.4
+SAGLAMLIK_ESIK, YIL_ESIK = 0.60, 0.60  # TASARIM 5.10, 5.12 ölçüt 4
 DUSUS_ESIK, DUSUS_GUN = 0.25, 365  # TASARIM 5.12 portföy kuralı
 GIDIS_DONUS = 2 * K1_MASRAF  # TASARIM 5.12 "Ölçülemedi"
 GECTI, GECMEDI, OLCULEMEDI = "Geçti", "Geçmedi", "Ölçülemedi"

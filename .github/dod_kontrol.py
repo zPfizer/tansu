@@ -38,6 +38,11 @@ def _dod_hatasi(bolum):
         sorunlar.append("en az 10 işaretli satır olmalı")
     if eksik:
         sorunlar.append("kanıt eksik; satır: " + ", ".join(eksik))
+    if not any(
+        re.match(r"^\s*- \[[xX]\] Tansu:", satir) and re.search(r"kanıt:\s*\S", satir)
+        for _, satir in isaretli
+    ):
+        sorunlar.append("Tansu: satırı işaretli ve kanıtlı olmalı")
     return "; ".join(sorunlar)
 
 
@@ -45,11 +50,14 @@ def _inceleme_hatasi(bolum):
     sorunlar = []
     if not any(re.fullmatch(r"Denetçi:[ \t]*\S.*", satir) for _, satir in bolum):
         sorunlar.append("Denetçi: alanı boş veya eksik")
-    if not any(
-        re.fullmatch(r"Sonuç:[ \t]*geçti[ \t]*", satir, re.IGNORECASE)
-        for _, satir in bolum
+    sonuclar = [satir for _, satir in bolum if re.match(r"\s*Sonuç:", satir)]
+    if len(sonuclar) > 1:
+        sorunlar.append(f"Sonuç: satırı tek olmalı ({len(sonuclar)} satır var)")
+    elif not any(
+        re.fullmatch(r"Sonuç:[ \t]*(geçti|GEÇTİ|NOTLU GEÇTİ)[ \t]*", satir)
+        for satir in sonuclar
     ):
-        sorunlar.append("Sonuç: geçti satırı eksik")
+        sorunlar.append("Sonuç: geçti ya da NOTLU GEÇTİ satırı eksik")
     return "; ".join(sorunlar)
 
 
@@ -70,7 +78,7 @@ def hatalar(govde: str) -> list[str]:
             "Kural 2: gövde boş; işaretsiz kutu kontrolü yapılamadı.",
             "Kural 3: ## Kabul ölçütleri bölümünde işaretli kutu yok.",
             "Kural 4: ## Definition of Done bölümünde 10 kanıtlı işaretli satır yok.",
-            "Kural 5: ## Bağımsız inceleme bölümünde Denetçi: ve Sonuç: geçti yok.",
+            "Kural 5: ## Bağımsız inceleme bölümünde Denetçi: ve Sonuç: geçti ya da NOTLU GEÇTİ yok.",
             "Kural 6: ## Gerçek veri kanıtı bölümünde içi dolu bir kod bloğu yok.",
         ]
 
