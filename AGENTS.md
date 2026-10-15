@@ -15,9 +15,9 @@ Each fact has one owner file. The other files only give a reference to it. Read 
 | `docs/kurallar/A-yapi-bolge.md` … `E-risk-cikis-surec.md` | the reading of the pool (havuz): what Tansu said. Rule: each note in the pool must have a reference here or must be in the "kural içermez" list |
 | `docs/sadakat.md` | the fidelity (sadakat) measurement |
 | `AGENTS.md` | the working rules and the work flow |
-| `docs/strateji-taslak/`, `docs/strateji-modulleri-taslak.md` (local, not in git) | proposals that wait for approval. They own no fact. They are outside the drift check (04c, 14.10) |
+| `docs/strateji-taslak/`, `docs/strateji-modulleri-taslak.md` (local, not in git) | proposals that wait for approval. They own no fact. They are outside the drift check (04c, 14.10) <!-- driftlint-ignore: local-only, gitignored, absent in CI --> |
 | `CODING_STANDARDS.md`, `DEFINITION_OF_DONE.md` | the code format and the done criteria (`## Tansu`) |
-| `docs/sorgu/sonuc-3-4.md`, `docs/sorgu/izleme/karar.md` (local, not in git) | the reasons for the decisions (read them when necessary) |
+| `docs/sorgu/sonuc-3-4.md`, `docs/sorgu/izleme/karar.md` (local, not in git) | the reasons for the decisions (read them when necessary) <!-- driftlint-ignore: local-only, gitignored, absent in CI --> |
 
 The drift check covers all these files. Correct a file when it contradicts another file, contains old information,
 or copies a fact of another file.
@@ -42,7 +42,7 @@ first. Write the reason. Then write the code.
 - **Do not look at the return (Getiriye bakma):** See `docs/KURALLAR.md` §4.
 - **Git (this repository only):** Do not use `rebase`, `--amend`, `--force` (and `--force-with-lease`), `reset --hard`, `clean -f`, `branch -D`,
   `checkout .`, `restore .`, `git add .`, or `git add -A` (for Claude, a permission deny blocks them: `permissions.deny` global and `.claude/settings.json`). Add files
-  by name. Which folders git tracks and the log rules are in TASARIM §5.11. Do not delete `veri/`. In a commit, leave the `kayit/` files only added, not
+  by name. Which folders git tracks and the log rules are in TASARIM §5.11. Do not delete `veri/`. In a commit, leave the `kayit/` files only added, not <!-- driftlint-ignore: veri/ is gitignored local data, absent in CI -->
   modified. This rule covers this repository only. The global Stop hook runs `git add -A -- receipts "*850-Companion*"` in the brain repository (`YONETIM/beyin`). That is outside this Tansu rule. `beyin.py receipt --ref` takes a vault-relative path, for example `--ref "🔮 850-Companion/Threads.md"`; a repo path fails with "source missing or outside vault".
 - **Task Scheduler (Görev Zamanlayıcı):** Two tasks are installed and enabled on this machine since the first official run (ticket 15, 06.10):
   `TansuGunluk` (`kurulum/tansu-gunluk.xml`, `python -m tansu gunluk`) and `TansuAylik` (`kurulum/tansu-aylik.xml`, `python -m tansu evren-indir`).
@@ -52,7 +52,7 @@ first. Write the reason. Then write the code.
   disabled (`<Enabled>false</Enabled>`); enable it with `schtasks /change /tn TansuGunluk /enable`. To delete a task: `schtasks /delete /tn TansuGunluk /f`.
 - **Rule parameter (Kural parametresi):** A rule parameter changes only with a TASARIM/KURALLAR change and as a new trial (deneme).
 - **Dependency (Bağımlılık):** Before you add a new package, check TASARIM §4 and the stdlib. Write an added package in `pyproject.toml`
-  with `==`.
+  with `==`. A CI tool outside Python is pinned to an exact version in the workflow file.
 
 ## Standards (Standartlar)
 `CODING_STANDARDS.md` and `DEFINITION_OF_DONE.md` start with the general standard of Levent. The `## Tansu` section at the end of each file
@@ -67,7 +67,7 @@ until the documents have no drift, no old information, and no contradiction. The
 (`.scratch/yazilim-fabrikasi/`) continue (Levent 10.10). When ticket 08 is complete, delete this line.
 
 - **Fikir (idea):** In the step of flow A that sharpens the plan (AKIS flow A, step 4), call `/tansu-grill`. It is the Tansu version of the skill of that step. Tansu comes first. It scans the risk and shows the text that will change.
-- **Fikir, kayıt (record):** Write a settled term to `GLOSSARY.md` at once. Write a decision to `docs/TASARIM.md`. Read TASARIM and `docs/sorgu/` first. Do not ask again for a decision that exists.
+- **Fikir, kayıt (record):** Write a settled term to `GLOSSARY.md` at once. Write a decision to `docs/TASARIM.md`. Read TASARIM and `docs/sorgu/` first. Do not ask again for a decision that exists. <!-- driftlint-ignore: local-only, gitignored, absent in CI -->
 - **Plan:** The spec and the tickets follow the own ticket layout of Tansu (`docs/agents/issue-tracker.md`). Do not write a ticket by hand. If a new decision appears during the work, update the spec first. Then the ticket step (AKIS flow A, step 7) builds the tickets again in dependency order.
 - **Yapım (build):** Open a branch `pr/NN-<ad>` from `master` for each ticket. Commit to that branch. Clear the context between tickets.
 - **PR:** Push the branch to `kaynak`. The pull request text step (AKIS flow A, step 17) and `.github/pull_request_template.md` write the PR body together. Do not merge the PR before two things are true.
