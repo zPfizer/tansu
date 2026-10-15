@@ -503,3 +503,21 @@ def test_bozuk_satir_baz_fiyat_olmaz_baz_onceki_tutarli_gunun_ham_kapanisidir(tm
     )
     assert _karantina(a) == [False, True, True]
     assert a.gun_tablosu["tavan"].iloc[2] == pytest.approx(110.0)
+
+
+def test_adim_orani_onceki_tutarli_kapanisa_bakar_bozuk_satir_atlanir(tmp_path):
+    # TASARIM 5.1 adım (bilet 07e-b, 5.13): kapanışlar 100, 50, 50; 2. gün bozuk (ham düşük 200 > kapanış), 3. gün olay
+    # (çarpan 0,5). Oran 50 / 100 (önceki tutarlı kapanış) = 0,5: adım. Baz 100 × 0,5 = 50, taban 50 × 0,9 = 45,
+    # kapanış 50 içinde: karantina yok. 2. gün bozuk satır: karantina.
+    bozuk = {**satir("2024-01-03", 50.0, 50.0), "ham_dusuk": 200.0}
+    a = anlik(
+        tmp_path,
+        fiyat=[
+            satir("2024-01-02", 100.0, 100.0),
+            bozuk,
+            satir("2024-01-04", 50.0, 50.0),
+        ],
+        olay=_bolunme_olayi(dt.date(2024, 1, 4)),
+    )
+    assert _karantina(a) == [False, True, False]
+    assert a.gun_tablosu["taban"].iloc[2] == pytest.approx(45.0)
