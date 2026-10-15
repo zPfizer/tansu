@@ -27,12 +27,12 @@ Use this part when you test whether a skill triggers on the right requests. The 
 2. **Runs:** Run each query 3 times. A skill counts as triggered when its rate is at least 0.5.
 3. **Model:** Pass `--model` with the model ID of real Tansu sessions.
 4. **Tuning:** When you tune a description, split the set: 60% train and 40% held-out. Judge only on the held-out part.
-5. **Sample first:** Run a small sample first. Read its distribution. Start the full run only if the setup is clean. A clean setup has three signs:
+5. **Sample first:** Run a small sample first. Read its distribution. Start the full run only if the setup is clean. A clean setup has four signs:
    - No run stops because a tool is denied.
    - No run is missing.
    - No outside context is in the eval session. Global hooks and brain context are outside context.
+   - No run changes a file. `--allowedTools` does not block other tools. Pass `--disallowedTools` for Edit, Write, Bash, PowerShell, and NotebookEdit. After the run, check `git status` of the project and the brain. (16.10: eval sessions acted on the queries and edited two Tansu files and the brain Threads.)
 
    (Reason, 16.10: in the first sample, global hooks put brain context into the eval sessions. 2 of 44 runs gave no result.)
-   - No run changes a file. `--allowedTools` does not block other tools. Pass `--disallowedTools` for Edit, Write, Bash, PowerShell, and NotebookEdit. After the run, check `git status` of the project and the brain. (16.10: eval sessions acted on the queries and edited two Tansu files and the brain Threads.)
 6. **Runner:** On Windows, the eval runner of skill-creator does not work. It reads pipes with `select()`. It also tests a temporary command copy that competes with the real skill. Use a runner that calls `claude -p` with the real project skills. It reads the first Skill tool call from `--output-format stream-json --verbose`.
 7. **Save:** Save the eval set, the exact command, and the results under `.scratch/<job>/` in the repository. The first set and two sample runs are in `.scratch/beceri-tetik-1610/`.

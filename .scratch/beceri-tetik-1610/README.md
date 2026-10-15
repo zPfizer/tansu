@@ -46,7 +46,7 @@ done < sorgular.tsv > ornek-kosu-2.tsv
 
 ## Olay (16.10)
 
-İki örnek koşu salt okuma değildi. `--allowedTools` diğer araçları engellemedi. Oturumlar sorguları iş olarak yaptı: 22. ve 24. sorgu `.claude/skills/tansu-grill/SKILL.md` ile `.claude/agents/vekil.md` dosyalarını değiştirdi (`git restore` ile geri alındı), beyin Threads'e sahte bir vekil satırı yazıldı (YONETIM oturumu sildi, beyin 391b890). Önlem: `tansu-eval` "Skill trigger eval" 5. madde.
+İki örnek koşu salt okuma değildi. `--allowedTools` diğer araçları engellemedi. Oturumlar sorguları iş olarak yaptı: 22. ve 24. sorgu `.claude/skills/tansu-grill/SKILL.md` ile `.claude/agents/vekil.md` dosyalarını değiştirdi (`git restore` ile geri alındı), beyin Threads'e sahte bir vekil satırı yazıldı (YONETIM oturumu sildi, beyin 391b890). Önlem: `tansu-eval` "Skill trigger eval", "Sample first".
 
 ## Açık iş
 
