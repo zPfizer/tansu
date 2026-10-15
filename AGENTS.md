@@ -15,6 +15,7 @@ Each fact has one owner file. The other files only give a reference to it. Read 
 | `docs/kurallar/A-yapi-bolge.md` … `E-risk-cikis-surec.md` | the reading of the pool (havuz): what Tansu said. Rule: each note in the pool must have a reference here or must be in the "kural içermez" list |
 | `docs/sadakat.md` | the fidelity (sadakat) measurement |
 | `AGENTS.md` | the working rules and the work flow |
+| `docs/strateji-taslak/`, `docs/strateji-modulleri-taslak.md` (local, not in git) | proposals that wait for approval. They own no fact. They are outside the drift check (04c, 14.10) |
 | `CODING_STANDARDS.md`, `DEFINITION_OF_DONE.md` | the code format and the done criteria (`## Tansu`) |
 | `docs/sorgu/sonuc-3-4.md`, `docs/sorgu/izleme/karar.md` (local, not in git) | the reasons for the decisions (read them when necessary) |
 
@@ -42,7 +43,7 @@ first. Write the reason. Then write the code.
 - **Git (this repository only):** Do not use `rebase`, `--amend`, `--force` (and `--force-with-lease`), `reset --hard`, `clean -f`, `branch -D`,
   `checkout .`, `restore .`, `git add .`, or `git add -A` (for Claude, a permission deny blocks them: `permissions.deny` global and `.claude/settings.json`). Add files
   by name. Which folders git tracks and the log rules are in TASARIM §5.11. Do not delete `veri/`. In a commit, leave the `kayit/` files only added, not
-  modified. This rule covers this repository only. The global Stop hook runs `git add -A -- receipts "*850-Companion*"` in the brain repository (`YONETIM/beyin`). That is outside this Tansu rule.
+  modified. This rule covers this repository only. The global Stop hook runs `git add -A -- receipts "*850-Companion*"` in the brain repository (`YONETIM/beyin`). That is outside this Tansu rule. `beyin.py receipt --ref` takes a vault-relative path, for example `--ref "🔮 850-Companion/Threads.md"`; a repo path fails with "source missing or outside vault".
 - **Task Scheduler (Görev Zamanlayıcı):** Two tasks are installed and enabled on this machine since the first official run (ticket 15, 06.10):
   `TansuGunluk` (`kurulum/tansu-gunluk.xml`, `python -m tansu gunluk`) and `TansuAylik` (`kurulum/tansu-aylik.xml`, `python -m tansu evren-indir`).
   The times are in TASARIM §6. The paths point to the main repository on this machine (`C:\Users\levent\Desktop\TANSU`).
