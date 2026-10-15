@@ -433,3 +433,51 @@ def test_karantinaya_giren_fiyat_yamanmaz(tmp_path):
     assert yeniden.fiyat.loc[
         1, ["ham_kapanis", "ham_aof", "kapanis", "aof"]
     ].tolist() == [150.0, 150.0, 75.0, 75.0]
+
+
+def _karantina(a):
+    return a.gun_tablosu.set_index("tarih")["karantina"].tolist()
+
+
+def test_limit_bazi_onceki_gunun_ham_kapanisidir_karantinali_gun_de_baz_olur(tmp_path):
+    # TASARIM 5.1: baz fiyat = önceki ham kapanış. d2 150 (100'ün +%50'si) karantinaya girer; d3 tavanı 150 × 1,10 = 165,
+    # d3 kapanışı 160 limit içinde, karantina yok. (Önceki temiz kapanış 100 olsaydı tavan 110 olur, d3 karantinaya girerdi.)
+    a = anlik(
+        tmp_path,
+        fiyat=[
+            satir("2024-01-02", 100.0, 100.0),
+            satir("2024-01-03", 150.0, 150.0),
+            satir("2024-01-04", 160.0, 160.0),
+        ],
+        olay=[],
+    )
+    assert _karantina(a) == [False, True, False]
+    assert a.gun_tablosu["tavan"].iloc[2] == pytest.approx(165.0)
+
+
+# Ham 100, 101, 102, 51, 52; düzeltilmiş 50, 50,5, 51, 51, 52 (çarpan 0,5 gerçekte 05.01.2024'te işler).
+BOLUNME = [
+    satir("2024-01-02", 100.0, 50.0),
+    satir("2024-01-03", 101.0, 50.5),
+    satir("2024-01-04", 102.0, 51.0),
+    satir("2024-01-05", 51.0, 51.0),
+    satir("2024-01-08", 52.0, 52.0),
+]
+
+
+@pytest.mark.parametrize("olay_gunu", [dt.date(2024, 1, 4), dt.date(2024, 1, 8)])
+def test_olayla_aciklanan_gun_tablo_tarihinin_bir_gun_oncesi_ya_da_sonrasinda_da_karantinaya_girmez(
+    tmp_path, olay_gunu
+):
+    # TASARIM 5.1 karantina: olay eşleştirmesi ±1 işlem günü. Gerçek adım 05.01'de (51 / 102 = 0,5);
+    # tablo 04.01 ya da 08.01 yazsa da baz fiyat 05.01'de 102 × 0,5 = 51, tavan 51 × 1,10 = 56,1.
+    olay = [
+        {
+            "SHT_KODU": "02",
+            "SHHE_TARIH": epoch(olay_gunu),
+            "SHHE_FIYAT_AYAR_OR": 0.5,
+        }
+    ]
+    a = anlik(tmp_path, fiyat=BOLUNME, olay=olay)
+    assert _karantina(a) == [False] * 5
+    assert a.gun_tablosu["tavan"].iloc[3] == pytest.approx(56.1)

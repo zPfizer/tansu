@@ -162,6 +162,13 @@ def kapanan_kodlar(oturum=None) -> pd.DataFrame:
     )  # .xls için xlrd
 
 
+def sirket_kodlari() -> pd.Series:
+    """Bugünkü bütün pay kodları (borsapy `companies`, KAP şirket listesi). Ağa çıkan tek yer burasıdır (TASARIM 4)."""
+    import borsapy
+
+    return borsapy.companies()["ticker"]
+
+
 class Onbellekli:
     """Sembol başına yanıtı klasöre yazar. Saatler süren evren indirmesi yarıda kesilirse yeniden başlayınca
     tamamlanan semboller tekrar istenmez. Hata yazılmaz; yalnız başarılı yanıt saklanır."""

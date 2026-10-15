@@ -370,6 +370,14 @@ def _olay_tarihi(ms) -> pd.Timestamp:
     return pd.Timestamp(dt.datetime.fromtimestamp(ms / 1000, ISTANBUL).date())
 
 
+def _olay_konumu(oran, i, carpan) -> int:
+    """Tablo tarihinin konumu `i`; ±1 işlem günü içinde düzeltme oranı sıçraması çarpana en yakın olan gün (TASARIM 5.1)."""
+    adaylar = [j for j in (i - 1, i, i + 1) if 1 <= j < len(oran)]
+    with np.errstate(all="ignore"):
+        fark = {j: abs(oran[j - 1] / oran[j] / carpan - 1) for j in adaylar}
+    return min(adaylar, key=lambda j: np.nan_to_num(fark[j], nan=np.inf), default=i)
+
+
 def _olay_denetimi(fiyat: pd.DataFrame, olaylar: pd.DataFrame) -> pd.DataFrame:
     """Gözlenen düzeltme oranını (düzeltilmiş/ham) olay çarpanlarından beklenenle karşılaştırır.
 
@@ -393,9 +401,7 @@ def _olay_denetimi(fiyat: pd.DataFrame, olaylar: pd.DataFrame) -> pd.DataFrame:
         if i < len(
             gunler
         ):  # pencereden sonraki olay bütün satırlara uygulanır, kaydırılmaz
-            adaylar = [j for j in (i - 1, i, i + 1) if 1 <= j < len(gunler)]
-            if adaylar:
-                i = min(adaylar, key=lambda j: abs(oran[j - 1] / oran[j] / carpan - 1))
+            i = _olay_konumu(oran, i, carpan)
         beklenen[beklenen.index < i] *= carpan
     fark = oran / beklenen.to_numpy() - 1
     uyari = abs(fark) > OLAY_TOLERANS
@@ -447,10 +453,14 @@ def _gunler(fiyat, olaylar, takvim):
     onceki = f["ham_kapanis"].where(ok).ffill().shift(1)
     carpan = pd.Series(1.0, index=f.index)
     gunler = f.index[islem.to_numpy()]
+    oran = (f["kapanis"] / f["ham_kapanis"])[islem].to_numpy()
     for tarih, grup in olaylar.groupby("tarih"):
+        if len(gunler) == 0 or tarih < gunler[0]:
+            continue
         i = gunler.searchsorted(tarih)  # olay gününe eşit ya da sonraki işlem günü
-        if i < len(gunler):  # ±1 gün kayma yok: tam evrende 0 fark (bilet 07), 5.1
-            carpan[gunler[i]] *= grup["carpan"].prod()
+        if i < len(gunler):
+            c = grup["carpan"].prod()
+            carpan[gunler[_olay_konumu(oran, i, c)]] *= c  # ±1 işlem günü (5.1)
     limit = pd.Series(np.where(f.index >= LIMIT_DEGISIM, 0.10, 0.20), index=f.index)
     ref = onceki * carpan
     tavan, taban, kapanis = ref * (1 + limit), ref * (1 - limit), f["ham_kapanis"]
