@@ -5,7 +5,9 @@ TASARIM gerekçesiyle güncellenir.
 
 **Blocked by:** 03
 
-**Status:** done (PR #13–#18, 961902f)
+**Status:** done (PR #18, 961902f)
+
+Alt biletler 07a–07e PR #13–#17 ile birleşti; son kapanış PR #18 (07f). (16.10)
 
 - [x] `denetim/tasarim-kod.md` §3'ün her maddesi `/diagnosing-bugs` ile ele alındı: davranışı gösteren test, sonra karar.
 - [x] Öncelik: `gunluk.py` yalnız AKTİF kartları indirir (STOP/BOZULDU açık pozisyon izlenmeyebilir).
