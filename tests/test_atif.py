@@ -20,6 +20,22 @@ def test_bolum_atiflari_var_olan_basliga_gider():
     assert atif_kirikleri(KOK, izlenen_dosyalar(KOK)) == []
 
 
+def test_tarama_kumesi_bilinen_dosyalari_icerir():
+    adlar = {yol.relative_to(KOK).as_posix() for yol in izlenen_dosyalar(KOK)}
+    assert {
+        "docs/TASARIM.md",
+        "docs/KURALLAR.md",
+        "AGENTS.md",
+        "CLAUDE.md",
+        "GLOSSARY.md",
+        "tansu/kayit.py",
+        ".claude/skills/tansu-grill/SKILL.md",
+        ".github/pull_request_template.md",
+    } <= adlar
+    # .scratch tarihsel metindir (biletler, arşiv); bilerek dışarıda
+    assert not any(ad.startswith(".scratch/") for ad in adlar)
+
+
 def test_karar_etiketleri_sorguda_tanimli():
     sorgu = KOK / "docs" / "sorgu"
     if not sorgu.exists():
@@ -37,7 +53,9 @@ def _belgeler(kok):
         "## 8. Açık\n1. a\n2. b\n## Ek A: Eleştiri\nKüçükler burada\n",
         encoding="utf-8",
     )
-    (docs / "KURALLAR.md").write_text("## 1. Ana bulgular\n", encoding="utf-8")
+    (docs / "KURALLAR.md").write_text(
+        "## 1. Ana bulgular\n1. a\n2. b\n", encoding="utf-8"
+    )
     return docs
 
 
@@ -59,6 +77,13 @@ def test_bolum_numaralari_baslik_ve_madde(tmp_path):
         ("TASARIM 6.3 madde yok", ["not.md:1: TASARIM 6.3"]),
         ("KURALLAR §5.1 yok", ["not.md:1: KURALLAR §5.1"]),
         ("TASARIM §5.1, §99", ["not.md:1: TASARIM §99"]),
+        # `madde N`: bölümün N. maddesi
+        ("KURALLAR §1 madde 2; TASARIM §6 madde 1; TASARIM 8 madde 2", []),
+        ("TASARIM 6 madde 99", ["not.md:1: TASARIM §6.99"]),
+        ("KURALLAR §1 madde 9", ["not.md:1: KURALLAR §1.9"]),
+        ("a\nKURALLAR §1\n  madde 9", ["not.md:2: KURALLAR §1.9"]),
+        ("TASARIM §99 madde 1", ["not.md:1: TASARIM §99", "not.md:1: TASARIM §99.1"]),
+        ("TASARIM §5.1, 6 madde 2 ve KURALLAR §1 madde 3", ["not.md:1: KURALLAR §1.3"]),
         (
             "TASARIM 5.1, 5.99 ve §98",
             ["not.md:1: TASARIM §5.99", "not.md:1: TASARIM §98"],

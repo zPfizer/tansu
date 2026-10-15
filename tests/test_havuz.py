@@ -136,3 +136,21 @@ def test_tam_ad_ve_ayni_numaraya_kisa_atif_belirsizdir(tmp_path):
         "belirsiz atıf gorsel-paket-12: gorsel-paket-012-yeni, gorsel-paket-12-ad-bir",
         "gorsel-paket-012-yeni",
     ]
+
+
+@pytest.mark.parametrize(
+    ("not_adi", "metin"),
+    [
+        ("kaynak-a-b-123", "kaynak-a-b-12"),  # kesik numara
+        ("kaynak-a-b-123", "kaynak-a-b-1"),
+        ("kaynak-abc-1", "kaynak-ab"),  # kelime ortasında kesik
+        ("gorsel-paket-01-x", "gorsel-paket-0 ve G0 ve gp-0"),
+        ("gorsel-paket-12-x", "gorsel-paket-1 ve G1 ve gp-1 ve -1"),
+        ("gorsel-paket-12-x", "gorsel-paket-123 ve G123"),
+        ("tweet-atrx-y", "T-atr"),
+        ("tweet-atr-risk", "tweet-atr-ris"),
+    ],
+)
+def test_kesik_kimlik_notu_kapsamaz(tmp_path, not_adi, metin):
+    _depo(tmp_path, "## X\n", metin + "\n")
+    assert havuz_sorunlari(tmp_path, _havuz(tmp_path, [not_adi])) == [not_adi]

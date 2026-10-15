@@ -16,6 +16,9 @@ _NO = r"\d+(?:\.\d+)*"
 # `TASARIM 5.1`, `TASARIM §5.1`, `docs/TASARIM.md` §5.1
 ATIF = re.compile(rf"(TASARIM|KURALLAR)(?:\.md`?)? §?({_NO})")
 # Atıf listesi ya da aralığı: `, §99`, ` ve §4`, `–5.6`, `/5.3`
+MADDE = re.compile(
+    r"\s+madde\s+(\d+)"
+)  # `KURALLAR §3 madde 2` = 3.2 (bölümün 2. maddesi)
 ATIF_DEVAMI = re.compile(rf"(\s*[–-]\s*|,\s*|\s+ve\s+|\s*/\s*)(§)?({_NO})")
 # Atıfın hemen ardından gelen alıntı başlık ya da kalın terim: TASARIM 5.8 "Kural kaydı"
 ALINTI = re.compile(
@@ -28,11 +31,25 @@ ETIKET = re.compile(r"(?<![\w-])(?:([BC])-(\d+)|(S2)-(\d+))(?![\w-])")
 SORU_LISTESI = re.compile(r"İ:\s*((?:\d{2}-\d{3}\s*,?\s*)+)")
 
 
+DOSYA_KOKLERI = (
+    "tansu",
+    "tests",
+    "docs",
+    ".claude",
+    ".github",
+    "AGENTS.md",
+    "CLAUDE.md",
+    "GLOSSARY.md",
+)
+
+
 def izlenen_dosyalar(kok):
-    """tansu/, tests/, docs/, AGENTS.md ve GLOSSARY.md altındaki git'e girmiş .py ve .md dosyaları."""
+    """tansu/, tests/, docs/, .claude/, .github/, AGENTS.md, CLAUDE.md, GLOSSARY.md altındaki git'e girmiş .py ve .md dosyaları.
+
+    `.scratch/` bilerek dışarıdadır: biletler ve arşiv tarihsel metindir, atıfları o günün TASARIM'ına göredir.
+    """
     cikti = subprocess.run(
-        ["git", "-C", str(kok), "ls-files", "-z", "--"]
-        + ["tansu", "tests", "docs", "AGENTS.md", "GLOSSARY.md"],
+        ["git", "-C", str(kok), "ls-files", "-z", "--"] + [*DOSYA_KOKLERI],
         capture_output=True,
         encoding="utf-8",
         check=True,
@@ -108,6 +125,9 @@ def atif_numaralari(metin):
         belge = eslesme.group(1)
         sonuc = [(belge, eslesme.group(2), eslesme.start(), eslesme.end(), False)]
         konum = eslesme.end()
+        if madde := MADDE.match(metin, konum):
+            numara = f"{eslesme.group(2)}.{madde.group(1)}"
+            sonuc.append((belge, numara, eslesme.start(), madde.end(), True))
         while devam := ATIF_DEVAMI.match(metin, konum):
             ayrac, isaret, numara = devam.groups()
             aralik = (
@@ -131,6 +151,8 @@ def atif_kirikleri(kok, dosyalar):
     }
     kirik = []
     for yol in dosyalar:
+        if yol.relative_to(kok).as_posix().startswith(TASLAKLAR):
+            continue  # taslaklar kayma denetimi dışında (AGENTS.md "Belgeler ve sahipleri")
         metin = yol.read_text(encoding="utf-8")
         for belge, numara, basla, bitis, listede in atif_numaralari(metin):
             bolumler = var[belge]
@@ -198,9 +220,8 @@ def etiket_kirikleri(kok, dosyalar, sorgu):
 BEYIN = Path.home() / "Desktop" / "YONETIM" / "beyin"
 HAVUZ = BEYIN / "kisisel" / "300-Projects" / "Tansu X Veri Havuzu"
 
-# Taslak dosyalar AGENTS.md tablosunda "hiçbir olguya sahip değil, kayma denetimi dışında" der;
-# havuz notlarına çalışma adlarıyla atıf verirler ve kazınmış üçüncü taraf Markdown içerirler. Beyin kaynak
-# yolu ve Markdown bağlantı denetimine girmezler.
+# AGENTS.md "Belgeler ve sahipleri": taslaklar hiçbir olguya sahip değildir ve kayma denetimi dışındadır
+# (04c, 14.10). Bu yüzden atıf, yol, bağlantı ve beyin yolu denetimlerine girmezler.
 TASLAKLAR = ("docs/strateji-taslak", "docs/strateji-modulleri-taslak.md")
 
 _NOT_ADI = re.compile(
@@ -447,6 +468,8 @@ def yol_kirikleri(kok, dosyalar):
 
     for yol in dosyalar:
         goreli = yol.relative_to(kok).as_posix()
+        if goreli.startswith(TASLAKLAR):
+            continue  # taslaklar kayma denetimi dışında (AGENTS.md "Belgeler ve sahipleri")
         metin = yol.read_text(encoding="utf-8")
         for eslesme in re.finditer(r"`([^`\n]+)`", metin):
             belirtec = eslesme.group(1).strip().replace("\\", "/")
@@ -465,8 +488,6 @@ def yol_kirikleri(kok, dosyalar):
                 continue
             var = any((kok / aday).exists() for aday in adaylar)
             kontrol(goreli, metin, eslesme.start(), var, ad)
-        if goreli.startswith(TASLAKLAR):
-            continue  # üçüncü taraf Markdown içerir (kazınmış README bağlantıları)
         for eslesme in [*BAGLANTI.finditer(metin), *BAGLANTI_TANIMI.finditer(metin)]:
             hedef = eslesme.group(1).replace("\\", "/")
             if DIS_BAGLANTI.match(hedef):

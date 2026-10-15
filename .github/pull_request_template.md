@@ -27,7 +27,7 @@ _Ölçütlerin sahibi `DEFINITION_OF_DONE.md`'dir (genel bölüm ve `## Tansu`).
 ## Bağımsız inceleme
 
 Denetçi: 
-<!-- CI accepts only the exact text "Sonuç: geçti" or "Sonuç: NOTLU GEÇTİ". CI rejects KALDI. -->
+<!-- CI accepts exactly one Sonuç line, and only one of these three exact texts: "Sonuç: geçti", "Sonuç: GEÇTİ", "Sonuç: NOTLU GEÇTİ". CI rejects "Geçti", KALDI, and a second Sonuç line. -->
 Sonuç: 
 
 ## Gerçek veri kanıtı

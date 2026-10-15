@@ -19,10 +19,16 @@ jobs:
         env:
           BASE: ${{ github.base_ref }}
         run: |
-          silinen=$(git diff --numstat "origin/$BASE...HEAD" -- kayit | awk '$2 == "-" { s += 1; next } { s += $2 } END { print s + 0 }')
+          set -eu
+          set -o pipefail
+          if ! git rev-parse --verify --quiet "origin/$BASE^{commit}" > /dev/null; then
+            echo "HATA: origin/$BASE bulunamadı; kayit/ denetimi yapılamadı."
+            exit 1
+          fi
+          silinen=$(git diff --numstat --no-renames "origin/$BASE...HEAD" -- kayit | awk '$2 == "-" { s += 1; next } { s += $2 } END { print s + 0 }')
           if [ "$silinen" -ne 0 ]; then
             echo "HATA: kayit/ altında $silinen satır silinmiş ya da değişmiş. kayit/ dosyaları yalnız satır ekler."
-            git diff --numstat "origin/$BASE...HEAD" -- kayit
+            git diff --numstat --no-renames "origin/$BASE...HEAD" -- kayit
             exit 1
           fi
       - uses: actions/setup-python@v5

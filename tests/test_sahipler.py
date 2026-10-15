@@ -12,6 +12,7 @@ from atif_araclari import (
     BEYIN,
     HAVUZ,
     KOK,
+    KOK_DOSYASI,
     atif_kirikleri,
     beyin_kirikleri,
     sahip_dosyalari,
@@ -51,7 +52,11 @@ def test_tablo_yollari_ayiklanir(tmp_path):
 
 
 def test_tablodaki_depo_yollari_var():
-    depo, _ = sahip_tablosu(KOK / "AGENTS.md")
+    depo, beyin = sahip_tablosu(KOK / "AGENTS.md")
+    # Başlık ya da tablo biçimi değişirse ayrıştırma sessizce boşalmasın.
+    assert "docs/TASARIM.md" in depo
+    assert "docs/kurallar/A-yapi-bolge.md" in depo
+    assert len(beyin) == 1
     eksik = [y for y in depo if not (KOK / y).exists() and not yerel_kok_yok(KOK, y)]
     assert eksik == []
 
@@ -165,6 +170,12 @@ def test_tablodaki_dosyalarin_beyin_yollari_havuzda_var():
         # sondaki açıklama, satır eki ve parça şablon ya da yol sayılmaz; yalnız ad denetlenir
         ("`gorsel-paket-02 (NN numaralı not)`", ["not.md:1: gorsel-paket-02"]),
         ("`kaynak-a-c.md:12 <açıklama> *`", ["not.md:1: kaynak-a-c.md"]),
+        # kesik kimlik not adı sayılmaz (ad başı yalnız tire sınırında)
+        ("`kaynak-a-b-12`", ["not.md:1: kaynak-a-b-12"]),
+        ("`kaynak-a-b-1`", ["not.md:1: kaynak-a-b-1"]),
+        ("`gorsel-paket-0`", ["not.md:1: gorsel-paket-0"]),
+        ("`gorsel-paket-011-x`", ["not.md:1: gorsel-paket-011-x"]),
+        ("`tweet-x-`", ["not.md:1: tweet-x-"]),
         ("`tweet-y#bolum` `tweet-x-y.md:3` `kaynak-a-b (NN)`", ["not.md:1: tweet-y"]),
         (
             "`assets/gorsel-paket-01/yok.png`",
@@ -281,3 +292,73 @@ def test_taslak_dosyalarin_baglantilari_taranmaz(tmp_path):
     _depo(tmp_path)
     yol = _yaz(tmp_path, "docs/strateji-taslak/x.md", "[a](../SETUP.html)")
     assert yol_kirikleri(tmp_path, [yol]) == []
+
+
+@pytest.mark.parametrize(
+    "kok_adi",
+    [
+        "tansu",
+        "tests",
+        "docs",
+        ".github",
+        "kurulum",
+        "kayit",
+        ".claude",
+        ".scratch",
+        "arsiv",
+    ],
+)
+def test_her_depo_kokunde_olmayan_yol_yakalanir(tmp_path, kok_adi):
+    _depo(tmp_path)
+    (tmp_path / "not.md").write_text(f"`{kok_adi}/yok.x`", encoding="utf-8")
+    assert yol_kirikleri(tmp_path, [tmp_path / "not.md"]) == [
+        f"not.md:1: {kok_adi}/yok.x"
+    ]
+
+
+@pytest.mark.parametrize("isaret", ["<", "*", "…", "YYYY", "–", "NN"])
+def test_her_sablon_isareti_yolu_atlatir_ama_yalniz_yolda(tmp_path, isaret):
+    _depo(tmp_path)
+    metin = f"`tansu/yok{isaret}.py` `tansu/yok2.py ({isaret})`"
+    (tmp_path / "not.md").write_text(metin, encoding="utf-8")
+    assert yol_kirikleri(tmp_path, [tmp_path / "not.md"]) == ["not.md:1: tansu/yok2.py"]
+
+
+@pytest.mark.parametrize(
+    "ad",
+    [
+        "YOK.md",
+        "YOK_BELGE.md",
+        "YOK-BELGE.md",
+        "pyproject.toml",
+        "requirements.lock.txt",
+    ],
+)
+def test_kok_dosyasi_adlari_taranir(tmp_path, ad):
+    assert KOK_DOSYASI.fullmatch(ad)
+    _depo(tmp_path)
+    (tmp_path / "not.md").write_text(f"`{ad}`", encoding="utf-8")
+    assert yol_kirikleri(tmp_path, [tmp_path / "not.md"]) == [f"not.md:1: {ad}"]
+
+
+@pytest.mark.parametrize("ad", ["yok.md", "durum.txt", "setup.cfg", "Yok.md"])
+def test_kok_dosyasi_desenine_uymayan_ad_yol_sayilmaz(tmp_path, ad):
+    assert not KOK_DOSYASI.fullmatch(ad)
+    _depo(tmp_path)
+    (tmp_path / "not.md").write_text(f"`{ad}`", encoding="utf-8")
+    assert yol_kirikleri(tmp_path, [tmp_path / "not.md"]) == []
+
+
+def test_taslaklar_atif_ve_yol_denetimi_disindadir(tmp_path):
+    # AGENTS.md: taslaklar kayma denetimi dışında (04c, 14.10); kod ve metin aynı şeyi söyler.
+    _depo(tmp_path)
+    (tmp_path / "docs" / "TASARIM.md").write_text("## 1. A\n", encoding="utf-8")
+    (tmp_path / "docs" / "KURALLAR.md").write_text("## 1. A\n", encoding="utf-8")
+    metin = "TASARIM §99 `tansu/yok.py` [x](yok.md)"
+    taslak = _yaz(tmp_path, "docs/strateji-taslak/x.md", metin)
+    taslak2 = _yaz(tmp_path, "docs/strateji-modulleri-taslak.md", metin)
+    assert atif_kirikleri(tmp_path, [taslak, taslak2]) == []
+    assert yol_kirikleri(tmp_path, [taslak, taslak2]) == []
+    sade = _yaz(tmp_path, "docs/x.md", metin)  # taslak değilse aynı metin hatalıdır
+    assert len(atif_kirikleri(tmp_path, [sade])) == 1
+    assert len(yol_kirikleri(tmp_path, [sade])) == 2

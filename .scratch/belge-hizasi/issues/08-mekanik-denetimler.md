@@ -83,3 +83,35 @@
   5. Mimari spec 5. adım: 9. karar (blok uzunluğu ve masraf senaryoları günlükte ayrı alan) 07f ile kapandı (TASARIM 5.8: blok uzunluğu çıktıdır; masraf düzeyi başına sonuç `masraf_sonuc`). Listeden çıkarıldı; "dokuz" her yerde "sekiz":
      `.scratch/tansu-mimari/spec.md`, bu biletin 6. kutusu, `.scratch/belge-hizasi/spec.md`; `tasarim-kod.md` §1'in 9. maddesine "Kapandı (07f)" notu. Kalan sekiz maddenin koda karşı bugünkü durumu elle bakıldı: sadakat sonrası kayıt, `duzeltme`, "Uyarı yok", K2 karantina,
      Canlı durumu için kodda karşılık hâlâ yok.
+- 08 ön denetim (15.10, son Codex turundan önce; her madde için dosyada birim test, kırmızı kanıt kopyada):
+  1. `madde N` atfı: `KURALLAR §3 madde 2`, `TASARIM 6 madde 99` bölümün N. maddesi (3.2, 6.99) diye denetlenir; gerçek depoda `madde` atıfları temiz (aileler.py:1, sadakat.py:12 dahil).
+     Kırmızı: `TASARIM 6 madde 99`, `KURALLAR §1 madde 9`, satır sonu bölünmüş `§1\n  madde 9` eski kodla geçerdi (6 test kırmızı), şimdi hata verir.
+  2. Tarama kümesine `.claude/`, `.github/` ve `CLAUDE.md` eklendi (63 dosya; SKILL.md, pull_request_template.md, dod_kontrol.py dahil), hepsi temiz. `.scratch/` bilerek dışarıda: biletler ve arşiv tarihsel metindir,
+     atıfları o günün TASARIM'ına göredir (tarama 16 kırık atıf verir; 13'ü bu biletin kendi mutasyon örnekleri). Canlı 07 biletindeki 3 gerçek hata düzeltildi: `07-kod-sapmalari.md:127` `TASARIM 117` aslında satır numarası
+     (`TASARIM.md satır 117`); :132 ve :134 eski TASARIM 5.1 cümlelerinden alıntı (07e-b'de yeniden yazıldı; "TASARIM 5.1'in o günkü ..." diye açıklandı). Arşive dokunulmadı.
+  3. Gerçek tablo testi artık `docs/TASARIM.md` ve `docs/kurallar/A-yapi-bolge.md` ayrıştırılmış yollar arasında ve tam 1 beyin satırı olmasını ister. Kırmızı: AGENTS başlığı "(Belgeler ve sahipleri)" → "(Owners)" yapılınca test kırılır.
+  4. Tarama kümesi testi: `docs/TASARIM.md`, `docs/KURALLAR.md`, `AGENTS.md`, `CLAUDE.md`, `GLOSSARY.md`, `tansu/kayit.py`, `.claude/skills/tansu-grill/SKILL.md`, `.github/pull_request_template.md` içerir; `.scratch/` içermez.
+  5. Yol kökleri: dokuz kök için `{kök}/yok.x` ve altı şablon işareti için literal parametreli testler; kök dosya adı desenleri ayrıca. Kırmızı (kopya): KOKLER'den `.github` ve `kurulum` çıkarılınca 2 test, SABLON'dan `NN` çıkarılınca 1 test kırılır.
+  6. `ci.yml` kayit adımı: `set -eu`, `set -o pipefail`, `git diff --numstat --no-renames`, `git rev-parse --verify origin/$BASE` başarısızsa `exit 1`. Betik ci.yml'den okunup geçici git deposunda `bash` ile koşan `tests/test_ci_kayit.py`
+     ile denetlenir (8 test; bash yoksa atlanır). Sonuçlar: satır ekleme exit 0, yeni dosya exit 0, satır değiştirme exit 1, dosya silme exit 1, yeniden adlandırma exit 1, bilinmeyen taban exit 1, boş dosya silme exit 0 (bilinen sınır).
+     Kırmızı (eski ci.yml ile): yeniden adlandırma exit 0 çıkıyordu, bilinmeyen taban exit 0 çıkıyordu, `pipefail`/`--no-renames` yoktu: 3 test kırmızı.
+  7. `dod_kontrol.py`: `Sonuç:` ile başlayan (girintili dahil) bütün satırlar sayılır; tam bir tane olmalı ve kabul edilen üç metinden biri olmalı. `Sonuç: KALDI` + `Sonuç: GEÇTİ` hata verir ("Sonuç: satırı tek olmalı (2 satır var)").
+     Kırmızı: eski kodla 5 yeni test kırmızı (KALDI+GEÇTİ, kaldı+geçti, GEÇTİ+GEÇTİ, girintili ikinci satır, boş ikinci `Sonuç:`). Şablon yorum satırı (`<!-- ... "Sonuç: geçti" ... -->`) sayılmaz.
+  8. Havuz kesik kimlikleri: `kaynak-a-b-12` ve `-1` (not `-123`), `kaynak-ab` (not `kaynak-abc-1`), `gorsel-paket-0`/`G0`/`gp-0` (not `-01`), `gorsel-paket-1`/`G1`/`-1` (not `-12`), `gorsel-paket-123`, `T-atr` (not `tweet-atrx-y`),
+     `tweet-atr-ris` kimliği kapsamaz; beyin yolu denetimi `gorsel-paket-0`, `gorsel-paket-011-x`, `kaynak-a-b-1` kesiklerini hata sayar. Kırmızı: ad başı eşleşmesinden tire sınırı kaldırılınca (`startswith(onek)`) 8 test kırılır (gerçek havuz testi dahil).
+  9. Taslaklar (`docs/strateji-taslak`, `docs/strateji-modulleri-taslak.md`): AGENTS.md "kayma denetimi dışında" der; kod da artık atıf, yol, bağlantı ve beyin yolu denetimlerinde taslakları atlar (`test_taslaklar_atif_ve_yol_denetimi_disindadir`; aynı metin taslak olmayan dosyada hata verir).
+     Tablodaki taslak yollarının var olması (`sahip_tablosu`) hâlâ denetlenir.
+  10. PR şablonu yorumu: CI tek `Sonuç` satırı kabul eder ve yalnız üç metinden birini: `geçti`, `GEÇTİ`, `NOTLU GEÇTİ`; `Geçti`, KALDI ve ikinci `Sonuç` satırı reddedilir.
+- Tanınan biçimler ve sınırlar (testler yalnız aşağıdakini denetler; bu liste kapsam dışını açıkça yazar):
+  - Bölüm atfı, tanınır: `TASARIM`/`KURALLAR` + (`.md` ya da `.md` ve kapanış backtick'i) + tek boşluk + isteğe bağlı `§` + numara (`5`, `5.11`); liste `, §n` ya da noktalı `, 5.3`, ` ve n`, `/n`; aralık `–` (iki uç; düz sayı uç dahil) ve `-` (yalnız noktalı uç); `madde N`.
+     Tanınmaz: `TASARIM'ın §N`, `bölüm N`, küçük harf (`tasarım 5`), `§ 5` (boşluklu), `TASARIM` ile numara arasında satır sonu, `ile`/`veya`/`;` listeleri, em-dash (`—`) aralığı, virgüllü düz sayı (`5.1, 6`), üç düzey numara (`5.12.4` hata verir),
+     başlıksız bölümün maddesi dışında madde atfı (`TASARIM 5 madde 1` alt başlığı olan bölümde 5.1 başlığıyla karışır).
+  - Alıntı terim, okunur: atıfın hemen ardından (`,` `:` ` ve` `(` ayracı olabilir) `"…"`, `“…”`, `‘…’`, `**…**`; terim atıf yapılan bölümün metninde aranır (Türkçe i/ı/İ katlanır, satır sonu tek boşluk). Okunmaz: atıftan önce gelen başlık
+     (`"X" (TASARIM 5.8)`), ASCII tek tırnak, liste sonrası alıntı, bölümü başka biçimde anan açıklama.
+  - Karar etiketi, okunur: `B-n`, `C-n`, `S2-n` ve `İ: NN-NNN` (virgüllü liste, satır sonunda bölünebilir). Okunmaz: `B-1/99`'daki `99`, `B-1–99` aralığının sonu, `İ: a ve b`'deki ikinci kimlik, harfli sonek (`B-3b`), tablo başlıkları (`P3`, `M1`, `Sorgu S13`).
+  - Yol, okunur: backtick içindeki ilk sözcük (`:satır`, `::test`, `#parça`, `\` ayracı düzeltilir); dokuz kök (tansu, tests, docs, .github, kurulum, kayit, .claude, .scratch, arsiv); büyük harfli kök `.md` adları, `pyproject.toml`, `requirements.lock.txt`;
+     Markdown `[m](hedef)`, `![r](hedef)`, `[kimlik]: hedef` hedefleri (dosyaya göre). Okunmaz: backtick dışındaki çıplak metin yolları, `./` ile başlayan yollar, kod çitleri içi ayrıca ele alınmaz, HTML bağlantıları (`<a href>`, `<img src>`), kod aralığındaki ikinci ve sonraki sözcükler,
+     `veri/`, `rapor/`, `gunluk/` çıktı klasörleri, şablon işaretli yollar. Yerel kök (`docs/sorgu`, `docs/strateji-taslak`) yoksa CI'da atlanır, varsa eksik dosya hatadır.
+  - Havuz: yalnız havuz klasörünün doğrudan altındaki `*.md` notları; alt klasörler ve `.md` olmayan dosyalar sayılmaz (`assets/` yalnız yol olarak denetlenir); düz sözcüklü adlar (`not-…`, `tansu-…`) yalnız tam adla kapsanır;
+     `-NN` kısa biçimi gevşektir (`-60)` gibi eksi bir sayı da o numaralı notu sayar; 7 not yalnız bu biçimle kapsanıyor); iki nota giden kısa atıf hatadır; hiçbir nota gitmeyen kısa atıf yok sayılır.
+  - `kayit/` adımı: silinen satır sayar. Satırı olmayan (boş) dosyanın silinmesi 0 görünür ve geçer (`test_bos_dosya_silmek_gecer_bilinen_sinir`); ikili dosya `-` olarak 1 sayılır.

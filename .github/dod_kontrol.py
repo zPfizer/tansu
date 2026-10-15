@@ -50,9 +50,12 @@ def _inceleme_hatasi(bolum):
     sorunlar = []
     if not any(re.fullmatch(r"Denetçi:[ \t]*\S.*", satir) for _, satir in bolum):
         sorunlar.append("Denetçi: alanı boş veya eksik")
-    if not any(
+    sonuclar = [satir for _, satir in bolum if re.match(r"\s*Sonuç:", satir)]
+    if len(sonuclar) > 1:
+        sorunlar.append(f"Sonuç: satırı tek olmalı ({len(sonuclar)} satır var)")
+    elif not any(
         re.fullmatch(r"Sonuç:[ \t]*(geçti|GEÇTİ|NOTLU GEÇTİ)[ \t]*", satir)
-        for _, satir in bolum
+        for satir in sonuclar
     ):
         sorunlar.append("Sonuç: geçti ya da NOTLU GEÇTİ satırı eksik")
     return "; ".join(sorunlar)

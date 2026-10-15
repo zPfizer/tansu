@@ -156,3 +156,28 @@ def test_kural_4_tansu_satiri_isaretsiz():
         + TANSU_HATASI
         + ".",
     ]
+
+
+@pytest.mark.parametrize(
+    "ek",
+    [
+        "Sonuç: KALDI\nSonuç: GEÇTİ",
+        "Sonuç: kaldı\nSonuç: geçti",
+        "Sonuç: GEÇTİ\nSonuç: GEÇTİ",
+        "Sonuç: GEÇTİ\n  Sonuç: NOTLU GEÇTİ",
+        "Sonuç: GEÇTİ\nSonuç:",
+    ],
+)
+def test_kural_5_sonuc_satiri_tek_olmali(ek):
+    govde = GECERLI.replace("Sonuç: GEÇTİ", ek)
+    assert hatalar(govde) == [
+        "Kural 5: ## Bağımsız inceleme bölümünde Sonuç: satırı tek olmalı ("
+        + str(len(ek.splitlines()))
+        + " satır var)."
+    ]
+
+
+def test_kural_5_sonuc_sablon_yorumu_satir_sayilmaz():
+    yorum = '<!-- CI accepts only the exact text "Sonuç: geçti". -->\n'
+    govde = GECERLI.replace("Sonuç: GEÇTİ", yorum + "Sonuç: GEÇTİ")
+    assert hatalar(govde) == []
