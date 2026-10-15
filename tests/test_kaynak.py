@@ -379,7 +379,7 @@ def test_evren_indir_ag_icin_yalniz_kaynagi_kullanir_borsapyye_dogrudan_cikmaz(
     # TASARIM 4: ağa çıkan tek yer `kaynak`. `__main__` şirket listesini `kaynak.sirket_kodlari` ile alır.
     import borsapy
 
-    from tansu import __main__ as giris
+    from tansu.__main__ import main
     from tansu import veri
 
     def yasak():
@@ -398,5 +398,5 @@ def test_evren_indir_ag_icin_yalniz_kaynagi_kullanir_borsapyye_dogrudan_cikmaz(
         kaynak, "kapanan_kodlar", lambda: pd.DataFrame({"kod": ["CCC"]})
     )
     monkeypatch.setattr(veri, "indir", sahte_indir)
-    assert giris._evren_indir(tmp_path) == "K1"
+    assert main(["evren-indir", "--kok", str(tmp_path)]) == 0
     assert indirilen == ["AAA", "BBB", "CCC"]
