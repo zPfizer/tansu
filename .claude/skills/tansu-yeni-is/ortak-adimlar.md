@@ -20,7 +20,7 @@ Merge `master` into the branch first. Then check the change by its type.
 Run the review in this order.
 1. Before Review, write the PR body draft with `Akış:` and `Çağrılan beceriler:` to `.scratch/<job>/pr-govde.md` of the main checkout `C:\Users\levent\Desktop\TANSU`, not of the worktree. An untracked file in the worktree makes `kurulum\kapi.ps1` print `kirli`. <!-- driftlint-ignore: local-only path of the main repository, absent in CI --> Open the PR as a draft (see "Pull request"). Give the path to the auditor.
 2. The orchestrator starts the two axes of `mattpocock-skills:code-review` itself, as two parallel Sonnet subagents. No auditor agent sits between them. Each subagent prompt says: "Do not start a subagent."
-3. The audit prompt asks for the verdict and the line `Yanlış iddia sayısı: N`. Apply AGENTS.md "Auditor and rounds" (false claim, doubt, second pass, error class). Copy the verdict line of the auditor word for word into `Denetçi kararı (aynen):`.
+3. The audit prompt asks for the verdict and the line `Yanlış iddia sayısı: N`. Apply docs/agents/is-kurallari.md "Auditor and rounds" (false claim, doubt, second pass, error class). Copy the verdict line of the auditor word for word into `Denetçi kararı (aynen):`.
 
 Both checks read `CODING_STANDARDS.md`, `DEFINITION_OF_DONE.md`, and the general standards file that `CODING_STANDARDS.md` points to. After a change in a calculation, search the changed modules for prose that states the formula. This covers docstrings, comments, report text, and HTML. Tie each one to its TASARIM sentence. When the coverage of a test changes, update the owning TASARIM sentence in the same commit.
 
@@ -30,7 +30,7 @@ Run `verification-before-completion`. Check the `## Tansu` items of `DEFINITION_
 ## Pull request
 Push the branch to `kaynak`. `mattpocock-skills:pr` and `.github/pull_request_template.md` write the PR body together.
 
-The PR body has an `Akış:` line with the flow skill used. The auditor checks the steps of that skill (AGENTS.md "Auditor and rounds"). `Çağrılan beceriler:` is a copy of the Skill calls of this session in call order. Do not write a skill that you did not call.
+The PR body has an `Akış:` line with the flow skill used. The auditor checks the steps of that skill (docs/agents/is-kurallari.md "Auditor and rounds"). `Çağrılan beceriler:` is a copy of the Skill calls of this session in call order. Do not write a skill that you did not call.
 
 Open a draft PR with this command chain: `git fetch -q kaynak && git merge-base --is-ancestor kaynak/master HEAD && git push -q -u kaynak <branch> && gh pr create --draft --base master --head <branch> --title "<title>" --body-file <pr-govde.md>`. After the verdict, fill `## Bağımsız inceleme`. Run `gh pr edit <N> --body-file <file>`, then `gh pr ready <N>`. The `dod` check skips a draft PR and runs at `gh pr ready`.
 

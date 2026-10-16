@@ -1033,7 +1033,7 @@ Adım 1–9 tamamlandı (MVP biletleri `.scratch/arsiv/tansu-mvp/issues/`, 05–
 7. **Simülatör** (iki bölme) + faiz + K2: tamamlandı (bilet 10, 11).
 8. **K1 + istatistik + deneme günlüğü;** boru hattı denetimi (5.12): tamamlandı (bilet 12, 13).
 9. **İki aileyi koş; rapor.** Kâğıt üstü izleme ve Görev Zamanlayıcı başlar: koşu ve görevler tamamlandı (bilet 14, 15;
-   ilk resmi koşu 05–06.10). Görevler 16.10'da kaldırıldı; bugünkü durum AGENTS.md "Task Scheduler". İki aile de Deneme; kâğıt üstü dönem başlamadı.
+   ilk resmi koşu 05–06.10). Görevler 16.10'da kaldırıldı; bugünkü durum `docs/agents/zamanlayici.md`. İki aile de Deneme; kâğıt üstü dönem başlamadı.
 10. **Gerçek BIST100** KAP endeks değişikliklerinden (paralel iş): bilet 16 (05.10), kısmi; sonuç §8 madde 2.
 
 ## 8. Açık sorular

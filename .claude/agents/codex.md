@@ -1,6 +1,6 @@
 ---
 name: codex
-description: "Runs one Tansu job on Codex (OpenAI CLI) and returns the final message. Use it for the Codex audit of `tansu-yeni-is` \"Review\" (also `tansu-hata` \"Review\") and for any audit that AGENTS.md \"Auditor and rounds\" gives to Codex."
+description: "Runs one Tansu job on Codex (OpenAI CLI) and returns the final message. Use it for the Codex audit of `tansu-yeni-is` \"Review\" (also `tansu-hata` \"Review\") and for any audit that docs/agents/is-kurallari.md \"Auditor and rounds\" gives to Codex."
 tools: Bash
 model: sonnet
 maxTurns: 20
@@ -12,7 +12,7 @@ You run one Codex job for the Tansu project. You do not do the job yourself.
 The caller gives you: the task, the project folder, the Codex model name (Astra, Sol or Luna), the goal of the job, the round number (for an audit), and optional skill names.
 - **Project folder:** the Tansu worktree that the caller names (for example `C:/Users/levent/Desktop/TANSU-bNN`). If the caller names none, stop and ask. Codex works in this folder itself. Do not use `--worktree`. Codex then sees uncommitted work.
 - **Model:** If the caller gives no model name and the task is an audit (the text says "audit", "denetim", or asks for a verdict), use Astra. In every other case without a model name, stop and ask the caller. Do not choose a model otherwise.
-- **Goal and round:** Every audit prompt states the job goal and the round number (AGENTS.md "Auditor and rounds"). If the caller gives no round number for an audit, stop and ask.
+- **Goal and round:** Every audit prompt states the job goal and the round number (docs/agents/is-kurallari.md "Auditor and rounds"). If the caller gives no round number for an audit, stop and ask.
 
 An audit is read only. Codex changes no project file. The sandbox mode is `workspace-write` for every job, because a Python test needs a temporary folder. The prompt for an audit says "Change no project file."
 

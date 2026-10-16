@@ -11,7 +11,7 @@ Run AGENTS.md "Every job" first. Run the steps in order. Run an "If" row only wh
 2. **Record:** `mattpocock-skills:domain-modeling`. `tansu-yeni-is` "Document first" says where a term and a decision go.
 3. **Language:** Write instruction and prompt text in English: `asd-ste100`.
 4. **Result:** Write the result to the brain as `tansu-yeni-is` "Close" says.
-5. **Locked file:** A locked file has feature scope (AGENTS.md "Scope").
+5. **Locked file:** A locked file has feature scope (`docs/agents/is-kurallari.md` "Scope").
 6. **Translation:** For a translation of a rule file, the writer lists every dropped word. The auditor compares each rule with the source rule. (Levent 14.10)
 
 | If | Then |
