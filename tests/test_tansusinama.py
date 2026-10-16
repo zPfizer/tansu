@@ -307,7 +307,8 @@ def test_ema_uctan_uca_tek_hisse_tek_hucre(tmp_path):
     # Al-tut: ilk geçerli AOF 02.02 = 103 → 110: 110·0,999/(103·1,001) − 1 = 0,0658274. Strateji al-tutu geçemez.
     # Özkaynak (dönem 02.02, 03.02, 04.02): 1,0; 1/1,001 = 0,999001; 0,999001·(110/104)·0,999 = 1,055579.
     # En büyük düşüş = 1/1,001 − 1 = −0,000999. Tutma 1 gün; maruziyet 1/3 (yalnız 03.02 kapanışı pozisyonda).
-    # Sinyalden sonraki 1 gün: kapanış(03.02)/kapanış(sinyal günü − 1 = 30.01) − 1 = 104/100 − 1 = 0,04; 3 ve 5 gün: satır yok.
+    # Sinyalden sonraki 1 gün (TASARIM 5.14: sinyal günü kapanışından k gün sonraki kapanışa): kapanış(03.02) / kapanış(sinyal
+    # günü 02.02) − 1 = 104/103 − 1 = 0,0097087; 3 ve 5 gün: satır yok. (Önceki spec bir önceki kapanışa bölüyordu: 104/100 − 1.)
     # B düz 100: sinyal yok → net 0,0 → para çıkmaz; al-tut 0,999/1,001 − 1 = −0,001998.
     kayit._yaz(
         {
@@ -386,7 +387,7 @@ def test_ema_uctan_uca_tek_hisse_tek_hucre(tmp_path):
     assert o["ort_tutma"] == pytest.approx(1.0)
     assert o["maruziyet"] == pytest.approx(1 / 3)
     assert o["kar_carpani"] is None
-    assert o["ileri_1"] == pytest.approx(0.04) and o["ileri_3"] is None
+    assert o["ileri_1"] == pytest.approx(0.0097087, abs=1e-7) and o["ileri_3"] is None
     assert o["ileri_5"] is None
     assert "şüpheli: aşırı uyum" in o["bayraklar"] and "az işlem" in o["bayraklar"]
     assert a["bayraklar"] == o["bayraklar"]
