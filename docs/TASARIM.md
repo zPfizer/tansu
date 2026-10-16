@@ -862,7 +862,8 @@ Levent 16.10: "Tansu ne diyorsa onu yap." Komut: `python -m tansu tansu-sinama`.
   KURALLAR §3'tekidir: EMA 27 hücre; çift Z penceresi × Z eşiği, 6 hücre (seçim p'si yıllık çift seçimine aittir, burada yok).
 - **Dönem:** Tansu modu bütün dönemdir: "Biz model eğitmedik kardeşim," (Ham, tweet-atr-yon-degisimi-dip-tepe-1927454690960101506).
   Dönem, 2015-12-01 (5.1) ile ısınmanın bittiği günün (tek hisse 500, çift 252 işlem günü; 5.1) geç olanından veri sonuna dek.
-  Isınması dolmayan hisse ve 252 ortak günü olmayan çift sınanmaz; adları çıktıda `atlanan` listesinde yazılır.
+  Çiftte dönem başı, bu iki tarihten sonraki ilk gündür ve iki bacağın da o gün kapanışı ve AOF'u vardır; böyle gün yoksa çift
+  sınanmaz. Isınması dolmayan hisse ve 252 ortak günü olmayan çift de sınanmaz; adları çıktıda `atlanan` listesinde yazılır.
 - **İleri yürüme (ikinci mod):** "EMA değeri walk forward le optimzie edilerek model oluşturulmuştur." (Ham,
   gorsel-paket-75-isctr-ad-ema-walk-forward). YORUM (bizim): her takvim yılı test yılıdır; seçim o yıldan önce kapanmış
   bütün işlemlerle (genişleyen pencere) aynı sağlam bölge kuralıyla yapılır; en az 2 tam eğitim yılı; test yılında seçilen
@@ -879,7 +880,8 @@ Levent 16.10: "Tansu ne diyorsa onu yap." Komut: `python -m tansu tansu-sinama`.
   Calmar, ortalama tutma (gün), maruziyet, kazanç/kayıp oranı. Ek: işlem getirisinin medyanı ("Ortalamaları temel alan
   indikatörler hava civadır Medyan temelli çalışın", Ham, tweet-medyan-temelli-finansal-indikatorler) ve sinyalden 1, 3 ve 5 gün
   sonraki getirinin medyanı ("sonraki 1, 3 ve 5 günde ne olmuş bakın", Ham, not-backtest-giris-sadeligi-risk-islem-gunlugu).
-  Tanım: sinyal günü kapanışından k işlem günü sonraki kapanışa getiri (k = 1, 3, 5).
+  Tanım: sinyal günü kapanışından k işlem günü sonraki kapanışa getiri (k = 1, 3, 5); k işlem günü = hissenin kapanışı olan
+  k gün (kapanışı olmayan gün sayılmaz; çiftte işlem gören bacağın günleri).
   YORUM (bizim): Sharpe = günlük getiri ortalaması / sapması × √252, risksiz getiri 0; Calmar = yıllık bileşik getiri /
   |en büyük düşüş|; maruziyet = pozisyonda kapanan gün / dönem günü.
 - **Şüpheli bayrakları** (etikettir, süzgeç değil): kazanma oranı ≥ %90 → "şüpheli: aşırı uyum" ("%90'lar ise mümkün
