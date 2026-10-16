@@ -11,9 +11,9 @@ Sütun "Durum": `uygulandı` ya da `kapsam dışı` (neden yazılı). "Tür": Ta
 | 2 | %90 isabet aşırı uyumdur | gorsel-paket-129-doas-lojistik-regresyon-hacim-rsi-filtreli-strateji: "Finansal piyasalarda %70 gibi bir değer yakalarsanız bu harika bir sonuçtur. %90'lar ise mümkün değildir." | 5.14 Şüpheli bayrakları | `olculer` (`SUPHELI_KAZANMA`) | `test_bayraklar_asiri_uyum_az_islem_ve_temiz` | uygulandı | Tansu; eşik YORUM |
 | 3 | Maliyet hesaba katılır | gorsel-paket-63-bist-momentum-dey-backtest-denetimi: "İşlem maliyetleri, vergiler ve likidite sorunu olan hisseler hesaba katılmadı." | 5.14 Masraf | `islem_getirisi` | `test_islem_getirisi_masrafli_cikis_bolu_giris` | uygulandı (maliyet eklendi; vergi ve likidite yok) | YORUM |
 | 4 | İleri yürüme | gorsel-paket-75-isctr-ad-ema-walk-forward: "EMA değeri walk forward le optimzie edilerek model oluşturulmuştur." | 5.14 İleri yürüme | `ileri` | `test_ileri_yil_yil_secim_nakit_yili_ve_dikis`, `test_ileri_gelecege_bakmaz_eski_yil_sonraki_secimi_degistirir_oncekini_degil` | uygulandı | Tansu; yıl ve pencere YORUM |
-| 5 | Sinyalden 1, 3, 5 gün sonrası | not-backtest-giris-sadeligi-risk-islem-gunlugu: "Backtest yapın. Örneğin 26 Ağustos'ta hangi hisseleri aday seçtiniz sonraki 1, 3 ve 5 günde ne olmuş bakın." | 5.14 Ölçüler | `_sonraki` | `test_ema_uctan_uca_tek_hisse_tek_hucre` | uygulandı | Tansu; medyan YORUM |
+| 5 | Sinyalden 1, 3, 5 gün sonrası | not-backtest-giris-sadeligi-risk-islem-gunlugu: "Backtest yapın. Örneğin 26 Ağustos'ta hangi hisseleri aday seçtiniz sonraki 1, 3 ve 5 günde ne olmuş bakın." | 5.14 Ölçüler | `_sonraki` | `test_ema_uctan_uca_tek_hisse_tek_hucre`, `test_sonraki_gecersiz_gun_sayilmaz` | uygulandı | Tansu; medyan YORUM |
 | 6 | Araçta "Backtest Modu" | tweet-abcd-patern-d-hedefi-backtest-2092343114971095065: Ham "MARKA"; "Backtest Modu" yalnız görsel metninde | yok | yok | yok | kapsam dışı: AB=CD ikinci dalga (TASARIM 3) | Tansu |
-| 7 | Bütün dönem, eğitim/test bölmesi yok | tweet-atr-yon-degisimi-dip-tepe-1927454690960101506: "Biz model eğitmedik kardeşim," | 5.14 Dönem | `_ema_donem`, `calistir` | `test_ema_uctan_uca_tek_hisse_tek_hucre` | uygulandı | Tansu |
+| 7 | Bütün dönem, eğitim/test bölmesi yok | tweet-atr-yon-degisimi-dip-tepe-1927454690960101506: "Biz model eğitmedik kardeşim," | 5.14 Dönem, İki tanım | `_ema_donem`, `cift_isleri`, `calistir` | `test_ema_uctan_uca_tek_hisse_tek_hucre`, `test_ema_ileri_son_yil_donemin_son_gunu`, `test_cift_son_satir_karantina_karantina_cikisi_veri_sonu_degil` | uygulandı | Tansu; iki tanım YORUM |
 | 8 | Takvim ayı ortalaması | tweet-aylik-getiri-mevsimsellik-nisan-sat-agustos-al-1782838495599378879: "son 20 yılın her takvim ayı % getirilerinin ortalamasını gösterir" | yok | yok | yok | kapsam dışı: mevsimsellik kodda aile değil (KURALLAR D) | Tansu |
 | 9 | Az veriye güvenme | tweet-aylik-getiri-p-value-sharpe-skewness-eleme-2009899784748794098: "veri sayısı az olduğu için (T-Statistic anlamlı çıkmamış) bu sonuçlara KRDMB kadar güvenemeyiz." | 5.14 Şüpheli bayrakları | `olculer` (`AZ_ISLEM`) | `test_bayraklar_asiri_uyum_az_islem_ve_temiz` | uygulandı | Tansu; eşik 5 Tansu'nun tablosu |
 | 10 | Olasılığa göre kasa payı | tweet-aylik-mevsimsellik-olasilik-kasa-ayari-2009731947375854034: "İstatistik bir kristal küre değildir, geleceği kesin olarak göstermez ama size pusula olur" | yok | yok | yok | kapsam dışı: pozisyon büyüklüğü (Kelly ile birlikte Levent'te) | Tansu |
@@ -70,4 +70,16 @@ TASARIM 5.14'te kullanılan iki tam Ham alıntısı:
 - tweet-medyan-temelli-finansal-indikatorler: "Ortalamaları temel alan indikatörler hava civadır Medyan temelli çalışın" (Ölçüler).
 - tweet-sma-optimizasyon-saglam-bolge-asiri-uyum-1986899794032304554: "Eğer en iyi ayarları bile para kazandırmıyorsa, o stratejiyle vakit kaybetmeyi bırakırsın." (Para çıkmaz).
 
-Koşu: `kayit/deneme.jsonl` `olay=tansu_sinama`, koşu 20261016T201747-0a886d (anlık görüntü 20261014-1930).
+## Sürüm 2 (17.10): iki tanım ve uç durumlar (Tansu maddesi değil; YORUM, TASARIM 5.14 "İki tanım")
+
+Sürüm 1 3. denetim turunun bulguları ve testleri (hepsi b464df1 koduyla kaldı, yeni kodla geçti; `kirmizi-v2.txt`):
+
+| Uç durum | Kod (`tansu/tansusinama.py`) | Test |
+|---|---|---|
+| Son gün karantinalı: karantina çıkışı, veri sonu değil | `cift_isleri`, `cift_tablolari` | `test_cift_son_satir_karantina_karantina_cikisi_veri_sonu_degil`, `test_cift_sonsuz_son_kapanis_son_gecerli_fiyat_ve_karantina_cikisi` |
+| İleri yürümenin son yılı dönemin son günü | `_ema_donem`, `_ema_is` | `test_ema_ileri_son_yil_donemin_son_gunu` |
+| Sıfır ya da sonsuz fiyat yok sayılır | `_ema_gecerli`, `_cift_gecerli`, `_ema_is`, `_cift_is` | `test_ema_al_tut_donem_basi_aof_sifir_sonraki_gecerli_gun`, `test_ema_al_tut_son_kapanis_sonsuz_son_gecerli_kapanis`, `test_sonraki_gecersiz_gun_sayilmaz` |
+| AOF'u olmayan gün dönem başı olamaz | `_ema_donem`, `cift_isleri` | `test_ema_donem_basi_sifir_aof_tek_gun_atlanir`, `test_cift_donem_basi_gecersiz_gun_atlanir[aof_sifir]`, `test_cift_donem_basi_gecersiz_gun_atlanir[limit_asimi]` |
+| Tek günlük çift dönemi | `cift_isleri`, `_sonuc` (`donem`) | `test_cift_tek_gunluk_donem_gecersiz_fiyat_atlanir`, `test_cift_tek_gunluk_donem_donem_alani` |
+
+Koşu (sürüm 1, eski kod): `kayit/deneme.jsonl` `olay=tansu_sinama`, koşu 20261016T201747-0a886d (anlık görüntü 20261014-1930).
