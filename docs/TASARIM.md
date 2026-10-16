@@ -863,7 +863,10 @@ Levent 16.10: "Tansu ne diyorsa onu yap." Komut: `python -m tansu tansu-sinama`.
 - **Dönem:** Tansu modu bütün dönemdir: "Biz model eğitmedik kardeşim," (Ham, tweet-atr-yon-degisimi-dip-tepe-1927454690960101506).
   Dönem, 2015-12-01 (5.1) ile ısınmanın bittiği günün (tek hisse 500, çift 252 işlem günü; 5.1) geç olanından veri sonuna dek.
   Çiftte dönem başı, bu iki tarihten sonraki ilk gündür ve iki bacağın da o gün kapanışı ve AOF'u vardır; böyle gün yoksa çift
-  sınanmaz. Isınması dolmayan hisse ve 252 ortak günü olmayan çift de sınanmaz; adları çıktıda `atlanan` listesinde yazılır.
+  sınanmaz. Dönem tek gün olabilir (işlem olmaz, net 0,0, al-tut yine hesaplanır). Dönem sonu hissenin (çiftte iki bacağın
+  erken biten) son satırıdır; kapanışı olmayan karantina günü dahildir, kapanış ileri doldurulur, al-tut son geçerli
+  kapanıştan satar. Isınması dolmayan ya da dönem başından itibaren AOF'u olmayan hisse ve 252 ortak günü olmayan çift de
+  sınanmaz; adları çıktıda `atlanan` listesinde yazılır.
 - **İleri yürüme (ikinci mod):** "EMA değeri walk forward le optimzie edilerek model oluşturulmuştur." (Ham,
   gorsel-paket-75-isctr-ad-ema-walk-forward). YORUM (bizim): her takvim yılı test yılıdır; seçim o yıldan önce kapanmış
   bütün işlemlerle (genişleyen pencere) aynı sağlam bölge kuralıyla yapılır; en az 2 tam eğitim yılı; test yılında seçilen

@@ -248,12 +248,16 @@ def _sonuc(kimlik, izgara, tablolar, hucre_raporu, al_tut, bas, son) -> dict:
 
 
 def _ema_donem(m, p, bas):
-    """(dönem başı, dönem sonu) ya da None. Başı: `bas` ile ısınmanın bittiği günün geç olanı; sonu: son geçerli kapanış."""
+    """(dönem başı, son geçerli kapanış günü) ya da None. Başı: `bas` ile ısınmanın bittiği günün geç olanı. Dönem başından
+    itibaren hiç AOF yoksa (al-tut alınamaz) ya da dönem boşsa None (TASARIM 5.14 Dönem). Dönem satırları `m`'nin son
+    satırına dek sürer (`_ema_is`): son satır kapanışsız karantina günü olabilir."""
     f = m.dropna(subset=["kapanis"])
     if len(f) < p.isinma:
         return None
     bas = max(pd.Timestamp(bas), f.index[p.isinma - 1])
-    return (bas, f.index[-1]) if bas <= f.index[-1] else None
+    if bas > f.index[-1] or not m["aof"].loc[bas:].notna().any():
+        return None
+    return bas, f.index[-1]
 
 
 def _ema_egri(t, kap, bas):
@@ -298,7 +302,7 @@ def ema_tablolari(m, p, izgara, bas) -> list:
 def _ema_is(ad, m, p, izgara, bas) -> dict:
     tablolar = ema_tablolari(m, p, izgara, bas)
     bas, son = _ema_donem(m, p, bas)
-    kap = m["kapanis"].ffill().loc[:son]
+    kap = m["kapanis"].ffill()  # motorun çıkış günleri `m`'nin her satırı olabilir
     f = m["kapanis"].dropna()  # k işlem günü: hissenin kapanışı olan günler
     c = f.to_numpy()
     ilk_aof = float(m["aof"].loc[bas:].dropna().iloc[0])
@@ -313,7 +317,7 @@ def _ema_is(ad, m, p, izgara, bas) -> dict:
         izgara,
         tablolar,
         hucre_raporu,
-        islem_getirisi(ilk_aof, float(kap.iloc[-1])),
+        islem_getirisi(ilk_aof, float(f.iloc[-1])),
         bas,
         son,
     )
@@ -508,10 +512,10 @@ def cift_isleri(anlik, sektor, semboller, bas, izgara) -> tuple:
             ilk = max(bas_konum, int(ortak[CIFT_ISINMA - 1]))
             tam = (var & aof)[:, j].all(axis=1)  # iki bacağın da kapanışı ve AOF'u var
             uygun = np.flatnonzero(tam[ilk:])
-            bas_k = ilk + int(uygun[0]) if len(uygun) else son_k
-            if bas_k >= son_k:
+            if not len(uygun):  # geçerli dönem başı satırı yok
                 atlanan.append(f"{y}-{x}")
                 continue
+            bas_k = ilk + int(uygun[0])  # en çok son_k: tek günlük dönem sınanır
             kes = slice(0, son_k + 1)
             isler.append(
                 (
