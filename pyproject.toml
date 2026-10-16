@@ -12,6 +12,7 @@ dependencies = [
     "tzdata==2026.5",
     "borsapy==0.11.0",
     "xlrd==2.0.2",
+    "psutil==7.2.2",
 ]
 
 [project.optional-dependencies]
@@ -24,4 +25,7 @@ packages = ["tansu"]
 pythonpath = ["."]
 
 [tool.ruff.lint]
-select = ["F", "E9", "ERA001"]
+select = ["F", "E9", "ERA001", "BLE001", "S110", "B017", "PLW1514"]
+# PLW1514 is a preview rule. With explicit-preview-rules, only the selected preview rules turn on.
+preview = true
+explicit-preview-rules = true

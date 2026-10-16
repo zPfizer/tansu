@@ -20,6 +20,7 @@ This file owns the contract of the `Status:` line. `triage-labels.md` owns only 
 - `done (PR #N, hash)`: merged. The parentheses name the PR and the merge commit.
 - `done (kısa not)`: delivered, not merged. The parentheses hold one short note: what is delivered and what moved elsewhere; the branch name is optional (example: ticket 06 of `belge-hizasi`). When the merge happens, the value becomes `done (PR #N, hash)`.
 - `resolved`: the closing value of a wayfinder child ticket (see "Wayfinding operations").
+- `done`: the legacy value of the closed tickets in `.scratch/arsiv/tansu-mvp/issues/` (before 14.10). New tickets use `done (...)` as above.
 
 A ticket is closed when its value starts with `done` or `resolved`. (bilet 05, 14.10)
 

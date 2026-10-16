@@ -15,7 +15,7 @@ The shared steps are in [ortak-adimlar.md](../tansu-yeni-is/ortak-adimlar.md). R
 5. **Review:** As `tansu-yeni-is` "Review".
 6. **Proof:** As `tansu-yeni-is` "Proof".
 7. **Pull request, merge, and close:** As `tansu-yeni-is` "Pull request", `tansu-yeni-is` "Merge", and `tansu-yeni-is` "Close".
-8. **Lesson:** `mattpocock-skills:retro`. Record the mistake as `CODING_STANDARDS.md` "Mistakes" says.
+8. **Lesson:** `mattpocock-skills:retro`. Record the mistake as the "Mistakes" section of the general standards file says. `CODING_STANDARDS.md` points to that file.
 
 | If | Then |
 |---|---|

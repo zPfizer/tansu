@@ -1,13 +1,15 @@
-"""Komut girişi: `python -m tansu sadakat | kayit | sinama | denetim | evren-indir | sektor-indir | gunluk [tarih] [--kok veri] [--kimlik KIMLIK] [--resmi] [--son] [--varyant AD]` (TASARIM 3; `--varyant` yalnız kayit ve sinama, varsayılan bugun)."""
+"""Komut girişi: `python -m tansu sadakat | kayit | sinama | tansu-sinama | denetim | evren-indir | sektor-indir | gunluk [tarih] [--kok veri] [--kimlik KIMLIK] [--resmi] [--son] [--varyant AD] [--isci N] [--hisse N] [--aile AILE] [--sektor-kok veri]` (TASARIM 3, 5.14; `--varyant` yalnız kayit ve sinama, varsayılan bugun)."""
 
 import argparse
 import datetime as dt
+import hashlib
 import json
 import sys
 from pathlib import Path
 
 from tansu import (
     aileler,
+    ciftbolme,
     denetim,
     evren,
     gunluk,
@@ -15,6 +17,7 @@ from tansu import (
     kaynak,
     sadakat,
     simulator,
+    tansusinama,
     veri,
 )
 
@@ -96,6 +99,33 @@ def _denetim(n, tekrar) -> int:
     return 0 if s["gecti"] else 1
 
 
+def _tansu_sinama(a, kok: Path) -> int:
+    """Tansu sınaması (TASARIM 5.14): koşar, `rapor/tansu-sinama-<koşu>.json` ve günlük satırını yazar, özeti basar."""
+    kimlik = a.kimlik or _en_yeni(kok)
+    anlik = veri.oku(kimlik, kok)
+    aileler = (a.aile,) if a.aile else tansusinama.AILELER
+    sektor = anlik.sektor
+    if not sektor and ciftbolme.AILE in aileler:
+        sektor = tansusinama.sektor_oku(a.sektor_kok)[0]
+    s = tansusinama.calistir(
+        anlik, sektor or {}, aileler, isci=a.isci, hisse=a.hisse, ilerleme=print
+    )
+    manifest = kok / "ag" / kimlik / "manifest.json"
+    s["manifest_sha256"] = hashlib.sha256(manifest.read_bytes()).hexdigest()
+    yol = tansusinama.yaz(s)
+    for aile, f in s["aileler"].items():
+        o = f["ozet"]
+        print(
+            f"{aile}: {o['toplam']} iş, sağlam bölge var {o['saglam_bolge_var']}, yok {o['saglam_bolge_yok']}, "
+            f"para çıkmaz {o['para_cikmaz']}; seçilenlerde al-tutu geçen {o['altut_gecen']}; "
+            f"atlanan {len(f['atlanan'])}"
+        )
+    print(
+        f"Tansu sınaması {s['kosu_id']}: {s['makine']['isci']} işçi, {s['makine']['sure_sn']} sn, {yol}"
+    )
+    return 0
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="tansu")
     ap.add_argument(
@@ -104,6 +134,7 @@ def main(argv=None) -> int:
             "sadakat",
             "kayit",
             "sinama",
+            "tansu-sinama",
             "denetim",
             "evren-indir",
             "sektor-indir",
@@ -139,11 +170,27 @@ def main(argv=None) -> int:
         default="bugun",
         help="kayit ve sinama: EMA ailesi varyantı (KURALLAR §3 Modül 1)",
     )
+    ap.add_argument(
+        "--isci", type=int, help="tansu-sinama: işçi sayısı (varsayılan: makineye göre)"
+    )
+    ap.add_argument("--hisse", type=int, help="tansu-sinama: adına göre ilk N hisse")
+    ap.add_argument(
+        "--aile",
+        choices=tansusinama.AILELER,
+        help="tansu-sinama: tek aile (varsayılan ikisi de)",
+    )
+    ap.add_argument(
+        "--sektor-kok",
+        default="veri",
+        help="tansu-sinama: günlük anlık görüntüde sektör yoksa sektörün okunacağı kök",
+    )
     a = ap.parse_args(argv)
     kok, p = Path(a.kok), aileler.VARYANTLAR[a.varyant]
     try:
         if a.komut == "denetim":
             return _denetim(a.n, a.tekrar)
+        if a.komut == "tansu-sinama":
+            return _tansu_sinama(a, kok)
         if a.komut == "gunluk":
             return gunluk.gunluk(a.tarih or dt.datetime.now(veri.ISTANBUL).date(), kok)
         if a.komut == "evren-indir":
