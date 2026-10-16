@@ -71,10 +71,19 @@ def test_dizin_kaynak_degerini_yinelemez():
     assert bulunan == []
 
 
-def test_coding_standards_seen_once_ve_rules():
-    seen = _bolum("CODING_STANDARDS.md", "## Seen once")
-    assert [s for s in seen if s.startswith("- 15.10")] == []
-    assert "Read the whole note" in "\n".join(_bolum("CODING_STANDARDS.md", "## Rules"))
+def test_coding_standards_atif_ve_tansu_kurallari():
+    # Karar S1 (Levent 17.10): genel kurallar ortak dosyada durur; bu dosya yalnız Tansu kurallarını taşır.
+    metin = (KOK / "CODING_STANDARDS.md").read_text(encoding="utf-8")
+    eski = [
+        s
+        for s in metin.splitlines()
+        if s.startswith(("## Rules", "## Mistakes", "## Seen once"))
+    ]
+    assert eski == []
+    assert "kod-standartlari-genel.md" in metin
+    tansu = "\n".join(_bolum("CODING_STANDARDS.md", "## Tansu"))
+    assert "Read the whole note" in tansu
+    assert "Define the boundary before the code" in tansu
 
 
 def test_settings_deny_okuma_kabuklarini_engeller():

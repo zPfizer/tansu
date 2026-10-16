@@ -20,7 +20,7 @@ Each fact has one owner file. The other files only give a reference to it. Read 
 | `AGENTS.md` | the entry, the working rules, the current state, the job rules (Every job, Scope, Who writes, Auditor and rounds), and the work flow table |
 | `.claude/skills/` | the work flow procedures, one skill per job type |
 | `docs/strateji-taslak/`, `docs/strateji-modulleri-taslak.md` (local, not in git) | proposals that wait for approval. They own no fact. They are outside the drift check. These local files need not exist <!-- driftlint-ignore: local-only, gitignored, absent in CI --> |
-| `CODING_STANDARDS.md`, `DEFINITION_OF_DONE.md` | the code format and the done criteria (`## Tansu`) |
+| `CODING_STANDARDS.md`, `DEFINITION_OF_DONE.md` | the Tansu code rules (`## Tansu`; the general rules are in the file that `CODING_STANDARDS.md` points to) and the done criteria (`## Tansu`) |
 | `docs/sorgu/sonuc-3-4.md`, `docs/sorgu/izleme/karar.md` (local, not in git) | the reasons for the decisions (read them when necessary and when they exist) <!-- driftlint-ignore: local-only, gitignored, absent in CI --> |
 
 The drift check covers all these files. Correct a file when it contradicts another file, contains old information,
@@ -140,8 +140,8 @@ Each skill lives in `.claude/skills/<name>/SKILL.md` and owns the steps of its f
   with `==`. A CI tool outside Python is pinned to an exact version in the workflow file.
 
 ## Standards (Standartlar)
-`CODING_STANDARDS.md` and `DEFINITION_OF_DONE.md` are the standards of Tansu. Tansu keeps its own copy. No shared original exists since 15.10 (Levent 15.10).
-The `## Tansu` section at the end of each file holds the Tansu-only items. `tansu-yeni-is` "Review" reads both files.
+`CODING_STANDARDS.md` and `DEFINITION_OF_DONE.md` are the standards of Tansu. `DEFINITION_OF_DONE.md` is Tansu's own copy. No shared original exists since 15.10 (Levent 15.10).
+`CODING_STANDARDS.md` is different since 17.10 (Levent 17.10): it points to the shared general file and holds only the Tansu items. The `## Tansu` section at the end of each file holds the Tansu-only items. `tansu-yeni-is` "Review" reads both files and the general file.
 
 ## Agent skills
 

@@ -126,7 +126,7 @@ Sonuç: ±%10 tüm dönem için DOĞRU DEĞİL. 2015-11-30 - 2020-03-12 arası m
 
 ## 6. EVDS: politika faizi, TLREF, mevduat faizi
 
-- EVDS taşındı: https://evds3.tcmb.gov.tr (eski evds2 kapandı; kaynak: https://apideposu.com/tr/blog/tcmb-evds-ve-kur-api-rehberi ve borsapy `_providers/evds.py` satır 3-13, ikincil kaynak). 
+- EVDS taşındı: https://evds3.tcmb.gov.tr (eski evds2 kapandı; kaynak: https://apideposu.com/tr/blog/tcmb-evds-ve-kur-api-rehberi ve borsapy `_providers/evds.py` satır 3-13, ikincil kaynak).
 - API anahtarı ZORUNLU (ücretsiz). Kayıt: evds3.tcmb.gov.tr -> BENİM SAYFAM -> anahtarı kopyala. Anahtar HTTP başlığı `key` olarak gönderilir (26.08.2024 değişikliği, borsapy `evds.py` satır 321-323). `bp.set_evds_key(...)` veya `EVDS_API_KEY` ortam değişkeni. Oran limiti belgesi bulunamadı (doğrulanmadı). Bu oturumda anahtarımız olmadığı için veri çekilmedi; yalnız katalog araması (anahtarsız) çalıştı.
 - Seri kodları (katalog araması, `bp.evds_search`, ölçüm; veri doğrulanmadı):
   - TLREF: `TP.BISTTLREF.ORAN` (oran), `TP.BISTTLREF.KAPANIS/DUSUK/YUKSEK` (endeks). Günlük (iş günü). TLREF hesaplamaya 2018-12-28, yayına 2019-06-17'de başladı (https://www.borsaistanbul.com/tr/sayfa/179/tlref-turk-lirasi-gecelik-referans-faiz-orani aramasından; Eylül 2019 kuralları: https://www.borsaistanbul.com/files/tlref-turk-lirasi-gecelik-referans-faiz-orani-kurallari-2019-eylul.pdf). 2015-2018 için TLREF YOK.

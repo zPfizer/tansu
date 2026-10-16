@@ -22,7 +22,7 @@ Run the review in this order.
 2. The orchestrator starts the two axes of `mattpocock-skills:code-review` itself, as two parallel Sonnet subagents. No auditor agent sits between them. Each subagent prompt says: "Do not start a subagent."
 3. The audit prompt asks for the verdict and the line `Yanlış iddia sayısı: N`. Apply AGENTS.md "Auditor and rounds" (false claim, doubt, second pass, error class). Copy the verdict line of the auditor word for word into `Denetçi kararı (aynen):`.
 
-Both checks read `CODING_STANDARDS.md` and `DEFINITION_OF_DONE.md`. After a change in a calculation, search the changed modules for prose that states the formula. This covers docstrings, comments, report text, and HTML. Tie each one to its TASARIM sentence. When the coverage of a test changes, update the owning TASARIM sentence in the same commit.
+Both checks read `CODING_STANDARDS.md`, `DEFINITION_OF_DONE.md`, and the general standards file that `CODING_STANDARDS.md` points to. After a change in a calculation, search the changed modules for prose that states the formula. This covers docstrings, comments, report text, and HTML. Tie each one to its TASARIM sentence. When the coverage of a test changes, update the owning TASARIM sentence in the same commit.
 
 ## Proof
 Run `verification-before-completion`. Check the `## Tansu` items of `DEFINITION_OF_DONE.md`.

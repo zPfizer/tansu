@@ -190,7 +190,8 @@ yükseği/düşüğüne koşullu. Ölçütler kısa kendi kodumuzdur. (A3, M1, S
     (`sektor_kapsam`: hedef, var, listede olmayan, alınamayan) tutar. Koşu yeni kimlikle yapılır.
 - **TradingView kaynaklı veri kullanılmaz.** Koşullar makineyle işlemeyi yasaklıyor.
 - **Kullanım koşulları** (bilet 01, `docs/arastirma/kullanim-kosullari-fiyat-adimi.md`):
-  - İş Yatırım'ın robots.txt dosyası `/_layouts/` yolunu yasaklıyor. Kullanım sözleşmesi bulunamadı.
+  - İş Yatırım'ın robots.txt dosyası `/_layouts/` yolunu yasaklıyor.
+  - İş Yatırım Uyarı Notu (https://www.isyatirim.com.tr/tr-tr/urunler/Sayfalar/uyari-notu.aspx, 16.10 2026'da okundu) "açık iznimiz olmaksızın … çoğaltılamaz, dağıtılamaz" der ve şunu yazar: "BIST piyasalarında oluşan tüm verilere ait telif hakları tamamen BIST'e ait olup, bu veriler tekrar yayınlanamaz."
   - Kişisel ve ticari olmayan kullanım sürer; ayak izi küçük tutulur:
     - hisse başına günde bir istek
     - istekler arası 1 sn
