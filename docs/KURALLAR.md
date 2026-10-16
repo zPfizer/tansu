@@ -284,7 +284,7 @@ tweet-envanter-azaltma-monte-carlo-pnl-1924523925683274094 · proje anlatısı: 
 tweet-evds-api-mevduat-faizi-cekme-1766868425815535946 · veri çekme kodu (EVDS API, seri TP.TRY.MT02: TL 3 aya kadar mevduat faizi) ve makro görüş (faiz, enflasyon); kural öğesi yok
 tweet-excel-degerleme-calismasi-koda-donusumu · değerleme, kapsam dışı: TASARIM §3
 tweet-fcfe-ddm-capraz-kontrol-degerleme-motoru · değerleme, kapsam dışı: TASARIM §3
-tweet-fibo-144-bar-786-bandi-1842305345110302780 · tarama çıktısı, kural öğesi yok (konu: C §23); tek hisse (AKSA) grafiği, Tansu taramanın @fiboborsa stratejisinden çıktığını söylüyor
+tweet-fibo-144-bar-786-bandi-1842305345110302780 · tarama çıktısı, kural öğesi yok (konu: C §23); tek hisse (AKSA) grafiği; @fiboborsa'ya yanıt: "Python taramasından çıkan hisselerden biri"
 tweet-fibo-786-bandi-tepki-teyit-gostergeleri-1847021977669628220 · tarama çıktısı, kural öğesi yok (konu: C §23); MACKO ve ULUUN için gösterge ekranı §23'teki ekranla aynı, eşik yok
 tweet-fibonacci-78-6-tepki-taramasi-1843361242519617709 · tarama çıktısı, kural öğesi yok (konu: C §23); IHAAS için EMA 89/144/233 ekranı §23/§24'te var
 tweet-fibonacci-786-bandi-tepki-tarama-1851718708936282217 · tarama çıktısı, kural öğesi yok (konu: C §23); 30.10.2024 tarama listesi, EUREN grafiği
