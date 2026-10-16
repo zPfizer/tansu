@@ -4,7 +4,6 @@ Testler gerçek git depoları kurar: uzak (bare), ana depo (uzak adı `kaynak`) 
 """
 
 import os
-import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -12,8 +11,6 @@ from pathlib import Path
 import pytest
 
 from kurulum.oturum_baslangic import guncelle
-
-pytestmark = pytest.mark.skipif(shutil.which("git") is None, reason="git yok")
 
 GERI = "TANSU master kaynak/master'ın {} kayıt gerisinde; kurallar eski olabilir"
 
@@ -217,6 +214,18 @@ def test_ayrik_head_degismez_ve_uyarir(depo):
     assert _git(ana, "branch", "--show-current") == ""
 
 
+def test_bare_depo_ana_agac_degildir_ve_degismez(depo, tmp_path):
+    ana, yan = depo
+    bare = tmp_path / "bare.git"
+    subprocess.run(["git", "clone", "-q", "--bare", str(ana), str(bare)], check=True)
+    _git(bare, "remote", "add", "kaynak", str(ana))
+    _git(bare, "config", "remote.kaynak.fetch", "+refs/heads/*:refs/heads/*")
+    _kayit(ana, "bare-den-ileri")
+    onceki = _git(bare, "show-ref")
+    assert guncelle(bare) == ""
+    assert _git(bare, "show-ref") == onceki
+
+
 def _calistir(ana, cwd):
     """Betiği kancanın çalıştırdığı gibi çalıştırır: depo CLAUDE_PROJECT_DIR ile, cwd başka yerde."""
     betik = Path(__file__).resolve().parents[1] / "kurulum" / "oturum_baslangic.py"
@@ -235,6 +244,27 @@ def test_betik_depoyu_claude_project_dir_ile_bulur_ve_ilerletir(depo, tmp_path):
     s = _calistir(ana, tmp_path)
     assert (s.returncode, s.stdout) == (0, "")
     assert _git(ana, "rev-parse", "master") == _git(yan, "rev-parse", "HEAD")
+
+
+def test_utf8_olmayan_git_stderr_betigi_bozmaz(depo, tmp_path, monkeypatch):
+    # Uzak yardımcı süreç stderr'e 0xff yazar ve çıkar; kanca stderr'e iz bırakmadan satırı yazmalı.
+    ana, yan = depo
+    yardimci = tmp_path / "bozuk.py"
+    yardimci.write_text(
+        "import sys\nsys.stderr.buffer.write(bytes([255]))\nsys.exit(1)\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("GIT_CONFIG_COUNT", "3")
+    monkeypatch.setenv("GIT_CONFIG_KEY_2", "protocol.ext.allow")
+    monkeypatch.setenv("GIT_CONFIG_VALUE_2", "always")
+    python = sys.executable.replace("\\", "/")
+    _git(ana, "remote", "set-url", "kaynak", f"ext::{python} {yardimci.as_posix()}")
+    s = _calistir(ana, tmp_path)
+    assert (s.returncode, s.stdout, s.stderr) == (
+        0,
+        "TANSU kaynak/master'a ulaşılamadı; kurallar eski olabilir\n",
+        "",
+    )
 
 
 def test_betik_kirli_agacta_uyari_satirini_yazar(depo, tmp_path):

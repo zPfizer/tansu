@@ -1,8 +1,14 @@
-"""SessionStart kancası: temiz ana depoyu (master) kaynak/master'a ilerletir.
+"""SessionStart kancası: ana çalışma ağacında master'ı kaynak/master'a ilerletir.
 
-Yalnız ana çalışma ağacında ve yalnız `git merge --ff-only` ile çalışır. Bağlı çalışma ağacına, izlenen dosyası değişmiş ağaca
-(izlenmeyen dosyalar ve `kayit/` sayılmaz) ve başka dala dokunmaz; bu durumlarda yalnız uyarı satırı yazar.
-Fetch başarısızsa "ulaşılamadı" satırı yazar. Oturumu hiçbir zaman bozmaz. Depo yolu `CLAUDE_PROJECT_DIR`, yoksa cwd.
+- Yalnız ana çalışma ağacında çalışır. Bare depoda ve bağlı çalışma ağaçlarında hiçbir şey yapmaz, hiçbir satır yazmaz.
+- Yalnız `master` dalında ve yalnız `git merge --ff-only` ile ilerletir.
+- İzlenmeyen dosyalar ve `kayit/` altındaki değişiklikler engellemez; başka her izlenen değişiklik engeller.
+  `kayit/` dosyasını ezecek bir ilerletmeyi `git merge --ff-only` kendisi reddeder.
+- master ilerletilemezse (başka dal, ayrık HEAD, engelleyen değişiklik, ayrışmış master, reddedilen ff)
+  tek bir "kaç kayıt geride" satırı yazar.
+- `git fetch` başarısızsa "ulaşılamadı" satırı yazar ve ilerletmez.
+- Depo yolu `CLAUDE_PROJECT_DIR`, yoksa cwd. Her git çağrısı 12 sn ile sınırlıdır. Takılan git'in üst sınırı
+  `.claude/settings.json` içindeki 20 sn'lik kanca zaman aşımıdır; "oturumu hiçbir zaman bozmaz" sözü verilmez.
 """
 
 import os
@@ -16,10 +22,12 @@ def _git(kok, *args, zaman=12):
     try:
         s = subprocess.run(
             ["git", "-C", str(kok), *args],
+            stdin=subprocess.DEVNULL,
             capture_output=True,
             encoding="utf-8",
+            errors="replace",
             timeout=zaman,
-            env={**os.environ, "GIT_TERMINAL_PROMPT": "0"},
+            env={**os.environ, "GIT_TERMINAL_PROMPT": "0", "GCM_INTERACTIVE": "never"},
         )
     except OSError, subprocess.SubprocessError:
         return None
@@ -27,6 +35,8 @@ def _git(kok, *args, zaman=12):
 
 
 def _ana_agac_mi(kok):
+    if _git(kok, "rev-parse", "--is-inside-work-tree") != "true":
+        return False
     dizin, ortak = (
         _git(kok, "rev-parse", "--git-dir"),
         _git(kok, "rev-parse", "--git-common-dir"),
