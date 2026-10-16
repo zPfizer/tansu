@@ -59,7 +59,7 @@ Genel bulgu: Tansu bazı notlarda giriş, stop ve hedefi birlikte verir: `gorsel
 | Temas eşiği | Low alt bandın üstünde +%0.92 iken "temas" sayıldı; max tolerans bilinmiyor | görsel (örnek), eşik YORUM |
 | Min temas | 3/3 gösteriliyor; zorunlu mu bilinmiyor | görsel; YORUM |
 | Kanal kurma | trend çizgisinde swing pivotları ikili bağlama; arada çizgi delinmez | Ham (`tweet-trend-cizgisi-swing-pivot-regresyon-zarf`:21–27); pivot tespiti ve kanal üretimi açık |
-| Tepki koşulu | belirtilmemiş | YORUM |
+| Tepki koşulu | haftalık kanalda alt banda gelip yeşil kapanış; "yeşil" = kapanış > açılış (YORUM) | Ham (`tweet-haftalik-kanal-alt-bant-yesil-kapanis-1956082078212305072`) |
 | Genişlik filtresi | "Genişlik değişimi" gösteriliyor, eşik yok | görsel |
 | Paralellik | paralel değil: alt çizgi ~+2.2, üst çizgi ~+3.0 yükseliyor; genişlik değişimi +15.3% | görsel |
 

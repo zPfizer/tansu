@@ -72,8 +72,8 @@ dizin kaynak değerini yinelemez.
 | Durum etiketleri | C §2 (E K15) | H (ad) |
 | Tepki penceresi | C §10 (E K15) | K |
 | ATR basamak merdiveni | E K25 | K |
-| Momentum marjında kâr al (%3 günlük) | E K28 | K |
-| Fon satış baskısı, fon risk radarı (hisse dışı; kapsam Levent kararı) | E K26, K27 | K, X |
+| Momentum marjında kâr al | E K28 | K |
+| Fon satış baskısı, fon risk radarı (hisse dışı; kapsam kararı Levent'te bekliyor) | E K26, K27 | K, X |
 | X arşivi kısa kayıtları (kripto dahil) | E K29 | X |
 
 E K1–K3: kaynakları birinci eldir, bu yüzden H'dir. K1 ve K2 Ham'dadır (tweet-atr-risk-butcesi-position-sizing-stop-loss, Ham'da yazar yok; gorsel-paket-115). K3'ün SMA250 altı kapanış çıkışı gorsel-paket-115 NotebookLM görselindedir. ATR uzunluğu, dolum ve SMA250'nin giriş filtresi olarak seçimi YORUM'dur (E K1–K3).
@@ -235,10 +235,10 @@ tweet-arz-talep-denge-fiyati-kodu-1906972824842965372 · eğitim (iktisat alış
 tweet-asuzu-coklu-degerleme-tutarliligi · değerleme, kapsam dışı: TASARIM §3
 tweet-atr-tabanli-stop-seviyesi-1987562052194644270 · tarama çıktısı, kural öğesi yok (konu: E K2): TAVHL için "STOP: 247.20, ATR: 8.90, AL" etiketi, giriş fiyatı ve koşul yok
 tweet-aylik-ortalama-maliyet-birikim-1783840694043623592 · kişisel yatırım alışkanlığı (aylık düzenli alım, ortalama maliyet, hedef 2028-2030); kural öğesi yok
-tweet-az-yatirimcili-fon-risk-kontrolu-1979721927809012208 · eğitim, fon riski uyarısı (11 yatırımcılı fon örneği); kapsam dışı (fon, hisse değil); eşik yok
+tweet-az-yatirimcili-fon-risk-kontrolu-1979721927809012208 · eğitim, fon riski uyarısı (11 yatırımcılı fon örneği); eşik yok (fon kapsamı: E K26)
 tweet-beklenen-fk-coklu-regresyon-modeli · değerleme, kapsam dışı: TASARIM §3
 tweet-beklenti-al-gerceklesen-sat-2085043282694779123 · görüş: slogan, ölçülür giriş veya çıkış koşulu yok
-tweet-beta-formul-rejime-gore-secim-2001638298473894378 · değerleme, kapsam dışı: TASARIM §3; beta tanımı (kovaryans / varyans); görsel rejime göre beta eşiği verir (boğada Beta > 1, ayıda Beta < 1, yatayda Beta ≈ 1.0); eşik sayısı yok, aynı içerik gorsel-paket-108-beta-risk-pusulasi
+tweet-beta-formul-rejime-gore-secim-2001638298473894378 · değerleme: beta tanımı (kovaryans / varyans); görsel rejime göre beta yönü verir (boğada Beta > 1, ayıda Beta < 1, yatayda Beta ≈ 1.0); rejim tanımı ve hesap penceresi yok; aynı içerik gorsel-paket-108-beta-risk-pusulasi; kapsam dışı: TASARIM §3
 tweet-birikim-sureci-kotu-haber-akilli-para · sohbet: Wyckoff anlatısı, kural yok
 tweet-bist-hft-colocation-quant-rekabet-kod-ogrenin · görüş
 tweet-cari-oran-likidite-acigi-bedelli-sermaye-artirimi · değerleme, kapsam dışı: TASARIM §3

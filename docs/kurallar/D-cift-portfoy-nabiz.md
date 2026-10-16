@@ -292,7 +292,7 @@ Genel uyarı: Tansu kod, formül, pencere, maliyet, OOS vermiyor. Görseller dü
   3. Win/Loss Ratio = ortalama kazanç / ortalama kayıp (KRDMB 12.14 / 3.28 ≈ 3.70; görsel 3.71, yuvarlama farkı).
   4. Skewness işareti: pozitif = yukarı sürpriz potansiyeli, negatif = ani sert düşüş riski (Ham: ASTOR, DURDO, GMTAS pozitif; AGHOL, AYES negatif).
   5. Ortalama kayıp 0 ve Win/Loss INF olan hisseler (ASTOR, GMTAS) veri azlığı nedeniyle güvenilmez sayılır (Ham: "muhtemelen" 1-2 Ocak verisi). YORUM: ASTOR için t 1.995 ve p 0.1841 değerleri t-dağılımında df = 2 (3 Ocak) ile uyuşur (elle hesap: p = 1 − t / √(t² + 2) = 0.184); Ham'ın 1-2 Ocak tahmini bununla uyuşmaz.
-  6. P-değeri sınırda olanlar (BEYAZ 0.0536, KRDMA 0.0519) "wild card" diye anılır: daha riskli, getiri potansiyeli yüksek (Ham).
+  6. P-değeri sınırda olan BEYAZ (0.0536) "wild card" diye anılır: daha riskli, getiri potansiyeli yüksek (Ham). KRDMA'nın p-değeri de sınırdadır (0.0519, görsel); Ham onu anmaz.
 - **Parametreler:**
 
 | parametre | değer | kaynak |
