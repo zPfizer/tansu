@@ -49,7 +49,17 @@ def guncelle(kok):
     uyari = f"TANSU master kaynak/master'ın {geride} kayıt gerisinde; kurallar eski olabilir"
     if (
         _git(kok, "branch", "--show-current") == "master"
-        and _git(kok, "status", "--porcelain", "--untracked-files=no") == ""
+        # kayit/ yerel çalıştırma çıktısıdır; ff-only, ezilecek yerel değişikliği zaten reddeder.
+        and _git(
+            kok,
+            "status",
+            "--porcelain",
+            "--untracked-files=no",
+            "--",
+            ".",
+            ":(exclude)kayit",
+        )
+        == ""
         and _git(kok, "merge", "--ff-only", "-q", "kaynak/master") is not None
     ):
         return ""

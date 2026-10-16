@@ -143,3 +143,80 @@ def test_master_kaynakla_esitse_bos_doner(depo):
     ana, yan = depo
     assert guncelle(ana) == ""
     assert _git(ana, "rev-parse", "master") == _git(ana, "rev-parse", "kaynak/master")
+
+
+def _kayit_dosyasi(ana, yan):
+    """İzlenen kayit/kartlar.jsonl ekler; ana ve yan aynı kayıtta kalır."""
+    (ana / "kayit").mkdir()
+    (ana / "kayit" / "kartlar.jsonl").write_text("bir\n", encoding="utf-8")
+    _git(ana, "add", "kayit/kartlar.jsonl")
+    _git(ana, "commit", "-q", "-m", "kayit")
+    _git(ana, "push", "-q", "kaynak", "master")
+    _git(yan, "pull", "-q", "origin", "master")
+
+
+def test_kayit_klasorundeki_yerel_degisiklik_ilerletmeyi_engellemez(depo):
+    ana, yan = depo
+    _kayit_dosyasi(ana, yan)
+    _ileri(yan, 1)
+    (ana / "kayit" / "kartlar.jsonl").write_text("bir\nyerel\n", encoding="utf-8")
+    assert guncelle(ana) == ""
+    assert _git(ana, "rev-parse", "master") == _git(ana, "rev-parse", "kaynak/master")
+    assert (ana / "kayit" / "kartlar.jsonl").read_text(encoding="utf-8") == (
+        "bir\nyerel\n"
+    )
+
+
+def test_kayit_disindaki_izlenen_degisiklik_engeller(depo):
+    ana, yan = depo
+    _kayit_dosyasi(ana, yan)
+    _ileri(yan, 1)
+    onceki = _git(ana, "rev-parse", "master")
+    (ana / "kayit" / "kartlar.jsonl").write_text("bir\nyerel\n", encoding="utf-8")
+    (ana / "a.txt").write_text("elle degisti", encoding="utf-8")
+    assert guncelle(ana) == GERI.format(1)
+    assert _git(ana, "rev-parse", "master") == onceki
+
+
+def test_uzak_ayni_kayit_dosyasini_degistirirse_ff_reddeder(depo):
+    ana, yan = depo
+    _kayit_dosyasi(ana, yan)
+    (yan / "kayit" / "kartlar.jsonl").write_text("bir\nuzak\n", encoding="utf-8")
+    _git(yan, "commit", "-q", "-a", "-m", "uzak kayit")
+    _git(yan, "push", "-q", "origin", "master")
+    onceki = _git(ana, "rev-parse", "master")
+    (ana / "kayit" / "kartlar.jsonl").write_text("bir\nyerel\n", encoding="utf-8")
+    assert guncelle(ana) == GERI.format(1)
+    assert _git(ana, "rev-parse", "master") == onceki
+    assert (ana / "kayit" / "kartlar.jsonl").read_text(encoding="utf-8") == (
+        "bir\nyerel\n"
+    )
+
+
+def test_yalniz_hazirlanmis_degisiklik_engeller(depo):
+    ana, yan = depo
+    _ileri(yan, 1)
+    onceki = _git(ana, "rev-parse", "master")
+    (ana / "a.txt").write_text("hazir", encoding="utf-8")
+    _git(ana, "add", "a.txt")
+    assert guncelle(ana) == GERI.format(1)
+    assert _git(ana, "rev-parse", "master") == onceki
+
+
+def test_ayrik_head_degismez_ve_uyarir(depo):
+    ana, yan = depo
+    _git(ana, "switch", "-q", "--detach")
+    _ileri(yan, 1)
+    onceki = _git(ana, "rev-parse", "master")
+    assert guncelle(ana) == GERI.format(1)
+    assert _git(ana, "rev-parse", "master") == onceki
+    assert _git(ana, "branch", "--show-current") == ""
+
+
+def test_ayrisan_master_degismez_ve_uyarir(depo):
+    ana, yan = depo
+    _kayit(ana, "yerel-ek")
+    _ileri(yan, 1)
+    yerel = _git(ana, "rev-parse", "master")
+    assert guncelle(ana) == GERI.format(1)
+    assert _git(ana, "rev-parse", "master") == yerel
