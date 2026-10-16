@@ -14,7 +14,7 @@ from dataclasses import replace
 import pandas as pd
 import pytest
 
-from tansu import aileler, gostergeler, motor, veri
+from tansu import aileler, denetim, gostergeler, motor, veri
 
 GUNLER = pd.bdate_range("2026-03-02", periods=10)
 STD = (100, 101, 99, 100)
@@ -999,6 +999,60 @@ def test_sinama_modul_1_varyanti_kutu_stopu_ve_hedef_cikisi():
     )
     assert (t.giris_fiyat, t.cikis_fiyat, t.gerceklesen_kayip) == (109.0, 114.5, 0.0)
     assert t.planlanan_risk == pytest.approx(13.0, abs=1e-9)
+
+
+# Bilet 06: KURALLAR §3 "Modül 1" Varyantlar tablosunun 23 adı (literal). Her varyant, sentetik dünyada (8 hisse, 700 gün; ısınma,
+# SMA ve sıkışma ayarı gevşek) motordan hatasız geçer: bir kez kendi kapılarıyla, bir kez kapılar (hacim, momentum, R/R) gevşekken.
+# Çıkış nedenleri tanımlı kümededir; fiyatlar sonlu ve pozitiftir; bütün varyantlarda toplam işlem sayısı sıfırdan büyüktür
+# (sınama boş değil).
+VARYANT_ADLARI = [
+    "bugun",
+    "tansu",
+    "ema_5_8_13",
+    "ema_10_20_50",
+    "ema_50_100_200",
+    "giris_kutu",
+    "giris_ema",
+    "giris_retest",
+    "giris_agresif",
+    "giris_arz",
+    "giris_ucgen",
+    "kutu_govde",
+    "hacim_yok",
+    "hacim_3",
+    "momentum_kapali",
+    "dusus_sonrasi",
+    "teyit_acik",
+    "teyit_trend",
+    "stop_atr15",
+    "stop_atr2",
+    "cikis_dip",
+    "cikis_rsi70",
+    "cikis_rsi50",
+]
+
+
+def test_her_varyant_motordan_gecer_kisa_sentetik_seride_hata_yok():
+    assert len(VARYANT_ADLARI) == 23
+    dunya = denetim.dunya(11, hisse=8, gun=700)
+    nedenler = {"stop", "sma250", "hedef", "cikis_kurali", "karantina", "veri_sonu"}
+    toplam = 0
+    for ad in VARYANT_ADLARI:
+        p = replace(
+            aileler.VARYANTLAR[ad],
+            isinma=60,
+            sma_n=50,
+            esik=0.03,
+            min_gun=2,
+            pencere=30,
+        )
+        for ayar in (p, replace(p, hacim_kat=0.0, momentum=False, rr_min=0.0)):
+            islemler, dusen = motor.sinama(dunya, ayar)
+            assert dusen >= 0, ad
+            assert set(islemler["neden"]) <= nedenler, ad
+            assert (islemler[["giris_fiyat", "cikis_fiyat"]] > 0).all().all(), ad
+            toplam += len(islemler)
+    assert toplam > 0
 
 
 @pytest.mark.parametrize(

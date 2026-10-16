@@ -629,7 +629,8 @@ def test_talep_bolgesi_olusum_bilinen_gun_bozulma_ve_temas():
     assert len(aileler.bolgeler(f.iloc[:17], "talep")) == 0
 
 
-def test_varyantlar_20_ad_temelden_tek_boyut_degisir():
+def test_varyantlar_23_ad_temelden_tek_boyut_degisir():
+    # Bilet 06 (KURALLAR §3 "Modül 1" Varyantlar, 667a0fd): 20 varyanta `giris_arz`, `giris_ucgen`, `dusus_sonrasi` eklendi.
     temel = aileler.VARYANTLAR["tansu"]
     assert temel == Parametre(
         periyotlar=(20, 50, 100, 200),
@@ -651,10 +652,13 @@ def test_varyantlar_20_ad_temelden_tek_boyut_degisir():
         "giris_ema": ("giris", "ema"),
         "giris_retest": ("giris", "retest"),
         "giris_agresif": ("giris", "agresif"),
+        "giris_arz": ("giris", "arz"),
+        "giris_ucgen": ("giris", "ucgen"),
         "kutu_govde": ("kutu_ust", "govde"),
         "hacim_yok": ("hacim_kat", 0.0),
         "hacim_3": ("hacim_kat", 3.0),
         "momentum_kapali": ("momentum", False),
+        "dusus_sonrasi": ("dusus", True),
         "teyit_acik": ("teyit", "gosterge"),
         "teyit_trend": ("teyit", "trend"),
         "stop_atr15": ("stop", "atr15"),
@@ -664,7 +668,7 @@ def test_varyantlar_20_ad_temelden_tek_boyut_degisir():
         "cikis_rsi50": ("cikis", "rsi50"),
     }
     assert set(aileler.VARYANTLAR) == {"bugun", "tansu", *tek}
-    assert len(aileler.VARYANTLAR) == 20
+    assert len(aileler.VARYANTLAR) == 23
     temel_alanlar = asdict(temel)
     for ad, (alan, deger) in tek.items():
         alanlar = asdict(aileler.VARYANTLAR[ad])
@@ -789,7 +793,7 @@ def test_varyantlar_ema_10_20_50_ve_kutu_govde_temelden_tek_boyut_degisir():
         alanlar = asdict(aileler.VARYANTLAR[ad])
         assert {a for a in alanlar if alanlar[a] != temel[a]} == {alan}, ad
         assert alanlar[alan] == deger, ad
-    assert len(aileler.VARYANTLAR) == 20
+    assert len(aileler.VARYANTLAR) == 23
 
 
 # --- Modül 1 sürüm 2, bilet 04: giriş türleri `arz` ve `ucgen` (KURALLAR §3 "Modül 1", Giriş türü) ---
