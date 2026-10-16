@@ -707,7 +707,10 @@ Parametreler ve ızgara önceden yazılır (`KURALLAR.md` §3). Kurallar:
   geliştirme koşusu sayılmaz. Aynı çift yeniden koşulursa ilk resmi p kalır. Başka bölümler (5.7, 5.12 boru hattı
   denetimi) m'yi yeniden tanımlamaz, buraya atıf verir. Yarıda kalan resmi koşunun (kural kimliği, aile) çifti Holm listesinde p = 1 ile yer alır; p = 1 sıralamada sona düşer, yani kabule yardım edemez, ve Holm ile B aynı tek m'yi kullanır. (bilet 03; vekil kararı 15.10, bilet 07d)
 - **Varyant:** EMA ailesinin her varyantının kendi parametre parmak izi vardır; bu yüzden kendi kural kimliği vardır. Her
-  varyant koşusu ayrı denemedir ve m'ye sayılır (varyantlar `KURALLAR.md` §3). Başka bir kural değişmez.
+  varyant koşusu ayrı denemedir ve m'ye sayılır (varyantlar `KURALLAR.md` §3). Başka bir kural değişmez. Yeni
+  parametre alanları `bugun`'un da parmak izini ve kural kimliğini değiştirir (kural aynı); resmi koşudan önce yeni
+  kural kaydı yazılır (`python -m tansu kayit`). Koşu varyantı `python -m tansu kayit|sinama --varyant <ad>` seçer
+  (varsayılan `bugun`).
 - **Alanlar:**
   - tarih (UTC ISO), `kosu_id`, `kural_id`
   - `kod_hash`, `param_hash`

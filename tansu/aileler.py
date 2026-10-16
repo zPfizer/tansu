@@ -52,15 +52,35 @@ RETEST_GUN = 5  # YORUM: güçlü mumdan sonra geri çekilme aranan gün
 BOLGE_GUN = 3  # YORUM: bölgenin onaylanması için bakılan gün (b+1 ... b+3)
 TREND_GUN = 5  # YORUM: yükselen trende temas aranan gün (t-5 ... t)
 YAKIN = 1.01  # YORUM: "yakın" = %1 (üçgen tepeleri, trend teması)
+STOP_KAT = {  # başlangıç stopu ATR katı: TASARIM 5.5 (2 ATR), KURALLAR §3 Modül 1 `atr15` (1,5 ATR)
+    "atr2": 2.0,
+    "atr15": 1.5,
+}
+
+
+def _kosu_basi(f: pd.DataFrame, p: Parametre) -> np.ndarray:
+    """Agresif giriş için: t günü, t-1'de biten sıkışma koşusunun ilk günü (konum); koşu yoksa ya da `min_gun` günden kısaysa -1."""
+    sikisik = (
+        gostergeler.sikisma_orani(f["kapanis"], p.periyotlar) <= p.esik
+    ).to_numpy()
+    basi, bas = np.full(len(f), -1), -1
+    for t in range(1, len(f)):
+        bas = (bas if bas >= 0 else t - 1) if sikisik[t - 1] else -1
+        if bas >= 0 and t - bas >= p.min_gun:
+            basi[t] = bas
+    return basi
 
 
 def pencere_gunleri(f: pd.DataFrame, p: Parametre = Parametre()) -> np.ndarray:
-    """Sıkışma dönemi bitmiş, giriş penceresi açık günler (bool, `f` sırasında)."""
+    """Giriş penceresi açık günler (bool, `f` sırasında). Sıkışma dönemi bitmiş, `pencere` gün; `retest` için `RETEST_GUN` gün daha. `agresif` için pencere yoktur: t-1'de biten koşu en az `min_gun` gündür."""
+    if p.giris == "agresif":
+        return _kosu_basi(f, p) >= 0
     oran = gostergeler.sikisma_orani(f["kapanis"], p.periyotlar)
     acik = np.zeros(len(f), dtype=bool)
+    uzun = p.pencere + (RETEST_GUN if p.giris == "retest" else 0)
     for d in gostergeler.sikisma_donemleri(oran, p.esik, p.min_gun):
         bit = f.index.get_loc(d["bit"])
-        acik[bit + 1 : bit + 1 + p.pencere] = True
+        acik[bit + 1 : bit + 1 + uzun] = True
     return acik
 
 
@@ -72,7 +92,7 @@ def uygun_gunler(f, p) -> np.ndarray:
 
 
 def on_sart(f: pd.DataFrame, p: Parametre = Parametre()) -> np.ndarray:
-    """K1 ön şartlı günler (KURALLAR §3 madde 2): pencere açık, SMA250 üstü, ısınma tamam. Gerçek sinyal günleri bunun parçasıdır."""
+    """K1 ön şartlı günler (KURALLAR §3 madde 2): pencere açık (`pencere_gunleri`), SMA250 üstü, ısınma tamam. Her giriş türünde gerçek sinyal günleri bunun parçasıdır."""
     return pencere_gunleri(f, p) & uygun_gunler(f, p)
 
 
@@ -87,7 +107,7 @@ def sikismasiz_kirilim(
 
 
 def _salinim(x: np.ndarray, tepe: bool) -> np.ndarray:
-    """Salınım noktaları (pencere 2): x[i], iki yanındaki ikişer günün en büyüğüne (tepe) ya da en küçüğüne (dip) eşit ya da üstü. i+2 gününde bilinir."""
+    """Salınım noktaları (pencere 2). Tepe: x[i] >= iki yanındaki ikişer günün değerlerinin hepsi. Dip: x[i] <= iki yanındaki ikişer günün değerlerinin hepsi. i+2 gününde bilinir."""
     s = np.zeros(len(x), dtype=bool)
     if len(x) >= 5:
         yan = np.stack([x[:-4], x[1:-3], x[3:-1], x[4:]])
@@ -184,11 +204,17 @@ def bolgeler(f: pd.DataFrame, yon: str) -> pd.DataFrame:
 
 def kurulum(f: pd.DataFrame, p: Parametre = Parametre()) -> pd.DataFrame:
     """`f`: tarih indeksli, `kapanis` ve `yuksek` (düzeltilmiş) sütunları; varyanta göre `dusuk`, `hacim`.
-    Satır = sinyal günü (kapanış günü); sütunlar `kutu_alt`, `kutu_ust`, `hedef` (hedef yoksa NaN). KURALLAR §3 Modül 1."""
+    Satır = sinyal günü (kapanış günü); sütunlar `kutu_alt`, `kutu_ust`, `hedef` (hedef yoksa NaN). KURALLAR §3 Modül 1.
+    Satırlar dönem sırasındadır (agresifte koşu sırası); ilk satır en erken dönemin sinyalidir. Aynı gün iki dönemin
+    sinyali olabilir (pencereler çakışırsa); satır tekrar eder ve `sinyal` bugünkü gibi tekrarı korur."""
     n = len(f)
     kap, yuk = f["kapanis"].to_numpy(float), f["yuksek"].to_numpy(float)
     dusuk_lazim = (
-        p.giris != "kutu" or p.momentum or p.teyit != "yok" or p.hedef != "yok"
+        p.giris != "kutu"
+        or p.momentum
+        or p.teyit != "yok"
+        or p.hedef != "yok"
+        or p.stop == "kutu"
     )
     # ponytail: varsayılan kural `dusuk` istemez; yoksa yalnız kutu_alt NaN kalır. Öbür varyantlar sütunu ister (yoksa KeyError).
     dus = (
@@ -257,25 +283,17 @@ def kurulum(f: pd.DataFrame, p: Parametre = Parametre()) -> pd.DataFrame:
         if not adaylar:
             return True, np.nan
         hedef = min(adaylar)
-        stop = {
-            "kutu": alt,
-            "atr15": kap[i] - 1.5 * atr[i],
-            "atr2": kap[i] - 2 * atr[i],
-        }[p.stop]
+        stop = alt if p.stop == "kutu" else kap[i] - STOP_KAT[p.stop] * atr[i]
         return bool(
             kap[i] > stop and (hedef - kap[i]) / (kap[i] - stop) >= p.rr_min
         ), hedef
 
     konumlar, satirlar = [], []
     if p.giris == "agresif":  # sıkışma sürerken: pencere yok, koşu başına tek sinyal
-        sikisik = (
-            gostergeler.sikisma_orani(f["kapanis"], p.periyotlar) <= p.esik
-        ).to_numpy()
-        bas, kullanilan = -1, set()
+        kosu_basi, kullanilan = _kosu_basi(f, p), set()
         for t in range(1, n):
-            # t-1'de biten koşunun ilk günü (koşu yoksa -1)
-            bas = (bas if bas >= 0 else t - 1) if sikisik[t - 1] else -1
-            if bas < 0 or t - bas < p.min_gun or bas in kullanilan:
+            bas = kosu_basi[t]  # t-1'de biten koşunun ilk günü (yoksa ya da kısaysa -1)
+            if bas < 0 or bas in kullanilan:
                 continue
             if not (dus[t] <= dus[bas:t].min() <= kap[t]) or not aday(t, hacim=False):
                 continue

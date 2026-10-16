@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from tansu import aileler, gostergeler
+from tansu import aileler, gostergeler, motor
 from tansu.aileler import (
     Parametre,
     on_sart,
@@ -662,3 +662,37 @@ def test_varyantlar_18_ad_temelden_tek_boyut_degisir():
         alanlar = asdict(aileler.VARYANTLAR[ad])
         assert {a for a in alanlar if alanlar[a] != temel_alanlar[a]} == {alan}, ad
         assert alanlar[alan] == deger, ad
+
+
+def test_stop_kat_atr2_ve_atr15_tek_yerde_motor_ile_ayni():
+    # TASARIM 5.5 acil stop 2 ATR; KURALLAR §3 Modül 1 atr15 = 1,5 ATR.
+    assert aileler.STOP_KAT == {"atr2": 2.0, "atr15": 1.5}
+    assert aileler.STOP_KAT["atr2"] == motor.STOP_ATR
+
+
+def test_stop_kutu_dusuk_sutununu_ister():
+    # Kutu stopu kutu altından gelir; `dusuk` yoksa NaN doldurulmaz, KeyError verilir (sessiz düzeltme yok).
+    f = _mumlar([100, 100, 100, 100, 100, 103, 104, 105])[["kapanis", "yuksek"]]
+    with pytest.raises(KeyError, match="dusuk"):
+        aileler.kurulum(f, Parametre(stop="kutu", **KUCUK))
+    assert _gunler(f, Parametre(stop="atr2", **KUCUK)) == [
+        5
+    ]  # varsayılan kural dusuk istemez
+
+
+# Retest: gün 19 = k+5, pencere (gün 14-16) dışında kalır, ama on_sart günüdür (pencere k'dan sonra 5 gün daha açık).
+# Agresif: sıkışma sürerken pencere yoktur; gün 5, t-1'de biten koşu 5 gün (>= 3) olduğu için on_sart günüdür.
+# Elle hesap: aynı veriler yukarıdaki retest "k5-gun" ve agresif testlerindedir; sinyal günleri 19 ve 5.
+def test_retest_ve_agresif_sinyal_gunleri_on_sart_gunudur():
+    f1 = _mum_sonrasi([(104.5, 105, 103, 100)] * 4 + [(103, 104, 100.5, 100)])
+    p1 = Parametre(giris="retest", **MUM)
+    f2 = _mumlar(
+        [100] * 8,
+        [100.5, 100.5, 100.5, 101, 100.5, 100.5, 100.5, 100.5],
+        [99.5, 99.5, 99, 99.5, 99.5, 98.8, 98.5, 99.5],
+    )
+    p2 = Parametre(giris="agresif", **AGRESIF)
+    for f, p, gun in ((f1, p1, 19), (f2, p2, 5)):
+        assert _gunler(f, p) == [gun]
+        assert on_sart(f, p)[gun]
+        assert on_sart(f, p).sum() >= 1

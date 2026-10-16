@@ -62,6 +62,23 @@ def test_atr_wilder_ilk_deger_ilk_n_tr_ortalamasi():
     assert atr.iloc[2:].tolist() == pytest.approx([2.0, 7 / 3, 26 / 9], abs=1e-12)
 
 
+def test_atr_bas_nan_satirlar_tohum_n_1_konumunda_nan_atlanarak():
+    # n=3, ilk iki satır NaN. Gerçek aralıklar: NaN; NaN; 4; 2; 6; 3.
+    # Gün 2: yüksek 14, düşük 10 (önceki kapanış yok) -> 4. Gün 3: yüksek 13, düşük 11, önceki kapanış 12 -> 2.
+    # Gün 4: yüksek 15, düşük 9 -> 6. Gün 5: yüksek 13,5, düşük 10,5 -> 3.
+    # Tohum konum n-1 = 2: ilk üç gerçek aralığın ortalaması, NaN atlanır = 4. ATR3 = (4*2+2)/3 = 10/3.
+    # ATR4 = (10/3*2+6)/3 = 38/9. ATR5 = (38/9*2+3)/3 = 103/27.
+    nan = float("nan")
+    atr = gostergeler.atr(
+        pd.Series([nan, nan, 14.0, 13, 15, 13.5]),
+        pd.Series([nan, nan, 10.0, 11, 9, 10.5]),
+        pd.Series([nan, nan, 12.0, 12, 12, 12]),
+        3,
+    )
+    assert atr.isna().tolist() == [True, True, False, False, False, False]
+    assert atr.iloc[2:].tolist() == pytest.approx([4.0, 10 / 3, 38 / 9, 103 / 27])
+
+
 def test_piyasa_durumu_kapanis_sma_ustunde_mi():
     # SMA(2): [nan, 1,5, 2,5, 2,5, 1,5]; 2 > 1,5 evet; 3 > 2,5 evet; 2 > 2,5 hayır; 1 > 1,5 hayır; ilk gün SMA yok -> hayır.
     from tansu.gostergeler import piyasa_durumu

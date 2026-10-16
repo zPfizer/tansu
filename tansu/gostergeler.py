@@ -21,16 +21,6 @@ def piyasa_durumu(xu100: pd.Series, n: int = 50) -> pd.Series:
     return xu100 > sma(xu100, n)
 
 
-def _wilder(x: pd.Series, n: int) -> pd.Series:
-    """Wilder ortalaması: ilk değer ilk n dolu değerin ortalaması, sonra (önceki*(n-1) + x)/n."""
-    ilk = int(x.notna().to_numpy().argmax())
-    tohum = x.copy()
-    tohum.iloc[: ilk + n - 1] = float("nan")
-    if len(x) >= ilk + n:
-        tohum.iloc[ilk + n - 1] = x.iloc[ilk : ilk + n].mean()
-    return tohum.ewm(alpha=1 / n, adjust=False).mean()
-
-
 def atr(
     yuksek: pd.Series, dusuk: pd.Series, kapanis: pd.Series, n: int = 14
 ) -> pd.Series:
@@ -39,13 +29,27 @@ def atr(
     tr = pd.concat(
         [yuksek - dusuk, (yuksek - onceki).abs(), (dusuk - onceki).abs()], axis=1
     ).max(axis=1)
-    return _wilder(tr, n)
+    tohum = tr.copy()
+    tohum.iloc[: n - 1] = float("nan")
+    if len(tr) >= n:
+        tohum.iloc[n - 1] = tr.iloc[:n].mean()
+    return tohum.ewm(alpha=1 / n, adjust=False).mean()
+
+
+def _wilder_rsi(x: pd.Series, n: int) -> pd.Series:
+    """RSI için Wilder ortalaması: ilk değer, ilk n dolu değerin ortalaması (`atr` tohumundan ayrıdır: baştaki NaN satırlar sayılmaz)."""
+    ilk = int(x.notna().to_numpy().argmax())
+    tohum = x.copy()
+    tohum.iloc[: ilk + n - 1] = float("nan")
+    if len(x) >= ilk + n:
+        tohum.iloc[ilk + n - 1] = x.iloc[ilk : ilk + n].mean()
+    return tohum.ewm(alpha=1 / n, adjust=False).mean()
 
 
 def rsi(kapanis: pd.Series, n: int = 14) -> pd.Series:
     """Wilder RSI: kazanç ve kayıp ortalamaları Wilder ortalamasıyla (KURALLAR §3 Modül 1, `rsi70`, `rsi50`)."""
     d = kapanis.diff()
-    kazanc, kayip = _wilder(d.clip(lower=0), n), _wilder((-d).clip(lower=0), n)
+    kazanc, kayip = _wilder_rsi(d.clip(lower=0), n), _wilder_rsi((-d).clip(lower=0), n)
     return 100 * kazanc / (kazanc + kayip)
 
 

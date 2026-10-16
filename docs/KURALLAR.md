@@ -332,7 +332,9 @@ geometri sadakati yönsüz yapılır. (bilet 04, 14.10)
          (bugünkü kural), stop, bekleyen tam çıkış, bekleyen yarı satış, hedef, `atr3` yarı satışı, kapanış kuralları
          (SMA250 bugünkü kural; yarı ve tam çıkış tetikleri ertesi AOF'a bırakılır), stop güncellemesi (ertesi gün için).
          Giriş günü yalnız stop kontrol edilir (TASARIM §5.3); merdiven, başabaş ve `dip` etkinliği ertesi günden
-         başlar. SMA250 çıkışı bildirilen gün yarı satış ve kural tetiklerine bakılmaz. "Önceki gün" son dolu gündür.
+         başlar. SMA250 çıkışı bildirilen gün kapanış tetiklerine (`dip`, `rsi70`, `rsi50`) bakılmaz; o günün bekleyen
+         yarı satış dolumu ve `atr3` yarı satışı sıradaki yerinde olur. `rsi70`'te kalanın çıkışı için kapanış, yarı
+         satışın dolduğu günden itibaren aranır. "Önceki gün" son dolu gündür.
          Aynı güne iki dönemin sinyali düşerse ilk dönemin kutusu ve hedefi kullanılır. K1 rastgele girişinde kutu ve
          hedef yoktur (`atr2` yedeği, hedef çıkışı yok; YORUM).
      - **Piyasa durumu** (Levent 16.10): yalnız bilgidir, kartı durdurmaz (TASARIM §3).
@@ -362,7 +364,9 @@ geometri sadakati yönsüz yapılır. (bilet 04, 14.10)
        | `cikis_dip` | çıkış `dip` | E K4, K5 |
        | `cikis_rsi70` | çıkış `rsi70` | E K5 |
        | `cikis_rsi50` | çıkış `rsi50` | E K5 |
-   - K1 ön şartı: (a) türünde sıkışma dönemi bitmiş ve 10 günlük pencere açık günler; (b) türünde sıkışma penceresi şartı aranmaz, yalnız hisse düzeyi şartlar (kapanış ≥ SMA250, ısınma, evren, karantina) aranır (TASARIM 5.7; bilet 03). Ek kol: sıkışmasız aynı kırılım (kapanış önceki 20 günün en yüksek yükseğinin üstünde, sıkışma penceresinde değil; 20 YORUM, TASARIM 5.7).
+   - K1 ön şartı: (a) türünde sıkışma dönemi bitmiş ve 10 günlük pencere açık günler (Modül 1 varyantlarında
+     `retest` için pencere 5 gün uzar; `agresif` için t−1'de biten koşusu en az 3 gün olan günlerdir; YORUM: gerçek
+     sinyal günleri havuzun içinde kalır); (b) türünde sıkışma penceresi şartı aranmaz, yalnız hisse düzeyi şartlar (kapanış ≥ SMA250, ısınma, evren, karantina) aranır (TASARIM 5.7; bilet 03). Ek kol: sıkışmasız aynı kırılım (kapanış önceki 20 günün en yüksek yükseğinin üstünde, sıkışma penceresinde değil; 20 YORUM, TASARIM 5.7).
    - Sağlamlık ızgarası (TASARIM 5.10, YORUM): eşik {%1,0; %1,2; %1,5}, en az gün {2; 3; 5}, giriş
      penceresi {5; 10; 20}. (İ: 06-072)
 
