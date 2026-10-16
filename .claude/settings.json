@@ -10,7 +10,7 @@
           },
           {
             "type": "command",
-            "command": "py -3 -X utf8 kurulum/oturum_baslangic.py",
+            "command": "py -3 -X utf8 \"$CLAUDE_PROJECT_DIR/kurulum/oturum_baslangic.py\"",
             "timeout": 20
           }
         ]

@@ -1,7 +1,8 @@
 """SessionStart kancası: temiz ana depoyu (master) kaynak/master'a ilerletir.
 
 Yalnız ana çalışma ağacında ve yalnız `git merge --ff-only` ile çalışır. Bağlı çalışma ağacına, izlenen dosyası değişmiş ağaca
-(izlenmeyen dosyalar sayılmaz) ve başka dala dokunmaz; bu durumlarda yalnız uyarı satırı yazar. Oturumu hiçbir zaman bozmaz: hata olursa sessiz kalır.
+(izlenmeyen dosyalar ve `kayit/` sayılmaz) ve başka dala dokunmaz; bu durumlarda yalnız uyarı satırı yazar.
+Fetch başarısızsa "ulaşılamadı" satırı yazar. Oturumu hiçbir zaman bozmaz. Depo yolu `CLAUDE_PROJECT_DIR`, yoksa cwd.
 """
 
 import os
@@ -69,7 +70,7 @@ def guncelle(kok):
 if __name__ == "__main__":
     sys.stdout.reconfigure(encoding="utf-8")
     try:
-        satir = guncelle(Path.cwd())
+        satir = guncelle(Path(os.environ.get("CLAUDE_PROJECT_DIR") or Path.cwd()))
     except Exception:  # noqa: BLE001 - kanca oturumu bozmamalı
         satir = ""
     if satir:

@@ -3,8 +3,11 @@
 Testler gerçek git depoları kurar: uzak (bare), ana depo (uzak adı `kaynak`) ve yeni kayıt iten ikinci bir klon.
 """
 
+import os
 import shutil
 import subprocess
+import sys
+from pathlib import Path
 
 import pytest
 
@@ -136,9 +139,7 @@ def test_fetch_basarisizsa_ulasilamadi_der_ve_degismez(depo, tmp_path):
     ana, yan = depo
     _git(ana, "remote", "set-url", "kaynak", str(tmp_path / "yok.git"))
     onceki = _git(ana, "rev-parse", "master")
-    assert (
-        guncelle(ana) == "TANSU kaynak/master'a ulaşılamadı; kurallar eski olabilir"
-    )
+    assert guncelle(ana) == "TANSU kaynak/master'a ulaşılamadı; kurallar eski olabilir"
     assert _git(ana, "rev-parse", "master") == onceki
 
 
@@ -214,6 +215,34 @@ def test_ayrik_head_degismez_ve_uyarir(depo):
     assert guncelle(ana) == GERI.format(1)
     assert _git(ana, "rev-parse", "master") == onceki
     assert _git(ana, "branch", "--show-current") == ""
+
+
+def _calistir(ana, cwd):
+    """Betiği kancanın çalıştırdığı gibi çalıştırır: depo CLAUDE_PROJECT_DIR ile, cwd başka yerde."""
+    betik = Path(__file__).resolve().parents[1] / "kurulum" / "oturum_baslangic.py"
+    return subprocess.run(
+        [sys.executable, "-X", "utf8", str(betik)],
+        capture_output=True,
+        encoding="utf-8",
+        cwd=cwd,
+        env={**os.environ, "CLAUDE_PROJECT_DIR": str(ana)},
+    )
+
+
+def test_betik_depoyu_claude_project_dir_ile_bulur_ve_ilerletir(depo, tmp_path):
+    ana, yan = depo
+    _ileri(yan, 1)
+    s = _calistir(ana, tmp_path)
+    assert (s.returncode, s.stdout) == (0, "")
+    assert _git(ana, "rev-parse", "master") == _git(yan, "rev-parse", "HEAD")
+
+
+def test_betik_kirli_agacta_uyari_satirini_yazar(depo, tmp_path):
+    ana, yan = depo
+    _ileri(yan, 1)
+    (ana / "a.txt").write_text("elle degisti", encoding="utf-8")
+    s = _calistir(ana, tmp_path)
+    assert (s.returncode, s.stdout) == (0, GERI.format(1) + "\n")
 
 
 def test_ayrisan_master_degismez_ve_uyarir(depo):
