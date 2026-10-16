@@ -47,6 +47,9 @@ Not: YORUM: bu katalogda ekranlar Tansu'ya atfedilen araç çıktıları olarak 
 - Tansu'nun kanıtı: yok (altyapı).
 - Günlük bedava veriyle uygulanabilir mi: evet, pivot hesabı OHLC ister. Ama parametreler (L, R, eşik) sizin kararınız. Kendi kuralınızı seçin ve `pivot_known_at = i + R` ile geleceği sızdırmayın. (YORUM)
 - Kaynak güveni: birinci el (etiketler), ikinci el (L/R şablonu).
+- Ek kaynaklar (X arşivi, 16.10):
+  - `tweet-swing-pivot-oteleme-backtest-2093465820932235288` — BOM sinyalinin backtest modülünde pivotun gerçekten swing low olduğundan emin olmak için pivot X bar ötelenir (pivot teyit gecikmesi, ileri bakma sızıntısını önler): "noktanin gerçekten swing lowpivot olduğundan emin olmak için X bar kadar öteleyerek kodladım" (Ham). X değeri yok; Tansu hafta sonu ayrıntılı bakacağını söyler, sonuç yok. Görselde HVN, Gaussian Fit, HH, BOS, D-HL, BOM etiketleri var (görsel metni). YORUM: bölümdeki `pivot_known_at = i + R` fikriyle aynıdır; R değeri belli değil; BOM kuralı A §16'da tanımsız kalır.
+  - `tweet-zigzag-atr-gridsearch-secimi-1908636901365407759` — Zikzak eşiğinin türü: Tansu zikzak sistemini ATR ile kurar ve ATR periyodunu hisse bazında gridsearch ile seçer. "Artık PnL ya da profit factor'e göre tercihimi yapıyorum." (Ham). Döküm (görsel, açıldı): sütunlar Symbol, ATR_Period, Total_PnL, Win_Rate (%), Profit_Factor, Trades; ATR periyotları 5–34; işlem sayısı 3–12 (küçük örneklem); en düşük PF 3,0 (YORUM: PF ≥ 3 süzgeci, E K19 ile uyumlu); Symbol sütunu boş, döküm hangi hisseye ait belli değil. Görsel 1: mum grafiği, siyah zikzak çizgisi, yeşil ▲ ve kırmızı ▼ işaretleri (görsel, açıldı). Zikzak eşiğinin ATR çarpanı, arama aralığının adımı ve örneklem dışı doğrulama yok. Hisse bazlı optimizasyon: karar Levent'te bekliyor (E K29). Parametre: Zikzak eşiği = ATR tabanlı; ATR periyodu hisse bazında gridsearch ile seçilir, görülen aralık 5–34; seçim ölçütü PnL veya profit factor (Ham; görsel, açıldı)
 
 ---
 
@@ -80,6 +83,8 @@ Not: YORUM: bu katalogda ekranlar Tansu'ya atfedilen araç çıktıları olarak 
 - Tansu'nun kanıtı: etiketli örnekler. Sistematik değil. LUKSK tarayıcı tablosundaki tek tamamlanmış satır.
 - Günlük bedava veriyle uygulanabilir mi: evet (etiketler fiyat yolundan türüyor). Eşikler YORUM.
 - Kaynak güveni: birinci el (etiketler, tablo). Yaşam döngüsü şeması ikinci el.
+- Ek kaynaklar (X arşivi, 16.10):
+  - `tweet-ab-cd-fibonacci-uzanti-hedef-bozuldu-2092338381548085291` — KCHOL örneği, 25.08.2026: "KCHOL pili bitti" (Ham). Görsel (görsel, açıldı): başlık "KCHOL - Swing Yapısı, Fibonacci ve AB=CD Analizi (Düşüş)"; dört hedef etiketi: D (hedef) 242.80, 165.40, 165.20 [BOZULDU], 206.40 [TAMAM]; Fibonacci ızgarası 0.000: 182, 1.000: 202, 1.272: 207, 1.618: 214, 2.000: 222 (TAMAM hedefi 206.40 ≈ 1.272 seviyesi). BOZULDU etiketi için YORUM (piksel okuması): A≈215, B≈178, C≈202 ile D = C − (A − B) ≈ 165; fiyat sonra A'nın üstüne çıktı (zirve ≈227), bu §3'ün "C sonrası A aşılırsa bozulur" maddesiyle uyumludur; A≈229 olan 165.40'lık desen A aşılmadığı için BOZULDU yazmaz. Bu, §2'deki tek aday tetikleyiciyi destekler, kanıtlamaz. "Pili bitti" sözü: fiyat 1.618–2.000 uzantısına çıkıp kırmızı mumla döndü (YORUM); giriş, çıkış, stop yok. Başlık "Düşüş" der, TAMAM hedefi ise yukarıdadır: başlık ile yön uyumu belirsiz.
 
 ---
 
@@ -389,7 +394,7 @@ Not: YORUM: bu katalogda ekranlar Tansu'ya atfedilen araç çıktıları olarak 
 | Stop | 64,00 (≈X) | görsel |
 | Kısmi kapatma oranı | bilinmiyor | YORUM (kural 7'de %50, burada yok) |
 
-- Belirsiz kalanlar: pattern oranları (Siyah Kuğu tanımı yok), giriş fiyatı ve tetikleyici, D'de otomatik giriş mi tepki teyidi mi, TP1 sonrası break-even stop'un işlem maliyeti.
+- Belirsiz kalanlar: pattern oranları (bu kaynakta Siyah Kuğu tanımı yok; bullish aralıklar §26), giriş fiyatı ve tetikleyici, D'de otomatik giriş mi tepki teyidi mi, TP1 sonrası break-even stop'un işlem maliyeti.
 - Tansu'nun kanıtı: tek hisse, görsel. Sonuç (fill) yok. Son mumlar D'den yukarı (92'ye yakın, TP4 çizgisine yakın). Seçilmiş olabilir.
 - Günlük bedava veriyle uygulanabilir mi: evet. TP formülü tam. Giriş ve pattern tanımı eksik.
 - Kaynak güveni: etiketler ve metin birinci el (görsel ve Ham).
@@ -457,7 +462,7 @@ Not: YORUM: bu katalogda ekranlar Tansu'ya atfedilen araç çıktıları olarak 
   - Bu birleşik tarayıcının "geçti" eşiği (hangi katmanlar zorunlu?). LIDER başlığındaki dört katman (Düşen Direnç Kıran + Talep + Fibo + ABCD) zorunlu olabilir (YORUM).
   - BALAT'ta aynı başlık (aynı tarayıcı geçişi) ama sonuç başarısız (kural 14). Yani tarayıcı geçişi tek başına işlem izni değil.
   - Aynı tarayıcıda "Siyah Kuğu" etiketi (LIDER) ve BALAT'ta başlıkta pattern yok. `Harmonik: Siyah Kuğu` her başlıkta yok.
-  - Beyaz Kuğu ve Siyah Kuğu oranları kaynakta yok. Gartley, Butterfly veya başka kural yerine konamaz.
+  - Beyaz Kuğu ve Siyah Kuğu oranları bu bölümün kaynaklarında yok (Siyah Kuğu bullish aralıkları 16.10'da §26'ya girdi). Gartley, Butterfly veya başka kural yerine konamaz.
 - Tansu'nun kanıtı: seçilmiş pozitif örnekler (LIDER RUN, AKCNS, 40) ve tek negatif örnek (BALAT). Oran yok. Pozitif seçim yanlılığı.
 - Günlük bedava veriyle uygulanabilir mi: parça parça evet (çizgi, EMA, hacim). Talep bölgesi ve delta tanımı eksik. Birleşik kural kodlanamaz.
 - Kaynak güveni: başlıklar ve metin alıntıları birinci el (görsel ve Ham).
@@ -557,6 +562,11 @@ Not: YORUM: bu katalogda ekranlar Tansu'ya atfedilen araç çıktıları olarak 
 - Kaynak güveni: başlıklar ve strateji birinci el (görsel ve Ham).
 - Ek örnek (KANIT, bilet 04, 14.10): `gorsel-paket-131-alka-elliott-wave2-fvg-temas` (Ham; görsel okundu). Başlık `ALKA - FVG TEMAS (0.00%) | BULLISH | ELLIOTT WAVE 2 (Düzeltme: -39.3%)`; lejant BB (14), EMA(9), RSI(14), EN YAKIN FVG (BRYAT ile aynı araç şablonu). Mavi 0→1 hamlesi, kırmızı kesik A-B-C, C noktası sarı FVG kutusuna (yaklaşık 9,6–10) değiyor. Ham metnindeki "inverted hammer" (ters çekiç) iddiası görselde seçilemedi (mumlar küçük): doğrulanmadı, görsel metinden önce gelir. Ölçüm (piksel, yaklaşık, YORUM): 0 ≈ 7,5, 1 ≈ 16,1, C ≈ 9,8 → geri alım ≈ 0,73, yani BRYAT bölgesi 0,50–0,786 içinde; başlıktaki "Düzeltme: -39.3%" zirveden düşüş yüzdesi gibi okunur ve BRYAT başlığındaki "Fibo: %64.3" ile aynı alan değildir (Ham da böyle der: fiyat zirveden bu yana yaklaşık %40 değer kaybetmiştir). Giriş, stop, hedef, sonuç yok.
 - FVG alımı öncesi yükselen dip filtresi (`gorsel-paket-132-fvg-yukselen-dipler-wave3-abc-duzeltme`; metin Ham; Ham'da yazar yok: kaynak notu metnin bir yapay zekâ yanıtından alınmış olabileceğini söyler, bu bir çıkarımdır; iki görsel okundu; bilet 04, 14.10): FVG alımı, önceki Lower Low (LL) sonrası Higher Low (HL) oluşmuş (ayı yapısı kırılmış, "Market Structure Shift") bir yükselişte, düzeltmenin yükselen diplerin üstündeki talep/FVG bölgesine inmesiyle daha güvenilirdir. Görsel 1: 0, 1, HH, A-B-C, HL, LH, LL etiketleri ve sarı FVG kutusu; görsel 2: 0-1-2-3 mavi yol, HH, HL, kırmızı kesik A-B-C, FVG ve talep kutuları; ikisinde fiyat/tarih değeri yok. Bu bir filtredir: giriş, stop, hedef yok. HL'nin tanımı (pivot ayarı) yok (YORUM); filtrenin başarı oranı ölçülmemiş. Sembol ve zaman dilimi yok.
+- Ek kaynaklar (X arşivi, 16.10):
+  - `tweet-elliott-2-dalga-dip-w1-1618-hedef-1985831305662050335` — Haftalık Wave 2 dibi ve Wave 3 hedefi, Tansu'nun kendi gönderisi (04.11.2025). "haftalık elliot son hafta 2. dalga dibi tespit edildi." ve "Hedefe takılmayın kendi hedefinizi kendiniz koyun." (Ham). Görsel (görsel, açıldı): "RODRG - ELLIOTT 2. DALGA DÜZELTMESİ [HAFTALIK]", "1.Dalga: +119.8% | 2.Dalga: -36.7% | 3.Dalga Hedef: 51.49 TL", "3. Dalga Hedef (W1*1.618): 51.49 TL". YORUM (piksel okuması): START ≈15,5, 1 ≈34,1, 2 ≈21,6; hedef = 2. dalga dibi + 1,618 × W1 ≈ 21,6 + 30,1 ≈ 51,7, yani BRYAT TP2 (C + 1,618 × W1) ile aynı formül; W2 geri alımı ≈%67 (BRYAT bölgesi 0,50–0,786 içinde); −%36,7 zirveden düşüştür (ALKA başlığındaki −%39,3 gibi). Giriş, stop, TP1, FVG yok; lejant BB (14), EMA(9), RSI(14) (görsel, açıldı). Parametre: Wave 3 hedefi = W1 × 1,618 (başlık: W1*1.618), RODRG örneğinde 51,49 TL; W1 +%119,8, W2 −%36,7 (görsel, açıldı); çapa (W2 dibi + 1,618 × W1) YORUM
+  - `tweet-elliott-dalga2-demand-konfluens-seviyeler-2094330871801053695` — CWENE için seviye merdiveni ve iki giriş tarzı (Tansu'nun alıntıladığı kendi gönderisi): "35–36: kritik destek üzerinde kaldıkça Dalga 2'nin bitmiş olma senaryosu canlı." 37–38 hacim/denge; 40–41.5 ilk direnç; 44–48.5 supply; 48.30 üstü kapanışta Dalga 3 güçlenir; 33.10 altı sayım iptal (Ham). Agresif: 35–36 demand korunmasını fırsat sayar, 33.10 yapısal risk; muhafazakâr: önce 40–41.5 kırılımını bekler. "Elliott'taki 2? noktası ile Demand bölgesinin aynı yere denk gelmesi bence önemli bir konfluens" (Ham). Dalga 2 dibi ile talep bölgesi çakışması filtre olarak okunur (YORUM). Sonuç yok. Parametre: Dalga 2 dibi ≈35 ile talep bölgesi 32,5–36 çakışması = konfluens; kademeler 37–38, 40–41,5, 44–48,5 (Ham); agresif stop 33,10 (yapısal risk), muhafazakâr giriş 40–41,5 kırılımı (Ham)
+  - `tweet-elliott-dalga2-fvg-temas-1989340141450850613` — ALKA, aynı araç şablonuyla (Wave 2 + FVG teması): başlık "ALKA - FVG TEMAS (0.00%) | BULLISH | ELLIOTT WAVE 2 (Düzeltme: -38.4%)" (görsel, açıldı). Ham: "#alka da tavan böyle geldi." Ham sonuç iddiasıdır, tek vaka. C noktası sarı FVG kutusuna değiyor; geri alım ölçümü ≈0,72 (piksel: 0≈7,5, 1≈16,0, C≈9,85; YORUM), BRYAT bölgesi 0,50–0,786 içinde. Eski ALKA örneğinde (-39.3%) başlık farklıdır. Parametre: Başlıktaki Düzeltme = -38,4% (zirve 16,0 → C ≈9,85; zirveden düşüş yüzdesi; görsel, açıldı)
+  - `tweet-elliott-ikinci-dalga-hedef-1618-1984349202730926414` — Dalga 3 hedefi formülü görselde: "3. Dalga Hedef (W1*1.618): 1557.96 TL"; "Impulse (Start-1-2): +50.8% | 2. Dalga Düzeltmesi: -31.2%" (görsel, açıldı). Ham: "Bu kardeş %150 falan yapmış:D" (sonuç iddiası, doğrulanmadı). BRYAT'taki TP2 = C + 1,618×W1 ile aynı: çapa Dalga 2 sonu (ölçüm: P2≈869 + 1,618×(1264−837) ≈ 1560; piksel, YORUM). Parametre: Wave 3 hedefi = W2 sonu + 1,618 × W1 (W1*1.618; görsel, açıldı; çapa ölçümü YORUM); araç eşikleri W1 +%50,8, W2 -%31,2 (UFUK örneği)
 
 ---
 
@@ -585,6 +595,13 @@ Not: YORUM: bu katalogda ekranlar Tansu'ya atfedilen araç çıktıları olarak 
 - Tansu'nun kanıtı: ENJSA hedefe ulaştı (görsel, hedef çizgisini test etmiş veya aşmış). Seçilmiş olumlu vaka. Hedefin önceden donduruldu mu belirsiz.
 - Günlük bedava veriyle uygulanabilir mi: Wave 4 hedef merdiveni evet. Dalga sayımı otomasyonu zor. Pivot ve sayım kuralı yok.
 - Kaynak güveni: birinci el (oranlar Ham'da; ENJSA başlığı ve metni).
+- Ek kaynaklar (X arşivi, 16.10):
+  - `tweet-c-dalga-0618-fibo-hedef-fiyat-1978152557945000041` — Bölümün "hedef formülü bilinmiyor" boşluğuna aday: hedef = 3. itki dalgasının sonu + 0,618 × en uzun itki dalgasının boyu (Tansu örnek olarak C dalgasını verir). "Elde ettiğiniz bu değeri üçüncü itki dalgasının sonuna eklediğinizde, fiyatın ulaşabileceği olası bir zirve ya da dip bölgesine dair güçlü bir tahmin yapabilirsiniz." (Ham). Bunun Wave 5 hedefi olduğu yazılı değil (YORUM). "En uzun itki dalgası" ile C seçimi, yön, oran seti ("0,618 gibi temel bir Fibonacci oranı") belirsiz; "Kodu hazır" der ama kod ve sonuç notta yok. Tansu: bu "tek başına bir kehanet değil". Parametre: Elliott hedef formülü = 3. itki sonu + 0,618 × en uzun itki dalgası boyu (Ham; hedef dalganın Wave 5 olduğu YORUM)
+  - `tweet-elliott-3-dalga-5-dalga-hedefi-1983565377532572092` — Dalga 5 hedef formülü artık görselde yazılı: "5. Dalga Hedef (W3*0.618): 18.63 TL" (görsel, açıldı). AEFES'te hedef 18.63, gerçekleşen 18.13: "18.63 hedef bulmuş algo. gerçekleşen 18.13" (Ham). Kod 3. itkiyi bulup ölçer; 4. dalganın bittiği noktayı bulmak sonraki adımdır (Ham). Tek vaka, seçilmiş. Parametre: Wave 5 hedefi = W3 × 0,618 (görsel, açıldı); çapa görselden ölçülünce P3 + 0,618×(P3−P2) çıkar: AEFES 17,29 + 0,618×2,15 ≈ 18,62 (piksel ölçümü, YORUM)
+  - `tweet-elliott-4-dalga-geri-cekilme-orani-2000162181623484798` — Tekrar: Wave 4 geri alım oranları aynı: "4. Dalga Düşüşü = 3. Dalga Yükselişi X (0.24 veya 0.38 veya 0.50)" (Ham). 100 birimlik 3. dalgada 24, 38 veya 50 birim geri düşüş beklenir. Yeni parametre yok. Okuma notu: Metin, havuzdaki `tweet-elliott-wave4-wave3-retracement-024-038-050` ile aynı (muhtemelen aynı gönderi iki adla); §17 kaynağı o not.
+  - `tweet-elliott-5-dalga-hedef-kesisim-bolgesi-2000274228516413714` — Wave 5 hedefi iki izdüşümün kesişimidir: başlık "Hedef Bölge: 93.73 - 103.03 TL | Fibo: %49.2"; çizgiler "1.618 X (P1'den)" ve "0.618 Y (P3'ten)"; kutu "KESİŞİM (5. Dalga Satış Bölgesi)" (görsel, açıldı). Ham: "Confluence kimi zaman güzel kar yazar. Videolarda anlatıldı." Alt sınır 93,73, §17'deki ENJSA ≈94 çizgisiyle uyumlu (YORUM). X ve Y'nin tanımı yazılı değil. Parametre: Wave 5 hedef bölgesi = 1,618×X (P1'den) ile 0,618×Y (P3'ten) kesişimi; ENJSA 93,73–103,03 TL (görsel, açıldı). 0,618 çizgisi alt, 1,618 çizgisi üst sınır (görsel, açıldı)
+  - `tweet-elliott-5-dalga-hedef-w3-0618-1984338420769177613` — Dalga 5 hedefi, 4. dalga bittiği anda hesaplanıyor: "5. Dalga Hedef (W3*0.618): 212.92 TL"; başlık "Impulse (1-3): +59.0% | 4. Dalga Düzeltmesi: -14.7%" (görsel, açıldı). Ham: "Kodumuz çalışıyor maşallah". Sonuç rakamı yok; görselde fiyat hedef çizgisine yaklaşmış (kırmızı ok). AEFES ile aynı formül. Parametre: Wave 5 hedefi = W3 × 0,618 (görsel, açıldı); TMPOL ölçümü: P3 ≈180 + 0,618×(180−126) ≈ 213 (piksel ölçümü, YORUM): çapa P3
+  - `tweet-elliott-fvg-hikkake-yorumu-2003162633210359902` — Tekrar: ENJSA Wave 4 + FVG + Hikkake yorumu Tansu'nun kendi gönderisinde: "Gerçekleşmiş bir hikayeye bakalım" (Ham). Hikkake = "ayı tuzağı" ardından yukarı patlama; Wave 5 hedefi yaklaşık 94-95 TL; fiyat 85-90 bandında; sarı kutu ve yeşil desteklerin altına inerse senaryo bozulur (Ham). Metin yapay zekâ özeti gibi okunur (YORUM). Yeni sayı yok; "gerçekleşmiş" ifadesi hedefin vurulduğunu destekler. Okuma notu: Ham metni, `gorsel-paket-102-enjsa-elliott-wave5-hikkake-fvg-outcome` notundaki metinle aynı; görsel de aynı ENJSA şablonu (§17 zaten alıntılıyor).
 
 ---
 
@@ -610,6 +627,8 @@ Not: YORUM: bu katalogda ekranlar Tansu'ya atfedilen araç çıktıları olarak 
 - Tansu'nun kanıtı: yok. Eğitim infografiği.
 - Günlük bedava veriyle uygulanabilir mi: sayma evet. Anlamlılığı test edilmeden kural sayılmaz.
 - Kaynak güveni: NotebookLM görseli, birinci el. Tansu'ya atfı belirsiz (NotebookLM damgası).
+- Ek kaynaklar (X arşivi, 16.10):
+  - `tweet-elliott-5-3-fibonacci-gun-sayma-2000103306325004349` — Tekrar: aynı NotebookLM görseli Tansu'nun kendi X gönderisinde: "Fibonacciyi çok sevdik o zaman biraz daha öğrenelim." (Ham). Görsel (açıldı): 5., 8., 13., 21. gün; "TAKVİM GÜNLERİNİ SAYIN". Gönderi eğitim niteliğinde; sembol, tolerans, sonuç yok. §18'deki 'Tansu'ya atfı belirsiz' notu: görsel Tansu'nun gönderisinde paylaşıldı, ama içeriğin kendi analizi olduğu kanıtlanmaz (YORUM). Parametre: Gün sayısı dizisi = 5, 8, 13, 21 (takvim günü) (görsel, açıldı). Okuma notu: G2 görseli `gorsel-paket-111-elliott-5plus3-fibonacci-islem-gunleri` ile aynı; Ham metni yeni bilgi vermez.
 
 ---
 
@@ -638,6 +657,8 @@ Not: YORUM: bu katalogda ekranlar Tansu'ya atfedilen araç çıktıları olarak 
 - Tansu'nun kanıtı: yok (eğitim görselleri, CAT seçilmiş).
 - Günlük bedava veriyle uygulanabilir mi: evet (hesap kolay). Anlamlı kural için aralık seçimi YORUM.
 - Kaynak güveni: Ham görselleri, birinci el; Ham'da yazar yok (eğitim metinleri; Eğitim, G120/g1–g4). YORUM: bu katalogda paylaşılan eğitim materyali olarak okunur; üretici doğrulanmış değildir.
+- Ek kaynaklar (X arşivi, 16.10):
+  - `tweet-elliott-ic-dis-sayim-confluence-2086920060254212344` — Konfluans bandı tanımı: "Elliot yaptınız, iç sayım ve dış sayım tekniği ile bir hedef belirlediniz ama %5 fibi bir sapma var. İşte o %5'lik alandır confluence alanı." (Ham, yanıt gönderisi). İki hedef (iç ve dış sayım) arasındaki sapma %5 kadar olursa, aralık konfluans bölgesidir. Parametre: Küme eşiği (yakınlık) = %5 Fibonacci sapması (Ham); yüzdenin birimi (fiyat mı, oran mı) belli değil (YORUM)
 
 ---
 
@@ -686,7 +707,7 @@ Sıralama: 1 = en hazır. "Hazır" = oran, giriş, çıkış ve etiket Tansu'nun
    - Hazır: temas sayısı, lookback ve EMA parametreleri A §3 (parametre tablosu) sahibindedir.
    - Boşluk: talep bölgesi kuralı, delta verisi, eşikler, zorunlu katmanlar. Kodlanamaz.
 10. Çoklu aralık Fibonacci (kural 19), Fibonacci gün sayımı (kural 18), Siyah/Beyaz Kuğu (kural 13), CD şiddeti (kural 6).
-    - Hazır değil: konsept, oran veya kural yok. Siyah ve Beyaz Kuğu oranları hiçbir yerde yok.
+    - Hazır değil: konsept, oran veya kural yok. Beyaz Kuğu oranları hiçbir yerde yok; Siyah Kuğu (bullish) oran aralıkları 16.10'da §26'ya girdi (tek örnek).
 
 Genel kanıt durumu: Tansu hiçbir harmonik kural için sistematik bir başarı tablosu göstermiyor. Tek sistematik tablo SMRTG (12 pattern) ve ISKPL (5 pattern), ikisi de tek hisse, maliyetsiz, stop kuralı bilinmiyor. Diğer örnekler seçilmiş pozitif vakalar (LIDER, AKCNS, 40, DOAS, KAPLM negatif dışında).
 
@@ -696,7 +717,7 @@ Ortak boşluklar (hepsi YORUM; kod öncesi karar):
 2. Oran toleransı: Ham'da %3–5 vardır; birimi açık değildir. Yaklaşık %10 aday seçimi YORUM'dur; MAKIM ve DGATE'den genel tolerans çıkarılamaz (Ham, G123:49; Araç, G122/g1).
 3. `BOZULDU`, `TEPKI_VERDI` ve `BELİRSİZLEŞTİ` eşikleri.
 4. Stop kuralı (X, XA 1,13, `X−2*ATR`).
-5. Siyah ve Beyaz Kuğu oran tanımı.
+5. Beyaz Kuğu oran tanımı; Siyah Kuğu için oran toleransı ve pivot kuralı (aralıklar §26).
 
 Küçük sonraki adım: kural 3 ve 4 için kendi pivot kararınızı yazın (L, R), sonra KRPLS D=11,29 ve D=10,05 değerlerini fiyat verisinden yeniden üretin.
 
@@ -710,3 +731,186 @@ Küçük sonraki adım: kural 3 ve 4 için kendi pivot kararınızı yazın (L, 
 - Parametreler: yok. Pivot ayarı, omuz benzerlik toleransı, "hacimli" eşiği, kırılım tamponu, stop yok (YORUM).
 - Tansu'nun kanıtı: yok (şema; piyasa örneği yok). Bu kural aşağı yönlü dönüş formasyonudur; BIST'te açığa satış pratik değil (TASARIM 3).
 - Günlük bedava veriyle uygulanabilir mi: evet (OHLCV). Kaynak güveni: düşük (şema).
+
+---
+
+## 23. 144 barlık Fibonacci %78,6 düzeyi ve ±%2 bant: sistem ve tarama, çoklu gösterge ekranı
+
+- Kaynak: `tweet-fibo-144-78-6-coklu-gosterge-sistemi-1842483289140965576` (05.10.2024; Ham ve görsel, açıldı), `tweet-144-bar-fibo-786-taramasi-1842310608135331999` (Tansu'nun yanıt gönderisi, 04.10.2024; üst gönderi notta yok; görsel yok). İkisi de Tansu'nun X gönderisidir (birinci el). Aynı ekranın CMENT örneği §24'tedir.
+- Tansu'nun ifadesi (verbatim): "144 barlık fibo ve 78.6 seviyesi sistemini bundan sonra böyle takip edeceğim. İndikatörler değişebilir ama temel mantığım böyle olacak" (Ham, 05.10.2024). Bir gün önceki yanıtta: "144 barlık Fibo taraması ve fiyatın 78.6 fiboya geldiği hisseler" ve "Çok çok önemli bir teknik üstad sağolsun" (Ham, 04.10.2024; gönderi iki hesaba yanıttır: @BorsaSeker, @fiboborsa). Görsel başlığı (açıldı): `Fibonacci, EMA, ROC, ADX-ADXR, MACD, OBV Seviyeleri (Son 144 Bar)`; `Fibo %78.6 (18.52)`, `Fibo Upper %80.6 (18.89)`, `Fibo Lower %76.6 (18.15)`, `EMA 20 (19.71)`, `EMA 50 (19.80)`, `EMA 100 (19.97)`, `EMA 200 (20.07)`, `Kapanış Fiyatı (18.90)`, `RSI 14 (42.05)`, `ADX (18.60)`, `ADXR (13.54)`, `MACD (-0.05)`, `MACD Signal (0.12)`, `OBV MA20 (9484766.00)`.
+- Tanım (YORUM, görsel ve hesap): 144 barlık pencerede en yüksek H ve en düşük L alınır; %78,6 düzeyi `H − 0,786×(H − L)` (yüksekten geri alım; §25'teki DOAS kodunun biçimiyle uyumlu). Hesap kontrolü (bizim): 18,52 × 1,02 = 18,89 ve 18,52 × 0,98 = 18,15; yani "Upper %80.6" ve "Lower %76.6" etiketleri düzeyin ±%2 fiyat bandıdır, oran değil. Kapanış 18,90 üst bandın üstünde, EMA'ların altında (19,7–20,1). Tansu'nun "temel mantığı" bu düzey ve bandır; göstergeler (RSI 50 ekseni, ROC 0 ekseni, ADX/ADXR, MACD, OBV MA20) yardımcıdır ve değişebilir. Tarama (04.10.2024): fiyatı bu düzeye gelen hisseler listelenir (YORUM). Tarama Tansu'nun mu, anılan hesabın mı belli değil; "teknik üstad sağolsun" sözü başkasının taramasını önerdiğini gösterir (YORUM).
+- Parametreler:
+
+| parametre | değer | kaynak |
+| --- | --- | --- |
+| Pencere | son 144 bar | Ham ve görsel, açıldı |
+| Fibonacci düzeyi | %78,6 (Ham: "78.6") | Ham ve görsel, açıldı |
+| Bant | ±%2 (fiyat düzeyinin; YORUM, hesap) | görsel, açıldı |
+| EMA'lar | 20, 50, 100, 200 (bu ekranda); 89, 144, 233 (CMENT ekranı, §24) | görsel, açıldı |
+| RSI, ROC, ADX/ADXR, MACD, OBV MA | RSI 14, ROC (0 ekseni), ADX-ADXR, MACD, OBV MA20 | görsel, açıldı |
+| Giriş, stop, hedef, bar birimi, zaman dilimi, "gelmek" toleransı, yön | yok (günlük varsayımı, YORUM) | - |
+
+- Belirsiz kalanlar: sinyal koşulu (band içi tepki mi, bandın üstüne kapanış mı); iki uç noktanın seçimi (144 barın en düşük ve en yüksek değeri mi, swing mi); pencerenin barı (günlük mü); ROC periyodu; ADX/ADXR eşikleri; göstergelerin karar rolü. 144 bir Fibonacci sayısıdır; seçim gerekçesi yazılı değil (YORUM). Giriş, stop, hedef yok.
+- Tansu'nun kanıtı: yok; tek hisse, sonuç yok. CMENT'te "tepki almış" cümlesi bant altında tepkiyi gösterir (§24; seçilmiş örnek).
+- Günlük bedava veriyle uygulanabilir mi: evet (OHLCV; 144 günlük en düşük ve en yüksek değerle %78,6). Sinyal kuralı eksik, kural olarak tanımsız. İlgili: A §10 (0,618–0,786 Golden Zone).
+- Kaynak güveni: Ham ve görsel birinci el; kural yarım: düşük. Hazırlık K.
+
+---
+
+## 24. EMA200'ü son gün yukarı kesen hisse taraması ve golden cross adayı (CMENT örneği)
+
+- Kaynak: `tweet-ema200-kesisim-golden-cross-adayi-1842524448802365487` (zincir, iki gönderi, 05.10.2024; Ham ve görsel, açıldı). Tansu'nun X gönderisi (birinci el).
+- Tansu'nun ifadesi (verbatim): "Son gün EMA 200'ü yukarı kesen hisseler: ADGYO, AKBNK, AKCNS, ANGEN, AVTUR, BASGZ, CMENT, GUBRF, KOZAA, LOGO, ORMA, RTALB, SAHOL, ULKER, VKGYO"; "Son gün yaşananlar sizi yanıltmasın dikkatli olun."; "Bu hisselerde golden cross arayabilirsiniz."; ikinci gönderi: "Örneğin bu hisselerden cment'e detay bakalım"; "76.8'den tepki almış" (Ham). Görsel (açıldı): `CMENT.IS Fibonacci, EMA, ROC, ADX-ADXR, MACD, OBV Seviyeleri (Son 144 Bar)`; `Fibo %78.6 (378.03)`, `Fibo Upper %80.6 (385.59)`, `Fibo Lower %76.6 (370.47)`, `EMA 89 (407.85)`, `EMA 144 (421.49)`, `EMA 233 (433.65)`, `Kapanış Fiyatı (386.00)`, `RSI 14 (48.36)`, `ADX (13.49)`, `ADXR (15.31)`, `MACD (-9.03)`, `MACD Signal (-5.12)`, `OBV MA20 (-156692.75)`.
+- Tanım (YORUM): tarama koşulu: son işlem gününün kapanışı EMA200'ün üstünde, önceki gün altında (yukarı kesişim). Golden cross: kısa EMA'nın uzun EMA'yı yukarı kesmesi (hangi EMA çifti belli değil; 50/200 adayı, YORUM). Tansu kesişimi tek başına sinyal saymaz: "yanıltmasın" uyarısı ve ek inceleme (CMENT'te 144 bar Fibo bandı, §23) ekler. Hesap kontrolü (bizim): Upper = 378,03 × 1,02 = 385,59 ve Lower = 378,03 × 0,98 = 370,47; yani etiketlerdeki %80,6 ve %76,6, fiyat düzeyinin ±%2 bandıdır, oran değil (YORUM). Kapanış 386,00 üst bandın hemen üstündedir. "76.8" CMENT fiyatı olamaz (fiyat ≈370–390); büyük olasılıkla %76,6 alt bandı veya 370 düzeyi (YORUM).
+- Parametreler:
+
+| parametre | değer | kaynak |
+| --- | --- | --- |
+| Tarama koşulu | son gün EMA 200'ü yukarı kesmek | Ham |
+| CMENT EMA seti | 89 / 144 / 233 | görsel, açıldı |
+| 144 bar Fibo | %78,6 düzeyi ve ±%2 fiyat bandı | görsel, açıldı |
+| ROC periyodu | 20 (başlık "ROC20") | görsel, açıldı |
+| Golden cross çifti, onay günü, filtre | bilinmiyor | YORUM |
+
+- Belirsiz kalanlar: EMA200 kesişiminin tanımı (kapanış mı, gün içi mi); golden cross çifti; EMA seti neden 89/144/233 (Fibonacci sayıları) iken diğer görselde 20/50/100/200 (§23); sıralama ve eleme.
+- Tansu'nun kanıtı: yok; liste ve tek örnek, sonuç yok.
+- Günlük bedava veriyle uygulanabilir mi: evet (günlük kapanış, EMA).
+- Kaynak güveni: Ham ve görsel birinci el; kural yok, güven düşük. Hazırlık K.
+
+---
+
+## 25. 1 yıllık kapanış aralığı Fibonacci seviyeleri ve EMA 10/20/50/100/200 seviye haritası (DOAS)
+
+- Kaynak: `tweet-ema-fibo-1yil-en-yuksek-dusuk-kapanis-1842291706093355330` (04.10.2024; Ham ve görsel, açıldı), `tweet-ema-fibo-seviyeleri-python-kod-1842212999169253445` (04.10.2024; Ham, iki görsel; kod görseli açıldı). Tansu'nun X gönderileri (birinci el).
+- Tansu'nun ifadesi (verbatim): "EMA VE FİBO kodları"; "1 yıllık günlük veriler"; "fibo en yüksek ve en düşük kapanışa göre çekilmiştir" (Ham; kod bağlantısı harici, notta yok). DOAS (Ham): "Sırası ile 215.57, 219.02 230.22, 245.53, 249.66, 258.28 ve 281.74 geçilir ise bir heyecan gelir!!!!!!!!"; "Şu hisseyi zirveden göz göre göre vermedik!"
+- Tanım (kod görseli, açıldı): veri = `yf.download(stock, period='1y')`, günlük `Close`. `EMA_n = Close.ewm(span=n, adjust=False).mean()`, n ∈ {10, 20, 50, 100, 200}. `max = Close.max()`, `min = Close.min()`, `fark = max − min`. Seviyeler: `Fib(r) = max − r×fark`, r ∈ {0,236; 0,382; 0,618; 0,786}; `1 = min`; `0 = max`. Hesap kontrolü (bizim, DOAS: max 399,75, min 208,80): 0,786 → 249,66 (etiket 249,66); 0,618 → 281,74 (281,74). Ham'daki yedi sayı sıralı: EMA200 215,57; EMA100 219,02; EMA50 230,22; EMA20 245,53; Fib 0,786 249,66; EMA10 258,28; Fib 0,618 281,74 (görseldeki değerlerle eşleşir). Okuma (YORUM): fiyat bu yedi direnci sırayla yukarı geçerse yükseliş "heyecanı" başlar; kapanışla mı, kaç gün mü belirtilmedi.
+- Parametreler:
+
+| parametre | değer | kaynak |
+| --- | --- | --- |
+| Pencere | 1 yıl, günlük kapanış | Ham ve kod, açıldı |
+| EMA periyotları | 10, 20, 50, 100, 200 (span, adjust=False) | kod, açıldı |
+| Fibonacci oranları | 0,236 / 0,382 / 0,618 / 0,786 (yüksekten aşağı) | kod, açıldı |
+| Aralık | en yüksek ve en düşük kapanış (fitil yok) | Ham ve kod, açıldı |
+| Geçiş ölçütü, giriş, stop, hedef | yok | - |
+
+- Belirsiz kalanlar: "geçilir" ölçütü; giriş, stop, hedef; 1 yıl = 252 işlem günü mü (yfinance takvim yılı); düzeltilmiş fiyat (auto_adjust) etkisi.
+- Tansu'nun kanıtı: yok (tek hisse, sonuç yok).
+- Günlük bedava veriyle uygulanabilir mi: evet (yfinance günlük kapanış, EMA). Kural olarak eksik: yalnız seviye listesi.
+- Kaynak güveni: Ham ve kod birinci el; kural yok, güven düşük. Hazırlık X.
+
+---
+
+## 26. Siyah Kuğu (bullish): oran aralıkları ve hedef bandı
+
+- Kaynak: `tweet-black-swan-fibo-618-100-hedef-bandi-1870475673585795531` (Ham ve görsel, açıldı; Tansu'nun X gönderisi, 21.12.2024).
+- Tansu'nun ifadesi (verbatim): "Benim beklentim 9644.60'da düşüşün son bulması ve seneyi 10069.34 ile 10257.40 arasında bir yerde kapatmamız." (Ham). Görsel başlığı "Bullish Black Swan Found"; etiketler: "AB/XA = 0.48 (Target: 0.382-0.724)", "BC/AB = 3.15 (Target: 2.0-4.237)", "CD/BC = 0.40 (Target: 0.5-0.886)", "Target Price: 9644.60", "Fibo 100%: 10257.40", "Fibo 61.8%: 10069.34"; bacaklar XA 801.80, AB −388.60, BC 1225.60, CD 492.30 (görsel, açıldı).
+- Tanım: (ölçüm, bizim hesabımız; görselin sayılarıyla tutarlı) AB/XA = 388,6 / 801,8 = 0,485; BC/AB = 1225,6 / 388,6 = 3,154; CD/BC = 492,3 / 1225,6 = 0,402. Hedef fiyat 9644,60 = C − 0,5 × BC = 10257,40 − 612,80 (YORUM: CD/BC alt sınırı 0,5). Fibo 100% = C tepesi (10257,40). Fibo 61,8% = D + 0,618 × (C − D) = 10069,34, burada D = 10257,40 − 492,30 = 9765,10; bu §11 TP formülüyle (r = 0,618 ve 1,000) aynıdır.
+- Parametreler:
+
+| parametre | değer | kaynak |
+| --- | --- | --- |
+| AB/XA | 0,382–0,724 | görsel, açıldı |
+| BC/AB | 2,0–4,237 | görsel, açıldı |
+| CD/BC | 0,5–0,886 | görsel, açıldı |
+| Hedef fiyat | 9644,60 | görsel, açıldı; formül YORUM |
+| TP seviyeleri | D + 0,618 × (C − D) ve C | görsel, açıldı; formül ölçüm |
+| Sembol, zaman dilimi | yok (fiyat ≈8.600–10.300, tarih Kasım–Aralık 2024) | görsel |
+
+- Belirsiz kalanlar: Sembol ve zaman dilimi yazılı değil. Örnekteki CD/BC = 0,40 değeri kendi hedef aralığının (0,5–0,886) altındadır; "Found" etiketi bu halde de yazılmıştır, hedef fiyat alt sınırdır, CD bacağı henüz bitmemiş olabilir (YORUM). Giriş, stop, pivot kuralı ve oran toleransı yok.
+- Tansu'nun kanıtı: yok (beklenti cümlesi; sonuç yok; 10069,34–10257,40 bandı bir tahmindir).
+- Günlük bedava veriyle uygulanabilir mi: evet (oranlar ve TP hesabı); pivot kuralı olmadan tarama kurulamaz. §13 ve §21'in kaynaklarında Kuğu oranı yoktu; bu not bullish tarafın ilk sayısal aralıklarını verir. Beyaz Kuğu (bearish) aynası yok (YORUM).
+- Kaynak güveni: Ham ve görsel birinci el; seçilmiş tek örnek: orta. Hazırlık K.
+
+---
+
+## 27. Elliott 0-1-a-b-c: c dibi, 1. tepe direncini al seviyesi yapma ve iki aşamalı plan (LIDFA, AKBNK)
+
+- Kaynak: `tweet-elliott-0-1-abc-kirilim-tarama-al-seviyesi-1986543299692237038` (Ham ve iki görsel; G1 açıldı, G2 aynı çizimin yakın görüntüsü, metni aynı; 06.11.2025), `tweet-elliott-1-tepe-kirilim-iki-asamali-plan-1986859079348924623` (Ham ve görsel, açıldı; 07.11.2025), `tweet-elliott-dip-sinyali-al-seviyesi-direnc-1986552596094468452` (AKBNK, 06.11.2025; Ham ve görsel, açıldı). Üçü de Tansu'nun X gönderisidir (birinci el).
+- Tansu'nun ifadesi (verbatim): "bu dipte sinyal aldık" ve "seviyenin geçilmesi ile 3. itki dalgasının ikinci hareketi de başlamış olur" (Ham, 06.11). "Alış noktası olan 1. tepenin yaklaşması bize satış için hazır kıta bekleyin der" (Ham, 06.11). İkinci gönderi: "pozisyonumun bir kısmını satarak kârımı realize ederim" (1. tepeye yaklaşınca) ve "Fiyat, "1 (Tepe)" direncini güçlü bir mumla yukarı yönlü kırdığında ve ideal olarak üzerinde kapanışlar yapmaya başladığında, bu benim için 3. Dalga'nın başladığının teyididir." (Ham, 07.11). AKBNK gönderisi: Ham "Portföyde bir banka olsun". Görsel (LIDFA, açıldı): "LIDFA - ELLIOTT KIRILIM TARAMASI (0-1-a-b-c)", "Periyot: HAFTALIK | Düzeltme: -15.6%", "AL SEVİYESİ (DİRENÇ): 4.37 TL"; etiketler 0 (Dip), 1 (Tepe), a, b, c (Dip 2); lejant İtki (0-1), Düzeltme (a-b-c), EMA(9), RSI(14). Görsel (AKBNK, açıldı): `AKBNK - ELLIOTT DİP SİNYALİ` / `Periyot: HAFTALIK | Düzeltme: -21.4% | AL SEVİYESİ (DİRENÇ): 69.75 TL`; aynı etiketler (`0 (Dip)`, `1 (Tepe)`, `a`, `b`, `c (Dip 2)`), 69,75 düzeyinde mavi yatay çizgi, sağda kırmızı yukarı ok.
+- Tanım: (YORUM; sıra Ham ve görsellerden) 1. Haftalık grafikte 0 (dip) → 1 (tepe) itkisi. 2. a-b-c düzeltmesi; c (Dip 2) 0'ın üstünde biter (Ham 07.11: "trendin sağlığı açısından olumlu"). 3. Düzeltme yüzdesi = c / 1. tepe − 1: LIDFA −%15,6 (hesap: 4,37 × 0,844 ≈ 3,69; görselde c ≈ 3,7), AKBNK −%21,4 (hesap, piksel: 54,8 / 69,75 − 1 ≈ −%21,4). 4. İlk sinyal c dibinde (tetikleyici yok). 5. AL SEVİYESİ = 1. tepe direnci (LIDFA 4,37 TL; AKBNK 69,75 TL): yaklaşınca pozisyonun bir kısmı satılır; güçlü mumla kırılıp üzerinde kapanışlar gelirse 3. dalga başlamış sayılır, kalanla devam edilir veya satılan geri alınır (hatta eklenir). Gerekçe: fiyatın direnci ilk denemede geçememe riski. Görsel (2. gönderi, açıldı): 0 (Dip), 1 (Tepe), a, b, c (Dip 2), mavi kesikli direnç, "3. Dalga Hede" (kesik); sayı yok.
+- Parametreler:
+
+| parametre | değer | kaynak |
+| --- | --- | --- |
+| Zaman dilimi | haftalık | görsel, açıldı |
+| Düzeltme | LIDFA −%15,6; AKBNK −%21,4 | görsel, açıldı |
+| Al seviyesi | 1. tepe direnci (LIDFA: 4,37 TL; AKBNK: 69,75 TL) | görsel, açıldı |
+| Kırılım teyidi | "güçlü mum" ve "üzerinde kapanışlar" (eşik yok) | Ham |
+| EMA(9), RSI(14) | çizilir; rolü yazılı değil | görsel |
+| Kısmi satış oranı, stop, hedef, min ve max düzeltme eşiği | yok | YORUM |
+
+- Belirsiz kalanlar: c dibini nasıl anlayacağız (pivot kuralı yok). c'nin 0'ın üstünde kalması zorunlu mu. "Güçlü mum" ve "kapanış sayısı" tanımı. Kısmi satış oranı. Stop (c dibi altı mı?). Hedef. "Dip 2" için en çok kabul edilen geri alım sınırı. Kırılış ölçütü (kapanış, tampon): AKBNK etiketi "AL SEVİYESİ (DİRENÇ)" kırılış mı, tepki mi demek belli değil (YORUM). Etiket çelişkisi: tarama kırılım seviyesine "AL SEVİYESİ" der (Ham: "Alış noktası olan 1. tepe"), plan ise c dibinde ilk alımı ve 1. tepede kısmi satışı anlatır; iki ayrı alım noktası var gibi okunur (YORUM: dipte ilk alım, kırılımda ikinci alım). Sayım otomasyon aracının çıktısıdır; tarama koşulu yazılı değil.
+- Tansu'nun kanıtı: yok (iki örnek, sonuç yok; LIDFA'da son mum ≈4,2–4,3, seviyenin altında).
+- Günlük bedava veriyle uygulanabilir mi: haftalık mum günlükten türetilir ve seviye hesabı kolaydır; dalga sayımı ve pivot tanımsız, kural olarak hayır. TASARIM §3 Elliott'u kapsam dışı bırakır.
+- Kaynak güveni: Ham ve görsel birinci el; düşük-orta. Hazırlık K.
+
+---
+
+## 28. Elliott 0-5 itkisi sonrası ABC düzeltmesi: Fibonacci merdiveni, C teyidi ve P-BOM girişi (IDGYO, CRDFA)
+
+- Kaynak: `tweet-elliott-abc-fib-oranlari-c-teyidi-2094008240824635656` (IDGYO, 30.08.2026; Ham ve görsel, açıldı), `tweet-elliott-abc-hedef-rr-2094496543860564136` (IDGYO, 31.08.2026; Ham ve üç görsel, G1 ve G2 açıldı), `tweet-elliott-abc-uyumsuzluk-donus-1998113575009726965` (08.12.2025; Ham ve iki görsel, açıldı), `tweet-elliott-expanded-flat-c-teyit-p-bom-2094052769493582241` (CRDFA, 30.08.2026; Ham ve görsel, açıldı). Hepsi Tansu'nun X gönderisi (birinci el).
+- Tansu'nun ifadesi (verbatim):
+  - IDGYO (Ham): "Yeni dipler gelmedi bana kalırsa C teyit oldu zaten BOM sinyalim de teyit vermişti." "Dikkatle izleyelim bu hafta". İkinci gönderi: "Bence hikaye bitmedi".
+  - IDGYO başlığı (görsel, açıldı): `IDGYO | ELLIOTT 0-1-2-3-4-5-A-B-C` / `Pattern #1 | C Tarihi: 21.08.2026 | Wave 2 Retracement: %86.4 | Wave 4 Retracement: %52.8 | Wave3/Wave1: 2.69 | Wave5/Wave1: 1.44 | C/0-5: %110.4`. Merdiven etiketleri: `W3→W4 %23.6 4.97`, `%38.2 4.65`, `%50.0 4.39`, `%52.8 4.33`, `%61.8 4.13`, `%78.6 3.77`; `ABC 0→5 %23.6 4.95`, `%38.2 4.62`, `%50.0 4.35`, `%61.8 4.07`, `%78.6 3.69` (ikinci gönderide 3.68); `5→A / B Gerçek %37.9 4.63`; `0→5 / C Gerçek %110.4 2.95`. Kırmızı kutu: C sonrası küçük mumlar. İkinci gönderide G1: `SUPPLY / ARZ 5.42 - 5.50`, `DEMAND / TEST EDİLDİ 2.97 - 3.04`.
+  - IDGYO hedef etiketleri (görsel, açıldı): C sonrası mor küçük `(1)` ve `(2)`; `HEDEF V2 #1 3.36 | 4.8p | R:R 1.09`, `HEDEF V2 #2 3.22 | 3.4p | R:R 0.29`, `HEDEF V2 #3 3.58 | 1.6p | R:R 2.39`.
+  - CRDFA (Ham): "B dalgası önceki tepeyi aşmış, C ise neredeyse başlangıç seviyesine kadar geri gelmiş bu yüzden yapı Expanded Flat'e benziyor. 25,16 şu an C adayı ama henüz yeni oluştuğu için teyitli dip diyemiyorum. Burada P-BOM sinyalini ararım ben (benim yazdığım sinyal)"; "hemen alım yapmak yerine önce C'nin korunmasını, sonra küçük 1-2 yapısının oluşmasını ve o küçük 1 tepesinin kırılmasını beklerdim. 24,50 altı (A) ise ana sayım açısından ciddi bozulma olur."; "C noktasının teyit almasını bekliyoruz, şu an için işlem erken, agresif bir giriş olur". Görsel (açıldı): `B DİRENCİ / GÜÇLÜ TEYİT 45.88`, `ÖNCEKİ 4. DALGA 36.34-36.96`, `0→5 / C Gerçek %96.3 25.16`, `GEÇERSİZLİK 25.16`, aynı yüzde merdiveni (`D3→D4`, `A-B-C 0→5`).
+  - Haftalık ABC (Ham, 08.12.2025): "Haftalık abc düzeltmesin yapmış bir elliot abimiz. uyumsuzluklar da var artık gitsin bu yaç." Görsel 1: 0-5 itkisi ve A-B-C (etiket). Görsel 2 (açıldı): düşen üst çizgi ve yatay alt çizgili fiyat, altında üç osilatör panelinde yükselen dip çizgileri (fiyat daha düşük dip, osilatör daha yüksek dip: pozitif uyumsuzluk görünümü, YORUM); osilatör adları yok.
+- Tanım:
+  1. Aralık: 0 = itki başı, 5 = itki sonu. Merdiven seviyeleri `ABC(r) = P5 − r×(P5 − P0)`, r ∈ {0,236; 0,382; 0,50; 0,618; 0,786}. Hesap kontrolü (bizim, IDGYO: P0≈3,20, P5=5,50): 4,96 / 4,62 / 4,35 / 4,08 / 3,69; etiketlerle uyumlu. `W3→W4(r) = P3 − r×(P3 − P2)` (P2≈3,31, P3≈5,48): 4,97 için uyumlu. Oranlar §17'deki Wave 4 oranlarına (0,24 / 0,38 / 0,50) 0,618 ve 0,786 ekler.
+  2. Gerçekleşen oranlar (aracın başlığı; hesap kontrolü bizim, piksel, YORUM): W2 geri alımı = (P1−P2)/(P1−P0) ≈ 0,86; W4 geri alımı = (P3−P4)/(P3−P2) ≈ 0,53; W3/W1 ≈ 2,7; W5/W1 = (P5−P4)/(P1−P0) ≈ 1,46 (başlık 1,44); C/0-5 = (P5−C)/(P5−P0) = 1,104 (C, P0'ın altına iner).
+  3. C teyidi (Tansu, sözel): C'den sonra yeni dip gelmemesi (IDGYO), C'nin korunması (CRDFA). Bu bir kapanış kuralı değil, gözlemdir.
+  4. P-BOM girişi (CRDFA, sözel): C korunur → küçük 1-2 yapısı oluşur → küçük 1 tepesi kırılınca al. Agresif giriş ("hemen alım") erken sayılır. P-BOM'un formülü verilmedi (A §16: BOM formülü yok).
+  5. Hedef merdiveni V2 (IDGYO, YORUM, piksel ölçümüyle ters çözüm): W1' = (1) − C ≈ 0,22; hedefler (2) + k×W1' ile uyumlu: #2 = 1,0 (3,22), #1 = 1,618 (3,36), #3 = 2,618 (3,58). R:R etiketleriyle tutarlı giriş ≈ (1) tepesi ≈ 3,17 ve stop ≈ (2) dibi ≈ 3,00: (3,36−3,17)/(3,17−3,00) ≈ 1,1; 3,22 için ≈ 0,3; 3,58 için ≈ 2,4. Bu çözüm Tansu'nun yazdığı bir kural değil.
+  6. Uyumsuzluk teyidi (08.12.2025, sözel): haftalık ABC bittikten sonra osilatör uyumsuzluğu dönüş işareti sayılır. Osilatör, pivot ve süre belirtilmedi.
+  7. Geçersizlik: IDGYO'da C 2,95 aracın `0→5 / C Gerçek` çizgisidir; CRDFA'da görselde `GEÇERSİZLİK 25.16` (C'nin kendisi), Ham'da `24,50 altı`. İkisi aynı değildir (Belirsiz kalanlar).
+- Parametreler:
+
+| parametre | değer | kaynak |
+| --- | --- | --- |
+| Merdiven oranları | 0,236 / 0,382 / 0,50 / 0,618 / 0,786 (ABC 0→5 ve W3→W4) | görsel, açıldı |
+| Ek "gerçek" etiketleri | W4 %52,8; B (5→A) %37,9; C/0-5 %110,4 (IDGYO), %96,3 (CRDFA) | görsel, açıldı |
+| IDGYO ölçüleri | W2 %86,4; W4 %52,8; W3/W1 2,69; W5/W1 1,44 | görsel, açıldı |
+| V2 hedefleri (IDGYO) | 3,22 / 3,36 / 3,58; R:R 0,29 / 1,09 / 2,39 | görsel, açıldı |
+| V2 çarpanları | 1,0 / 1,618 / 2,618 × küçük W1 | YORUM (piksel) |
+| "p" sütunu (3,4p / 4,8p / 1,6p) | anlamı bilinmiyor | görsel, açıldı; YORUM |
+| Demand bölgesi (IDGYO) | 2,97–3,04, "test edildi" | görsel, açıldı |
+| CRDFA düzeyleri | C adayı 25,16; B 45,88; önceki 4. dalga 36,34–36,96; iptal "24,50 altı" | Ham ve görsel, açıldı |
+| Pivot ve sayım kuralı, osilatör, süre | bilinmiyor | YORUM |
+
+- Belirsiz kalanlar: P-BOM'un tanımı; "teyit" ölçütü (kaç gün yeni dip yok?); küçük 1-2 yapısının pivot kuralı; uyumsuzluk osilatörü; "p" anlamı; CRDFA'da iptal seviyesi: Ham "24,50 altı (A)" der, görsel `GEÇERSİZLİK 25.16` yazar; görselde A ≈ 33,8 ve 24,50 nokta 0'a denk (piksel), yani Ham'ın "(A)" etiketi görseldeki A'ya uymaz; üç değer birbirini tutmaz (YORUM: görsel esastır); C'nin P0'ın altına inmesi (IDGYO %110,4) ile Elliott'un klasik "Dalga 2/ABC sınırı" arasındaki ilişki.
+- Tansu'nun kanıtı: sonuç yok. IDGYO ve CRDFA bekleyen kurulumlardır ("işlem erken", "dikkatle izleyelim"). Tek örnekler, seçilmiş.
+- Günlük bedava veriyle uygulanabilir mi: merdiven ve oranlar evet (OHLC ve pivot). Dalga sayımı, P-BOM ve uyumsuzluk için pivot kuralı ve formül gerekir; şimdi uygulanamaz.
+- Kaynak güveni: Ham ve görsel birinci el; sayısal parametreler görselden okundu, yorumlar YORUM işaretli. Hazırlık K.
+
+---
+
+## 29. Elliott taramaları: C (ABC bitişi) taraması ve 3. itki dalgası taraması (IPEKE, AEFES, ASGYO, HURGZ)
+
+- Kaynak: `tweet-elliott-itki-abc-taramasi-1984331550519910770` (IPEKE, 31.10.2025), `tweet-elliott-ucuncu-dalga-baslangici-1947614735068770788` (ASGYO, 22.07.2025), `tweet-elliott-ucuncu-dalga-taramasi-1949043393927024960` (HURGZ, 26.07.2025), `tweet-elliott-ucuncu-itki-taramasi-1950934573468025012` (31.07.2025). Hepsi Tansu'nun X gönderisi (birinci el); Ham ve görseller açıldı (dördüncü gönderide görsel yok).
+- Tansu'nun ifadesi (verbatim):
+  - 3. itki: "Elliot C taraması değil, 3.itki dalgası taraması yapın. Getirileri daha iyi." (Ham, 31.07.2025).
+  - 3. dalga taraması (Ham, 26.07.2025): "#python ile elliot 3. dalga taramasında 23.07 de yaptığımız taramada #hrgaz çıkan hisselerden biri idi. %12 prim vermiş 2 güne. Doğrusu bunlara hiç geriye dönüp bakmıyorum çoğu güzel prim veriyor." ASGYO gönderisi (Ham, 22.07.2025): "konu bu kadar basittir."
+  - Görsel (açıldı): kapanış çizgisi grafiği; `ASGYO.IS - 3. Dalga Başlangıcı: 2024-07-17`, `HURGZ.IS - 3. Dalga Başlangıcı: 2024-07-23`; lejant `Close Price`, `1. Tepe (B)` (kırmızı yatay kesik çizgi), `3. Dalga Başlangıcı` (yeşil dikey nokta çizgi); turuncu noktalar son iki dip (iki dip yakın) ve 1. tepe çizgisi üzerinde bir nokta. İkinci görsel TradingView mum grafiği (yeşil mumlar, kırmızı yukarı ok).
+  - C taraması (IPEKE, Ham, 31.10.2025): "Elliot taramamız #ipeke bugün tavan yapmış:) Gerçi bunu gruba da vermemiştim henüz hala deneme süreçlerinde." Görsel: `IPEKE - ELLIOTT WAVE (1-2-3-4-5 + A-B-C) SIRALI | Impulse #1: +36.7% | Corrective: -14.8%`; AEFES'te aynı şablon: `Impulse #1: +21.6% | Corrective: -24.0%`.
+- Tanım (YORUM, görselden): iki tarama türü vardır. (a) C taraması: tamamlanmış 1-2-3-4-5 itkisi ve ardından A-B-C düzeltmesi; sinyal C dibinde. (b) 3. dalga başlangıcı taraması: kapanış serisinde 1. tepe (B) çizgisi ve ikinci dip (iki yakın dip) sonrası yukarı kırılış 3. dalganın başlangıcı sayılır; tarih etiketi bu başlangıç günüdür. Kırılış ölçütü, pivot kuralı ve süre yazılı değil. Tansu'nun "çoğu güzel prim veriyor" cümlesi sayısal tablo vermez.
+- Parametreler:
+
+| parametre | değer | kaynak |
+| --- | --- | --- |
+| Taramanın çıktı alanları | Impulse %, Corrective % (IPEKE +36,7 / −14,8; AEFES +21,6 / −24,0) | görsel, açıldı |
+| 3. dalga göstergesi | 1. tepe (B) çizgisi, 3. dalga başlangıç tarihi | görsel, açıldı |
+| HURGZ sonucu | %12 prim, 2 gün | Ham |
+| Tarama eşikleri, pivot, kırılış ölçütü | bilinmiyor | YORUM |
+
+- Belirsiz kalanlar: tarama koşulu; "prim" neye göre (hangi giriş fiyatı); "getirileri daha iyi" karşılaştırması sayısal değil; Temmuz 2025'te 3. itki taraması önerilirken Ekim 2025'te C taraması deneme sürecinde (YORUM: ikisi paralel mi, görüş mü değişti, belli değil). Görsel başlıklarındaki tarih yılı (2024) ile gönderi yılı (2025) uyuşmaz (ASGYO: görsel 2024-07-17, gönderi 22.07.2025; HURGZ: görsel 2024-07-23, gönderi 26.07.2025); yıl farkı açıklanmamış, TradingView ekranı ayrı bir görseldir. Ham HURGZ için "#hrgaz" yazar, görselde HURGZ.IS görünür.
+- Tansu'nun kanıtı: HURGZ %12 (2 gün), IPEKE tavan; seçilmiş vakalar. "Getirileri daha iyi" iddiası ölçülmemiş.
+- Günlük bedava veriyle uygulanabilir mi: kapanış serisiyle evet; sayım ve pivot kuralı olmadan uygulanamaz.
+- Kaynak güveni: Ham ve görsel birinci el; kural yok, güven düşük. Hazırlık X.
+
+---
+
+## 30. X arşivi kısa kayıtları (16.10)
+
+- Elliott: işlem için avantajlı dalgalar 3, 5, A ve C (`tweet-elliott-3-5-a-c-avantajli-dalgalar-2093964129438404912`; Ham ve görsel birinci el, görsel açıldı; Tansu'nun X gönderisi, 30.08.2026; görsel başlığı "ELLIOTT WAVE PROJESİ | Çalışma Özeti"): Tansu: "Not almak yiğidin şanındandır, her ne kadar kod yazsak da geleneksel bir yanım her zaman daha ağır basar:) Paylaşayım kilit bilgileri." (Ham). Görsel: "6. En Avantajlı Dalgalar: 3, 5, A ve C"; "Trading açısından en önemli fikir, her dalgayı trade etmeye çalışmak yerine bir üst derecedeki trend yönünde hareket eden daha avantajlı dalgaları seçmektir."; "Ana prensip: Beş dalgalı hareket büyük trendin yönünü gösterir; üç dalgalı karşı-trend hareket ise o trende yeniden katılmak için setup sağlar." Tablo (görsel, açıldı): Wave (2) düzeltmesinden sonra Wave (3), Wave (4) düzeltmesinden sonra Wave (5) (ana trend yönü; "genellikle en güçlü" ve "ikinci yüksek güvenli" motive hareket); Wave (5) tamamlanınca Wave (A) (üst derece düzeltmenin başlangıcı); Wave (B) düzeltmesinden sonra Wave (C) (düzeltmenin ana yönüne katılmak). Sayı yok. Dalga sayımı ve doğrulaması, giriş, stop, hedef, "yüksek güvenli" ölçüsü yok. "6." madde numarasıdır; 1–5 notta yok. Görselin üreticisi belli değil (YORUM: Tansu kendi çalışma notu der, görselde araç damgası yok). A ve C satırları düşüş yönlü işlemdir; BIST'te açığa satış pratik değildir (TASARIM §3). İlk iki satır §16 (Wave 2'den Wave 3'e) ve §17 (Wave 4'ten Wave 5'e) ile aynı çerçevenin genel gerekçesi olarak okunur (YORUM). Günlük veriyle: kavram olarak evet; dalga sayımı otomasyonu tanımsız, kural olarak hayır (TASARIM §3 Elliott'u kapsam dışı bırakır). Hazırlık X. Kaynak güveni: ilke düzeyi: düşük-orta.
+- Elliott beş dalga tamamlanışı ve kanal direnci uyarısı (AGESA; `tweet-bes-dalga-kanal-direnci-uyarisi-1986050444750119097`; Ham ve görsel, açıldı; Tansu'nun X gönderisi, 05.11.2025): "#AGESA haftalık" ve "Ben diyeceğimi diyeyim de sonra aman neden bizi uyarmadın olmasın" (Ham). Görsel başlığı: "AGESA.IS — DİRENÇ YAKININDA" ve "(30 Bar | 1 Impulse, 0 Tam Desen)" (görsel, açıldı). YORUM (Tansu kural yazmaz): haftalık grafikte 0-1-2-3-4-5 beş noktalı itki sayılır; 5. nokta (≈219) kırmızı üst kanal çizgisine değer, yeşil alt çizgi buna yaklaşık paraleldir; etiket "DİRENÇ YAKININDA": fiyat kanalın üst sınırındadır. Uyarı yeni alım yerine düzeltme riskini anlatır (yön sözle yazılmaz). Paneller: RSI(14) (≈75–80, görsel okuma), ADX/DI(14), MACD Histogram. Parametre: tarama penceresi 30 bar (görsel); zaman dilimi haftalık (Ham); RSI(14), ADX/DI(14) (görsel). Kanal çizgisinin çizim kuralı, "yakın" toleransı, "Tam Desen" tanımı, uyarının eylemi ve eşik yok. 5. dalga tamamlanınca A dalgasını bekleyen Elliott ilkesiyle uyumlu okunabilir (YORUM). Tansu'nun kanıtı: yok (tek uyarı; sonuç yok). Günlük veriyle: haftalık mum günlükten türetilir; kanal ve beş dalga sayımı tanımsız, kural olarak hayır. Hazırlık X. Kaynak güveni: düşük.

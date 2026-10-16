@@ -96,6 +96,8 @@ Genel uyarı: Tansu kod, formül, pencere, maliyet, OOS vermiyor. Görseller dü
 - **Belirsiz:** emir zamanı (kapanış mı T+1 mi), nakit akışı, komisyon, lot yuvarlama, neden bazı günler üç AL.
 - **Kanıt (GÖRSEL, 15.05.2026):** başlangıç 100.000; son kapanış 126.764,84 (+%26,76); önceki kapanış 129.433,76; günlük K/Z −2.668,92 (−%2,06); pasif (aynı ağırlıklarla sabit) 127.805,42 (+%27,81); aktif–pasif −1.040,58 (−%1,04). Bileşen getirisi: GARAN +%4,85 (129,80), KGYO +%58,21 (12,53), CCOLA +%20,98 (82,95). Yani **rebalancing bu pencerede pasifin 1,04 puan altında**; getiri varlık seçiminden (KGYO) geliyor. Bu bir hesap: 0,5×4,85+0,4×58,21+0,1×20,98 = 27,81 (GÖRSEL ile uyuşuyor).
 - **Bedava veri:** Evet (yfinance günlük kapanış). **Güven:** Kural basit ve net; ama kanıt kısa (1,5 ay) ve pasifi geçemiyor. Yüksek (kural), düşük (kanıt).
+- Ek kaynaklar (X arşivi, 16.10):
+  - `tweet-sabit-oranli-gunluk-dengeleme-2053179966284530147` — BIST 100 ile 2015–2025 sınaması: "Vol Oranı" %0–%100 tarandı; tüm dönemde aktif (günlük dengelenen) en yüksek %30'da: aktif %3426,22, pasif %833,65; 2023–2025 alt döneminde en yüksek %20'de: aktif %109,42, pasif %66,20 (görsel, açıldı). "BIST al tut bekle yeri değildir kardeşim" (Ham). Görselde kırmızı çerçeve tüm dönemde %40, alt dönemde %20 satırını işaretler; başlık %30 der. Hesap (YORUM): Pasif(w) = (1−w)×1212,94 + w×(−51,37) tüm satırlarla uyuşur; yani oran, adı yazılmayan ikinci varlığın payı gibi okunur. Maliyet yok; kayıttaki 1,5 aylık pasif-altı sonuçla çelişir (bu pencere on bir yıl). Parametre: Vol Oranı (YORUM: ikinci varlığın portföy payı) = %30 tüm dönemde, %20 alt dönemde en yüksek aktif getiri; %10–%40 aralığında aktif pasifin çok üstünde (görsel, açıldı)
 
 ## Ağırlık duyarlılığı (TEKTU / EREGL)
 - **Kaynak:** gorsel-paket-57 (01–04).
@@ -263,6 +265,9 @@ Genel uyarı: Tansu kod, formül, pencere, maliyet, OOS vermiyor. Görseller dü
   - `tweet-aylik-mevsimsellik-getiri-istatistigi-2018404523635515480` — Aylık mevsimsellik kuralının ölçülmüş örneği: XU100 Şubat getirisi 12 yılda 5 pozitif, 7 negatif; başarı oranı %41,7 (%70 eşiğinin altında, "risk" ayı). "BIST Şubat ayını sevmiyor." (Ham). Grafikte 2015-2026 çubukları var; gönderi 2026-02-02 tarihli, yani 2026 Şubat çubuğu yarım aydır (YORUM). Parametre: XU100 Şubat: pozitif 5, negatif 7, toplam 12, başarı oranı %41,7, ortalama −%0,54, maksimum +%8,20, minimum −%11,03, standart sapma %5,02 (görsel, açıldı).
   - `tweet-aylik-mevsimsellik-olasilik-kasa-ayari-2009731947375854034` — Tekrar: aynı aylık mevsimsellik kuralı; bu gönderi Tansu'nun X gönderisidir (2026-01-09, id 2009731947375854034), yazar belirsizliği kalkar. "Hangi aylarda %70 ve üzeri ihtimalle yükseldiğine bakın (Yüksek Olasılık)." (Ham). Kasa oranları Nisan %80, Ağustos %30 örnektir (Ham: "Uygulama").
   - `tweet-aylik-ortalama-getiri-mevsimsellik-1911360286876925997` — Aylık mevsimsellik hesap yöntemi: Yahoo Finance aylık kapanıştan aylık % getiri, takvim ayı ortalaması, tek ay (Nisan) filtresi, ayın günlerine göre günlük ortalama. "Bir hisse senedinin belli bir ayda, örneğin Nisan ayında, tarihsel olarak kazandırma eğilimi olup olmadığını görmek için kullanır." (Ham). Çıktı yalnız grafik, eşik ve sonuç kuralı yok. Günlük grafikte x ekseni "Day of February", başlık "April" (görsel, açıldı; Tansu'nun kod etiketi hatası). Parametre: aylık getiri = (bu ay kapanış − önceki ay kapanış) / önceki ay kapanış, veri Yahoo Finance (Ham).
+  - `tweet-takvim-ayi-mevsimsellik-getiri-1878196312941711453` — Aylık mevsimsellik kuralına banka örneği: son 20 yılın takvim ayı ortalama getirisi, Şubat'ta ortak dip beklentisi: "Şubat ayında banka tarafında dip mi yapacağız? Son 20 yıllık verilerin aylık ortalaması öyle diyor." (Ham). Beş banka da Şubat'ta negatiftir (yaklaşık −0,007 ile −0,040; AKBNK, GARAN, ISCTR, YKBNK, VAKBN) (görsel, açıldı; çizgi grafiğinden okuma). %70 olasılık eşiği, ağırlık kuralı, test ve sonuç yok; soru biçiminde bir gözlemdir. Parametre: mevsimsellik evreni = 5 banka hissesi: AKBNK, GARAN, ISCTR, YKBNK, VAKBN (görsel, açıldı)
+  - `tweet-takvim-ayi-mevsimsellik-getiri-1878208807685296426` — Aylık mevsimsellik banka grafiğinin güncellemesi, evren 5 bankadan 10 bankaya genişler: "Şöyle güncelleyelim bankacılığı" (Ham; yanıt, üst gönderi notta yok). Eklenenler ALBRK, HALKB, ICBCT, SKBNK, TSKB (görsel metni). Yeni kural, eşik veya sonuç yok; aynı 20 yıllık takvim ayı ortalaması grafiği (YORUM: pencere yazılı değil, önceki gönderiden devralınır). Parametre: mevsimsellik evreni = 10 banka hissesi: AKBNK, GARAN, ISCTR, YKBNK, VAKBN, ALBRK, HALKB, ICBCT, SKBNK, TSKB (görsel metni)
+  - `tweet-takvim-ayi-ortalama-getiri-al-sat-1723441298609238305` — Tekrar: aylık mevsimsellik kuralının DOAŞ örneği, özgün gönderi (11.11.2023, yapay zeka ile hazırlanmış): "Nisan sat Ağustos al, Kasım sat." (Ham). Son 20 yılın takvim ayı ortalama getirisi; Şubat'tan Nisan'a yükseliş, Ağustos'a düşüş iddiası. Grafikte (görsel, açıldı) Nisan ≈0,0040 yüksek, ama en yüksek nokta Kasım ≈0,0042; Şubat ≈0,000, Ağustos ≈−0,0015 en düşük; Mayıs–Temmuz düz bir düşüş değildir. YORUM: eksen değerleri 0,004 düzeyinde, bu yüzden bu seri aylık getiri değil günlük ortalama getiri olabilir (banka grafiklerinde eksen 0,06 düzeyindedir); birim açıklanmamış. Tek hisse, test yok; bölümdeki DOAŞ ek kaynağı bu gönderiyi alıntılıyor olabilir (YORUM).
 
 ---
 
@@ -308,3 +313,41 @@ Genel uyarı: Tansu kod, formül, pencere, maliyet, OOS vermiyor. Görseller dü
 - **Tansu'nun kanıtı:** Tablo yalnız geçmiş Ocak getirisini özetler. İleriye dönük sınama yok. 13 hisseden yalnız biri anlamlıdır. Edge kanıtı yok.
 - **Bedava veri:** Evet. Aylık getiri günlük kapanıştan çıkar. t-testi ve Shapiro için kütüphane gerekir; TASARIM §4 ile denetlenmedi (YORUM). Hazırlık K.
 - **Güven:** Orta. Ham ve görsel birinci eldir ve sayılar uyumludur. Test türü ve örneklem büyüklüğü yazılı değildir.
+
+## Portföy VIF kontrolü (üst sınır 10, tercih 5)
+- **Kaynak:** `tweet-vif-5-10-portfoy-hedge-1823403053212475711` (Ham; Tansu'nun X gönderisi, 13.08.2024; görsel yok). Aynı konuda Tansu'nun başka X gönderileri (Markowitz çoklu doğrusal bağlantı, portföyde VIF ön kontrolü) başka notlardadır.
+- **Tansu'nun ifadesi (verbatim):** "birden fazla hisseden oluşan portföyünüz varsa nolur VİF değerini kontrol edin. 10 üzeri olmasın, 5 üstü olmazsa daha harika olur." "Bizim gibi piyasalarda en basit hedging yöntemidir."
+- **Tanım:** Portföydeki hisselerin getiri serileri arasındaki çoklu doğrusal bağlantı VIF ile ölçülür. Kural: VIF 10'u aşmamalıdır; 5'i aşmaması tercih edilir. YORUM: VIF_i = 1 / (1 − R²_i), R²_i = hisse i getirisinin diğer hisselerin getirilerine regresyonundan; sınır her hisse için en büyük VIF'e uygulanır.
+- **Parametreler:**
+
+| parametre | değer | kaynak |
+|---|---|---|
+| üst sınır | 10 | Ham |
+| tercih edilen sınır | 5 | Ham |
+| getiri serisi türü ve pencere | yok | belirsiz |
+| eşik aşılınca eylem | yok (YORUM: hisse çıkar veya ağırlık azalt) | belirsiz |
+
+- **Belirsiz kalanlar:** Hesap penceresi ve getiri türü (günlük mü, haftalık mı). "VIF" tek bir sayı mı (en büyük) yoksa hisse başına mı. Eşik aşılırsa ne yapılacağı. "Hedging" burada çeşitlendirme anlamında kullanılmış görünür (YORUM; bağımsız bir hedge aracı değildir).
+- **Tansu'nun kanıtı:** Yok (ilke ve iki sayı).
+- **Bedava veri:** Evet (günlük kapanıştan getiri, regresyon). Portföy simülasyonuna eklenmesi TASARIM kararıdır.
+- **Güven:** Ham; sayılar açık, yöntem yok: orta-düşük. Hazırlık K.
+
+## Haftanın günü mevsimselliği: en kötü ortalama getirili günde giriş yok (XU100, son 1 yıl)
+- **Kaynak:** `tweet-weekday-return-seasonality-filter-1891208151497613761` (Ham ve görsel, açıldı; Tansu'nun X gönderisi, 16.02.2025). Bu kural, "Sektör rotasyonu" bölümündeki aylık mevsimsellik kuralının haftalık karşılığıdır.
+- **Tansu'nun ifadesi (verbatim):** "Endeksin ralli yaptığı dönemde haftanın kötü getirisi salı günü idi, işleme girmezdik, o gün şimdi pazartesi." Görsel başlığı: "XU100 Average Daily Returns by Weekday (Last 1 Year)" (görsel, açıldı).
+- **Tanım (Ham ve görsel):** (1) XU100'ün günlük getirisinin haftanın günü başına ortalaması hesaplanır (son 1 yıl). (2) Ortalaması en kötü olan günde işleme girilmez ("girmezdik"). (3) En kötü gün dönemle değişir: ralli döneminde Salı, son 1 yılda Pazartesi (Ham). YORUM: kural = giriş günü, son 1 yılın en düşük ortalamalı gününe denkse yeni giriş yapılmaz.
+- **Parametreler:**
+
+| parametre | değer | kaynak |
+|---|---|---|
+| pencere | son 1 yıl | görsel başlığı (açıldı) |
+| ölçü | haftanın günü başına ortalama günlük getiri | görsel (açıldı) |
+| evren | XU100 endeksi (hisse bazında değil) | görsel (açıldı) |
+| dışarıda kalan gün sayısı | 1 ("o gün") | Ham |
+| ortalama getiri (Pzt / Sal / Çar / Per / Cum) | ≈ −0,0052 / −0,0001 / −0,0033 / +0,0086 / +0,0016 | görsel, açıldı (çizgiden okuma, ölçüm) |
+| eşik, yeniden hesap sıklığı | yok | belirsiz |
+
+- **Belirsiz kalanlar:** "Ralli dönemi" tanımı ve tarihleri. "Girmezdik" geçmiş zamandır; "o gün şimdi pazartesi" uygulamanın sürdüğünü ima eder (YORUM). Yalnız en kötü gün mü, negatif ortalamalı Çarşamba da mı dışarıda. Anlamlılık testi yok (YORUM: bir yılda her gün için yaklaşık 50 gözlem vardır; hata payı ortalama farklarından büyük olabilir). Endeks günü mü, hisse günü mü ölçüt. Giriş günü sinyal günü mü emir günü mü.
+- **Tansu'nun kanıtı:** Tek grafik; sonuç, backtest ve kâr karşılaştırması yok.
+- **Bedava veri:** Evet (endeksin günlük kapanışı).
+- **Güven:** Ham ve görsel birinci el; tek cümlelik kural: düşük-orta. Hazırlık K.

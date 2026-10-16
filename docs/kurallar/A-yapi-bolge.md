@@ -93,7 +93,7 @@ Genel bulgu: Tansu bazı notlarda giriş, stop ve hedefi birlikte verir: `gorsel
 | Giriş/stop/hedef | yok | - |
 
 - Önemli: BALAT görseli bir başarısızlık örneğidir. Tansu'nun yorumu (Ham, `gorsel-paket-45`): "Abcd analizine güvenip çaat diye alırsan küüt diye böyle olursun. Her zaman çalışmaz. İkinci alt grafiğe dikkat." (Küm. Delta uzun süre negatif). LIDER ise "Kuğuyu bir de talep toplama bölgesinde yakalarsanız böyle RUN! olur grafiğiniz." (Ham, `gorsel-paket-34`). Yani aynı başlıklı iki sinyalden biri başarılı biri başarısız gösterildi; Küm. Delta bir filtre olarak ima ediliyor ama eşik yok.
-- Belirsiz kalanlar: çizgi kuran algoritma, talep bölgesi bağı, Lookback anlamı, Küm. Delta hesabı, "Siyah Kuğu" oranları. Gerçek işlem deltası günlük OHLCV'den çıkmaz; kaynak panelinin proxy olup olmadığı açık değildir (Araç, G45/g1, alt panel). YORUM: günlük proxy bizim seçimimizdir.
+- Belirsiz kalanlar: çizgi kuran algoritma, talep bölgesi bağı, Lookback anlamı, Küm. Delta hesabı, "Siyah Kuğu" oranları (bu bölümün kaynaklarında yok; bullish aralıklar: C §26, 16.10). Gerçek işlem deltası günlük OHLCV'den çıkmaz; kaynak panelinin proxy olup olmadığı açık değildir (Araç, G45/g1, alt panel). YORUM: günlük proxy bizim seçimimizdir.
 - Tansu'nun kanıtı: yok; biri seçilmiş pozitif, biri seçilmiş negatif.
 - Günlük bedava veriyle uygulanabilir mi: Düşen direnç kırılımı + EMA5/8/13 + Fib + ABCD: evet (günlük). Küm. Delta paneli: hesabı belirsiz (Araç, G45/g1, alt panel); günlük proxy YORUM'dur. Siyah Kuğu: oranlar verilmemiş, kodlanamaz.
 - Kaynak güveni: başlık değerleri birinci el ama düşük çözünürlük; kural düşük.
@@ -208,6 +208,9 @@ Genel bulgu: Tansu bazı notlarda giriş, stop ve hedefi birlikte verir: `gorsel
 - Tansu'nun kanıtı: yok; seçilmiş pozitif tek örnek, başarısız adaylar yok.
 - Ek örnek (KANIT, bilet 04, 14.10): `gorsel-paket-66-fibo-volume-profile-vwap-delta-yuzde20` (Tansu'nun metni, Ham; görsel okundu): 8 Ocak 2026 görünümü; düşüşün 0,786 seviyesi ve yatay direnç aşıldı; fiyat 31,00, POC 29,71, VAH 30,24, VWAP 28,00 (VWAP'tan +%10,73 uzak); +DI, −DI'nın üstünde; kümülatif delta yukarı eğimli. Tansu'nun sonuç iddiası ayrı bir grafikte; bu katalog getiri rakamı yazmaz. Seçilmiş pozitif örnek; giriş, stop, hedef yok. Delta için emir akışı verisi gerekir (günlük veriden çıkmaz).
 - Günlük veriyle: evet. Güven: akış net, parametreler yok; tweet metni Ham, görsel doğrular seviyeleri.
+- Ek kaynaklar (X arşivi, 16.10):
+  - `tweet-bos-fibo-golden-zone-order-block-alim-2002131073137062285` — Tekrar, birinci el kaynak olarak: aynı strateji metni Tansu'nun kendi X gönderisi (19.12.2025; bölümdeki -105 metni "Ham'da yazar yok" idi). Beş adım aynıdır; ek ayrıntılar: giriş yalnız fiyat Fib 0.5 ("Discount") altına inince aranır, hedef bölge 0.618–0.786 ve yeşil kutu (Order Block veya FVG) teması şart; BOS "önceki önemli bir tepeyi yukarı yönlü kırıp üzerinde kapanış" demektir. "Stop Loss (SL): Fibonacci 1.0 seviyesinin (hareketin başladığı en dip noktanın) hemen altına koyulur." (Ham). TP1 Fib 0.0, ileri hedef uzatma (−0.27 "vb."). "Hemen altına": tampon sayısı yok. Tansu "taramasını yaparsınız" der: tarama kendisinde yok. Görsel (görsel, açıldı): bölümdeki yaklaşık okumalar yerine yazılı değerler 0.236: 201.05, 0.786: 164.11 (küçük yazı; 0.0 ve 1.0 uçlarıyla formül 164.41 verir, bu yüzden 0.786 değeri belirsiz). Parametre: Fib 0.236 = 201.05; Fib 0.786 = 164.11 (görsel, açıldı; bölümdeki 201.69 ve 163.75 yaklaşık okumadır)
+  - `tweet-fib-382-giris-618-stop-bos-1838978628757143953` — Aynı yapı (itki, BOS, HH, Fib), farklı seviyeler: "38.2% ENTRY" ve "61.8% SL"; başlık "1. IMPULSIVE MOVE (AROUND 38.2% FIBONACCI LEVEL)" (görsel, açıldı). Ham: "Şu durumu kodlayıp taramasını yapalım bakalım ne çıkacak" (kodlama niyeti, sonuç yok). §10'daki 0.618–0.786 giriş ve Fib 1.0 stop yerine daha sığ varyant. Şema, sembol ve sonuç yok. Parametre: Giriş = Fib 0,382 geri alımı; stop = Fib 0,618 (görsel, açıldı); anahtar seviye (KEY LEVELS) kutusu itki başında (görsel, açıldı)
 
 ---
 
@@ -312,7 +315,7 @@ Kodlanabilirlik sırası (kaynağın verdiği ve bizim YORUM ile doldurmamız ge
 Kodlanamayacak veya yeterince tanımsız olanlar:
 - SETUP x/100 ve "Skor 100/100 / Sınıf A+" (5, 1): puan formülü hiçbir yerde yok.
 - Zone D.Touch / D.Teyit tanımları (6): açıklanmamış.
-- Siyah Kuğu harmonik (3): oranlar verilmemiş.
+- Siyah Kuğu harmonik (3): bu bölümün kaynaklarında oranlar verilmemiş (bullish aralıklar: C §26, 16.10).
 - BOM, AHENK, gizli filtre breakout (14, 16): kural açıklanmamış.
 - 80-100 hafta yatay (15): tek parametre (süre).
 - Küm. Delta (3): gerçek emir akışı verisi gerekir.
