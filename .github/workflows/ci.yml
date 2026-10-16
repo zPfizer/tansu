@@ -31,6 +31,12 @@ jobs:
             git diff --numstat --no-renames "origin/$BASE...HEAD" -- kayit
             exit 1
           fi
+      # PR'da satır sonu boşluğu ve çatışma işareti kalmaz.
+      - name: git diff --check
+        if: github.event_name == 'pull_request'
+        env:
+          BASE: ${{ github.base_ref }}
+        run: git diff --check "origin/$BASE...HEAD"
       - uses: actions/setup-python@v5
         with:
           python-version: "3.14"
@@ -46,3 +52,19 @@ jobs:
         with:
           node-version: "24.19.0"
       - run: npx --yes @alifurkangokce/driftlint@0.19.0 .
+
+  # Ayrı iş: `ci` kontrol adı sabit kalır (skill Merge adımı bu adı anar). Windows'ta yalnız testler koşar.
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: requirements.lock.txt
+      - run: python -m pip install -r requirements.lock.txt -e ".[dev]"
+      - run: pytest -q
