@@ -27,7 +27,7 @@ from tansu import ciftbolme, kayit, motor, rapor, saglamlik, simulator, veri
 MASRAF = 0.001  # TASARIM 5.14: her yönde %0,10, kayma yok
 SUPHELI_KAZANMA = 0.90  # TASARIM 5.14: kazanma oranı bu değerden küçük değilse "şüpheli: aşırı uyum" (YORUM)
 AZ_ISLEM = 5  # TASARIM 5.14: Tansu'nun tablosundaki süzgeç "İşlem >= 5"
-ISCI_BELLEK_GB = 0.5  # ponytail: yer tutucu; makinede ölçülen işçi belleğiyle değişir (TASARIM 5.14, Makine ve paralellik)
+ISCI_BELLEK_GB = 0.25  # ölçülen işçi başı tepe bellek 0,17 GB + pay (performans.md)
 BASLANGIC = simulator.BASLANGIC
 EGITIM_YIL = 2  # TASARIM 5.14 ileri yürüme: en az 2 tam eğitim yılı
 CIFT_ISINMA = 252  # TASARIM 5.14 Dönem: çiftte ısınma 252 işlem günü
@@ -43,7 +43,7 @@ def islem_getirisi(giris, cikis, m=MASRAF) -> float:
 
 
 def makine() -> dict:
-    """Mantıksal çekirdek, boş ve toplam bellek (GB), GPU adı (nvidia-smi yoksa ya da yanıt vermezse None)."""
+    """Mantıksal ve fiziksel çekirdek, boş ve toplam bellek (GB), GPU adı (nvidia-smi yoksa ya da yanıt vermezse None)."""
     bellek = psutil.virtual_memory()
     gpu, smi = None, shutil.which("nvidia-smi")
     if smi:
@@ -59,6 +59,7 @@ def makine() -> dict:
             gpu = None
     return {
         "cekirdek": os.cpu_count(),
+        "fiziksel_cekirdek": psutil.cpu_count(logical=False) or os.cpu_count(),
         "bellek_bos_gb": round(bellek.available / 2**30, 2),
         "bellek_toplam_gb": round(bellek.total / 2**30, 2),
         "gpu": gpu,
@@ -68,7 +69,7 @@ def makine() -> dict:
 def isci_sayisi(
     cekirdek, bellek_bos_gb, is_sayisi, isci_bellek_gb=ISCI_BELLEK_GB
 ) -> int:
-    """min(çekirdek, boş bellek × 0,8 / işçi başı bellek, iş sayısı); en az 1 (TASARIM 5.14)."""
+    """min(çekirdek (`calistir` fiziksel çekirdeği verir), boş bellek × 0,8 / işçi başı bellek, iş sayısı); en az 1 (TASARIM 5.14)."""
     return max(1, min(cekirdek, int(bellek_bos_gb * 0.8 / isci_bellek_gb), is_sayisi))
 
 
@@ -190,11 +191,11 @@ def _hucreler(izgara) -> list:
 
 
 def _sonraki(seriler) -> dict:
-    """Sinyalden 1, 3 ve 5 gün sonraki getirinin medyanı: kapanış(sinyal + k) / kapanış(sinyal − 1) − 1 (TASARIM 5.14).
+    """Sinyal günü kapanışından k işlem günü sonraki kapanışa getirinin medyanı, k = 1, 3, 5 (TASARIM 5.14).
     `seriler`: işlem başına (kapanış dizisi, sinyal konumu)."""
     sonuc = {}
     for k in (1, 3, 5):
-        v = [c[s + k] / c[s - 1] - 1 for c, s in seriler if s >= 1 and s + k < len(c)]
+        v = [c[s + k] / c[s] - 1 for c, s in seriler if s + k < len(c)]
         sonuc[f"ileri_{k}"] = float(np.median(v)) if v else None
     return sonuc
 
@@ -275,8 +276,9 @@ def _getirili(t) -> pd.DataFrame:
     )
 
 
-def _ema_is(ad, m, p, izgara, bas) -> dict:
-    bas, son = _ema_donem(m, p, bas)
+def ema_tablolari(m, p, izgara, bas) -> list:
+    """Bir hissenin ızgara hücrelerinin işlem tabloları (düz ızgara sırasında, `getiri` sütunlu); dönem `_ema_donem`'dir."""
+    bas, _ = _ema_donem(m, p, bas)
     f = m.dropna(subset=["kapanis"])
     zincir = motor.Zincir(m)
     tablolar = []
@@ -284,6 +286,12 @@ def _ema_is(ad, m, p, izgara, bas) -> dict:
         sig = ail.sinyal(f, replace(p, **h))
         t, _ = zincir.calistir(m.index.get_indexer(sig[sig >= bas]))
         tablolar.append(_getirili(t))
+    return tablolar
+
+
+def _ema_is(ad, m, p, izgara, bas) -> dict:
+    tablolar = ema_tablolari(m, p, izgara, bas)
+    bas, son = _ema_donem(m, p, bas)
     kap = m["kapanis"].ffill().loc[:son]
     c = kap.to_numpy()
     ilk_aof = float(m["aof"].loc[bas:].dropna().iloc[0])
@@ -571,7 +579,9 @@ def calistir(
     if ciftbolme.AILE in aileler:
         isler += _cift_isleri(anlik, sektor, semboller, bas, izgara[ciftbolme.AILE])
     mak = makine()
-    isci = isci or isci_sayisi(mak["cekirdek"], mak["bellek_bos_gb"], len(isler))
+    isci = isci or isci_sayisi(
+        mak["fiziksel_cekirdek"], mak["bellek_bos_gb"], len(isler)
+    )
     sonuc = _kos(isler, isci, ilerleme, t0)
     ailelerin = {}
     for aile in aileler:

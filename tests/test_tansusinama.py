@@ -208,6 +208,7 @@ def test_isci_sayisi_en_kucuk_sinir_en_az_bir(
 def test_makine_cekirdek_bellek_ve_gpu():
     m = ts.makine()
     assert m["cekirdek"] >= 1
+    assert 1 <= m["fiziksel_cekirdek"] <= m["cekirdek"]
     assert 0 < m["bellek_bos_gb"] <= m["bellek_toplam_gb"]
     assert m["gpu"] is None or isinstance(m["gpu"], str)
 

@@ -2,7 +2,8 @@
 
 Tek parametrik test: bileşen × kesim günü. Sentetik dünya (`denetim.dunya`, 24 hisse, 900 gün; 02.01.2012'den). Kesilen
 anlık görüntüde t'den sonraki fiyat satırları ve faiz değişimleri yoktur; tam görüntünün t'ye kadarki çıktısı aynı olmalı.
-Kapsam: evren, göstergeler, EMA ve çift sinyalleri, çift seçimi, likidite medyanı, faiz hizalaması (ve K2 sepeti).
+Kapsam: evren, göstergeler, EMA ve çift sinyalleri, çift seçimi, likidite medyanı, faiz hizalaması (ve K2 sepeti), Tansu
+sınaması (EMA hücre işlemleri ve ileri yürüme seçimleri).
 """
 
 import numpy as np
@@ -18,6 +19,7 @@ from tansu import (
     gostergeler,
     motor,
     simulator,
+    tansusinama,
     veri,
 )
 
@@ -157,6 +159,43 @@ def yillik_fazla_(tam, kes_, t):
     pd.testing.assert_frame_equal(sonuc[0].loc[biten], sonuc[1].loc[biten])
 
 
+def tansusinama_(tam, kes_, t):
+    """Tansu sınaması (TASARIM 5.14), EMA ailesi: t'den önce kapanan hücre işlemleri ve ileri yürüme seçimleri (yıl ≤ t.year,
+    seçim Y-01-01'den önce kapanmış işlemlerle yapılır) kesilmişle tam görüntüde aynıdır. Kesilmişte t'de veri sonu çıkışı
+    olabilir: t'de ve sonrasında kapananlar karşılaştırılmaz."""
+    izgara = tansusinama.IZGARA["ema_sikismasi"]
+    sekil = tuple(len(v) for v in izgara.values())
+    bas, son = pd.Timestamp("2012-01-01"), pd.Timestamp("2015-12-31")
+    sutunlar = [
+        "sinyal_tarih",
+        "giris_tarih",
+        "cikis_tarih",
+        "giris_fiyat",
+        "cikis_fiyat",
+    ]
+    toplam, secimler = 0, [[], []]
+    for s in sorted(tam.fiyat["sembol"].unique())[:8]:
+        tablolar = [
+            tansusinama.ema_tablolari(
+                motor.mumlar(a, s), aileler.Parametre(), izgara, BAS
+            )
+            for a in (tam, kes_)
+        ]
+        for tb, kb in zip(*tablolar):
+            pd.testing.assert_frame_equal(
+                tb.loc[tb["cikis_tarih"] < t, sutunlar].reset_index(drop=True),
+                kb.loc[kb["cikis_tarih"] < t, sutunlar].reset_index(drop=True),
+                check_dtype=False,  # boş tablonun sütunları object kalır
+            )
+            toplam += int((tb["cikis_tarih"] < t).sum())
+        for liste, tb in zip(secimler, tablolar):
+            yillar = tansusinama.ileri(tb, sekil, bas, son)["yillar"]
+            liste.append([y for y in yillar if y["yil"] <= t.year])
+    assert toplam > 0 or t < pd.Timestamp("2014-06-01")  # sınama boş değil
+    assert secimler[0] == secimler[1]
+    assert any(secimler[0][0])  # ileri yürüme yılı var
+
+
 @pytest.mark.parametrize("kesim", KESIM)
 @pytest.mark.parametrize(
     "bilesen",
@@ -168,6 +207,7 @@ def yillik_fazla_(tam, kes_, t):
         cift_secimi_,
         zemin_,
         yillik_fazla_,
+        tansusinama_,
     ],
     ids=lambda f: f.__name__,
 )

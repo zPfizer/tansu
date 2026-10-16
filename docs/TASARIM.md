@@ -816,7 +816,8 @@ Genel "Geçti" yalnız hepsi sağlanınca yazılır. (İ: 17-079)
   test, bileşen × dört kesim günü: 2014-09-30, 2015-01-15, 2015-03-02 ve yılın son işlem günü 2014-12-31 (yıllık fazla
   getiri için biten yılın karşılaştırılması; bilet 07d, 15.10). Kapsam: evren (ay başı seçimi), göstergeler (EMA, SMA, Wilder ATR, sıkışma oranı,
   piyasa durumu), EMA sinyali ve ön şart dizileri, çift Z ve hedef günleri, yıllık çift seçimi, likidite medyanı,
-  faiz hizalaması (gecelik getiri dizisi) ve K2 sepeti.
+  faiz hizalaması (gecelik getiri dizisi), K2 sepeti ve Tansu sınaması (5.14: EMA hücre işlemleri ve ileri yürüme
+  seçimleri; t'den önce biten test yılları aynı).
 
 ### 5.13 Veri kapıları
 Getiri görülmeden yazılır; kural kaydına girer. (B-7, İ: 19-015)
@@ -893,10 +894,14 @@ Levent 16.10: "Tansu ne diyorsa onu yap." Komut: `python -m tansu tansu-sinama`.
 - **Çift adayları** (YORUM, bizim; vekil 16.10): aynı sektördeki hisse çiftleri (5.6 YORUM'u), Y = sembol sırasına göre ilk.
   Günlük anlık görüntüde sektör yoksa sektör tablosu `--sektor-kok` altındaki en yeni tam anlık görüntüden okunur (5.2:
   bugünkü sınıflama). Site denenen çift sayısını ve sağlam bölgeli çiftlerin oranını yan yana yazar.
-- **Makine ve paralellik** (Levent kararı 16.10): koşu başında mantıksal çekirdek, boş bellek ve GPU ölçülür. İşçi sayısı =
-  min(çekirdek, boş bellek × 0,8 / işçi başı bellek, iş sayısı), en az 1; iş birimi bir hisse ya da bir çifttir. Sonuç işçi
-  sayısından bağımsızdır (test). Koşu ilerlemeyi yazar: biten / toplam iş, geçen süre, tahmini kalan süre, CPU kullanımı.
-  GPU: ölçülür ve sonuç bu maddeye yazılır.
+- **Makine ve paralellik** (Levent kararı 16.10): koşu başında mantıksal ve fiziksel çekirdek, boş bellek ve GPU ölçülür.
+  İşçi sayısı = min(fiziksel çekirdek, boş bellek × 0,8 / 0,25 GB, iş sayısı), en az 1; iş birimi bir hisse ya da bir çifttir.
+  Sonuç işçi sayısından bağımsızdır (test). Koşu ilerlemeyi yazar: biten / toplam iş, geçen süre, tahmini kalan süre, CPU
+  kullanımı. Gerekçe (YORUM, 16.10 ölçümü, 1.205 iş): 1 işçi 39,6 sn, 16 işçi 7,4 sn, 24 işçi 7,5 sn, 32 işçi 8,3 sn; yani
+  32 mantıksal çekirdek 24 fiziksel çekirdekten yavaştır ve 16 işçiden sonra kazanç yoktur. İşçi başı tepe bellek 0,17 GB
+  ölçüldü; 0,25 GB bu değer artı paydır.
+  GPU (16.10): makinede RTX 5070 Ti var; GPU hesap kütüphanesi yok (torch 2.14.0+cpu, CUDA yok; cupy yok). GPU hızı
+  ölçülemedi; GPU kullanılmaz. İş gün gün yol bağımlı bir döngüdür; bütün koşu 24 işçide 7,5 sn sürer.
 - **Kayıt ve çıktı:** sonuç `rapor/tansu-sinama-<koşu>.json`; deneme günlüğüne `tur=destek`, `olay=tansu_sinama` satırı
   (koşu kimliği, anlık görüntü ve manifest sha256'sı, `git_commit`, `kirli`, makine, işçi, süre). Holm ve m bunu saymaz (5.11).
 - **Bizim ek kontrolümüz:** aynı ailenin son resmi `durum` satırı (5.11, 5.12) çıktıda ve sitede yanında durur.

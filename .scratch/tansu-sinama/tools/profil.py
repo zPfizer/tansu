@@ -14,7 +14,10 @@ def olc(ana, cpu, tepe, dur):
     psutil.cpu_percent()
     while not dur.wait(0.5):
         cpu.append(psutil.cpu_percent())
-        rss = [c.memory_info().rss for c in ana.children(recursive=True) if c.is_running()]
+        try:
+            rss = [c.memory_info().rss for c in ana.children(recursive=True)]
+        except psutil.NoSuchProcess:
+            continue  # çocuk süreç okuma sırasında bitti; bir sonraki turda okunur
         if rss:
             tepe[0] = max(tepe[0], max(rss) / 2**30)
             tepe[1] = max(tepe[1], len(rss))
