@@ -31,3 +31,7 @@ GPU:
 - Sonuç: GPU var, GPU hesap kütüphanesi yok; GPU hızı ölçülemedi, GPU kullanılmadı. Bir kütüphane kurmak yeni
   bağımlılık ve büyük indirme ister. İş her gün bir önceki güne bağlı (stop, geçiş) bir döngüdür; bütün koşu 24 işçide
   7,5 sn sürdüğü için GPU'nun kazandırabileceği süre en çok bu 7,5 sn'dir.
+
+Sürüm 2 (17.10), son kodla geliştirme koşusu `20261016T214244-65c468` (kod 02341c8, `kirli: false`; `kayit/deneme.jsonl`):
+1.205 iş, 24 işçi, 9,84 sn; komutun ilerleme satırında CPU %94-95. Sürüm 1 koşusu 8,72 sn idi: fark 2 katın altında,
+kapı yeniden ölçülmedi. GPU kullanılmadı: hesap kütüphanesi kurulu değil.

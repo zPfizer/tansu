@@ -83,3 +83,4 @@ Sürüm 1 3. denetim turunun bulguları ve testleri (hepsi b464df1 koduyla kald�
 | Tek günlük çift dönemi | `cift_isleri`, `_sonuc` (`donem`) | `test_cift_tek_gunluk_donem_gecersiz_fiyat_atlanir`, `test_cift_tek_gunluk_donem_donem_alani` |
 
 Koşu (sürüm 1, eski kod): `kayit/deneme.jsonl` `olay=tansu_sinama`, koşu 20261016T201747-0a886d (anlık görüntü 20261014-1930).
+Koşu (sürüm 2, son kod 02341c8, `kirli: false`): 20261016T214244-65c468, aynı anlık görüntü; site Sınama sekmesi bu koşudan.
