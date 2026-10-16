@@ -192,9 +192,13 @@ geometri sadakati yönsüz yapılır. (bilet 04, 14.10)
        bittiği yer ile, en düşük mumun gölgesinin bittiği yer." (`gorsel-paket-18-konsolidasyon-body-wick`, Ham).
        `govde`'de üst sınır, dönemde gün yüksekliği en büyük olan günün gövde ucudur (YORUM: "en yüksek mum" =
        yüksekliği en büyük gün; eşitlikte ilk gün). Veride açılış yok; gövde ucu = max(önceki kapanış, kapanış)
-       (YORUM; bölgelerdeki vekil ölçüyle aynı). Dönemin ilk gününde önceki kapanış yoktur, o gün gövde ucu
-       kapanıştır (YORUM). Üst sınır giriş tetiğini, `retest` seviyesini ve `kutu_ust` sütununu değiştirir; alt sınır
+       (YORUM; bölgelerdeki vekil ölçüyle aynı). Önceki kapanış, serinin önceki günüdür; dönemden önceki gün olabilir.
+       Yalnız serinin ilk gününde önceki kapanış yoktur, o gün gövde ucu kapanıştır (YORUM: veri o kapanışı taşır ve
+       bölgeler aynı vekil ölçüyü kullanır). Üst sınır giriş tetiğini, `retest` seviyesini ve `kutu_ust` sütununu değiştirir; alt sınır
        değişmez.
+     - **Sıkışma.** Tansu: "EMA'ların (örneğin EMA 20, 50, 100) birbirinin içine geçtiğini ve "düzleştiğini" gör."
+       (`tweet-ema-sikismasi-talep-bolgesi-kirilim-2002087132089770127`, Ham). Oran şartı bu cümleyi karşılar; ayrı eğim
+       süzgeci yoktur (YORUM: cümle sayı vermez; ölçülmedi).
      - **Giriş türü** (`giris`). Giriş penceresi, dönem bitişinden sonraki 10 gündür (YORUM; bugünkü kural). Bir gün
        aday olur ancak ve yalnız tetik, bütün süzgeçler, kapanış ≥ SMA250 ve ısınma o gün sağlanırsa. Pencerede ilk aday
        gün sinyaldir. Dönem başına tek sinyal vardır.
@@ -216,6 +220,20 @@ geometri sadakati yönsüz yapılır. (bilet 04, 14.10)
          kadarki en düşük düşüğü ve kapanış_t ≥ o düşüktür (YORUM: değdi, altında kapanmadı; Tansu: kutunun altında
          kapanışta "analiz iptal olur"). Kutu = koşu + t günü. Koşu başına tek sinyal vardır. Hacim şartı uygulanmaz;
          bu bir kırılım değildir (YORUM).
+       - `arz`. Tansu: "Fiyat iki kutu arasına sıkışmış." ve "Yatırımcı: Fiyatın üstteki kırmızı kutuyu hacimli bir şekilde
+         kırıp üzerinde kapanış yapmasını beklemelidir."
+         (`tweet-ema-sikismasi-talep-bolgesi-kirilim-2002087132089770127`, Ham). YORUM: üst kutu, dönem bitişinde sabitlenir.
+         Üst kutu, dönem bitişinde aktif (bilinen gün ≤ dönem sonu, bölge o gün bitmemiş) arz bölgelerinden proximal'ı kutu
+         üstünden büyük olanların en küçük proximal'lısıdır (Hedef maddesindeki bölge tanımı). Böyle bölge yoksa bu dönemde
+         sinyal yoktur. Pencerede kapanış, üst kutunun distal'ının üstündeyse gün tetiktir. "hacimli" kısmı hacim
+         süzgecidir. Pencere 10 gündür (YORUM; bugünkü kural).
+       - `ucgen`. Tansu: "Kırılma tarihi olarak görülen bar, üst çizginin üzerine taşan ve üzerinde kapanan bar"
+         (`tweet-ema-sikismasi-ucgen-kirilim-hacim-1954300245707497649`, Ham) ve "fiyatın direnci yukarı kırması genellikle
+         güçlü bir yükseliş sinyali olarak yorumlanır" (`tweet-ema-sikisma-yukselen-ucgen-tarama-1952086678639669635`,
+         Ham). Dönemde üçgen aranır (tanım: Üçgen hedefi maddesi). Üçgen yoksa bu dönemde sinyal yoktur. Üst çizgi, o
+         üçgenin ilk ve son salınım tepesinden geçer (YORUM: Tansu çizginin hangi tepelerden geçtiğini yazmaz). Pencerede
+         t günü, kapanış_t > çizginin t'deki değeriyse tetiktir. Salınım noktaları dönemin içindedir; dönem bitişinde
+         hepsi bilinir. Hacim kısmı hacim süzgecidir.
      - **Süzgeçler** (hepsi aday şartıdır). Eksik değer (YORUM): hacim ya da gösterge teyidi hesaplanamayan gün aday
        değildir; momentum squeeze hesaplanamayan gün süzgeçten geçer (kural yalnız "negatif ve düşen" günü eler).
        - Hacim (`hacim_kat`: 0, 2, 3). Tansu: "Breakout anında hacmin ortalamanın en az 2-3 katı olması lazım."
@@ -240,7 +258,12 @@ geometri sadakati yönsüz yapılır. (bilet 04, 14.10)
          (`tweet-ema-sikisma-psar-trend-temas-hacim-1956041277096546504`, Ham; ayar yok; başlangıç YORUM: ilk gün
          yükselen trend, ilk SAR ilk düşük, ilk uç nokta ilk yüksek). Stokastik %K(14) > %D(3);
          Tansu: "stoc güzel kesmiş" (`tweet-ema-squeeze-downtrend-break-checklist-1953173142861414759`, Ham; ayar yok;
-         periyotlar YORUM). Listedeki hacim maddesi hacim süzgecindedir.
+         periyotlar YORUM). Momentum artıyor, yani squeeze momentum val_t > val_{t−1}; trend güçleniyor, yani ADX_t >
+         ADX_{t−1}; Tansu: "trend güşlenmiş momentum artmış"
+         (`tweet-ema-squeeze-downtrend-break-checklist-1953173142861414759`, Ham; ölçüler YORUM). ADX(14, Wilder 1978;
+         YORUM, standart tanım): +DM, −DM ve gerçek aralık Wilder ortalamasıyla 14 gün yumuşatılır; DX = 100 × |+DI − −DI|
+         / (+DI + −DI); ADX, DX'in 14 günlük Wilder ortalamasıdır. ADX hesaplanamayan gün aday değildir (Eksik değer).
+         Listedeki hacim maddesi hacim süzgecindedir.
        - Trend teyidi (`teyit` = `trend`; vekil kararı 16.10: trend çizgileri de kodlanır). Tansu: "şahane düşeni kırmış"
          (`tweet-ema-squeeze-downtrend-break-checklist-1953173142861414759`, Ham) ve "Yükselen trende temas edip tepki
          alsın" (`tweet-ema-sikisma-psar-trend-temas-hacim-1956041277096546504`, Ham). Doğru tanımı YORUM'dur (Tansu pivot
@@ -255,6 +278,16 @@ geometri sadakati yönsüz yapılır. (bilet 04, 14.10)
          gün aday değildir. stop_tahmini: `kutu` için kutu alt; `atr15` için kapanış_t − 1,5 × ATR_t; `atr2` için
          kapanış_t − 2 × ATR_t. Hedef bulunmazsa kapı uygulanmaz; ödül sınırsız sayılır (YORUM). Giriş tahmini
          kapanış_t'dir; gerçek giriş ertesi günün AOF'udur (TASARIM §5.3).
+       - Düşüş (`dusus`: açık ya da kapalı; varsayılan kapalı). Tansu: "Fiyatın güçlü bir düşüşten sonra durulduğu ve
+         yataya bağladığı Demand (Talep) bölgesini çiz." (`tweet-ema-sikismasi-talep-bolgesi-kirilim-2002087132089770127`,
+         Ham). Tansu "güçlü düşüş" için sayı vermez. YORUM: açıkken dönem başından önceki 20 günün en yüksek yükseği,
+         kutu alt + 3 × ATR14 (dönem başı günü) değerinden küçükse dönem sayılmaz. 20 ve 3 YORUM'dur. Yalnız dönem
+         başından önceki günlere bakılır.
+       - Bilgi olarak okunan cümleler (kural değildir; YORUM). `tweet-qullamaggie-tarzi-hacimli-breakout-tarama-1979546907505545421`
+         notundaki tarama maddeleri (RSI > 60, MACD pozitif, fiyat MA 20-50-200 üstünde) başka bir tarama stratejisidir;
+         yalnız hacim ve "kapanış o seviyenin üstünde" cümleleri yukarıda kuraldır. `tweet-ema-sikisma-macd-histogram-egim-1957958199425818842`
+         notundaki "0 altında" o grafiğin durumunu anlatır; kural "histogram artıyor" kalır. `gorsel-paket-15-rbr-demand-zone`
+         ortak bir şemadır; Tansu'nun kendi sözü değildir.
      - **Stop** (`stop`; Levent 16.10: başlangıç stopu 1,5 ATR ve 2 ATR, ikisi de sınanır).
        - `atr2` (varsayılan): giriş − 2 × ATR_sinyal (E K2; TASARIM §5.5).
        - `atr15`: giriş − 1,5 × ATR_sinyal (E K25 başlangıç stopu; YORUM).
@@ -317,8 +350,12 @@ geometri sadakati yönsüz yapılır. (bilet 04, 14.10)
          yapılır; kayan nokta hatası tam bir basamağı düşürmesin diye (YORUM).
        - Başabaş çıkışı (E K32). Tansu: "Eğer kârlı bölgeye geçtikten sonra fiyat geri dönerek tekrar tam olarak giriş
          fiyatınıza ulaşırsa, derhal pozisyondan çıkmanız gerekir."
-         (`tweet-under30-over30-1-5r-basabas-cikis-1992547498343161903`, Ham). Yüksek ≥ giriş + 1,5 × R ise stop =
-         max(stop, giriş). Aktivasyon fiyat alanı olarak gün yüksekliği YORUM'dur (E K32).
+         (`tweet-under30-over30-1-5r-basabas-cikis-1992547498343161903`, Ham). R = giriş − ilk stop (risk birimi).
+         Yüksek ≥ giriş + 1,5 × R ise stop = max(stop, giriş). Aktivasyon fiyat alanı olarak gün yüksekliği YORUM'dur (E K32).
+       - İz süren stop başlangıcı (YORUM). Tansu: "pozisyonun risk/ödül oranı hedefine ulaştığında Trailing Stop (TS) ve kâr
+         alma kuralları devreye girer" (`tweet-rsi30-giris-iki-asamali-cikis`, Ham; Ham'da yazar yok). Not sayı vermez.
+         ATR merdiveni n ≥ 2'de, başabaş 1,5 R'de başlar. İz süren stopun statik ya da dinamik oluşu (E K4) Levent'e kalır;
+         buna dokunulmaz.
        - Yarı satış: tek sefer, pozisyonun yarısı. Kalan yarı öbür kurallarla çıkar. `cikis` değeri hangi kuralın
          çalıştığını seçer.
          - `atr3` (E K25). Tansu: "3 ATR'ye ulaşınca %50 satış yapın"
@@ -335,6 +372,11 @@ geometri sadakati yönsüz yapılır. (bilet 04, 14.10)
            günün AOF'unda yarı satılır (RSI, Wilder ortalamasıyla; Ham: "70 seviyesinin üzerindeyken, daha sonra 70
            seviyesinin altına düşerek kapanış yaptığında"; "daha sonra" = ertesi gün, YORUM). Sonra ilk kapanış <
            önceki gün düşüğü ise ertesi günün AOF'unda kalanın tamamı satılır (neden `cikis_kurali`).
+           Etkinleşme önşartı. Tansu: "Pozisyon kâr bölgesine geçtikten ve SMA 50/RSI 50 dirençleri aşıldıktan sonra, ana
+           kâr alma sinyali RSI 70 Reddi ile başlar." (`tweet-rsi30-giris-iki-asamali-cikis`, Ham; Ham'da yazar yok).
+           RSI70 yarı satışı yalnız girişten sonra bir u günü varsa sayılır: u ≤ t−1, kapanış_u > giriş fiyatı ve
+           kapanış_u > SMA50_u (SMA50, kapanışın 50 günlük basit ortalamasıdır). RSI ≥ 50 şartı RSI ≥ 70 ile örtülüdür.
+           Ölçüler YORUM'dur (Ham sayı vermez).
          - `rsi50` (E K5). Tansu yarı satış koşulları: "Fiyat 50 RSI seviyesini reddederse." "Fiyat 50 SMA ortalamasını
            reddederse." "1.5 ATR kârdayken, önceki günün düşüğünün altında kapanış gelirse." Tam çıkış: "Bu 3
            senaryodan herhangi ikisi gerçekleşirse işlemin tamamını kapatın."
@@ -353,10 +395,10 @@ geometri sadakati yönsüz yapılır. (bilet 04, 14.10)
          hedef yoktur (`atr2` yedeği, hedef çıkışı yok; YORUM).
      - **Piyasa durumu** (Levent 16.10): yalnız bilgidir, kartı durdurmaz (TASARIM §3).
      - **Varyantlar** (`aileler.VARYANTLAR`). Temel `tansu`: periyotlar (20, 50, 100, 200), giriş `mum`, hacim 2 kat,
-       momentum açık, teyit `yok`, kutu üstü `yuksek`, stop `kutu`, hedef `tansu`, R/R 2, çıkış `atr3` (YORUM: Tansu'nun söylediği
+       momentum açık, teyit `yok`, düşüş `dusus` kapalı, kutu üstü `yuksek`, stop `kutu`, hedef `tansu`, R/R 2, çıkış `atr3` (YORUM: Tansu'nun söylediği
        kuralların birleşimi). Her varyant temelden tek boyut değiştirir. `bugun` istisnadır: varsayılan `Parametre()`
        değerleridir, yani yukarıdaki Giriş maddesinin bugünkü kuralıdır; karşılaştırma tabanıdır. Her varyant ayrı kural
-       kimliği ve ayrı denemedir (TASARIM §5.11). Günlük kart `bugun` ile kalır (TASARIM §6).
+       kimliği ve ayrı denemedir (TASARIM §5.11). Tabloda 23 varyant vardır. Günlük kart `bugun` ile kalır (TASARIM §6).
 
        | Varyant | Değişen boyut ve değer | Kaynak |
        |---|---|---|
@@ -369,10 +411,13 @@ geometri sadakati yönsüz yapılır. (bilet 04, 14.10)
        | `giris_ema` | giriş `ema` | Giriş türü, `ema` |
        | `giris_retest` | giriş `retest` | Giriş türü, `retest` |
        | `giris_agresif` | giriş `agresif` | Giriş türü, `agresif` |
+       | `giris_arz` | giriş `arz` | Giriş türü, `arz` |
+       | `giris_ucgen` | giriş `ucgen` | Giriş türü, `ucgen` |
        | `kutu_govde` | `kutu_ust` `govde` | Tansu: "En yüksek mumun gövdesinin bittiği yer" (`gorsel-paket-18-konsolidasyon-body-wick`, Ham); Kutu maddesi |
        | `hacim_yok` | hacim 0 | hacim süzgecinin karşılaştırması (YORUM) |
        | `hacim_3` | hacim 3 kat | Tansu: 2-3 kat (üst uç) |
        | `momentum_kapali` | momentum kapalı | momentum squeeze süzgecinin karşılaştırması (YORUM) |
+       | `dusus_sonrasi` | `dusus` açık | Tansu: "Fiyatın güçlü bir düşüşten sonra durulduğu" (`tweet-ema-sikismasi-talep-bolgesi-kirilim-2002087132089770127`, Ham); Düşüş süzgeci |
        | `teyit_acik` | teyit `gosterge` | Gösterge teyidi |
        | `teyit_trend` | teyit `trend` | Trend teyidi |
        | `stop_atr15` | stop `atr15` | Levent 16.10; E K25 |
@@ -381,7 +426,7 @@ geometri sadakati yönsüz yapılır. (bilet 04, 14.10)
        | `cikis_rsi70` | çıkış `rsi70` | E K5 |
        | `cikis_rsi50` | çıkış `rsi50` | E K5 |
    - K1 ön şartı: (a) türünde sıkışma dönemi bitmiş ve 10 günlük pencere açık günler (Modül 1 varyantlarında
-     `retest` için pencere 5 gün uzar; `agresif` için t−1'de biten koşusu en az 3 gün olan günlerdir; YORUM: gerçek
+     `arz` ve `ucgen` aynı 10 günlük pencere havuzunu kullanır (YORUM); `retest` için pencere 5 gün uzar; `agresif` için t−1'de biten koşusu en az 3 gün olan günlerdir; YORUM: gerçek
      sinyal günleri havuzun içinde kalır); (b) türünde sıkışma penceresi şartı aranmaz, yalnız hisse düzeyi şartlar (kapanış ≥ SMA250, ısınma, evren, karantina) aranır (TASARIM 5.7; bilet 03). Ek kol: sıkışmasız aynı kırılım (kapanış önceki 20 günün en yüksek yükseğinin üstünde, sıkışma penceresinde değil; 20 YORUM, TASARIM 5.7).
    - Sağlamlık ızgarası (TASARIM 5.10, YORUM): eşik {%1,0; %1,2; %1,5}, en az gün {2; 3; 5}, giriş
      penceresi {5; 10; 20}. (İ: 06-072)

@@ -287,7 +287,7 @@ hatasından** ayırmak.
   - Evren yalnız yeni girişi sınırlar. Evrenden çıkan hissenin açık pozisyonu kendi kuralıyla
     kapanır. (B-9)
 - **İşlemi kapanan hisseler:** İş Yatırım bunları da veriyor, ama liste eksik.
-  - Kapanan hissede açık pozisyon −%100 sayılır; nedeni bilinirse son fiyat.
+  - Kapanan hissede açık pozisyon −%100 sayılır (yarı satılmış pozisyonda kalan yarı; 5.5); nedeni bilinirse son fiyat.
   - 60 işlem gününden uzun durdurma kapanma sayılır.
   - Bulunamayan semboller raporda yazılır.
 - **Sektör:** bugünkü sınıflamadan (borsapy). Kaba ve tarih bilgisiz; bilinen yanlılık. Sektörü
@@ -396,8 +396,10 @@ Risk paketi (`kurallar/E` K1–K3): acil stop ve gün sonu stopu adları Ham met
   `KURALLAR.md` §3). Varsayılan kuralda bu paket yoktur; öbür aileler bu paketle kabul edildikten sonra denenir.
 - **Yarı satışlı işlem:** işlem tablosunda tek satırdır. Çıkış fiyatı (yarı satış fiyatı + son çıkış fiyatı) / 2'dir; yarılar
   eşit adettir. Getiri ve gerçekleşen kayıp (5.3) bu ortalama fiyattan hesaplanır; masraf oranı sabit olduğu için getiri
-  kesindir. Sınır: simülatör yarı satışın nakdini son çıkış gününde görür. Yarı satış ile son çıkış arasında nakdin faizi ve
-  yeniden kullanımı eksik kalır.
+  kesindir. İşlem tablosunda ayrıca `yari_tarih` ve `yari_fiyat` vardır (yarı satış yoksa boş). Hisse kapanırsa (5.2) ve
+  yarı satış hissenin son işlem gününde ya da önce yapılmışsa (`yari_tarih` ≤ son işlem günü), çıkış fiyatı (`yari_fiyat` + 0) / 2
+  olur; yarı satış yoksa 0 olur. Sınır: simülatör yarı satışın nakdini son çıkış gününde görür. Yarı satış ile son çıkış
+  arasında nakdin faizi ve yeniden kullanımı eksik kalır.
 
 ### 5.6 Portföy ve bölmeler
 İlk sürümde her aile **kendi sermayesiyle ayrı** ölçülür. Sınama tek sürekli koşudur; sermaye yıldan
@@ -515,7 +517,8 @@ serisinin kaynağını ve son değişim tarihini yazar; seri boşsa koşu SORUNL
 - **Özkaynak:** nakit + açık pozisyonların düzeltilmiş kapanışla değeri (kapanışı olmayan gün son kapanış).
 - **Kapanan hisse (5.2):** kapanma günü (`evren.kapananlar`) açık olan pozisyon o gün 0 fiyatla
   kapanır (−%100, neden `kapanma`). Kapanma nedeni listesi henüz bağlı değildir (bilet 07); her kapanma
-  −%100 sayılır. Rapor bu işlemlerin sayısını yazar.
+  −%100 sayılır. Yarı satılmış pozisyon yalnız kalan yarıyı kaybeder (5.5 "Yarı satışlı işlem"). Rapor bu işlemlerin
+  sayısını yazar.
 
 ### 5.7 Karşılaştırma (asıl soru)
 

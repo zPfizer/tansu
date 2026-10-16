@@ -73,6 +73,7 @@ olduğunu söyler; sayı, formül ve işleyiş, atıf verilen bölümdedir (TASA
 | Sıkışma dönemi | Sıkışma oranının eşiği aşmadığı art arda günler (KURALLAR §3). |
 | Giriş penceresi | Sıkışma dönemi bittikten sonra giriş sinyalinin oluşabileceği dönem (KURALLAR §3). |
 | Kutu | Sıkışma dönemindeki fiyat aralığı: alt sınır en düşük düşük, üst sınır en yüksek yüksektir. Tansu'nun talep bölgesi (yeşil kutu) sözüyle eşlemek YORUM'dur (KURALLAR §3). |
+| Üst kutu | `arz` girişinde, sıkışma dönemi bittiğinde kutunun üstünde duran en yakın aktif arz bölgesi (KURALLAR §3). |
 | Talep bölgesi | Fiyatın aşağıda alıcı bulması beklenen bölge. Sınırları proximal ve distal çizgidir (KURALLAR §3, `docs/kurallar/A-yapi-bolge.md`). |
 | Arz bölgesi | Fiyatın yukarıda satışla karşılaşması beklenen bölge. Sınırları proximal ve distal çizgidir (KURALLAR §3, `docs/kurallar/A-yapi-bolge.md`). |
 | Proximal ve distal çizgi | Bölgenin iki sınırı. Proximal çizgi fiyata yakın sınırdır, distal çizgi uzak sınırdır (KURALLAR §3, `docs/kurallar/A-yapi-bolge.md`). |
