@@ -871,7 +871,7 @@ def parti_entegre(kayit_dosyalari, kok, tarih):
 
 KULLANIM = (
     "kullanım: atif_araclari.py alinti <jsonl...> | entegre <tarih> <jsonl...> | "
-    "parti <parti.txt...> | alinti-belge <base-ref>"
+    "parti <parti.txt...> | alinti-belge <base-ref> | acik-sayi"
 )
 
 
@@ -879,10 +879,11 @@ def main(argv, havuz=HAVUZ, kok=KOK):
     """Komut satırı. Sorun varsa 1, eksik ya da bilinmeyen argüman varsa 2 (kullanım metni stderr'e) döner.
 
     `alinti <jsonl...>`, `entegre <tarih> <jsonl...>`, `parti <parti.txt...>`,
-    `alinti-belge <base-ref>` (`git diff -U0 <base-ref> -- docs/kurallar` ile eklenen satırların alıntıları).
+    `alinti-belge <base-ref>` (`git diff -U0 <base-ref> -- docs/kurallar` ile eklenen satırların alıntıları),
+    `acik-sayi` (havuzda atıfsız açık not sayısı; test kapısı `TANSU_BEKLENEN_ACIK` için kullanır).
     """
     komut, *argumanlar = argv or [""]
-    gerekli = {"alinti": 1, "parti": 1, "entegre": 2, "alinti-belge": 1}
+    gerekli = {"alinti": 1, "parti": 1, "entegre": 2, "alinti-belge": 1, "acik-sayi": 0}
     if (
         komut not in gerekli
         or len(argumanlar) < gerekli[komut]
@@ -890,6 +891,9 @@ def main(argv, havuz=HAVUZ, kok=KOK):
     ):
         print(KULLANIM, file=sys.stderr)
         return 2
+    if komut == "acik-sayi":
+        print(len(havuz_sorunlari(kok, havuz)))
+        return 0
     if komut == "entegre":
         tarih, *dosyalar = argumanlar
         for ad, sayi in parti_entegre(map(Path, dosyalar), kok, tarih).items():
