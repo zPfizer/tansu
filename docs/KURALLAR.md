@@ -1,22 +1,29 @@
 # Kural kataloğu (05.10.2026)
 
-Kaynak: beyindeki Tansu havuzu (14.10 sayımı: 258 not, 228 görsel). Ayrıntılar `docs/kurallar/A–E` dosyalarındadır;
+Kaynak: beyindeki Tansu havuzu (14.10 sayımı: 258 not, 227 görsel ve 1 PDF). Ayrıntılar `docs/kurallar/A–E` dosyalarındadır;
 bu belge onların dizini ve seçimidir. Her kuralın kaynağı, parametresi ve "YORUM" etiketi orada.
 
 Okuma kuralları (birinci el, ikinci el, NotebookLM ve YORUM tanımları GLOSSARY'dedir):
-- Kuralın dayanağı birinci el kaynaktır. Not ile görsel çelişirse görsel geçerlidir (§1 madde 3).
-- İkinci el kaynak kural olarak tek başına kullanılmaz; NotebookLM ayrı işaretlenir.
+- Kuralın dayanağı birinci el kaynaktır: notun Ham metni ve notun görselleri (NotebookLM görselleri dahil). Notun Ham dışı
+  bölümü görselle çelişirse görsel geçerlidir (§1 madde 3).
+- Notun öbür bölümleri (Sentez, Cevo çıkarımı, Kaynak kartı, Teknik Ek) ikinci eldir ve kural olarak tek başına kullanılmaz;
+  "NotebookLM görseli" etiketi yalnız bilgi verir.
 - Bir YORUM'un sınamada denenen her değeri yeni deneme sayılır; istisna: önceden yazılmış sağlamlık ızgarasının
   hücreleri ve masraf senaryoları deneme sayısına girmez (TASARIM 5.10, 5.11; İ: 09-056). Sadakat kontrolünde denenen
   aday formüller deneme sayısına girmez, p üretmez; seçilen formül kural kaydına girer (TASARIM 5.11, İ: 10-033, 04-090).
 
 ## 1. Ana bulgular
 
-1. Tansu hiçbir kural için tam giriş + stop + hedef üçlüsü ve sistematik sınama vermiyor. Kanıtı
+1. Tansu bazı kurallar için tam giriş + stop + hedef üçlüsü verir: gorsel-paket-105, -106 ve -107 Ham metinleri ve AKFIS
+   görseli (ENTRY, STOP, TP1–3). gorsel-paket-58 Ham giriş (300.75), hedef (389.30) ve risk/ödül (1:2.27) verir; stop vermez.
+   Sistematik çok sembollü sınama yoktur; yalnız tek sembollü tablolar vardır (SMRTG 12 patern, ISKPL 5 patern). Kanıtı
    seçilmiş örneklerdir; bazı başarısız örnekleri de paylaşır (BALAT, AKSGY, bağı kopan çift).
-2. Tepe/dip (pivot) bulma ayarı, temas toleransı, bölge üretimi ve SETUP puan formülü hiçbir yerde yok.
-3. Notlarda görselle çelişen en az 8 hata bulundu (ör. BOS/Fib seviyeleri, ISKPL tarihi, Gartley D
-   yönü, HKTM işareti). Not ile görsel çelişirse görsel geçerlidir.
+2. Talep/arz bölgesi üretim kuralı, temas toleransı ve SETUP puan formülü hiçbir yerde yok. Tepe/dip (pivot) ayarı
+   yalnız gorsel-paket-60 görselinde görünür ("Swing=15 sol-only | MinGap=15"); konsolidasyon bölgesinin sınırı
+   gorsel-paket-18 Ham'da tanımlıdır (en yüksek mumun gövde ucu, en düşük mumun gölge ucu).
+3. Gartley takip tablosunda (gorsel-paket-123) D girişi `X + (A-X) * 0.786 (Boğa için)` yazılıdır; tablonun kendi TP
+   formülleri D'nin A'nın altında olduğunu varsayar. Hata Tansu'nun tablosunun içindedir (YORUM: bizim hesabımız, C §7).
+   Notun Ham dışı bölümü görselle çelişirse görsel geçerlidir.
 4. 05.10 ön denemesindeki "4 ATR hedef" ve "EMA50 altı çıkış" Tansu kaynaklarında yok; kaldırılır.
 
 ## 2. Dizin
@@ -52,15 +59,15 @@ dizin kaynak değerini yinelemez.
 ### Risk ve çıkış (E)
 | Kural | Bölüm | Hazırlık |
 |---|---|---|
-| Risk bütçesi ve lot | E K1 | K |
-| Acil stop | E K2 | K |
-| Gün sonu stopu | E K3 | K |
+| Risk bütçesi ve lot | E K1 | H |
+| Acil stop | E K2 | H |
+| Gün sonu stopu | E K3 | H |
 | İz süren stop, kısmi kâr | E K4, K5 | K |
 | Harmonik hedef merdivenleri | C §4, §11 (E K11) | K |
 | Durum etiketleri | C §2 (E K15) | H (ad) |
 | Tepki penceresi | C §10 (E K15) | K |
 
-E K1–K3: kaynakları NotebookLM'dir (ikinci el), bu yüzden H değil K'dir. İkinci el kaynak tek başına kural olmaz (yukarıdaki okuma kuralı); bu üç kural, birinci el kaynak bulunana dek bizim okumamız (YORUM) olarak benimsenir.
+E K1–K3: kaynakları birinci eldir, bu yüzden H'dir. K1 ve K2 Ham'dadır (tweet-atr-risk-butcesi-position-sizing-stop-loss, Ham'da yazar yok; gorsel-paket-115). K3'ün SMA250 altı kapanış çıkışı gorsel-paket-115 NotebookLM görselindedir. ATR uzunluğu, dolum ve SMA250'nin giriş filtresi olarak seçimi YORUM'dur (E K1–K3).
 
 ### Piyasa durumu (D)
 | Kural | Bölüm | Hazırlık |
@@ -81,7 +88,7 @@ E K1–K3: kaynakları NotebookLM'dir (ikinci el), bu yüzden H değil K'dir. İ
 **İlk sürümde sınanacak aileler:**
 | Sıra | Aile | Neden | En önemli YORUM |
 |---|---|---|---|
-| 1 | Çift rotasyonu | 4 ölçütün hepsi; Tansu'nun en güçlü rakamları | sapma formülü ve pencere |
+| 1 | Çift rotasyonu | 4 ölçütün hepsi; sayısal çıktısı var (VAKBN–GARAN raporu, §4) | sapma formülü ve pencere |
 | 2 | EMA sıkışması | parametreler birinci el; oran formülü sadakatle seçildi (YORUM, aşağıda) | giriş tetiği |
 
 Sürüm kapsamının sahibi TASARIM §3'tür. AB=CD ilk sürümde yoktur (gerekçe TASARIM §3, Sorgu 3). İkinci dalgada
@@ -100,8 +107,8 @@ geometri sadakati yönsüz yapılır. (bilet 04, 14.10)
    - K1 ön şartı: çift seçilmiş ve |Z| ≥ 2 olan günler.
    - Sağlamlık ızgarası (TASARIM 5.10, YORUM): Z penceresi {60; 120}, eşik {1,5; 2; 2,5}, seçim p'si
      {0,01; 0,05; 0,10}. (İ: 04-089)
-2. **EMA sıkışması kırılımı** (Tansu'nun sayısal iddiası yok; bu ailenin getiri iddiası bizim
-   hipotezimizdir, İ: 10-002)
+2. **EMA sıkışması kırılımı** (Tansu parametre vermez; tek sayısı gorsel-paket-65 Ham'daki "Bir günde %5 Ema
+   sıkışması"dır, anlamı açık değil. Bu ailenin getiri iddiası bizim hipotezimizdir, İ: 10-002)
    - Oran: (en büyük EMA − en küçük EMA) / EMA200; EMA20/50/100/200, `ewm(adjust=False)`. Formül görselde yok (B §1); sadakat
      kontrolüyle KRDMD örneğinde eşleşti, KRDMD dışında doğrulanmadı (YORUM, §4; düşüş trendinde paydanın EMA200 mü
      en küçük EMA mı olduğu açıktır, TASARIM §8 madde 6; bilet 04, 14.10).
@@ -165,15 +172,15 @@ Kural:
 - Tansu'nun örnek çiftleri ve hisseleri sonuca bakılarak seçilmiş olabilir. Bu yüzden çift rotasyonu
   yalnız onun çiftlerinde değil, önceden yazılmış bir kuralla seçilen bütün çiftlerde sınanır
   (aynı sektör: YORUM, TASARIM 5.6; oluşum penceresinde eşbütünleşme). Onun çiftleri ayrıca gösterilir. AGROT–GARAN
-  rotasyon değildir (iki bacak + nakit) ve borsapy'ye göre farklı sektördedir.
-- NotebookLM infografikleri Tansu'nun kendi kuralı olmayabilir.
+  rotasyon değildir (iki bacak + nakit) ve borsapy'ye göre farklı sektördedir (bizim veri: borsapy; Tansu iddiası değil).
+- NotebookLM görselleri birinci eldir (GLOSSARY); Tansu'nun kendi kuralı olmayabilir.
 
 ## Kural içermeyen notlar (bilet 04, 14.10)
 
-Havuzdaki her not A–E dosyalarında ya da bu belgede geçer. Aşağıdaki notlar işlem kuralı (giriş, çıkış, filtre, eşik) içermiyor. Yazarı belirsiz bir metindeki kural "kural içermez" sayılmaz; A–E'de "yazarlığı belirsiz, ikinci el" etiketiyle yazılır (ör. DEA/VZA ve aylık mevsimsellik notları: D, "Sektör rotasyonu"). Okuma derinliği: kısa notlar baştan sona; uzun değerleme notlarında Ham, Sentez ve teknik başlıklar. Biçim: dosya adı · gerekçe. "Kapsam dışı: TASARIM §3": TASARIM 3 (değerleme, opsiyon).
+Havuzdaki her not A–E dosyalarında ya da bu belgede geçer. Aşağıdaki notlar işlem kuralı (giriş, çıkış, filtre, eşik) içermiyor. Yazarı belirsiz bir metindeki kural "kural içermez" sayılmaz; A–E'de "Ham; Ham'da yazar yok" etiketiyle yazılır (ör. DEA/VZA ve aylık mevsimsellik notları: D, "Sektör rotasyonu"). Bir değerleme notu filtre ya da eşik taşıyorsa girdisinde yazılır; kapsamı TASARIM §3 dışarıda bırakır. Okuma derinliği: kısa notlar baştan sona; uzun değerleme notlarında Ham, Sentez ve teknik başlıklar. Biçim: dosya adı · gerekçe. "Kapsam dışı: TASARIM §3": TASARIM 3 (değerleme, opsiyon).
 
 gorsel-paket-04-tsla-implied-move · kapsam dışı: TASARIM §3 (opsiyon); ABD örneği, kural yok
-gorsel-paket-108-beta-risk-pusulasi · değerleme: beta tanımı, eşiksiz rejim görüşü
+gorsel-paket-108-beta-risk-pusulasi · değerleme: beta tanımı; görsel rejime göre beta eşiği verir (boğada Beta > 1, ayıda Beta < 1); kapsam dışı: TASARIM §3
 gorsel-paket-130-piyasa-evreleri-birikim-dagitim-semasi · kavram şeması, sayı yok
 gorsel-paket-133-medyan-kanal-kullanimi · gösterge fikri, parametre yok (medyan: B §28)
 gorsel-paket-14-isletme-analizi-kriterleri · değerleme, kapsam dışı: TASARIM §3
@@ -225,7 +232,7 @@ tweet-gordon-buyume-modeli-temettu-degerleme · değerleme, kapsam dışı: TASA
 tweet-nihai-hedef-tek-tus-temel-teknik-degerleme-llm-nlp · vaat: hedef beyanı
 tweet-optimal-momentum-plus-simulasyon-tamamlandi · vaat
 tweet-ozkaynak-artisi-varlik-finansman-yatirim-verimliligi · değerleme, kapsam dışı: TASARIM §3
-tweet-pddd-roe-sektor-tarihsel-value-trap-filtresi · değerleme, kapsam dışı: TASARIM §3
+tweet-pddd-roe-sektor-tarihsel-value-trap-filtresi · değerleme: Ham bir filtre verir (düşük PD/DD + yüksek ROE + sektör altı çarpan; 36 çeyrek çıpa); kapsam dışı: TASARIM §3
 tweet-pine-script-python-gorev-ayrimi-veri-backtest-icra · araç tercihi
 tweet-python-ai-stratejik-yonetim-vizyon-misyon-kodlama · kurumsal proje, kapsam dışı
 tweet-python-finans-verisi-ogrenme-yol-haritasi · eğitim
