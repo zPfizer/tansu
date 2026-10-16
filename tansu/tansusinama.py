@@ -255,25 +255,23 @@ def _fiyat_gecerli(x):
     return (x > 0) & np.isfinite(x)
 
 
-def _ema_gecerli(m) -> pd.Series:
-    """Geçerli fiyat günleri (TASARIM 5.14): `islem` doğru, `karantina` yanlış, AOF ve kapanış sıfırdan büyük ve sonlu."""
-    return (
-        m["islem"]
-        & ~m["karantina"]
-        & _fiyat_gecerli(m["aof"])
-        & _fiyat_gecerli(m["kapanis"])
-    )
+def _gecerli(islem, karantina, aof, kapanis):
+    """Geçerli fiyat günü (TASARIM 5.14 Geçerli fiyat günü): `islem` doğru, karantina yanlış, AOF ve kapanış sıfırdan büyük
+    ve sonlu. Seri ya da dizi alır. Yalnız bu modülün fiyat okumaları içindir; sinyal ve ısınma sayımını değiştirmez."""
+    return islem & ~karantina & _fiyat_gecerli(aof) & _fiyat_gecerli(kapanis)
 
 
 def _ema_donem(m, p, bas):
     """(dönem başı, dönemin son günü) ya da None (TASARIM 5.14 Dönem). Başı: `bas` ile ısınmanın bittiği günün geç olanından
-    başlayarak (o gün dahil) ilk geçerli fiyat günü. Isınma dolmuyorsa ya da dönem başı bulunmuyorsa None. Son gün: `m`'nin
-    son satırı; fiyatı geçerli olmak zorunda değildir."""
+    başlayarak (o gün dahil) ilk geçerli fiyat günü. Isınma sayımı kapanışı olan günlerdir (5.1). Isınma dolmuyorsa ya da dönem
+    başı bulunmuyorsa None. Son gün: `m`'nin son satırı; fiyatı geçerli olmak zorunda değildir."""
     f = m.dropna(subset=["kapanis"])
     if len(f) < p.isinma:
         return None
     bas = max(pd.Timestamp(bas), f.index[p.isinma - 1])
-    uygun = m.index[(m.index >= bas) & _ema_gecerli(m)]
+    uygun = m.index[
+        (m.index >= bas) & _gecerli(m["islem"], m["karantina"], m["aof"], m["kapanis"])
+    ]
     return (uygun[0], m.index[-1]) if len(uygun) else None
 
 
@@ -319,7 +317,7 @@ def ema_tablolari(m, p, izgara, bas) -> list:
 def _ema_is(ad, m, p, izgara, bas) -> dict:
     tablolar = ema_tablolari(m, p, izgara, bas)
     bas, son = _ema_donem(m, p, bas)
-    gecerli = _ema_gecerli(m)
+    gecerli = _gecerli(m["islem"], m["karantina"], m["aof"], m["kapanis"])
     # değerleme: son geçerli kapanış ileri taşınır
     kap = m["kapanis"].where(gecerli).ffill()
     # k işlem günü: hissenin geçerli fiyat günleri
@@ -415,15 +413,10 @@ def _cift_simule(hedef, bas_k, d) -> tuple:
     return _getirili(pd.DataFrame(islemler, columns=sutunlar)), egri
 
 
-def _cift_gecerli(C, A, F):
-    """Bacak başına geçerli fiyat günleri (TASARIM 5.14): `islem` doğru, karantina yanlış, kapanış ve AOF sıfırdan büyük ve sonlu."""
-    return F["I"] & ~F["Kar"] & _fiyat_gecerli(C) & _fiyat_gecerli(A)
-
-
 def cift_tablolari(y, x, gunler, C, A, F, bas_k, izgara) -> tuple:
     """Bir çiftin ızgara hücrelerinin (düz ızgara sırasında) işlem tabloları ve günlük özkaynakları; `cift_isleri` girdisiyle.
     `G`: bacak başına geçerli fiyat günü (TASARIM 5.14); `Cf`, `SA`: son geçerli kapanış ve son temiz AOF, ileri taşınır."""
-    G = _cift_gecerli(C, A, F)
+    G = _gecerli(F["I"], F["Kar"], A, C)
     d = {
         "gunler": gunler,
         "C": C,
@@ -526,7 +519,7 @@ def cift_isleri(anlik, sektor, semboller, bas, izgara) -> tuple:
     }
     kol = {s: j for j, s in enumerate(C.columns)}
     var = C.notna().to_numpy()
-    gecerli = _cift_gecerli(C.to_numpy(), A.to_numpy(), F)
+    gecerli = _gecerli(F["I"], F["Kar"], A.to_numpy(), C.to_numpy())
     # bacağın `gun_tablosu`ndaki son satırı
     son_gun = g.groupby("sembol")["tarih"].max()
     bas_konum = int(gunler.searchsorted(pd.Timestamp(bas)))
