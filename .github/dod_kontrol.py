@@ -124,11 +124,13 @@ def _beceri_hatasi(govde, akis_ad):
 
 
 def _yorumsuz(metin):
-    return re.sub(r"<!--.*?-->", "", metin, flags=re.DOTALL)
+    return re.sub(
+        r"<!--.*?-->", lambda m: "\n" * m.group().count("\n"), metin, flags=re.DOTALL
+    )
 
 
 def _karar_hatasi(bolum):
-    satirlar = _yorumsuz("\n".join(satir for _, satir in bolum)).splitlines()
+    satirlar = [satir for _, satir in bolum]
 
     def alanlar(onek):
         return [
@@ -146,7 +148,11 @@ def _karar_hatasi(bolum):
     karar_onek = r"Denetçi kararı \(aynen\)"
     karar = alanlar(karar_onek)
     diger = "\n".join(
-        satir for satir in satirlar if not re.match(rf"\s*(Sonuç|{karar_onek}):", satir)
+        satir
+        for satir in satirlar
+        if not re.match(
+            rf"\s*(Sonuç|{karar_onek}|Yanlış iddia sayısı|İkinci geçiş):", satir
+        )
     )
     if len(karar) != 1:
         sorunlar.append(
@@ -178,6 +184,11 @@ def _karar_hatasi(bolum):
 
     if KALDI.search(diger):
         sorunlar.append("Bağımsız inceleme bölümünde KALDI sözcüğü var")
+    elif SUPHE.search(diger):
+        sorunlar.append(
+            "Bağımsız inceleme bölümünde şüphe sözcüğü var "
+            "(olabilir, belki, şüphe, emin değil)"
+        )
 
     sayilar = alanlar("Yanlış iddia sayısı")
     if len(sayilar) != 1:
@@ -228,6 +239,8 @@ def _kapi_hatasi(bolum, bas_sha, kod_var):
 
 
 def hatalar(govde: str, bas_sha: str | None = None, kod_var: bool = False) -> list[str]:
+    if govde:
+        govde = _yorumsuz(govde)
     if not govde or not govde.strip():
         return [
             "Kural 1: gövde boş; gerekli dört başlık yok.",
@@ -294,7 +307,7 @@ def hatalar(govde: str, bas_sha: str | None = None, kod_var: bool = False) -> li
         sonuc.append("Kural 9: ## Bağımsız inceleme bölümünde " + ayrinti + ".")
     if kanit is not None and (ayrinti := _kapi_hatasi(kanit, bas_sha, kod_var)):
         sonuc.append("Kural 10: ## Gerçek veri kanıtı bölümünde " + ayrinti + ".")
-    if "İNCELEME" in _yorumsuz(govde):
+    if "İNCELEME" in govde:
         sonuc.append("Kural 11: PR gövdesinde İNCELEME yer tutucusu kalmış.")
     return sonuc
 

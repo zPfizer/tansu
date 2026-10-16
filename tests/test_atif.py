@@ -704,6 +704,56 @@ def test_belge_alinti_yalniz_verilen_satirlar_ve_ileri_sira(tmp_path):
     assert belge_alinti_sorunlari(havuz, belge, [1]) == ["k.md:1: gerek yok … Aslolan"]
 
 
+def _belge_iki_satir(tmp_path, alinti_ilk, alinti_son, ham=HAM):
+    havuz = tmp_path / "havuz"
+    _not(havuz, "tweet-a-1", ham=ham)
+    belge = tmp_path / "k.md"
+    belge.write_text(
+        "## A\n"  # 1
+        "- `tweet-a-1` — başlık\n"  # 2
+        f'- önce "{alinti_ilk}\n'  # 3
+        f'{alinti_son}" (Ham).\n'  # 4
+        "- sonra\n",  # 5
+        encoding="utf-8",
+    )
+    return havuz, belge
+
+
+def test_belge_iki_satirli_alinti_kaynakta_yoksa_ilk_satirda_bildirilir(tmp_path):
+    havuz, belge = _belge_iki_satir(tmp_path, "kaynakta", "yok")
+    # alıntı 3-4. satırı kapsar: verilen satır ikisinden biri olsa yeter, bildirim ilk satırda
+    assert belge_alinti_sorunlari(havuz, belge, [3]) == ["k.md:3: kaynakta yok"]
+    assert belge_alinti_sorunlari(havuz, belge, [4]) == ["k.md:3: kaynakta yok"]
+    assert belge_alinti_sorunlari(havuz, belge, [3, 4]) == ["k.md:3: kaynakta yok"]
+
+
+def test_belge_iki_satirli_alinti_kaynaktaysa_gecer(tmp_path):
+    havuz, belge = _belge_iki_satir(tmp_path, "Para yoksa", "gerisine bakmaya")
+    assert belge_alinti_sorunlari(havuz, belge, [3, 4]) == []
+    assert belge_alinti_sorunlari(havuz, belge, [4]) == []
+
+
+def test_belge_alinti_verilen_satirlarin_disindaysa_denetlenmez(tmp_path):
+    havuz, belge = _belge_iki_satir(tmp_path, "kaynakta", "yok")
+    assert belge_alinti_sorunlari(havuz, belge, [1, 2, 5]) == []
+
+
+def test_belge_alinti_adayi_alintinin_kapsadigi_satirlardir(tmp_path):
+    havuz = tmp_path / "havuz"
+    _not(havuz, "tweet-a-1", ham=HAM)
+    _not(havuz, "tweet-b-2", ham="başka metin")
+    belge = tmp_path / "k.md"
+    belge.write_text(
+        "## A\n"  # 1
+        "- `tweet-a-1` — başlık\n"  # 2
+        '- `tweet-b-2` — "Para yoksa\n'  # 3
+        'gerisine" (Ham).\n',  # 4
+        encoding="utf-8",
+    )
+    # satır adayı yalnız b-2 (bölümdeki a-1 sayılmaz); 4. satırda not adı yok ama alıntı 3'ten başlar
+    assert belge_alinti_sorunlari(havuz, belge, [4]) == ["k.md:3: Para yoksa gerisine"]
+
+
 def _git(kok, *arg):
     subprocess.run(
         ["git", "-C", str(kok), "-c", "user.name=t", "-c", "user.email=t@t.t", *arg],
@@ -735,3 +785,22 @@ def test_main_alinti_belge_diffin_eklenen_satirlarini_denetler(tmp_path, capsys)
     _git(kok, "commit", "-q", "-a", "-m", "y")
     assert main(["alinti-belge", "HEAD"], havuz=havuz, kok=kok) == 0
     assert capsys.readouterr().out == ""
+
+
+def test_main_alinti_belge_iki_satirli_alintiyi_denetler(tmp_path, capsys):
+    havuz = tmp_path / "havuz"
+    _not(havuz, "tweet-a-1", ham="tamam")
+    kok = tmp_path / "depo"
+    (kok / "docs" / "kurallar").mkdir(parents=True)
+    belge = kok / "docs" / "kurallar" / "E-x.md"
+    belge.write_bytes('- `tweet-a-1` — "tamam"\n'.encode("utf-8"))
+    _git(kok, "init", "-q")
+    _git(kok, "add", "-A")
+    _git(kok, "commit", "-q", "-m", "x")
+    belge.write_bytes(
+        '- `tweet-a-1` — "tamam"\n- `tweet-a-1` — "kaynakta\nyok" (Ham).\n'.encode(
+            "utf-8"
+        )
+    )
+    assert main(["alinti-belge", "HEAD"], havuz=havuz, kok=kok) == 1
+    assert capsys.readouterr().out == "E-x.md:2: kaynakta yok\n"

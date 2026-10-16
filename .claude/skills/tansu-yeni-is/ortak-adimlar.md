@@ -18,7 +18,7 @@ Merge `master` into the branch first. Then check the change by its type.
 - A change to documents only (no code): run one `mattpocock-skills:code-review` pass by a Sonnet subagent on the diff. Run no Codex audit.
 
 Run the review in this order.
-1. Before Review, write the PR body draft with `Akış:` and `Çağrılan beceriler:` to `.scratch/<job>/pr-govde.md`. Open the PR as a draft (see "Pull request"). Give the path to the auditor.
+1. Before Review, write the PR body draft with `Akış:` and `Çağrılan beceriler:` to `.scratch/<job>/pr-govde.md` of the main checkout `C:\Users\levent\Desktop\TANSU`, not of the worktree. An untracked file in the worktree makes `kurulum\kapi.ps1` print `kirli`. <!-- driftlint-ignore: local-only path of the main repository, absent in CI --> Open the PR as a draft (see "Pull request"). Give the path to the auditor.
 2. The orchestrator starts the two axes of `mattpocock-skills:code-review` itself, as two parallel Sonnet subagents. No auditor agent sits between them. Each subagent prompt says: "Do not start a subagent."
 3. The audit prompt asks for the verdict and the line `Yanlış iddia sayısı: N`. Apply AGENTS.md "Auditor and rounds" (false claim, doubt, second pass, error class). Copy the verdict line of the auditor word for word into `Denetçi kararı (aynen):`.
 

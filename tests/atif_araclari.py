@@ -666,35 +666,37 @@ def alinti_sorunlari(havuz, kayit_dosyalari):
 
 
 def belge_alinti_sorunlari(havuz, yol, satir_nolari):
-    """Belgenin verilen satırlarındaki alıntılardan atıf yapılan notta olmayanlar: 'belge adı:satır: alıntı'.
+    """Belgenin verilen satırlarına değen alıntılardan atıf yapılan notta olmayanlar: 'belge adı:satır: alıntı'.
 
-    Aday not = aynı satırdaki backtick'li tam not adları; satırda yoksa aynı `## ` bölümündekiler.
-    Adayı olmayan alıntı da sorundur. Eşleşme `alinti_sorunlari` ile aynıdır.
+    Alıntılar belgenin tüm metninden çıkarılır (alıntı satır sonu içerebilir). Karakter aralığı verilen
+    satırlardan en az birine değen her alıntı denetlenir ve ilk satırında bildirilir.
+    Aday not = alıntının kapsadığı satırlardaki backtick'li tam not adları; yoksa ilk satırın `## `
+    bölümündekiler. Adayı olmayan alıntı da sorundur. Eşleşme `alinti_sorunlari` ile aynıdır.
     """
     kaynak = _kaynak_onbellegi(havuz)
-    satirlar = yol.read_text(encoding="utf-8").split("\n")
+    metin = yol.read_text(encoding="utf-8")
+    satirlar = metin.split("\n")
+    verilen = set(satir_nolari)
     sorunlar = []
-    for no in satir_nolari:
-        if not 1 <= no <= len(satirlar):
+    for e in _TIRNAK.finditer(metin):
+        ilk = metin.count("\n", 0, e.start()) + 1
+        son = metin.count("\n", 0, e.end() - 1) + 1
+        if verilen.isdisjoint(range(ilk, son + 1)):
             continue
-        satir = satirlar[no - 1]
-        alintilar = [e.group(1) or e.group(2) for e in _TIRNAK.finditer(satir)]
-        if not alintilar:
-            continue
-        adlar = _not_adlari(satir)
+        adlar = _not_adlari("\n".join(satirlar[ilk - 1 : son]))
         if not adlar:
             bas = next(
-                (s for s in range(no - 1, -1, -1) if satirlar[s].startswith("## ")), 0
+                (s for s in range(ilk - 1, -1, -1) if satirlar[s].startswith("## ")), 0
             )
-            son = next(
-                (s for s in range(no, len(satirlar)) if satirlar[s].startswith("## ")),
+            kapat = next(
+                (s for s in range(ilk, len(satirlar)) if satirlar[s].startswith("## ")),
                 len(satirlar),
             )
-            adlar = _not_adlari("\n".join(satirlar[bas:son]))
+            adlar = _not_adlari("\n".join(satirlar[bas:kapat]))
         metinler = [k for a in adlar if (k := kaynak(a)) is not None]
-        for alinti in alintilar:
-            if not metinler or not _alinti_var(alinti, metinler):
-                sorunlar.append(f"{yol.name}:{no}: {' '.join(alinti.split())}")
+        alinti = e.group(1) or e.group(2)
+        if not metinler or not _alinti_var(alinti, metinler):
+            sorunlar.append(f"{yol.name}:{ilk}: {' '.join(alinti.split())}")
     return sorunlar
 
 

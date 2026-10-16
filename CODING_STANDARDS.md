@@ -45,4 +45,4 @@ them when you write code.
   wrote the formulas of TASARIM again.)
 - **Do not write a missing thing as if it exists (Olmayanı var gibi yazma):** The documents describe only what exists
   today. Planned work stays in the spec and the ticket. When the work is in place, it goes into the document.
-- **Open the source before a new fact (Kaynağı aç):** Before you write a new fact sentence in a correction, open the Ham line or the image. If you cannot find it, write "okunamıyor" or YORUM. (16.10: a correction wrote a new unsupported sentence into TASARIM three times. 16.10: a batch reading wrote claims without YORUM that the source does not state (review findings S3–S5).)
+- **Open the source before a new fact (Kaynağı aç):** Before you write a new fact sentence in a document, open the Ham line or the image. If you cannot find it, write "okunamıyor" or YORUM. (16.10: a correction wrote a new unsupported sentence into TASARIM three times. 16.10: a batch reading wrote three claims that the source does not state, without YORUM.)

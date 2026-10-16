@@ -464,6 +464,53 @@ def test_kural_9_ve_11_cok_satirli_yorum_gecer():
     assert hatalar(GECERLI + yorum) == []
 
 
+def test_yorum_inceleme_bolumunde_kaldi_satiri_gecer():
+    govde = GECERLI.replace(IKINCI_SATIRI, IKINCI_SATIRI + "<!--\nSonuç: KALDI\n-->\n")
+    assert hatalar(govde) == []
+
+
+def test_yorum_icindeki_kapi_satirlari_sayilmaz():
+    blok = (
+        "kapi: pytest -> 0\n"
+        "kapi: ruff check -> 0\n"
+        "kapi: ruff format -> 0\n"
+        "kapi: git diff --check -> 0\n"
+        "kapi: HEAD 0123456789abcdef0123456789abcdef01234567 temiz\n"
+    )
+    govde = GECERLI.replace(blok, "<!--\n" + blok + "-->\n")
+    assert hatalar(govde) == [
+        "Kural 10: ## Gerçek veri kanıtı bölümünde eksik satır: "
+        "kapi: pytest -> 0 ya da kapi: pytest (belge) -> 0; "
+        "kapi: ruff check -> 0; kapi: ruff format -> 0; "
+        "kapi: git diff --check -> 0; "
+        "kapi: HEAD <40 küçük harfli onaltılı hane> temiz."
+    ]
+
+
+def test_yorum_icindeki_isaretsiz_kutu_sayilmaz():
+    govde = GECERLI.replace(AKIS_SATIRI, "<!--\n- [ ] Bekliyor\n-->\n" + AKIS_SATIRI)
+    assert hatalar(govde) == []
+
+
+def test_yorumdan_sonra_kural_2_satir_numarasi_dogru_kalir():
+    govde = GECERLI.replace(
+        AKIS_SATIRI, "<!--\nuc satirli\nyorum-->\n  - [ ] Bekliyor\n" + AKIS_SATIRI
+    )
+    assert hatalar(govde) == ["Kural 2: işaretsiz kutu var; satır: 33."]
+
+
+def test_kural_9_suphe_bolumun_baska_satirinda():
+    govde = GECERLI.replace(IKINCI_SATIRI, IKINCI_SATIRI + "Olabilir; kesin değil.\n")
+    assert hatalar(govde) == [
+        R9.format(
+            "Bağımsız inceleme bölümünde şüphe sözcüğü var "
+            "(olabilir, belki, şüphe, emin değil)"
+        )
+    ]
+    govde = GECERLI.replace(IKINCI_SATIRI, IKINCI_SATIRI + "<!-- belki -->\n")
+    assert hatalar(govde) == []
+
+
 def test_kural_9_kaldi_bolumun_baska_satirinda():
     govde = GECERLI.replace(IKINCI_SATIRI, IKINCI_SATIRI + "KALDI olabilir.\n")
     assert hatalar(govde) == [

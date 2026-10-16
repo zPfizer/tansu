@@ -36,7 +36,7 @@ Denetçi:
 Denetçi kararı (aynen):
 Yanlış iddia sayısı:
 İkinci geçiş:
-<!-- CI kuralları: Denetçi kararı satırı, denetçinin karar satırının kelimesi kelimesine kopyasıdır. CI, kopya KALDI sözcüğünü içeriyorsa PR'ı reddeder. "KALDI olabilir" gibi bir şüphe de KALDI sayılır (AGENTS.md "Auditor and rounds"). CI ayrıca kopya satırında şüphe sözcüğü (olabilir, belki, şüphe, emin değil) görürse ve bölümde yorum dışında herhangi bir yerde KALDI görürse reddeder. Kopyadaki karar sözcüğü Sonuç satırındakiyle aynı olmalıdır. Yanlış iddia sayısı, kopyalanan (son) geçişin sayısıdır ve 0 olmalıdır. İkinci geçiş satırı "yok" veya "geçti" olur: düzeltme geçişi koşuldu mu. CI, "İNCELEME" yer tutucusunu reddeder. CI, HTML yorumlarını yok sayar. -->
+<!-- CI kuralları: CI, her kuraldan önce tüm HTML yorumlarını siler. Denetçi kararı satırı, denetçinin karar satırının kelimesi kelimesine kopyasıdır. CI, bölümde KALDI sözcüğünü görürse PR'ı reddeder. "KALDI olabilir" gibi bir şüphe de KALDI sayılır (AGENTS.md "Auditor and rounds"). CI ayrıca bölümün tamamında şüphe sözcüğü (olabilir, belki, şüphe, emin değil) arar ve bulursa reddeder. Kopyadaki karar sözcüğü Sonuç satırındakiyle aynı olmalıdır. Yanlış iddia sayısı, kopyalanan (son) geçişin sayısıdır ve 0 olmalıdır. İkinci geçiş satırı "yok" veya "geçti" olur: düzeltme geçişi koşuldu mu. CI, "İNCELEME" yer tutucusunu reddeder. -->
 <!-- CI accepts exactly one Sonuç line, and only one of these three exact texts: "Sonuç: geçti", "Sonuç: GEÇTİ", "Sonuç: NOTLU GEÇTİ". CI rejects "Geçti", KALDI, and a second Sonuç line. -->
 Sonuç: 
 
