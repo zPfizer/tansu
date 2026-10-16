@@ -880,7 +880,8 @@ def main(argv, havuz=HAVUZ, kok=KOK):
 
     `alinti <jsonl...>`, `entegre <tarih> <jsonl...>`, `parti <parti.txt...>`,
     `alinti-belge <base-ref>` (`git diff -U0 <base-ref> -- docs/kurallar` ile eklenen satırların alıntıları),
-    `acik-sayi` (havuzda atıfsız açık not sayısı; test kapısı `TANSU_BEKLENEN_ACIK` için kullanır).
+    `acik-sayi` (açık havuz notu sayısı: `havuz_sorunlari` satırları, yani atıfsız notlar ve belirsiz atıf satırları;
+    test kapısı `TANSU_BEKLENEN_ACIK` için kullanır).
     """
     komut, *argumanlar = argv or [""]
     gerekli = {"alinti": 1, "parti": 1, "entegre": 2, "alinti-belge": 1, "acik-sayi": 0}

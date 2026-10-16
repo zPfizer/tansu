@@ -8,6 +8,10 @@ $py = 'C:\Users\levent\Desktop\TANSU\.venv\Scripts\python.exe'
 if (-not $env:TANSU_BEKLENEN_ACIK) {
     if (Test-Path (Join-Path $HOME 'Desktop\YONETIM\beyin\kisisel\300-Projects\Tansu X Veri Havuzu')) {
         $acikSayi = & $py -X utf8 tests/atif_araclari.py acik-sayi
+        if ($LASTEXITCODE -ne 0) {
+            'kapi: acik havuz notu = HATA'
+            exit 1
+        }
         "kapi: acik havuz notu = $acikSayi"
         if ([int]$acikSayi -gt 0) { $env:TANSU_BEKLENEN_ACIK = "$acikSayi" }
     } else {
