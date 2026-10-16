@@ -95,5 +95,37 @@ def test_bilet_ihlalleri_sahte_kokte_tam_liste(tmp_path):
     ]
 
 
+def test_yakin_ramak_degerler_reddedilir_bolum_disi_madde_sayilmaz(tmp_path):
+    _sozlesme_kopyala(tmp_path)
+    izleyici = tmp_path / "docs" / "agents" / "issue-tracker.md"
+    izleyici.write_text(
+        izleyici.read_text(encoding="utf-8") + "\n## Other\n\n- `zzz`: x\n",
+        encoding="utf-8",
+    )
+    bilet = tmp_path / ".scratch" / "x" / "issues"
+    bilet.mkdir(parents=True)
+    ornekler = {
+        "01-bitisik.md": "# T\n**Status:** done(PR #9)\n",
+        "02-acik.md": "# T\n**Status:** done (PR #9\n",
+        "03-buyuk.md": "# T\n**Status:** Done (a)\n",
+        "04-donex.md": "# T\n**Status:** donex (a)\n",
+        "05-artik.md": "# T\n**Status:** done (a) tail\n",
+        "06-rol-artik.md": "# T\n**Status:** ready-for-agent extra\n",
+        "07-bolum-disi.md": "# T\n**Status:** zzz\n",
+        "08-gecerli.md": "# T\n**Status:** done (a)\n",
+    }
+    for ad, metin in ornekler.items():
+        (bilet / ad).write_text(metin, encoding="utf-8")
+    assert bilet_ihlalleri(tmp_path) == [
+        ".scratch/x/issues/01-bitisik.md:2: izin verilmeyen değer: done(PR #9)",
+        ".scratch/x/issues/02-acik.md:2: izin verilmeyen değer: done (PR #9",
+        ".scratch/x/issues/03-buyuk.md:2: izin verilmeyen değer: Done (a)",
+        ".scratch/x/issues/04-donex.md:2: izin verilmeyen değer: donex (a)",
+        ".scratch/x/issues/05-artik.md:2: izin verilmeyen değer: done (a) tail",
+        ".scratch/x/issues/06-rol-artik.md:2: izin verilmeyen değer: ready-for-agent extra",
+        ".scratch/x/issues/07-bolum-disi.md:2: izin verilmeyen değer: zzz",
+    ]
+
+
 def test_gercek_biletler_sozlesmeye_uyar():
     assert bilet_ihlalleri(KOK) == []
