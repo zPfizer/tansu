@@ -282,7 +282,9 @@ geometri sadakati yönsüz yapılır. (bilet 04, 14.10)
          yataya bağladığı Demand (Talep) bölgesini çiz." (`tweet-ema-sikismasi-talep-bolgesi-kirilim-2002087132089770127`,
          Ham). Tansu "güçlü düşüş" için sayı vermez. YORUM: açıkken dönem başından önceki 20 günün en yüksek yükseği,
          kutu alt + 3 × ATR14 (dönem başı günü) değerinden küçükse dönem sayılmaz. 20 ve 3 YORUM'dur. Yalnız dönem
-         başından önceki günlere bakılır.
+         başından önceki günlere bakılır. Dönem başından önce 20 gün yoksa ya da ATR14 hesaplanamıyorsa süzgeç
+         hesaplanamaz ve dönem sayılmaz (YORUM). `agresif` girişte dönem başı yoktur; `dusus` ile `agresif` birlikte
+         tanımsızdır ve parametre hata verir (YORUM; hiçbir varyant bu birleşimi kullanmaz).
        - Bilgi olarak okunan cümleler (kural değildir; YORUM). `tweet-qullamaggie-tarzi-hacimli-breakout-tarama-1979546907505545421`
          notundaki tarama maddeleri (RSI > 60, MACD pozitif, fiyat MA 20-50-200 üstünde) başka bir tarama stratejisidir;
          yalnız hacim ve "kapanış o seviyenin üstünde" cümleleri yukarıda kuraldır. `tweet-ema-sikisma-macd-histogram-egim-1957958199425818842`
@@ -374,7 +376,8 @@ geometri sadakati yönsüz yapılır. (bilet 04, 14.10)
            önceki gün düşüğü ise ertesi günün AOF'unda kalanın tamamı satılır (neden `cikis_kurali`).
            Etkinleşme önşartı. Tansu: "Pozisyon kâr bölgesine geçtikten ve SMA 50/RSI 50 dirençleri aşıldıktan sonra, ana
            kâr alma sinyali RSI 70 Reddi ile başlar." (`tweet-rsi30-giris-iki-asamali-cikis`, Ham; Ham'da yazar yok).
-           RSI70 yarı satışı yalnız girişten sonra bir u günü varsa sayılır: u ≤ t−1, kapanış_u > giriş fiyatı ve
+           RSI70 yarı satışı yalnız girişten sonra bir u günü varsa sayılır (giriş günü sayılmaz; merdiven, başabaş ve
+           `dip` gibi ertesi günden başlar; YORUM): u ≤ t−1, kapanış_u > giriş fiyatı ve
            kapanış_u > SMA50_u (SMA50, kapanışın 50 günlük basit ortalamasıdır). RSI ≥ 50 şartı RSI ≥ 70 ile örtülüdür.
            Ölçüler YORUM'dur (Ham sayı vermez).
          - `rsi50` (E K5). Tansu yarı satış koşulları: "Fiyat 50 RSI seviyesini reddederse." "Fiyat 50 SMA ortalamasını
