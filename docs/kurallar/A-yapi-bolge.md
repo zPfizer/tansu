@@ -93,7 +93,7 @@ Genel bulgu: Tansu bazı notlarda giriş, stop ve hedefi birlikte verir: `gorsel
 | Giriş/stop/hedef | yok | - |
 
 - Önemli: BALAT görseli bir başarısızlık örneğidir. Tansu'nun yorumu (Ham, `gorsel-paket-45`): "Abcd analizine güvenip çaat diye alırsan küüt diye böyle olursun. Her zaman çalışmaz. İkinci alt grafiğe dikkat." (Küm. Delta uzun süre negatif). LIDER ise "Kuğuyu bir de talep toplama bölgesinde yakalarsanız böyle RUN! olur grafiğiniz." (Ham, `gorsel-paket-34`). Yani aynı başlıklı iki sinyalden biri başarılı biri başarısız gösterildi; Küm. Delta bir filtre olarak ima ediliyor ama eşik yok.
-- Belirsiz kalanlar: çizgi kuran algoritma, talep bölgesi bağı, Lookback anlamı, Küm. Delta hesabı, "Siyah Kuğu" oranları. Gerçek işlem deltası günlük OHLCV'den çıkmaz; kaynak panelinin proxy olup olmadığı açık değildir (Araç, G45/g1, alt panel). YORUM: günlük proxy bizim seçimimizdir.
+- Belirsiz kalanlar: çizgi kuran algoritma, talep bölgesi bağı, Lookback anlamı, Küm. Delta hesabı, "Siyah Kuğu" oranları (bu bölümün kaynaklarında yok; bullish aralıklar: C §26, 16.10). Gerçek işlem deltası günlük OHLCV'den çıkmaz; kaynak panelinin proxy olup olmadığı açık değildir (Araç, G45/g1, alt panel). YORUM: günlük proxy bizim seçimimizdir.
 - Tansu'nun kanıtı: yok; biri seçilmiş pozitif, biri seçilmiş negatif.
 - Günlük bedava veriyle uygulanabilir mi: Düşen direnç kırılımı + EMA5/8/13 + Fib + ABCD: evet (günlük). Küm. Delta paneli: hesabı belirsiz (Araç, G45/g1, alt panel); günlük proxy YORUM'dur. Siyah Kuğu: oranlar verilmemiş, kodlanamaz.
 - Kaynak güveni: başlık değerleri birinci el ama düşük çözünürlük; kural düşük.

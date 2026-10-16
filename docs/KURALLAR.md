@@ -305,7 +305,7 @@ tweet-topsis-cok-kriterli-hisse-siralama-motoru · görüş: sıralama yöntemi,
 tweet-topsis-hisse-secimi-yaklasan-proje · proje fikri
 tweet-ttrak-pddd-primi-carpan-sikismasi · değerleme, kapsam dışı: TASARIM §3
 tweet-wbdata-dunya-bankasi-makro-veri-cekme-1860262968446824713 · araç ve veri: wbdata ile ABD toplam rezerv serisini çekip çizen Python kodu (makro veri); kural öğesi yok
-tweet-yf-gecikme-gunluk-periyot-1849792794132435435 · araç tercihi, veri kaynağı: yfinance 15 dk gecikmeli, günlük veri tercihi; eşik yok (Yahoo kullanılmaz: TASARIM §5.1)
+tweet-yf-gecikme-gunluk-periyot-1849792794132435435 · araç tercihi, veri kaynağı: yfinance 15 dk gecikmeli, günlük veri tercihi, gecikme için en az 4 saatlik periyot önerisi (veri zamanlaması: E K30); işlem eşiği yok (Yahoo kullanılmaz: TASARIM §5.1)
 tweet-yfinance-bist-is-uzantisi-1761496087221707093 · araç tercihi, veri çekme kodu: yfinance BIST .IS eki; kural öğesi yok
 tweet-yfinance-close-auto-adjust-true-1892947326915739997 · araç tercihi, kütüphane sürüm uyarısı (yfinance auto_adjust=True, Adj Close yerine Close); kural öğesi yok
 tweet-yfinance-haftalik-veri-cekme-1849540753816453297 · araç tercihi, veri çekme kodu (yfinance interval 1wk); kural öğesi yok
