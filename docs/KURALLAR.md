@@ -59,7 +59,17 @@ dizin kaynak değerini yinelemez.
 | BOM, AHENK, gizli filtre | A §16, §14 | **X** |
 | Mavi çizgi, Pre Signal | B §8, §2 | **X** |
 | Bottle pattern (iki mum) | B §33 | K |
+| SMA kesişimi (TUPRS, EURUSD) | B §35 | K |
+| Üç kırmızı mum SELL sinyali | B §36 | K |
+| Fibonacci düzeyi + bant sistemi (144 bar) | C §23 | K |
+| EMA200 yukarı kesen tarama, golden cross adayı (CMENT) | C §24 | K |
+| 1 yıllık kapanış aralığı Fibonacci + EMA seviye haritası (DOAS) | C §25 | X |
+| Siyah Kuğu (bullish) oran aralıkları | C §26 | K |
+| Elliott 0-1-a-b-c: c dibi ve 1. tepe direnci (LIDFA, AKBNK) | C §27 | K |
+| Elliott 0-5 sonrası ABC: Fibonacci merdiveni, C teyidi, P-BOM (IDGYO, CRDFA) | C §28 | K |
+| Elliott taramaları (C taraması, 3. itki dalgası taraması) | C §29 | X |
 | X arşivi kısa kayıtları | A §17, B §34 | X |
+| X arşivi kısa kayıtları (Elliott) | C §30 | X |
 
 ### Risk ve çıkış (E)
 | Kural | Bölüm | Hazırlık |
@@ -75,6 +85,10 @@ dizin kaynak değerini yinelemez.
 | Momentum marjında kâr al | E K28 | K |
 | Fon satış baskısı, fon risk radarı (hisse dışı; kapsam kararı Levent'te bekliyor) | E K26, K27 | K, X |
 | X arşivi kısa kayıtları (kripto dahil) | E K29 | X |
+| Veriyi periyot kapanışında çek (tamamlanmış çubuk) | E K30 | H |
+| Optimizasyonda sağlam bölge ve aşırı uyum | E K31 | K |
+| Başabaş çıkışı (R aktivasyonlu, Under 30 Over 30) | E K32 | K |
+| Value-at-Risk (VaR) ve hedge | E K33 | X |
 
 E K1–K3: kaynakları birinci eldir, bu yüzden H'dir. K1 ve K2 Ham'dadır (tweet-atr-risk-butcesi-position-sizing-stop-loss, Ham'da yazar yok; gorsel-paket-115). K3'ün SMA250 altı kapanış çıkışı gorsel-paket-115 NotebookLM görselindedir. ATR uzunluğu, dolum ve SMA250'nin giriş filtresi olarak seçimi YORUM'dur (E K1–K3).
 
@@ -86,6 +100,8 @@ E K1–K3: kaynakları birinci eldir, bu yüzden H'dir. K1 ve K2 Ham'dadır (twe
 | Sektör liderleri 30/60/90 gün + anomali temizleme | D, "Sektör rotasyonu" | H |
 | Volatilite şoku freni | E K8 | X |
 | Aylık mevsimsellik eleme tablosu | D, "Aylık mevsimsellik: istatistiksel eleme tablosu" | K |
+| Portföy VIF kontrolü | D, "Portföy VIF kontrolü" | K |
+| Haftanın günü mevsimselliği (giriş günü filtresi) | D, "Haftanın günü mevsimselliği" | K |
 
 ## 3. Seçim
 
@@ -243,6 +259,7 @@ tweet-birikim-sureci-kotu-haber-akilli-para · sohbet: Wyckoff anlatısı, kural
 tweet-bist-hft-colocation-quant-rekabet-kod-ogrenin · görüş
 tweet-cari-oran-likidite-acigi-bedelli-sermaye-artirimi · değerleme, kapsam dışı: TASARIM §3
 tweet-convex-hull-dea-sektor-rotasyonu-projesi · proje fikri
+tweet-elliott-abc-fvg-algoritma-1989365905504256144 · örnek grafik, koşul yok (görsel: 1-2-3-A-B-C etiketi, sarı FVG kutusu, Matriks ekranı; Ham: "İşte böyle çalışıyor algoritma"; konu: C §17)
 tweet-enflasyon-farki-pi-pi-yildiz-1907020125770772606 · makro gösterge tanımı (π − π* = yerli eksi yabancı enflasyon, örnek %13 ve %2 için ≈ 0,11); eşik ve kural yok, üst gönderi notta yok
 tweet-envanter-azaltma-monte-carlo-pnl-1924523925683274094 · proje anlatısı: kavramsal Monte Carlo simülasyonu (5 envanter stratejisi, 100.000 senaryo, 3 piyasa koşulu); sayısal sonuç ve eşik yok, yalnız kavramsal ilke (yükselen trendde yavaş, düşen trendde hızlı sat)
 tweet-evds-api-mevduat-faizi-cekme-1766868425815535946 · veri çekme kodu (EVDS API, seri TP.TRY.MT02: TL 3 aya kadar mevduat faizi) ve makro görüş (faiz, enflasyon); kural öğesi yok
@@ -264,19 +281,41 @@ tweet-is-yatirim-bilanco-veri-toplama-1942613749073879070 · eğitim: bilanço v
 tweet-isyatirim-financial-data-source-1889446483449037295 · araç tercihi: İş Yatırım finansal verisi (class tipi kodla erişim), değerleme verisi (kapsam dışı: TASARIM §3), kural öğesi yok
 tweet-kmeans-silhouette-pca-kume-gorsellestirme-1762356653779763260 · eğitim: müşteri kümeleme (K-means, silhouette, PCA) kod örneği; ürün/kargo verisi, trade kuralı yok (havuz etiketi: dış kapsam)
 tweet-nihai-hedef-tek-tus-temel-teknik-degerleme-llm-nlp · vaat: hedef beyanı
+tweet-nispi-ppp-kur-enflasyon-testi-1907020119080935479 · makro, kur ve enflasyon farkı testi (nispi PPP), kural öğesi yok, kapsam dışı
 tweet-optimal-momentum-plus-simulasyon-tamamlandi · vaat
 tweet-ozkaynak-artisi-varlik-finansman-yatirim-verimliligi · değerleme, kapsam dışı: TASARIM §3
+tweet-pandas-zaman-serisi-kod-kaliplari-2023876641689075990 · eğitim (pandas zaman serisi kod kalıpları tablosu)
 tweet-pddd-roe-sektor-tarihsel-value-trap-filtresi · değerleme: Ham bir filtre verir (düşük PD/DD + yüksek ROE + sektör altı çarpan; 36 çeyrek çıpa); kapsam dışı: TASARIM §3
+tweet-period-net-profit-capital-extract-1913605982594138565 · bilanço kalemi (net kâr, sermaye) çekme kodu, değerleme ve temel veri, kapsam dışı: TASARIM §3
 tweet-pine-script-python-gorev-ayrimi-veri-backtest-icra · araç tercihi
 tweet-python-ai-stratejik-yonetim-vizyon-misyon-kodlama · kurumsal proje, kapsam dışı
 tweet-python-finans-verisi-ogrenme-yol-haritasi · eğitim
+tweet-rasyo-kumeleme-mlp-hisse-secimi-2086819758138134758 · değerleme, kapsam dışı: TASARIM §3 (10 finansal rasyo ile kümeleme ve MLP süzme şeması; rasyo listesi ve eşik yok)
 tweet-regresyon-ml-rasyolardan-piyasa-degeri-sapmasi · değerleme, kapsam dışı: TASARIM §3
 tweet-relatif-degerleme-piyasa-norm-bantlari · değerleme, kapsam dışı: TASARIM §3
 tweet-roc-nopat-yatirilan-sermaye-hesabi · değerleme, kapsam dışı: TASARIM §3
 tweet-sirket-degerlendirme-sektor-isletme-finansal-degerleme-kontrol-listesi · değerleme, kapsam dışı: TASARIM §3
+tweet-takas-virman-gercek-satis-ayrimi-1936386099225448628 · görüş: takas yorumu ilkesi (aracı kurumlar arası virman satış sayılmaz; birkaç gün veya hafta boyunca desen, hacim ve fiyat teyidi); eşik ve tarama koşulu yok; takas ve AKD verisi bedava günlük veride yok
+tweet-telegram-bot-python-mesaj-1847042700467745116 · araç tercihi: Telegram bot ile algoritma çıktısı gönderme kodu; kural öğesi yok (TASARIM Telegram'ı "Yok" listesine koyar)
+tweet-temel-filtre-sonra-teknik-tarama-1850990584338792873 · proje fikri: planlanan yeni nesil tarama, önce temel analiz ve fiyat değerlendirmesi süzgeci, sonra teknik tarama; eşik yok; değerleme, kapsam dışı: TASARIM §3
+tweet-to-float-excel-finansal-tutar-donusum-1956812751902474403 · araç: Excel'den gelen tutar metnini sayıya çeviren Python işlevi; kural öğesi yok
+tweet-toplu-akd-cekme-kumulatif-veri-1967190744399327388 · araç tercihi, veri kaynağı (AKD her gün toplu çekilir ve kümülatif toplanır; Matrix bireysele API vermiyor); kural öğesi yok
+tweet-topsis-cok-kriterli-hisse-secimi-2015048294649545183 · görüş: çok kriterli sıralama yöntemi (TOPSIS), eşik yok; proje fikri ve kod satış planı; girdiler F/K, PD/DD gibi değerleme verisi: kapsam dışı: TASARIM §3
 tweet-topsis-cok-kriterli-hisse-siralama-motoru · görüş: sıralama yöntemi, eşik yok
 tweet-topsis-hisse-secimi-yaklasan-proje · proje fikri
 tweet-ttrak-pddd-primi-carpan-sikismasi · değerleme, kapsam dışı: TASARIM §3
+tweet-wbdata-dunya-bankasi-makro-veri-cekme-1860262968446824713 · araç ve veri: wbdata ile ABD toplam rezerv serisini çekip çizen Python kodu (makro veri); kural öğesi yok
+tweet-yf-gecikme-gunluk-periyot-1849792794132435435 · araç tercihi, veri kaynağı: yfinance 15 dk gecikmeli, günlük veri tercihi; eşik yok (Yahoo kullanılmaz: TASARIM §5.1)
+tweet-yfinance-bist-is-uzantisi-1761496087221707093 · araç tercihi, veri çekme kodu: yfinance BIST .IS eki; kural öğesi yok
+tweet-yfinance-close-auto-adjust-true-1892947326915739997 · araç tercihi, kütüphane sürüm uyarısı (yfinance auto_adjust=True, Adj Close yerine Close); kural öğesi yok
+tweet-yfinance-haftalik-veri-cekme-1849540753816453297 · araç tercihi, veri çekme kodu (yfinance interval 1wk); kural öğesi yok
+tweet-yfinance-multi-stock-merge-1897595128165929334 · araç tercihi, veri çekme kodu (iki hissenin Close serisini birleştirme); kural öğesi yok
+tweet-yfinance-multiindex-droplevel-1893614943657755035 · araç tercihi, kütüphane düzeltmesi (MultiIndex droplevel); kural öğesi yok; tekrar: tweet-yfinance-close-auto-adjust-true-1892947326915739997
+tweet-yfinance-multiindex-duzeltme-1893610096833200443 · araç tercihi, kütüphane düzeltmesi (MultiIndex); kural öğesi yok; kod hacmi 0 olan satırları atar (veri temizliği, eşik yok)
+tweet-yfinance-opsiyon-zinciri-iv-open-interest-1909203207387037837 · kapsam dışı: TASARIM §3 (opsiyon); ABD örneği (AAPL zinciri), kural yok
+tweet-yfinance-plotly-mum-grafigi-kodu-1983214789644976325 · araç tercihi, grafik kodu (Plotly mum grafiği, DOAS); kural öğesi yok
+tweet-yfinance-veri-eksikligi-1846284880206086632 · araç tercihi, veri kaynağı uyarısı (yfinance son günler eksik olabilir); kural öğesi yok
+tweet-yuksek-beta-martingale-1876964680947696067 · görüş: yüksek betalı hisse ile martingale iddiası; deneysel çalışma atfı kaynaksız; koşul, parametre ve sonuç yok
 
 ## Kısa atıfların tam adları (bilet 04, 14.10)
 
