@@ -423,17 +423,79 @@ def test_kural_9_sayi_ve_ikinci_gecis(eski, yeni, ayrinti):
     assert hatalar(GECERLI.replace(eski, yeni)) == [R9.format(ayrinti)]
 
 
+@pytest.mark.parametrize("ikinci", ["yok", "geçti"])
+@pytest.mark.parametrize("sayi", ["1", "2"])
+def test_kural_9_yanlis_iddia_varken_karar_gecemez(sayi, ikinci):
+    govde = GECERLI.replace("Yanlış iddia sayısı: 0", f"Yanlış iddia sayısı: {sayi}")
+    govde = govde.replace("İkinci geçiş: yok", f"İkinci geçiş: {ikinci}")
+    assert hatalar(govde) == [
+        R9.format("Yanlış iddia sayısı: yanlış iddia varken karar geçemez")
+    ]
+
+
+def test_kural_9_ikinci_gecis_yok_ve_gecti_sifirla_kabul_edilir():
+    assert hatalar(GECERLI) == []
+    assert hatalar(GECERLI.replace("İkinci geçiş: yok", "İkinci geçiş: geçti")) == []
+
+
+SABLON_YORUMU = (
+    "<!-- CI kuralları: Denetçi kararı satırı, denetçinin karar satırının kelimesi kelimesine "
+    'kopyasıdır. CI, kopya KALDI sözcüğünü içeriyorsa PR\'ı reddeder. "KALDI olabilir" gibi '
+    'bir şüphe de KALDI sayılır (AGENTS.md "Auditor and rounds"). Kopyadaki karar sözcüğü '
+    'Sonuç satırındakiyle aynı olmalıdır. CI, "İNCELEME" yer tutucusunu reddeder. -->\n'
+)
+SONUC_YORUMU = (
+    "<!-- CI accepts exactly one Sonuç line, and only one of these three exact texts: "
+    '"Sonuç: geçti", "Sonuç: GEÇTİ", "Sonuç: NOTLU GEÇTİ". CI rejects "Geçti", KALDI, '
+    "and a second Sonuç line. -->\n"
+)
+IKINCI_SATIRI = "İkinci geçiş: yok\n"
+
+
+def test_kural_9_ve_11_sablon_yorumlari_gecer():
+    govde = GECERLI.replace(IKINCI_SATIRI, IKINCI_SATIRI + SABLON_YORUMU + SONUC_YORUMU)
+    assert hatalar(govde) == []
+    assert hatalar(GECERLI + SABLON_YORUMU) == []
+
+
+def test_kural_9_ve_11_cok_satirli_yorum_gecer():
+    yorum = "<!-- ilk satır\nKALDI olabilir\nİNCELEME -->\n"
+    assert hatalar(GECERLI.replace(IKINCI_SATIRI, IKINCI_SATIRI + yorum)) == []
+    assert hatalar(GECERLI + yorum) == []
+
+
+def test_kural_9_kaldi_bolumun_baska_satirinda():
+    govde = GECERLI.replace(IKINCI_SATIRI, IKINCI_SATIRI + "KALDI olabilir.\n")
+    assert hatalar(govde) == [
+        R9.format("Bağımsız inceleme bölümünde KALDI sözcüğü var")
+    ]
+    govde = GECERLI.replace(IKINCI_SATIRI, IKINCI_SATIRI + "Not: kaldı.\n")
+    assert hatalar(govde) == [
+        R9.format("Bağımsız inceleme bölümünde KALDI sözcüğü var")
+    ]
+    govde = GECERLI.replace(IKINCI_SATIRI, IKINCI_SATIRI + "Not: kaldırıldı.\n")
+    assert hatalar(govde) == []
+
+
 @pytest.mark.parametrize(
-    ("ikinci", "ayrinti"),
+    "yeni",
     [
-        ("yok", "İkinci geçiş: geçti olmalı (yanlış iddia sayısı 0'dan büyük)"),
-        ("geçti", None),
+        "GEÇTİ olabilir.",
+        "GEÇTİ, belki.",
+        "GEÇTİ, Belki bir not.",
+        "GEÇTİ, şüphe yok sayıldı.",
+        "GEÇTİ, ŞÜPHE var.",
+        "GEÇTİ, emin değil.",
+        "GEÇTİ, EMİN DEĞİL.",
     ],
 )
-def test_kural_9_yanlis_iddia_varsa_ikinci_gecis_gerekir(ikinci, ayrinti):
-    govde = GECERLI.replace("Yanlış iddia sayısı: 0", "Yanlış iddia sayısı: 2")
-    govde = govde.replace("İkinci geçiş: yok", f"İkinci geçiş: {ikinci}")
-    assert hatalar(govde) == ([] if ayrinti is None else [R9.format(ayrinti)])
+def test_kural_9_suphe_sozcugu_reddedilir(yeni):
+    govde = GECERLI.replace(KARAR_SATIRI, f"Denetçi kararı (aynen): {yeni}\n")
+    assert hatalar(govde) == [
+        R9.format(
+            "Denetçi kararı şüphe sözcüğü içeriyor (olabilir, belki, şüphe, emin değil)"
+        )
+    ]
 
 
 R10 = "Kural 10: ## Gerçek veri kanıtı bölümünde {}."
@@ -489,8 +551,79 @@ def test_kural_10_head_pr_basi_ile_eslesir():
     ]
 
 
+def test_kural_10_her_onek_tam_bir_kez():
+    eski = (
+        "kapi: pytest -> 0\n"
+        "kapi: ruff check -> 0\n"
+        "kapi: ruff format -> 0\n"
+        "kapi: git diff --check -> 0\n"
+        "kapi: HEAD fedcba9876543210fedcba9876543210fedcba98 temiz\n"
+    )
+    yeni = (
+        "kapi: pytest -> 1\n"
+        "kapi: ruff check -> 0\n"
+        "kapi: ruff format -> 0\n"
+        "kapi: git diff --check -> 0\n"
+        "kapi: HEAD 0123456789abcdef0123456789abcdef01234567 temiz\n"
+    )
+    govde = GECERLI.replace(
+        "kapi: pytest -> 0\nkapi: ruff check -> 0\nkapi: ruff format -> 0\n"
+        "kapi: git diff --check -> 0\n"
+        "kapi: HEAD 0123456789abcdef0123456789abcdef01234567 temiz\n",
+        eski + yeni,
+    )
+    assert hatalar(govde) == [
+        R10.format(
+            "birden çok satır: kapi: pytest; kapi: ruff check; kapi: ruff format; "
+            "kapi: git diff --check; kapi: HEAD"
+        )
+    ]
+
+
+def test_kural_10_ikinci_pytest_satiri_reddedilir():
+    govde = GECERLI.replace(
+        "kapi: pytest -> 0\n", "kapi: pytest -> 0\nkapi: pytest -> 0\n"
+    )
+    assert hatalar(govde) == [R10.format("birden çok satır: kapi: pytest")]
+    govde = GECERLI.replace(
+        "kapi: pytest -> 0\n", "kapi: pytest -> 0\nkapi: pytest (belge) -> 0\n"
+    )
+    assert hatalar(govde) == [R10.format("birden çok satır: kapi: pytest")]
+
+
+def test_kural_10_ikinci_head_satiri_reddedilir():
+    ek = f"kapi: HEAD {SHA_BASKA} temiz\n"
+    govde = GECERLI.replace(
+        f"kapi: HEAD {SHA} temiz\n", f"kapi: HEAD {SHA} temiz\n{ek}"
+    )
+    assert hatalar(govde) == [R10.format("birden çok satır: kapi: HEAD")]
+
+
+def test_kural_10_kod_var_ise_belge_pytest_reddedilir():
+    belge = GECERLI.replace("kapi: pytest -> 0", "kapi: pytest (belge) -> 0")
+    assert hatalar(belge, kod_var=True) == [
+        R10.format("kod değişti; tam pytest gerekir")
+    ]
+    assert hatalar(belge, kod_var=False) == []
+    assert hatalar(belge) == []
+    assert hatalar(GECERLI, kod_var=True) == []
+
+
+def test_kural_10_kod_var_ve_eksik_satir_birlikte():
+    govde = GECERLI.replace("kapi: pytest -> 0", "kapi: pytest (belge) -> 0")
+    govde = govde.replace("kapi: ruff check -> 0\n", "")
+    assert hatalar(govde, kod_var=True) == [
+        R10.format(
+            "eksik satır: kapi: ruff check -> 0; kod değişti; tam pytest gerekir"
+        )
+    ]
+
+
 def test_kural_11_inceleme_yer_tutucusu():
     assert hatalar(GECERLI + "İNCELEME\n") == [
+        "Kural 11: PR gövdesinde İNCELEME yer tutucusu kalmış."
+    ]
+    assert hatalar(GECERLI + "<!-- İNCELEME -->\nİNCELEME\n") == [
         "Kural 11: PR gövdesinde İNCELEME yer tutucusu kalmış."
     ]
 
@@ -502,6 +635,11 @@ def test_dod_yml_taslak_ve_sha():
         "draft == false",
         "ready_for_review",
         "PR_BAS_SHA: ${{ github.event.pull_request.head.sha }}",
+        "PR_KOD_VAR",
+        "fetch-depth: 0",
+        "set -eu",
+        "BASE: ${{ github.base_ref }}",
+        "$GITHUB_ENV",
     ):
         assert parca in metin
 
@@ -519,3 +657,4 @@ def test_kapi_betigi():
         "kirli",
     ):
         assert parca in metin
+    assert "--untracked-files=no" not in metin

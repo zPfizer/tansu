@@ -14,6 +14,7 @@ from atif_araclari import (
     KOK,
     alinti_sorunlari,
     atif_kirikleri,
+    belge_alinti_sorunlari,
     bolum_numaralari,
     etiket_kirikleri,
     izlenen_dosyalar,
@@ -326,6 +327,51 @@ def test_alinti_sorunlari(tmp_path, kayit, bolumler, beklenen):
     assert _alinti(tmp_path, kayit, **bolumler) == beklenen
 
 
+@pytest.mark.parametrize(
+    ("satir", "ham", "beklenen"),
+    [
+        # parçalar kaynakta ileri sırayla geçer
+        ('a "SAT ... AL" b', "AL sonra SAT", ["k.jsonl:1: tweet-a-1: SAT ... AL"]),
+        ('a "SAT … AL" b', "AL sonra SAT", ["k.jsonl:1: tweet-a-1: SAT … AL"]),
+        ('a "SAT ... AL" b', "SAT sonra AL", []),
+        ('a "SAT … AL" b', "önce SAT sonra AL", []),
+        # ikinci parça birincinin bittiği yerden sonra başlar
+        ('a "ab … ab" b', "ab", ["k.jsonl:1: tweet-a-1: ab … ab"]),
+        ('a "ab … ab" b', "ab x ab", []),
+        # ` / ` iki yanı da boşluğa çevrilmez: kaynaktaki eğik çizgi kalır
+        ('a "10 2" b', "10 / 2", ["k.jsonl:1: tweet-a-1: 10 2"]),
+        ('a "10 / 2" b', "10 / 2", []),
+        # alıntıdaki ` / ` satır sonu işaretidir: parçalar ileri sırayla, kaynakta satır sonuyla geçer
+        ('a "EMA5 > EMA20 / EMA10 > EMA20" b', "EMA5 > EMA20\nEMA10 > EMA20", []),
+        (
+            'a "Bravo / Alfa" b',
+            "Alfa\nBravo",
+            ["k.jsonl:1: tweet-a-1: Bravo / Alfa"],
+        ),
+        # satır sonu içeren alıntı da denetlenir
+        ('a "kaynakta\nyok" b', HAM, ["k.jsonl:1: tweet-a-1: kaynakta yok"]),
+        ('a "Para yoksa\ngerisine" b', HAM, []),
+    ],
+)
+def test_alinti_parcalari_ileri_sirayla_tek_kaynakta(tmp_path, satir, ham, beklenen):
+    assert _alinti(tmp_path, {"satir": satir}, ham=ham) == beklenen
+
+
+def test_alinti_parcalari_iki_notta_dagilamaz(tmp_path):
+    havuz = tmp_path / "havuz"
+    _not(havuz, "tweet-a-1", ham="birinci")
+    _not(havuz, "tweet-b-2", ham="ikinci")
+    yol = _jsonl(
+        tmp_path / "k.jsonl",
+        {"not": "tweet-a-1", "satir": 'x `tweet-b-2` "birinci … ikinci"'},
+        {"not": "tweet-b-2", "satir": 'x `tweet-a-1` "birinci / ikinci"'},
+    )
+    assert alinti_sorunlari(havuz, [yol]) == [
+        "k.jsonl:1: tweet-a-1: birinci … ikinci",
+        "k.jsonl:2: tweet-b-2: birinci / ikinci",
+    ]
+
+
 def test_alinti_adayi_kayit_notu_ve_alandaki_not_adlaridir(tmp_path):
     havuz = tmp_path / "havuz"
     _not(havuz, "tweet-a-1", ham="birinci not")
@@ -573,3 +619,119 @@ def test_main_entegre_sayilari_yazar(tmp_path, capsys):
     yol = _jsonl(tmp_path / "k.jsonl", _ek("tweet-yeni-2", "## K2. Çıkış"))
     assert main(["entegre", "16.10", str(yol)], kok=kok) == 0
     assert capsys.readouterr().out == f"{E}: 1\n"
+
+
+@pytest.mark.parametrize(
+    "argv",
+    [
+        [],
+        ["bilinmeyen", "x"],
+        ["alinti"],
+        ["parti"],
+        ["entegre"],
+        ["entegre", "16.10"],
+        ["alinti-belge"],
+        ["alinti-belge", "a", "b"],
+    ],
+)
+def test_main_girdi_dosyasi_yoksa_2_doner(tmp_path, capsys, argv):
+    assert main(argv, havuz=tmp_path, kok=tmp_path) == 2
+    atilan = capsys.readouterr()
+    assert atilan.out == ""
+    assert atilan.err.startswith("kullanım:")
+
+
+@pytest.mark.parametrize(
+    ("kayit", "alan"),
+    [
+        (_ek("tweet-yeni-2", "## K2. Çıkış", satir="iki\nsatır"), "satir"),
+        (_ek("tweet-yeni-2", "## K2. Çıkış", parametre="p\r\nq"), "parametre"),
+        ({"not": "tweet-uc-3", "sonuc": "yok", "neden": "iki\nsatır"}, "neden"),
+    ],
+)
+def test_entegre_alani_satir_sonu_icerirse_hata(tmp_path, kayit, alan):
+    kok = _kok(tmp_path, eol="\r\n")
+    ilk = (_oku(kok, E), _oku(kok, K))
+    yol = _jsonl(tmp_path / "k.jsonl", kayit)
+    with pytest.raises(ValueError, match=alan):
+        parti_entegre([yol], kok, "16.10")
+    assert (_oku(kok, E), _oku(kok, K)) == ilk
+
+
+# --- belge_alinti_sorunlari: son belgelerdeki alıntı atıf yapılan notta geçer ---
+
+BELGE = (
+    "# Belge\n"  # 1
+    "## A bölümü\n"  # 2
+    '- `tweet-a-1` — "Para yoksa gerisine bakmaya gerek yok" (Ham).\n'  # 3
+    '- satırda not yok: "gerek yok" (Ham).\n'  # 4
+    '- `tweet-b-2` — "para girişi esastır" (Ham).\n'  # 5
+    '- `tweet-b-2` — "Para yoksa" (Ham).\n'  # 6
+    "\n"  # 7
+    "## B bölümü\n"  # 8
+    '- yetim: "yetim alıntı"\n'  # 9
+    "- alıntısız satır\n"  # 10
+)
+
+
+def _belge_havuzu(tmp_path):
+    havuz = tmp_path / "havuz"
+    _not(havuz, "tweet-a-1", ham=HAM)
+    _not(havuz, "tweet-b-2", ham="başka metin")
+    belge = tmp_path / "k.md"
+    belge.write_text(BELGE, encoding="utf-8")
+    return havuz, belge
+
+
+def test_belge_alinti_adaylari_satir_sonra_bolum(tmp_path):
+    havuz, belge = _belge_havuzu(tmp_path)
+    # 3: satır adayı; 4: satırda not yok, bölümdeki adaylar (a-1 alıntıyı taşır); 10: alıntı yok
+    assert belge_alinti_sorunlari(havuz, belge, [3, 4, 10]) == []
+    # 5: paraphrase; 6: satır adayı yalnız b-2, bölümdeki a-1 sayılmaz; 9: bölümde not adı yok
+    assert belge_alinti_sorunlari(havuz, belge, [3, 4, 5, 6, 9, 10]) == [
+        "k.md:5: para girişi esastır",
+        "k.md:6: Para yoksa",
+        "k.md:9: yetim alıntı",
+    ]
+
+
+def test_belge_alinti_yalniz_verilen_satirlar_ve_ileri_sira(tmp_path):
+    havuz, belge = _belge_havuzu(tmp_path)
+    assert belge_alinti_sorunlari(havuz, belge, [3, 99]) == []
+    belge.write_text(
+        '`tweet-a-1` "gerek yok … Aslolan" ve "Aslolan … gerek yok"\n', encoding="utf-8"
+    )
+    assert belge_alinti_sorunlari(havuz, belge, [1]) == ["k.md:1: gerek yok … Aslolan"]
+
+
+def _git(kok, *arg):
+    subprocess.run(
+        ["git", "-C", str(kok), "-c", "user.name=t", "-c", "user.email=t@t.t", *arg],
+        check=True,
+        capture_output=True,
+    )
+
+
+def test_main_alinti_belge_diffin_eklenen_satirlarini_denetler(tmp_path, capsys):
+    havuz = tmp_path / "havuz"
+    _not(havuz, "tweet-a-1", ham="tamam")
+    kok = tmp_path / "depo"
+    (kok / "docs" / "kurallar").mkdir(parents=True)
+    belge = kok / "docs" / "kurallar" / "E-x.md"
+
+    def yaz(*alintilar):
+        belge.write_bytes(
+            "".join(f'- `tweet-a-1` — "{a}"\n' for a in alintilar).encode("utf-8")
+        )
+
+    yaz("eski kötü", "silinecek", "tamam", "tamam")
+    _git(kok, "init", "-q")
+    _git(kok, "add", "-A")
+    _git(kok, "commit", "-q", "-m", "x")
+    # 2. satır silinir (saf silme bloğu: +1,0), sonuna kötü satır eklenir; eski kötü satır diffte değildir
+    yaz("eski kötü", "tamam", "tamam", "yeni kötü")
+    assert main(["alinti-belge", "HEAD"], havuz=havuz, kok=kok) == 1
+    assert capsys.readouterr().out == "E-x.md:4: yeni kötü\n"
+    _git(kok, "commit", "-q", "-a", "-m", "y")
+    assert main(["alinti-belge", "HEAD"], havuz=havuz, kok=kok) == 0
+    assert capsys.readouterr().out == ""

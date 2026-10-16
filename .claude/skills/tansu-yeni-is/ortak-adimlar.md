@@ -8,7 +8,7 @@ Use one branch `pr/NN-<ad>` from `master` for each ticket. Give it its own workt
 ## Test gate
 Run `kurulum\kapi.ps1`. It runs pytest, `ruff check .`, `ruff format --check .`, and `git diff --check kaynak/master`, and it prints `kapi:` summary lines. Run it before each commit. Everything must be green.
 
-After the last commit, run it again on the clean tree. This also applies after a fix commit or a merge of `master`. Paste that output into `## Gerçek veri kanıtı` of the PR body. The last line must be `kapi: HEAD <sha> temiz`, and the sha must be the PR head sha.
+After the last commit, run it again on the clean tree. This also applies after a fix commit or a merge of `master`. Paste that output into `## Gerçek veri kanıtı` of the PR body. The last line must be `kapi: HEAD <sha> temiz`, and the sha must be the PR head sha. An untracked file also makes the tree `kirli`. A code change needs the full run (CI rejects `-Belge` then).
 
 When only documents changed, `kurulum\kapi.ps1 -Belge` runs the document tests. The full run is in CI. While pool notes are open, set `TANSU_BEKLENEN_ACIK=<count>`. For a pool batch, also set `TANSU_PARTI=<batch ids>`. Do not deselect a red test.
 

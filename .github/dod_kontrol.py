@@ -33,6 +33,15 @@ KAPI_SATIRLARI = (
         "kapi: HEAD <40 küçük harfli onaltılı hane> temiz",
     ),
 )
+KAPI_ONEKLERI = (
+    "kapi: pytest",
+    "kapi: ruff check",
+    "kapi: ruff format",
+    "kapi: git diff --check",
+    "kapi: HEAD",
+)
+KALDI = re.compile(r"(?<!\w)kald[ıiIİ](?!\w)", re.IGNORECASE)
+SUPHE = re.compile(r"(?<!\w)(olabilir|belki|şüphe|emin\s+değ[iİ]l)", re.IGNORECASE)
 
 
 def _bolum(satirlar, baslik):
@@ -114,11 +123,17 @@ def _beceri_hatasi(govde, akis_ad):
     return ""
 
 
+def _yorumsuz(metin):
+    return re.sub(r"<!--.*?-->", "", metin, flags=re.DOTALL)
+
+
 def _karar_hatasi(bolum):
+    satirlar = _yorumsuz("\n".join(satir for _, satir in bolum)).splitlines()
+
     def alanlar(onek):
         return [
             satir.split(":", 1)[1].strip()
-            for _, satir in bolum
+            for satir in satirlar
             if re.match(rf"\s*{onek}:", satir)
         ]
 
@@ -128,11 +143,11 @@ def _karar_hatasi(bolum):
     if len(sonuclar) == 1 and re.fullmatch(r"geçti|GEÇTİ|NOTLU GEÇTİ", sonuclar[0]):
         sonuc = sonuclar[0].replace("geçti", "GEÇTİ")
 
-    karar = [
-        satir.split(":", 1)[1].strip()
-        for _, satir in bolum
-        if re.match(r"\s*Denetçi kararı \(aynen\):", satir)
-    ]
+    karar_onek = r"Denetçi kararı \(aynen\)"
+    karar = alanlar(karar_onek)
+    diger = "\n".join(
+        satir for satir in satirlar if not re.match(rf"\s*(Sonuç|{karar_onek}):", satir)
+    )
     if len(karar) != 1:
         sorunlar.append(
             f"Denetçi kararı (aynen): satırı tek olmalı ({len(karar)} satır var)"
@@ -140,8 +155,13 @@ def _karar_hatasi(bolum):
     elif not karar[0]:
         sorunlar.append("Denetçi kararı (aynen): metni boş")
     else:
-        if re.search(r"(?<!\w)kald[ıiIİ](?!\w)", karar[0], re.IGNORECASE):
+        if KALDI.search(karar[0]):
             sorunlar.append("Denetçi kararı KALDI içeriyor")
+        elif SUPHE.search(karar[0]):
+            sorunlar.append(
+                "Denetçi kararı şüphe sözcüğü içeriyor "
+                "(olabilir, belki, şüphe, emin değil)"
+            )
         sozcukler = list(
             dict.fromkeys(
                 s.replace("geçti", "GEÇTİ")
@@ -156,28 +176,28 @@ def _karar_hatasi(bolum):
                 f"Sonuç: değerinden ({sonuc}) farklı"
             )
 
+    if KALDI.search(diger):
+        sorunlar.append("Bağımsız inceleme bölümünde KALDI sözcüğü var")
+
     sayilar = alanlar("Yanlış iddia sayısı")
-    sayi = None
     if len(sayilar) != 1:
         sorunlar.append(
             f"Yanlış iddia sayısı: satırı tek olmalı ({len(sayilar)} satır var)"
         )
     elif not re.fullmatch(r"\d+", sayilar[0]):
         sorunlar.append("Yanlış iddia sayısı: değeri tam sayı olmalı")
-    else:
-        sayi = int(sayilar[0])
+    elif int(sayilar[0]) > 0:
+        sorunlar.append("Yanlış iddia sayısı: yanlış iddia varken karar geçemez")
 
     ikinci = alanlar("İkinci geçiş")
     if len(ikinci) != 1:
         sorunlar.append(f"İkinci geçiş: satırı tek olmalı ({len(ikinci)} satır var)")
     elif ikinci[0] not in ("yok", "geçti"):
         sorunlar.append("İkinci geçiş: yok ya da geçti olmalı")
-    elif sayi and ikinci[0] != "geçti":
-        sorunlar.append("İkinci geçiş: geçti olmalı (yanlış iddia sayısı 0'dan büyük)")
     return "; ".join(sorunlar)
 
 
-def _kapi_hatasi(bolum, bas_sha):
+def _kapi_hatasi(bolum, bas_sha, kod_var):
     satirlar = [satir.rstrip() for _, satir in bolum]
     eksik = [
         etiket
@@ -185,6 +205,15 @@ def _kapi_hatasi(bolum, bas_sha):
         if not any(re.fullmatch(desen, satir) for satir in satirlar)
     ]
     sorunlar = ["eksik satır: " + "; ".join(eksik)] if eksik else []
+    if kod_var and "kapi: pytest (belge) -> 0" in satirlar:
+        sorunlar.append("kod değişti; tam pytest gerekir")
+    cok = [
+        onek
+        for onek in KAPI_ONEKLERI
+        if sum(satir.startswith(onek) for satir in satirlar) > 1
+    ]
+    if cok:
+        sorunlar.append("birden çok satır: " + "; ".join(cok))
     bulunan = [
         m.group(1)
         for satir in satirlar
@@ -198,7 +227,7 @@ def _kapi_hatasi(bolum, bas_sha):
     return "; ".join(sorunlar)
 
 
-def hatalar(govde: str, bas_sha: str | None = None) -> list[str]:
+def hatalar(govde: str, bas_sha: str | None = None, kod_var: bool = False) -> list[str]:
     if not govde or not govde.strip():
         return [
             "Kural 1: gövde boş; gerekli dört başlık yok.",
@@ -263,16 +292,18 @@ def hatalar(govde: str, bas_sha: str | None = None) -> list[str]:
         sonuc.append("Kural 8: " + ayrinti)
     if inceleme is not None and (ayrinti := _karar_hatasi(inceleme)):
         sonuc.append("Kural 9: ## Bağımsız inceleme bölümünde " + ayrinti + ".")
-    if kanit is not None and (ayrinti := _kapi_hatasi(kanit, bas_sha)):
+    if kanit is not None and (ayrinti := _kapi_hatasi(kanit, bas_sha, kod_var)):
         sonuc.append("Kural 10: ## Gerçek veri kanıtı bölümünde " + ayrinti + ".")
-    if "İNCELEME" in govde:
+    if "İNCELEME" in _yorumsuz(govde):
         sonuc.append("Kural 11: PR gövdesinde İNCELEME yer tutucusu kalmış.")
     return sonuc
 
 
 if __name__ == "__main__":
     sorunlar = hatalar(
-        os.environ.get("PR_GOVDE", ""), os.environ.get("PR_BAS_SHA") or None
+        os.environ.get("PR_GOVDE", ""),
+        os.environ.get("PR_BAS_SHA") or None,
+        os.environ.get("PR_KOD_VAR") == "1",
     )
     for sorun in sorunlar:
         print(sorun)

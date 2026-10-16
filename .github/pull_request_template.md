@@ -36,7 +36,7 @@ Denetçi:
 Denetçi kararı (aynen):
 Yanlış iddia sayısı:
 İkinci geçiş:
-<!-- CI kuralları: Denetçi kararı satırı, denetçinin karar satırının kelimesi kelimesine kopyasıdır. CI, kopya KALDI sözcüğünü içeriyorsa PR'ı reddeder. "KALDI olabilir" gibi bir şüphe de KALDI sayılır (AGENTS.md "Auditor and rounds"). Kopyadaki karar sözcüğü Sonuç satırındakiyle aynı olmalıdır. Yanlış iddia sayısı 0'dan büyükse İkinci geçiş satırına "geçti" yazılır. Yanlış iddia yoksa "yok" yazılır. CI, "İNCELEME" yer tutucusunu reddeder. -->
+<!-- CI kuralları: Denetçi kararı satırı, denetçinin karar satırının kelimesi kelimesine kopyasıdır. CI, kopya KALDI sözcüğünü içeriyorsa PR'ı reddeder. "KALDI olabilir" gibi bir şüphe de KALDI sayılır (AGENTS.md "Auditor and rounds"). CI ayrıca kopya satırında şüphe sözcüğü (olabilir, belki, şüphe, emin değil) görürse ve bölümde yorum dışında herhangi bir yerde KALDI görürse reddeder. Kopyadaki karar sözcüğü Sonuç satırındakiyle aynı olmalıdır. Yanlış iddia sayısı, kopyalanan (son) geçişin sayısıdır ve 0 olmalıdır. İkinci geçiş satırı "yok" veya "geçti" olur: düzeltme geçişi koşuldu mu. CI, "İNCELEME" yer tutucusunu reddeder. CI, HTML yorumlarını yok sayar. -->
 <!-- CI accepts exactly one Sonuç line, and only one of these three exact texts: "Sonuç: geçti", "Sonuç: GEÇTİ", "Sonuç: NOTLU GEÇTİ". CI rejects "Geçti", KALDI, and a second Sonuç line. -->
 Sonuç: 
 
@@ -46,7 +46,7 @@ Sonuç:
 
 ## Gerçek veri kanıtı
 
-<!-- Son commit'ten sonra, temiz ağaçta koşulan `kurulum\kapi.ps1` çıktısını yapıştırın. CI, `kapi:` satırlarını ve HEAD sha'sını denetler. -->
+<!-- Son commit'ten sonra, temiz ağaçta koşulan `kurulum\kapi.ps1` çıktısını yapıştırın. CI, `kapi:` satırlarını ve HEAD sha'sını denetler. Tam olarak bir kapi koşusu yapıştırın. Kod değiştiyse tam koşu gerekir, `-Belge` olmaz. -->
 
 ```
 ```

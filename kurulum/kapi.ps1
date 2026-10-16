@@ -21,7 +21,7 @@ git diff --check kaynak/master
 $diffKod = $LASTEXITCODE
 
 $sha = (git rev-parse HEAD)
-$kirli = git status --porcelain --untracked-files=no
+$kirli = git status --porcelain
 $durum = if ($kirli) { 'kirli' } else { 'temiz' }
 $acik = if ($env:TANSU_BEKLENEN_ACIK) { $env:TANSU_BEKLENEN_ACIK } else { 'yok' }
 $parti = if ($env:TANSU_PARTI) { $env:TANSU_PARTI } else { 'yok' }
