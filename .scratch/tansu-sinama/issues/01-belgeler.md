@@ -1,6 +1,6 @@
 # 01 Belgeler: TASARIM 5.14, sözlük, kurallar/E
 
-**Status:** ready-for-agent
+**Status:** in-review
 Blocked by: yok
 
 Write `.scratch/tansu-sinama/tasarim-5-14.md` into docs/TASARIM.md as §5.14. Add the module row, the command and the test

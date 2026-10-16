@@ -29,7 +29,7 @@ Sütun "Durum": `uygulandı` ya da `kapsam dışı` (neden yazılı). "Tür": Ta
 | 20 | Dış backtest aracı | tweet-hareketli-ortalama-backtest-araci-1979931015771517315: "Kaydedin lazım olur" | yok | yok | yok | kapsam dışı: dış site, yöntem yok | Tansu |
 | 21 | MA kesişiminde rejim için optimizasyon | tweet-hareketli-ortalama-kesisim-optimizasyonu-2071142623520215512: "optimization should actually be used to analyze which moving average crossovers indicate the formation of bearish or bullish markets" | yok | yok | yok | kapsam dışı: MA kesişimi ailesi kodda yok (B §35) | Tansu |
 | 22 | Hisse özelinde optimizasyon | tweet-hisse-bazli-ema-optimizasyonu-1845478584154026462: "Ben onu hisse özelinde yapıyorum" | 5.14 Hisse başına optimizasyon | `_ema_isleri`, `_kos` | `test_hisse_siniri_ilk_n_hisse_ada_gore` | uygulandı | Tansu |
-| 23 | Her hisse için ayrı parametre | tweet-hisse-bazli-parametre-optimizasyonu-1840170065464803535: "her hisse için farklı parametrelerde giriş çıkış yapmak lazım." | 5.14 Hisse başına optimizasyon | `_ema_isleri`, `_cift_isleri` | `test_1_ve_2_iscide_ayni_sonuc` | uygulandı | Tansu |
+| 23 | Her hisse için ayrı parametre | tweet-hisse-bazli-parametre-optimizasyonu-1840170065464803535: "her hisse için farklı parametrelerde giriş çıkış yapmak lazım." | 5.14 Hisse başına optimizasyon | `_ema_isleri`, `cift_isleri` | `test_1_ve_2_iscide_ayni_sonuc` | uygulandı | Tansu |
 | 24 | Backtest ve forward test | tweet-kitap-model-sentezi-backtest-forward-test-kod-mimarisi: "Bu yapıyı oluşturduktan sonra sabırla backtest ve forward test süreçlerini yönetmeniz gerekir." | 5.14 İleri yürüme; 5.8 kâğıt üstü dönem | `ileri` | `test_ileri_yil_yil_secim_nakit_yili_ve_dikis` | uygulandı (forward test = kâğıt dönemi, mevcut) | Tansu |
 | 25 | Basit tut | tweet-ma-kesisim-var-opt1-opt2-optimizasyon-1784690075059585046: "Basit iyidir. Yormayın kendinizi :)" | yok | yok | yok | kapsam dışı: MA kesişimi ailesi kodda yok | Tansu |
 | 26 | Kendi backtest sınıfı (MACD) | tweet-macd-son-gun-al-backtest-1861839074463474170: "Buyurun size backesterclass ile macd son gün al verenler" | yok | yok | yok | kapsam dışı: kod bizde yok, MACD ailesi yok | Tansu |
@@ -65,5 +65,9 @@ Tansu method items mapped: 41 of 41 (bulgu-00: 15, bulgu-01: 14, bulgu-02: 12 sa
 Ek (yöntem satırı değil, brifte anılan): gorsel-paket-53-stat-arb-bag-kopusu-negatif-backtest "Mutlaka backtest etmek lazım"
 ve tweet-winrate-80-tarama-backtest-tablosu-2092745592661246196 (tablo sütunları, "Komisyon: %0.10", "İşlem >= 5"; görsel):
 TASARIM 5.14 Masraf ve Ölçüler.
+
+TASARIM 5.14'te kullanılan iki tam Ham alıntısı:
+- tweet-medyan-temelli-finansal-indikatorler: "Ortalamaları temel alan indikatörler hava civadır Medyan temelli çalışın" (Ölçüler).
+- tweet-sma-optimizasyon-saglam-bolge-asiri-uyum-1986899794032304554: "Eğer en iyi ayarları bile para kazandırmıyorsa, o stratejiyle vakit kaybetmeyi bırakırsın." (Para çıkmaz).
 
 Koşu: `kayit/deneme.jsonl` `olay=tansu_sinama`, koşu 20261016T201747-0a886d (anlık görüntü 20261014-1930).

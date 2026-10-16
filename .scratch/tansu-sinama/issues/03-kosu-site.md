@@ -1,6 +1,6 @@
 # 03 Kapı, koşu ve site
 
-**Status:** ready-for-agent
+**Status:** in-review
 Blocked by: 02
 
 Gate: 5 stocks of one family, 1 worker and the chosen worker count; estimate for 99 stocks × both families in

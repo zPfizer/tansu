@@ -3,7 +3,7 @@
 Makine (psutil ve nvidia-smi, 16.10): 24 fiziksel, 32 mantıksal çekirdek; bellek 95,7 GB, boş 66,4 GB;
 GPU NVIDIA GeForce RTX 5070 Ti, 16303 MiB, sürücü 610.88.
 
-Komut: `PYTHONPATH=. .venv/Scripts/python.exe -X utf8 .scratch/tansu-sinama/tools/profil.py hepsi 0 1,4,8,16,24,32`
+Ölçüm aracı depoda tutulmadı (CLAUDE.md kural 4). Ölçüm, `calistir`'ı 1, 4, 8, 16, 24 ve 32 işçiyle koşturup süreyi `time.perf_counter`, CPU'yu ve işçi belleğini psutil ile yarım saniyede bir örnekledi.
 (çalışma ağacı TANSU-b35, kod 239429c, anlık görüntü 20261014-1930; süre iş hazırlığını ve süreç açılışını kapsar).
 Ana süreç belleği (anlık görüntü okunduktan sonra): 0,27 GB.
 

@@ -193,7 +193,7 @@ def _hucreler(izgara) -> list:
 
 def _sonraki(seriler) -> dict:
     """Sinyal günü kapanışından k işlem günü sonraki kapanışa getirinin medyanı, k = 1, 3, 5 (TASARIM 5.14).
-    `seriler`: işlem başına (kapanış dizisi, sinyal konumu)."""
+    `seriler`: işlem başına (hissenin yalnız kapanışı olan günlerinin kapanış dizisi, sinyal günün bu dizideki konumu)."""
     sonuc = {}
     for k in (1, 3, 5):
         v = [c[s + k] / c[s] - 1 for c, s in seriler if s + k < len(c)]
@@ -203,11 +203,11 @@ def _sonraki(seriler) -> dict:
 
 def _durum(b) -> tuple:
     if b["para_cikmaz"]:
-        return "para_cikmaz", "Para çıkmaz: en iyi ayar bile zararda."
+        return "para_cikmaz", "Para çıkmaz: en iyi ayar bile kâr etmiyor."
     if b["secilen"] is None:
         return (
             "saglam_bolge_yok",
-            "Sağlam bölge yok: kârlı ayarın yanı zararda (tuzak).",
+            "Sağlam bölge yok: kârlı ayarın yanında kâr etmeyen ayar var (tuzak).",
         )
     return (
         "saglam_bolge_var",
@@ -299,12 +299,13 @@ def _ema_is(ad, m, p, izgara, bas) -> dict:
     tablolar = ema_tablolari(m, p, izgara, bas)
     bas, son = _ema_donem(m, p, bas)
     kap = m["kapanis"].ffill().loc[:son]
-    c = kap.to_numpy()
+    f = m["kapanis"].dropna()  # k işlem günü: hissenin kapanışı olan günler
+    c = f.to_numpy()
     ilk_aof = float(m["aof"].loc[bas:].dropna().iloc[0])
 
     def hucre_raporu(i):
         egri, pozisyonda, tutma = _ema_egri(tablolar[i], kap, bas)
-        sinyaller = [(c, kap.index.get_loc(s)) for s in tablolar[i]["sinyal_tarih"]]
+        sinyaller = [(c, f.index.get_loc(s)) for s in tablolar[i]["sinyal_tarih"]]
         return egri, pozisyonda, tutma, _sonraki(sinyaller)
 
     return _sonuc(
@@ -420,7 +421,10 @@ def _cift_is(ad, y, x, sektor, gunler, C, A, F, bas_k, izgara) -> dict:
 
     def hucre_raporu(i):
         t = tablolar[i]
-        sinyaller = [(d["Cf"][:, r.bacak], r.sinyal_konum) for r in t.itertuples()]
+        sinyaller = []
+        for r in t.itertuples():  # alınan bacağın kapanışı olan günleri sayılır
+            var = ~np.isnan(d["C"][:, r.bacak])
+            sinyaller.append((d["C"][var, r.bacak], int(var[: r.sinyal_konum].sum())))
         return (
             egriler[i],
             int(t["tutma"].sum()),
@@ -428,7 +432,7 @@ def _cift_is(ad, y, x, sektor, gunler, C, A, F, bas_k, izgara) -> dict:
             _sonraki(sinyaller),
         )
 
-    # Al-tut 50/50: dönem başı satırı iki bacağın da kapanışı olan satırdır; AOF'ları orada geçerlidir.
+    # Al-tut 50/50: dönem başı satırında iki bacağın da kapanışı ve AOF'u vardır (`cift_isleri`).
     al_tut = float(
         np.mean([islem_getirisi(A[bas_k, j], d["Cf"][n - 1, j]) for j in (0, 1)])
     )
@@ -461,7 +465,8 @@ def _ema_isleri(anlik, semboller, p, izgara, bas) -> tuple:
 
 
 def cift_isleri(anlik, sektor, semboller, bas, izgara) -> tuple:
-    """(işler, atlanan adlar): aynı sektördeki çiftler; 252 ortak günü olmayan ya da dönemi boş çift sınanmaz (TASARIM 5.14)."""
+    """(işler, atlanan adlar): aynı sektördeki çiftler (TASARIM 5.14). Dönem başı: `bas` ve 252. ortak kapanış gününden geç
+    olanı ya da sonraki, iki bacağın da kapanışı ve AOF'u olan ilk gün; yoksa, ya da 252 ortak gün yoksa çift sınanmaz."""
     gunler = anlik.gunler
     f = anlik.fiyat[anlik.fiyat["sembol"].isin(semboller)]
     C = f.pivot(index="tarih", columns="sembol", values="kapanis").reindex(gunler)
@@ -483,6 +488,7 @@ def cift_isleri(anlik, sektor, semboller, bas, izgara) -> tuple:
     }
     kol = {s: j for j, s in enumerate(C.columns)}
     var = C.notna().to_numpy()
+    aof = A.notna().to_numpy()
     bas_konum = int(gunler.searchsorted(pd.Timestamp(bas)))
     gruplar = {}
     for s in C.columns:
@@ -499,7 +505,10 @@ def cift_isleri(anlik, sektor, semboller, bas, izgara) -> tuple:
             son_k = min(
                 np.flatnonzero(var[:, j[0]])[-1], np.flatnonzero(var[:, j[1]])[-1]
             )
-            bas_k = max(bas_konum, int(ortak[CIFT_ISINMA - 1]))
+            ilk = max(bas_konum, int(ortak[CIFT_ISINMA - 1]))
+            tam = (var & aof)[:, j].all(axis=1)  # iki bacağın da kapanışı ve AOF'u var
+            uygun = np.flatnonzero(tam[ilk:])
+            bas_k = ilk + int(uygun[0]) if len(uygun) else son_k
             if bas_k >= son_k:
                 atlanan.append(f"{y}-{x}")
                 continue

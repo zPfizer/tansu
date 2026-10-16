@@ -1,6 +1,6 @@
 # Kapı: tam koşudan önce süre tahmini (16.10)
 
-Komut: `PYTHONPATH=. .venv/Scripts/python.exe -X utf8 .scratch/tansu-sinama/tools/profil.py <aile> <hisse> <işçi>`
+Ölçüm aracı depoda tutulmadı (CLAUDE.md kural 4). Ölçüm, `calistir`'ı 1, 4, 8, 16, 24 ve 32 işçiyle koşturup süreyi `time.perf_counter`, CPU'yu ve işçi belleğini psutil ile yarım saniyede bir örnekledi.
 (çalışma ağacı TANSU-b35, kod 239429c, anlık görüntü 20261014-1930, kayıt yazmaz).
 
 | aile | hisse | iş | işçi | süre sn | sn/iş | ort. CPU % | işçi başı tepe bellek GB | süreç |

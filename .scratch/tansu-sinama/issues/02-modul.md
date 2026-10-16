@@ -1,6 +1,6 @@
 # 02 Modül: `tansu/tansusinama.py` ve `tansu-sinama` komutu
 
-**Status:** ready-for-agent
+**Status:** in-review
 Blocked by: 01
 
 Build the faces in spec.md test-first (red test committed before code). Reuse `motor.mumlar`, `motor.Zincir`,
