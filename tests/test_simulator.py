@@ -318,6 +318,47 @@ def test_kapanmada_yari_satis_son_islem_gunune_dahil_kadar_sayilir(yari_konum, c
     assert a.cikis_fiyat == pytest.approx(cikis, abs=1e-9)
 
 
+def test_kapanmada_yari_satis_sutunlari_olmayan_el_yapimi_tablo_hata_vermez_cikis_sifir():
+    # Aynı dünya (A konum 2'de son kez işlem görür, kapanma günü konum 63). El yapımı işlem tablosunda `yari_tarih` ve
+    # `yari_fiyat` sütunları yok: yarı satış sayılmaz, kapanmada çıkış fiyatı 0 (TASARIM 5.2).
+    gunler = pd.bdate_range("2026-02-02", periods=70)
+    fiyat = pd.DataFrame(
+        [
+            dict(mum(g, 100.0), sembol=s)
+            for s, konum in (("A", [0, 1, 2, 64]), ("Z", range(70)))
+            for g in gunler[konum]
+        ]
+    )
+    anlik = veri.Anlik(
+        "kapanma",
+        fiyat,
+        pd.DataFrame(columns=["sembol", "tarih", "kod", "carpan"]),
+        pd.DataFrame({"tarih": [pd.Timestamp("2026-01-01")], "faiz": [0.0]}),
+    )
+    t = pd.DataFrame(
+        {
+            "sembol": ["A"],
+            "sinyal_tarih": [gunler[0]],
+            "giris_tarih": [gunler[1]],
+            "cikis_tarih": [gunler[64]],
+            "giris_fiyat": [100.0],
+            "cikis_fiyat": [105.0],
+            "adet": [1],
+            "planlanan_risk": [4.0],
+            "neden": ["veri_sonu"],
+        }
+    )
+    s = simulator.calistir(
+        anlik,
+        t,
+        bas="2026-02-02",
+        masraflar=(0.003,),
+        evr={pd.Period("2026-02"): ["A", "Z"]},
+    )["masraf"][0.003]
+    a = s["islemler"].iloc[0]
+    assert (a.neden, a.cikis_tarih, a.cikis_fiyat) == ("kapanma", gunler[63], 0.0)
+
+
 def test_evren_disi_sinyal_islem_acmaz(tmp_path):
     # Şubat evreni referansı 30.01: tek hisse hacmi 0 → evrende yok. İşlem yok.
     seri = [

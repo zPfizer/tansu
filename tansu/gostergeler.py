@@ -21,14 +21,21 @@ def piyasa_durumu(xu100: pd.Series, n: int = 50) -> pd.Series:
     return xu100 > sma(xu100, n)
 
 
+def _gercek_aralik(
+    yuksek: pd.Series, dusuk: pd.Series, kapanis: pd.Series, skipna: bool = True
+) -> pd.Series:
+    """Gerçek aralık (TASARIM 5.5). İlk günde önceki kapanış yoktur: `skipna` ise yüksek - düşük, değilse NaN."""
+    onceki = kapanis.shift(1)
+    return pd.concat(
+        [yuksek - dusuk, (yuksek - onceki).abs(), (dusuk - onceki).abs()], axis=1
+    ).max(axis=1, skipna=skipna)
+
+
 def atr(
     yuksek: pd.Series, dusuk: pd.Series, kapanis: pd.Series, n: int = 14
 ) -> pd.Series:
     """Wilder ATR: ilk değer ilk n gerçek aralığın ortalaması, sonra (önceki*(n-1) + TR)/n (TASARIM 5.5)."""
-    onceki = kapanis.shift(1)
-    tr = pd.concat(
-        [yuksek - dusuk, (yuksek - onceki).abs(), (dusuk - onceki).abs()], axis=1
-    ).max(axis=1)
+    tr = _gercek_aralik(yuksek, dusuk, kapanis)
     tohum = tr.copy()
     tohum.iloc[: n - 1] = float("nan")
     if len(tr) >= n:
@@ -56,20 +63,18 @@ def rsi(kapanis: pd.Series, n: int = 14) -> pd.Series:
 def adx(
     yuksek: pd.Series, dusuk: pd.Series, kapanis: pd.Series, n: int = 14
 ) -> pd.Series:
-    """Wilder ADX (Wilder 1978; KURALLAR §3 Modül 1, gösterge teyidi): +DM, -DM ve gerçek aralık Wilder ortalamasıyla yumuşatılır;
-    DX = 100 × |+DI − −DI| / (+DI + −DI); ADX, DX'in Wilder ortalamasıdır. İlk ADX 2n-1. günde gelir (öncesi NaN)."""
+    """Wilder ADX (Wilder 1978; KURALLAR §3 Modül 1, gösterge teyidi; gerçek aralık TASARIM 5.5): +DM, -DM ve gerçek aralık Wilder ortalamasıyla yumuşatılır;
+    DX = 100 × |+DI − −DI| / (+DI + −DI), +DI + −DI = 0 ise 0 (yönlü hareket yok; ATR = 0 dahil); ADX, DX'in Wilder
+    ortalamasıdır. İlk ADX 0 tabanlı 2n−1 konumunda (2n. gün) gelir, öncesi NaN."""
     yukari, asagi = yuksek.diff(), -dusuk.diff()
     arti = yukari.where((yukari > asagi) & (yukari > 0), 0.0).where(yukari.notna())
     eksi = asagi.where((asagi > yukari) & (asagi > 0), 0.0).where(yukari.notna())
-    onceki = kapanis.shift(1)
-    tr = pd.concat(
-        [yuksek - dusuk, (yuksek - onceki).abs(), (dusuk - onceki).abs()], axis=1
-    ).max(
-        axis=1, skipna=False
-    )  # ilk günde önceki kapanış yok: NaN (DM ile aynı tohum günü)
+    # ilk günde önceki kapanış yok: NaN (DM ile aynı tohum günü)
+    tr = _gercek_aralik(yuksek, dusuk, kapanis, skipna=False)
     tr, arti, eksi = (_wilder_rsi(x, n) for x in (tr, arti, eksi))
     di_arti, di_eksi = 100 * arti / tr, 100 * eksi / tr
-    return _wilder_rsi(100 * (di_arti - di_eksi).abs() / (di_arti + di_eksi), n)
+    dx = 100 * (di_arti - di_eksi).abs() / (di_arti + di_eksi)
+    return _wilder_rsi(dx.where(arti + eksi != 0, 0.0), n)  # ATR = 0: DI = 0/0 = NaN
 
 
 def momentum_squeeze(

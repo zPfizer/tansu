@@ -191,3 +191,33 @@ def test_adx_wilder_dm_tr_yumusatma_dx_ve_ilk_adx():
     assert sonuc.iloc[3:].tolist() == pytest.approx(
         [200 / 3, 190 / 3, 2885 / 39], abs=1e-9
     )
+
+
+# KURALLAR §3 "Modül 1" gösterge teyidi: +DI + −DI = 0 ise DX = 0 (yönlü hareket yok; ATR = 0 dahil; YORUM, TA-Lib kuralı).
+# n=2. 1) Düz hisse (yüksek = düşük = kapanış = 10, 6 gün): her +DM, −DM ve gerçek aralık 0; DX gün 2'den 0; ilk ADX gün 3 = 0.
+# 2) Önce düz, sonra yukarı: yüksek [10;10;10;11;11], düşük 10, kapanış [10;10;10;10,5;10,5].
+#   Gün 1, 2: yukarı 0, aşağı 0 -> +DM 0, -DM 0; gerçek aralık 0. Gün 3: yukarı 1, aşağı 0 -> +DM 1; gerçek aralık
+#   max(1; |11-10|; |10-10|) = 1. Gün 4: yukarı 0, aşağı 0 -> +DM 0; gerçek aralık max(1; 0,5; 0,5) = 1.
+#   Wilder (tohum gün 2 = gün 1 ve 2 ortalaması): +DM 0; 0,5; 0,25. TR 0; 0,5; 0,75. -DM hep 0.
+#   DX gün 2: +DI + -DI = 0 -> 0. Gün 3: +DI 100, -DI 0 -> 100. Gün 4: +DI 100*0,25/0,75 = 100/3, -DI 0 -> 100.
+#   ADX: tohum gün 3 = (0 + 100)/2 = 50; gün 4 = (50 + 100)/2 = 75.
+@pytest.mark.parametrize(
+    "yuksek, kapanis, beklenen",
+    [
+        ([10.0] * 6, [10.0] * 6, [None, None, None, 0.0, 0.0, 0.0]),
+        (
+            [10.0, 10, 10, 11, 11],
+            [10.0, 10, 10, 10.5, 10.5],
+            [None, None, None, 50.0, 75.0],
+        ),
+    ],
+    ids=["duz-hisse", "once-duz-sonra-yukari"],
+)
+def test_adx_yonlu_hareket_yoksa_dx_sifir_atr_sifir_dahil(yuksek, kapanis, beklenen):
+    sonuc = gostergeler.adx(
+        pd.Series(yuksek), pd.Series([10.0] * len(yuksek)), pd.Series(kapanis), 2
+    )
+    assert sonuc.isna().tolist() == [x is None for x in beklenen]
+    assert sonuc.dropna().tolist() == pytest.approx(
+        [x for x in beklenen if x is not None], abs=1e-9
+    )

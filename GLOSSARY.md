@@ -80,6 +80,8 @@ olduğunu söyler; sayı, formül ve işleyiş, atıf verilen bölümdedir (TASA
 | Varyant | EMA sıkışması kırılımının, temel kuraldan tek boyutu değişen sınanabilir hâli. Her varyant ayrı kural kimliği ve ayrı denemedir (KURALLAR §3, TASARIM §5.11). |
 | R/R kapısı | Hedefi olan bir sinyalin, ödülün riske oranı eşiğin altındaysa aday sayılmaması (KURALLAR §3). |
 | Momentum squeeze | Fiyatın sıkışma sırasındaki ivmesini gösteren gösterge. Tansu tanım vermez; tanımımız YORUM'dur (KURALLAR §3). |
+| ADX | Trendin ne kadar güçlü olduğunu gösteren gösterge; trendin yönünü göstermez. Gösterge teyidinde artıyor olması istenir (KURALLAR §3). |
+| Düşüş süzgeci | Sıkışma döneminin, güçlü bir düşüşten sonra gelmiyorsa sayılmaması. Varsayılan olarak kapalıdır; açık hâli bir varyanttır (KURALLAR §3). |
 | Çift rotasyonu | Bir çiftin iki hissesi arasında Z'ye göre geçiş yapmaya dayanan aile (KURALLAR §3). |
 | Bacak | İki anlamı vardır. Çiftte: iki hisseden biri; iki bacağın rolleri Y ve X'tir (TASARIM §5.6). Formasyonda: iki dönüş noktası arasındaki fiyat hareketi, ör. CD bacağı (KURALLAR §2). |
 | Geçiş | Çiftte tutulan bacağı satıp öteki bacağı almak (TASARIM §5.6). |

@@ -46,7 +46,7 @@ class Pozisyon:
         frozenset()
     )  # tetiklenmiş farklı senaryolar (`dip`, `rsi70`, `rsi50`, `sma50`)
     yari_bekleyen: bool = False  # yarı satış tetiklendi, ertesi AOF'ta dolar
-    kar: bool = False  # `rsi70` önşartı: girişten sonra bir kapanış hem giriş fiyatının hem SMA50'nin üstünde oldu
+    kar: bool = False  # `rsi70` önşartı (KURALLAR §3 Modül 1, rsi70 "Etkinleşme önşartı"): girişten sonra bir kapanış hem giriş fiyatının hem SMA50'nin üstünde oldu; giriş günü sayılmaz
 
 
 def bekleyen(

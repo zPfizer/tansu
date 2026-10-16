@@ -262,7 +262,9 @@ geometri sadakati yönsüz yapılır. (bilet 04, 14.10)
          ADX_{t−1}; Tansu: "trend güşlenmiş momentum artmış"
          (`tweet-ema-squeeze-downtrend-break-checklist-1953173142861414759`, Ham; ölçüler YORUM). ADX(14, Wilder 1978;
          YORUM, standart tanım): +DM, −DM ve gerçek aralık Wilder ortalamasıyla 14 gün yumuşatılır; DX = 100 × |+DI − −DI|
-         / (+DI + −DI); ADX, DX'in 14 günlük Wilder ortalamasıdır. ADX hesaplanamayan gün aday değildir (Eksik değer).
+         / (+DI + −DI); +DI + −DI = 0 ise (yönlü hareket yok; ATR = 0 olan düz ya da durdurulmuş hisse dahil) DX = 0 (YORUM: yönlü
+         hareket yoksa trend yoktur; TA-Lib kuralı); ADX, DX'in 14 günlük Wilder ortalamasıdır. ADX hesaplanamayan gün aday
+         değildir (Eksik değer).
          Listedeki hacim maddesi hacim süzgecindedir.
        - Trend teyidi (`teyit` = `trend`; vekil kararı 16.10: trend çizgileri de kodlanır). Tansu: "şahane düşeni kırmış"
          (`tweet-ema-squeeze-downtrend-break-checklist-1953173142861414759`, Ham) ve "Yükselen trende temas edip tepki
@@ -352,7 +354,7 @@ geometri sadakati yönsüz yapılır. (bilet 04, 14.10)
          yapılır; kayan nokta hatası tam bir basamağı düşürmesin diye (YORUM).
        - Başabaş çıkışı (E K32). Tansu: "Eğer kârlı bölgeye geçtikten sonra fiyat geri dönerek tekrar tam olarak giriş
          fiyatınıza ulaşırsa, derhal pozisyondan çıkmanız gerekir."
-         (`tweet-under30-over30-1-5r-basabas-cikis-1992547498343161903`, Ham). R = giriş − ilk stop (risk birimi).
+         (`tweet-under30-over30-1-5r-basabas-cikis-1992547498343161903`, Ham). R tanımı: TASARIM §5.3 "İşlem günlüğü".
          Yüksek ≥ giriş + 1,5 × R ise stop = max(stop, giriş). Aktivasyon fiyat alanı olarak gün yüksekliği YORUM'dur (E K32).
        - İz süren stop başlangıcı (YORUM). Tansu: "pozisyonun risk/ödül oranı hedefine ulaştığında Trailing Stop (TS) ve kâr
          alma kuralları devreye girer" (`tweet-rsi30-giris-iki-asamali-cikis`, Ham; Ham'da yazar yok). Not sayı vermez.

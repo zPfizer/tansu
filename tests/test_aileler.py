@@ -325,8 +325,10 @@ def test_momentum_suzgeci_negatif_ve_dusen_gun_aday_degil(
 ARTAN = [0, 1, 2, 3, 4, 5, 6, 7]  # her gün bir öncekinden büyük
 
 
-# Aynı veri. Üç gösterge teyidi birlikte aranır: MACD histogramı artıyor (h_t > h_{t-1}), PSAR < kapanış, %K > %D.
+# Aynı veri. Gösterge teyidi beş şartı birlikte arar: MACD histogramı artıyor (h_t > h_{t-1}), PSAR < kapanış, %K > %D,
+# momentum artıyor, ADX artıyor. Bu test ilk üçünü değiştirir; momentum ve ADX her gün artan verilir (iki şart sağlanır).
 # Hepsi sağlanır -> gün 5. MACD histogramı düşüyor, PSAR üstte (200 > 103), %K <= %D -> her biri tek başına yok.
+# Momentum ve ADX şartları `test_gosterge_teyidi_momentum_ve_adx_artisi_da_ister` testindedir.
 # Histogram [0,0,0,0,0,0,1,1]: gün 5 için 0 > 0 hayır; gün 6 için 1 > 0 evet -> 6.
 @pytest.mark.parametrize(
     "hist, psar, k, d, beklenen",
@@ -339,7 +341,7 @@ ARTAN = [0, 1, 2, 3, 4, 5, 6, 7]  # her gün bir öncekinden büyük
     ],
     ids=["hepsi", "macd-dusuyor", "macd-gun-6", "psar-ustte", "stokastik-asagida"],
 )
-def test_gosterge_teyidi_macd_psar_ve_stokastik_birlikte(
+def test_gosterge_teyidi_macd_psar_stokastik_sartlari_momentum_ve_adx_artarken(
     monkeypatch, hist, psar, k, d, beklenen
 ):
     f = _mumlar([100, 100, 100, 100, 100, 103, 104, 105])
@@ -1038,3 +1040,110 @@ def test_dusus_t_den_sonraki_gunler_t_oncesi_karari_degistirmez():
     for n in range(20, len(f) + 1):
         kesik = aileler.kurulum(f.iloc[:n], p)
         pd.testing.assert_frame_equal(tam[tam.index <= f.index[n - 1]], kesik)
+
+
+# --- Modül 1 sürüm 2, bilet 09: kod incelemesi düzeltmeleri (ayırt edici testler) ---
+
+
+# ATR14 hesaplanamıyorsa (NaN) süzgeç hesaplanamaz ve dönem sayılmaz (KURALLAR §3 Modül 1, Düşüş). Çerçeve: "dusus-30" (yukarıdaki
+# test): ATR varken dönem sayılır, sinyal gün 40. ATR her yerde NaN verilirse karşılaştırma yanlış olur, dönem sayılmaz.
+def test_dusus_donem_basinda_atr_nan_ise_donem_sayilmaz(monkeypatch):
+    f = _dusus_cercevesi(130.0, 100.0, 103.0)
+    assert _gunler(f, Parametre(dusus=True, **DUSUS)) == [40]
+    monkeypatch.setattr(
+        gostergeler, "atr", lambda *a, **kw: pd.Series(np.nan, index=f.index)
+    )
+    assert _gunler(f, Parametre(dusus=True, **DUSUS)) == []
+
+
+def _arz_secim_cercevesi():
+    """48 gün; yüksek = kapanış + 1, düşük = kapanış - 1 (gün 42 yükseği 100). Gün 0-13 düz 100 (ATR 2), 14-17 yükseliş
+    (105; 111; 118; 122), 18-21 düşüş (121; 113; 108; 104), 22 mum 107, 23-24 (106; 98), 25-27 yükseliş (105; 110; 114),
+    28-31 (113; 104; 102; 100), 32 mum 103, 33-34 (102; 94), 35-44 düz 94, 45-47 kırılım (106; 112; 116)."""
+    kapanis = [100.0] * 14
+    kapanis += [105, 111, 118, 122, 121, 113, 108, 104, 107, 106, 98, 105, 110, 114]
+    kapanis += [113, 104, 102, 100, 103, 102] + [94] * 11 + [106, 112, 116]
+    yuksek = [k + 1 for k in kapanis]
+    yuksek[42] = 100.0  # fitil: kutu üstü tam 100
+    return _mumlar(kapanis, yuksek)
+
+
+# Arz bölgeleri (hepsi gün 17, 22, 27, 32 mumlarından; proximal = mumdan önceki kapanış, distal = mum yüksek):
+#   A: gün 17 (122), proximal 118, distal 123; ATR17 ~ 3,1 (gerçek aralıklar gün 14-17: 6, 7, 8, 5; öncesi 2): gün 19 kapanışı
+#      113 <= 118 - 3,1 -> bilinen gün 19, aktif (bozulma yok).
+#   C: gün 22 (107), proximal 104, distal 108; gün 24 kapanışı 98 <= 104 - ATR (ATR < 6) -> bilinen gün 24; gün 26 kapanışı 110 > 108 -> BİTER.
+#   B: gün 27 (114), proximal 110, distal 115; gün 29 kapanışı 104 <= 110 - ATR (ATR < 6) -> bilinen gün 29, aktif.
+#   D: gün 32 (103), proximal 100, distal 104; gün 34 kapanışı 94 <= 100 - ATR (ATR < 6) -> bilinen gün 34, aktif.
+# Her mum bir önceki kapanışın üstünde (yeşil), ertesi gün kapanış yükselmez; öbür yükseliş günleri (14-16, 25-26) ertesi gün de
+# yeşildir, bölge doğurmaz.
+# Sıkışma dönemi: düz 94 günlerinde oran (EMA2 ile EMA3 arası) gün 38'de eşiğin (0,004) altına iner ve gün 44'e dek altındadır:
+# dönem gün 38-44 (gün 45 kapanışı 106 oranı eşiğin üstüne çıkarır). Kutu üstü 100 (gün 42 fitili), kutu altı 93.
+# Dönem bitişinde (gün 44) aktif: A, B, D. C bitmiştir -> yok sayılır.
+# Kutu üstünden büyük proximal: A (118) ve B (110). D'nin proximal'ı 100 = kutu üstü: "büyük" değil -> yok sayılır.
+# En küçük proximal: B -> distal 115. Gün 45 (106), 46 (112) <= 115; gün 47 (116) > 115 -> sinyal gün 47.
+# Yanlış okumalar: C dahil -> distal 108 -> gün 46; D dahil (>=) -> distal 104 -> gün 45; en büyük proximal (A) -> 123 -> sinyal yok.
+def test_giris_arz_en_kucuk_proximal_aktif_bolge_biten_ve_esit_proximal_yok_sayilir():
+    f = _arz_secim_cercevesi()
+    ayar = dict(KUCUK, sma_n=1)
+    z = aileler.bolgeler(f, "arz")
+    assert list(zip(z["proximal"], z["distal"])) == [
+        (118.0, 123.0),
+        (104.0, 108.0),
+        (110.0, 115.0),
+        (100.0, 104.0),
+    ]
+    # Bitişler: A yok; C gün 26 (dönem bitişinden önce); D gün 45 ve B gün 47 (dönem bitişinden sonra, pencerede)
+    bitis = [None if pd.isna(b) else f.index.get_loc(b) for b in z["bitis"]]
+    assert bitis == [None, 26, 47, 45]
+    assert _gunler(f, Parametre(giris="kutu", **ayar)) == [14, 45]
+    p = Parametre(giris="arz", **ayar)
+    assert _gunler(f, p) == [47]
+    k = aileler.kurulum(f, p).iloc[0]
+    assert (k["kutu_alt"], k["kutu_ust"]) == (93.0, 100.0)
+
+
+# Üçgen: dönem gün 0-12 (kapanış 100). Salınım tepeleri gün 2 (105), 6 (105,8), 10 (105,4): 105,8 ve 105,4 <= 105 * 1,01 = 106,05.
+# Dipler gün 3 (96), 6 (97), 9 (98): yükseliyor. Pencere gün 13, 14, 15. Kapanışlar 105,5; 105,7; 105,9.
+# İlk ve SON tepeden geçen çizgi (gün 2, 105) - (gün 10, 105,4): eğim 0,4/8 = 0,05; değer(t) = 105,4 + 0,05 (t - 10):
+#   gün 13 = 105,55; gün 14 = 105,6; gün 15 = 105,65. 105,5 > 105,55 hayır; 105,7 > 105,6 evet -> sinyal gün 14.
+# İlk iki tepeden geçen çizgi (gün 2) - (gün 6, 105,8): eğim 0,2; değer(t) = 105,8 + 0,2 (t - 6): gün 13 = 107,2; gün 14 = 107,4;
+#   gün 15 = 107,6 -> hiçbir kapanış geçmez -> sinyal yok.
+# Son iki tepeden geçen çizgi (gün 6) - (gün 10): eğim -0,4/4 = -0,1; değer(t) = 105,4 - 0,1 (t - 10): gün 13 = 105,1 -> 105,5 > 105,1 -> gün 13.
+# `kutu` (kutu üstü 105,8): yalnız gün 15 (105,9 > 105,8).
+def test_giris_ucgen_ust_cizgi_ilk_ve_son_tepeden_gecer_uc_tepeyle_ayirt_edilir():
+    yuk = [101.0] * 13 + [106.0, 106.2, 106.4]
+    yuk[2], yuk[6], yuk[10] = 105.0, 105.8, 105.4
+    dus = [99.0] * 13 + [104.5, 104.7, 104.9]
+    dus[3], dus[6], dus[9] = 96.0, 97.0, 98.0
+    f = _mumlar([100.0] * 13 + [105.5, 105.7, 105.9], yuk, dus)
+    ayar = dict(KUCUK, sma_n=1)
+    assert _gunler(f, Parametre(giris="kutu", **ayar)) == [15]
+    p = Parametre(giris="ucgen", **ayar)
+    assert _gunler(f, p) == [14]
+    k = aileler.kurulum(f, p).iloc[0]
+    assert (k["kutu_alt"], k["kutu_ust"]) == (96.0, 105.8)
+
+
+# Dönem başı ilk gün olup serinin ilk günü değilse gövde ucu önceki kapanışı kullanır (KURALLAR §3 Modül 1, Kutu).
+# Ayar `DUSUS`: periyotlar (1, 2) (EMA1 = kapanış, EMA2 alfa 2/3), oran = |kapanış - EMA2| / EMA2, eşik 0,005, en az 3 gün, pencere 3.
+# Kapanış: gün 0-21 130; gün 22-24 100; gün 25 99,9; gün 26-30 100; gün 31-33 101,6; 101,7; 101,8. Yüksek = kapanış + 1,
+# düşük = kapanış - 1, ama gün 25 yükseği 102 (dönemin en yüksek günü; ilk gün).
+# 130 -> 100 sıçramasında EMA2 farkı her gün üçte birine iner: gün 22 = 10; gün 23 = 3,33; gün 24 = 1,11 (EMA2 101,11).
+#   Oranlar: gün 22 = 0,091; gün 23 = 0,032; gün 24 = 1,11 / 101,11 = 0,011 > 0,005. Gün 25: EMA2 = (2/3) 99,9 + (1/3) 101,11 =
+#   100,3037; oran = (100,3037 - 99,9) / 100,3037 = 0,00402 <= 0,005 -> dönem başı gün 25 (serinin ilk günü değil).
+# Gün 26-30 oranı daha küçük (EMA2 farkı 0,30; 0,10; 0,034; 0,011; 0,004). Gün 31: EMA2 = 101,6 - (101,6 - 100,0012) / 3 = 101,067;
+#   oran = (101,6 - 101,067) / 101,067 = 0,00527 > 0,005 -> dönem gün 25-30'da biter. Pencere gün 31, 32, 33.
+# Gövde ucu = max(önceki kapanış, kapanış) = max(100; 99,9) = 100 (kapanış tek başına 99,9 olurdu). Gün 0-21 dönemi: kutu üstü
+# 130 (ilk gün: önceki kapanış yok -> kapanış), kapanışlar 100 -> sinyal yok.
+# govde: kutu üstü 100; gün 31 kapanışı 101,6 > 100 -> sinyal gün 31, kutu_ust 100. yuksek: kutu üstü 102; 101,6; 101,7; 101,8 <= 102 -> yok.
+def test_kutu_ust_govde_donem_ilk_gunu_serinin_ilk_gunu_degilse_onceki_kapanis_kullanilir():
+    kapanis = [130.0] * 22 + [100.0] * 3 + [99.9] + [100.0] * 5 + [101.6, 101.7, 101.8]
+    yuksek = [k + 1 for k in kapanis]
+    yuksek[25] = 102.0
+    f = _mumlar(kapanis, yuksek)
+    ayar = dict(DUSUS, sma_n=1)
+    assert _gunler(f, Parametre(giris="kutu", kutu_ust="yuksek", **ayar)) == []
+    govde = Parametre(giris="kutu", kutu_ust="govde", **ayar)
+    assert _gunler(f, govde) == [31]
+    k = aileler.kurulum(f, govde).iloc[0]
+    assert (k["kutu_alt"], k["kutu_ust"]) == (pytest.approx(98.9), 100.0)

@@ -911,6 +911,23 @@ def test_rsi70_yari_satis_onsart_onceki_gun_kapanis_giris_ve_sma50_ustunde(
     assert _ozet(satirlar, Parametre(cikis="rsi70")) == _ak(beklenen)
 
 
+# rsi70 önşartında giriş günü sayılmaz (KURALLAR §3 "Modül 1": "giriş günü sayılmaz"). Giriş 100 (gün 1), stop 96.
+# Gün 1 (giriş günü): kapanış 101 > giriş fiyatı 100 ve > SMA50 90 (giriş günü sayılsaydı önşart sağlanırdı).
+# Gün 2: kapanış 99,5 <= 100 -> önşart sağlanmaz; RSI 72 -> 69 reddi var, ama önşart yok -> yarı satış yok.
+# Gün 3: AOF 100,2; veri sonu kapanışı 100,5 (düşük 99,5 > stop). Yarı satış yok -> çıkış 100,5; risk 4, kayıp 0.
+# (Giriş günü sayılsaydı gün 2 yarı satış verir, gün 3 AOF 100,2'de dolar; çıkış (100,2 + 100,5) / 2 = 100,35.)
+def test_rsi70_onsart_giris_gunu_sayilmaz_sonraki_gun_saglamazsa_yari_satis_yok():
+    satirlar = [
+        S0,
+        r(100, 101, 99, 101, rsi=55, onceki_rsi=54, sma50=90, onceki_dusuk=0),
+        r(100, 100.5, 99, 99.5, rsi=69, onceki_rsi=72, sma50=90, onceki_dusuk=0),
+        r(100.2, 101, 99.5, 100.5, rsi=60, onceki_rsi=69, sma50=90, onceki_dusuk=99),
+    ]
+    assert _ozet(satirlar, Parametre(cikis="rsi70")) == _ak(
+        (1, 100, 3, 100.5, "veri_sonu", 4, 0)
+    )
+
+
 def test_zincir_onbellek_anahtari_kurulum_degerini_icerir():
     # Aynı konum, iki kutu. Kutu alt 95: gün 2 düşük 96 > 95, dokunmaz, veri sonu 97. Kutu alt 97: 96 <= 97 -> stop 97.
     m = _mumlar([S0, GIRIS, r(98, 99, 96, 97)], 2)
@@ -1003,8 +1020,8 @@ def test_sinama_modul_1_varyanti_kutu_stopu_ve_hedef_cikisi():
 
 # Bilet 06: KURALLAR §3 "Modül 1" Varyantlar tablosunun 23 adı (literal). Her varyant, sentetik dünyada (8 hisse, 700 gün; ısınma,
 # SMA ve sıkışma ayarı gevşek) motordan hatasız geçer: bir kez kendi kapılarıyla, bir kez kapılar (hacim, momentum, R/R) gevşekken.
-# Çıkış nedenleri tanımlı kümededir; fiyatlar sonlu ve pozitiftir; bütün varyantlarda toplam işlem sayısı sıfırdan büyüktür
-# (sınama boş değil).
+# Her koşu motor tablosunun sütunlarını verir; çıkış nedenleri tanımlı kümededir; fiyatlar sonlu ve pozitiftir. Bütün koşuların
+# TOPLAM işlem sayısı sıfırdan büyüktür (sınama boş değil); tek bir varyant boş olabilir (`giris_ucgen` bu dünyada işlem üretmez).
 VARYANT_ADLARI = [
     "bugun",
     "tansu",
@@ -1036,6 +1053,20 @@ def test_her_varyant_motordan_gecer_kisa_sentetik_seride_hata_yok():
     assert len(VARYANT_ADLARI) == 23
     dunya = denetim.dunya(11, hisse=8, gun=700)
     nedenler = {"stop", "sma250", "hedef", "cikis_kurali", "karantina", "veri_sonu"}
+    sutunlar = [
+        "sinyal_tarih",
+        "giris_tarih",
+        "giris_fiyat",
+        "cikis_tarih",
+        "cikis_fiyat",
+        "neden",
+        "adet",
+        "planlanan_risk",
+        "gerceklesen_kayip",
+        "yari_tarih",
+        "yari_fiyat",
+        "sembol",
+    ]
     toplam = 0
     for ad in VARYANT_ADLARI:
         p = replace(
@@ -1047,8 +1078,8 @@ def test_her_varyant_motordan_gecer_kisa_sentetik_seride_hata_yok():
             pencere=30,
         )
         for ayar in (p, replace(p, hacim_kat=0.0, momentum=False, rr_min=0.0)):
-            islemler, dusen = motor.sinama(dunya, ayar)
-            assert dusen >= 0, ad
+            islemler, _ = motor.sinama(dunya, ayar)
+            assert list(islemler.columns) == sutunlar, ad
             assert set(islemler["neden"]) <= nedenler, ad
             assert (islemler[["giris_fiyat", "cikis_fiyat"]] > 0).all().all(), ad
             toplam += len(islemler)
