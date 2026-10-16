@@ -165,3 +165,29 @@ def test_stokastik_k_ve_d():
     assert k.iloc[2:].tolist() == pytest.approx([75.0, 100 / 3, 75.0], abs=1e-9)
     assert d.isna().tolist() == [True, True, True, False, False]
     assert d.iloc[3:].tolist() == pytest.approx([325 / 6, 325 / 6], abs=1e-9)
+
+
+def test_adx_wilder_dm_tr_yumusatma_dx_ve_ilk_adx():
+    # n=2 (Wilder ortalaması: ilk değer ilk 2 değerin ortalaması, sonra (önceki*1 + yeni)/2).
+    # yüksek [10;11;12;11,5;12;13], düşük [8;9;9,5;9;9,5;11], kapanış [9;10;11;10;11,5;12,5].
+    # Gün 1..5 için yukarı = yüksek_t - yüksek_{t-1}, aşağı = düşük_{t-1} - düşük_t; +DM = yukarı (yukarı > aşağı ve > 0), -DM = aşağı (aşağı > yukarı ve > 0):
+    #   gün 1: yukarı 1, aşağı -1 -> +DM 1, -DM 0.   gün 2: yukarı 1, aşağı -0,5 -> +DM 1, -DM 0.
+    #   gün 3: yukarı -0,5, aşağı 0,5 -> +DM 0, -DM 0,5.   gün 4: yukarı 0,5, aşağı -0,5 -> +DM 0,5, -DM 0.
+    #   gün 5: yukarı 1, aşağı -1,5 -> +DM 1, -DM 0.
+    # Gerçek aralık = max(yüksek-düşük, |yüksek-önceki kapanış|, |düşük-önceki kapanış|): gün 1..5 = 2; 2,5; 2,5; 2,5; 2.
+    # Wilder (gün 2'de tohum = gün 1 ve 2 ortalaması): +DM 1; 0,5; 0,5; 0,75. -DM 0; 0,25; 0,125; 0,0625.
+    #   TR 2,25; 2,375; 2,4375; 2,21875 (gün 2, 3, 4, 5).
+    # +DI = 100*+DM/TR: 44,444; 21,053; 20,513; 33,803. -DI: 0; 10,526; 5,128; 2,817.
+    # DX = 100*|+DI - -DI|/(+DI + -DI): gün 2 = 100; gün 3 = 100*0,25/0,75 = 100/3; gün 4 = 100*0,375/0,625 = 60;
+    #   gün 5 = 100*0,6875/0,8125 = 1100/13.
+    # ADX: tohum gün 3 = (100 + 100/3)/2 = 200/3; gün 4 = (200/3 + 60)/2 = 190/3; gün 5 = (190/3 + 1100/13)/2 = 2885/39.
+    sonuc = gostergeler.adx(
+        pd.Series([10.0, 11, 12, 11.5, 12, 13]),
+        pd.Series([8.0, 9, 9.5, 9, 9.5, 11]),
+        pd.Series([9.0, 10, 11, 10, 11.5, 12.5]),
+        2,
+    )
+    assert sonuc.isna().tolist() == [True, True, True, False, False, False]
+    assert sonuc.iloc[3:].tolist() == pytest.approx(
+        [200 / 3, 190 / 3, 2885 / 39], abs=1e-9
+    )

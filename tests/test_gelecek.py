@@ -3,8 +3,8 @@
 Tek parametrik test: bileşen × kesim günü. Sentetik dünya (`denetim.dunya`, 24 hisse, 900 gün; 02.01.2012'den). Kesilen
 anlık görüntüde t'den sonraki fiyat satırları ve faiz değişimleri yoktur; tam görüntünün t'ye kadarki çıktısı aynı olmalı.
 Kapsam: evren, göstergeler, EMA ve çift sinyalleri, çift seçimi, likidite medyanı, faiz hizalaması (ve K2 sepeti).
-Modül 1: yeni göstergeler (RSI, momentum squeeze, MACD, PSAR, stokastik) ve EMA kurulumu (varyant örnekleri: kutu, hedef;
-arz ve talep bölgeleri).
+Modül 1: yeni göstergeler (RSI, momentum squeeze, ADX, MACD, PSAR, stokastik) ve EMA kurulumu (varyant örnekleri: kutu, hedef,
+`arz` ve `ucgen` girişleri, düşüş süzgeci; arz ve talep bölgeleri).
 """
 
 from dataclasses import replace
@@ -77,6 +77,9 @@ def gostergeler_(tam, kes_, t):
             "momentum": lambda a: gostergeler.momentum_squeeze(
                 seri(a, s, "yuksek"), seri(a, s, "dusuk"), seri(a, s)
             ),
+            "adx": lambda a: gostergeler.adx(
+                seri(a, s, "yuksek"), seri(a, s, "dusuk"), seri(a, s)
+            ),
             "macd": lambda a: gostergeler.macd_histogram(seri(a, s)),
             "psar": lambda a: gostergeler.psar(
                 seri(a, s, "yuksek"), seri(a, s, "dusuk")
@@ -142,23 +145,23 @@ def kurulum_varyantlari():
         )
         ornek[ad] = p
         ornek[ad + "_gevsek"] = replace(p, hacim_kat=0.0, momentum=False, rr_min=0.0)
-    for giris in (
-        "arz",
-        "ucgen",
-    ):  # bilet 04: yeni giriş türleri (üst kutu ve üst çizgi t'de bilinenlerden)
+    # bilet 04 ve 05: yeni giriş türleri (üst kutu, üst çizgi) ve düşüş süzgeci; `tansu` temelinden tek alan
+    for ad, alan in (
+        ("giris_arz", dict(giris="arz")),
+        ("giris_ucgen", dict(giris="ucgen")),
+        ("dusus_sonrasi", dict(dusus=True)),
+    ):
         p = replace(
             aileler.VARYANTLAR["tansu"],
-            giris=giris,
             isinma=60,
             sma_n=50,
             esik=0.03,
             min_gun=2,
             pencere=30,
+            **alan,
         )
-        ornek["giris_" + giris] = p
-        ornek["giris_" + giris + "_gevsek"] = replace(
-            p, hacim_kat=0.0, momentum=False, rr_min=0.0
-        )
+        ornek[ad] = p
+        ornek[ad + "_gevsek"] = replace(p, hacim_kat=0.0, momentum=False, rr_min=0.0)
     return ornek
 
 

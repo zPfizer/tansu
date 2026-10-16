@@ -38,6 +38,7 @@ class Parametre:
     rr_min: float = 2.0
     cikis: str = "yok"  # `motor` okur
     kutu_ust: str = "yuksek"  # KURALLAR §3 Modül 1 Kutu: yuksek = gün yüksekliği, govde = en yüksek günün gövde ucu
+    dusus: bool = False  # KURALLAR §3 Modül 1 Düşüş: açıkken güçlü düşüşten sonra gelmeyen dönem sayılmaz
 
     def __post_init__(self):
         for alan, izinli in SECENEKLER.items():
@@ -45,6 +46,10 @@ class Parametre:
                 raise ValueError(
                     f"Parametre {alan}: {getattr(self, alan)!r} tanımsız; izinli: {izinli}"
                 )
+        if self.dusus and self.giris == "agresif":
+            raise ValueError(
+                "Parametre dusus: agresif girişle tanımsız (KURALLAR §3 Modül 1: düşüş şartı sıkışma dönemi başına bakar)"
+            )
 
 
 KIRILIM_GUN = 20  # YORUM (KURALLAR §3): sıkışmasız kırılım kolunda önceki gün sayısı
@@ -54,6 +59,10 @@ RETEST_GUN = 5  # YORUM: güçlü mumdan sonra geri çekilme aranan gün
 BOLGE_GUN = 3  # YORUM: bölgenin onaylanması için bakılan gün (b+1 ... b+3)
 TREND_GUN = 5  # YORUM: yükselen trende temas aranan gün (t-5 ... t)
 YAKIN = 1.01  # YORUM: "yakın" = %1 (üçgen tepeleri, trend teması)
+DUSUS_GUN = 20  # YORUM (KURALLAR §3 Modül 1 Düşüş): dönem başından önceki bakılan gün
+DUSUS_ATR = (
+    3.0  # YORUM: düşüş = en yüksek yüksek >= kutu alt + 3 × ATR14 (dönem başı günü)
+)
 STOP_KAT = {  # başlangıç stopu ATR katı: TASARIM 5.5 (2 ATR), KURALLAR §3 Modül 1 `atr15` (1,5 ATR)
     "atr2": 2.0,
     "atr15": 1.5,
@@ -229,6 +238,7 @@ def kurulum(f: pd.DataFrame, p: Parametre = Parametre()) -> pd.DataFrame:
         or p.teyit != "yok"
         or p.hedef != "yok"
         or p.stop == "kutu"
+        or p.dusus
     )
     # ponytail: varsayılan kural `dusuk` istemez; yoksa yalnız kutu_alt NaN kalır. Öbür varyantlar sütunu ister (yoksa KeyError).
     dus = (
@@ -238,7 +248,7 @@ def kurulum(f: pd.DataFrame, p: Parametre = Parametre()) -> pd.DataFrame:
     )
     atr = (
         gostergeler.atr(f["yuksek"], f["dusuk"], f["kapanis"], ATR_N).to_numpy()
-        if p.giris in ("mum", "retest") or p.hedef == "tansu"
+        if p.giris in ("mum", "retest") or p.hedef == "tansu" or p.dusus
         else None
     )
     govde = np.fmax(
@@ -257,14 +267,24 @@ def kurulum(f: pd.DataFrame, p: Parametre = Parametre()) -> pd.DataFrame:
     if p.hacim_kat > 0:
         ort = f["hacim"].shift(1).rolling(HACIM_GUN).mean()  # t hariç
         hacim_ok = (f["hacim"] >= p.hacim_kat * ort).to_numpy()
-    if p.momentum:
+    if p.momentum or p.teyit == "gosterge":
         v = gostergeler.momentum_squeeze(f["yuksek"], f["dusuk"], f["kapanis"])
+    if p.momentum:
         ok &= ~((v < 0) & (v < v.shift(1))).to_numpy()
-    if p.teyit == "gosterge":
+    if (
+        p.teyit == "gosterge"
+    ):  # hesaplanamayan değer (NaN) karşılaştırmayı yanlış yapar: gün aday değil
         h = gostergeler.macd_histogram(f["kapanis"])
         k, d = gostergeler.stokastik(f["yuksek"], f["dusuk"], f["kapanis"])
         psar = gostergeler.psar(f["yuksek"], f["dusuk"])
-        ok &= ((h > h.shift(1)) & (psar < f["kapanis"]) & (k > d)).to_numpy()
+        a = gostergeler.adx(f["yuksek"], f["dusuk"], f["kapanis"])
+        ok &= (
+            (h > h.shift(1))
+            & (psar < f["kapanis"])
+            & (k > d)
+            & (v > v.shift(1))
+            & (a > a.shift(1))
+        ).to_numpy()
     tepe = np.flatnonzero(_salinim(yuk, True)) if p.teyit == "trend" else None
     dip = np.flatnonzero(_salinim(dus, False)) if p.teyit == "trend" else None
     arz = _bolge_listesi(f, "arz") if p.hedef == "tansu" or p.giris == "arz" else []
@@ -336,6 +356,11 @@ def kurulum(f: pd.DataFrame, p: Parametre = Parametre()) -> pd.DataFrame:
         for d in gostergeler.sikisma_donemleri(oran, p.esik, p.min_gun):
             bas, bit = f.index.get_loc(d["bas"]), f.index.get_loc(d["bit"])
             ust, alt = ust_bul(bas, bit + 1), dus[bas : bit + 1].min()
+            if p.dusus and not (
+                bas >= DUSUS_GUN
+                and yuk[bas - DUSUS_GUN : bas].max() >= alt + DUSUS_ATR * atr[bas]
+            ):
+                continue  # güçlü düşüşten sonra gelmeyen dönem sayılmaz (yalnız dönem başından önceki günler)
             ucgen = (
                 _ucgen_hedef(yuk[bas : bit + 1], dus[bas : bit + 1])
                 if p.hedef == "tansu"

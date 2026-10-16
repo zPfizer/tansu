@@ -322,6 +322,9 @@ def test_momentum_suzgeci_negatif_ve_dusen_gun_aday_degil(
     assert _gunler(f, Parametre(momentum=momentum, **KUCUK)) == beklenen
 
 
+ARTAN = [0, 1, 2, 3, 4, 5, 6, 7]  # her gün bir öncekinden büyük
+
+
 # Aynı veri. Üç gösterge teyidi birlikte aranır: MACD histogramı artıyor (h_t > h_{t-1}), PSAR < kapanış, %K > %D.
 # Hepsi sağlanır -> gün 5. MACD histogramı düşüyor, PSAR üstte (200 > 103), %K <= %D -> her biri tek başına yok.
 # Histogram [0,0,0,0,0,0,1,1]: gün 5 için 0 > 0 hayır; gün 6 için 1 > 0 evet -> 6.
@@ -344,6 +347,9 @@ def test_gosterge_teyidi_macd_psar_ve_stokastik_birlikte(
     monkeypatch.setattr(gostergeler, "macd_histogram", lambda *a, **kw: seri(hist))
     monkeypatch.setattr(gostergeler, "psar", lambda *a, **kw: seri(psar))
     monkeypatch.setattr(gostergeler, "stokastik", lambda *a, **kw: (seri(k), seri(d)))
+    # Bilet 05: gösterge teyidi momentum ve ADX artışını da ister (KURALLAR §3 "Modül 1"); bu test ikisini her gün artan verir.
+    monkeypatch.setattr(gostergeler, "momentum_squeeze", lambda *a, **kw: seri(ARTAN))
+    monkeypatch.setattr(gostergeler, "adx", lambda *a, **kw: seri(ARTAN))
     assert _gunler(f, Parametre(teyit="gosterge", **KUCUK)) == beklenen
 
 
@@ -908,5 +914,123 @@ def test_giris_arz_ve_ucgen_t_den_sonraki_gunler_t_oncesi_karari_degistirmez(
     tam = aileler.kurulum(f, p)
     assert len(tam) == 1  # sınama boş değil
     for n in range(6, len(f) + 1):
+        kesik = aileler.kurulum(f.iloc[:n], p)
+        pd.testing.assert_frame_equal(tam[tam.index <= f.index[n - 1]], kesik)
+
+
+# --- Modül 1 sürüm 2, bilet 05: gösterge teyidine momentum ve ADX artışı, düşüş süzgeci (KURALLAR §3 "Modül 1") ---
+
+NAN = float("nan")
+
+
+# Aynı veri (kapanış [100x5, 103, 104, 105], kutu tetiği gün 5, 6, 7). MACD, PSAR ve stokastik her gün geçer (histogram
+# [0,0,0,0,0,1,2,3]: gün 5, 6, 7 artıyor; PSAR 99 < kapanış; %K 50 > %D 40). Momentum ve ADX değerleri verilir.
+# 1) ikisi de her gün artıyor -> gün 5.
+# 2) momentum [0,0,0,0,2,1,2,3]: gün 5 için 1 > 2 hayır; gün 6 için 2 > 1 evet -> gün 6.
+# 3) ADX aynı dizi -> gün 6.
+# 4) momentum her gün düşüyor -> sinyal yok.
+# 5) ADX [NaN x6, 1, 2]: gün 5 NaN; gün 6 için 1 > NaN hayır (hesaplanamayan gün aday değil); gün 7 için 2 > 1 evet -> gün 7.
+# 6) momentum aynı NaN dizisi -> gün 7.
+@pytest.mark.parametrize(
+    "momentum, adx, beklenen",
+    [
+        (ARTAN, ARTAN, [5]),
+        ([0, 0, 0, 0, 2, 1, 2, 3], ARTAN, [6]),
+        (ARTAN, [0, 0, 0, 0, 2, 1, 2, 3], [6]),
+        ([7, 6, 5, 4, 3, 2, 1, 0], ARTAN, []),
+        (ARTAN, [NAN] * 6 + [1, 2], [7]),
+        ([NAN] * 6 + [1, 2], ARTAN, [7]),
+    ],
+    ids=[
+        "ikisi-artiyor",
+        "momentum-gun-6",
+        "adx-gun-6",
+        "momentum-dusuyor",
+        "adx-nan",
+        "momentum-nan",
+    ],
+)
+def test_gosterge_teyidi_momentum_ve_adx_artisi_da_ister(
+    monkeypatch, momentum, adx, beklenen
+):
+    f = _mumlar([100, 100, 100, 100, 100, 103, 104, 105])
+    seri = lambda v: pd.Series(v, index=f.index, dtype=float)  # noqa: E731
+    monkeypatch.setattr(
+        gostergeler, "macd_histogram", lambda *a, **kw: seri([0, 0, 0, 0, 0, 1, 2, 3])
+    )
+    monkeypatch.setattr(gostergeler, "psar", lambda *a, **kw: seri(99.0))
+    monkeypatch.setattr(
+        gostergeler, "stokastik", lambda *a, **kw: (seri(50.0), seri(40.0))
+    )
+    monkeypatch.setattr(
+        gostergeler, "momentum_squeeze", lambda *a, **kw: seri(momentum)
+    )
+    monkeypatch.setattr(gostergeler, "adx", lambda *a, **kw: seri(adx))
+    assert _gunler(f, Parametre(teyit="gosterge", **KUCUK)) == beklenen
+
+
+def test_parametre_dusus_varsayilani_kapali_agresifle_tanimsiz():
+    # Varsayılan kural değişmez (dusus kapalı). Agresif girişte "dönem başı" KURALLAR'da tanımlı değildir (koşu + t günü kutusu):
+    # birleşim sessizce yok sayılmaz, hata verir.
+    assert Parametre().dusus is False
+    assert aileler.VARYANTLAR["tansu"].dusus is False
+    with pytest.raises(ValueError, match="dusus"):
+        Parametre(giris="agresif", dusus=True)
+
+
+def _dusus_cercevesi(onceki, sonra, son):
+    """Gün 0-21 kapanış `onceki`, gün 22-39 kapanış `sonra`, gün 40-42 kapanış `son`; yüksek = kapanış + 1, düşük = kapanış - 1."""
+    return _mumlar([onceki] * 22 + [sonra] * 18 + [son] * 3)
+
+
+# Ayar: periyotlar (1, 2) (EMA1 = kapanış, EMA2 alfa 2/3), oran = |kapanış - EMA2| / EMA2, eşik 0,005, en az 3 gün, pencere 3, SMA2.
+# Her çerçeve: gün 0-21 düz `onceki` (dönem, 22 gün); gün 22'de `sonra`'ya sıçrama; gün 40'ta `son`. Girişler `kutu` (kutu üstü = yüksek).
+# Sıçrama J = onceki - sonra. Gün 22 sonrası EMA2 = sonra + J/3^k (k = 1 gün 22); oran <= 0,005 olan ilk k dönemi başlatır:
+#   J=30: k=4 (30/81 = 0,370; oran 0,00369) -> dönem başı gün 25.  J=6: k=3 (6/27 = 0,222; oran 0,0022; k=2 oran 0,0066 > eşik) -> gün 24.
+#   J=4: k=2 (4/9 = 0,444; oran 0,00442) -> gün 23.
+# ATR14 (Wilder): düz günlerde gerçek aralık 2, tohum 2. Gün 22'de GA = max(2, |101 - önceki|, |99 - önceki|) = J + 1 (önceki = sonra + J).
+#   ATR_22 = (13*2 + J + 1)/14; sonraki günler GA 2: ATR_t - 2 = (ATR_22 - 2) * (13/14)^(t - 22).
+#   J=30: ATR_22 = 57/14 = 4,071; ATR_25 = 2 + 2,071*0,8007 = 3,659. J=6: ATR_22 = 33/14 = 2,357; ATR_24 = 2 + 0,357*0,862 = 2,308.
+#   J=4: ATR_22 = 31/14 = 2,214; ATR_23 = 2 + 0,214*0,929 = 2,199.
+# Düşüş şartı: önceki 20 günün en yüksek yükseği M >= kutu alt + 3 ATR (kutu alt = dönem en düşük düşüğü = sonra - 1 = 99).
+#   J=30: pencere gün 5-24, M = 131 (gün 5-21 yüksek 131); 99 + 3*3,659 = 109,98 <= 131 -> dönem sayılır.
+#   J=6: pencere gün 4-23, M = 107; 99 + 3*2,308 = 105,92 <= 107 -> sayılır.
+#   J=4: pencere gün 3-22, M = 105; 99 + 3*2,199 = 105,60 > 105 -> sayılmaz.
+# Gün 0-21 dönemi (kutu üstü onceki + 1): sonrası düşük kapanışlar kutu üstünü geçmez, sinyal yok (dönem başı gün 0 de hesaplanamaz).
+# Gün 40 kapanış 103: EMA2 = 102, oran 1/102 = 0,0098 > eşik -> dönem gün 39'da biter; 103 > kutu üstü 101 -> sinyal gün 40.
+# Yükseliş (onceki 100, sonra 130, son 135): gün 0-21 dönemi sinyali gün 22 (130 > 101). J = -30: sıçrama yukarı, EMA2 = 130 - 30/3^k:
+#   k=4 -> gün 25 dönem başı (oran 0,00286), dönem gün 25-39. ATR_25 = 3,659 (J=30 ile aynı: gün 22 GA = max(2, 31, 29) = 31);
+#   pencere gün 5-24: M = 131 (gün 22-24 yüksek 131); kutu alt 129; 129 + 3*3,659 = 139,98 > 131 -> sayılmaz.
+#   Gün 40 kapanış 135 > kutu üstü 131 -> `dusus` kapalıyken sinyal gün 40. `dusus` açıkken: gün 0-21 dönemi (dönem başı 0 < 20) ve
+#   yükseliş sonrası dönem sayılmaz -> sinyal yok.
+DUSUS = dict(periyotlar=(1, 2), esik=0.005, min_gun=3, pencere=3, isinma=1, sma_n=2)
+
+
+@pytest.mark.parametrize(
+    "onceki, sonra, son, kapali, acik",
+    [
+        (130.0, 100.0, 103.0, [40], [40]),
+        (106.0, 100.0, 103.0, [40], [40]),
+        (104.0, 100.0, 103.0, [40], []),
+        (100.0, 130.0, 135.0, [22, 40], []),
+    ],
+    ids=["dusus-30", "dusus-6", "dusus-4-zayif", "yukselis"],
+)
+def test_dusus_suzgeci_donem_basindan_onceki_20_gunun_yuksegi_kutu_alt_arti_3_atr(
+    onceki, sonra, son, kapali, acik
+):
+    f = _dusus_cercevesi(onceki, sonra, son)
+    assert _gunler(f, Parametre(dusus=False, **DUSUS)) == kapali
+    assert _gunler(f, Parametre(dusus=True, **DUSUS)) == acik
+    assert _gunler(f, Parametre(**DUSUS)) == kapali  # varsayılan: kapalı
+
+
+# Geleceği görmeme: `dusus` yalnız dönem başından önceki günlere bakar; veri n. günde kesilirse n'e kadarki sinyaller aynıdır.
+def test_dusus_t_den_sonraki_gunler_t_oncesi_karari_degistirmez():
+    f = _dusus_cercevesi(130.0, 100.0, 103.0)
+    p = Parametre(dusus=True, **DUSUS)
+    tam = aileler.kurulum(f, p)
+    assert len(tam) == 1  # sınama boş değil
+    for n in range(20, len(f) + 1):
         kesik = aileler.kurulum(f.iloc[:n], p)
         pd.testing.assert_frame_equal(tam[tam.index <= f.index[n - 1]], kesik)

@@ -46,6 +46,7 @@ class Pozisyon:
         frozenset()
     )  # tetiklenmiş farklı senaryolar (`dip`, `rsi70`, `rsi50`, `sma50`)
     yari_bekleyen: bool = False  # yarı satış tetiklendi, ertesi AOF'ta dolar
+    kar: bool = False  # `rsi70` önşartı: girişten sonra bir kapanış hem giriş fiyatının hem SMA50'nin üstünde oldu
 
 
 def bekleyen(
@@ -144,7 +145,8 @@ def _gun(p, m):
 
 
 def _cikis_kurali(p, m):
-    """`dip`, `rsi70`, `rsi50`: tetikler kapanışta bakılır, yarı satış ve tam çıkış ertesi AOF'ta dolar."""
+    """`dip`, `rsi70`, `rsi50`: tetikler kapanışta bakılır, yarı satış ve tam çıkış ertesi AOF'ta dolar.
+    `rsi70` yarı satışı için önşart `kar`: girişten sonra önceki bir günün kapanışı giriş fiyatının ve SMA50'nin üstündedir."""
     c = p.ayar.cikis
     if c in ("yok", "atr3"):
         return p
@@ -153,7 +155,7 @@ def _cikis_kurali(p, m):
         ad
         for ad, ok in (
             ("dip", c != "rsi70" and p.aktif and alti),  # etkinlik önceki günlerden
-            ("rsi70", c == "rsi70" and m["onceki_rsi"] >= 70 > m["rsi"]),
+            ("rsi70", c == "rsi70" and p.kar and m["onceki_rsi"] >= 70 > m["rsi"]),
             ("rsi50", c == "rsi50" and m["onceki_rsi"] >= 50 > m["rsi"]),
             ("sma50", c == "rsi50" and m["yuksek"] >= m["sma50"] > m["kapanis"]),
         )
@@ -167,6 +169,11 @@ def _cikis_kurali(p, m):
         p,
         aktif=p.aktif or _ulasti(m["yuksek"], p.giris_fiyat + ETKIN_ATR * p.atr),
         senaryo=gorulen,
+        # önşart bugünün tetiğinden sonra güncellenir: tetik yalnız u <= t-1 günlerine bakar (giriş günü hariç, `_gun` çağrılmaz)
+        kar=p.kar
+        or (
+            c == "rsi70" and m["kapanis"] > p.giris_fiyat and m["kapanis"] > m["sma50"]
+        ),
     )
     if tam:
         return replace(p, bekleyen="cikis_kurali")

@@ -745,20 +745,22 @@ YARI = {
         ],
         (1, 100, 6, 102, "veri_sonu", 4, 0),
     ),
-    # rsi70: gün 2 RSI 72 -> 69 (70'in altında): tetik. Gün 3 AOF 100,5 yarı satış (kapanış 100 < önceki düşük 100? hayır).
-    # Gün 4 kapanış 99 < önceki düşük 99,5 ve yarı satış yapılmış -> kalanın tamamı ertesi AOF'ta. Gün 5 AOF 98,5
+    # rsi70 (bilet 05: etkinleşme önşartı). Gün 2 kapanış 102 > giriş 100 ve > SMA50 90: kâr bölgesi (u = 2 <= t - 1).
+    # Gün 3 RSI 72 -> 69 (70'in altında): tetik. Gün 4 AOF 100,5 yarı satış (kapanış 100 < önceki düşük 100? hayır).
+    # Gün 5 kapanış 99 < önceki düşük 99,5 ve yarı satış yapılmış -> kalanın tamamı ertesi AOF'ta. Gün 6 AOF 98,5
     # (düşük 97,5 > 96), neden cikis_kurali. Ortalama (100,5 + 98,5) / 2 = 99,5; kayıp 0,5.
     "rsi70_yari_sonra_kalan": (
         Parametre(cikis="rsi70"),
         [
             S0,
-            r(100, 101, 99, 100, rsi=55, onceki_rsi=54, onceki_dusuk=0),
-            r(101, 102, 100, 101, rsi=69, onceki_rsi=72, onceki_dusuk=99),
-            r(100.5, 101, 99, 100, rsi=60, onceki_rsi=69, onceki_dusuk=100),
-            r(100, 100.5, 98.5, 99, rsi=55, onceki_rsi=60, onceki_dusuk=99.5),
-            r(98.5, 99, 97.5, 98, rsi=50, onceki_rsi=55, onceki_dusuk=98.5),
+            r(100, 101, 99, 100, rsi=55, onceki_rsi=54, sma50=90, onceki_dusuk=0),
+            r(101, 102.5, 100.5, 102, rsi=72, onceki_rsi=55, sma50=90, onceki_dusuk=99),
+            r(101, 102, 100, 101, rsi=69, onceki_rsi=72, sma50=90, onceki_dusuk=100.5),
+            r(100.5, 101, 99, 100, rsi=60, onceki_rsi=69, sma50=90, onceki_dusuk=100),
+            r(100, 100.5, 98.5, 99, rsi=55, onceki_rsi=60, sma50=90, onceki_dusuk=99.5),
+            r(98.5, 99, 97.5, 98, rsi=50, onceki_rsi=55, sma50=90, onceki_dusuk=98.5),
         ],
-        (1, 100, 5, 99.5, "cikis_kurali", 4, 0.5),
+        (1, 100, 6, 99.5, "cikis_kurali", 4, 0.5),
     ),
 }
 
@@ -792,9 +794,9 @@ def test_dip_etkinlesmeden_ve_rsi70_yarisindan_once_kapanis_dusuk_alti_satis_ver
     # Gün 3 veri sonu 99,5. Çıkış fiyatı ortalama değil: 99,5; kayıp 0,5.
     satirlar = [
         S0,
-        r(100, 101, 99, 100, rsi=60, onceki_rsi=60, onceki_dusuk=0),
-        r(100, 101, 98, 99, rsi=60, onceki_rsi=60, onceki_dusuk=99.5),
-        r(99, 100, 98, 99.5, rsi=60, onceki_rsi=60, onceki_dusuk=98),
+        r(100, 101, 99, 100, rsi=60, onceki_rsi=60, sma50=90, onceki_dusuk=0),
+        r(100, 101, 98, 99, rsi=60, onceki_rsi=60, sma50=90, onceki_dusuk=99.5),
+        r(99, 100, 98, 99.5, rsi=60, onceki_rsi=60, sma50=90, onceki_dusuk=98),
     ]
     assert _ozet(satirlar, Parametre(cikis=cikis)) == _ak(
         (1, 100, 3, 99.5, "veri_sonu", 4, 0.5)
@@ -866,6 +868,47 @@ RSI50 = {
 def test_rsi50_ilk_senaryo_yari_ikinci_farkli_senaryo_tam_cikis(ad):
     satirlar, beklenen = RSI50[ad]
     assert _ozet(satirlar, Parametre(cikis="rsi50")) == _ak(beklenen)
+
+
+# rsi70 etkinleşme önşartı (bilet 05, KURALLAR §3 "Modül 1"): RSI70 yarı satışı yalnız girişten sonra bir u <= t - 1 gününde
+# kapanış > giriş fiyatı ve kapanış > SMA50 olmuşsa sayılır. Giriş 100 (gün 1), stop 96. Gün 3 RSI 72 -> 69 (reddi) ve kapanış
+# 101 > 100 ve > SMA50 90: bugünün kendisi koşulu sağlar, ama u <= t - 1 olmalı. Gün 2 kapanış K, SMA50 M.
+# Gün 4 AOF 101, gün 5 veri sonu kapanış 102,5 (düşük 101 > stop).
+# K=101, M=90: gün 2 koşulu sağlar -> yarı satış gün 4 AOF 101; ortalama (101 + 102,5) / 2 = 101,75.
+# K=101, M=105: kapanış SMA50'nin altında -> önşart yok -> satış yok, çıkış 102,5.
+# K=100, M=90: kapanış giriş fiyatına eşit (> değil) -> satış yok, çıkış 102,5.
+# K=99,5, M=90: kapanış giriş fiyatının altında -> satış yok, çıkış 102,5.
+@pytest.mark.parametrize(
+    "kapanis_2, sma50_2, beklenen",
+    [
+        (101.0, 90.0, (1, 100, 5, 101.75, "veri_sonu", 4, 0)),
+        (101.0, 105.0, (1, 100, 5, 102.5, "veri_sonu", 4, 0)),
+        (100.0, 90.0, (1, 100, 5, 102.5, "veri_sonu", 4, 0)),
+        (99.5, 90.0, (1, 100, 5, 102.5, "veri_sonu", 4, 0)),
+    ],
+    ids=["onsart-var", "sma50-altinda", "girise-esit", "giris-altinda"],
+)
+def test_rsi70_yari_satis_onsart_onceki_gun_kapanis_giris_ve_sma50_ustunde(
+    kapanis_2, sma50_2, beklenen
+):
+    satirlar = [
+        S0,
+        r(100, 101, 99, 100, rsi=55, onceki_rsi=54, sma50=90, onceki_dusuk=0),
+        r(
+            100.5,
+            101.5,
+            99.5,
+            kapanis_2,
+            rsi=72,
+            onceki_rsi=55,
+            sma50=sma50_2,
+            onceki_dusuk=99,
+        ),
+        r(100.5, 101, 100, 101, rsi=69, onceki_rsi=72, sma50=90, onceki_dusuk=99.5),
+        r(101, 102, 100.5, 101.5, rsi=60, onceki_rsi=69, sma50=90, onceki_dusuk=100),
+        r(102, 103, 101, 102.5, rsi=60, onceki_rsi=60, sma50=90, onceki_dusuk=100.5),
+    ]
+    assert _ozet(satirlar, Parametre(cikis="rsi70")) == _ak(beklenen)
 
 
 def test_zincir_onbellek_anahtari_kurulum_degerini_icerir():
