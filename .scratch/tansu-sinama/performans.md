@@ -35,3 +35,4 @@ GPU:
 Sürüm 2 (17.10), son kodla geliştirme koşusu `20261016T214244-65c468` (kod 02341c8, `kirli: false`; `kayit/deneme.jsonl`):
 1.205 iş, 24 işçi, 9,84 sn; komutun ilerleme satırında CPU %94-95. Sürüm 1 koşusu 8,72 sn idi: fark 2 katın altında,
 kapı yeniden ölçülmedi. GPU kullanılmadı: hesap kütüphanesi kurulu değil.
+Denetim tur 1 sonrası kod 157fb8d, koşu `20261016T221419-5e57c1`: 1.205 iş, 24 işçi, 9,56 sn; ilerleme satırında CPU %87.
