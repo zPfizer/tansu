@@ -204,6 +204,8 @@ Not: YORUM: bu katalogda ekranlar Tansu'ya atfedilen araç çıktıları olarak 
 - Tansu'nun kanıtı: tek hisse, seçilmiş. SMRTG 12 pattern (%58 hedef, kapalılarda %70). ISKPL 5/5. Out-of-sample yok. Maliyet yok. Hisse seçiminin amacı açık değildir; yüksek getiriden seçim açıklaması YORUM'dur, kaynak kuralı değildir (Ham, tweet-iskpl-abcd-cden-dye-backtest:23).
 - Günlük bedava veriyle uygulanabilir mi: yapı olarak evet; stop kuralı olmadan birebir tekrar edilemez. SMRTG işlemlerinin yönü görselde yoktur; aşağı yönlü bir işlem varsa alış kapsamına uymaz (YORUM), bu sınır bütün AB=CD ailesine genellenmez (Araç, G03/g1; Ham, tweet-iskpl-abcd-cden-dye-backtest:23).
 - Kaynak güveni: birinci el (sayılar). Yorumlar ikinci el.
+- Ek kaynaklar (X arşivi, 16.10):
+  - `tweet-ab-cd-patern-backtest-sonuclari-2090922221489344704` — SMRTG backtest tablosunun Tansu'nun kendi X gönderisi (2026-08-21) olduğunu doğrular; tablo sayıları aynıdır (12 patern, 7 hedef, 3 stop, 2 açık; 100.000 → 405.327,42 TL; %305,33) (görsel, açıldı). Seçim gerekçesi: SMRTG elinde tutanlara zarar vermiş hisse. "Ama sistemi olan bu bataktan büyük kar ile çıkardı" (Ham). Stop kuralı ve işlem yönü hâlâ yazılı değil.
 
 ---
 
