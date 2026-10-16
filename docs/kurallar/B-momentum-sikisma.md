@@ -47,6 +47,8 @@ Görsel kökü: `...\assets\<klasör>\`. Not dosyaları kökte. Aşağıda "gp-N
 - Kanıt: tek KRDMD örneği, seçilmiş pozitif. Sistematik tablo yok. Ratio sıkışma boyunca ~0.5-1, sonra %10+ (görsel okuması).
 - Günlük bedava veriyle uygulanabilir mi: EVET (sıkışma dedektörü); giriş kuralı yok. Parametreler (4 EMA, %1.2, 3 gün) ve KURALLAR §3'ün seçtiği oran formülü günlük kapanışla hesaplanır (bilet 04, 14.10).
 - Kaynak güveni: parametreler birinci el; giriş yok; ratio formülü kaynakta yok (YORUM; KRDMD'de sadakatle eşleşti).
+- Ek kaynaklar (X arşivi, 16.10):
+  - `tweet-ema-sikisma-tarama-1996662869107134897` — Aynı sıkışma dedektörü farklı EMA setiyle (PAPIL): başlık "EMA Sıkışma Analizi (Sıkışma: %0.03)", "En Sıkışık An (%0.03)" işareti (görsel, açıldı). Tansu: "sıkışmayı yakalayın bakın keyfinize." (Ham). Tolerans, süre ve pencere görselde yok. Parametre: EMA seti (PAPIL örneği) = 10/20/50; en sıkışık an oranı = %0,03 (görsel, açıldı)
 
 ## 2. EMA sıkışma "Pre Signal" (ICBCT)
 
@@ -59,6 +61,8 @@ Görsel kökü: `...\assets\<klasör>\`. Not dosyaları kökte. Aşağıda "gp-N
 - Kanıt: tek örnek, tek gün; sonuç beyanı yok.
 - Uygulanabilir mi: HAYIR (özel parametre, gizli). Fikir olarak Kural 1 ile birleştirilebilir.
 - Güven: görsel birinci el, kural gizli.
+- Ek kaynaklar (X arşivi, 16.10):
+  - `tweet-ema-sikisma-momentum-conflict-2045457969215631398` — BULL/BEAR/CONFLICT sayacının mantığı (YORUM: aynı araç): "EMA sıkışması bull sinyal aldınız ama momentum squeeze neg ve negatif büyüyor" "O zaman burada conflict sinyal vardır, bull yönde aksiyon alınmaz" (Ham, 18.04.2026; iki satır). Momentum squeeze negatif ve büyüyorsa EMA sıkışma alımı yok; araç adı ve formül yok. Parametre: CONFLICT = EMA sıkışması bull yönlü iken momentum squeeze negatif ve büyüyor; bu durumda bull aksiyon yok (Ham; ICBCT sayacıyla eşleşme YORUM; momentum squeeze göstergesi ve eşiği yok)
 
 ## 3. Demand bölgesinde EMA5/8/13 sıkışması
 
@@ -198,6 +202,11 @@ Görsel kökü: `...\assets\<klasör>\`. Not dosyaları kökte. Aşağıda "gp-N
 - Kanıt: kod için yok. KLMSN: tek örnek, sonuç yok.
 - Uygulanabilir mi: EVET (engulfing dedektörü, günlük OHLC ile birebir). EMA34 teyit kuralı HAYIR.
 - Güven: kod birinci el; KLMSN kuralı yok.
+- Ek kaynaklar (X arşivi, 16.10):
+  - `tweet-bullish-engulfing-daily-scan-1898292620645781672` — Günlük tarama (08.03.2025): "Şu bullish engulfing taraması da çok hoşuma gidiyor." (Ham). Görsel başlığı "Son İşlem Gününde Engulf Green Sinyali" (görsel metni): tarama yalnız son işlem gününün boğa yutan mumunu arar. Koşul ayrıntısı yok (YORUM: bölümdeki 4 koşullu kod); tarama çıktısı sembolsüz, grafik Eylül 2024 - Mart 2025. Ham: kendi quant stratejisi dışında alternatif taramalar gruba verilecek.
+  - `tweet-ema-5-10-engulfing-teyit-1863002809567785287` — Tansu EMA5/10 stratejisine engulfing mumunu teyit olarak ekler: "Bunlar çok jenerik stratejiler. 5-10 ema." "yanına ben engulfing ekledim." "hammer eklenebilir vs." (Ham; @JR_GPT'ye yanıt, üst gönderi notta yok). YORUM: EMA5 ve EMA10 kesişimi veya dizilimi sinyal, engulfing teyit mumu; hammer ek teyit adayı. Parametre: Engulfing'in eşlik ettiği EMA çifti = 5 ve 10 (Ham: "5-10 ema"); kesişim mi dizilim mi belirsiz
+  - `tweet-ema-dizilim-engulfing-hacim-teyit-1923069231043838440` — BLCYT grafiği, KLMSN ile aynı şablon ("Engulfing + EMA34 Tepki/Kırılım", görsel metni). Ham bu başlığın boşluğunu doldurur: "EMA5 > EMA8 > EMA13 > EMA34 sıralaması"; engulfing EMA'ların hemen altında; hacim, RSI 30 üstü çıkış veya MACD kesişimi ve "İkinci gün teyidi" aranır; EMA34 direnç olabilir (Ham). Risk yönetimi (stop, pozisyon büyüklüğü) gerektiği söylenir, değer yok. Parametre: EMA dizilimi = EMA5 > EMA8 > EMA13 > EMA34 (Ham); teyit: engulfing yüksek hacimli (eşik yok), RSI 30 altından yukarı çıkış veya MACD kesişimi (Ham, örnek), engulfing sonrası ikinci gün devam mumu (Ham)
+  - `tweet-ema-serit-engulfing-sinyali-1899562937414537239` — Aynı araç şablonu (EMA5/8/13/34 ve "Son Engulf Green" işareti) Tansu'nun kendi X gönderisinde: "Güzel bir engulfing:)" (Ham). Görselde (açıldı) EMA5>8>13>34 sıralı yükselen şerit, yutan boğa işaretleri; koşul, eşik ve giriş yok. Parametre: EMA seti = 5/8/13/34; yutan boğa işareti adı "Son Engulf Green" (görsel, açıldı)
 
 ## 11. Tweezer Bottom + talep bölgesi
 
@@ -299,6 +308,8 @@ Görsel kökü: `...\assets\<klasör>\`. Not dosyaları kökte. Aşağıda "gp-N
 - Parametreler: MA türü, periyot, K, eşik YOK. "%5-10" = iddia, kanıtsız.
 - Uygulanabilir mi: KISMEN (fikir; sayılar YORUM). Güven: Ham.
 - DMA kanal eğimi (`gorsel-paket-119-dma-kanal-egim-evre-gecis`; yalnız görsel, metin yok; bilet 04, 14.10): infografik `DMA Kanal Analizi: Trendin Gücünü Anlamak`: kanal eğimi ne kadar dikse yükseliş o kadar güçlüdür; eğim mevcut trendin gidişatını ve gücünü izler; mevcut evre sonraki evrenin tonunu etkiler (zayıf yükseliş, sert düşüş habercisi; hafif düşüş, güçlü yükseliş habercisi). Görselde kaynak imzası yok (Ham yalnız görsel; Ham'da yazar yok). "DMA" açılımı, formül, periyot, eşik, sembol yok: kural tanımsız. Uygulanabilir mi: HAYIR (DMA tanımsız; eğim fikri yukarıdaki §17 ile aynı türdendir).
+- Ek kaynaklar (X arşivi, 16.10):
+  - `tweet-dma-kanal-egim-trend-gucu-1998887651357925859` — DMA kanal eğimi infografiği Tansu'nun kendi gönderisidir (10.12.2025, "Biliyor muydunuz?"); bölümün "Ham'da yazar yok" notu bu gönderiyle çözülür. "Eğim Ne Kadar Dikse, Yükseliş O Kadar Güçlüdür" (görsel metni). Evre etkisi: zayıf yükseliş sert düşüşün, hafif düşüş güçlü yükselişin habercisidir. DMA açılımı, formül, eşik yok.
 
 ## 18. Rolling alpha ve rolling skewness (momentum listesine katman)
 
@@ -349,6 +360,8 @@ Görsel kökü: `...\assets\<klasör>\`. Not dosyaları kökte. Aşağıda "gp-N
 - Parametreler: hepsi YOK (uzun ortalama periyodu, swing kuralı, evre eşikleri).
 - Giriş: yok. Ham yalnız evreleri tanımlar (Evre 2 giriş kuralı değildir); HH/HL yalnız görseldeki swing etiketleridir.
 - Uygulanabilir mi: HAYIR/KISMEN (YORUM ile 30 haftalık MA gibi). Güven: Ham (evre tanımı); kural yok.
+- Ek kaynaklar (X arşivi, 16.10):
+  - `tweet-dort-asamali-fiyat-dongusu-150-200-ort-1945064189082599687` — Dört evreli fiyat döngüsünün (ilgisizlik, yükseliş, tepe, düşüş) Tansu'nun kendi metni ve 2. evre geçiş göstergeleri: "Fiyat hem 150 hem 200 günlük ortalamanın üzerinde"; 150 günlük ortalama 200 günlüğün üzerinde; 200 günlük ortalama yukarı dönmüş (Ham). Giriş: yükseliş başlarken katılmak, dipten almak değil. Parametre: Evre 2 geçişi = fiyat > 150 ve 200 günlük ortalama, 150g > 200g, 200g yukarı dönük, daha yüksek dip ve tepe, yükseliş günlerinde hacim güçlü ve geri çekilmede düşük; dipten %25–30 yukarıda (çoğu zaman %80'e kadar) (Ham; ortalama türü SMA mı EMA mı belirtilmemiş). Evre 1 = fiyat 200 günlük ortalamaya yakın yatay, hacim düşük (Ham)
 
 ## 23. OBV trend onayı (gp-104)
 
@@ -373,6 +386,8 @@ Görsel kökü: `...\assets\<klasör>\`. Not dosyaları kökte. Aşağıda "gp-N
 - Parametreler: EMA 50/100/200, pencere 150 mum (görsel). KDE parametreleri, sıkışma ölçüsü, hacim eşiği YOK.
 - Kanıt: tek endeks örneği (sonuç kapanış 14587.90).
 - Uygulanabilir mi: KISMEN (KDE parametreleri YORUM). Güven: görsel birinci el.
+- Ek kaynaklar (X arşivi, 16.10):
+  - `tweet-ema-50-100-200-sikisma-1953175981310591077` — Tekrar: Tansu'nun yanıtı EMA setini 50-100-200 olarak verir: "50-100-200 EMA:)" (Ham; @hakanbebek'e yanıt, üst gönderi notta yok; adı "sıkışma" der, bu yüzden YORUM: sıkışma için kullanılan set). Sıkışma ölçüsü ve eşik yok.
 
 ## 26. "Sağlıklı trend" CSCO: "TÜM ŞARTLAR SAĞLANDI (GÜÇLÜ TREND)"
 
@@ -410,6 +425,8 @@ Görsel kökü: `...\assets\<klasör>\`. Not dosyaları kökte. Aşağıda "gp-N
 - Williams %R (Ham; Ham'da yazar yok; not `source_type: user-provided-strategy-spec`): 30 dk, W%R(14), SMA14; uzun: close > SMA14, W%R önce >= -20, -50'ye çekilmiş, -50 üstüne dönüş, bullish mum, sinyal mumu high'ı aşınca giriş, stop en yakın swing low, hedef >= 2R; kısa simetrik (-80). Gün içi veri gerekir. Ayrıntılı backtest sayıları Cevo/Claude çıktısı, Tansu'nun değil.
 - Uygulanabilir mi: MA filtresi EVET (parametre YORUM); Williams kuralı HAYIR (30 dk veri; Ham'da yazar yok).
 - Güven: Ham.
+- Ek kaynaklar (X arşivi, 16.10):
+  - `tweet-ema-200-ustu-trend-filtresi-1766672851610763653` — SASA örneğinde (10.03.2024) fiyat 200 günlük EMA'nın altındaysa trend pozitif sayılmaz ve işlem açılmaz: "200 EMA üzerine atmadan işlem doğru olmaz." (Ham). Görselde EMA 20, 50 ve 200 çizili; kapanış 40,78, EMA200 43,69 (görsel metni). YORUM: filtre kapanışın EMA200 üstünde olmasıdır; kapanış mı gün içi mi belirsiz. Parametre: MA filtresi periyodu ve tipi = EMA, 200 gün (Ham: "200 günlük EMA altında trend")
 
 ## 31. Diğer mum ve konum ipuçları (kısa)
 
@@ -487,10 +504,15 @@ Görsel kökü: `...\assets\<klasör>\`. Not dosyaları kökte. Aşağıda "gp-N
 - Heikin Ashi yeşil kapanış taraması ve AEFES sonucu (`tweet-heikin-ashi-strateji-backtest-1844839462896832814`; Ham ve görsel birinci el; Tansu'nun X gönderisi, 11.10.2024; üç görsel): Tansu: "AEFES için strateji sonucu (Baya iyi çalışmış)"; "Başlangıç Bakiyesi: 100.000"; "Strateji Final Bakiyesi: 207.546"; "Buy and Hold Final Bakiyesi: 144.057". Görsel 1 başlığı: "Son gün yeşil Heikin Ashi kapanışına sahip hisseler" (görsel metni; 45 sembol). Görsel 2 (görsel metni): "AEFES.IS Price, Scaled RSI and Scaled Smoothed RSI (-40 to 40)". Görsel 3 (görsel metni): "AEFES Heikin Ashi Strategy vs Buy & Hold". Parametre: tarama koşulu = son günün Heikin Ashi mumu yeşil kapanış (görsel metni). RSI periyodu, ölçekleme ve yumuşatma yok. Strateji giriş ve çıkış kuralı, maliyet ve kayma yok; RSI'nin rolü belli değil (YORUM: mum rengi ve/veya ölçeklenmiş RSI sıfır çizgisi). Hesap (bizim): 207.546 / 100.000 = +%107,5; al-tut +%44,1. Ham "Toplam Kar/Zarar (Buy & Hold): 440.57" yazar; 144.057 − 100.000 = 44.057 olmalıdır (not değiştirilmez). Tansu'nun kanıtı: tek hisse, yaklaşık 9 ay, Tansu "baya iyi çalışmış" diye seçmiş; örneklem dışı doğrulama yok. Heikin Ashi için D'de BIST100 örneği vardır (BIST VIX 5 adım). Günlük veriyle: Heikin Ashi günlük OHLC'den hesaplanır, tarama koşulu uygulanır; strateji tanımsız olduğu için sonuç yeniden üretilemez. Hazırlık X. Kaynak güveni: Ham ve görsel birinci el; sayılar tutarlı; kural yok: düşük.
 - MOST ve HO kesişim sistemi, THYAO optimizasyonlu sınama özeti (`tweet-most-ho-kesisim-optimizasyon-1779521360609354088`; Ham ve iki görsel birinci el, G1 açıldı; Tansu'nun X gönderisi, 14.04.2024): Ham yalnız "#THYAO iyi görünüyor değil mi:)" der. Görsel G1 (Sistemli Tester özeti, görsel, açıldı): "MOST ve HO Kesiş _OPT", "TURK HAVA YOLLARI AS", "12.04.2022 - 9.04.2024 arası 500 bar 728 gün"; "Optimizasyon Değerleri": OPT1 15, OPT2 3, OPT3 11, OPT4 1, OPT5 5, OPT6 0,5 (OPT7–OPT10 boş); başlangıç bakiyesi 10000, komisyon masrafı 1448,59 (toplam). Sonuç: son bakiye 56800,71, getiri 46800,71 (%468,01); 12 işlem: 8 kârlı (toplam 51492,81), 4 zararlı (toplam 4692,10), 8 long, 0 short; ort. kâr 6436,60, ort. zarar 1173,03, oran 5,49; en kârlı pozisyon 12.05.2023–23.08.2023, 69 bar, 80,05; en zararlı 05.09.2023–11.09.2023, 4 bar, −7,32 (birim yazılı değil; YORUM: yüzde); son işlem AL 21.03.2024 286,07; son durum 309,25. Hesap kontrolü (bizim): 51492,81 − 4692,10 = 46800,71; 51492,81 / 8 = 6436,60; 4692,10 / 4 = 1173,03. G2 ("Data - % Getiri Karşılaştırılması") Data ve Overall çizgilerini çizer, sayı yok (YORUM: Data = al-tut). Kural yok: YORUM yalnız addan okunur (MOST ve HO çizgilerinin kesişimi sinyal verir, sistem optimize edilmiştir). MOST ve HO tanımı, OPT1–OPT6 anlamı, giriş ve çıkış koşulu, optimizasyon aralığı ve ölçütü, örneklem dışı doğrulama ve komisyon oranı yazılı değil. Tansu'nun kanıtı: tek hisse, tek dönem, optimizasyonlu (örneklem içi) sonuç. Hisse bazlı optimizasyonla ilişki: E K29 (karar Levent'te bekliyor). Günlük veriyle: kural tanımı olmadığı için hayır. Hazırlık X. Kaynak güveni: Ham ve görsel birinci el; sonuç görseli iç tutarlı; kural ve parametre anlamı yok: düşük.
 - Çoklu bant ve MACD sinyal kümelenmesi, dipten dönüş (ARZUM; `tweet-bant-sinyal-kumelenme-dip-donus-1962958352276754833`; Ham ve görsel birinci el, görsel açıldı; Tansu'nun X gönderisi, 02.09.2025): "Bir de size bunu vereyim benim için dipten dönüş sinyalidir bu. herkes farklı yorumlayabilir" (Ham). Görsel (açıldı): `ARZUM.IS — Son sinyaller (son 10 bar)`; sütunlar `AL -3R`, `AL -2O`, `AL MACD`, `SAT +2A`, `U +3D`, `U i+3`, `U -2D`, `UO -2`. İşaretler: 2025-08-04 AL MACD; 08-06 AL MACD; 08-07 U +3D; 08-08 U i+3; 08-11 SAT +2A; 08-19 AL MACD; 08-28 U -2D; 08-29 AL -3R, AL -2O, U -2D, UO -2; 09-01 AL -2O, AL MACD, U -2D, UO -2; 09-02 AL -2O, U -2D, UO -2. Grafik `ARZUM.IS — Günlük`: mumlar, turkuaz ve turuncu orta çizgiler, çok sayıda kesikli bant, altta MACD histogramı ve yeşil ▲ / kırmızı ▼ işaretleri; fiyat son barlarda sert düşmüş. YORUM: sütun adları açıklanmamıştır; "AL" ve "SAT" sütunları alım ve satım işaretidir; "-3R", "-2O", "+2A", "+3D", "i+3", "-2D", "-2" eksi ve artı bant düzeyleri gibi görünür (harflerin anlamı bilinmiyor). Okuma (YORUM): aşağı bant sütunları ve MACD alımı kısa sürede birlikte tetiklenirse dipten dönüş sayılır; Tansu bar sayısı ve eşik vermez. Hesap kontrolü (bizim): son 3 barda 4 + 4 + 3 = 11 işaret; önceki 7 satırda 1'er = 7 işaret. Parametre: tablo penceresi "son 10 bar" (tarihler ardışık değil: 05.08 ve 12.08 yok; yalnız sinyal olan günler olabilir, YORUM). Sütun anlamları, bant ve MACD ayarları (gizli gösterge), kümelenme eşiği (kaç sütun, kaç bar), tetik gün, giriş, stop, hedef ve çıkış yok. Tansu'nun kanıtı: yok (tek örnek, sonuç yok); "herkes farklı yorumlayabilir" yorum olduğunu belirtir. Günlük veriyle: veri evet (günlük OHLC), kural hayır (sütun formülleri yok). Hazırlık X. Kaynak güveni: kural tanımsız, güven düşük.
+- Çoklu gösterge seti, günlük ve haftalıkta birlikte al (`tweet-coklu-indikator-gunluk-haftalik-al-1852771794739966025`; Ham; Tansu'nun X gönderisi, 02.11.2024; görsel yok; duyuru "Pek yakında", kod ve çıktı yok): Ham: "Yeni indikatörümüz" "MACD,CCI, Trend Takip" "DMI,DIOSC,MOM,Her piyasada kullanılmalı." "RSI,STOK, Aşırı alım satım" "OBV, İşlem hacmi" "Bunlara günlük ve haftalık bakacağız." "Hem haftalıkta hem de günlükte al sinyali verenleri listeleyeceğiz." Parametre: sekiz gösterge (MACD, CCI, DMI, DIOSC, MOM, RSI, Stokastik, OBV), iki zaman dilimi (günlük ve haftalık, ikisinde birden al); her göstergenin "al" tanımı, periyot, eşik ve kaç göstergenin al vermesi gerektiği yok. YORUM: DIOSC = DMI osilatörü (+DI ile -DI farkı), MOM = momentum; haftalık mum günlük veriden türetilir. Şubat 2024 THYAO gösterge setinde (`tweet-cci-posc-macd-gosterge-seti-1761507718693548409`) CCI (20 günlük EMA'lı), MACD, Stokastik ve Momentum (8 günlük MA'lı) çizilmişti; aynı ayarların bu sete taşındığı yazılı değil. Tansu'nun kanıtı: yok (duyuru). Günlük veriyle: evet (OHLCV), tanımlar olmadan kodlanamaz. Hazırlık X. Kaynak güveni: Ham birinci el; yapı açık, sayı yok: düşük.
+- CCI üstüne MOST sistemi, DOAS saatlik sınama özeti (`tweet-cci-uzerine-most-sistemi-1782789450767962601`; Ham; G2 açıldı, G1 ve G3 görsel metni; Tansu'nun X gönderisi, 23.04.2024): "#DOAS uzun vadeli yatırımcı olmak bu ülkede zor. matematiğin istatistiğin dediğine kulak vermek lazım keşke satsaymışım dememek için." "Gerçi bende pek uymuyorum buna ama artık uyacağım:)" "Bir kaç kere tavanı yakalayınca unutulmuyor." (Ham). Sistem adı "CCI ÜSTÜNE MOST OPT"; MOST göstergesi CCI serisine uygulanır (YORUM); al ve sat koşulu yazılı değil. B'deki MOST ve HO kesişim sistemi ile aynı araç ve aynı tür sonuç özetidir (yukarıdaki MOST ve HO bullet'ı). Parametre: optimizasyon değerleri OPT1 = 52, OPT2 = 3 (görsel, açıldı; anlamı yazılı değil, YORUM: 52 periyot, 3 yüzde); test aralığı 30.01.2024 17:00 - 22.04.2024 18:00, 500 bar; grafik başlığı "DOAS  60  TL" (G3 görsel metni; işlem saatleri 17:00 ve 18:00, YORUM: 60 dakikalık çubuk); başlangıç bakiyesi 10000, son 13467,29, getiri 3467,29 (%34,67), komisyon masrafı 321,73; 5 işlem, hepsi long: 3 kârlı (toplam 3920,57), 2 zararlı (toplam 453,27); ort. kâr 1306,86, ort. zarar 226,64 (oran 5,77); en kârlı pozisyon 04.04.2024 15:00 - 18.04.2024 13:00, 55 bar, 23,76; en zararlı 29.03.2024 10:00 - 02.04.2024 16:00, 24 bar, -3,39 (birim yazılı değil, YORUM: yüzde); son işlem SAT 18.04.2024 13:00, 345,71; son fiyat 319,00 (22.04.2024). Hesap kontrolü (bizim): 3920,57 - 453,27 = 3467,30 (görsel 3467,29: yuvarlama); 3920,57 / 3 = 1306,86; 453,27 / 2 = 226,64; 1306,86 / 226,64 = 5,77; çıkış fiyatından sonraki düşüş (345,71 - 319,00) / 345,71 = %7,7. Tansu'nun gerekçesi: sistem 18.04.2024'te SAT verdi, sonra fiyat düştü; sistem sinyaline uymak gerekir. Tansu'nun kanıtı: tek hisse, yaklaşık üç ay, 5 işlem, optimize edilmiş ayar (örneklem içi); seçilmiş örnek. MOST ve CCI ayarlarının anlamı, optimizasyon aralığı ve ölçütü, örneklem dışı doğrulama ve komisyonun kâr rakamlarına dahil olup olmadığı yok. Hisse bazlı optimizasyon ve parametre: karar Levent'te bekliyor (E K29). Günlük veriyle: hayır (saatlik veri; günlük kurmak için MOST ve CCI ayarı ile al-sat koşulu gerekir). Hazırlık X. Kaynak güveni: Ham ve görsel birinci el; sayılar net, kural yok: orta-düşük.
+- Uzun süren ve dengeli momentum ölçümü (`tweet-dengeli-momentum-cok-ufuk-drawdown-risk-1958442372557144525`; Ham; Tansu'nun X gönderisi, 21.08.2025; görsel yok): "Uzun süren ve dengeli momentum’u hesaplamanın yolu aslında kısa vadeli gürültüyü azaltıp, kalıcı yön değişimlerini yakalamaktır." "Örneğin son 1 ay, 3 ay ve 6 aylık getirilerin hepsini aynı formülde tartarak birleşik bir momentum elde edilir." (Ham). Beş katman (Ham'dan özet; formül Tansu'da yok): yarı ömürlü ağırlıklandırma (ağırlıklar "üstel şekilde değil daha yavaş azalır"); istikrar (risk-ayarlı momentum: getirilerin varyansı veya karelenmiş sapmaları, "düşük oynaklıkta istikrarlı bir getiri" tercih edilir); sektör senkronizasyonu (aynı sektördeki benzer varlıkların yön birlikteliği); çoklu ufuk (1, 3 ve 6 ay); drawdown profili (iyi momentumda düşüşler "hem sınırlı hem de hızlı onarılan" yapıdadır). Parametre: yalnız ufuklar 1 ay, 3 ay, 6 ay. Ufuk ağırlıkları, yarı ömür ve ağırlık fonksiyonu, varyans penceresi, senkronizasyon ölçüsü, drawdown ölçüsü, katmanların tek skorda birleşmesi ve giriş, çıkış, eşik yok. İlgili: §14 (12 aylık on-dilim), §15 (Clenow skoru), §18 (rolling alpha ve skewness katmanı). Tansu'nun kanıtı: yok (sonuç, örnek, sembol yok). Günlük veriyle: kısmen (getiri, varyans ve drawdown günlük kapanıştan; sektör senkronizasyonu için sektör sınıflaması gerekir). Hazırlık X. Kaynak güveni: Ham birinci el; kavramsal çerçeve, tek sayısal ayar 1/3/6 ay: düşük.
+- EMA'nın EMA'sı ile ayrışma, satış zamanı yaklaşıyor uyarısı (BRSAN; `tweet-ema-uzerinden-ema-ayrisma-1760725146959270113`; Ham ve kod görseli birinci el, iki görsel, G1 açıldı; Tansu'nun X gönderisi, 22.02.2024, iki gönderilik zincir): "#BRSAN hissesi için #Python'da kısa ama etkili bir kodlama." "Hisseni 5 günlük üssel hareketli ortalaması ve bununda 10 üssel hareketli ortalaması alındı. Böylece ortalamaların birbirinden uzaklaşması görselleştirildi. Hızlı olanın yavaş olandan uzaklaşması-->" ve "trade edenlerin karlarının arttığını ve artık satış zamanının yaklaştığını gösterir. Geliştirilebilir." (Ham). Kod (görsel, açıldı): `ema1 = hesapla_ema(fiyat_serisi, 5)`, `ema2 = hesapla_ema(ema1, 5)`, `k = 2 / (gun_sayisi + 1)`, `ewm(alpha=k, adjust=False)`; `sinyaller['al']` ve `sinyaller['sat']` ema1 ile ema2 karşılaştırmasıdır (satırlar görselde sağdan kesik). YORUM: ayrışma = ema1 − ema2 farkının büyümesi; kısa vadeli işlemcilerin kârının arttığı ve satışın yaklaştığı uyarısıdır, yani çıkış (kâr alma) uyarısıdır, giriş sinyali değildir. Parametre: hızlı EMA = 5 günlük EMA (kapanış); yavaş çizgi = EMA(EMA5, 5) (kod) ve Ham "10" der: Ham ile kod çelişir, kod görseli birincil sayılır (YORUM); EMA katsayısı alpha = 2 / (periyot + 1). Ayrışma eşiği, ayrışma ölçüsü (mutlak fark mı yüzde mi), al ve sat ek koşulları (kod satırları kesik) ve çıkış yok. Aynı gün aynı kurulum için kesişim kodu: §60. İlgili: E K25 (13 EMA ve ATR merdiveni), E K28 (kâr alma). Tansu'nun kanıtı: yok (tek grafik, sonuç yok). Günlük veriyle: evet (günlük kapanış); eşik olmadığı için kural yarım. Hazırlık X. Kaynak güveni: Ham ve kod görseli birinci el; Ham ile kod arasında çelişki; eşik yok: düşük.
 - Ek kaynaklar (X arşivi, 16.10):
   - `tweet-vegas-ema-tek-hisse-optimizasyonu-1846299109302362243` — Vegas (3 EMA) için optimizasyon yapıldı, hisse başına çalışır: "Vegas için optimizasyon yaptım. 3 EMA var. Tam 1 saat sürdü optimizasyon." ve "OPT'leri tek hisse için yapıyoruz." (Ham; üst gönderi de Ham'da: kod, optimizasyon ve getiri hesabı dış bağlantıda, açılmadı). Arama aralığı, ölçüt, sonuç ve örneklem dışı doğrulama yok. Hisse bazlı optimizasyon: karar Levent'te bekliyor.
   - `tweet-vegas-tuneli-ema-optimizasyon-8-150-150-1828161056960827738` — Vegas tüneli EMA seti DOAŞ için optimize edildi: "Soldaki 12-144-169, sağdaki ise optimize edilmiş ema'lar ile getiri grafiği. (8-150-150)" (Ham). Ham sonuç (yanıt): 2022–2024'te al-tut 7,49 kat, 12-144-169 6 kat, optimize 7 kat; "strateji alpha yaratamamış ama getiri eğrisi daha iyileştiği kesin" (Ham). Görselde son değerler yaklaşık 5,4 (al-tut), 4,3 (12-144-169), 5,1 (optimize) (görsel, açıldı; ölçüm). Tek hisse, örneklem içi; giriş ve çıkış kuralı yok. Hisse bazlı optimizasyon: karar Levent'te bekliyor. Parametre: Vegas optimize EMA seti (DOAŞ, 2022–2024) = 8-150-150 (Ham). Okuma notu: Ham sayıları (al-tut 7,49 kat, 12-144-169 6 kat, optimize 7 kat) görseldeki son değerlerle uyuşmaz: creturns ≈5,4, cstrategy ≈4,3 (G1) ve ≈5,1 (G2) (görsel, açıldı; ölçüm). Oranlar tutarlıdır (6/7,49 = 0,80; 4,3/5,4 = 0,80; 7/7,49 = 0,93; 5,1/5,4 = 0,94), düzey farkı açıklanmamış (görselde tepe ≈8,5). Görsel doğru sayılır.
   - `tweet-vegas-tuneli-geri-test-doas-1827794622434640093` — Vegas tüneli 12-144-169 günlük EMA seti DOAŞ'ta al-tutu geçemedi: "2022-2024 yılları arasında vegas tüneli stratejisi doaş getirisine yenik düşmüştür." (Ham). Görselde son değerler cstrategy ≈4,3, creturns (al-tut) ≈5,4 (görsel, açıldı; ölçüm). Tansu EMA'ların optimize edilebileceğini söyler; kod ve veri dış bağlantıda (açılmadı); giriş ve çıkış kuralı yok. Hisse bazlı optimizasyon: karar Levent'te bekliyor. Parametre: Vegas sonucu, DOAŞ 2022–2024, EMA 12-144-169: strateji ≈4,3 kat, al-tut ≈5,4 kat (görsel, açıldı; ölçüm)
+  - `tweet-ema-12-144-169-uclu-1783160562156716179` — Tekrar: 12-144-169 EMA seti nasıl kurulur: "Ema 3 kez seçin. Uzunlukları 12-144-169 yapın" (Ham, yanıt, 24.04.2024; üst gönderi notta yok). Üç ayrı EMA göstergesi eklenir; giriş ve çıkış kuralı yok. Aynı setin kesişim taraması: §63.
 
 ---
 
@@ -516,6 +538,8 @@ Görsel kökü: `...\assets\<klasör>\`. Not dosyaları kökte. Aşağıda "gp-N
 - Kaynak güveni: Orta düşük. Ham ve görsel birinci el; TUPRS'te strateji al-tutu geçmez, örneklem dışı doğrulama yok. Hazırlık K.
 - Ek kaynaklar (X arşivi, 16.10):
   - `tweet-bist100-usd-ema50-200-kesisim-1847537834397237420` — BIST100 dolar cinsi EMA 50/200 kesişim grafiği (SMA yerine EMA): başlık "BİST100 EMA Crossover (50-200)", eksen "Price in USD", "BUY SIGNAL" ve "SELL SIGNAL" üçgenleri (görsel, açıldı). Ham: "Allah korusun diyelim." EMA50, EMA200'e yaklaşıyor; olası aşağı kesişim (SELL) uyarısı (YORUM). Sinyal koşulu ve sonuç yok. Parametre: Kesişim çifti = EMA50 / EMA200, fiyat USD cinsi (BIST100 / dolar kuru; görsel, açıldı); yeşil üçgen BUY (EMA50 yukarı keser), kırmızı üçgen SELL (aşağı keser) (görsel, açıldı; yön eşlemesi YORUM)
+  - `tweet-death-cross-ema50-ema200-1911462470763360258` — Ölüm kesişimi (death cross) tanımı Tansu'nun kendi gönderisinde: "Death Cross = EMA 50 çizgisinin, EMA 200 çizgisinin altına düşmesi" (Ham). Yorum: yatırımcı pozisyon kapatabilir, yeni alımdan kaçınabilir; "Tek başına bir sinyal her zaman yeterli değildir." (Ham). Sembol, periyot, stop düzeyi, hedef ve sonuç yok; çift EMA (SMA değil). Parametre: Death cross çifti = EMA50, EMA200'ün altına keser (periyot belirtilmemiş; Ham)
+  - `tweet-ema-50-200-maliyetli-backtest-1837452465022615616` — TUPRS için 50/200 EMA (SMA değil) stratejisi kodu işlem maliyetiyle: "işlem maliyeti ilaveli, optimizasyonu artık kendiniz yaparsınız :). (0.001 işlem maliyeti eklenmiştir)" (Ham). Görsel (görsel metni): 2022 için creturns, cstrategy ve cstrategy_net eğrileri (sayı yok). Optimizasyon: karar Levent'te bekliyor (E K29). Ham: "You cannot beat the market!" görüş, kural değil. Parametre: İşlem maliyeti = 0,001 (Ham: "0.001 işlem maliyeti eklenmiştir"); tek yön mü gidiş-dönüş mü, pozisyon değişiminde mi uygulanır belirsiz (YORUM)
 
 ---
 
@@ -571,6 +595,8 @@ Görsel kökü: `...\assets\<klasör>\`. Not dosyaları kökte. Aşağıda "gp-N
 - Tansu'nun kanıtı: yok; seçilmiş grafikler. "Güvenilirdir" iddiası ölçülmemiş.
 - Günlük bedava veriyle uygulanabilir mi: evet (OHLC; ADX ve DI formülü bilinen Wilder hesabıdır). Kural olarak eksik: onay ve çıkış yok.
 - Kaynak güveni: Ham ve görsel birinci el; eşikler birbiriyle çelişir: orta-düşük. Hazırlık K.
+- Ek kaynaklar (X arşivi, 16.10):
+  - `tweet-bollinger-trend-momentum-di-teyit-1775396085038469494` — Yanıt (@volcano8470, 03.04.2024): Bollinger yalnız trend piyasada iyi sinyal verir; "Üst bant momentum indikatörü ve +-DI ile beraber takip edilirse, BB güvenilirdir." Yatay piyasada "band sıkışır tadı tuzu olmaz" (Ham). Rejim filtresi: BB sinyali trendde, momentum ve ±DI teyidiyle; eşik ve periyot yok. YORUM: yatay piyasadaki sıkışma §40 ve §45'teki sıkışma durumudur.
 
 ---
 
@@ -612,6 +638,9 @@ Görsel kökü: `...\assets\<klasör>\`. Not dosyaları kökte. Aşağıda "gp-N
 - Tansu'nun kanıtı: yok; "güvendiğim strateji", "en sevdiğim" sözleri; CUSAN, AFYON, TUPRS tek örnek; TUPRS bearish rejection "hemen yakaladı", BTCUSD al sinyali 1 hafta önce (Ham); sayısal sonuç yok. Seçilmiş vakalar.
 - Günlük bedava veriyle uygulanabilir mi: evet (günlük OHLC; Bollinger ve mum rengi). Saatlik CUSAN örneği ücretsiz günlük veride yok; AFYON grafiği gün içi görünüyorsa TASARIM §3 kapsamı dışıdır (YORUM). Mum ölçütü eksik, kural bugün eksik.
 - Kaynak güveni: Ham birinci el; kural net ama mum tanımı ve ayarlar parçalı (3 SS ve 1,5 SD), backtest ve kod yok: orta-düşük. Hazırlık K.
+- Ek kaynaklar (X arşivi, 16.10):
+  - `tweet-bollinger-uc-sapma-saatlik-al-1845929388904444018` — DOCO saatlik örneği (14.10.2024): "3SS BB al verdi." (Ham). Görsel başlığı "DOCO.IS AL sinyali verdi." (görsel metni); grafik fiyat ve BB üst, orta, alt çizgileri, 7-14 Ekim 2024. 3 SS kuralının saatlik uygulaması; mum koşulu ve eşik yazılı değil. Saatlik veri günlük bedava veride yok.
+  - `tweet-bollinger-ust-bant-ortalamaya-donus-1778707323147448589` — DOAS ortalamaya dönüş beklentisi (12.04.2024): üst banda varan sert yükselişten sonra kırmızı son mum; "Bence haftaya ortalamasına geri çekilmek isteyecek." (Ham). Ham: "BB ve 3SS ile 20EMA"; hedef bölge "317-318". Görselde (açıldı) beyaz orta çizgi sağ kenarda yaklaşık 318'dedir (ölçüm, YORUM: hedef = orta çizgi). Hedefin sayısı hisseye özgüdür; zaman ufku yaklaşık bir hafta (YORUM). Parametre: Orta çizgi türü = 20 EMA (Ham: "BB ve 3SS ile 20EMA"; bölümdeki SMA20 ile farklı, YORUM); geri çekilme hedefi = orta çizgi, DOAS'ta 317-318 (Ham)
 
 ---
 
@@ -647,6 +676,10 @@ Görsel kökü: `...\assets\<klasör>\`. Not dosyaları kökte. Aşağıda "gp-N
 - Tansu'nun kanıtı: THYAO grafiğinde üç kutu çizilmiş, seçilmiş vakalar; sayısal sonuç yok. ISYAT ve SAYAS bekleyen kurulumlardır. Tarama çıktısı açılmadı.
 - Günlük bedava veriyle uygulanabilir mi: BB, RSI ve MACD günlük kapanıştan hesaplanır; OBV hacim, ATR yüksek ve düşük ister (projenin güncel veri durumu ayrıdır: §0).
 - Kaynak güveni: Ham ve görsel birinci el; BB 20/2, RSI 14 ve RSI 50 görselden ve Ham'dan açık; stop ve tarama koşulu kısmi: orta. Hazırlık K.
+- Ek kaynaklar (X arşivi, 16.10):
+  - `tweet-bollinger-orta-bant-rsi50-al-sat-1774426858567643590` — DOAS kodlama önerisi (31.03.2024): al = fiyat orta bandı yukarı keser ve RSI 50'yi yukarı keser; sat = orta bandı aşağı keser; üst ve alt bant kaldırıldı. "orta bandı aşağı kestiğinde sat sinyali üret" (Ham). Bölümde çıkış yoktu: bu, çıkış kuralıdır. Görsel başlığı "DOAS.IS için Optimize Edilmiş Bollinger Bantları ve Al/Sat Sinyalleri" (görsel metni): hisse bazlı optimizasyon izi, değer yok; karar Levent'te bekliyor. Parametre: Çıkış (sat) = fiyat BB orta bandını aşağı keser; RSI koşulu yok (Ham)
+  - `tweet-bollinger-orta-bant-rsi50-kesisim-1840361825134678149` — PENGD tarama çıktısı (29.09.2024), 10.01.2025 taramasının MACD'siz önceki sürümü gibi okunur (YORUM). "PENGD için son kapanış gününde RSI kesişimi: True" ve "Bollinger Orta Bandı Kesişimi: True" (görsel, açıldı). RSI 50 kesişimi seviye değil kesişim olarak çizilir (kırmızı nokta, son bar RSI yaklaşık 52; ölçüm, YORUM) ve kapanış orta bandın hemen üstündedir. Ham: "Arkadaşların aklında olsun enteresan olabilir". Parametre: Tarama koşulu (29.09.2024) = son kapanışta BB orta bandı yukarı kesişimi ve RSI 50 yukarı kesişimi; MACD yok; grafik penceresi 100 bar (görsel, açıldı)
+  - `tweet-bollinger-rsi-50-tarama-1864543445295014396` — Tekrar, 09.01.2025 duyurusundan önce (05.12.2024): "Aşağıda Bollinger Bantları ve RSI>50 taramasını yolluyorum." (Ham). Koşul ayrıntısı yok, kod dış bağlantıda (açılmadı). Yeni olan öğüt: taramayı "daha önce verdiğim taramalar ile" birleştirip yeni tarama kurmak (Ham).
 
 ---
 
@@ -709,6 +742,8 @@ Görsel kökü: `...\assets\<klasör>\`. Not dosyaları kökte. Aşağıda "gp-N
 - Tansu'nun kanıtı: CONSE "2 GÜNDE %5", ISFIN "BİR KAÇ GÜN İÇİNDE %5" (Ham); iki seçilmiş vaka, giriş fiyatı yok, kazanma oranı yok.
 - Günlük bedava veriyle uygulanabilir mi: evet (günlük OHLC). RSI trend çizgisi için tepe kuralı gerekir; şimdi tam uygulanamaz.
 - Kaynak güveni: Ham ve görsel birinci el; stop ve hedef sözlü; dedektör eşiği ve trend çizgisi kuralı yok: orta-düşük. Hazırlık K.
+- Ek kaynaklar (X arşivi, 16.10):
+  - `tweet-coklu-dip-donus-teyit-listesi-1995931145499017316` — Dipten dönüş teyit listesi (02.12.2025, yanıt, sembol yok): "CDBelthold mum formasyonu" ve "RSI düşeni kırmış" ile birlikte "CCI Pozitif uyumsuzluk", "MACD güzel yerden kesmeyue hazırlanıyor", "Hacim artmış", "T3 kesişimi var" (Ham). Bölümdeki iki koşula dört ek teyit eklenir; hepsi eşiksiz. Görselde (açıldı; Matriks) düşen fiyat dipleri karşısında yükselen osilatör dipleri ve RSI panelinde düşen trend çizgisinin son barda yukarı kırılışı görünür; osilatör adları yazılı değil (YORUM).
 
 ---
 
@@ -754,6 +789,8 @@ Görsel kökü: `...\assets\<klasör>\`. Not dosyaları kökte. Aşağıda "gp-N
 - Tansu'nun kanıtı: BIST100'de bir bölge, sonuç sayısı yok. Seçilmiş örnek.
 - Günlük bedava veriyle uygulanabilir mi: evet (günlük OHLC); trend göstergesi tanımsız olduğu için filtre bugün kodlanamaz.
 - Kaynak güveni: Ham ve görsel birinci el; kural sözlü, ölçüt yok: orta-düşük. Hazırlık X.
+- Ek kaynaklar (X arşivi, 16.10):
+  - `tweet-bullish-mum-rsi14-50-ema-filtre-1853110872819773819` — Somut mum filtresi planı (03.11.2024): "Bulşish Mum formasyonları taraması sadece RSİ14>50 olduğu zaman ve istediğimiz ema üzerinde iken al sinyali verecek." (Ham). §43 uyarısının tarama biçimi: boğa mumu + RSI(14) > 50 + fiyat EMA üstünde. Tansu: "Kafamda projesi hazır, iş kodlamaya kaldı" (Ham); kod ve çıktı yok. Parametre: Boğa mum sinyali filtresi = RSI(14) > 50 (seviye) ve fiyat > seçilecek EMA; EMA periyodu yok ("istediğimiz ema") (Ham)
 
 ---
 
@@ -813,3 +850,460 @@ Görsel kökü: `...\assets\<klasör>\`. Not dosyaları kökte. Aşağıda "gp-N
 - Tansu'nun kanıtı: yok (örnek ve sonuç yok).
 - Günlük bedava veriyle uygulanabilir mi: BB, KC ve RSI günlük OHLC'den hesaplanır; ayarlar eksik olduğundan kural şimdi uygulanamaz (ayar seçimi bizim YORUM'umuz olurdu).
 - Kaynak güveni: Ham birinci el; sayı yok: düşük. Hazırlık K.
+
+## 46. BULL/BEAR etiketleri: günlük sinyalin 5 günlük toplamı (+3 boğa, -4 panik; FROTO)
+
+- Kaynak: `tweet-bull-bear-5-gunluk-toplam-sinyal-2042901081785557425` (FROTO, 11.04.2026; Ham ve görsel, açıldı). Tansu'nun X gönderisidir (birinci el). Ham metni yapay zekâ çıktısı gibi okunur (YORUM); Ham olarak birinci el sayılır.
+- Tansu'nun ifadesi (verbatim):
+  - Ham: BULL etiketi, alt paneldeki gri çizginin (5 günlük toplam sinyal) "+3 seviyesine veya üzerine çıktığı anlarda beliriyor"; BEAR etiketi "-4 veya -5 seviyesine kadar düştüğü yerlerde ortaya çıkıyor".
+  - Ham: "Böyle dönemlerde yeni bir pozisyon açmak yerine, kırılımın (yukarı veya aşağı) netleşmesini beklemek genellikle en güvenli stratejidir."
+  - Ham (rolling pencere): "son rolling periyodumuzun günün en yüksek seviyesini aşamamış, ancak en düşük seviyesinin altına da inmemiş".
+  - Görsel başlığı (görsel metni; sol kısım karartılmış): `FROTO.IS · ... Son: 10.04.2026 | Kapanış=105.30 | Sinyal=+0 | 5g Toplam=-1`; etiketler `BULL`, `BEAR`.
+- Tanım (YORUM; Ham ve görsel, açıldı):
+  1. Günlük sinyal s(t) üç değer alır: -1, 0, +1 (alt panelde turkuaz +1 ve kırmızı -1 kısa çizgileri, ±0,5'te ince noktalı eşik çizgileri; görsel, açıldı).
+  2. 5g Toplam = son 5 günlük s(t) toplamıdır; aralığı -5 ile +5 (eksen -5...+5; görsel, açıldı).
+  3. BULL: 5g Toplam yeşil kesik çizgiyi (+3) yukarı geçtiğinde, fiyatın altına yeşil ok ve etiket. BEAR: 5g Toplam kırmızı kesik çizgiyi (-4) aşağı geçtiğinde, kırmızı ok ve etiket (görsel, açıldı).
+  4. s(t) tanımı Ham'dan okunur (YORUM): kapanış (veya gün yükseği) son rolling periyodun en yükseğini aşarsa +1, en düşüğünün altına inerse -1, aralık içindeyse 0. Rolling periyodun uzunluğu yazılı değildir.
+  5. Durum okuması (Ham): -1 nötr bölge, "kararsızlık" evresi; yeni boğa için 4 puan yukarı, panik için 3 puan aşağı gerekir (hesap bizim: -1'den +3'e 4 puan, -1'den -4'e 3 puan; Ham'daki "Boğa eşiğine: +4 / Panik eşiğine: 3 birim" eşik değil, uzaklıktır). Nötr bölgede yeni pozisyon açılmaz; kırılım beklenir (Ham).
+- Parametreler:
+
+| parametre | değer | kaynak |
+|---|---|---|
+| BULL eşiği | 5g Toplam >= +3 | Ham ve görsel, açıldı |
+| BEAR eşiği | 5g Toplam <= -4 (Ham: "-4 veya -5") | Ham ve görsel, açıldı (kesik çizgi -4) |
+| Toplam penceresi | 5 gün | Ham ve görsel (başlık `5g Toplam`) |
+| Günlük sinyal değerleri | -1, 0, +1 | görsel, açıldı (YORUM) |
+| Rolling periyot uzunluğu | yok | - |
+| Giriş, stop, hedef | yok | - |
+
+- Belirsiz kalanlar: rolling periyodun uzunluğu; s(t) yüksek veya kapanışa göre mi; etiketin yalnız eşiğe ilk varışta mı yoksa her barda mı çıktığı (görselde yeşil oklar eşik çizgisine ilk varışta durur; YORUM); BULL ve BEAR'dan sonra pozisyon kuralı (giriş, stop, çıkış) yok; hesap kodu paylaşılmadı.
+- Tansu'nun kanıtı: yok; FROTO'da Ocak 2024 - Nisan 2026 arası yaklaşık 20 etiket, sonuç sayısı yok. Seçilmiş örnek.
+- Günlük bedava veriyle uygulanabilir mi: evet (günlük OHLC); rolling periyot seçilmeden kural tam değildir.
+- Kaynak güveni: Ham ve görsel birinci el; eşikler açık, s(t) formülü ve pencere yok: orta-düşük. Hazırlık K.
+
+## 47. Bullish Hikkake: iç bar, sahte aşağı kırılım, yukarı dönüş ve iç bar altı stop
+
+- Kaynak: `tweet-bullish-hikkake-ic-bar-stop-1913982654933848532` (20.04.2025; Ham ve görsel, açıldı). Tansu'nun X gönderisidir (birinci el). Ham emoji başlıklı ders metni gibi okunur, yapay zekâ özeti olabilir (YORUM); Ham olarak birinci el sayılır. Sembol yazılı değil ("Grafikte görülen kardeş"). C §17 ve ENJSA örneğinde "Hikkake" yalnız anılır; tanım ve stop orada yoktu.
+- Tansu'nun ifadesi (verbatim):
+  - Ham: "önce bir iç bar (inside bar) oluşur yani mevcut mum, önceki mumun gövdesi ve fitili içinde kalır."
+  - Ham: "Sonraki gün bu sıkışma aşağı yönlü kırılır gibi olur (fiyat önce düşer) fakat birkaç gün içinde fiyat toparlar ve yukarı yönlü hareket eder."
+  - Ham: "İç bar kırılımı sonrası yukarı yönlü dönüş yakalandıysa alıma geçilebilir. Stop-loss genelde iç barın altına konur."
+  - Ham: "Volatilite düşükken ortaya çıktığında daha anlamlıdır." Teyit: "RSI / MACD", "Hacim", "EMA 8 veya EMA 21’e tutunuyorsa, pozitif sinyal olur."
+- Tanım (Ham ve YORUM):
+  1. İç bar: t-1 mumunun High ve Low değerleri t-2 mumunun aralığı içindedir (Ham: "gövdesi ve fitili içinde"; YORUM: High[t-1] <= High[t-2] ve Low[t-1] >= Low[t-2]).
+  2. Sahte kırılım: iç bardan sonra fiyat iç barın altına sarkar (Ham: "fiyat önce düşer").
+  3. Dönüş: birkaç gün içinde yeşil mum ve yukarı hareket; kısa pozisyonlar stop olur (Ham). Görselde (açıldı) 18 Nisan 2025 mumu uzun alt fitille önceki mumların dibinin altına sarkıp büyük yeşil kapanır; altında yeşil üçgen. Görselden hangi mumun iç bar olduğu kesin okunmaz (YORUM).
+  4. Giriş: dönüş yakalandıktan sonra (Ham: "alıma geçilebilir"); giriş fiyatı ve günü yazılı değil.
+  5. Stop: iç barın altı (Ham; YORUM: iç barın Low değeri).
+- Parametreler:
+
+| parametre | değer | kaynak |
+|---|---|---|
+| Formasyon | iç bar + sahte aşağı kırılım + yukarı dönüş (bullish) | Ham |
+| Dönüş süresi | "birkaç gün içinde" | Ham |
+| Stop | iç barın altı | Ham |
+| Teyit | RSI/MACD, hacim artışı, EMA 8 veya EMA 21 desteği; eşik yok | Ham |
+| Bağlam | düşük volatilite | Ham |
+| Hedef | yok | - |
+| Zaman dilimi | günlük (görselde günlük mumlar; YORUM) | görsel, açıldı |
+
+- Belirsiz kalanlar: dönüşün kaç gün içinde sayıldığı; giriş tetiği (yeşil mum kapanışı mı, iç bar yükseğinin aşılması mı); hacim ve RSI eşiği; düşük volatilite ölçüsü; hedef; sembol ve sonuç.
+- Tansu'nun kanıtı: yok (tek grafik örneği, sonuç yok).
+- Günlük bedava veriyle uygulanabilir mi: evet (günlük OHLC). Giriş tetiği ve hedef olmadan kural eksiktir.
+- Kaynak güveni: Ham ve görsel birinci el; kural sözlü, stop var, tetik ve hedef yok: orta-düşük. Hazırlık K.
+
+## 48. Bullish Tasuki: iki yeşil mum, yukarı boşluk, boşluğa inen kırmızı mum ve kodu (GARAN)
+
+- Kaynak: `tweet-bullish-tasuki-mum-kurali-kod-1905592381618962842` (GARAN.IS örneği, 28.03.2025; Ham, G1 görsel metni ve G2 kod görseli, G2 açıldı). Tansu'nun X gönderisidir (birinci el).
+- Tansu'nun ifadesi (verbatim):
+  - Ham: "Birinci mum yeşil (pozitif) bir mumdur," "İkinci mum da yeşil (pozitif) olup, birinci mumun üzerinde bir boşluk (gap) ile açılır," "Üçüncü mum ise kırmızı (negatif) bir mumdur ama birinci mumun kapanış fiyatının altına inmez." "Kodu da verilmiştir".
+  - Kod (G2, açıldı; kod yorumları Tansu'nundur): `data[i, close] < data[i, open]` ("3. mum kırmızı"); `data[i, close] < data[i - 1, open]` (yorum: "3. mum, 2. mumdan daha aşağıda açılmış"); `data[i, close] > data[i - 2, close]` ("3. mum, 1. mumun kapanışından yukarıda kapandı"); `data[i - 1, close] > data[i - 1, open]` ("2. mum yeşil"); `data[i - 1, open] > data[i - 2, close]` ("2. mum, 1. mumun kapanışından yukarıda açılmış (gap)"); `data[i - 2, close] > data[i - 2, open]` ("1. mum yeşil").
+  - G1 başlığı (görsel metni): "GARAN.IS - Tasuki Pattern", lejant "Candlestick", "Buy Signal", "Sell Signal"; Haziran-Eylül 2024.
+- Tanım (kod, YORUM yorumlama): i barı üçüncü mumdur. (1) mum i-2: yeşil (Close > Open). (2) mum i-1: yeşil ve Open[i-1] > Close[i-2] (birinci kapanışın üstünde boşluk). (3) mum i: kırmızı, Close[i] < Open[i-1] (ikinci mumun açılışının altında kapanış) ve Close[i] > Close[i-2] (birinci kapanışın üstünde kalır, boşluğu tamamen kapatmaz). Altı koşul birlikte doğruysa formasyon vardır. `buy` veya `sell` sütununa yazma satırı görselde yoktur (kod kesik).
+- Parametreler:
+
+| parametre | değer | kaynak |
+|---|---|---|
+| Mum sayısı | 3 | Ham ve kod, açıldı |
+| Mum 1 | yeşil | Ham ve kod |
+| Mum 2 | yeşil, Open2 > Close1 (boşluk) | Ham ve kod |
+| Mum 3 | kırmızı, Close3 < Open2, Close3 > Close1 | kod, açıldı |
+| Boşluk büyüklüğü, gövde eşiği, önceki trend | yok | - |
+| Giriş, stop, hedef | yok | - |
+
+- Belirsiz kalanlar: kodun yorum satırı ("2. mumdan daha aşağıda açılmış", yani Open3 < Open2 gibi okunur) ile kod koşulu (Close3 < Open2) uyuşmaz: üçüncü mumun açılışı hiç denetlenmez (YORUM: yorum satırı hatalıdır veya koşul eksiktir); Ham "birinci mumun kapanış fiyatının altına inmez" der, kod bunu Close3 > Close1 olarak yazar, düşük fitil denetlenmez; sinyalin hangi sütuna yazıldığı; giriş günü ve çıkış; önceki yukarı trend şartı yok (klasik yükselen Tasuki boşluğu devam formasyonudur, Tansu "Bullish Tasuki" der, YORUM).
+- Tansu'nun kanıtı: yok (tek GARAN grafiği, sonuç yok).
+- Günlük bedava veriyle uygulanabilir mi: evet (günlük OHLC; üç mumluk dedektör). Yorum satırı ile kod arasındaki fark çözülmeden birebir kodlanmaz.
+- Kaynak güveni: Ham ve kod birinci el, transkripsiyon görselle uyuşur; kod kesik, giriş ve çıkış yok: orta-düşük. Hazırlık H.
+
+## 49. Dark Cloud Cover (kara bulut örtüsü): düşüş sinyali, stop ilk mumun tepesi, hedef yakın destek
+
+- Kaynak: `tweet-dark-cloud-cover-stop-ilk-mum-tepe-1982688365007794207` (27.10.2025; Ham ve G1, açıldı). Tansu'nun X gönderisidir (birinci el). Ham ders metni gibi okunur (YORUM; Ham olarak birinci el sayılır). Sembol yok ("emsai öncesi" ifadesi bir hisseye işaret edebilir, belirsiz).
+- Tansu'nun ifadesi (verbatim):
+  - Ham: "Bu bir düşüş sinyalidir ve yukarı trendde görülür." "İlk mum beyaz ve uzun olmalıdır." "İkinci mum siyah olmalı ve ilk mumun üstünde açılıp ilk mumun ortasından aşağısında kapanmalıdır. Ne kadar aşağıda kapanırsa o kadar güçlü sinyal olur."
+  - Ham: "Özellikle direnç seviyesinde veya yukarı trendin sonunda görürsen güçlü düşüş sinyalidir. Hacim de önemlidir. İkinci günde hacim artışı varsa sinyal daha güvenilirdir."
+  - Ham: "Risk yönetimi için stop loss ilk mumun en yüksek seviyesine koyabilirsin. Hedef olarak da yakındaki destek seviyelerini kullanabilirsiniz." "hiçbir formasyon yüzde yüz çalışmaz. Başka göstergelerle de teyit almalısınız."
+  - G1 (görsel, açıldı): ders şeması: üç yükselen çubuk, uzun beyaz mum, onun yukarısında açılan siyah mum; siyah mumun kapanışı beyaz mumun gövde ortasının altındadır ve beyaz mumun açılışının üstündedir.
+- Tanım (Ham ve görsel; formül YORUM):
+  1. Ön koşul: yukarı trend (Ham). Ölçüt yazılı değil.
+  2. Mum 1: beyaz (yeşil) ve uzun (uzunluk eşiği yok).
+  3. Mum 2: siyah (kırmızı); açılış mum 1'in üstünde (YORUM: Open2 > High1; Ham "ilk mumun üstünde"; şemada siyah gövdenin tepesi beyaz mumun fitil ucunun üstündedir); kapanış mum 1 gövdesinin orta noktasının altında: Close2 < (Open1 + Close1) / 2 (YORUM; şemada Close2 > Open1).
+  4. Güç: kapanış orta noktanın ne kadar altındaysa o kadar güçlü (Ham).
+  5. Anlam: "satış düşünmelisiniz" (Ham). BIST'te kısa pozisyon pratik değil (TASARIM §3); YORUM: mevcut alımı kapatma uyarısı olarak okunur.
+  6. Stop: mum 1'in en yüksek seviyesi (Ham; kısa pozisyon stopu). Hedef: yakındaki destek seviyeleri (Ham; sayı yok). Levent 16.10: Tansu hedef verdiği için kural bu hedefi kullanır.
+- Parametreler:
+
+| parametre | değer | kaynak |
+|---|---|---|
+| Ön koşul | yukarı trend; en iyisi direnç veya trend sonu | Ham |
+| Mum 1 | uzun beyaz | Ham |
+| Mum 2 | siyah, açılış mum 1'in üstünde, kapanış mum 1 gövde ortasının altında | Ham ve görsel, açıldı |
+| Teyit | ikinci gün hacim artışı; başka göstergeler | Ham |
+| Stop | mum 1'in en yüksek seviyesi | Ham |
+| Hedef | yakındaki destek seviyeleri (sayı yok) | Ham |
+| Uzunluk, hacim eşiği | yok | - |
+
+- Belirsiz kalanlar: Ham "ilk mumun üstünde açılıp" der: üstü High1 mi Close1 mi; orta nokta gövdenin mi tüm aralığın mı (Ham "ortasından"; şema gövde ortasını gösterir, YORUM); "uzun" eşiği (YORUM: gövde / ATR); yukarı trend ölçütü; destek seviyesinin bulunması; çıkış kuralı alım pozisyonu için ayrı yazılmamıştır; bu sistem yalnız alış yönlüdür.
+- Tansu'nun kanıtı: yok (şema, sonuç yok).
+- Günlük bedava veriyle uygulanabilir mi: evet (günlük OHLCV); yukarı trend ve uzunluk ölçüsü seçilmeden kural eksiktir.
+- Kaynak güveni: Ham ve şema birinci el; mum kuralı net, stop ve hedef sözlü, ölçüler yok: orta. Hazırlık K.
+
+## 50. Doji mum + RSI(14) 30/70 al-sat taraması (FROTO kodu, günlük gün sonu taramaları)
+
+- Kaynak: `tweet-doji-mum-rsi-14-al-sat-sinyali-1842657804374720958` (05.10.2024; Ham ve kod görseli, G1 açıldı; kod ayrıca dış bağlantıda, açılmadı), `tweet-doji-rsi-30-70-sinyal-1844841798608286006` (11.10.2024; Ham ve görsel metni), `tweet-doji-rsi-30-70-sinyal-1847540406533210185` (19.10.2024; Ham ve iki görselin metni). Hepsi Tansu'nun X gönderisidir (birinci el).
+- Tansu'nun ifadesi (verbatim): "Doji mum ve RSI kombinasyonuna bakalım." (Ham, 05.10.2024). Yanıt (Ham): "Doji mum olsun ve RSI > 30 olsun. Al koşulu o zaman geliyor". 11.10.2024 (Ham): "Alım Sinyali (Buy Signal): Doji formasyonu + RSI ≤ 30" ve "Satım Sinyali (Sell Signal): Doji formasyonu + RSI ≥ 70". 19.10.2024 (Ham): "Dünlük doji mumu oluşumu ve RSI30 RSI70". Kod (görsel, açıldı): `data['RSI_14'] = ta.rsi(data['Close'], length=14)`; `data['Doji'] = np.abs(data['Open'] - data['Close']) <= (data['High'] - data['Low']) * 0.1`; `buy_signals = doji_indices[doji_rsi_values <= 30]`; `sell_signals = doji_indices[doji_rsi_values >= 70]`; örnek `FROTO.IS`, `period='6mo'`, `interval='1d'`.
+- Tanım (kod, görsel, açıldı; YORUM işaretli yerler hariç):
+  1. Doji: gövde `|Open − Close|` en çok `0,1 × (High − Low)` (aralığın %10'u).
+  2. RSI: `pandas_ta.rsi`, 14 periyot (YORUM: pandas_ta varsayılanı Wilder yumuşatmasıdır; §42'deki basit ortalamalı RSI'dan farklıdır).
+  3. Al: aynı barda doji ve RSI ≤ 30. Sat: aynı barda doji ve RSI ≥ 70.
+  4. Tarama günlüktür ve gün sonunda çalışır; çıktı başlığı "Gün Sonu Sinyali Veren Hisseler" (görsel metni). Çıktı örnekleri: 11.10.2024'te dokuz hisse, hepsi "Buy Signal" (BOSSA, DOFER, ECILC, FORTE, IPEKE, ISBTR, IZFAS, KAREL, KMPUR); 19.10.2024'te INVEO ve KGYO "Buy Signal", SKTAS ve TKFEN "Sell Signal" (görsel metni). Sembol listeleri kural öğesi değil, tarama çıktısıdır.
+- Parametreler:
+
+| parametre | değer | kaynak |
+|---|---|---|
+| Doji gövde eşiği | 0,1 × (High − Low) | görsel, açıldı (Ham'da yok) |
+| RSI periyodu | 14 | görsel, açıldı |
+| Al eşiği | RSI ≤ 30 | görsel, açıldı; Ham'da yanıt "> 30" çelişir |
+| Sat eşiği | RSI ≥ 70 | görsel, açıldı; Ham |
+| Periyot | günlük (gün sonu) | görsel, açıldı; görsel metni |
+| Giriş, stop, hedef | yok | - |
+
+- Belirsiz kalanlar: Ham yanıtı "RSI > 30" ile koddaki `<= 30` çelişir (kod ve 11.10.2024 gönderisi ≤ 30 der; çoğunluk ve kod esas, YORUM); "sat" BIST'te açığa satış mı çıkış mı; giriş hangi gün ve fiyattan; doji tek başına yönsüzdür, Tansu aynı dönemde teyit mumu ister (§51); düşen trend filtresi yok (§43); eşiklerin hisse bazlı optimizasyonu: karar Levent'te bekliyor (E K29). RSI 30/70 düzey koşulu §42'dedir; fark: burada doji koşulu da gerekir.
+- Tansu'nun kanıtı: yok (sonuç, backtest, isabet oranı yok; yalnız tarama çıktıları).
+- Günlük bedava veriyle uygulanabilir mi: evet (günlük OHLC ve RSI).
+- Kaynak güveni: Ham ve kod birinci el; tarama koşulu tam (kodda); giriş, çıkış ve kanıt yok: orta. Hazırlık H.
+
+## 51. Doji price action: düşen piyasada doji + boğa teyit mumu (üç mum kodu), gösterge teyitleri, stop ve hedef
+
+- Kaynak: `tweet-doji-boga-teyit-mumu-1907860073239683477` (03.04.2025; Ham ve görsel, açıldı), `tweet-doji-uc-mum-sinyal-kodu-1906259245223354396` (30.03.2025; üç gönderilik zincir; Ham ve kod görseli, iki görsel de açıldı), `tweet-doji-teyit-ema-rsi-macd-adx-1913979295262769619` (20.04.2025; Ham ve görsel, açıldı). Hepsi Tansu'nun X gönderisidir (birinci el). Aynı doji için RSI 30/70 taraması ayrı bölümdedir (§50).
+- Tansu'nun ifadesi (verbatim): "Teorik boğa yönlü Doji formasyonu:" "Düşen bir piyasada, kararsızlık mumu olan Doji'nin ortaya çıkması, yön değişiminin ilk ipucu olabilir." "Ancak bu durumun, ardından gelen bir yükseliş (bullish) mumu ile teyit edilmesi gerekir." "Kodladık tarattık" (Ham, 03.04.2025; satırlar). "Doji formasyonu da tek mumdan oluşur ve açılış fiyatı ile kapanış fiyatı eşittir." (Ham, 30.03.2025). Örnek strateji (Ham, 20.04.2025): "1. gün: Al sinyali geldi, ancak bekle." "2. gün: Fiyat bir önceki günün tepesini geçerse, hacim artarsa, RSI & MACD destekliyorsa alıma geçilebilir." "Stop-loss: Al sinyalinden bir gün önceki dip seviyesi." "Hedef: Son zirve (yaklaşık XX TL) ve yukarısı." "bu sinyal tek başına yeterli değil" (Ham).
+- Tanım:
+  1. Kod (görsel, açıldı; boğa): bar i-2 kırmızı (`close < open`); bar i-1 doji (`close == open`, tam eşitlik); bar i yeşil (`close > open`) ve `close[i] > close[i-1]` ise `buy = 1` (kod yorumu: "Artık i+1 değil, i": sinyal teyit mumunun kendisindedir). Ayı biçimi aynalıdır: i-2 yeşil, i-1 doji, i kırmızı ve `close[i] < close[i-1]` ise `sell = -1`. Kodda i-2 koşulu iki kez aynen yazılıdır; i-3 koşulu yoktur (görsel, açıldı).
+  2. Görseller (açıldı): kırmızı kutuda küçük gövdeli doji ve ardından yeşil mum; yeşil mumda yeşil üçgen (Buy Signal).
+  3. Teyit (Ham, 20.04.2025): al sinyalinin geldiği gün (doji sonrası yeşil mum) hemen girilmez; ertesi gün: fiyat önceki günün zirvesini geçer, hacim artar, RSI ve MACD destekler. Destek göstergeleri: sinyal gününün hacmi önceki günlere göre artmış; EMA8 EMA21'i yukarı kesmek üzere ve fiyat EMA8 üstünde; RSI 50 üstünde kalıcı, son diplerde pozitif uyumsuzluk; MACD çizgisi sinyali yukarı kesmiş ve histogram sıfır üstünde; ADX yükseliyor ve DI+ yukarıda.
+  4. Çıkış (Ham, 20.04.2025): stop = al sinyalinden bir gün önceki dip; hedef = son zirve ve yukarısı. Levent 16.10: Tansu hedef verdiği için kural bu hedefi kullanır.
+- Parametreler:
+
+| parametre | değer | kaynak |
+|---|---|---|
+| Doji | açılış = kapanış (kod: tam eşitlik) | Ham ve görsel, açıldı |
+| Önceki mum | kırmızı (düşen piyasa) | görsel, açıldı |
+| Teyit mumu | yeşil ve kapanış > doji kapanışı | görsel, açıldı |
+| Giriş günü | sinyalden sonraki gün, önceki günün zirvesi aşılınca | Ham |
+| Stop | al sinyalinden bir gün önceki dip (YORUM: doji mumunun en düşüğü) | Ham |
+| Hedef | son zirve ("yaklaşık XX TL", sayı yok) | Ham |
+| Teyit göstergeleri | EMA 8/21, RSI 50, MACD sinyal kesişimi, ADX ve DI+, hacim artışı | Ham |
+| Hacim, ADX eşiği | yok | BELİRSİZ |
+
+- Belirsiz kalanlar: sinyal günü doji mi yeşil mum mu (Ham: "Son günkü yeşil mum içinde oluşan al sinyali", yani yeşil mum; YORUM); stop'un tam bar ve fiyat tanımı; doji için §50'de 0,1 × aralık eşiği kullanılır, burada tam eşitlik; kod ikinci düşüş mumunu gerçekten istiyor mu (tekrarlı koşul); teyit göstergelerinin hangisinin zorunlu olduğu; ayı biçiminin BIST'te anlamı (açığa satış mı çıkış mı). Kural yalnız düşen trendin dibinde anlamlıdır: trend tanımı yok (§43 genel uyarısı).
+- Tansu'nun kanıtı: yok (örnek sembol ve sonuç yok; 20.04.2025 gönderisinde fiyatlar "XX TL" ile gizli).
+- Günlük bedava veriyle uygulanabilir mi: evet (günlük OHLCV; üç mum kodu doğrudan, teyit göstergeleri standart).
+- Kaynak güveni: Ham ve kod birinci el; kod net, teyit ve çıkış sözel, eşiksiz: orta-düşük. Hazırlık K.
+
+## 52. RSI pozitif uyumsuzluk taraması: fiyatta düşen dip, RSI'da yükselen dip; mum, EMA, hacim, MACD ve Stokastik teyidi (AVHOL, BINHO, PARSN)
+
+- Kaynak: `tweet-divergence-ema-macd-stoch-checklist-1911876515043692724` (14.04.2025; Ham ve görsel, açıldı), `tweet-divergence-engulfing-ema-1910771334558130427` (11.04.2025; Ham ve görsel metni), `tweet-divergence-inverted-hammer-1910743114530385964` (11.04.2025; Ham ve iki görselin metni; AVHOL), `tweet-divergence-tasuki-gap-1910750627728175106` (11.04.2025; dört gönderilik zincir; Ham ve görsel metni; BINHO), `tweet-dragonfly-doji-divergence-ema-1914398342404006237` (21.04.2025; Ham ve iki görsel, G1 açıldı; PARSN). Hepsi Tansu'nun X gönderisidir (birinci el).
+- Tansu'nun ifadesi (verbatim): "Bugünkü RSI Pozitif uyumsuzluk taramamıza takılan bu kardeşimizi kısaca inceleyelim. Uyumsuzluk cuma oluşmuş." "RSI Pozitif Uyumsuzluk: Fiyat düşerken RSI yükselmiş. Bu, düşüş momentumunun zayıfladığına ve alım yönlü bir dönüş ihtimaline işaret eder." Teyit listesi (Ham): fiyat "EMA5, EMA8, EMA13 ve EMA21" üzerine çıkmış; "Son günlerde hacimde gözle görülür bir artış var"; MACD çizgisi sinyal çizgisini yukarı kesmiş, histogram pozitife dönmeye başlamış; Stokastik "henüz aşırı alım bölgesine girmemiş", yukarı ivme. "Her zaman risk yönetimi elden bırakılmamalı." Mum teyitleri (Ham): "Hem pozitif uyumsuzluk var hemde yutan boğa. tabi ema kombinasyonlarına da bakmak laızm." "Uyuşmazlığın yanında Tasuki Gap mum formasyonu sinyali de geldi.Bu bir bir boğa devam formasyonudur." "RSI uyumsuzluk → alım sinyali, Tasuki Gap → alımın momentum kazandığını ve devam edeceğini gösteriyor." "Dragonfly doji yapmış ... bir de cuma günü uyumsuzluk yapmış bugün teyit edilmiş.ema kesişimleri de şahane" (Ham). AVHOL için tek yorum: "Süper yakalamış mumu" (Ham).
+- Tanım (YORUM; Ham ve görsellerden):
+  1. Pozitif (düzenli) uyumsuzluk: fiyatta aralıkta düşen dip (görselde "Fiyat Düşüşü" çizgisi), RSI'da aynı aralıkta yükselen dip (görselde "RSI Yükselişi" çizgisi). Bu, §9 gizli uyumsuzluğun tersidir (orada fiyat yüksek dip, osilatör düşük dip).
+  2. Tarama günlük çalışır; çıktı başlığı `<SEMBOL>.IS - Pozitif Uyumsuzluk #n: <başlangıç> → <bitiş>` biçimindedir. Örnekler (görsel metni): AVHOL #5: 2025-01-28 → 2025-04-09; BINHO #8: 2025-01-07 → 2025-04-09; PARSN #3: 2025-01-29 → 2025-04-18. Aralıklar 71, 92 ve 79 takvim günüdür (hesap bizim). Bitiş tarihi tespit günüdür. "#n" sayısının anlamı belirsizdir (YORUM: o hissede n. uyumsuzluk).
+  3. Teyit katmanları (hepsi Ham'da yardımcı olarak sayılır, zorunlu sayılmaz): (a) TA-Lib mum formasyonu: görsellerde `CDLINVERTEDHAMMER`, `CDLTASUKIGAP`, `CDLENGULFING`, `CDLDRAGONFLYDOJI` (başlık: "tespit edilen formasyonlar"); (b) fiyat EMA5, EMA8, EMA13, EMA21 üstünde; (c) hacim artışı; (d) MACD çizgisi sinyali yukarı keser ve histogram pozitif; (e) Stokastik %K-%D aşırı alımda değil ve yukarı ivmeli.
+  4. Tasuki Gap (Ham, boğa devam formasyonu): 1. mum güçlü yeşil; 2. mum yukarı gap bırakıp açılan yeşil mum; 3. mum kırmızı ama gap alanını tamamen kapatmaz. Tansu'nun okuması: uyumsuzluk sonrası alım dalgasının teyidi. Kodlu üç mumluk Tasuki tanımı §48'dedir.
+- Parametreler:
+
+| parametre | değer | kaynak |
+|---|---|---|
+| Kısa EMA seti | 5, 8, 13, 21 | Ham (görsel lejantı üçüncü çizgiyi "EMA5" yazar, görsel, açıldı) |
+| RSI periyodu | 14 (yalnız PARSN G1 paneli: "RSI (14) & EMA(10)") | görsel, açıldı; tarama için belirsiz |
+| Uyumsuzluk aralığı | örnekte 71–92 gün | görsel metni; ölçüm |
+| Mum formasyonları | TA-Lib CDL işlevleri (ters çekiç, Tasuki Gap, yutan, yusufçuk doji) | görsel metni |
+| Pivot (dip) seçim kuralı, en küçük aralık | yok | BELİRSİZ |
+| Giriş günü, stop, hedef | yok | - |
+
+- Belirsiz kalanlar: dip pivotlarının seçimi; RSI periyodu ve Wilder mi basit mi olduğu; teyit katmanlarından hangilerinin zorunlu olduğu; "teyit" günü (Ham: cuma uyumsuzluk, pazartesi teyit); giriş fiyatı, stop ve hedef; Tansu'nun §9 aracının (Swing=15, MinGap=15) bu tarama olup olmadığı. Teyit listesinin dili, yapay zekâ üslubunda genel bir kontrol listesine benzer (YORUM); eşik içermez.
+- Tansu'nun kanıtı: seçilmiş örnekler. BINHO: "%8'e yakın marj" (Ham, tek gün; YORUM: DEY marjı gibi dönem en yüksek / referans). AVHOL ve PARSN için sonuç yok. Başarı oranı yok. Stratejinin sınaması yok.
+- Günlük bedava veriyle uygulanabilir mi: evet, kısmen (OHLCV: RSI, EMA, MACD, Stokastik, hacim, TA-Lib mumları). Uyumsuzluk için pivot kuralı ve pencere YORUM olarak seçilmelidir.
+- Kaynak güveni: Ham ve görsel birinci el; teyit listesi tam, eşiksiz; uyumsuzluk algoritması yok: orta-düşük. Hazırlık K.
+
+## 53. WaveTrend (dalga osilatörü, 10 21): aşırı satım bölgesinde al sinyali taraması
+
+- Kaynak: `tweet-dalga-osilatoru-asiri-satim-taramasi-1845369437441933344` (13.10.2024; Ham; G1 açıldı, G2 görsel metni), `tweet-dalga-osilatoru-stochrsi-rsi-1845198590081167684` (12.10.2024; Ham), `tweet-dalga-trend-osilator-10-21-1848426907441692797` (21.10.2024; Ham ve görsel metni; G2 açıldı). Üçü de Tansu'nun X gönderisidir (birinci el). WaveTrend A §5 tablosunda yalnız panel ayarı olarak, E K29'da DOAS testi olarak anılır; tarama bu kayıtta ilk kez.
+- Tansu'nun ifadesi (verbatim):
+  - 13.10.2024 (Ham): "Dalga osilatörü taramasına göre son gün aşırı satım bölgesinde al veren BIST30 hisselerİ"; çıktı #TAVHL ve #TOASO; "Gerisi detay teknikçilere kalmış."
+  - 12.10.2024 (Ham): "wave osilatörü yazıyoruz daha sonra bunu" Stokastik RSI ve RSI ile "kombinleyeceğiz" (Ham'daki yazım: "stoc.rsı ve rsı").
+  - 21.10.2024 (Ham): "Dalga osilatörüne göre al sinyali üreten hisseler"; "Dalga osilatörü fanatiği bir arkadaş vardı. bunu birşeyler le kombinlemek lazım, bilemedim."
+  - Görsel başlıkları (görsel metni): "WT (10 21)", çizgiler "WT_1" ve "WT_2"; 21.10 listesi "Buy signal generated for these stocks in BIST 30:" ve 23 sembol.
+- Tanım (görsel, açıldı; kural YORUM):
+  1. Gösterge: WaveTrend, ayar (10, 21): kanal uzunluğu 10, ortalama uzunluğu 21 (görsel başlığı; YORUM: standart WaveTrend adlandırması). WT_1 turuncu çizgi, WT_2 siyah kesikli çizgi; histogram WT_1 ile WT_2 farkı gibi görünür (YORUM).
+  2. Bölgeler: pembe iki yatay bant, +50 ile +60 arası (aşırı alım) ve -50 ile -60 arası (aşırı satım) (görsel, açıldı; piksel ölçümü, YORUM).
+  3. Tarama (13.10): son gün aşırı satım bölgesinde "al" veren hisseler; evren BIST30. "Al" tanımı yazılı değildir. TAVHL görselinde son bar WT_1 yaklaşık -62, WT_2 yaklaşık -58 ve WT_1 hâlâ WT_2'nin altındadır (görsel, açıldı; ölçüm): yani son barda kesişim görünmez; YORUM: tarama koşulu bölgede olmak olabilir.
+  4. Tansu tek başına WaveTrend'e güvenmez: StochRSI ve RSI ile birleştirme planı (12.10), "kombinlemek lazım" (21.10). "Dalga osilatörü fanatiği bir arkadaş vardı" (Ham, 21.10) cümlesi aracın başkasının favorisi olduğunu söyler.
+- Parametreler:
+
+| parametre | değer | kaynak |
+|---|---|---|
+| WaveTrend ayarı | (10, 21) | görsel, açıldı (başlık "WT (10 21)") |
+| Aşırı satım bandı | yaklaşık -50 ile -60 | görsel, açıldı (ölçüm, YORUM) |
+| Aşırı alım bandı | yaklaşık +50 ile +60 | görsel, açıldı (ölçüm, YORUM) |
+| Tarama günü | son gün | Ham |
+| Evren | BIST30 (13.10); 21.10 başlığı BIST 30 | Ham ve görsel metni |
+| Veri penceresi | Ocak 2022 - Ekim 2024 | görsel, açıldı |
+| "Al" tanımı, WT_2 periyodu, giriş, stop, hedef | yok | - |
+
+- Belirsiz kalanlar: "al" tanımı (WT_1'in WT_2'yi yukarı kesmesi mi, bölgede olmak mı); bant değerleri: A §5 tablosunda eşikler 60, 53, -53, -60, E K29'da DOAS için ">-60 ve <50" yerine "<-50 ve <50" revizyonu vardır, görselde bantlar -50 ile -60 arasıdır; WT_2'nin periyodu; birleştirme planının (StochRSI, RSI) sonucu yoktur; 21.10 başlığı "BIST 30" der ama 23 sembolün çoğu BIST30'da değildir (ALGYO, BINHO, KENT ve benzeri); hisse bazlı parametre: karar Levent'te bekliyor (E K29).
+- Tansu'nun kanıtı: yok (tarama çıktıları; DOAS'ta WaveTrend stratejisinin al-tutun gerisinde kaldığı E K29'dadır).
+- Günlük bedava veriyle uygulanabilir mi: evet (WaveTrend günlük yüksek, düşük, kapanıştan hesaplanır); "al" tanımı olmadan kural eksiktir.
+- Kaynak güveni: Ham ve görsel birinci el; ayar ve bant var, al koşulu yok: düşük-orta. Hazırlık K.
+
+## 54. CMF para girişi filtresi: son 3 gün pozitif, önceki 3 gün negatif
+
+- Kaynak: `tweet-cmf-3-gun-pozitif-onceki-3-gun-negatif-1845558544126366115` (13.10.2024; üç gönderilik zincir; Ham, G1 ve G2 görsel metni, G1 açıldı). Tansu'nun X gönderisidir (birinci el). Aynı filtre EMA ve RSI taramasına eklenir (§56).
+- Tansu'nun ifadesi (verbatim):
+  - Ham: "Uyumadan önce para giriş çıkış taraması için kod yazdım." "Bu kodu diğer stratejiler ile kullanırız. Son 3 gün pozitif ve önceki 3 gün negatif ise al sinyali doğuyor."
+  - Yanıt (Ham): "Bu sinyale göre al sat yapmayın." "Son 3 gün parani girişi olan hisseleri diğer stratejilerde ayıklayacağız"
+  - Yanıt (Ham): "Bu kodda bizim için önemli olan, son gün 3 pozitif olması önceki 3 gün de negatif olması. Böylece koşul karşılanmış oluyor. Al sat işaretlerine bakmayın. Bunu filtre olarak kullanacağız."
+  - Görsel başlığı (görsel metni): "KRDMA.IS Closing Price & CMF Buy/Sell Signals (Last Day Signal: Buy)"; alt panel "KRDMA.IS CMF Oscillator".
+- Tanım (Ham ve YORUM):
+  1. Gösterge: CMF (para akışı osilatörü; görsel başlığı "CMF Oscillator", değer aralığı yaklaşık -0,4 ile +0,5; görsel, açıldı). Periyot yazılı değil.
+  2. Koşul: son 3 günün CMF değeri pozitif ve ondan önceki 3 günün CMF değeri negatif (Ham). YORUM: pozitif = CMF > 0; "önceki 3 gün" = son 3 günün hemen öncesindeki 3 gün (t-5, t-4, t-3; t son gün), yani iki bitişik üçlü pencere; Ham bunu açıklamaz.
+  3. Simetrik durum "sat" olarak listelenir (YORUM: son 3 gün negatif, önceki 3 gün pozitif); çıktı tablosu (sütunlar Stock ve Signal Type) 8 sembol içerir: 5 "Buy" (CEOEM, KRDMA, LIDFA, METUR, YONGA), 3 "Sell" (KRSTL, MPARK, MSGYO) (görsel metni).
+  4. Kullanım: al-sat sinyali değil, filtre. Son 3 gün para girişi olan hisseler diğer stratejilerle daraltılır (Ham).
+- Parametreler:
+
+| parametre | değer | kaynak |
+|---|---|---|
+| Son pencere | 3 gün CMF pozitif | Ham |
+| Önceki pencere | 3 gün CMF negatif | Ham |
+| Tarama günü | son gün | Ham |
+| CMF periyodu | yok | - |
+| Giriş, stop, hedef, çıkış | yok (filtre) | Ham |
+
+- Belirsiz kalanlar: CMF periyodu; "pozitif" ve "negatif" sınırının 0 olduğu; iki pencerenin bitişik olduğu; filtrenin birleştirileceği diğer stratejiler; sonuç.
+- Tansu'nun kanıtı: yok (tek KRDMA grafiği ve 8 sembollük çıktı, sonuç yok).
+- Günlük bedava veriyle uygulanabilir mi: evet (CMF günlük yüksek, düşük, kapanış ve hacimden hesaplanır). Periyot seçilmeden kural tam değildir.
+- Kaynak güveni: Ham birinci el; kural sözlü ve açık, periyot yok: orta. Hazırlık K.
+
+## 55. EMA dizilimi son gün taraması: kısa > orta > uzun (9-14-21, 5-10-21, 5-8-13, 5-8-13-21/34)
+
+- Kaynak: `tweet-ema-5-10-21-hizalama-tarama-1844833910817276371` (11.10.2024; Ham ve kod görseli, açıldı), `tweet-ema-9-14-21-dizilim-taramasi-1838243230472610284` (23.09.2024; Ham, çıktı görseli ve kod görseli), `tweet-ema-9-14-21-dizilim-taramasi-1838636729143533634` (24.09.2024; Ham ve kod görseli), `tweet-ema-5-8-13-21-ayari-1911869427274170527` (14.04.2025; yanıt zinciri, Ham), `tweet-ema-5-8-13-dizilimi-2000636236785209375` (15.12.2025; yanıt, Ham), `tweet-ema-5-8-13-dizilim-yon-2045521472530108518` (18.04.2026; Ham ve görsel metni). Hepsi Tansu'nun X gönderisidir (birinci el). Fiyatın EMA'ların üstünde olduğu ve RSI ile birleşen tarama ayrı bölümdedir (§56).
+- Tansu'nun ifadesi (verbatim): "BIST100 9-14-21 Günlük EMA Taraması" "Al sinyali veren hisseler: DEVA, DURDO, FROTO, GENIL, INVEO, KRDMD, OTKAR" (Ham, 11.10.2024). "9-14-21 günlük EMA taramasından çıkan hissseler." (Ham, 23.09.2024). "9-14-21 GÜN EMA Kesişimlerini kodlayalım." "Geliştirmeye açık" (Ham, 24.09.2024). "5>8>13" (Ham, 15.12.2025; @Pinescriptt'e yanıt, üst gönderi notta yok). "ema 5-8-13-21" ve ardından "ema 5-8-13-34" (Ham, 14.04.2025; @BorsaSeker'e yanıt, "bu soruyu siz daha önce 2 defa daha sordunuz cevapladım"). "trend is your friend." (Ham, 18.04.2026) ve betik çıktısı "YUKARI YÖNLÜ - Güçlü alım!" (görsel metni).
+- Tanım (kod, görsel, açıldı; YORUM işaretli yerler hariç): günlük kapanıştan EMA (`ewm(span=n, adjust=False)`), veri `yf.download(symbol, period="6mo", interval="1d")`, son bar `iloc[-1]`. Koşul: `EMA_a > EMA_b > EMA_c` (9-14-21 kodunda yorum satırı "Al sinyali: EMA9 > EMA14 > EMA21"). Kodlar yalnız son barın sıralamasına bakar; önceki bar ve taze kesişim aranmaz (kod başlıkta "kesişim" der, ama koşul dizilimdir). Çıktı hisse listesidir; giriş, stop, hedef, çıkış yok. THYAO çıktısında (görsel metni) fiyat 277,25 > EMA5 274,79 > EMA8 274,10 > EMA13 273,78 için "YUKARI YÖNLÜ - Güçlü alım!" etiketi çıkar (YORUM: etiketin koşulu fiyat > EMA5 > EMA8 > EMA13).
+- Parametreler:
+
+| parametre | değer | kaynak |
+|---|---|---|
+| EMA seti, tarama 1 | 9 / 14 / 21 | Ham ve kod, açıldı (BIST30, 28 sembol) |
+| EMA seti, tarama 2 | 5 / 10 / 21 | kod, açıldı (BIST100 listesi, yaklaşık 100 sembol; Ham başlığı 9-14-21 der) |
+| EMA seti, yanıtlar | 5 > 8 > 13; 5-8-13-21; 5-8-13-34 | Ham |
+| EMA tipi | üstel, span = n, adjust=False | kod, açıldı |
+| Veri penceresi | günlük, 6 ay | kod, açıldı |
+| Koşul | son bar: kısa > orta > uzun | kod, açıldı |
+
+- Belirsiz kalanlar: Tansu'nun ana seti hangisidir (9-14-21, 5-10-21, 5-8-13, 5-8-13-21 mi 5-8-13-34 mü; ikinci yanıt düzeltme mi ek mi belli değil); fiyatın EMA'ların üstünde olma şartı; taze kesişim şartı; RSI, hacim veya çıkış yok; evren (BIST30 mu BIST100 mü). İlgili: §4 (EMA5/8/13 dizilimi tarayıcı etiketi olarak), §58 (5 > 8 > 13 > 21 dizilimi RSI ve MACD ile).
+- Tansu'nun kanıtı: yok (liste, sonuç yok).
+- Günlük bedava veriyle uygulanabilir mi: evet (günlük kapanış, EMA). Kural eşiği veya geri test yok.
+- Kaynak güveni: kod ve çıktı birinci el; kural yalnız tarama koşulu, kanıt yok: orta. Hazırlık H.
+
+## 56. Kapanış EMA'ların üstünde + RSI(14) > 50 son gün taraması (EMA14/34/55 ve EMA5/14/34/55) ve CMF dönüşü varyantı; tavan günü uyarısı
+
+- Kaynak: iki EMA seti, aynı kural ailesi (YORUM: EMA5 sonradan eklenen sürümdür; RSI koşulu ve çıktı biçimi aynı). EMA14/34/55 sürümü: `tweet-ema-14-34-55-ustu-rsi-50-tarama-1845913799976800345` (14.10.2024; Ham; görsel yok), `tweet-ema-14-34-55-ustu-rsi50-gecis-1844069225851469851` (09.10.2024; Ham ve görsel, açıldı; TUREX örneği). EMA5/14/34/55 sürümü: `tweet-ema-ustu-kapanis-rsi-14-50-tarama-1842574480692150662` (05.10.2024; Ham, G1 açıldı, G2 görsel metni), `tweet-ema-5-14-34-55-ustunde-tarama-1847729477876666512` (19.10.2024; zincir, iki gönderi; Ham ve görsel metni), `tweet-ema-rsi14-cmf-obv50-gunluk-tarama-1848383646794731823` (21.10.2024; görsel metni), `tweet-ema-5-14-34-55-rsi-50-tarama-1852065846069465325` (31.10.2024; Ham ve görsel, açıldı), `tweet-ema-5-14-34-buy-signal-1898118783811698900` (07.03.2025; Ham ve görsel metni). CMF dönüşü varyantı: `tweet-ema-5-14-34-55-rsi-cmf-donus-1848806602553385447` (22.10.2024; Ham), `tweet-ema-rsi-cmf-donus-tarama-1851712038571249901` (30.10.2024; Ham; ETILR), `tweet-ema-rsi-cmf-donus-tarama-1851720332580966708` (30.10.2024; Ham, görsel metni; TSGYO), `tweet-ema-rsi-cmf-donus-tarama-1852063288533881329` (31.10.2024; Ham; GZNMI), `tweet-ema-rsi-cmf-kesisim-tarama-1847335598140358763` (18.10.2024; Ham, G1 açıldı, G2 ve G3 görsel metni: ARCLK, ARSAN). Hepsi Tansu'nun X gönderisidir (birinci el). EMA, RSI ve CMF taramasının çıktı listesinden başka içeriği olmayan tekrarları KURALLAR "Kural içermeyen notlar" listesindedir.
+- Tansu'nun ifadesi (verbatim):
+  - EMA14/34/55 (Ham, 09.10.2024): "Son kapanış EMA14, EMA34, EMA55'in üzerinde ve RSI(14) son gün 50'yi geçmiş olan hisseler: [GARAN, GENIL, INVEO, KGYO,MAGEN, MEPET, NUHCM, TUCLK, TUREX]". 14.10.2024 (Ham): aynı cümle, çıktı "INVEO, KGYO".
+  - EMA5/14/34/55 tanımı (Ham, 05.10.2024): "Koşul" "Son gün kapanışı EMA5-14-34-55 üzerinde olsun (Son gün ortalamaların en üstüne atıyor)" "RSI 14 son gün > 50 olsun". 19.10.2024 (Ham): "Son gün koşulları sağlayan hisseler:" (ICUGS, SANFM) "Siz anladınız onu" ve yanıt "Bu hisselerde rsı14 > 50 aynı zamanda." Çıktı satırı (görsel, açıldı; 31.10.2024): "Günlük analizde son gün fiyatın EMA5-EMA14-EMA34-EMA55'den büyük ve RSI14>50 olması kriterini sağladı." (liste: BMSTL, BORLS, DAGHL, EUHOL, FRIGO, GZNMI, INVEO, KGYO, PAGYO, PASEU, SANFM, TDGYO). "para giriş çıkışlarına bakarsanız yarın bu listeden bir şeyler çıkar." (Ham, 31.10.2024). "şu para girişi hayra alamet değil:)" (Ham, 07.03.2025; grafik: Kapanış Fiyatı, EMA5, EMA14, EMA34, AL Sinyali; sembol yok).
+  - CMF dönüşü (Ham, Tansu'nun alıntıladığı gönderi ve 22.10.2024): "ETILR Günlük analizde son gün fiyatın EMA5-EMA14-EMA34-EMA55'den büyük, RSI14>50 ve CMF son 3 gün pozitif, önceki 3 gün negatif kriterini sağladı." "Aşağıdaki sinyal geldi ama ETILR 'DEN UZAK DURUN!" "Tavana gitmiş etilr" "Yine de riskli ben işlem açmam" (Ham, 30.10.2024). "İşte bu önemli bir sinyal hocam. Buna bi bakın bence." (Ham, TSGYO). "Zaten tavan olmuş dikkat" (Ham, GZNMI). "Bence buradan bir tavan çıkar pazartesi yinede kontrollü gidin" (Ham, 18.10.2024).
+  - EMA5 x EMA13 varyantı (görsel, açıldı): "Günlük analizde EMA5 EMA13 EMA14 / RSI14-21 50 ve CMF Koşulu"; "EMA5 EMA13'ü yukarı kesti, RSI21 50'nin üzerinde ve CMF koşulu sağlandı". 21.10.2024 çıktısı (görsel metni): CMF dönüş koşulunu "sağlayan hiç bir hisse yok".
+- Tanım (Ham ve çıktı metni; yorum YORUM):
+  1. Temel tarama (T1): son işlem günü kapanışı EMA'ların hepsinin üstünde (EMA14, EMA34, EMA55; sonraki sürümde EMA5 de) ve RSI(14) son gün 50'nin üstünde. Görsel (açıldı; ölçüm): TUREX'te kapanış 94,60, EMA14 93,36, EMA34 91,43, EMA55 87,24; RSI son iki barda 50'nin altından yaklaşık 53'e çıkar. EMA14 > EMA34 > EMA55 sıralaması örnekte vardır; Ham bu sıralamayı şart koşmaz (YORUM). RSI için EMA14/34/55 sürümü "50'yi geçmiş" der (YORUM: önceki gün RSI ≤ 50, son gün > 50, yani yukarı kesişim); EMA5/14/34/55 sürümü "RSI14 > 50" der (düzey). Hangisinin esas olduğu yazılı değil.
+  2. CMF dönüşü (T2): T1 + CMF son 3 gün pozitif, önceki 3 gün negatif (CMF'nin eksiden artıya dönüşü; yeni sinyal, T1'den seyrek: 21.10.2024'te sıfır hisse, T1'de 5 sembol: INVEO, KGYO, MANAS, ULAS, ZRGYO). CMF koşulunun kuralı §54'tedir. "para giriş çıkışlarına" ifadesi bu CMF veya benzer bir akış göstergesi anlamına gelir (YORUM; Tansu hangi göstergeyi kastettiğini yazmaz).
+  3. EMA5 x EMA13 varyantı (T3): EMA5, EMA13'ü yukarı keser, RSI21 > 50, "CMF koşulu" (koşulun ayrıntısı yok). EMA ve RSI koşulunun dar sürümü §57'dedir.
+  4. Eleme ve tavan filtresi: Tansu sinyali otomatik almaz. ETILR için sinyal geldiği hâlde "UZAK DURUN!" der (neden yazılı değil; elle eleme). Kapanışı tavan olan hisseye girmez ("Yine de riskli ben işlem açmam"). GZNMI'de sinyal ve "Zaten tavan olmuş dikkat" aynı gündür (31.10, Ham). ETILR'de tavan sonradan oldu (30.10 yanıtı, Ham; sinyal 22.10); sinyal gününün tavan olduğu belli değil. YORUM: "sinyal günü tavan" okuması yalnız GZNMI'ye dayanır. YORUM: bu kişisel risk tercihidir; TASARIM §5.3 "Kapanışı tavan fiyatında olan gün (bir fiyat adımı toleransla) giriş yok." ile aynı sonucu verir.
+  5. 07.03.2025 grafiğinde yalnız EMA5/14/34 çizili (EMA55 yok), "AL Sinyali" işareti var; sinyal koşulu yazılı değil.
+- Parametreler:
+
+| parametre | değer | kaynak |
+|---|---|---|
+| EMA seti | 14 / 34 / 55 (09.10 ve 14.10.2024); 5 / 14 / 34 / 55 (05.10.2024 ve sonrası; 07.03.2025 grafiğinde 5 / 14 / 34) | Ham; görsel, açıldı |
+| Fiyat koşulu | kapanış > her EMA | Ham; görsel, açıldı |
+| RSI | periyot 14, eşik 50 (düzey veya yukarı kesişim: belirsiz) | Ham; görsel, açıldı |
+| CMF dönüşü | son 3 gün > 0, önceki 3 gün < 0 | Ham |
+| EMA kesişimi (T3) | EMA5, EMA13'ü yukarı keser; EMA14 de gösterilir; RSI21 > 50 (başlıkta RSI14-21 50) | görsel, açıldı |
+| CMF periyodu, sıfır eşiği | yok | - |
+| Zaman dilimi | günlük, son gün | Ham; görsel, açıldı |
+| Stop, hedef, çıkış | yok | - |
+
+- Belirsiz kalanlar: RSI için "geçmiş" kesişim mi düzey mi; CMF periyodu ve hesabı; para giriş çıkışı göstergesi; ETILR'yi eleme nedeni; T3'te "CMF koşulu" ve RSI14'ün de şart olup olmadığı (başlık "RSI14-21 50" der, mesaj yalnız RSI21'i söyler); Ham 05.10.2024'te EMA5'i sayar, aynı günün tarama çıktısı (görsel, açıldı) yalnız "EMA14, EMA34, EMA55" yazar (hangi kod çalıştı belli değil); EMA'ların kendi aralarındaki sıra; giriş, stop, hedef, çıkış. İlgili: §39, §40 (RSI 50 yukarı kesişimi), §23 (OBV teyidi), §55 (yalnız dizilim).
+- Tansu'nun kanıtı: yok. Tarama listeleri ve tahmin cümleleri ("bir tavan çıkar") var; sonuç ölçümü yok.
+- Günlük bedava veriyle uygulanabilir mi: evet (günlük OHLCV; EMA, RSI, CMF). Kural tarama düzeyindedir; çıkış yok.
+- Kaynak güveni: Ham ve görsel birinci el; T1 ve T2 koşulu tam, CMF periyodu ve RSI sınırı belirsiz: orta-düşük. Hazırlık K.
+
+## 57. EMA5 üstü EMA13 (RSI21 > 50) ve EMA5 üstü EMA14 (RSI14 > 50) sinyali ve taraması
+
+- Kaynak: `tweet-ema-5-13-rsi-21-50-sinyal-kodu-1842513105089114147` (05.10.2024 10:32; Ham ve üç kod görseli; G1 ve G3 açıldı), `tweet-ema-kesisim-rsi-50-tarama-1842517514552541286` (05.10.2024 10:49; Ham ve görsel metni). İkisi de Tansu'nun X gönderisidir (birinci el).
+- Tansu'nun ifadesi (verbatim): "ema5-13-21-34-55 fiyat grafiğine yazdırıldı." "Altta RSI21 > 50 ve RSI14>50 grafikleri oluşturuldu." "1. EMA5 > EMA13 ise ve RSI21 > 50 ise bu iyi bir sinyaldir." "2. EMA5 > EMA 14 ise ve RSI14 > 50 ise bu iyi bir sinyaldir." (Ham, 10:32; satırlar). "Koşul 1: EMA5, EMA13'ü yukarı kestiğinde ve RSI21, RSI50'nin üzerinde ise" "Koşul 2: EMA5, EMA14'ü yukarı kestiğinde ve RSI14, RSI50'nin üzerinde" ve "TARAMA SONUÇLARI: ASELS, ATAGY, BASCM, BORLS, BURCE, DAGI, ENSRI, GUBRF, SELGD, SEYKM, VAKBN" (Ham, 10:49). "EĞİTİM AMAÇLIDIR..." (Ham).
+- Tanım (YORUM): iki koşul çifti. Koşul 1: EMA5 üstü EMA13 ve RSI(21) > 50. Koşul 2: EMA5 üstü EMA14 ve RSI(14) > 50. İlk gönderi "EMA5 > EMA13 ise" (dizilim) der; 17 dakika sonraki gönderi "yukarı kestiğinde" (kesişim) der: kesişim sürümü sonraki ve daha dar tanımdır (YORUM: tarama son gün kesişimini arar). Kod görseli (açıldı): EMA'lar `ewm(span, adjust=False)`; RSI `pandas_ta.rsi(length=14)` ve `length=21`; `yf.download(period="3mo", interval="1d")`. Çizimde RSI 50 kesikli çizgi. Örnek grafikler: AKBNK (kapanış 54,35; EMA5 55,42 < EMA13 57,83; RSI'lar 50 altında, yani sinyal yok; görsel, açıldı) ve ASELS (kapanış 61,15; EMA5 59,09 > EMA13 58,84 > EMA14 58,81; görsel metni).
+- Parametreler:
+
+| parametre | değer | kaynak |
+|---|---|---|
+| EMA hızlı / yavaş | 5 / 13 (RSI21 ile), 5 / 14 (RSI14 ile) | Ham |
+| RSI periyodu ve eşik | 21 ve 14; eşik 50 | Ham; kod, açıldı |
+| Veri | günlük, 3 ay (yfinance) | kod, açıldı |
+| İlgili uzun EMA'lar (çizim) | 21, 34, 55 | kod, açıldı |
+
+- Belirsiz kalanlar: kesişim penceresi (yalnız son gün mü, son n gün mü); EMA21/34/55'in sinyaldeki rolü (yalnız çizim); EMA13 ile RSI21, EMA14 ile RSI14 eşleşmesinin nedeni; giriş, stop, hedef; sonuç. Benzer ama farklı tarama: §56 (fiyat tüm EMA'ların üstünde ve RSI14 > 50; EMA kesişimi aranmaz).
+- Tansu'nun kanıtı: yok (tarama listesi, sonuç yok).
+- Günlük bedava veriyle uygulanabilir mi: evet (günlük kapanış, EMA, RSI).
+- Kaynak güveni: kural cümleleri birinci el (Ham); eşik ve çıkış yok, kanıt yok: orta-düşük. Hazırlık K.
+
+## 58. EMA5 > EMA8 > EMA13 > EMA21 dizilimi + RSI düşen tepe çizgisi kırılımı + MACD sıfır üstü kesişim
+
+- Kaynak: `tweet-ema-dizilim-rsi-kirilim-macd-1911425114245124453` (13.04.2025; Ham ve görsel, açıldı). Tansu'nun X gönderisidir (birinci el). Dizilim §55'teki son gün dizilim taramasının dört EMA'lı biçimidir (YORUM); RSI ve MACD koşulları bu kayıtta eklenir.
+- Tansu'nun ifadesi (verbatim): "EMA5 > EMA8 >   EMA13 > EMA21" "RSI kırılımı 30   ÜSTÜNDEN geldi (60.29)" "MACD sinyali pozitif" "MACD konumu 0 üstü" "MACD kesişim noktası 0 üstü" ":)" "Mis" (Ham; satırlar, boşluklar Ham'daki gibi). Görsel panelleri (görsel, açıldı): EMA5/8/13/21 (mum grafiği); "RSI ve Trend Kırılımı" (RSI, "RSI Tepeleri", "Düşen Tepe Trend"); "MACD" (MACD, MACD Signal, MACD Histogram); "Hacim (Volume)".
+- Tanım (YORUM): beş koşulun birleşimi. (1) EMA5 > EMA8 > EMA13 > EMA21. (2) RSI panelinde son iki RSI tepesinden geçen düşen çizgi yukarı kırılır; 30 ÜSTÜNDEN = RSI kırılımdan önce aşırı satıma (30) inmemiştir, kırılım orta bölgeden gelir; RSI son değeri 60,29. Görselde çizgi iki RSI tepesini bağlar ve son bar çizginin üstündedir (görsel, açıldı; RSI ≈ 60, kesikli 30 ve 70 çizgileriyle uyumlu). (3) MACD çizgisi sinyalin üstünde. (4) MACD çizgisi sıfırın üstünde. (5) MACD ve sinyal kesişiminin gerçekleştiği nokta sıfırın üstündedir (güçlü bölgede oluşan al kesişimi). Görselde MACD ve sinyal son barlarda sıfırın üstündedir, histogram küçük pozitiftir (görsel, açıldı).
+- Parametreler:
+
+| parametre | değer | kaynak |
+|---|---|---|
+| EMA dizilimi | 5 > 8 > 13 > 21 | Ham; görsel, açıldı |
+| RSI düşen tepe çizgisi | iki tepe, kırılım | görsel, açıldı |
+| RSI son değeri | 60,29 | Ham |
+| RSI kırılım öncesi taban | 30 üstünde | Ham (YORUM: aşırı satım yok) |
+| MACD | sinyalin ve sıfırın üstünde; kesişim sıfır üstünde | Ham |
+| RSI ve MACD periyotları | yok | BELİRSİZ |
+
+- Belirsiz kalanlar: 30 ÜSTÜNDEN geldi ifadesinin anlamı; RSI tepelerinin seçimi (pivot genişliği); RSI ve MACD periyotları; hacim şartı (panel var, koşul yok); giriş, stop, hedef; sonuç. İlgili: §41 (RSI düşen trend çizgisi kırılımı), §9 (RSI uyumsuzluğu).
+- Tansu'nun kanıtı: yok (tek örnek, sembol yok, sonuç yok).
+- Günlük bedava veriyle uygulanabilir mi: dizilim, RSI ve MACD evet; RSI üzerinde trend çizgisi kırılımı kısmen (çizgi kuralı yok).
+- Kaynak güveni: koşul listesi birinci el (Ham); eşikler ve çizgi yöntemi yok: orta-düşük. Hazırlık K.
+
+## 59. EMA5 ve EMA10'un EMA20'yi birlikte kesmesi + MACD + OBV artışı + RSI(14) 50 yukarı kesişimi (günlük AL taraması)
+
+- Kaynak: `tweet-ema-kesisim-macd-obv-rsi50-1840777067882787015` (30.09.2024; Ham ve iki görsel, G1 açıldı, G2 görsel metni; ilk sürüm), `tweet-ema-macd-rsi-obv-tarama-1847008515014922537` (17.10.2024; Ham ve iki görsel; G1 açıldı; iki gönderilik zincir), `tweet-ema-macd-rsi-obv-tarama-1847012312911057085` (17.10.2024; Ham, görsel metni), `tweet-ema-macd-rsi-obv-al-tarama-1851719680052072481` (30.10.2024; Ham, görsel metni). Aynı bot mesajı `tweet-ema-rsi14-cmf-obv50-gunluk-tarama-1848383646794731823` içinde de görünür (21.10.2024; §56). Hepsi Tansu'nun X gönderisidir (birinci el). YORUM: dört not aynı kuralın iki sürümüdür; MACD koşulu sürümlerde farklıdır (aşağıda).
+- Tansu'nun ifadesi (verbatim):
+  - 30.09.2024 (Ham; satırlar): "EMA5 ve EMA10, EMA20'yi anda anda kessin" "MACD 0'a çok yakın olsun" "OBV artsın" "RSI1450'yi yukarı kessin" "Sağlayan tek hisse ANELE ve TDGYO" "Hayırlı uğurlu olsun." "Parayı kazananın bi kahvesini içerim:)". Görsel başlığı: "TDGYO.IS İçin Alış Sinyalleri (EMA Kesişimi, MACD, RSI ve OBV)" (görsel, açıldı).
+  - 17.10.2024 (Ham; satırlar): "Son gün;" "EMA5 > EMA20" "EMA10 > EMA20" "EMA5 ve EMA10, EMA20'yi yukarı kesmiş" "MACD > MACD Sinyal Çizgisi:" "RSI14 > 50" "RSI14 önceki gün ≤ 50" "OBV (On Balance Volume) artışı: Son 5 günlük OBV değişimi pozitif". Yanıt: "P A R A  A K I Ş I N I  K O N T R O L  E D İ N" (Ham). "Aralarından sağlam bir kaçını seçip sayısını azaltacağım." (Ham).
+  - 30.10.2024 (Ham): "Aslolan para girişidir." "Para yoksa gerisine bakmaya gerek yok." Bot metni (görsel metni): "Günlük taramada son kapanış günü fiyatın EMA5'den büyük olup, EMA5-10-20 MACD RSI14-50 VE OBV50 koşullarını sağlayıp AL sinyali veren hisseler".
+- Tanım (Ham; yorum YORUM; YORUM: anda anda = aynı anda, RSI1450 = RSI14 ve 50):
+  1. Aynı gün EMA5 ve EMA10, EMA20'yi yukarı keser (EMA5 > EMA20, EMA10 > EMA20; Ham, 17.10.2024).
+  2. MACD: 30.09.2024 sürümünde MACD "0'a çok yakın" olmalıdır (eşik yok); 17.10.2024 sürümünde MACD > MACD sinyal çizgisidir (MACD ayarı yazılı değil; YORUM: standart 12-26-9). İki sürüm birbirini dışlayabilir; hangisinin esas olduğu yazılı değil.
+  3. RSI14 > 50 ve önceki gün RSI14 ≤ 50 (50'nin yukarı kesilişi; §39 ve §40'taki RSI 50 kesişimiyle aynı eleman).
+  4. OBV artıyor: 17.10.2024 sürümünde son 5 günlük OBV değişimi pozitif (30.09.2024'te pencere yok; §23'teki OBV trend onayıyla ilgili).
+  5. Bot metni kapanışın EMA5'in üstünde olmasını da ister (görsel metni). Para girişi (OBV) Tansu'nun ilk bakılacak koşuludur: "Para yoksa gerisine bakmaya gerek yok" (Ham); bu, koşul sırası değil bakış önceliğidir (YORUM).
+  6. Görsel (TDGYO, 30.09.2024, açıldı): üç EMA çizgisi son barlarda iç içe (fiyat 10-11 TL), RSI14 son barda yaklaşık 53 ve 50'yi yukarı keser, MACD ve sinyal sıfırın hemen altında (yaklaşık -0,05), OBV yükselir. ANELE grafiği aynı şablondadır (görsel metni). Bot mesajlarının saatleri görselde 17:17 ile 22:29 arasındadır (görsel metni); giriş fiyatı ve günü yazılı değil.
+- Parametreler:
+
+| parametre | değer | kaynak |
+|---|---|---|
+| EMA | 5, 10, 20 (kapanış); EMA5 ve EMA10, EMA20'yi aynı anda yukarı keser | Ham; görsel, açıldı |
+| RSI | periyot 14; eşik 50; önceki gün ≤ 50 | Ham; görsel, açıldı |
+| OBV | son 5 günlük değişim > 0 (30.09.2024: "artsın", pencere yok) | Ham |
+| MACD | 30.09: sıfıra yakın; 17.10: MACD > sinyal; ayar ve eşik yok | Ham |
+| Kapanış | EMA5'in üstünde | görsel metni |
+| Stop, hedef, çıkış | yok | - |
+
+- Belirsiz kalanlar: "aynı anda" kesişimin aynı bar mı n bar penceresi mi olduğu; "yukarı kesmiş" kesişimin son günde mi yoksa son birkaç günde mi olduğu; "0'a çok yakın" eşiği; MACD'nin iki tanımı; bot metnindeki "OBV50" etiketinin Ham'daki "5 günlük OBV değişimi" ile ilişkisi (YORUM: 50 bir eşik ya da OBV ortalaması olabilir; kod görülmedi); "sayısını azaltacağım" cümlesi sinyal sayısını mı strateji sayısını mı azaltır (YORUM: "her strateji için" dediği için strateji sayısı); giriş, stop, hedef, çıkış. Tarama "tek hisse ANELE ve TDGYO" (30.09.2024) ve en çok üç hisse verir: koşulların birlikte çok sıkı olduğunun göstergesi (YORUM).
+- Tansu'nun kanıtı: yok. Yalnız tarama çıktıları: 30.09.2024 ANELE, TDGYO; 17.10.2024 EGSER, INVEO, KGYO; 21.10.2024 INVEO, KGYO; 30.10.2024 INVEO, KGYO, MERIT. Sonrasında sonuç ölçümü yok; "Parayı kazananın bi kahvesini içerim" bir vaattir, kanıt değil.
+- Günlük bedava veriyle uygulanabilir mi: evet (günlük OHLCV; EMA, MACD, RSI ve OBV hesaplanır). Koşul listesi tamdır; çıkış yoktur.
+- Kaynak güveni: Ham ve görsel birinci el; koşul listesi tam; MACD ve OBV50 belirsiz, çıkış yok: orta. Hazırlık K.
+
+## 60. EMA5 ve EMA5'in EMA10'u kesişimi + CCI(20) ±100 (THYAO kodu)
+
+- Kaynak: `tweet-ema-5-10-kesisim-cci-20-seviyeleri-1760742464309350866` (22.02.2024; Ham ve üç kod görseli; G1 ve G3 açıldı). Tansu'nun X gönderisidir (birinci el). Aynı gün BRSAN için EMA'nın EMA'sı ayrışma uyarısı §34'te kısa kayıttır.
+- Tansu'nun ifadesi (verbatim): "#THYAO'da neler oluyor" "Kodlayalım" (Ham; iki satır). Kod yorumları (görsel, açıldı): "EMA'nın kendi 10 günlük EMA'sı", "Kesişim noktalarını ve sinyalleri belirle", "Aşırı alım seviyesi" (100), "Aşırı satım seviyesi" (-100).
+- Tanım (kod, görsel, açıldı): `ema1` = fiyatın 5 günlük EMA'sı (`alpha = 2/(n+1)`, `adjust=False`). `ema2` = `ema1`'in 10 günlük EMA'sı (fiyatın EMA10'u değil). `al = 1` eğer `ema1 > ema2` ve önceki barda `ema1 <= ema2` (yukarı kesişim). `sat = 1` eğer `ema1 < ema2` ve önceki barda `ema1 >= ema2` (aşağı kesişim). CCI: tipik fiyat `TP = (High + Low + Close)/3`; `CCI = (TP - SMA20(TP)) / (0,015 × ortalama sapma)`, pencere 20; `CCI_EMA20` = CCI'nın EMA'sı (span 20). Grafikte ±100 yatay çizgi. Bu iki parça ayrı hücrelerdir; CCI ile EMA kesişimini bağlayan bir giriş koşulu yoktur.
+- Parametreler:
+
+| parametre | değer | kaynak |
+|---|---|---|
+| ema1 | EMA5 (fiyat) | kod, açıldı |
+| ema2 | EMA10 (ema1 üzerinde) | kod, açıldı |
+| CCI pencere | 20; sabit 0,015 | kod, açıldı |
+| CCI seviyeleri | +100 aşırı alım, -100 aşırı satım | kod, açıldı |
+| CCI yumuşatma | EMA20 (span 20) | kod, açıldı |
+
+- Belirsiz kalanlar: CCI'nın al/sat kararındaki rolü (filtre mi, çıkış mı); ±100 çizgisinin geçiş yönü; çıkış, stop, hedef; sonuç. Kod görselleri iki ayrı parçadır (G1, G3).
+- Tansu'nun kanıtı: yok (tek hisse, grafik, sonuç yok).
+- Günlük bedava veriyle uygulanabilir mi: evet (OHLC günlük).
+- Kaynak güveni: kod birinci el; kural yok, güven düşük. Hazırlık K.
+
+## 61. Momentum teyit listesi: EMA, RSI 50, MACD, ADX ve hacim ile düşüş ve dönüş teyidi (AGROT, BYDNR)
+
+- Kaynak: `tweet-ema-rsi-macd-adx-dusus-teyidi-1778359964634915038` (11.04.2024; Ham, iki gönderilik zincir; G1 açıldı), `tweet-ema-rsi-macd-hacim-zayif-teyit-1911423210484023697` (13.04.2025; Ham, görsel açıldı). İkisi de Tansu'nun X gönderisidir (birinci el). Birinci notun Ham metni iki gönderide de yarım kalır (arşiv kesmesi: "Ayrıca 5 günlük ve", "YTD").
+- Tansu'nun ifadesi (verbatim): AGROT: "ilk bakışta hisse yatay bir piyasaya girmiş gibi görünüyor. 20 günlük EMA (15.64) destek olarak çalışmış. Soru, orayı kıracak mı kırmayacak mı? Bana kalırsa aşağıya kırmak üzere. Hisse momentum kaybediyor. RSI'50'nin altına düştü düşecek."; "20 günlük üssel hareketli ortalamaları da sinyali vermiş. para girişinde de bir düşüş gözlemleniyor aynı şekilde MACD-AS de yönünü aşağıya çevirmiş. ADX de aşağı trendin kuvvetlendiği sinyalini vermiş." (Ham). BYDNR: "EMA'lar (5-8-13-21) sıralı ve fiyat EMA'ların altında veya tam dibinde"; "Her yükseliş denemesi EMA21 (kırmızı) tarafından aşağı itiliyor"; "RSI düşen bir kanal çizgisi ile kırılmaya çalışmış ancak," "Kırılım yeni olmuş, teyidi zayıf. RSI seviyesi hala 50'nin altında"; "MACD çizgisi hâlâ sıfırın altında. Negatif bölgede MACD-Sinyal kesişimi zayıf sinyaldir."; "RSI kırılımına eşlik eden belirgin bir hacim artışı yok." "Güçlü dönüşler genellikle artan hacimle gelir."; "İlk sıçrama değil, ikinci teyit dalgası yatırım için daha güvenlidir."; "Stop-loss seviyesi net belirlenmeli" (Ham).
+- Tanım (Ham; yorum YORUM): iki yönlü teyit listesi. Düşüş teyidi (AGROT): EMA20 destek kırılımı (fiyat EMA20'nin altına kapanır); RSI 50'nin altına iner; kısa EMA (5 günlük) ve EMA20 sinyali; para girişi azalır (gösterge adı yok, YORUM: OBV ya da CMF); MACD (histogram ya da sinyal) aşağı döner; ADX aşağı trendin güçlendiğini gösterir. Dönüş teyidi (BYDNR, düşen trendden dönüş): fiyat EMA5/8/13/21 kümesinin üstüne çıkar (EMA21 direnç olmaktan çıkar); RSI düşen tepe çizgisini kırar ve 50'nin üstüne geçer; MACD sıfırın üstüne geçer, histogram güçlenir; RSI kırılımına hacim artışı eşlik eder. Eksik teyit = erken giriş riski; Tansu bekleme ve "ikinci teyit dalgası" ister, stop net belirlenmeli der. Bu bir kontrol listesidir; kaç şartın yeteceği yazılı değil.
+- Parametreler:
+
+| parametre | değer | kaynak |
+|---|---|---|
+| EMA | 20 (AGROT; 15,64 örnek değer); 5-8-13-21 (BYDNR) | Ham; görsel, açıldı (BYDNR lejantı) |
+| RSI | eşik 50; düşen tepe trend çizgisi kırılımı | Ham; görsel, açıldı |
+| MACD | sıfır çizgisi; MACD-sinyal kesişimi | Ham; görsel, açıldı |
+| ADX | eşik yok (Ham: "aşağı trendin kuvvetlendiği") | Ham |
+| Hacim | RSI kırılımında artış; eşik yok | Ham |
+| Periyotlar (RSI, MACD, ADX), stop, hedef | yok | - |
+
+- Belirsiz kalanlar: "para girişi" göstergesi; kaç teyidin yeterli olduğu; "RSI kırılımı" için ölçü; hacim artışı eşiği; AGROT'ta 5 günlük EMA'nın hangi çizgiyle kesiştiği (Ham yarım); stop ve hedef.
+- Tansu'nun kanıtı: yok (iki seçilmiş grafik, sonuç yok). BYDNR gönderisi yapılandırılmış, yapay zekâ yardımlı gibi görünen bir yorumdur (#Python etiketi, emojili başlıklar; YORUM).
+- Günlük bedava veriyle uygulanabilir mi: evet (EMA, RSI, MACD, ADX, hacim günlük OHLCV'dendir); trend çizgisi ve eşikler tanımsız olduğu için kural yarım. İlgili: §39 (RSI 50 + OBV), §43 (trend filtresi).
+- Kaynak güveni: Ham ve görsel birinci el; kural sözlü, eşiksiz: düşük. Hazırlık X.
+
+## 62. EMA sıkışması sonrası hacimli kapanışla al: yükselen destek teması, PSAR, MACD eğimi ve trend çizgisi kırılımı teyitleri
+
+- Kaynak: `tweet-ema-sikismasi-hacimli-kapanis-al-1953221966678376915` (06.08.2025; Ham, görsel açıldı: AKSUE), `tweet-ema-squeeze-downtrend-break-checklist-1953173142861414759` (06.08.2025; Ham, görsel açıldı, görselde metin yok), `tweet-ema-sikisma-psar-trend-temas-hacim-1956041277096546504` (14.08.2025; Ham, görsel açıldı), `tweet-ema-sikisma-yukselen-destek-1957935566827221201` (19.08.2025; Ham, görsel açıldı: FRIGO), `tweet-ema-sikisma-macd-histogram-egim-1957958199425818842` (20.08.2025; Ham, görsel açıldı), `tweet-ema-sikisma-trend-kirilim-sar-1982687024344949140` (27.10.2025; Ham, görsel açıldı). Hepsi Tansu'nun X gönderisidir (birinci el). Sıkışma dedektörü: §1; EMA50/100/200 sıkışma örneği: §25; BULL/BEAR/CONFLICT sayacı: §2.
+- Tansu'nun ifadesi (verbatim): "Al strateji, ema sıkışması sonrası fiyat hacim ile ema'ların üzerinde kapansın, sonra otur izle...Buradaki detay, sıkışmayı erken yakalarsan erken pozisyon alırsın. Bazen sıkışma günler sürer. Artık yakalama şansın tarama kabiliyetinle doğru orantılıdır." (Ham, 06.08.2025). "Bu yapıyı bulun" "EMA'lar sıkışsın" "PSAR'lar fiyat altına insin" "Yükselen trende temas edip tepki alsın" "Hacim artsın" "Falan filan" (Ham, 14.08.2025; satırlar). "üssel ortalamalar sıkışmış trend yukarı kırılmış psarlar neredeyse olduğu yerde" (Ham, 27.10.2025). "EMA sıkışması şahane düşeni kırmış hacim artmış stoc güzel kesmiş trend güşlenmiş momentum artmış vs vs" (Ham, 06.08.2025; "emin olmamakla ve teknik detaya bakmamakla beraber" ön sözüyle). "EMA sıkışması da var yükselen trendden destek alacak mı göreceğiz, MACD olumsuz." (Ham, 19.08.2025). "yükselen desteğine derede ise temas etmek üzere ema sıkışmış histo eğimi artmaya başlamış 0 altında" (Ham, 20.08.2025). Görsel başlıkları (görsel, açıldı): "Son 10 günde BAŞLAYAN sıkışma: 2025-08-12 → 2025-08-19 | Çekirdek: 6 bar | Toplam: 126 bar (+/- 120/35)" (FRIGO); "En Uzun EMA Sıkışması ve Trendline (2025-10-23)" ve "Kapanış: 17.04 | Trendline: 17.04"; "Yükselen Destek Teması - İlk Temas: 2025-06-19, Son Temas: 2025-07-31" ve "Son Gün Fiyatı: 18.84 | Trend Çizgisi Son Gün Değeri: 18.21" (AKSUE).
+- Tanım (Ham; yorum YORUM): yapı üç katmandır. (1) Sıkışma: kısa-orta-uzun EMA'lar birbirine yaklaşır (örneklerde EMA50/100/200; FRIGO'da EMA50/100); tarama "Son 10 günde BAŞLAYAN sıkışma" ve "En Uzun EMA Sıkışması" gibi çıktılar verir (görsel başlıkları). (2) Giriş ("Al strateji"): sıkışma sonrası fiyat hacimle birlikte EMA'ların üstünde kapanır; sonra pozisyon tutulur ("otur izle"; çıkış yazılı değil). Erken yakalama erken giriş demektir; sıkışma günlerce sürebilir. (3) Teyitler (kontrol listesi, kaç tanesi şart olduğu yok): SAR'lar (SAR, Fast SAR, Slow SAR) fiyatın altına iner ya da kırılımda yerinde durur; fiyat yükselen trend çizgisine temas edip tepki alır ("Son Temas" işareti); hacim artar; MACD histogram eğimi artar (sıfırın altında bile); düşen trend çizgisi hacimle kırılır, stokastik yukarı keser, momentum artar. Uyarı: "MACD olumsuz" (FRIGO) bekleme nedenidir; momentum squeeze negatif ve büyüyorsa bull aksiyon yoktur (§2, `tweet-ema-sikisma-momentum-conflict-2045457969215631398`). Tansu hiçbir gönderide sonuç ya da hedef vermez.
+- Parametreler:
+
+| parametre | değer | kaynak |
+|---|---|---|
+| EMA seti | 50/100/200 (AKSUE, PSAR ve trend kırılımı örnekleri); 50/100 (FRIGO, MACD örnekleri) | görsel, açıldı |
+| Sıkışma taraması | son 10 gün içinde başlayan; çekirdek 6 bar; toplam 126 bar; "(+/- 120/35)" anlamı yok | görsel, açıldı |
+| SAR | SAR, Fast SAR, Slow SAR (AF ayarı yok) | görsel, açıldı |
+| Hacim | hacim artışı; Volume EMA 20 çizgisi | Ham; görsel, açıldı |
+| Sıkışma eşiği, hacim eşiği, temas toleransı | yok | - |
+| Stop, hedef, çıkış | yok | - |
+
+- Belirsiz kalanlar: sıkışma ölçüsü ve eşiği (§1 ve KURALLAR §3'teki ratio formülü ile eşleşip eşleşmediği); "hacimle" kaç kat; "üzerinde kapansın" hangi EMA'ların hepsi; teyitlerden kaçı gerekli; SAR ayarları; trend çizgisi tanımı (A §12); "(+/- 120/35)" ve "Çekirdek" anlamı; 27.10.2025 örneğinde kapanış çizgi değerine eşittir (17,04 = 17,04), "yukarı kırılmış" sınırdadır. Çıkış, stop, hedef yok.
+- Tansu'nun kanıtı: yok. Seçilmiş örnek grafikleri; AKSUE'de sıkışmadan sonra fiyat 14'ten 18-20 bandına çıkmıştır (görsel, açıldı; sonuç ölçülmemiş). Kural yeniden üretilebilir bir sistem değildir.
+- Günlük bedava veriyle uygulanabilir mi: evet (EMA, SAR, MACD, hacim günlük OHLCV'dendir). Giriş cümlesi kodlanabilir, eşikler varsayım gerektirir; trend çizgisi ve stokastik tanımsızdır.
+- Kaynak güveni: Ham ve görsel birinci el; kural sözlü, eşiksiz, çıkışsız: orta-düşük. Hazırlık K.
+
+## 63. EMA12'nin EMA144 ve EMA169 tünelini yukarı kesmesi: giriş taraması ve EMA13 > 144 > 169 dizilim taraması
+
+- Kaynak: `tweet-ema12-144-169-tunel-kesisim-1783135314036376019` (24.04.2024; Ham), `tweet-ema12-ema144-169-yukari-kesisim-tarama-1839566564107919502` (27.09.2024; Ham, alıntılanan bot gönderisi), `tweet-ema13-144-169-dizilim-tarama-1845923939736080720` (14.10.2024; Ham, @idealborsa'ya yanıt; üst gönderi notta yok). Hepsi Tansu'nun X gönderisidir (birinci el; görsel yok). Aynı EMA seti: §34 (12-144-169 optimizasyon sorusu, Vegas tüneli DOAŞ geri testi).
+- Tansu'nun ifadesi (verbatim): "Yeni bir strateji yapalım mı :) Kısa vadeli trade için, 12EMA'nın , 144EMA ve 169EMA'yı (Bu ikisi bir tünel oluşturur) yukarı kesmesi ile güzel fırsatlar yakalanabilir. Python, Matrix ve Tradingview kodlarını yazalım haydi :)" (Ham, 24.04.2024). Tarama (alıntılanan gönderi): "12 günlük EMA'nın 144 ve 169 günlük EMA'yı yeni yukarı kestiği hisseler:" EGEPO ve "Bakın derim :)"; Tansu'nun yorumu: "Senide mi yakaladık ya;)" (Ham, 27.09.2024). "Çok basit bir stratejisi var" "ema13 >ema144>ema169" "Bu tabi her hisse için optimize olursa çok daha iyi giriş çıkış noktaları verir." "Tarama için yukarıdaki ideal." "Bununla tavan hisseler bulduk." (Ham, 14.10.2024; satırlar).
+- Tanım (Ham; yorum YORUM): günlük barda iki tarama. T1 (giriş sinyali): EMA12, hem EMA144'ü hem EMA169'u yeni yukarı keser ("yeni" = son gün, YORUM); EMA144 ve EMA169 yakın iki çizgidir (tünel). T2 (durum taraması): EMA13 > EMA144 > EMA169, yani kısa EMA tünelin üstünde ve tünel sıralıdır; kesişim değil dizilimdir. Tansu T2'yi tarama için "ideal" sayar ve optimize edilirse giriş ve çıkış noktalarının daha iyi olacağını söyler. Çıkış kuralı yok. Hisse bazlı optimizasyon bu notlarda hedeflenir (§34, E K29 ve E K20 ile birlikte okunur; karar Levent'te bekliyor).
+- Parametreler:
+
+| parametre | değer | kaynak |
+|---|---|---|
+| EMA seti (T1) | 12, 144, 169 (günlük) | Ham |
+| EMA seti (T2) | 13, 144, 169 | Ham |
+| Kesişim | EMA12 ↑ EMA144 ve EMA12 ↑ EMA169; "yeni" | Ham (yeniliğin penceresi: YORUM) |
+| Zaman çerçevesi | günlük ("12 günlük EMA"); "Kısa vadeli trade" | Ham |
+| Stop, hedef, çıkış | yok | - |
+
+- Belirsiz kalanlar: EMA12 ile EMA13 farkı (iki gönderi iki farklı kısa EMA söyler; biri yazım farkı olabilir, YORUM); kesişimin her iki EMA'yı aynı günde mi kesmesi; "yeni" penceresi; çıkış, stop ve hedef; "güzel fırsatlar" ölçülmemiş. Tansu'nun kodu (Python, Matrix, TradingView) notlarda yok.
+- Tansu'nun kanıtı: yok (EGEPO örneği, "tavan hisseler bulduk" cümlesi; sonuç ölçümü yok). Karşı kanıt aynı sette: §34'e göre DOAŞ 2022-2024'te 12-144-169 stratejisi al-tutu geçemedi (Ham; tek hisse).
+- Günlük bedava veriyle uygulanabilir mi: evet (günlük kapanıştan EMA; 169 günlük geçmiş gerekir). Çıkış olmadığı için kural giriş düzeyindedir.
+- Kaynak güveni: Ham birinci el; giriş koşulu net, çıkış ve parametre onayı yok: orta-düşük. Hazırlık K.
