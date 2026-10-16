@@ -14,7 +14,7 @@ Uyarı 2: `T-atr-risk-butcesi-position-sizing-stop-loss` için `assets` klasör�
 
 Uyarı 3: Notlardaki "Cevo katkısı", "Cevo düzeltmesi", test fixture, state machine ve "kanonik" bölümleri Tansu'ya ait değil. Bunları Tansu ifadesi olarak kullanma.
 
-Uyarı 4: 05.10 ön denemesi "4 ATR hedef" ve "kapanış EMA50 altı bozulma" kullandı; bu kaynaklarda ikisi de yok. Tansu'nun 2 ATR stopu var. Güncel karar: hedef yok, gün sonu stopu SMA250 (YORUM); sahip TASARIM §5.5, KURALLAR §1 madde 4. Aşağıdaki "4 ATR hedef" ve "EMA50" anmaları bu eski ön denemeyi gösterir. (bilet 04, 14.10)
+Uyarı 4: 05.10 ön denemesi "4 ATR hedef" ve "kapanış EMA50 altı bozulma" kullandı; bu kaynaklarda ikisi de yok. Tansu'nun 2 ATR stopu var. Güncel karar: varsayılan kuralda hedef yok (EMA ailesinin hedefi varyantlardadır, KURALLAR §3), gün sonu stopu SMA250 (YORUM); sahip TASARIM §5.5, KURALLAR §1 madde 4. Aşağıdaki "4 ATR hedef" ve "EMA50" anmaları bu eski ön denemeyi gösterir. (bilet 04, 14.10)
 
 ---
 
@@ -139,6 +139,7 @@ Uyarı 4: 05.10 ön denemesi "4 ATR hedef" ve "kapanış EMA50 altı bozulma" ku
 - Tansu'nun kanıtı: G-125 grafiği; seçilmiş, olumlu yönetim örneği. Fiyat çıkış oklarından sonra düşer. Fiyat/dolum etiketi yok.
 - Bedava günlük veri: kapanış ve önceki Low hesabı yapılabilir; aktivasyonun fiyat alanı, ATR zamanı ve dolum ayrıntıları açık değildir.
 - Kaynak güveni: Düşük-orta. Aktivasyon formülü Ham'da var (iki biçim); fiyat alanı ve dolum yok.
+- Modül 1 çıkış paketi: KURALLAR §3.
 - Ek kaynaklar (X arşivi, 16.10):
   - `tweet-atr-iz-suren-stop-1933510083163406784` — ATR ile iz süren stop kullanma tavsiyesi, sonuç yorumu olarak: "Atr ile iz süren stop koymazsan bugünkü gibi mal gibi malda kalırsın." (Ham). Çarpan, periyot ve güncelleme kuralı yok; tekrar.
   - `tweet-atr-iz-suren-stop-1960955617868210398` — ATR tabanlı iz süren stopun gerekçesi ve sınırları: sabit yüzde yerine volatiliteye göre stop; dezavantajlar: geç stop, düşük hacimli hissede yanlış sinyal, ATR periyodunu anlama gereği. "Burada ATR tabanlı iz süren stop yöntemi devreye girer." (Ham). Sayı, çarpan ve periyot yok.
@@ -157,7 +158,7 @@ Uyarı 4: 05.10 ön denemesi "4 ATR hedef" ve "kapanış EMA50 altı bozulma" ku
   2. TP1: "%10" (anlamı belirsiz, aşağıda).
   3. TP2 (ikinci satış): ayrıntıları belirtilmemiş.
   4. Fiyat ≥ giriş + 1,5 ATR: trailing aktif (K4).
-   5. Aktivasyon geçildikten sonraki barlardan ilk `Close[t] < Low[t−1]` kapanışında %50 satış sinyali oluşur (Ham, tweet-statik-dinamik-iz-suren-stop-atr:20); kısmi satışın dolumu YORUM'dur; TASARIM kısmi kârı ve iz süren stopu erteledi (TASARIM 5.5, "İz süren stop ve kısmi kâr" maddesi, :373).
+   5. Aktivasyon geçildikten sonraki barlardan ilk `Close[t] < Low[t−1]` kapanışında %50 satış sinyali oluşur (Ham, tweet-statik-dinamik-iz-suren-stop-atr:20); kısmi satışın dolumu YORUM'dur (TASARIM 5.3); EMA ailesinin varyantları bu satışı dener (KURALLAR §3, dip varyantı; TASARIM 5.5, iz süren stop ve kısmi kâr maddesi).
   6. 2 ATR emergency stop: kalan tamamını kapat (girişten itibaren aktif, YORUM).
 - Parametreler:
 
@@ -177,6 +178,7 @@ Uyarı 4: 05.10 ön denemesi "4 ATR hedef" ve "kapanış EMA50 altı bozulma" ku
 - Tansu'nun kanıtı: Tek seçilmiş grafik. Backtest yok, dolum yok, tam-çıkış kıyaslaması yok.
 - Bedava günlük veri: Evet (Low[t−1], Close, ATR). Önceki gün dibi günlük mumdan hesaplanır.
 - Kaynak güveni: Düşük. Yalnız Ham metni (TP rakamı ve formül yok) ve okunmayan grafik. TP1/TP2 ve %50 kimlikleri çözülmeden uygulanamaz.
+- Modül 1 çıkış paketi: KURALLAR §3.
 - RSI 30 girişi ve iki aşamalı çıkış (`tweet-rsi30-giris-iki-asamali-cikis`; Ham; Ham'da yazar yok; grafik notta yok; bilet 04, 14.10): giriş: RSI(14) 30'un altından yukarı kesip üzerinde kapanış yapar. Kâr alma: RSI(14) 70'in üzerindeyken 70'in altında kapanırsa (RSI 70 reddi) pozisyonun %50'si satılır; kalan %50, bir önceki günün low'unun altında kapanışta satılır ve işlem biter. Tansu'nun cümlesi: "Üst paneldeki mumlar sırası ile giriş noktası, trailling noktası, ilk %50 kar aldığımız RSI70 reddi ve ikinci %50 kar aldığımız önceki mumun en düşüğünün altında kapanış." Parametre: RSI(14), 30, 70, %50 + %50 (Ham). Belirsiz: başlangıç ("sıkı") stop yok; "risk/ödül hedefi" ile "SMA 50 / RSI 50 dirençleri" ilişkisi belli değil; trailing noktası tanımsız; backtest yok. K5 ile fark: K5'te önceki gün dibi altı kapanış ilk %50'yi satar ve kalanı 2 ATR acil stop kapatır; bu notta aynı kapanış kalan %50'yi (tam çıkışı) satar, ilk %50'yi RSI 70 reddi satar. İkisi ayrı Tansu notudur; çözülmedi, K5 değişmedi.
 - Ek kaynaklar (X arşivi, 16.10):
   - `tweet-atr-stop-hedef-iki-kademeli-yari-satis-1989777185264066973` — İki koşullu yarım satış (K1, K2) çıktısı: K1 ile pozisyonun %50'si satıldı (2025-07-07, 182.50, +%10.61), K2 ile kalanın %50'si satıldı (2025-08-20, 196.10, +%18.85), kalan %25 (görsel, açıldı). Grafikte "HEDEF: 173.49 (1.5 ATR)", "STOP: 153.69", "ATR: 5.66" etiketleri okunur. K1 ve K2 koşulları yazılı değil. "Sırf grafiklere bakmamak için, tembelliğimden, şöyle bir sistem yazıyorum." (Ham) Parametre: hedef etiketi = giriş + 1.5 ATR ("HEDEF: 173.49 (1.5 ATR)") (görsel, açıldı); stop = giriş − 2 ATR (hesap, YORUM: 173.49 − 1.5 × 5.66 = 165.00; 153.69 + 2 × 5.66 = 165.01; 182.50 / 165.00 = %10.61 ile tutarlı); kısmi satış = %50 + kalanın %50'si, kalan %25 (görsel, açıldı).
@@ -448,6 +450,7 @@ Uyarı 4: 05.10 ön denemesi "4 ATR hedef" ve "kapanış EMA50 altı bozulma" ku
 - Tansu'nun kanıtı: Günlük kayıt tek hisse, geriye dönük, seçilmiş örnektir (çıkış %24.58; %50 satışın toplam getiriye etkisi yazılmaz). YAPRK tablosu yalnız giriş günü planıdır; sonuç yok. Backtest yok.
 - Bedava günlük veri: Evet. Günlük OHLC ve ATR(14) yeter. Seviye için High, stop için Low kullanmak YORUM'dur.
 - Kaynak güveni: Orta-yüksek. Tablo kuralları görselde net ve birinci eldir. Başlangıç stop formülü ve n=1, n=2 farkı YORUM'dur. 13 EMA yazısı kavramsaldır, sayı vermez. Hazırlık K.
+- Modül 1 çıkış paketi: KURALLAR §3.
 - Ek kaynaklar (X arşivi, 16.10):
   - `tweet-sabit-atr-kar-alma-iz-suren-stop-2022431570012106899` — ASTOR tablosu K25 merdivenini 1–20 ATR'ye uzatır (giriş 2026-02-03, 155.00 TL, ATR(14) 7.56 TL, başlangıç stop 143.66 = giriş − 1,5×ATR, hesap: 11.34); stop n ATR'de (n−2) ATR seviyesine çıkar; 3 ATR'de (2026-02-12, 183.40) stop 162.56 ve %50 satış, 4 ATR'de stop 170.11, durum AÇIK (%50) (görsel, açıldı). "Listelerde uygulanacak stop ve kar alma sistemi." (Ham). Başlangıç stop 1,5 ATR (hesap) ile K2'nin 2 ATR acil stopu: karar Levent'te bekliyor. Parametre: seviye sayısı = 1–20 ATR (görsel, açıldı); stop (n−2) ATR seviyesi, n=20 için 18 ATR (görsel, açıldı)
   - `tweet-sabit-atr-kar-alma-iz-suren-stop-2022434791292080331` — Tekrar: GZNMI için aynı 1–20 ATR tablosu (giriş 2026-02-12, 56.15 TL, ATR(14) 2.85 TL, başlangıç stop 51.88 = giriş − 1,5×ATR, hesap: 4.27 ≈ 4.275); 1 ATR 2026-02-13'te ulaşıldı (61.75), stop aynı, durum AÇIK (%100) (görsel, açıldı). Ham metin yok; alıntılanan gönderi: "Tavan İkna olduk mu" (Ham). Başlangıç stop 1,5 ATR ile K2 2 ATR: karar Levent'te bekliyor.
@@ -545,7 +548,7 @@ Uyarı 4: 05.10 ön denemesi "4 ATR hedef" ve "kapanış EMA50 altı bozulma" ku
 
 - Belirsiz kalanlar: Marj eşiği ve satış fiyatı. Liste seçim kuralı (Tansu "listede homojenlik yoktu" der). Tablodaki Günlük_% tanımı (Toplam_% / 3 değil: IPEKE 6.17 ve 4.86). Ham "-7" der; tabloda TUKAS Günlük_% −6.17 ve Toplam_% −15.46; "-7" hangi ölçüdür belli değil. Satış gün içi mi kapanışta mı.
 - Tansu'nun kanıtı: 12 hisselik tek tablo, 3 gün; seçilmiş dönem. DEY gerçekleşmiş tepedir (sonradan bilinir); tepede satış mümkün değildir, tablo "marjı görünce sat" kuralının sonucu değildir (YORUM).
-- Bedava günlük veri: Kısmen. Günlük High ve Close ile 3 günlük sonuç ve DEY hesaplanır. "Marjı görünce" satışı gün içi izleme ister. TASARIM §3 iz süren stop, kısmi kâr ve süre çıkışını ilk sürümün dışında tutar.
+- Bedava günlük veri: Kısmen. Günlük High ve Close ile 3 günlük sonuç ve DEY hesaplanır. "Marjı görünce" satışı gün içi izleme ister. TASARIM §3 süre çıkışını ilk sürümün dışında tutar; iz süren stop ve kısmi kâr yalnız EMA ailesinin varyantlarındadır (KURALLAR §3).
 - Kaynak güveni: Ham ve görsel birinci el; eşik yok: düşük-orta. Hazırlık K.
 
 ## K29. X arşivi kısa kayıtları (16.10)
@@ -627,6 +630,7 @@ Uyarı 4: 05.10 ön denemesi "4 ATR hedef" ve "kapanış EMA50 altı bozulma" ku
 - Tansu'nun kanıtı: Yok (ilke; sayı, örnek ve sonuç yok).
 - Bedava günlük veri: Kısmen. Giriş ve 1,5 R aktivasyonu günlük High ile, anında çıkış günlük Low ile yaklaşılır; aynı gün içinde aktivasyon ve geri dönüş olursa sıra günlük veride bilinmez (YORUM).
 - Kaynak güveni: Ham; ders anlatımı biçiminde, tek parametre (1,5 R). Kurulum tanımsız: düşük-orta. Hazırlık K.
+- Modül 1 çıkış paketi: KURALLAR §3.
 
 ## K33. Value-at-Risk (VaR): vadeye göre azami kayıp ve kayıp toleransına göre hedge
 
@@ -696,7 +700,7 @@ Eksik (Tansu söylemedi), hepsi YORUM ile doldurulmalı ve YORUM etiketli kalmal
 5. Birden fazla açık pozisyonda toplam risk sınırı ve korelasyon.
 6. TP1 "%10" kimliği; TP2 miktarı; %50 paydası.
 7. Trailing aktivasyonunun High/Close bazı, ATR zamanı ve dolum ayrıntıları (Chandelier k çarpanı kaynak kuralı değildir).
-8. Kâr hedefi için sabit ATR çarpanı yok; Ham'da "Hedef" diye yazılan giriş + 1,5 ATR eşiği iz süren moda geçiş eşiğidir (K4; statik ve dinamik biçim, Ham metni dinamiği önerir). "4 ATR hedef" 05.10 ön denemesinin kararıydı; kaldırıldı, güncel karar: hedef yok (TASARIM §5.5; bilet 04, 14.10).
+8. Kâr hedefi için sabit ATR çarpanı yok; Ham'da "Hedef" diye yazılan giriş + 1,5 ATR eşiği iz süren moda geçiş eşiğidir (K4; statik ve dinamik biçim, Ham metni dinamiği önerir). "4 ATR hedef" 05.10 ön denemesinin kararıydı; kaldırıldı, güncel karar: varsayılan kuralda hedef yok; EMA ailesinin hedefi varyantlardadır (TASARIM §5.5, KURALLAR §3; bilet 04, 14.10).
 9. EMA50 çıkışı kaynak kuralı değildir (05.10 ön denemesinin kararıydı; kaldırıldı). NotebookLM örneği SMA250 altında kapanışta çıkışı gösterir; ortalama seçimi okura aittir (Ham, G115:20; NotebookLM, g1). Projenin gün sonu stopu ile harmonik bozulma ayrıdır.
 10. Zaman stopu: Tansu'da yalnız "tepki penceresi" (10 gün/20 bar) var; pozisyon zaman stopu yok.
 11. Komisyon ve kayma varsayımı.
