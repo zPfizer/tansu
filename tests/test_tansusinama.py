@@ -7,6 +7,7 @@ giriş 03.02 AOF 104, çıkış 04.02 son kapanış 110 (veri sonu). Dönem 02.0
 Çift verisi: A, B, C 270 işlem günü (2025-01-01'den). B ve C 100'de sabit; A 255-261. günler 95, sonra 100.
 """
 
+import dataclasses
 import json
 import re
 
@@ -35,14 +36,19 @@ def seri_a():
     ]
 
 
-def ema_anlik(tmp_path):
-    return anlik_hazirla(tmp_path, {"A": seri_a(), "B": duz(1e9)})
+def ema_anlik(tmp_path, b=None):
+    return anlik_hazirla(tmp_path, {"A": seri_a(), "B": b or duz(1e9)})
 
 
-def cift_anlik(tmp_path):
+def cift_anlik(tmp_path, a_satir=None, ek=None):
+    """`a_satir`: A'nın dizin → alan değişiklikleri (ham alanlar kilit ve karantinayı sürer, Z düzeltilmiş kapanıştan
+    hesaplanır); `ek`: ek hisse serileri."""
     a = [95.0 if 255 <= i < 262 else 100.0 for i in range(270)]
     sabit = [mum(g, 100.0) for g in GUNLER]
-    seriler = {"A": [mum(g, k) for g, k in zip(GUNLER, a)], "B": sabit, "C": sabit}
+    a_mum = [mum(g, k) for g, k in zip(GUNLER, a)]
+    for i, alan in (a_satir or {}).items():
+        a_mum[i].update(alan)
+    seriler = {"A": a_mum, "B": sabit, "C": sabit, **(ek or {})}
     return anlik_hazirla(tmp_path, seriler)
 
 
@@ -309,7 +315,7 @@ def test_ema_uctan_uca_tek_hisse_tek_hucre(tmp_path):
     # Özkaynak (dönem 02.02, 03.02, 04.02): 1,0; 1/1,001 = 0,999001; 0,999001·(110/104)·0,999 = 1,055579.
     # En büyük düşüş = 1/1,001 − 1 = −0,000999. Tutma 1 gün; maruziyet 1/3 (yalnız 03.02 kapanışı pozisyonda).
     # Sinyalden sonraki 1 gün (TASARIM 5.14: sinyal günü kapanışından k gün sonraki kapanışa): kapanış(03.02) / kapanış(sinyal
-    # günü 02.02) − 1 = 104/103 − 1 = 0,0097087; 3 ve 5 gün: satır yok. (Önceki spec bir önceki kapanışa bölüyordu: 104/100 − 1.)
+    # günü 02.02) − 1 = 104/103 − 1 = 0,0097087; 3 ve 5 gün: satır yok.
     # B düz 100: sinyal yok → net 0,0 → para çıkmaz; al-tut 0,999/1,001 − 1 = −0,001998.
     kayit._yaz(
         {
@@ -363,7 +369,7 @@ def test_ema_uctan_uca_tek_hisse_tek_hucre(tmp_path):
         }
     }
     f = s["aileler"]["ema_sikismasi"]
-    assert f["eksenler"] == EMA_IZGARA
+    assert f["eksenler"] == EMA_IZGARA and f["atlanan"] == []
     assert [h["hisse"] for h in f["hisseler"]] == ["A", "B"]
     assert f["ozet"] == {
         "toplam": 2,
@@ -384,6 +390,7 @@ def test_ema_uctan_uca_tek_hisse_tek_hucre(tmp_path):
     assert o["secildi"] is True
     assert (o["islem"], o["kazanan"], o["kaybeden"], o["kazanma"]) == (1, 1, 0, 1.0)
     assert o["net"] == pytest.approx(0.0555790, abs=1e-7)
+    assert o["fark"] == pytest.approx(-0.0102483, abs=1e-7)  # 0,0555790 − 0,0658274
     assert o["max_dd"] == pytest.approx(-0.000999, abs=1e-6)
     assert o["ort_tutma"] == pytest.approx(1.0)
     assert o["maruziyet"] == pytest.approx(1 / 3)
@@ -439,7 +446,7 @@ def test_cift_uctan_uca_bir_gecis(tmp_path):
         izgara=IZGARA,
     )
     f = s["aileler"]["cift_rotasyonu"]
-    assert f["eksenler"] == CIFT_IZGARA
+    assert f["eksenler"] == CIFT_IZGARA and f["atlanan"] == []
     assert [h["hisse"] for h in f["hisseler"]] == ["A-B"]  # C başka sektör
     assert f["ozet"] == {
         "toplam": 1,
@@ -460,11 +467,123 @@ def test_cift_uctan_uca_bir_gecis(tmp_path):
     assert o["hucre"] == {"z_pencere": 5, "z_esik": 1.0} and o["secildi"] is False
     assert (o["islem"], o["kazanan"], o["kaybeden"], o["kazanma"]) == (2, 1, 1, 0.5)
     assert o["net"] == pytest.approx(0.0484295, abs=1e-7)
+    assert o["fark"] == pytest.approx(0.0504275, abs=1e-7)  # 0,0484295 + 0,0019980
     assert o["kar_carpani"] == pytest.approx(25.2895, abs=1e-3)
     assert o["ort_tutma"] == pytest.approx(6.0)
     assert o["maruziyet"] == pytest.approx(12 / 19)
     assert o["max_dd"] == pytest.approx(-0.002996, abs=1e-6)
     assert o["bayraklar"] == ["az işlem"]
+
+
+TEK_HUCRE = {"cift_rotasyonu": {"z_pencere": [5], "z_esik": [1.0]}}
+SEKTOR_ABC = {"A": "X", "B": "X", "C": "Y"}
+
+
+def tek_hucreli_cift(tmp_path, a_satir):
+    s = ts.calistir(
+        cift_anlik(tmp_path, a_satir),
+        SEKTOR_ABC,
+        aileler=("cift_rotasyonu",),
+        isci=1,
+        bas="2015-12-01",
+        ilerleme=lambda m: None,
+        izgara=TEK_HUCRE,
+    )
+    return hisse(s, "cift_rotasyonu", "A-B")
+
+
+def test_cift_kilit_gecisi_engeller_sinyal_tasinmaz(tmp_path):
+    # Hedef günleri test_cift_uctan_uca_bir_gecis ile aynı: 256. gün hedef A, 263. gün hedef B (Z düzeltilmiş kapanıştan).
+    # A'nın ham serisinde 257. gün 95'in %10 üstüne (104,5; fiyat adımı 0,1 → 104,5 ≥ 104,4) çıkar: tavan kilidi, A'nın
+    # düzeltilmiş AOF'u 95 kalır. 257. gün geçiş yapılmaz; sinyal ertesi güne taşınmaz (258. günün hedefi 0) → A hiç alınmaz.
+    # 264. gün B'ye geçiş açık: B 100'den alınır, son kapanış 100: tek işlem, getiri 100·0,999/(100·1,001) − 1 = −0,001998.
+    # Tutma 269 − 264 = 5; maruziyet 5/19 (264-268 / dönem 251-269). Net ≤ 0 → para çıkmaz.
+    kilit = {
+        "ham_kapanis": 104.5,
+        "ham_aof": 104.5,
+        "ham_yuksek": 104.5,
+        "ham_dusuk": 104.5,
+    }
+    h = tek_hucreli_cift(tmp_path, {257: kilit})
+    o = h["olcu"]
+    assert h["durum"] == "para_cikmaz" and o["islem"] == 1
+    assert o["net"] == pytest.approx(-0.001998, abs=1e-6)
+    assert o["ort_tutma"] == pytest.approx(5.0)
+    assert o["maruziyet"] == pytest.approx(5 / 19)
+
+
+def test_cift_karantina_son_temiz_aofta_cikar_pencere_boyunca_girmez(tmp_path):
+    # Kilitsiz seri: 257. gün A 95'ten alınır. 260. gün A'nın AOF'u 90 (düşük 95'in altında → satır bozuk → karantina).
+    # Çıkış son temiz AOF'ta: 259. gün AOF 95 (karantina günü AOF'u 90 değil): getiri 95·0,999/(95·1,001) − 1 = −0,001998.
+    # 263. gün hedef B'nin 264. gün geçişi karantina penceresinde (250 satır) olduğu için yapılmaz; veri sonuna dek nakit.
+    # Tek işlem; tutma 260 − 257 = 3; maruziyet 3/19 (257-259 / dönem 251-269).
+    h = tek_hucreli_cift(tmp_path, {260: {"aof": 90.0, "ham_aof": 90.0}})
+    o = h["olcu"]
+    assert h["durum"] == "para_cikmaz" and o["islem"] == 1
+    assert o["net"] == pytest.approx(-0.001998, abs=1e-6)
+    assert o["ort_tutma"] == pytest.approx(3.0)
+    assert o["maruziyet"] == pytest.approx(3 / 19)
+
+
+def test_atlanan_isinmasi_dolmayan_hisse_ve_kisa_cift(tmp_path):
+    # EMA: isınma 6 gün; A 8 satır sınanır, B 5 satır (< 6) sınanmaz ve adı `atlanan` listesindedir.
+    s = ts.calistir(
+        ema_anlik(tmp_path / "e", duz(1e9, adet=5)),
+        {},
+        aileler=("ema_sikismasi",),
+        isci=1,
+        p=dataclasses.replace(P, isinma=6),
+        bas=BAS,
+        ilerleme=lambda m: None,
+        izgara=IZGARA,
+    )
+    f = s["aileler"]["ema_sikismasi"]
+    assert f["atlanan"] == ["B"]
+    assert [h["hisse"] for h in f["hisseler"]] == ["A"] and f["ozet"]["toplam"] == 1
+    # Çift: D yalnız 100 gün (< 252 ortak gün): A-D ve B-D sınanmaz, A-B sınanır.
+    d = [mum(g, 100.0) for g in GUNLER[:100]]
+    s = ts.calistir(
+        cift_anlik(tmp_path / "c", ek={"D": d}),
+        {**SEKTOR_ABC, "D": "X"},
+        aileler=("cift_rotasyonu",),
+        isci=1,
+        bas="2015-12-01",
+        ilerleme=lambda m: None,
+        izgara=IZGARA,
+    )
+    f = s["aileler"]["cift_rotasyonu"]
+    assert f["atlanan"] == ["A-D", "B-D"]
+    assert [h["hisse"] for h in f["hisseler"]] == ["A-B"] and f["ozet"]["toplam"] == 1
+
+
+def test_yaz_m_yi_artirmaz_ve_kart_yazmaz(tmp_path):
+    # Yarıda kalmış resmi koşu m'ye 2 aile sayar (TASARIM 5.11); Tansu sınaması satırı (tur=destek) m'yi değiştirmez
+    # ve kart dosyası üretmez (TASARIM 5.14).
+    kayit._yaz(
+        {
+            "tur": "deneme",
+            "olay": "basladi",
+            "kosu_id": "R1",
+            "kural_id": "x",
+            "resmi": True,
+        }
+    )
+    assert kayit.deneme_sayisi() == 2
+    s = ts.calistir(
+        ema_anlik(tmp_path),
+        {},
+        aileler=("ema_sikismasi",),
+        isci=1,
+        p=P,
+        bas=BAS,
+        ilerleme=lambda m: None,
+        izgara=IZGARA,
+    )
+    ts.yaz(s)
+    assert any(r["olay"] == "tansu_sinama" for r in kayit._oku())
+    assert kayit.deneme_sayisi() == 2
+    assert not list((tmp_path / "rapor").glob("kartlar-*.csv"))
+    assert not (tmp_path / "kayit" / "kartlar.jsonl").exists()
 
 
 def test_1_ve_2_iscide_ayni_sonuc(tmp_path):
@@ -535,6 +654,7 @@ def test_komut_uctan_uca_rapor_ve_gunluk_satiri(tmp_path, capsys):
     assert (
         len(dosyalar) == 1 and str(dosyalar[0]) in cikti and "cift_rotasyonu" in cikti
     )
+    assert "atlanan 0" in cikti
     sonuc = json.loads(dosyalar[0].read_text(encoding="utf-8"))
     satir = next(s for s in kayit._oku() if s["olay"] == "tansu_sinama")
     assert dosyalar[0].name == f"tansu-sinama-{sonuc['kosu_id']}.json"

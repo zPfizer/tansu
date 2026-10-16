@@ -168,7 +168,7 @@ CSV: sütun listesi, ilk satır cümlesi, sabit durum listesi, yasaklı kelime A
 **Bağımlılık:** `tansusinama` makine ölçümü için `psutil` kullanır (boş bellek, CPU kullanımı); `requirements.lock.txt`'te
 vardır, `pyproject.toml`'da `psutil==7.2.2` olarak sabitlenir.
 
-Takvim, fiyat günlerinden çıkar (İş Yatırım XU100 günleri). Maliyet tek bir sabittir.
+Takvim, fiyat günlerinden çıkar (İş Yatırım XU100 günleri). Maliyet tek bir sabittir; Tansu sınaması (5.14) kendi sabitini kullanır.
 
 **Motor kendi Adım döngümüzdür; vectorbt kullanılmaz.** Dolum kuralları (5.3) AOF'a ve gün
 yükseği/düşüğüne koşullu. Ölçütler kısa kendi kodumuzdur. (A3, M1, S2-41, C-2)
@@ -816,7 +816,7 @@ Genel "Geçti" yalnız hepsi sağlanınca yazılır. (İ: 17-079)
   test, bileşen × dört kesim günü: 2014-09-30, 2015-01-15, 2015-03-02 ve yılın son işlem günü 2014-12-31 (yıllık fazla
   getiri için biten yılın karşılaştırılması; bilet 07d, 15.10). Kapsam: evren (ay başı seçimi), göstergeler (EMA, SMA, Wilder ATR, sıkışma oranı,
   piyasa durumu), EMA sinyali ve ön şart dizileri, çift Z ve hedef günleri, yıllık çift seçimi, likidite medyanı,
-  faiz hizalaması (gecelik getiri dizisi), K2 sepeti ve Tansu sınaması (5.14: EMA hücre işlemleri ve ileri yürüme
+  faiz hizalaması (gecelik getiri dizisi), K2 sepeti ve Tansu sınaması (EMA ve çift; 5.14: hücre işlemleri ve ileri yürüme
   seçimleri; t'den önce biten test yılları aynı).
 
 ### 5.13 Veri kapıları
@@ -862,6 +862,7 @@ Levent 16.10: "Tansu ne diyorsa onu yap." Komut: `python -m tansu tansu-sinama`.
   KURALLAR §3'tekidir: EMA 27 hücre; çift Z penceresi × Z eşiği, 6 hücre (seçim p'si yıllık çift seçimine aittir, burada yok).
 - **Dönem:** Tansu modu bütün dönemdir: "Biz model eğitmedik kardeşim," (Ham, tweet-atr-yon-degisimi-dip-tepe-1927454690960101506).
   Dönem, 2015-12-01 (5.1) ile ısınmanın bittiği günün (tek hisse 500, çift 252 işlem günü; 5.1) geç olanından veri sonuna dek.
+  Isınması dolmayan hisse ve 252 ortak günü olmayan çift sınanmaz; adları çıktıda `atlanan` listesinde yazılır.
 - **İleri yürüme (ikinci mod):** "EMA değeri walk forward le optimzie edilerek model oluşturulmuştur." (Ham,
   gorsel-paket-75-isctr-ad-ema-walk-forward). YORUM (bizim): her takvim yılı test yılıdır; seçim o yıldan önce kapanmış
   bütün işlemlerle (genişleyen pencere) aynı sağlam bölge kuralıyla yapılır; en az 2 tam eğitim yılı; test yılında seçilen

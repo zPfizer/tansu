@@ -196,6 +196,44 @@ def tansusinama_(tam, kes_, t):
     assert any(secimler[0][0])  # ileri yürüme yılı var
 
 
+def tansusinama_cift_(tam, kes_, t):
+    """Tansu sınaması (TASARIM 5.14), çift ailesi: t'den önce kapanan hücre işlemleri ve ileri yürüme seçimleri (yıl ≤ t.year)
+    kesilmişle tam görüntüde aynıdır. Kesilmişte t'de veri sonu çıkışı olabilir: t'de ve sonrasında kapananlar
+    karşılaştırılmaz."""
+    izgara = tansusinama.IZGARA["cift_rotasyonu"]
+    sekil = tuple(len(v) for v in izgara.values())
+    bas, son = pd.Timestamp("2012-01-01"), pd.Timestamp("2015-12-31")
+    semboller = ["S000", "S001", "S002", "S004", "S005", "S006"]
+    isler = [
+        tansusinama.cift_isleri(a, a.sektor, semboller, bas, izgara)
+        for a in (tam, kes_)
+    ]
+    assert len(isler[0]) > 0
+    assert [j[1] for j in isler[0]] == [j[1] for j in isler[1]]
+    sutunlar = [
+        "sinyal_tarih",
+        "giris_tarih",
+        "cikis_tarih",
+        "giris_fiyat",
+        "cikis_fiyat",
+    ]
+    toplam, secimler = 0, [[], []]
+    for jt, jk in zip(*isler):
+        tablolar = [tansusinama.cift_tablolari(*j[2:4], *j[5:])[0] for j in (jt, jk)]
+        for tb, kb in zip(*tablolar):
+            pd.testing.assert_frame_equal(
+                tb.loc[tb["cikis_tarih"] < t, sutunlar].reset_index(drop=True),
+                kb.loc[kb["cikis_tarih"] < t, sutunlar].reset_index(drop=True),
+                check_dtype=False,  # boş tablonun sütunları object kalır
+            )
+            toplam += int((tb["cikis_tarih"] < t).sum())
+        for liste, tb in zip(secimler, tablolar):
+            yillar = tansusinama.ileri(tb, sekil, bas, son)["yillar"]
+            liste.append([y for y in yillar if y["yil"] <= t.year])
+    assert toplam > 0 or t < pd.Timestamp("2014-06-01")  # sınama boş değil
+    assert secimler[0] == secimler[1]
+
+
 @pytest.mark.parametrize("kesim", KESIM)
 @pytest.mark.parametrize(
     "bilesen",
@@ -208,6 +246,7 @@ def tansusinama_(tam, kes_, t):
         zemin_,
         yillik_fazla_,
         tansusinama_,
+        tansusinama_cift_,
     ],
     ids=lambda f: f.__name__,
 )
