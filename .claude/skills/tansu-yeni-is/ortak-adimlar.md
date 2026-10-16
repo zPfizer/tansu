@@ -36,7 +36,7 @@ Open a draft PR with this command chain: `git fetch -q kaynak && git merge-base 
 
 ## Merge
 Merge when two things are true.
-- CI is green. `ci` is the `kayit/` append-only step, ruff, pytest, and driftlint. `dod` is the PR body.
+- CI is green. `ci` is the `kayit/` append-only step, `git diff --check`, ruff, pytest, and driftlint. `windows` is pytest on Windows. `dod` is the PR body.
 - The independent verdict is GEÇTİ or NOTLU GEÇTİ. For code, it is the verdict of the Codex audit. For documents only, it is the verdict of the `mattpocock-skills:code-review` pass.
 
 Wait for CI with one command: `gh pr checks <N> --watch` (timeout 300000 ms). Do not poll the status.

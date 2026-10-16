@@ -41,7 +41,7 @@ Tarihsel gerekçe. Güncel politikanın sahibi TASARIM §4 ("Kaynaklar", "Kullan
      - indirme ve sınamada yerel önbellek
    - İş Yatırım engellerse ya da itiraz ederse indirme durur ve TASARIM yeniden açılır.
    - Gerekçe:
-     - robots.txt tarayıcı botlara yönelik bir rica; yasaklayan bir kullanım sözleşmesi bulunamadı.
+     - robots.txt tarayıcı botlara yönelik bir rica; bu araştırmada (05.10) yasaklayan bir kullanım sözleşmesi bulunamadı. 16.10'da İş Yatırım Uyarı Notu bulundu: veriyi çoğaltmayı ve dağıtmayı izne bağlıyor (TASARIM §5.1).
      - Yük, bir kullanıcının tarayıcıdan bakmasına yakın.
      - Bedava alternatifler (Yahoo, TradingView) ya yanlış ya yasak.
    - Bu karar Levent'in tek sözüyle geri alınabilir.
