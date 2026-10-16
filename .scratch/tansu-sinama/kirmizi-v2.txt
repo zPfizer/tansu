@@ -1,0 +1,19 @@
+E         comparison failed
+E         comparison failed
+E         comparison failed
+E         comparison failed
+E         comparison failed
+E         comparison failed
+FAILED tests/test_tansusinama.py::test_cift_son_satir_karantina_karantina_cikisi_veri_sonu_degil
+FAILED tests/test_tansusinama.py::test_ema_ileri_son_yil_donemin_son_gunu - A...
+FAILED tests/test_tansusinama.py::test_ema_al_tut_donem_basi_aof_sifir_sonraki_gecerli_gun
+FAILED tests/test_tansusinama.py::test_ema_al_tut_son_kapanis_sonsuz_son_gecerli_kapanis
+FAILED tests/test_tansusinama.py::test_ema_donem_basi_sifir_aof_tek_gun_atlanir
+FAILED tests/test_tansusinama.py::test_sonraki_gecersiz_gun_sayilmaz - assert...
+FAILED tests/test_tansusinama.py::test_cift_sonsuz_son_kapanis_son_gecerli_fiyat_ve_karantina_cikisi
+FAILED tests/test_tansusinama.py::test_cift_donem_basi_gecersiz_gun_atlanir[aof_sifir]
+FAILED tests/test_tansusinama.py::test_cift_donem_basi_gecersiz_gun_atlanir[limit_asimi]
+FAILED tests/test_tansusinama.py::test_cift_tek_gunluk_donem_gecersiz_fiyat_atlanir
+FAILED tests/test_tansusinama.py::test_cift_tek_gunluk_donem_donem_alani - Ke...
+11 failed, 36 passed, 2 warnings in 5.55s
+01120f9

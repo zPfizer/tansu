@@ -175,3 +175,9 @@ olduğunu söyler; sayı, formül ve işleyiş, atıf verilen bölümdedir (TASA
 | Ölçülemedi | Karar vermeye veri ya da süre yetmediğini belirten sonuç. "Geçmedi"den ayrıdır (TASARIM §5.12). |
 | Deneme / Kâğıt / Canlı | Deneme, resmi kabul almamış; Kâğıt, geçmiş sınamayı geçmiş; Canlı, kâğıt üstü dönemi de geçmiş aile durumudur (TASARIM §5.12, §6). |
 | Kâğıt üstü dönem | Kâğıt ailenin para konmadan izlendiği dönem. Canlı durumundan ayrıdır (TASARIM §5.8). |
+| Tansu sınaması | Tansu'nun kendi sınama yöntemi: her hissede ayrı ızgara, sağlam bölge, al-tut kıyası, kendi ölçü tablosu. Kabul kararına girmez (TASARIM §5.14). |
+| Sağlam bölge | Kendisi ve bütün komşuları kârlı olan ızgara hücreleri. Tek başına kârlı hücre tuzak sayılır (TASARIM §5.14). |
+| Para çıkmaz | En iyi ayarın bile masraf sonrası kazandırmadığı sonuç etiketi (TASARIM §5.14). |
+| Al-tut | Aynı hissenin aynı dönemde bir kez alınıp tutulması; kıyas çizgisidir (TASARIM §5.14). |
+| Geçerli fiyat günü | Tansu sınamasında fiyatı al-tut, değerleme ve gün sayımında kullanılabilen gün (TASARIM §5.14). |
+| Dönemin son günü | Tansu sınamasında dönemin bittiği gün; fiyatı geçerli olmak zorunda değildir (TASARIM §5.14). |

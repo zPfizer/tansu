@@ -54,6 +54,7 @@ HASH_DISI = [
     "kaynak.py",
     "rapor.py",
     "sadakat.py",
+    "tansusinama.py",
 ]
 SEMA = 1  # TASARIM 5.11: günlük şema sürümü
 IZGARA = saglamlik.IZGARA  # KURALLAR §3 (YORUM): her ailenin önceden yazılmış ızgarası
