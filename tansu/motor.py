@@ -1,7 +1,8 @@
-"""Motor: saf Adım fonksiyonu ve sinyallerden işlem listesi (TASARIM 5.3, 5.5).
+"""Motor: saf Adım fonksiyonu ve sinyallerden işlem listesi (TASARIM 5.3, 5.5; çıkış paketi KURALLAR §3 "Modül 1").
 
 Fiyatlar düzeltilmiş seriden; kilit ve karantina bayrakları ham seriden gelir (`veri.Anlik.gun_tablosu`).
 Mum: tarih, aof, yuksek, dusuk, kapanis, sma250, atr, islem, karantina, kilit_tavan, kilit_taban.
+Yalnız etkin kuralın okuduğu sütunlar: hacim (kurulum), rsi, onceki_rsi, sma50, onceki_dusuk.
 """
 
 from dataclasses import dataclass, replace
@@ -11,6 +12,10 @@ import pandas as pd
 from tansu import aileler, gostergeler
 
 STOP_ATR = 2.0  # TASARIM 5.5: acil stop = giriş - 2 ATR
+STOP_ATR15 = 1.5  # KURALLAR §3 Modül 1: `atr15` başlangıç stopu
+ETKIN_ATR = 1.5  # `dip` kuralı giriş + 1,5 ATR görülünce etkin olur
+YARI_ATR = 3.0  # `atr3` yarı satış seviyesi: giriş + 3 ATR
+BASABAS_R = 1.5  # yüksek giriş + 1,5 R görülünce stop girişe çıkar
 KARANTINA_GUN = 250  # TASARIM 5.1: karantinadan sonra yeni sinyal yok
 ATR_N = 14
 
@@ -27,13 +32,39 @@ class Pozisyon:
     bekleyen: str = None  # dolmamış çıkışın nedeni
     son_aof: float = None  # son temiz AOF (karantina çıkışı için)
     cikis_tarih: object = None
-    cikis_fiyat: float = None
-    neden: str = None  # kapalıysa: stop | sma250 | karantina | veri_sonu | iptal
+    cikis_fiyat: float = (
+        None  # yarı satış varsa yalnız son çıkışın fiyatı; ortalama `_tablo`'da
+    )
+    neden: str = None  # kapalıysa: stop | sma250 | hedef | cikis_kurali | karantina | veri_sonu | iptal
+    ayar: aileler.Parametre = aileler.Parametre()
+    kutu_alt: float = None  # sinyal günü kutu altı (kutu stopu); None: kutu yok
+    hedef: float = None  # sinyal günü hedef fiyatı; None: hedef yok
+    ilk_stop: float = None  # planlanan risk ve R buradan (stop yükselse de değişmez)
+    yari_tarih: object = None
+    yari_fiyat: float = None
+    aktif: bool = False  # `dip`: yüksek giriş + 1,5 ATR görüldü
+    senaryo: frozenset = (
+        frozenset()
+    )  # tetiklenmiş farklı senaryolar (`dip`, `rsi70`, `rsi50`, `sma50`)
+    yari_bekleyen: bool = False  # yarı satış tetiklendi, ertesi AOF'ta dolar
 
 
-def bekleyen(atr: float, sinyal_tarih=None) -> Pozisyon:
+def bekleyen(
+    atr: float,
+    sinyal_tarih=None,
+    ayar: aileler.Parametre = aileler.Parametre(),
+    kutu_alt=None,
+    hedef=None,
+) -> Pozisyon:
     """Sinyal günü kapanışında oluşan, ertesi gün girecek pozisyon."""
-    return Pozisyon("bekliyor", atr=atr, sinyal_tarih=sinyal_tarih)
+    return Pozisyon(
+        "bekliyor",
+        atr=atr,
+        sinyal_tarih=sinyal_tarih,
+        ayar=ayar,
+        kutu_alt=kutu_alt,
+        hedef=hedef,
+    )
 
 
 def _kapat(p, tarih, fiyat, neden):
@@ -41,18 +72,30 @@ def _kapat(p, tarih, fiyat, neden):
 
 
 def adim(p: Pozisyon, m) -> Pozisyon:
-    """(pozisyon, bugünkü mum) → pozisyon. Saf; kurallar TASARIM 5.3'te."""
+    """(pozisyon, bugünkü mum) → pozisyon. Saf; kurallar TASARIM 5.3 ve 5.5, KURALLAR §3 Modül 1."""
     if p.durum == "kapali":
         return p
     if p.durum == "bekliyor":
-        if m["karantina"] or not m["islem"] or m["kilit_tavan"]:
+        kutu = p.ayar.stop == "kutu" and p.kutu_alt is not None
+        if (
+            m["karantina"]
+            or not m["islem"]
+            or m["kilit_tavan"]
+            or (kutu and m["aof"] <= p.kutu_alt)  # kutu altına sarkan giriş iptal
+        ):
             return _kapat(p, m["tarih"], None, "iptal")
+        stop = (
+            p.kutu_alt
+            if kutu
+            else m["aof"] - (STOP_ATR15 if p.ayar.stop == "atr15" else STOP_ATR) * p.atr
+        )
         p = replace(
             p,
             durum="acik",
             giris_tarih=m["tarih"],
             giris_fiyat=m["aof"],
-            stop=m["aof"] - STOP_ATR * p.atr,
+            stop=stop,
+            ilk_stop=stop,
         )
         ilk_gun = True
     else:
@@ -68,17 +111,95 @@ def adim(p: Pozisyon, m) -> Pozisyon:
         return _kapat(p, m["tarih"], min(p.stop, m["aof"]), "stop")
     if p.bekleyen:
         return p if m["kilit_taban"] else _kapat(p, m["tarih"], m["aof"], p.bekleyen)
-    if not ilk_gun and m["kapanis"] < m["sma250"]:
-        return replace(p, bekleyen="sma250")
-    return p
+    return p if ilk_gun else _gun(p, m)
 
 
-def tara(mumlar: pd.DataFrame, sinyaller) -> tuple:
+def _gun(p, m):
+    """Stopa dokunmayan, tam çıkışı beklemeyen açık gün (giriş günü hariç): KURALLAR §3 gün sırası."""
+    t, aof = m["tarih"], m["aof"]
+    if p.yari_bekleyen and not m["kilit_taban"]:  # kilitli taban: AOF dolumu kayar
+        p = replace(p, yari_bekleyen=False, yari_tarih=t, yari_fiyat=aof)
+    if p.hedef is not None and m["yuksek"] >= p.hedef:
+        return _kapat(p, t, p.hedef if m["dusuk"] <= p.hedef else aof, "hedef")
+    seviye = p.giris_fiyat + YARI_ATR * p.atr
+    if p.ayar.cikis == "atr3" and p.yari_tarih is None and m["yuksek"] >= seviye:
+        p = replace(p, yari_tarih=t, yari_fiyat=seviye if m["dusuk"] <= seviye else aof)
+    if m["kapanis"] < m["sma250"]:  # SMA250 tam çıkışı önce gelir
+        p = replace(p, bekleyen="sma250")
+    else:
+        p = _cikis_kurali(p, m)
+    return _merdiven(p, m) if p.ayar.cikis != "yok" else p
+
+
+def _cikis_kurali(p, m):
+    """`dip`, `rsi70`, `rsi50`: tetikler kapanışta bakılır, yarı satış ve tam çıkış ertesi AOF'ta dolar."""
+    c = p.ayar.cikis
+    if c in ("yok", "atr3"):
+        return p
+    alti = m["kapanis"] < m["onceki_dusuk"]  # kapanış önceki gün düşüğünün altında
+    senaryo = {
+        ad
+        for ad, ok in (
+            ("dip", c != "rsi70" and p.aktif and alti),  # etkinlik önceki günlerden
+            ("rsi70", c == "rsi70" and m["onceki_rsi"] >= 70 > m["rsi"]),
+            ("rsi50", c == "rsi50" and m["onceki_rsi"] >= 50 > m["rsi"]),
+            ("sma50", c == "rsi50" and m["yuksek"] >= m["sma50"] > m["kapanis"]),
+        )
+        if ok
+    }
+    gorulen = p.senaryo | senaryo
+    # rsi50: ikinci farklı senaryo tam çıkış. rsi70: yarı satıştan sonra ilk dip kapanışı (yarı satış günü dahil).
+    tam = len(gorulen) > 1 or (c == "rsi70" and p.yari_tarih is not None and alti)
+    yari = bool(senaryo) and not p.senaryo  # ilk senaryo yarı satış verir
+    p = replace(
+        p,
+        aktif=p.aktif or m["yuksek"] >= p.giris_fiyat + ETKIN_ATR * p.atr,
+        senaryo=gorulen,
+    )
+    if tam:
+        return replace(p, bekleyen="cikis_kurali")
+    return replace(p, yari_bekleyen=True) if yari else p
+
+
+def _merdiven(p, m):
+    """ATR merdiveni ve başabaş (çıkış paketi): ertesi gün için stop, yalnız yukarı gider."""
+    n = (m["yuksek"] - p.giris_fiyat) // p.atr
+    stop = max(p.stop, p.giris_fiyat + (n - 2) * p.atr) if n >= 2 else p.stop
+    if m["yuksek"] >= p.giris_fiyat + BASABAS_R * (p.giris_fiyat - p.ilk_stop):
+        stop = max(stop, p.giris_fiyat)
+    return replace(p, stop=stop)
+
+
+def _kutu_hedef(kurulum) -> dict:
+    """Sinyal günü → (kutu_alt, hedef); NaN None olur (kutu yoksa `atr2` yedeği, hedef yoksa hedef çıkışı yok)."""
+    if kurulum is None:
+        return {}
+    return {
+        t: tuple(None if pd.isna(x) else float(x) for x in (a, h))
+        for t, a, h in zip(kurulum.index, kurulum["kutu_alt"], kurulum["hedef"])
+    }
+
+
+def kurulum_bilgisi(f: pd.DataFrame, p: aileler.Parametre):
+    """Kutu stopu ya da hedef kullanan ayar için `aileler.kurulum` (aynı güne düşen iki dönemin ilki); yoksa None."""
+    if p.stop != "kutu" and p.hedef == "yok":
+        return None
+    k = aileler.kurulum(f, p)
+    return k[~k.index.duplicated()]
+
+
+def tara(
+    mumlar: pd.DataFrame,
+    sinyaller,
+    ayar: aileler.Parametre = aileler.Parametre(),
+    kurulum=None,
+) -> tuple:
     """Tek Adım döngüsü (`islemler` ve günlük kart ortak kullanır).
 
+    `kurulum`: `aileler.kurulum` tablosu (indeks sinyal günleri; kutu_alt, hedef); satırı olmayan sinyal günü kutusuz ve hedefsizdir.
     (iptal dışı kapanmış pozisyonlar, düşen sinyal sayısı, veri sonunda kapanmamış pozisyon ya da None,
     son mumda kapanan pozisyon ya da None; iptal dahil)."""
-    sinyaller = set(sinyaller)
+    sinyaller, kb = set(sinyaller), _kutu_hedef(kurulum)
     kapali, dusen, p, son_karantina, kapanan = [], 0, None, None, None
     for i, (tarih, satir) in enumerate(mumlar.iterrows()):
         m = {**satir.to_dict(), "tarih": tarih}
@@ -94,13 +215,18 @@ def tara(mumlar: pd.DataFrame, sinyaller) -> tuple:
             son_karantina = i
         engelli = son_karantina is not None and i - son_karantina < KARANTINA_GUN
         if p is None and tarih in sinyaller and not engelli:
-            p = bekleyen(m["atr"], tarih)
+            p = bekleyen(m["atr"], tarih, ayar, *kb.get(tarih, (None, None)))
     return kapali, dusen, p, kapanan
 
 
-def islemler(mumlar: pd.DataFrame, sinyaller) -> tuple:
+def islemler(
+    mumlar: pd.DataFrame,
+    sinyaller,
+    ayar: aileler.Parametre = aileler.Parametre(),
+    kurulum=None,
+) -> tuple:
     """Tek hissenin mumları (tarih indeksli) ve sinyal günlerinden (işlem listesi, düşen sinyal sayısı)."""
-    kapali, dusen, p, _ = tara(mumlar, sinyaller)
+    kapali, dusen, p, _ = tara(mumlar, sinyaller, ayar, kurulum)
     if p is not None and p.durum == "bekliyor":
         dusen += 1  # sinyalden sonra veri yok
     elif p is not None:
@@ -112,12 +238,18 @@ def islemler(mumlar: pd.DataFrame, sinyaller) -> tuple:
 class Zincir:
     """Bir hissenin sinyal konumlarından `islemler` ile aynı tabloyu kurar; tek işlem sonuçlarını önbelleğe alır (K1, TASARIM 5.7).
 
-    Aynı hissede sinyal kümesi her tekrarda değişir; her (konum) sinyalinin tek başına sonucu aynıdır. Bir sinyal,
-    önceki işlem kapanana dek (kapandığı gün hariç: kapanış gününün sinyali alınır, `islemler` gibi) ve karantina
-    penceresinde (250 satır) düşer."""
+    Aynı hissede sinyal kümesi her tekrarda değişir; her (konum, kutu alt, hedef) sinyalinin tek başına sonucu aynıdır.
+    Önbellek anahtarı kurulum değerlerini içerir: sağlamlık ızgarası aynı Zincir'i, aynı konum için kutusu farklı hücrelerle
+    paylaşır. Bir sinyal, önceki işlem kapanana dek (kapandığı gün hariç: kapanış gününün sinyali alınır, `islemler` gibi) ve
+    karantina penceresinde (250 satır) düşer. `kurulum` ctor'da verilirse çağrıların varsayılanıdır."""
 
-    def __init__(self, mumlar: pd.DataFrame):
-        self.mumlar = mumlar
+    def __init__(
+        self,
+        mumlar: pd.DataFrame,
+        ayar: aileler.Parametre = aileler.Parametre(),
+        kurulum=None,
+    ):
+        self.mumlar, self.ayar, self.kurulum = mumlar, ayar, kurulum
         self.satirlar = [
             {**s, "tarih": t} for t, s in zip(mumlar.index, mumlar.to_dict("records"))
         ]
@@ -130,11 +262,16 @@ class Zincir:
         self.son = (gecerli.index[-1], gecerli.iloc[-1]) if len(gecerli) else None
         self.onbellek = {}
 
-    def tek(self, i: int) -> tuple:
+    def tek(self, i: int, kb: tuple = (None, None)) -> tuple:
         """(kapalı pozisyon ya da None, kapanış konumu ya da None). None kapanış konumu: pozisyon veri sonuna dek açık
-        ya da sinyalden sonra veri yok (`dusen`: p None)."""
-        if i not in self.onbellek:
-            p = bekleyen(self.satirlar[i]["atr"], self.satirlar[i]["tarih"])
+        ya da sinyalden sonra veri yok (`dusen`: p None). `kb`: (kutu alt, hedef), yoksa (None, None)."""
+        if (i, kb) not in self.onbellek:
+            p = bekleyen(
+                self.satirlar[i]["atr"],
+                self.satirlar[i]["tarih"],
+                self.ayar,
+                *kb,
+            )
             sonuc = None
             for j in range(i + 1, len(self.satirlar)):
                 p = adim(p, self.satirlar[j])
@@ -143,16 +280,17 @@ class Zincir:
                     break
             if sonuc is None and p.durum == "acik":
                 sonuc = (_kapat(p, self.son[0], self.son[1], "veri_sonu"), None)
-            self.onbellek[i] = sonuc or (None, None)
-        return self.onbellek[i]
+            self.onbellek[(i, kb)] = sonuc or (None, None)
+        return self.onbellek[(i, kb)]
 
-    def kapali(self, konumlar) -> tuple:
+    def kapali(self, konumlar, kurulum=None) -> tuple:
         """(kapanmış pozisyonlar, düşen sinyal sayısı): tablo kurmadan; K1 çok hissenin pozisyonlarını tek tabloda toplar."""
+        kb = _kutu_hedef(self.kurulum if kurulum is None else kurulum)
         kapali, dusen, blok = [], 0, 0
         for i in sorted(set(konumlar)):
             if i < blok or self.engelli[i]:
                 continue
-            p, j = self.tek(i)
+            p, j = self.tek(i, kb.get(self.satirlar[i]["tarih"], (None, None)))
             if p is None or p.neden == "iptal":
                 dusen += 1
                 blok = len(self.satirlar) if p is None else j
@@ -161,28 +299,37 @@ class Zincir:
                 blok = len(self.satirlar) + 1 if j is None else j
         return kapali, dusen
 
-    def calistir(self, konumlar) -> tuple:
-        """(işlem tablosu, düşen sinyal sayısı); `islemler(mumlar, sinyaller)` ile aynı."""
-        kapali, dusen = self.kapali(konumlar)
+    def calistir(self, konumlar, kurulum=None) -> tuple:
+        """(işlem tablosu, düşen sinyal sayısı); `islemler(mumlar, sinyaller, ayar, kurulum)` ile aynı."""
+        kapali, dusen = self.kapali(konumlar, kurulum)
         return _tablo(kapali), dusen
 
 
 def _tablo(pozisyonlar) -> pd.DataFrame:
-    return pd.DataFrame(
-        [
+    satirlar = []
+    for p in pozisyonlar:
+        # ponytail: yarı satışlı işlem tek satır, çıkış fiyatı iki yarının ortalaması; simülatör yarı satışın nakdini son
+        # çıkış gününde görür (faiz ve yeniden kullanım eksik, TASARIM 5.5 "Yarı satışlı işlem"). Gün gün nakit için iki satır gerekir.
+        cikis = (
+            p.cikis_fiyat
+            if p.yari_fiyat is None
+            else (p.yari_fiyat + p.cikis_fiyat) / 2
+        )
+        satirlar.append(
             {
                 "sinyal_tarih": p.sinyal_tarih,
                 "giris_tarih": p.giris_tarih,
                 "giris_fiyat": p.giris_fiyat,
                 "cikis_tarih": p.cikis_tarih,
-                "cikis_fiyat": p.cikis_fiyat,
+                "cikis_fiyat": cikis,
                 "neden": p.neden,
                 "adet": p.adet,
-                "planlanan_risk": p.adet * (p.giris_fiyat - p.stop),
-                "gerceklesen_kayip": p.adet * max(0.0, p.giris_fiyat - p.cikis_fiyat),
+                "planlanan_risk": p.adet * (p.giris_fiyat - p.ilk_stop),
+                "gerceklesen_kayip": p.adet * max(0.0, p.giris_fiyat - cikis),
             }
-            for p in pozisyonlar
-        ],
+        )
+    return pd.DataFrame(
+        satirlar,
         columns=[
             "sinyal_tarih",
             "giris_tarih",
@@ -218,9 +365,16 @@ def _mumlar_kur(anlik, sembol, p, atr_n) -> pd.DataFrame:
     )
     g = anlik.gun_tablosu
     g = g[g["sembol"] == sembol].set_index("tarih")
-    m = f[["aof", "yuksek", "dusuk", "kapanis"]].reindex(g.index)  # eksik gün NaN kalır
+    m = f[["aof", "yuksek", "dusuk", "kapanis", "hacim"]].reindex(
+        g.index
+    )  # eksik gün NaN kalır
     m["sma250"] = gostergeler.sma(m["kapanis"], p.sma_n)
     m["atr"] = gostergeler.atr(m["yuksek"], m["dusuk"], m["kapanis"], atr_n)
+    m["rsi"] = gostergeler.rsi(m["kapanis"])
+    m["sma50"] = gostergeler.sma(m["kapanis"], 50)
+    # önceki gün = son dolu gün (eksik gün atlanır)
+    m["onceki_rsi"] = m["rsi"].ffill().shift(1)
+    m["onceki_dusuk"] = m["dusuk"].ffill().shift(1)
     for ad in ("islem", "karantina", "kilit_tavan", "kilit_taban"):
         m[ad] = g[ad].astype(bool)
     return m
@@ -232,18 +386,21 @@ def sinama(
     """Anlık görüntünün sembolleri için (işlem listesi, düşen sinyal sayısı).
 
     `uye`: (sembol, tarih) tablosu (`simulator.uyeler`); verilirse yalnız o hisse-günlerdeki sinyaller motora girer,
-    yani simülatörün alabileceği sinyaller (TASARIM 5.6 evren süzgeci)."""
+    yani simülatörün alabileceği sinyaller (TASARIM 5.6 evren süzgeci). `p` aynı zamanda çıkış ayarıdır; kutu stopu
+    ya da hedef kullanan ayarda kurulum bilgisi de motora girer."""
     parcalar, dusen = [], 0
     gunler = None if uye is None else uye.groupby("sembol")["tarih"].agg(list)
     for s in anlik.fiyat["sembol"].unique():
         if gunler is not None and s not in gunler.index:
             continue
         m = mumlar(anlik, s, p, atr_n)
-        sig = aileler.sinyal(m.dropna(subset=["kapanis"]), p)
+        f = m.dropna(subset=["kapanis"])
+        sig = aileler.sinyal(f, p)
         if gunler is not None:
             sig = sig[sig.isin(gunler[s])]
-        t, d = Zincir(m).calistir(
-            m.index.get_indexer(sig)
+        # ponytail: kurulum ikinci kez hesaplanır (sinyal zaten onu hesaplamıştı); yalnız kutu stopu ve hedef varyantlarında
+        t, d = Zincir(m, p).calistir(
+            m.index.get_indexer(sig), kurulum_bilgisi(f, p)
         )  # `islemler` ile bire bir (test), ama tek geçişte hızlı
         if len(t):  # boş tablolar sütun türünü object'e bozar
             parcalar.append(t.assign(sembol=s))

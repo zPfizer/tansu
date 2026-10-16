@@ -202,13 +202,15 @@ geometri sadakati yönsüz yapılır. (bilet 04, 14.10)
        - `retest`. Tansu: "bu mumun ardından gelen küçük geri çekilmedir (Retest)" (aynı not, Ham). YORUM: pencerede
          ilk `mum` günü k olsun; hacim şartı k'de aranır. k+1 … k+5 içinde düşüğü ≤ kutu üstü olan ilk gün j'dir. j'nin
          kapanışı kutu üstünün üstündeyse sinyal j'dir. Değilse bu dönemde sinyal yoktur. Öbür süzgeçler j'de aranır.
+         k'de hacim şartı sağlanmazsa da bu dönemde sinyal yoktur; j giriş penceresinin dışına düşebilir (YORUM).
        - `agresif`. Tansu: "EMA'lar hala sıkışıkken, fiyat talep bölgesinin alt sınırına değdiğinde alım yapmak." ve
          "Stop olma ihtimali yüksektir" (aynı not, Ham). Pencere yoktur; sıkışma sürerken aranır. t günü için t−1'de
          biten koşu (oran ≤ eşik) en az 3 gün sürmüştür (sıkışma dönemiyle aynı süre; YORUM). Düşük_t ≤ koşunun t−1'e
          kadarki en düşük düşüğü ve kapanış_t ≥ o düşüktür (YORUM: değdi, altında kapanmadı; Tansu: kutunun altında
          kapanışta "analiz iptal olur"). Kutu = koşu + t günü. Koşu başına tek sinyal vardır. Hacim şartı uygulanmaz;
          bu bir kırılım değildir (YORUM).
-     - **Süzgeçler** (hepsi aday şartıdır).
+     - **Süzgeçler** (hepsi aday şartıdır). Eksik değer (YORUM): hacim ya da gösterge teyidi hesaplanamayan gün aday
+       değildir; momentum squeeze hesaplanamayan gün süzgeçten geçer (kural yalnız "negatif ve düşen" günü eler).
        - Hacim (`hacim_kat`: 0, 2, 3). Tansu: "Breakout anında hacmin ortalamanın en az 2-3 katı olması lazım."
          (`tweet-qullamaggie-tarzi-hacimli-breakout-tarama-1979546907505545421`, Ham; genel kırılım kuralıdır, EMA'ya özel
          değildir). Aynı notta: "Gün içi kırılma yetmez, kapanış o seviyenin üstünde olmalı." Ayrıca Tansu: "Hacimli
@@ -228,7 +230,8 @@ geometri sadakati yönsüz yapılır. (bilet 04, 14.10)
          h_t > h_{t−1}; Tansu: "histo eğimi artmaya başlamış"
          (`tweet-ema-sikisma-macd-histogram-egim-1957958199425818842`, Ham; periyotlar YORUM). PSAR(0,02; 0,02; 0,2;
          Wilder 1978) kapanışın altındadır; Tansu: "PSAR'lar fiyat altına insin"
-         (`tweet-ema-sikisma-psar-trend-temas-hacim-1956041277096546504`, Ham; ayar yok). Stokastik %K(14) > %D(3);
+         (`tweet-ema-sikisma-psar-trend-temas-hacim-1956041277096546504`, Ham; ayar yok; başlangıç YORUM: ilk gün
+         yükselen trend, ilk SAR ilk düşük, ilk uç nokta ilk yüksek). Stokastik %K(14) > %D(3);
          Tansu: "stoc güzel kesmiş" (`tweet-ema-squeeze-downtrend-break-checklist-1953173142861414759`, Ham; ayar yok;
          periyotlar YORUM). Listedeki hacim maddesi hacim süzgecindedir.
        - Trend teyidi (`teyit` = `trend`; vekil kararı 16.10: trend çizgileri de kodlanır). Tansu: "şahane düşeni kırmış"
@@ -272,7 +275,8 @@ geometri sadakati yönsüz yapılır. (bilet 04, 14.10)
          kırmızı değil; b+1 … b+3 içinde kapanış ≥ gövde_üst_b + 1,0 × ATR_b; distal = düşük_b, proximal = gövde_üst_b;
          bozulma (A §9, Ham'ın ana seçeneği): ilk kapanış < distal (daha katı `low < zone_low` kodlanmaz). Çıktı
          sütunları (A §6): `bas`, `bilinen`, `proximal`, `distal`, `bitis`, `temas`, `teyit`. temas, bilinen günden
-         sonra bölge aktifken fiyatın bölgeye girdiği gün sayısıdır (arz: yüksek ≥ proximal; talep: düşük ≤ proximal).
+         sonra bölge aktifken fiyatın bölgeye girdiği gün sayısıdır (arz: yüksek ≥ proximal; talep: düşük ≤ proximal;
+         bozulma günü sayılmaz).
          teyit, bilinen gündür (YORUM, A §6).
        - Üçgen hedefi. Tansu: "hedefi de üçgenin taban yüksekliğini yukarı projekte ederek düşünmek mantıklıdır."
          (`tweet-ema-sikismasi-ucgen-kirilim-hacim-1954300245707497649`, Ham). Tarama adımları: "En az iki tane birbirine
@@ -327,7 +331,10 @@ geometri sadakati yönsüz yapılır. (bilet 04, 14.10)
        - Gün sırası (YORUM; açık pozisyon, giriş günü hariç; dolum fiyatları TASARIM §5.3): karantina ya da işlem yok
          (bugünkü kural), stop, bekleyen tam çıkış, bekleyen yarı satış, hedef, `atr3` yarı satışı, kapanış kuralları
          (SMA250 bugünkü kural; yarı ve tam çıkış tetikleri ertesi AOF'a bırakılır), stop güncellemesi (ertesi gün için).
-         Giriş günü yalnız stop kontrol edilir (TASARIM §5.3).
+         Giriş günü yalnız stop kontrol edilir (TASARIM §5.3); merdiven, başabaş ve `dip` etkinliği ertesi günden
+         başlar. SMA250 çıkışı bildirilen gün yarı satış ve kural tetiklerine bakılmaz. "Önceki gün" son dolu gündür.
+         Aynı güne iki dönemin sinyali düşerse ilk dönemin kutusu ve hedefi kullanılır. K1 rastgele girişinde kutu ve
+         hedef yoktur (`atr2` yedeği, hedef çıkışı yok; YORUM).
      - **Piyasa durumu** (Levent 16.10): yalnız bilgidir, kartı durdurmaz (TASARIM §3).
      - **Varyantlar** (`aileler.VARYANTLAR`). Temel `tansu`: periyotlar (20, 50, 100, 200), giriş `mum`, hacim 2 kat,
        momentum açık, teyit `yok`, stop `kutu`, hedef `tansu`, R/R 2, çıkış `atr3` (YORUM: Tansu'nun söylediği
