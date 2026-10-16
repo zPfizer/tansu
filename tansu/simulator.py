@@ -275,9 +275,11 @@ def _suzgec(islemler, evr, ilk, kg) -> tuple:
         if r.sembol in kg:
             son, gun = kg[r.sembol]
             if r.giris_tarih <= gun and (r.cikis_tarih > son or r.neden == "veri_sonu"):
+                # yarı satış son işlem gününe dek yapıldıysa yalnız kalan yarı sıfırlanır (TASARIM 5.5 "Yarı satışlı işlem")
+                yari = pd.notna(r.yari_tarih) and r.yari_tarih <= son
                 t.loc[k, ["cikis_tarih", "cikis_fiyat", "neden"]] = [
                     gun,
-                    0.0,
+                    r.yari_fiyat / 2 if yari else 0.0,
                     "kapanma",
                 ]
                 sayi += 1

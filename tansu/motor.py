@@ -324,6 +324,7 @@ def _tablo(pozisyonlar) -> pd.DataFrame:
     for p in pozisyonlar:
         # ponytail: yarı satışlı işlem tek satır, çıkış fiyatı iki yarının ortalaması; simülatör yarı satışın nakdini son
         # çıkış gününde görür (faiz ve yeniden kullanım eksik, TASARIM 5.5 "Yarı satışlı işlem"). Gün gün nakit için iki satır gerekir.
+        # `yari_tarih` ve `yari_fiyat` satırda kalır: simülatör kapanan hissede yalnız kalan yarıyı sıfırlar (TASARIM 5.2).
         cikis = (
             p.cikis_fiyat
             if p.yari_fiyat is None
@@ -340,6 +341,8 @@ def _tablo(pozisyonlar) -> pd.DataFrame:
                 "adet": p.adet,
                 "planlanan_risk": p.adet * (p.giris_fiyat - p.ilk_stop),
                 "gerceklesen_kayip": p.adet * max(0.0, p.giris_fiyat - cikis),
+                "yari_tarih": p.yari_tarih,
+                "yari_fiyat": p.yari_fiyat,
             }
         )
     return pd.DataFrame(
@@ -354,8 +357,12 @@ def _tablo(pozisyonlar) -> pd.DataFrame:
             "adet",
             "planlanan_risk",
             "gerceklesen_kayip",
+            "yari_tarih",
+            "yari_fiyat",
         ],
-    )
+    ).astype(
+        {"yari_tarih": "datetime64[ns]", "yari_fiyat": float}
+    )  # yarı satış yoksa NaT / NaN (TASARIM 5.5 "Yarı satışlı işlem")
 
 
 def mumlar(

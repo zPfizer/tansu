@@ -769,6 +769,21 @@ def test_yari_satis_kurallari(ad):
     assert _ozet(satirlar, ayar) == _ak(beklenen)
 
 
+def test_islem_tablosu_yari_satis_tarihini_ve_fiyatini_tasir_yoksa_bos():
+    # TASARIM 5.5 "Yarı satışlı işlem". atr3_gun_ici: yarı satış gün 2'de seviye 100 + 3*2 = 106'da.
+    ayar, satirlar, _ = YARI["atr3_gun_ici"]
+    t, _ = motor.islemler(_mumlar(satirlar, 2), GUNLER[[0]], ayar)
+    assert (t.iloc[0].yari_tarih, t.iloc[0].yari_fiyat) == (GUNLER[2], 106.0)
+    # stopta_cikis: yarı satış kuralı yok (cikis "yok"): iki sütun da boş.
+    sinyaller, atr, satirlar, _, _ = SENARYO["stopta_cikis"]
+    t, _ = motor.islemler(_mumlar(satirlar, atr), GUNLER[sinyaller])
+    assert pd.isna(t.iloc[0].yari_tarih) and pd.isna(t.iloc[0].yari_fiyat)
+    # İşlemsiz tabloda da sütunlar vardır.
+    sinyaller, atr, satirlar, _, _ = SENARYO["kilitli_tavan_girisi"]
+    t, _ = motor.islemler(_mumlar(satirlar, atr), GUNLER[sinyaller])
+    assert len(t) == 0 and {"yari_tarih", "yari_fiyat"} <= set(t.columns)
+
+
 @pytest.mark.parametrize("cikis", ["dip", "rsi70"])
 def test_dip_etkinlesmeden_ve_rsi70_yarisindan_once_kapanis_dusuk_alti_satis_vermez(
     cikis,
