@@ -73,3 +73,78 @@ def test_piyasa_durumu_kapanis_sma_ustunde_mi():
         False,
         False,
     ]
+
+
+def test_rsi_wilder_ilk_deger_ilk_n_degisimin_ortalamasi():
+    # n=3, kapanış [10; 11; 10; 12; 11; 13]. Değişimler: +1; -1; +2; -1; +2.
+    # İlk üç değişim (+1; -1; +2): kazanç ortalaması (1+0+2)/3 = 1; kayıp ortalaması (0+1+0)/3 = 1/3.
+    # RSI3 = 100 * 1 / (1 + 1/3) = 75.
+    # Gün 4 (değişim -1): kazanç (1*2+0)/3 = 2/3; kayıp (1/3*2+1)/3 = 5/9; RSI = 100 * (6/9) / (6/9 + 5/9) = 600/11.
+    # Gün 5 (değişim +2): kazanç (2/3*2+2)/3 = 10/9; kayıp (5/9*2)/3 = 10/27; RSI = 100 * (30/27) / (40/27) = 75.
+    sonuc = gostergeler.rsi(pd.Series([10.0, 11, 10, 12, 11, 13]), 3)
+    assert sonuc.isna().tolist() == [True, True, True, False, False, False]
+    assert sonuc.iloc[3:].tolist() == pytest.approx([75.0, 600 / 11, 75.0], abs=1e-9)
+
+
+def test_momentum_squeeze_linreg_son_nokta():
+    # n=3. yüksek [11;12;13;14;16;17], düşük [9;10;11;12;13;15], kapanış [10;11;12;13;15;14].
+    # Gün 2: en yüksek 13, en düşük 9 -> ort 11; SMA3 = 11; orta = 11; kaynak = 12-11 = 1.
+    # Gün 3: en yüksek 14, en düşük 10 -> 12; SMA3 = 12; orta = 12; kaynak = 13-12 = 1.
+    # Gün 4: en yüksek 16, en düşük 11 -> 13,5; SMA3 = 40/3; orta = (13,5+40/3)/2 = 161/12; kaynak = 15-161/12 = 19/12.
+    # Gün 5: en yüksek 17, en düşük 12 -> 14,5; SMA3 = 14; orta = 14,25; kaynak = 14-14,25 = -1/4.
+    # Gün 4 değeri: kaynak [1; 1; 19/12], x = 0,1,2. Eğim = (y2-y0)/2 = 7/24; ortalama = 43/36;
+    #   son noktadaki doğru değeri = 43/36 + 7/24 = 107/72.
+    # Gün 5 değeri: kaynak [1; 19/12; -1/4]. Eğim = (-1/4-1)/2 = -5/8; ortalama = 7/9; değer = 7/9 - 5/8 = 11/72.
+    sonuc = gostergeler.momentum_squeeze(
+        pd.Series([11.0, 12, 13, 14, 16, 17]),
+        pd.Series([9.0, 10, 11, 12, 13, 15]),
+        pd.Series([10.0, 11, 12, 13, 15, 14]),
+        3,
+    )
+    assert sonuc.isna().tolist() == [True, True, True, True, False, False]
+    assert sonuc.iloc[4:].tolist() == pytest.approx([107 / 72, 11 / 72], abs=1e-9)
+
+
+def test_macd_histogram_makd_eksi_sinyal():
+    # hızlı 2 (alfa 2/3), yavaş 3 (alfa 1/2), sinyal 2 (alfa 2/3); kapanış [10; 12; 11; 13].
+    # EMA2: 10; 34/3; 100/9; 334/27. EMA3: 10; 11; 11; 12. MACD: 0; 1/3; 1/9; 10/27.
+    # Sinyal (MACD'nin EMA2'si): 0; 2/9; 4/27; 8/27. Histogram = MACD - sinyal: 0; 1/9; -1/27; 2/27.
+    sonuc = gostergeler.macd_histogram(pd.Series([10.0, 12, 11, 13]), 2, 3, 2)
+    assert sonuc.tolist() == pytest.approx([0.0, 1 / 9, -1 / 27, 2 / 27], abs=1e-9)
+
+
+def test_psar_wilder_yukselen_trend_sonra_donus():
+    # adım 0,02; tavan 0,2. yüksek [10;11;12;13;12;10,5;10], düşük [9;10;11;12;10,5;9,5;9].
+    # Gün 0: SAR = düşük = 9, yükselen, EP = 10, AF = 0,02.
+    # Gün 1: 9+0,02*(10-9) = 9,02; önceki düşükten (9) yüksek olamaz -> 9. Yeni tepe 11: EP 11, AF 0,04.
+    # Gün 2: 9+0,04*(11-9) = 9,08; en düşük iki önceki düşük 9 -> 9. EP 12, AF 0,06.
+    # Gün 3: 9+0,06*(12-9) = 9,18 (düşükler 11 ve 10 üstünde değil). EP 13, AF 0,08.
+    # Gün 4: 9,18+0,08*(13-9,18) = 9,4856. Yeni tepe yok.
+    # Gün 5: 9,4856+0,08*(13-9,4856) = 9,766752; düşük 9,5 < 9,766752 -> dönüş: SAR = EP = 13, EP = 9,5, AF = 0,02.
+    # Gün 6: düşen trend: 13+0,02*(9,5-13) = 12,93; üst sınırlar 10,5 ve 12 altında -> 12,93. Düşük 9 < EP: EP 9.
+    sonuc = gostergeler.psar(
+        pd.Series([10.0, 11, 12, 13, 12, 10.5, 10]),
+        pd.Series([9.0, 10, 11, 12, 10.5, 9.5, 9]),
+    )
+    assert sonuc.tolist() == pytest.approx(
+        [9.0, 9.0, 9.0, 9.18, 9.4856, 13.0, 12.93], abs=1e-9
+    )
+
+
+def test_stokastik_k_ve_d():
+    # n=3, d=2. yüksek [12;13;14;13;15], düşük [10;11;12;11;12], kapanış [11;12;13;12;14].
+    # Gün 2: en yüksek 14, en düşük 10 -> %K = 100*(13-10)/(14-10) = 75.
+    # Gün 3: en yüksek 14, en düşük 11 -> %K = 100*(12-11)/(14-11) = 100/3.
+    # Gün 4: en yüksek 15, en düşük 11 -> %K = 100*(14-11)/(15-11) = 75.
+    # %D = %K'nın SMA2'si: gün 3 (75+100/3)/2 = 325/6; gün 4 (100/3+75)/2 = 325/6.
+    k, d = gostergeler.stokastik(
+        pd.Series([12.0, 13, 14, 13, 15]),
+        pd.Series([10.0, 11, 12, 11, 12]),
+        pd.Series([11.0, 12, 13, 12, 14]),
+        3,
+        2,
+    )
+    assert k.isna().tolist() == [True, True, False, False, False]
+    assert k.iloc[2:].tolist() == pytest.approx([75.0, 100 / 3, 75.0], abs=1e-9)
+    assert d.isna().tolist() == [True, True, True, False, False]
+    assert d.iloc[3:].tolist() == pytest.approx([325 / 6, 325 / 6], abs=1e-9)

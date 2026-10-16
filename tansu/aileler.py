@@ -1,11 +1,19 @@
-"""Aileler: EMA sıkışması kırılım sinyali (KURALLAR §3 madde 2; TASARIM 5.1 ısınma, 5.3 SMA250 şartı)."""
+"""Aileler: EMA sıkışması kırılım sinyali ve kurulum bilgisi (KURALLAR §3 madde 2 ve "Modül 1"; TASARIM 5.1 ısınma, 5.3 SMA250 şartı)."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 import numpy as np
 import pandas as pd
 
 from tansu import gostergeler
+
+SECENEKLER = {  # KURALLAR §3 Modül 1: her alanın izinli değerleri
+    "giris": ("kutu", "ema", "mum", "retest", "agresif"),
+    "teyit": ("yok", "gosterge", "trend"),
+    "stop": ("atr2", "atr15", "kutu"),
+    "hedef": ("yok", "tansu"),
+    "cikis": ("yok", "atr3", "dip", "rsi70", "rsi50"),
+}
 
 
 @dataclass(frozen=True)
@@ -16,9 +24,34 @@ class Parametre:
     pencere: int = 10  # YORUM: dönem bittikten sonra giriş penceresi (gün)
     isinma: int = 500  # TASARIM 5.1: hissenin ilk gününden bu kadar işlem günü dolmadan sinyal yok
     sma_n: int = 250
+    giris: str = "kutu"  # KURALLAR §3 Modül 1: giriş türü
+    hacim_kat: float = (
+        0.0  # 0: süzgeç yok; yoksa hacim >= kat × önceki 20 günün ortalaması
+    )
+    momentum: bool = False
+    teyit: str = "yok"
+    stop: str = (
+        "atr2"  # başlangıç stopu: R/R kapısı burada, giriş stopu `motor`'da okur
+    )
+    hedef: str = "yok"
+    rr_min: float = 2.0
+    cikis: str = "yok"  # `motor` okur
+
+    def __post_init__(self):
+        for alan, izinli in SECENEKLER.items():
+            if getattr(self, alan) not in izinli:
+                raise ValueError(
+                    f"Parametre {alan}: {getattr(self, alan)!r} tanımsız; izinli: {izinli}"
+                )
 
 
 KIRILIM_GUN = 20  # YORUM (KURALLAR §3): sıkışmasız kırılım kolunda önceki gün sayısı
+ATR_N = 14  # TASARIM 5.5; `motor.ATR_N` ile aynı (`motor` bu modüle dayanır, geri import yok)
+HACIM_GUN = 20  # YORUM (KURALLAR §3 Modül 1): hacim ortalaması günü
+RETEST_GUN = 5  # YORUM: güçlü mumdan sonra geri çekilme aranan gün
+BOLGE_GUN = 3  # YORUM: bölgenin onaylanması için bakılan gün (b+1 ... b+3)
+TREND_GUN = 5  # YORUM: yükselen trende temas aranan gün (t-5 ... t)
+YAKIN = 1.01  # YORUM: "yakın" = %1 (üçgen tepeleri, trend teması)
 
 
 def pencere_gunleri(f: pd.DataFrame, p: Parametre = Parametre()) -> np.ndarray:
@@ -53,17 +86,279 @@ def sikismasiz_kirilim(
     )
 
 
+def _salinim(x: np.ndarray, tepe: bool) -> np.ndarray:
+    """Salınım noktaları (pencere 2): x[i], iki yanındaki ikişer günün en büyüğüne (tepe) ya da en küçüğüne (dip) eşit ya da üstü. i+2 gününde bilinir."""
+    s = np.zeros(len(x), dtype=bool)
+    if len(x) >= 5:
+        yan = np.stack([x[:-4], x[1:-3], x[3:-1], x[4:]])
+        s[2:-2] = (x[2:-2] >= yan.max(0)) if tepe else (x[2:-2] <= yan.min(0))
+    return s
+
+
+def _dogru(x: np.ndarray, a, u: int) -> float:
+    """İki salınım noktasından (konumlar `a`) geçen doğrunun `u` konumundaki değeri."""
+    return x[a[1]] + (x[a[1]] - x[a[0]]) / (a[1] - a[0]) * (u - a[1])
+
+
+def _ucgen_hedef(yuksek: np.ndarray, dusuk: np.ndarray) -> float:
+    """Üçgen hedefi (KURALLAR §3 Modül 1): dönem içi tepe ve diplerden; üçgen yoksa NaN."""
+    tepe, dip = yuksek[_salinim(yuksek, True)], dusuk[_salinim(dusuk, False)]
+    if (
+        len(tepe) < 2
+        or len(dip) < 3
+        or (tepe[1:] > tepe[0] * YAKIN).any()
+        or (np.diff(dip) <= 0).any()
+    ):
+        return np.nan
+    return tepe.max() + (tepe[0] - dip[0])
+
+
+def _trend_teyit(t, kap, yuk, dus, tepe, dip) -> bool:
+    """Trend teyidi (KURALLAR §3 Modül 1): düşen trend kırılımı ya da yükselen trende temas ve tepki. `tepe`, `dip`: salınım konumları; yalnız i+2 <= t olanlar bilinir."""
+    a = tepe[tepe <= t - 2][-2:]
+    if len(a) == 2 and yuk[a[1]] < yuk[a[0]] and _dogru(yuk, a, t) < kap[t]:
+        return True
+    b = dip[dip <= t - 2][-2:]
+    if len(b) == 2 and dus[b[1]] > dus[b[0]]:
+        for u in range(max(t - TREND_GUN, 0), t + 1):
+            d = _dogru(dus, b, u)
+            if dus[u] <= d * YAKIN and kap[u] >= d and kap[t] > kap[u]:
+                return True
+    return False
+
+
+def _bolge_listesi(f: pd.DataFrame, yon: str) -> list:
+    """Bölgeler `(b, bilinen gün, bozulma günü, proximal, distal)`, tam sayı konumlarıyla; bozulma yoksa bozulma günü `len(f)`."""
+    kap, yuk, dus = (f[s].to_numpy(float) for s in ("kapanis", "yuksek", "dusuk"))
+    atr = gostergeler.atr(f["yuksek"], f["dusuk"], f["kapanis"], ATR_N).to_numpy()
+    n, y = len(f), 1 if yon == "arz" else -1
+    # mum > 0: bölge yönünde mum (arz: yeşil, talep: kırmızı)
+    mum = y * np.diff(kap, prepend=np.nan)
+    sonuc = []
+    for b in range(1, n - 1):
+        if not (mum[b] > 0 and not mum[b + 1] > 0):
+            continue
+        # gövdenin yakın ucu: yeşil mumda alt, kırmızıda üst; ikisinde de önceki kapanış
+        prox = kap[b - 1]
+        j = next(
+            (
+                j
+                for j in range(b + 1, min(b + 1 + BOLGE_GUN, n))
+                if y * (kap[j] - prox) <= -atr[b]
+            ),
+            None,
+        )
+        if j is None:
+            continue
+        distal = yuk[b] if y > 0 else dus[b]
+        sonra = np.flatnonzero(y * (kap[j + 1 :] - distal) > 0)
+        sonuc.append((b, j, j + 1 + sonra[0] if len(sonra) else n, prox, distal))
+    return sonuc
+
+
+def bolgeler(f: pd.DataFrame, yon: str) -> pd.DataFrame:
+    """Arz (`yon="arz"`) ya da talep bölgeleri (KURALLAR §3 Modül 1; sütunlar A §6): bas, bilinen, proximal, distal, bitis (NaT: aktif), temas, teyit."""
+    yuk, dus, gun = f["yuksek"].to_numpy(float), f["dusuk"].to_numpy(float), f.index
+    satirlar = []
+    for b, j, k, prox, distal in _bolge_listesi(f, yon):
+        gir = yuk[j + 1 : k] >= prox if yon == "arz" else dus[j + 1 : k] <= prox
+        satirlar.append(
+            {
+                "bas": gun[b],
+                "bilinen": gun[j],
+                "proximal": prox,
+                "distal": distal,
+                "bitis": gun[k] if k < len(f) else pd.NaT,
+                "temas": int(gir.sum()),
+                "teyit": gun[j],  # YORUM (A §6): oluşum ve onay tarihi = bilinen gün
+            }
+        )
+    s = pd.DataFrame(
+        satirlar,
+        columns=["bas", "bilinen", "proximal", "distal", "bitis", "temas", "teyit"],
+    )
+    for sutun in ("bas", "bilinen", "bitis", "teyit"):
+        s[sutun] = pd.to_datetime(s[sutun])
+    return s
+
+
+def kurulum(f: pd.DataFrame, p: Parametre = Parametre()) -> pd.DataFrame:
+    """`f`: tarih indeksli, `kapanis` ve `yuksek` (düzeltilmiş) sütunları; varyanta göre `dusuk`, `hacim`.
+    Satır = sinyal günü (kapanış günü); sütunlar `kutu_alt`, `kutu_ust`, `hedef` (hedef yoksa NaN). KURALLAR §3 Modül 1."""
+    n = len(f)
+    kap, yuk = f["kapanis"].to_numpy(float), f["yuksek"].to_numpy(float)
+    dusuk_lazim = (
+        p.giris != "kutu" or p.momentum or p.teyit != "yok" or p.hedef != "yok"
+    )
+    # ponytail: varsayılan kural `dusuk` istemez; yoksa yalnız kutu_alt NaN kalır. Öbür varyantlar sütunu ister (yoksa KeyError).
+    dus = (
+        f["dusuk"].to_numpy(float)
+        if dusuk_lazim or "dusuk" in f
+        else np.full(n, np.nan)
+    )
+    atr = (
+        gostergeler.atr(f["yuksek"], f["dusuk"], f["kapanis"], ATR_N).to_numpy()
+        if p.giris in ("mum", "retest") or p.hedef == "tansu"
+        else None
+    )
+    # her aday günün şartı: SMA250, ısınma, momentum, gösterge teyidi
+    ok = uygun_gunler(f, p)
+    hacim_ok = np.ones(n, dtype=bool)
+    if p.hacim_kat > 0:
+        ort = f["hacim"].shift(1).rolling(HACIM_GUN).mean()  # t hariç
+        hacim_ok = (f["hacim"] >= p.hacim_kat * ort).to_numpy()
+    if p.momentum:
+        v = gostergeler.momentum_squeeze(f["yuksek"], f["dusuk"], f["kapanis"])
+        ok &= ~((v < 0) & (v < v.shift(1))).to_numpy()
+    if p.teyit == "gosterge":
+        h = gostergeler.macd_histogram(f["kapanis"])
+        k, d = gostergeler.stokastik(f["yuksek"], f["dusuk"], f["kapanis"])
+        psar = gostergeler.psar(f["yuksek"], f["dusuk"])
+        ok &= ((h > h.shift(1)) & (psar < f["kapanis"]) & (k > d)).to_numpy()
+    tepe = np.flatnonzero(_salinim(yuk, True)) if p.teyit == "trend" else None
+    dip = np.flatnonzero(_salinim(dus, False)) if p.teyit == "trend" else None
+    arz = _bolge_listesi(f, "arz") if p.hedef == "tansu" else []
+    emax = mum = None
+    if p.giris == "ema":
+        emax = (
+            pd.concat([gostergeler.ema(f["kapanis"], q) for q in p.periyotlar], axis=1)
+            .max(axis=1)
+            .to_numpy()
+        )
+    if p.giris in ("mum", "retest"):
+        # yeşil, uzun (>= ATR14), güçlü (kapanış üst üçte birde); açılış yok, vekil ölçü
+        mum = (
+            (np.diff(kap, prepend=np.nan) > 0)
+            & (yuk - dus >= atr)
+            & (3 * (kap - dus) >= 2 * (yuk - dus))
+        )
+
+    def aday(i, hacim=True):
+        return bool(
+            ok[i]
+            and (hacim_ok[i] or not hacim)
+            and (p.teyit != "trend" or _trend_teyit(i, kap, yuk, dus, tepe, dip))
+        )
+
+    def tetik(i, ust):
+        if p.giris == "ema":
+            return kap[i] > emax[i]
+        if p.giris == "kutu":
+            return kap[i] > ust
+        return mum[i] and kap[i] > ust
+
+    def kapi(i, alt, ucgen):
+        """(geçti, hedef): hedef, arz bölgesi ve üçgen hedeflerinden kapanışın üstünde kalanların küçüğü; R/R kapısı yalnız hedef varsa."""
+        if p.hedef != "tansu":
+            return True, np.nan
+        adaylar = [
+            x for x in (ucgen, *(z[3] for z in arz if z[1] <= i < z[2])) if x > kap[i]
+        ]
+        if not adaylar:
+            return True, np.nan
+        hedef = min(adaylar)
+        stop = {
+            "kutu": alt,
+            "atr15": kap[i] - 1.5 * atr[i],
+            "atr2": kap[i] - 2 * atr[i],
+        }[p.stop]
+        return bool(
+            kap[i] > stop and (hedef - kap[i]) / (kap[i] - stop) >= p.rr_min
+        ), hedef
+
+    konumlar, satirlar = [], []
+    if p.giris == "agresif":  # sıkışma sürerken: pencere yok, koşu başına tek sinyal
+        sikisik = (
+            gostergeler.sikisma_orani(f["kapanis"], p.periyotlar) <= p.esik
+        ).to_numpy()
+        bas, kullanilan = -1, set()
+        for t in range(1, n):
+            # t-1'de biten koşunun ilk günü (koşu yoksa -1)
+            bas = (bas if bas >= 0 else t - 1) if sikisik[t - 1] else -1
+            if bas < 0 or t - bas < p.min_gun or bas in kullanilan:
+                continue
+            if not (dus[t] <= dus[bas:t].min() <= kap[t]) or not aday(t, hacim=False):
+                continue
+            ucgen = (
+                _ucgen_hedef(yuk[bas:t], dus[bas:t]) if p.hedef == "tansu" else np.nan
+            )
+            gecti, hedef = kapi(t, dus[t], ucgen)
+            if gecti:
+                kullanilan.add(bas)
+                konumlar.append(t)
+                satirlar.append((dus[t], yuk[bas : t + 1].max(), hedef))
+    else:
+        oran = gostergeler.sikisma_orani(f["kapanis"], p.periyotlar)
+        for d in gostergeler.sikisma_donemleri(oran, p.esik, p.min_gun):
+            bas, bit = f.index.get_loc(d["bas"]), f.index.get_loc(d["bit"])
+            ust, alt = yuk[bas : bit + 1].max(), dus[bas : bit + 1].min()
+            ucgen = (
+                _ucgen_hedef(yuk[bas : bit + 1], dus[bas : bit + 1])
+                if p.hedef == "tansu"
+                else np.nan
+            )
+            sira, hacim = range(bit + 1, min(bit + 1 + p.pencere, n)), True
+            if p.giris == "retest":
+                # ilk güçlü mum k; sonra k+1 ... k+5 içinde kutu üstüne değen ilk gün j
+                k = next((i for i in sira if tetik(i, ust)), None)
+                j = None
+                if k is not None and hacim_ok[k]:
+                    j = next(
+                        (
+                            i
+                            for i in range(k + 1, min(k + 1 + RETEST_GUN, n))
+                            if dus[i] <= ust
+                        ),
+                        None,
+                    )
+                sira, hacim = ([j] if j is not None and kap[j] > ust else []), False
+            for i in sira:
+                if (p.giris == "retest" or tetik(i, ust)) and aday(i, hacim):
+                    gecti, hedef = kapi(i, alt, ucgen)
+                    if gecti:
+                        konumlar.append(i)
+                        satirlar.append((alt, ust, hedef))
+                        break
+    return pd.DataFrame(
+        satirlar,
+        index=f.index.take(konumlar),
+        columns=["kutu_alt", "kutu_ust", "hedef"],
+        dtype=float,
+    )
+
+
 def sinyal(f: pd.DataFrame, p: Parametre = Parametre()) -> pd.DatetimeIndex:
     """`f`: tarih indeksli, `kapanis` ve `yuksek` (düzeltilmiş) sütunları. Sinyal günleri (kapanış günü)."""
-    oran = gostergeler.sikisma_orani(f["kapanis"], p.periyotlar)
-    sma = gostergeler.sma(f["kapanis"], p.sma_n)
-    uygun = (f["kapanis"] >= sma).to_numpy()  # SMA250 NaN ise False
-    gunler = []
-    for d in gostergeler.sikisma_donemleri(oran, p.esik, p.min_gun):
-        bit = f.index.get_loc(d["bit"])
-        tavan = f["yuksek"].iloc[f.index.get_loc(d["bas"]) : bit + 1].max()
-        for i in range(bit + 1, min(bit + 1 + p.pencere, len(f))):
-            if f["kapanis"].iloc[i] > tavan and uygun[i] and i + 1 >= p.isinma:
-                gunler.append(f.index[i])
-                break
-    return pd.DatetimeIndex(gunler)
+    return kurulum(f, p).index
+
+
+# KURALLAR §3 Modül 1: Tansu'nun söylediği kuralların birleşimi (YORUM)
+_TANSU = Parametre(
+    giris="mum",
+    hacim_kat=2.0,
+    momentum=True,
+    stop="kutu",
+    hedef="tansu",
+    cikis="atr3",
+)
+# KURALLAR §3 Modül 1 varyant tablosu: temelden tek boyut değişir; `bugun` karşılaştırma tabanıdır
+VARYANTLAR = {
+    "bugun": Parametre(),
+    "tansu": _TANSU,
+    "ema_5_8_13": replace(_TANSU, periyotlar=(5, 8, 13)),
+    "ema_50_100_200": replace(_TANSU, periyotlar=(50, 100, 200)),
+    "giris_kutu": replace(_TANSU, giris="kutu"),
+    "giris_ema": replace(_TANSU, giris="ema"),
+    "giris_retest": replace(_TANSU, giris="retest"),
+    "giris_agresif": replace(_TANSU, giris="agresif"),
+    "hacim_yok": replace(_TANSU, hacim_kat=0.0),
+    "hacim_3": replace(_TANSU, hacim_kat=3.0),
+    "momentum_kapali": replace(_TANSU, momentum=False),
+    "teyit_acik": replace(_TANSU, teyit="gosterge"),
+    "teyit_trend": replace(_TANSU, teyit="trend"),
+    "stop_atr15": replace(_TANSU, stop="atr15"),
+    "stop_atr2": replace(_TANSU, stop="atr2"),
+    "cikis_dip": replace(_TANSU, cikis="dip"),
+    "cikis_rsi70": replace(_TANSU, cikis="rsi70"),
+    "cikis_rsi50": replace(_TANSU, cikis="rsi50"),
+}

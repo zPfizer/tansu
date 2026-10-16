@@ -3,7 +3,11 @@
 Tek parametrik test: bileşen × kesim günü. Sentetik dünya (`denetim.dunya`, 24 hisse, 900 gün; 02.01.2012'den). Kesilen
 anlık görüntüde t'den sonraki fiyat satırları ve faiz değişimleri yoktur; tam görüntünün t'ye kadarki çıktısı aynı olmalı.
 Kapsam: evren, göstergeler, EMA ve çift sinyalleri, çift seçimi, likidite medyanı, faiz hizalaması (ve K2 sepeti).
+Modül 1: yeni göstergeler (RSI, momentum squeeze, MACD, PSAR, stokastik) ve EMA kurulumu (varyant örnekleri: kutu, hedef;
+arz ve talep bölgeleri).
 """
+
+from dataclasses import replace
 
 import numpy as np
 import pandas as pd
@@ -69,6 +73,20 @@ def gostergeler_(tam, kes_, t):
                 seri(a, s, "yuksek"), seri(a, s, "dusuk"), seri(a, s), 14
             ),
             "sikisma": lambda a: gostergeler.sikisma_orani(seri(a, s)),
+            "rsi": lambda a: gostergeler.rsi(seri(a, s), 14),
+            "momentum": lambda a: gostergeler.momentum_squeeze(
+                seri(a, s, "yuksek"), seri(a, s, "dusuk"), seri(a, s)
+            ),
+            "macd": lambda a: gostergeler.macd_histogram(seri(a, s)),
+            "psar": lambda a: gostergeler.psar(
+                seri(a, s, "yuksek"), seri(a, s, "dusuk")
+            ),
+            "stokastik_k": lambda a: gostergeler.stokastik(
+                seri(a, s, "yuksek"), seri(a, s, "dusuk"), seri(a, s)
+            )[0],
+            "stokastik_d": lambda a: gostergeler.stokastik(
+                seri(a, s, "yuksek"), seri(a, s, "dusuk"), seri(a, s)
+            )[1],
         }.items():
             pd.testing.assert_series_equal(f(tam).loc[:t], f(kes_), obj=f"{s} {ad}")
     xu = lambda a: a.fiyat.groupby("tarih")["xu100"].first()  # noqa: E731
@@ -101,6 +119,61 @@ def ema_sinyal_(tam, kes_, t):
     assert toplam > 0 or t < pd.Timestamp(
         "2014-06-01"
     )  # sınama boş değil: t öncesinde sinyal var
+
+
+def kurulum_varyantlari():
+    """Örnek varyantlar; ısınma, SMA ve sıkışma ayarı gevşek (900 günlük dünyada çok sinyal çıksın). Her biri sıkı ve kapıları gevşek (hacim, momentum, R/R yok)."""
+    ornek = {}
+    for ad in (
+        "tansu",
+        "giris_ema",
+        "giris_retest",
+        "giris_agresif",
+        "teyit_acik",
+        "teyit_trend",
+    ):
+        p = replace(
+            aileler.VARYANTLAR[ad],
+            isinma=60,
+            sma_n=50,
+            esik=0.03,
+            min_gun=2,
+            pencere=30,
+        )
+        ornek[ad] = p
+        ornek[ad + "_gevsek"] = replace(p, hacim_kat=0.0, momentum=False, rr_min=0.0)
+    return ornek
+
+
+def kurulum_(tam, kes_, t):
+    """EMA kurulumu (kutu, hedef; varyant örnekleri) ve arz/talep bölgeleri: t'den sonrası t öncesini değiştirmez."""
+    sinyal_sayisi = hedef_sayisi = bolge_sayisi = 0
+    varyantlar = kurulum_varyantlari()
+    for s in sorted(tam.fiyat["sembol"].unique()):
+        ft, fk = (
+            a.fiyat[a.fiyat["sembol"] == s].set_index("tarih")[
+                ["kapanis", "yuksek", "dusuk", "hacim"]
+            ]
+            for a in (tam, kes_)
+        )
+        for ad, p in varyantlar.items():
+            ktam, kkes = aileler.kurulum(ft, p), aileler.kurulum(fk, p)
+            pd.testing.assert_frame_equal(ktam[ktam.index <= t], kkes, obj=f"{s} {ad}")
+            sinyal_sayisi += len(kkes)
+            hedef_sayisi += int(kkes["hedef"].notna().sum())
+        for yon in ("arz", "talep"):
+            zt, zk = aileler.bolgeler(ft, yon), aileler.bolgeler(fk, yon)
+            zt = zt[zt["bilinen"] <= t].reset_index(drop=True)
+            # t'den sonraki bozulma t'de bilinmez; temas sayısı t'den sonraki günleri de sayar, karşılaştırılmaz
+            zt["bitis"] = zt["bitis"].where(zt["bitis"] <= t)
+            pd.testing.assert_frame_equal(
+                zt.drop(columns="temas"),
+                zk.drop(columns="temas"),
+                obj=f"{s} {yon}",
+            )
+            bolge_sayisi += len(zk)
+    # sınama boş değil: kesimde sinyal, hedef ve bölge var
+    assert sinyal_sayisi > 0 and hedef_sayisi > 0 and bolge_sayisi > 0
 
 
 def cift_sinyal_(tam, kes_, t):
@@ -164,6 +237,7 @@ def yillik_fazla_(tam, kes_, t):
         evren_,
         gostergeler_,
         ema_sinyal_,
+        kurulum_,
         cift_sinyal_,
         cift_secimi_,
         zemin_,
