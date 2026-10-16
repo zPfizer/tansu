@@ -319,7 +319,7 @@ hatasından** ayırmak.
   - Gün içinde tetiklenen yarı satış (`atr3`): gün yüksek ≥ seviye ise pozisyonun yarısı satılır. Dolum seviyedir.
     Gün düşüğü seviyenin üstündeyse dolum AOF'tur.
   - Kapanışta tetiklenen yarı satış ve tam çıkış (`dip`, `rsi70`, `rsi50`) ertesi günün AOF'unda dolar.
-  - Kilitli taban gününde AOF dolumları ertesi güne kayar.
+  - Kilitli taban gününde AOF dolumları ertesi güne kayar; hedef ya da `atr3` o gün tetiklenirse de dolum ertesi kilitsiz günün AOF'undadır (hedefte neden `hedef` kalır, yarı satış tek seferdir).
 - **Kilitli gün:**
   - Kapanışı tavan fiyatında olan gün (bir fiyat adımı toleransla) giriş yok.
   - Kapanışı taban fiyatında olan gün çıkış ertesi güne kayar.

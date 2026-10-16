@@ -187,7 +187,14 @@ geometri sadakati yönsüz yapılır. (bilet 04, 14.10)
        (`tweet-ema-sikismasi-talep-bolgesi-kirilim-2002087132089770127`, Ham). YORUM: kutu, sıkışma dönemidir. Üst sınır
        dönemdeki en yüksek gün yüksekliği, alt sınır dönemdeki en düşük gün düşüğüdür. Tansu konsolidasyon kutusunda üst
        sınır için gövde ucunu, alt sınır için fitil ucunu söyler (A §14, `gorsel-paket-18-konsolidasyon-body-wick`).
-       Biz üst sınırda gün yüksekliğini alırız; çünkü varsayılan giriş kuralı böyledir (YORUM).
+       Biz üst sınırda varsayılan olarak gün yüksekliğini alırız; çünkü varsayılan giriş kuralı böyledir (YORUM).
+       `kutu_ust` alanı üst sınırı seçer: `yuksek` (varsayılan) ya da `govde`. Tansu: "En yüksek mumun gövdesinin
+       bittiği yer ile, en düşük mumun gölgesinin bittiği yer." (`gorsel-paket-18-konsolidasyon-body-wick`, Ham).
+       `govde`'de üst sınır, dönemde gün yüksekliği en büyük olan günün gövde ucudur (YORUM: "en yüksek mum" =
+       yüksekliği en büyük gün; eşitlikte ilk gün). Veride açılış yok; gövde ucu = max(önceki kapanış, kapanış)
+       (YORUM; bölgelerdeki vekil ölçüyle aynı). Dönemin ilk gününde önceki kapanış yoktur, o gün gövde ucu
+       kapanıştır (YORUM). Üst sınır giriş tetiğini, `retest` seviyesini ve `kutu_ust` sütununu değiştirir; alt sınır
+       değişmez.
      - **Giriş türü** (`giris`). Giriş penceresi, dönem bitişinden sonraki 10 gündür (YORUM; bugünkü kural). Bir gün
        aday olur ancak ve yalnız tetik, bütün süzgeçler, kapanış ≥ SMA250 ve ısınma o gün sağlanırsa. Pencerede ilk aday
        gün sinyaldir. Dönem başına tek sinyal vardır.
@@ -259,6 +266,12 @@ geometri sadakati yönsüz yapılır. (bilet 04, 14.10)
          fiyat adımı farkı modellenmez. Kutu yoksa (K1 rastgele girişi) `atr2` uygulanır. Giriş günü AOF ≤ stop ise giriş
          iptal olur (Tansu: kutunun altında kapanışta "analiz iptal olur"; iptal kuralı YORUM) ve düşen sinyal sayılır
          (TASARIM §5.3).
+         Kutu altı kapanış kurulumu iptal eder. Tansu: "Eğer fiyat bu kutunun altına sarkar ve kapanış yaparsa, analiz
+         iptal olur" (aynı not, Ham). `stop` = `kutu` iken, sıkışma dönemi bittikten sonra ve aday günden önce herhangi
+         bir günün kapanışı kutu altının altındaysa (kapanış < kutu alt) o dönemden sinyal çıkmaz. `retest` için dönem
+         bitişinden j gününe kadar bakılır; k ile j arası dahildir. Kapsam YORUM'dur: kural yalnız kutu stopunda
+         uygulanır; `atr2` ve `atr15` ve bugünkü kural değişmez. `agresif` girişte dönem bitişi yoktur; bu kural
+         uygulanmaz (YORUM; o girişin kendi şartı yukarıdadır).
      - **Hedef** (`hedef` = `tansu`; Levent 16.10: "Tansu bazı kurallarına satış hedef veriyorsa biz de o kuralı
        kullanmalıyız."). Varsayılan `yok`.
        - Arz bölgesi hedefi. Tansu: "İlk hedef, grafiğin sağ üstünde gördüğün Kırmızı Bölge (Supply/Arz) alanıdır."
@@ -300,7 +313,8 @@ geometri sadakati yönsüz yapılır. (bilet 04, 14.10)
          (`tweet-atr-iz-suren-stop-tablosu-2045421697814126693`, görsel metni). n = ⌊(yüksek − giriş) / ATR_sinyal⌋. n ≥ 2
          ise stop = max(stop, giriş + (n − 2) × ATR_sinyal). Yani n = 2'de stop giriştir, n = 3'te 1 ATR'dir. Stop yalnız
          yukarı gider. ATR sinyal günü değeridir (YORUM; E K25'te giriş günü ATR'sidir, o değer giriş AOF'undan önce
-         bilinmez).
+         bilinmez). Bu bölümdeki eşik karşılaştırmaları (n, `atr3`, `dip` etkinliği, başabaş) 9 ondalığa yuvarlanarak
+         yapılır; kayan nokta hatası tam bir basamağı düşürmesin diye (YORUM).
        - Başabaş çıkışı (E K32). Tansu: "Eğer kârlı bölgeye geçtikten sonra fiyat geri dönerek tekrar tam olarak giriş
          fiyatınıza ulaşırsa, derhal pozisyondan çıkmanız gerekir."
          (`tweet-under30-over30-1-5r-basabas-cikis-1992547498343161903`, Ham). Yüksek ≥ giriş + 1,5 × R ise stop =
@@ -339,7 +353,7 @@ geometri sadakati yönsüz yapılır. (bilet 04, 14.10)
          hedef yoktur (`atr2` yedeği, hedef çıkışı yok; YORUM).
      - **Piyasa durumu** (Levent 16.10): yalnız bilgidir, kartı durdurmaz (TASARIM §3).
      - **Varyantlar** (`aileler.VARYANTLAR`). Temel `tansu`: periyotlar (20, 50, 100, 200), giriş `mum`, hacim 2 kat,
-       momentum açık, teyit `yok`, stop `kutu`, hedef `tansu`, R/R 2, çıkış `atr3` (YORUM: Tansu'nun söylediği
+       momentum açık, teyit `yok`, kutu üstü `yuksek`, stop `kutu`, hedef `tansu`, R/R 2, çıkış `atr3` (YORUM: Tansu'nun söylediği
        kuralların birleşimi). Her varyant temelden tek boyut değiştirir. `bugun` istisnadır: varsayılan `Parametre()`
        değerleridir, yani yukarıdaki Giriş maddesinin bugünkü kuralıdır; karşılaştırma tabanıdır. Her varyant ayrı kural
        kimliği ve ayrı denemedir (TASARIM §5.11). Günlük kart `bugun` ile kalır (TASARIM §6).
@@ -349,11 +363,13 @@ geometri sadakati yönsüz yapılır. (bilet 04, 14.10)
        | `bugun` | giriş `kutu`, hacim 0, momentum kapalı, teyit `yok`, stop `atr2`, hedef `yok`, çıkış `yok` | bugünkü kural (yukarıdaki Giriş maddesi) |
        | `tansu` | temel | yukarıdaki maddeler |
        | `ema_5_8_13` | periyotlar (5, 8, 13) | Tansu: "Ben 5-8-13 kullandım." (`tweet-ema-sikismasi-talep-bolgesi-kirilim-2002087132089770127`, Ham) |
+       | `ema_10_20_50` | periyotlar (10, 20, 50) | Tansu: "EMA 10   EMA 20   EMA 50" (`tweet-ema-sikisma-tarama-1996662869107134897`, G1 görsel metni; PAPIL örneği) |
        | `ema_50_100_200` | periyotlar (50, 100, 200) | Tansu örnekleri: B §25, B §62 |
        | `giris_kutu` | giriş `kutu` | bugünkü giriş kuralı |
        | `giris_ema` | giriş `ema` | Giriş türü, `ema` |
        | `giris_retest` | giriş `retest` | Giriş türü, `retest` |
        | `giris_agresif` | giriş `agresif` | Giriş türü, `agresif` |
+       | `kutu_govde` | `kutu_ust` `govde` | Tansu: "En yüksek mumun gövdesinin bittiği yer" (`gorsel-paket-18-konsolidasyon-body-wick`, Ham); Kutu maddesi |
        | `hacim_yok` | hacim 0 | hacim süzgecinin karşılaştırması (YORUM) |
        | `hacim_3` | hacim 3 kat | Tansu: 2-3 kat (üst uç) |
        | `momentum_kapali` | momentum kapalı | momentum squeeze süzgecinin karşılaştırması (YORUM) |

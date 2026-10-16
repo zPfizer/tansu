@@ -272,7 +272,7 @@ Genel bulgu: Tansu bazı notlarda giriş, stop ve hedefi birlikte verir: `gorsel
 - Tanım: -18: zone_upper = max(open,close) of highest-high candle; zone_lower = min(low). -44/-41: uzun yatay kutu başlangıcı Point A, üst bandın aşıldığı Point B; -44'te sarı MA benzeri çizgi ve mavi noktalı trailing/zarf var (kimliği yok).
 - Parametreler: tümü yok (filtre, süre, kutu yüksekliği); YORUM: süre ve ATR-normalize yükseklik.
 - Giriş/stop/hedef: yok. Kanıt: seçilmiş; -41 hipotez ("uzun konsolidasyon -> güçlü kırılım") test edilmemiş. Günlük veriyle: evet (kural yazılabilir) ama gizli filtre kopyalanamaz. Güven: düşük.
-- Modül 1'de kullanımı: KURALLAR §3 (kutu sınırı: alt sınır en düşük mumun fitil ucu; üst sınır bizim seçimimiz, gün yüksekliği, YORUM).
+- Modül 1'de kullanımı: KURALLAR §3 (kutu sınırı: alt sınır en düşük mumun fitil ucu; üst sınır varsayılanda bizim seçimimiz, gün yüksekliği, YORUM; `kutu_govde` varyantında gövde ucu).
 - Ek kaynaklar (X arşivi, 16.10):
   - `tweet-yatay-konsolidasyon-7-30-gun-yuzde10-1939569795696922684` — Yatay kanal (konsolidasyon) anlatımı ve tarama kodu (30.06.2025). Stop: "stop-loss seviyelerini bu bandın hemen dışına koymak rasyonel bir risk yönetimidir." (Ham). Giriş: "Kanalın yukarısı hacimle kırılırsa alım" (Ham). Görsel (görsel, açıldı): "AKMGY.IS | 30 gün yatay (183.30 - 200.00) | Başlangıç idx: 588" ve "AKMGY.IS: 30 gün boyunca yatay kanal, % değişim: 9.11% (2025-05-14 ~ 2025-06-27)" (görsel metni). Parametre: kanal = son 2 ayda en az 7 en fazla 30 gün boyunca %10'dan fazla hareket etmeyen bölge (Ham); stop mesafesi = bandın hemen dışı, tampon sayısı yok (Ham)
 

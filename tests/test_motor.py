@@ -971,3 +971,127 @@ def test_ayni_gune_iki_donem_sinyali_ilk_donemin_kutusu_kullanilir():
     assert _ozet(satirlar, Parametre(stop="kutu"), kurulum) == _ak(
         (1, 100, 2, 95, "stop", 5, 5)
     )
+
+
+# --- Düzeltme turu C: kilitli tabanda hedef ve yarı satış, eşik karşılaştırmasında kayan nokta (TASARIM 5.3) ---
+
+KILITLI = {
+    # hedef 110, stop 96. Gün 2 kilitli taban: yüksek 112 >= 110, düşük 99,9 > 96 -> o gün çıkış yok.
+    # Gün 3 kilitsiz: ertesi gün AOF 105, neden hedef. Risk 4, kayıp 0.
+    "hedef_ertesi_kilitsiz_gun_aof": (
+        Parametre(hedef="tansu"),
+        _kurulum(hedef=110.0),
+        [
+            S0,
+            r(100, 111, 99, 111),
+            r(99.9, 112, 99.9, 99.9, kilit_taban=True),
+            r(105, 108, 104, 106),
+        ],
+        (1, 100, 3, 105, "hedef", 4, 0),
+    ),
+    # Gün 2 ve gün 3 kilitli taban (gün 3 yüksek 99,5 < hedef, düşük 99,5 > 96): bekleyen hedef kayar. Gün 4 AOF 104.
+    "hedef_iki_kilitli_gun": (
+        Parametre(hedef="tansu"),
+        _kurulum(hedef=110.0),
+        [
+            S0,
+            r(100, 111, 99, 111),
+            r(99.9, 112, 99.9, 99.9, kilit_taban=True),
+            r(99.5, 99.5, 99.5, 99.5, kilit_taban=True),
+            r(104, 106, 103, 105),
+        ],
+        (1, 100, 4, 104, "hedef", 4, 0),
+    ),
+}
+
+
+@pytest.mark.parametrize("ad", KILITLI)
+def test_hedef_kilitli_taban_gununde_ertesi_kilitsiz_gunun_aofunda_dolar(ad):
+    ayar, kurulum, satirlar, beklenen = KILITLI[ad]
+    assert _ozet(satirlar, ayar, kurulum) == _ak(beklenen)
+
+
+def test_atr3_yari_satis_kilitli_taban_gununde_ertesi_aofa_kayar_ve_tek_seferdir():
+    # Giriş 104, ATR 2: stop 100, seviye 110. Gün 2 kilitli taban, her fiyat 112,86 >= 110: yarı satış o gün yok.
+    # Merdiven: n = ⌊8,86 / 2⌋ = 4 -> stop 108. Gün 3 kilitsiz: yarı satış AOF 113 (düşük 112 > 108).
+    # Yüksek 120: n = 8 -> stop 116. Gün 4 ve 5 yüksek >= 110 yine, ama yarı satış tek sefer; düşük 116,5 ve 117 > 116.
+    # Veri sonu 120. Ortalama (113 + 120) / 2 = 116,5 (gün 2'de AOF 112,86 dolsaydı 116,43).
+    satirlar = [
+        S0,
+        r(104, 105, 103, 104),
+        r(112.86, 112.86, 112.86, 112.86, kilit_taban=True),
+        r(113, 120, 112, 118),
+        r(117, 119, 116.5, 118),
+        r(119, 121, 117, 120),
+    ]
+    assert _ozet(satirlar, Parametre(cikis="atr3")) == _ak(
+        (1, 104, 5, 116.5, "veri_sonu", 4, 0)
+    )
+
+
+def _ozet_atr(satirlar, ayar, atr):
+    # Fiyatlar 5-10 arası; varsayılan SMA250 (50) SMA250 çıkışı verirdi. SMA250 = 1: kapanış hep üstünde.
+    satirlar = [{"sma250": 1.0, **s} for s in satirlar]
+    t, dusen = motor.islemler(_mumlar(satirlar, atr), GUNLER[[0]], ayar)
+    assert dusen == 0 and len(t) == 1
+    x = t.iloc[0]
+    return (
+        GUNLER.get_loc(x.giris_tarih),
+        x.giris_fiyat,
+        GUNLER.get_loc(x.cikis_tarih),
+        x.cikis_fiyat,
+        x.neden,
+        x.planlanan_risk,
+        x.gerceklesen_kayip,
+    )
+
+
+@pytest.mark.parametrize(
+    "yuksek, beklenen",
+    [
+        # Giriş 10, ATR 0,2, ilk stop 9,6. Gün 2 yüksek 10,6: (10,6 - 10) / 0,2 = 3 tam (kayan nokta 2,999...): n = 3,
+        # stop = 10 + 1 * 0,2 = 10,2. Gün 3 düşük 9,95 <= 10,2 -> min(10,2; 10,3) = 10,2. Risk 0,4, kayıp 0.
+        (10.6, (1, 10, 3, 10.2, "stop", 0.4, 0)),
+        # Yüksek 10,5999: oran 2,9995 -> n = 2, stop = 10. Gün 3 düşük 9,95 <= 10 -> min(10; 10,3) = 10.
+        (10.5999, (1, 10, 3, 10.0, "stop", 0.4, 0)),
+    ],
+)
+def test_merdiven_tam_esikte_kayan_nokta_basamagi_dusurmez(yuksek, beklenen):
+    satirlar = [
+        r(10, 10.1, 9.9, 10),
+        r(10, 10.1, 9.9, 10, onceki_dusuk=0),
+        r(10.3, yuksek, 10.1, 10.4, onceki_dusuk=0),
+        r(10.3, 10.4, 9.95, 10.3, onceki_dusuk=0),
+    ]
+    assert _ozet_atr(satirlar, Parametre(cikis="dip"), 0.2) == _ak(beklenen)
+
+
+def test_atr3_seviyesi_tam_esikte_kayan_nokta_yuzunden_kacmaz():
+    # Giriş 5,2, ATR 0,2, stop 4,8. Seviye 5,2 + 3 * 0,2 = 5,8 (kayan nokta 5,800000000000001). Gün 2 yüksek 5,8,
+    # düşük 5,3 <= seviye -> yarı satış 5,8. n = ⌊0,6 / 0,2⌋ = 3 -> stop 5,4 (gün 3 düşük 5,5 > 5,4). Veri sonu 5,7.
+    # Ortalama (5,8 + 5,7) / 2 = 5,75 (yarı satış kaçsaydı 5,7).
+    satirlar = [
+        r(5.2, 5.3, 5.1, 5.2),
+        r(5.2, 5.3, 5.1, 5.2),
+        r(5.5, 5.8, 5.3, 5.6),
+        r(5.7, 5.8, 5.5, 5.7),
+    ]
+    assert _ozet_atr(satirlar, Parametre(cikis="atr3"), 0.2) == _ak(
+        (1, 5.2, 3, 5.75, "veri_sonu", 0.4, 0)
+    )
+
+
+def test_dip_etkinligi_tam_esikte_kayan_nokta_yuzunden_kacmaz():
+    # Giriş 5,2, ATR 0,4, stop 4,4. Etkinlik 5,2 + 1,5 * 0,4 = 5,8 (kayan nokta 5,800000000000001). Gün 2 yüksek 5,8 -> etkin.
+    # Gün 3 kapanış 5,25 < önceki düşük 5,3 -> tetik; gün 4 AOF 5,1 yarı satış. Veri sonu 5,3.
+    # Ortalama (5,1 + 5,3) / 2 = 5,2 (etkinlik kaçsaydı satış olmaz, 5,3). Risk 0,8.
+    satirlar = [
+        r(5.2, 5.4, 5.0, 5.2),
+        r(5.2, 5.4, 5.0, 5.2, onceki_dusuk=0),
+        r(5.4, 5.8, 5.3, 5.6, onceki_dusuk=5.0),
+        r(5.4, 5.5, 5.2, 5.25, onceki_dusuk=5.3),
+        r(5.1, 5.4, 5.0, 5.3, onceki_dusuk=5.2),
+    ]
+    assert _ozet_atr(satirlar, Parametre(cikis="dip"), 0.4) == _ak(
+        (1, 5.2, 4, 5.2, "veri_sonu", 0.8, 0)
+    )

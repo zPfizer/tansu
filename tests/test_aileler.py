@@ -623,7 +623,7 @@ def test_talep_bolgesi_olusum_bilinen_gun_bozulma_ve_temas():
     assert len(aileler.bolgeler(f.iloc[:17], "talep")) == 0
 
 
-def test_varyantlar_18_ad_temelden_tek_boyut_degisir():
+def test_varyantlar_20_ad_temelden_tek_boyut_degisir():
     temel = aileler.VARYANTLAR["tansu"]
     assert temel == Parametre(
         periyotlar=(20, 50, 100, 200),
@@ -639,11 +639,13 @@ def test_varyantlar_18_ad_temelden_tek_boyut_degisir():
     assert aileler.VARYANTLAR["bugun"] == Parametre()
     tek = {
         "ema_5_8_13": ("periyotlar", (5, 8, 13)),
+        "ema_10_20_50": ("periyotlar", (10, 20, 50)),
         "ema_50_100_200": ("periyotlar", (50, 100, 200)),
         "giris_kutu": ("giris", "kutu"),
         "giris_ema": ("giris", "ema"),
         "giris_retest": ("giris", "retest"),
         "giris_agresif": ("giris", "agresif"),
+        "kutu_govde": ("kutu_ust", "govde"),
         "hacim_yok": ("hacim_kat", 0.0),
         "hacim_3": ("hacim_kat", 3.0),
         "momentum_kapali": ("momentum", False),
@@ -656,7 +658,7 @@ def test_varyantlar_18_ad_temelden_tek_boyut_degisir():
         "cikis_rsi50": ("cikis", "rsi50"),
     }
     assert set(aileler.VARYANTLAR) == {"bugun", "tansu", *tek}
-    assert len(aileler.VARYANTLAR) == 18
+    assert len(aileler.VARYANTLAR) == 20
     temel_alanlar = asdict(temel)
     for ad, (alan, deger) in tek.items():
         alanlar = asdict(aileler.VARYANTLAR[ad])
@@ -696,3 +698,89 @@ def test_retest_ve_agresif_sinyal_gunleri_on_sart_gunudur():
         assert _gunler(f, p) == [gun]
         assert on_sart(f, p)[gun]
         assert on_sart(f, p).sum() >= 1
+
+
+# --- Düzeltme turu C: kutu altı kapanış iptali, yeni varyantlar, gövde ucu (KURALLAR §3 "Modül 1") ---
+
+
+def _tansu(**alan):
+    """`tansu` varyantı; küçük ayar: periyotlar (2, 3), eşik 0,004, en az 3 gün, pencere 3, SMA1, hacim ve momentum kapalı."""
+    kucuk = dict(KUCUK, sma_n=1, hacim_kat=0.0, momentum=False)
+    return Parametre(**{**asdict(aileler.VARYANTLAR["tansu"]), **kucuk, **alan})
+
+
+# 20 gün: kapanış 100, yüksek 101, düşük 99 (oran 0): dönem gün 0-19, kutu alt 99, kutu üst 101.
+# Gün 20: kapanış 97, yüksek 100, düşük 96. EMA2 = 100 - 3*2/3 = 98, EMA3 = 100 - 3/2 = 98,5; oran 0,5/98,5 = 0,0051 > 0,004
+# -> dönem gün 19'da biter. 97 < 99: kutu altı kapanış. Gün 21: kapanış 104, yüksek 104,5, düşük 100.
+# Gün 21 mum: yeşil (104 > 97), ATR21 = ((26 + 4) / 14 * 13 + 7,5) / 14 = 2,53 <= aralık 4,5, (104 - 100) / 4,5 = 0,89 >= 2/3,
+# 104 > 101; ema: 104 > EMA2 102; kutu: 104 > 101. Arz bölgesi ve üçgen yok -> hedef yok, R/R kapısı geçer.
+# stop kutu: gün 20'nin kapanışı 97 < 99 -> kurulum iptal, sinyal yok. stop atr2: gün 21 sinyal.
+@pytest.mark.parametrize("giris", ["kutu", "ema", "mum"])
+def test_kutu_altinda_kapanis_kutu_stopunda_donemi_iptal_eder_atr2_de_etmez(giris):
+    f = _mumlar(
+        [100.0] * 20 + [97.0, 104.0],
+        [101.0] * 20 + [100.0, 104.5],
+        [99.0] * 20 + [96.0, 100.0],
+    )
+    assert _gunler(f, _tansu(giris=giris, stop="atr2")) == [21]
+    assert _gunler(f, _tansu(giris=giris, stop="kutu")) == []
+    assert _gunler(f, _tansu(giris=giris, stop="atr15")) == [21]
+
+
+# Gün 0-19 aynı; gün 20 kapanış 97 (kutu altı), gün 21 mum (104; 104,5; 100), gün 22 geri çekilme (102; 103; 100,8).
+# Dönem gün 19'da biter (yukarıdaki gibi); pencere gün 20-22; ilk mum k = 21; j = 22 (düşük 100,8 <= 101, kapanış 102 > 101).
+# stop atr2: sinyal gün 22. stop kutu: gün 20 kapanışı 97 < 99 (k'dan önce) -> iptal.
+def test_kutu_altinda_kapanis_retest_icin_mumdan_once_de_iptal_eder():
+    f = _mumlar(
+        [100.0] * 20 + [97.0, 104.0, 102.0],
+        [101.0] * 20 + [100.0, 104.5, 103.0],
+        [99.0] * 20 + [96.0, 100.0, 100.8],
+    )
+    assert _gunler(f, _tansu(giris="retest", stop="atr2")) == [22]
+    assert _gunler(f, _tansu(giris="retest", stop="kutu")) == []
+
+
+# Kapanış [100, 101, 100, 100, 100, 103, 104, 105]: oran gün 0-4 <= 0,004 (en büyüğü gün 1: 0,1667/100,5 = 0,0017), gün 5
+# 0,4769/101,53 = 0,0047 > 0,004 -> dönem gün 0-4. Yüksek [100,5; 101,5; 104; 100,5; 100,5; ...]: en yüksek gün 2 (104).
+# Gün 2 gövde ucu = max(önceki kapanış 101, kapanış 100) = 101 (kapanış tek başına 100 olurdu).
+# yuksek: kutu üstü 104; 103 > 104 hayır, 104 > 104 hayır, 105 > 104 -> gün 7. govde: kutu üstü 101; 103 > 101 -> gün 5.
+def test_kutu_ust_govde_en_yuksek_gunun_govde_ucu_giris_tetigini_ve_sutunu_degistirir():
+    f = _mumlar(
+        [100, 101, 100, 100, 100, 103, 104, 105],
+        [100.5, 101.5, 104, 100.5, 100.5, 103.5, 104.5, 105.5],
+    )
+    yuksek = Parametre(giris="kutu", kutu_ust="yuksek", **KUCUK)
+    govde = Parametre(giris="kutu", kutu_ust="govde", **KUCUK)
+    assert _gunler(f, yuksek) == [7]
+    assert _gunler(f, govde) == [5]
+    assert aileler.kurulum(f, yuksek).iloc[0]["kutu_ust"] == 104.0
+    assert aileler.kurulum(f, govde).iloc[0]["kutu_ust"] == 101.0
+    assert Parametre().kutu_ust == "yuksek"
+    with pytest.raises(ValueError, match="kutu_ust"):
+        Parametre(kutu_ust="gövde")
+
+
+# `_mum_sonrasi`: gün 0-13 düz (kapanış 100, yüksek 101); gün 0 en yüksek gün (eşitlikte ilk) ve önceki kapanış yok -> gövde
+# ucu = kapanış 100. Mum günü 14 (104). Gün 15: düşük 100,8, kapanış 102. Gün 16: düşük 99,8, kapanış 101,5.
+# yuksek: kutu üstü 101 -> j = 15 (100,8 <= 101), 102 > 101 -> sinyal 15. govde: kutu üstü 100 -> 100,8 <= 100 hayır;
+# j = 16 (99,8 <= 100), 101,5 > 100 -> sinyal 16. SMA10 gün 15 = 100,6; gün 16 = 100,75 (ikisi de kapanışın altında).
+def test_kutu_ust_govde_retest_seviyesini_degistirir():
+    f = _mum_sonrasi([(102, 103, 100.8, 100), (101.5, 102, 99.8, 100)])
+    yuksek = Parametre(giris="retest", kutu_ust="yuksek", **MUM)
+    govde = Parametre(giris="retest", kutu_ust="govde", **MUM)
+    assert _gunler(f, yuksek) == [15]
+    assert _gunler(f, govde) == [16]
+    assert aileler.kurulum(f, govde).iloc[0]["kutu_ust"] == 100.0
+
+
+def test_varyantlar_ema_10_20_50_ve_kutu_govde_temelden_tek_boyut_degisir():
+    temel = asdict(aileler.VARYANTLAR["tansu"])
+    assert temel["kutu_ust"] == "yuksek"
+    for ad, alan, deger in (
+        ("ema_10_20_50", "periyotlar", (10, 20, 50)),
+        ("kutu_govde", "kutu_ust", "govde"),
+    ):
+        alanlar = asdict(aileler.VARYANTLAR[ad])
+        assert {a for a in alanlar if alanlar[a] != temel[a]} == {alan}, ad
+        assert alanlar[alan] == deger, ad
+    assert len(aileler.VARYANTLAR) == 20

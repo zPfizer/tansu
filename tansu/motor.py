@@ -66,6 +66,11 @@ def bekleyen(
     )
 
 
+def _ulasti(yuksek, seviye) -> bool:
+    """yüksek >= seviye; kayan nokta hatası tam eşiği kaçırmasın diye 9 ondalığa yuvarlanır (KURALLAR §3 ATR merdiveni)."""
+    return round(yuksek - seviye, 9) >= 0
+
+
 def _kapat(p, tarih, fiyat, neden):
     return replace(p, durum="kapali", cikis_tarih=tarih, cikis_fiyat=fiyat, neden=neden)
 
@@ -116,14 +121,21 @@ def adim(p: Pozisyon, m) -> Pozisyon:
 
 def _gun(p, m):
     """Stopa dokunmayan, tam çıkışı beklemeyen açık gün (giriş günü hariç): KURALLAR §3 gün sırası."""
-    t, aof = m["tarih"], m["aof"]
-    if p.yari_bekleyen and not m["kilit_taban"]:  # kilitli taban: AOF dolumu kayar
+    t, aof, taban = m["tarih"], m["aof"], m["kilit_taban"]
+    if p.yari_bekleyen and not taban:  # kilitli taban: AOF dolumu kayar
         p = replace(p, yari_bekleyen=False, yari_tarih=t, yari_fiyat=aof)
     if p.hedef is not None and m["yuksek"] >= p.hedef:
+        if taban:  # kilitli taban: tam çıkış ertesi kilitsiz günün AOF'unda, stop gibi (TASARIM 5.3)
+            return replace(p, bekleyen="hedef")
         return _kapat(p, t, p.hedef if m["dusuk"] <= p.hedef else aof, "hedef")
     seviye = p.giris_fiyat + YARI_ATR * p.atr
-    if p.ayar.cikis == "atr3" and p.yari_tarih is None and m["yuksek"] >= seviye:
-        p = replace(p, yari_tarih=t, yari_fiyat=seviye if m["dusuk"] <= seviye else aof)
+    if p.ayar.cikis == "atr3" and p.yari_tarih is None and _ulasti(m["yuksek"], seviye):
+        if taban:  # kilitli taban: yarı satış ertesi kilitsiz günün AOF'unda; yari_tarih o zamana dek boş, tek sefer
+            p = replace(p, yari_bekleyen=True)
+        else:
+            p = replace(
+                p, yari_tarih=t, yari_fiyat=seviye if m["dusuk"] <= seviye else aof
+            )
     if m["kapanis"] < m["sma250"]:  # SMA250 tam çıkışı önce gelir
         p = replace(p, bekleyen="sma250")
     else:
@@ -153,7 +165,7 @@ def _cikis_kurali(p, m):
     yari = bool(senaryo) and not p.senaryo  # ilk senaryo yarı satış verir
     p = replace(
         p,
-        aktif=p.aktif or m["yuksek"] >= p.giris_fiyat + ETKIN_ATR * p.atr,
+        aktif=p.aktif or _ulasti(m["yuksek"], p.giris_fiyat + ETKIN_ATR * p.atr),
         senaryo=gorulen,
     )
     if tam:
@@ -163,9 +175,11 @@ def _cikis_kurali(p, m):
 
 def _merdiven(p, m):
     """ATR merdiveni ve başabaş (çıkış paketi): ertesi gün için stop, yalnız yukarı gider."""
-    n = (m["yuksek"] - p.giris_fiyat) // p.atr
+    n = (
+        round((m["yuksek"] - p.giris_fiyat) / p.atr, 9) // 1
+    )  # tam basamak kayan nokta hatasıyla düşmesin
     stop = max(p.stop, p.giris_fiyat + (n - 2) * p.atr) if n >= 2 else p.stop
-    if m["yuksek"] >= p.giris_fiyat + BASABAS_R * (p.giris_fiyat - p.ilk_stop):
+    if _ulasti(m["yuksek"], p.giris_fiyat + BASABAS_R * (p.giris_fiyat - p.ilk_stop)):
         stop = max(stop, p.giris_fiyat)
     return replace(p, stop=stop)
 

@@ -13,6 +13,7 @@ SECENEKLER = {  # KURALLAR §3 Modül 1: her alanın izinli değerleri
     "stop": ("atr2", "atr15", "kutu"),
     "hedef": ("yok", "tansu"),
     "cikis": ("yok", "atr3", "dip", "rsi70", "rsi50"),
+    "kutu_ust": ("yuksek", "govde"),
 }
 
 
@@ -36,6 +37,7 @@ class Parametre:
     hedef: str = "yok"
     rr_min: float = 2.0
     cikis: str = "yok"  # `motor` okur
+    kutu_ust: str = "yuksek"  # KURALLAR §3 Modül 1 Kutu: yuksek = gün yüksekliği, govde = en yüksek günün gövde ucu
 
     def __post_init__(self):
         for alan, izinli in SECENEKLER.items():
@@ -227,6 +229,16 @@ def kurulum(f: pd.DataFrame, p: Parametre = Parametre()) -> pd.DataFrame:
         if p.giris in ("mum", "retest") or p.hedef == "tansu"
         else None
     )
+    govde = np.fmax(
+        np.r_[np.nan, kap[:-1]], kap
+    )  # gövde ucu: açılış yok; ilk günde önceki kapanış yok -> kapanış
+
+    def ust_bul(a, b):
+        """Kutu üstü (gün a ... b-1): gün yüksekliklerinin en büyüğü ya da `govde`'de o günün gövde ucu (eşitlikte ilk gün)."""
+        return (
+            yuk[a:b].max() if p.kutu_ust == "yuksek" else govde[a + yuk[a:b].argmax()]
+        )
+
     # her aday günün şartı: SMA250, ısınma, momentum, gösterge teyidi
     ok = uygun_gunler(f, p)
     hacim_ok = np.ones(n, dtype=bool)
@@ -304,12 +316,12 @@ def kurulum(f: pd.DataFrame, p: Parametre = Parametre()) -> pd.DataFrame:
             if gecti:
                 kullanilan.add(bas)
                 konumlar.append(t)
-                satirlar.append((dus[t], yuk[bas : t + 1].max(), hedef))
+                satirlar.append((dus[t], ust_bul(bas, t + 1), hedef))
     else:
         oran = gostergeler.sikisma_orani(f["kapanis"], p.periyotlar)
         for d in gostergeler.sikisma_donemleri(oran, p.esik, p.min_gun):
             bas, bit = f.index.get_loc(d["bas"]), f.index.get_loc(d["bit"])
-            ust, alt = yuk[bas : bit + 1].max(), dus[bas : bit + 1].min()
+            ust, alt = ust_bul(bas, bit + 1), dus[bas : bit + 1].min()
             ucgen = (
                 _ucgen_hedef(yuk[bas : bit + 1], dus[bas : bit + 1])
                 if p.hedef == "tansu"
@@ -331,6 +343,8 @@ def kurulum(f: pd.DataFrame, p: Parametre = Parametre()) -> pd.DataFrame:
                     )
                 sira, hacim = ([j] if j is not None and kap[j] > ust else []), False
             for i in sira:
+                if p.stop == "kutu" and (kap[bit + 1 : i] < alt).any():
+                    break  # Tansu: kutu altı kapanışta analiz iptal olur (KURALLAR §3 Stop `kutu`)
                 if (p.giris == "retest" or tetik(i, ust)) and aday(i, hacim):
                     gecti, hedef = kapi(i, alt, ucgen)
                     if gecti:
@@ -364,11 +378,13 @@ VARYANTLAR = {
     "bugun": Parametre(),
     "tansu": _TANSU,
     "ema_5_8_13": replace(_TANSU, periyotlar=(5, 8, 13)),
+    "ema_10_20_50": replace(_TANSU, periyotlar=(10, 20, 50)),
     "ema_50_100_200": replace(_TANSU, periyotlar=(50, 100, 200)),
     "giris_kutu": replace(_TANSU, giris="kutu"),
     "giris_ema": replace(_TANSU, giris="ema"),
     "giris_retest": replace(_TANSU, giris="retest"),
     "giris_agresif": replace(_TANSU, giris="agresif"),
+    "kutu_govde": replace(_TANSU, kutu_ust="govde"),
     "hacim_yok": replace(_TANSU, hacim_kat=0.0),
     "hacim_3": replace(_TANSU, hacim_kat=3.0),
     "momentum_kapali": replace(_TANSU, momentum=False),
