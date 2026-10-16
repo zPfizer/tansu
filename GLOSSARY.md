@@ -179,3 +179,5 @@ olduğunu söyler; sayı, formül ve işleyiş, atıf verilen bölümdedir (TASA
 | Sağlam bölge | Kendisi ve bütün komşuları kârlı olan ızgara hücreleri. Tek başına kârlı hücre tuzak sayılır (TASARIM §5.14). |
 | Para çıkmaz | En iyi ayarın bile masraf sonrası kazandırmadığı sonuç etiketi (TASARIM §5.14). |
 | Al-tut | Aynı hissenin aynı dönemde bir kez alınıp tutulması; kıyas çizgisidir (TASARIM §5.14). |
+| Geçerli fiyat günü | Tansu sınamasında fiyatı kullanılabilen gün: işlem görmüş, karantinasız, fiyatı sıfırdan büyük ve sonlu (TASARIM §5.14). |
+| Dönemin son günü | Tansu sınamasında hissenin son veri satırı; fiyatının geçerli olması gerekmez (TASARIM §5.14). |

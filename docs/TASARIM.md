@@ -861,30 +861,44 @@ Levent 16.10: "Tansu ne diyorsa onu yap." Komut: `python -m tansu tansu-sinama`.
   parametrelerde giriş çıkış yapmak lazım." (Ham, tweet-hisse-bazli-parametre-optimizasyonu-1840170065464803535). Izgara
   KURALLAR §3'tekidir: EMA 27 hücre; çift Z penceresi × Z eşiği, 6 hücre (seçim p'si yıllık çift seçimine aittir, burada yok).
 - **Dönem:** Tansu modu bütün dönemdir: "Biz model eğitmedik kardeşim," (Ham, tweet-atr-yon-degisimi-dip-tepe-1927454690960101506).
-  Dönem, 2015-12-01 (5.1) ile ısınmanın bittiği günün (tek hisse 500, çift 252 işlem günü; 5.1) geç olanından veri sonuna dek.
-  Çiftte dönem başı, bu iki tarihten sonraki ilk gündür ve iki bacağın da o gün kapanışı ve AOF'u vardır; böyle gün yoksa çift
-  sınanmaz. Dönem tek gün olabilir (işlem olmaz, net 0,0, al-tut yine hesaplanır). Dönem sonu hissenin (çiftte iki bacağın
-  erken biten) son satırıdır; kapanışı olmayan karantina günü dahildir, kapanış ileri doldurulur, al-tut son geçerli
-  kapanıştan satar. Isınması dolmayan ya da dönem başından itibaren AOF'u olmayan hisse ve 252 ortak günü olmayan çift de
-  sınanmaz; adları çıktıda `atlanan` listesinde yazılır.
+  Dönem, dönem başından dönemin son gününe dektir. Dönem başı: 2015-12-01 (5.1) ile ısınmanın bittiği günün (tek hisse 500
+  kapanış günü, çift 252 ortak kapanış günü; 5.1) geç olanından başlayarak (o gün dahil) ilk geçerli fiyat günü (çiftte iki
+  bacağın da geçerli fiyat günü olduğu ilk gün). Isınması dolmayan, dönem başı dönemin son gününe dek bulunmayan hisse ve 252 ortak günü olmayan çift
+  sınanmaz; adları çıktıda `atlanan` listesinde yazılır. Çıktı her hisse için `donem` alanında dönem başını ve son gününü yazar.
+- **İki tanım** (YORUM, bizim, 17.10; Tansu'nun notlarında yok. Sürüm 1'in 3 denetim turu bu ikisi ayrılmadığı için KALDI):
+  - *Geçerli fiyat günü:* hissenin `gun_tablosu`nda `islem` doğru ve `karantina` yanlış olan, AOF'u ve kapanışı sıfırdan büyük
+    ve sonlu olan gün. Eksik, işlem görmeyen, karantinalı ve NaN, sıfır ya da sonsuz fiyatlı gün geçerli değildir. Bu modülde
+    fiyat okuyan her yer yalnız geçerli fiyat gününü kullanır: dönem başı, al-tut alışı ve satışı, özkaynağın kapanışla
+    değerlenmesi (son geçerli kapanış ileri taşınır), 1, 3 ve 5 gün sayımı, çiftte geçiş günü (iki bacak da geçerli). Tek
+    hisse işleminin giriş ve çıkış fiyatı motordan gelir (5.3, 5.5); bu tanım onu değiştirmez.
+  - *Dönemin son günü:* hissenin `gun_tablosu`ndaki son satırı; çiftte iki bacağın son satırlarının erken olanı. Fiyatının
+    geçerli olması gerekmez. Özkaynak eğrisi, maruziyetin paydası, karantina engeli ve ileri yürümenin son takvim yılı bu
+    günü kapsar.
+  - Uç durumlar: (1) son gün karantinalıysa (kapanışı olsun olmasın) açık pozisyon o gün karantina kuralıyla son temiz AOF'tan
+    çıkar (5.3; çiftte 5.6), "veri sonu" çıkışı olmaz. (2) Sıfır ya da sonsuz fiyatlı gün yok sayılır; hiçbir çıktı sonsuz ya da
+    NaN olmaz. (3) AOF'u olmayan gün dönem başı olamaz; dönem başı sonraki geçerli fiyat günüdür. (4) Dönem tek gün olabilir:
+    işlem olmaz (giriş ertesi günü ister), net 0,0, maruziyet 0, Sharpe ve Calmar yok; al-tut aynı günün AOF'undan alıp
+    kapanışından satar.
 - **İleri yürüme (ikinci mod):** "EMA değeri walk forward le optimzie edilerek model oluşturulmuştur." (Ham,
   gorsel-paket-75-isctr-ad-ema-walk-forward). YORUM (bizim): her takvim yılı test yılıdır; seçim o yıldan önce kapanmış
   bütün işlemlerle (genişleyen pencere) aynı sağlam bölge kuralıyla yapılır; en az 2 tam eğitim yılı; test yılında seçilen
   hücrenin giriş günü o yılda olan işlemleri alınır, önceki işlem kapanmadan giren işlem atılır. Sağlam bölge yoksa o yıl nakit.
+  Son test yılı dönemin son gününün yılıdır.
 - **İşlem:** sinyal ve dolum 5.3 ve 5.5 kuralıdır: sinyal kapanışta, giriş ertesi günün AOF'unda (bir çubuk gecikme; Tansu'nun
   kodunda `position.shift(1)`, görsel, tweet-sma-geri-test-sinifi-python-1831402232769847775), acil stop 2 ATR, gün sonu stopu
   SMA250. Çift: geçiş ertesi günün AOF'unda; 5.6'daki engeller (işlem yok, kilit, karantina penceresi) aynıdır. YORUM (bizim):
   tek pozisyon, sermayenin hepsi işlemde, kesirli adet; boştaki nakit faiz kazanmaz (Tansu'nun al-tut kıyaslarında faiz yok).
 - **Masraf:** her yönde %0,10, kayma yok: Tansu'nun tablosunda "Komisyon: %0.10" (görsel,
   tweet-winrate-80-tarama-backtest-tablosu-2092745592661246196). İşlem getirisi = çıkış·(1−m) / (giriş·(1+m)) − 1.
-- **Al-tut:** aynı hisse, aynı dönem: ilk günün AOF'unda al, son kapanışta sat, aynı masraf. Çiftte 50/50, başta bir kez.
+- **Al-tut:** aynı hisse, aynı dönem: dönem başının AOF'unda al, dönemin son gününe dek son geçerli fiyat gününün kapanışında
+  sat, aynı masraf. Çiftte 50/50, başta bir kez.
 - **Ölçüler** (Tansu'nun tablosunun sütunları, aynı görsel): kazanma oranı, işlem, kazanan, kaybeden, kâr çarpanı (kazançlar
   toplamı / kayıplar toplamının mutlak değeri), ortalama işlem, strateji getirisi, al-tut getirisi, fark, en büyük düşüş, Sharpe,
   Calmar, ortalama tutma (gün), maruziyet, kazanç/kayıp oranı. Ek: işlem getirisinin medyanı ("Ortalamaları temel alan
   indikatörler hava civadır Medyan temelli çalışın", Ham, tweet-medyan-temelli-finansal-indikatorler) ve sinyalden 1, 3 ve 5 gün
   sonraki getirinin medyanı ("sonraki 1, 3 ve 5 günde ne olmuş bakın", Ham, not-backtest-giris-sadeligi-risk-islem-gunlugu).
-  Tanım: sinyal günü kapanışından k işlem günü sonraki kapanışa getiri (k = 1, 3, 5); k işlem günü = hissenin kapanışı olan
-  k gün (kapanışı olmayan gün sayılmaz; çiftte işlem gören bacağın günleri).
+  Tanım: sinyal günü ya da ondan önceki son geçerli fiyat gününün kapanışından, sinyal gününden sonraki k. geçerli fiyat
+  gününün kapanışına getiri (k = 1, 3, 5; çiftte alınan bacağın günleri). Geçerli olmayan gün sayılmaz.
   YORUM (bizim): Sharpe = günlük getiri ortalaması / sapması × √252, risksiz getiri 0; Calmar = yıllık bileşik getiri /
   |en büyük düşüş|; maruziyet = pozisyonda kapanan gün / dönem günü.
 - **Şüpheli bayrakları** (etikettir, süzgeç değil): kazanma oranı ≥ %90 → "şüpheli: aşırı uyum" ("%90'lar ise mümkün
