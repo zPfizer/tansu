@@ -41,8 +41,8 @@ def guncelle(kok):
     """Uyarı satırını ("" = uyarı yok) döner; hata fırlatmaz."""
     if not _ana_agac_mi(kok) or "kaynak" not in (_git(kok, "remote") or "").split():
         return ""
-    # Fetch başarısızsa eldeki kaynak/master ile devam edilir.
-    _git(kok, "fetch", "-q", "kaynak")
+    if _git(kok, "fetch", "-q", "kaynak") is None:
+        return "TANSU kaynak/master'a ulaşılamadı; kurallar eski olabilir"
     geride = _git(kok, "rev-list", "--count", "master..kaynak/master")
     if not geride or geride == "0":
         return ""

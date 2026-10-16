@@ -131,11 +131,14 @@ def test_kaynak_uzagi_yoksa_bos_doner(depo):
     assert guncelle(ana) == ""
 
 
-def test_fetch_basarisizsa_hata_vermez_ve_degismez(depo, tmp_path):
+def test_fetch_basarisizsa_ulasilamadi_der_ve_degismez(depo, tmp_path):
+    # Karar (tur 1): başarısız fetch "güncel" gibi görünmez; sabit uyarı satırı yazılır.
     ana, yan = depo
     _git(ana, "remote", "set-url", "kaynak", str(tmp_path / "yok.git"))
     onceki = _git(ana, "rev-parse", "master")
-    assert guncelle(ana) == ""
+    assert (
+        guncelle(ana) == "TANSU kaynak/master'a ulaşılamadı; kurallar eski olabilir"
+    )
     assert _git(ana, "rev-parse", "master") == onceki
 
 
