@@ -147,13 +147,7 @@ def _karar_hatasi(bolum):
 
     karar_onek = r"Denetçi kararı \(aynen\)"
     karar = alanlar(karar_onek)
-    diger = "\n".join(
-        satir
-        for satir in satirlar
-        if not re.match(
-            rf"\s*(Sonuç|{karar_onek}|Yanlış iddia sayısı|İkinci geçiş):", satir
-        )
-    )
+    karar_bulgu = False
     if len(karar) != 1:
         sorunlar.append(
             f"Denetçi kararı (aynen): satırı tek olmalı ({len(karar)} satır var)"
@@ -162,8 +156,10 @@ def _karar_hatasi(bolum):
         sorunlar.append("Denetçi kararı (aynen): metni boş")
     else:
         if KALDI.search(karar[0]):
+            karar_bulgu = True
             sorunlar.append("Denetçi kararı KALDI içeriyor")
         elif SUPHE.search(karar[0]):
+            karar_bulgu = True
             sorunlar.append(
                 "Denetçi kararı şüphe sözcüğü içeriyor "
                 "(olabilir, belki, şüphe, emin değil)"
@@ -182,9 +178,16 @@ def _karar_hatasi(bolum):
                 f"Sonuç: değerinden ({sonuc}) farklı"
             )
 
-    if KALDI.search(diger):
+    # Satır sonları boşluk olur: iki satıra bölünmüş şüphe sözcüğü bulunur.
+    metin = " ".join(
+        satir
+        for satir in satirlar
+        if not re.match(r"\s*Sonuç:", satir)
+        and not (karar_bulgu and re.match(rf"\s*{karar_onek}:", satir))
+    )
+    if KALDI.search(metin):
         sorunlar.append("Bağımsız inceleme bölümünde KALDI sözcüğü var")
-    elif SUPHE.search(diger):
+    elif SUPHE.search(metin):
         sorunlar.append(
             "Bağımsız inceleme bölümünde şüphe sözcüğü var "
             "(olabilir, belki, şüphe, emin değil)"

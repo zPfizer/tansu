@@ -411,16 +411,22 @@ def test_kural_9_karar_satiri_tek_olmali():
             "İkinci geçiş: yok\nİkinci geçiş: yok\n",
             "İkinci geçiş: satırı tek olmalı (2 satır var)",
         ),
-        (
-            "İkinci geçiş: yok",
-            "İkinci geçiş: belki",
-            "İkinci geçiş: yok ya da geçti olmalı",
-        ),
         ("İkinci geçiş: yok", "İkinci geçiş: ", "İkinci geçiş: yok ya da geçti olmalı"),
     ],
 )
 def test_kural_9_sayi_ve_ikinci_gecis(eski, yeni, ayrinti):
     assert hatalar(GECERLI.replace(eski, yeni)) == [R9.format(ayrinti)]
+
+
+def test_kural_9_ikinci_gecis_alaninda_suphe_sozcugu():
+    govde = GECERLI.replace("İkinci geçiş: yok", "İkinci geçiş: belki")
+    assert hatalar(govde) == [
+        R9.format(
+            "Bağımsız inceleme bölümünde şüphe sözcüğü var "
+            "(olabilir, belki, şüphe, emin değil); "
+            "İkinci geçiş: yok ya da geçti olmalı"
+        )
+    ]
 
 
 @pytest.mark.parametrize("ikinci", ["yok", "geçti"])
@@ -509,6 +515,18 @@ def test_kural_9_suphe_bolumun_baska_satirinda():
     ]
     govde = GECERLI.replace(IKINCI_SATIRI, IKINCI_SATIRI + "<!-- belki -->\n")
     assert hatalar(govde) == []
+
+
+def test_kural_9_suphe_karar_satirindan_sonraki_satira_bolunur():
+    govde = GECERLI.replace(
+        KARAR_SATIRI, "Denetçi kararı (aynen): GEÇTİ, emin\ndeğil.\n"
+    )
+    assert hatalar(govde) == [
+        R9.format(
+            "Bağımsız inceleme bölümünde şüphe sözcüğü var "
+            "(olabilir, belki, şüphe, emin değil)"
+        )
+    ]
 
 
 def test_kural_9_kaldi_bolumun_baska_satirinda():
