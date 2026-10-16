@@ -1,7 +1,10 @@
 # Kural kataloğu (05.10.2026)
 
-Kaynak: beyindeki Tansu havuzu (14.10 sayımı: 258 not, 227 görsel ve 1 PDF). Ayrıntılar `docs/kurallar/A–E` dosyalarındadır;
-bu belge onların dizini ve seçimidir. Her kuralın kaynağı, parametresi ve "YORUM" etiketi orada.
+Kaynak: beyindeki Tansu havuzu (16.10 sayımı: 1.926 not, 1.848 görsel ve 1 PDF; 1.668 not X arşivinden eklendi, eleme kaydı
+havuzda `x-arsiv/eleme.jsonl`). Ayrıntılar `docs/kurallar/A–E` dosyalarındadır;
+bu belge onların dizini ve seçimidir. Her kuralın kaynağı, parametresi ve "YORUM" etiketi orada. X arşivi notları var olan
+bölümlerde "Ek kaynaklar (X arşivi, 16.10)" bloğunda, yeni kurallar yeni bölümlerde, tek öğeli olanlar dosyanın
+"X arşivi kısa kayıtları (16.10)" bölümündedir.
 
 Okuma kuralları (birinci el, ikinci el, NotebookLM ve YORUM tanımları GLOSSARY'dedir):
 - Kuralın dayanağı birinci el kaynaktır: notun Ham metni ve notun görselleri (NotebookLM görselleri dahil). Notun Ham dışı
@@ -55,6 +58,8 @@ dizin kaynak değerini yinelemez.
 | Siyah/Beyaz Kuğu | C §13 | **X** |
 | BOM, AHENK, gizli filtre | A §16, §14 | **X** |
 | Mavi çizgi, Pre Signal | B §8, §2 | **X** |
+| Bottle pattern (iki mum) | B §33 | K |
+| X arşivi kısa kayıtları | A §17, B §34 | X |
 
 ### Risk ve çıkış (E)
 | Kural | Bölüm | Hazırlık |
@@ -66,6 +71,10 @@ dizin kaynak değerini yinelemez.
 | Harmonik hedef merdivenleri | C §4, §11 (E K11) | K |
 | Durum etiketleri | C §2 (E K15) | H (ad) |
 | Tepki penceresi | C §10 (E K15) | K |
+| ATR basamak merdiveni | E K25 | K |
+| Momentum marjında kâr al | E K28 | K |
+| Fon satış baskısı, fon risk radarı (hisse dışı; kapsam kararı Levent'te bekliyor) | E K26, K27 | K, X |
+| X arşivi kısa kayıtları (kripto dahil) | E K29 | X |
 
 E K1–K3: kaynakları birinci eldir, bu yüzden H'dir. K1 ve K2 Ham'dadır (tweet-atr-risk-butcesi-position-sizing-stop-loss, Ham'da yazar yok; gorsel-paket-115). K3'ün SMA250 altı kapanış çıkışı gorsel-paket-115 NotebookLM görselindedir. ATR uzunluğu, dolum ve SMA250'nin giriş filtresi olarak seçimi YORUM'dur (E K1–K3).
 
@@ -76,6 +85,7 @@ E K1–K3: kaynakları birinci eldir, bu yüzden H'dir. K1 ve K2 Ham'dadır (twe
 | BIST + VIX 5 adım (NotebookLM) | D, "Hangi VIX?"; "BIST VIX long: 5 adım kontrol listesi" | K |
 | Sektör liderleri 30/60/90 gün + anomali temizleme | D, "Sektör rotasyonu" | H |
 | Volatilite şoku freni | E K8 | X |
+| Aylık mevsimsellik eleme tablosu | D, "Aylık mevsimsellik: istatistiksel eleme tablosu" | K |
 
 ## 3. Seçim
 
@@ -216,19 +226,43 @@ kaynak-ekonometri-hangi-soru-hangi-yontem-haritasi · eğitim: yöntem haritası
 kaynak-stefan-jansen-ml-algo-trading · eğitim: kitap önerisi
 tansu-calisma-kurallari · süreç notu, işlem kuralı değil
 tweet-9aydan-yilsonu-satis-net-kar-tahmini · değerleme, kapsam dışı: TASARIM §3
+tweet-akd-matrix-iq-gunluk-veritabani-1964445184328159257 · araç tercihi, veri kaynağı (AKD Matrix IQ'dan alınıyor, günlük veri tabanı planı); kural öğesi yok
+tweet-akd-veri-kaynagi-api-1941449822050848997 · araç tercihi, veri kaynağı (AKD için Matrix IQ ve Algolab); kural öğesi yok; tekrar: tweet-akd-matrix-iq-gunluk-veritabani-1964445184328159257
+tweet-analitik-ag-sureci-hisse-secimi-1944868638307311952 · eğitim (Analitik Ağ Süreci yöntem anlatımı); eşik, parametre ve ölçülen sonuç yok
 tweet-arima-hiperparametre-acf-pacf-grid-search · eğitim: model seçimi
 tweet-arz-talep-bolgesinde-formasyon-bekleyisi · sohbet; tekrar: tweet-formasyon-arz-talep-confluence-kapisi ham kaydı
+tweet-arz-talep-denge-fiyati-kodu-1906972824842965372 · eğitim (iktisat alıştırması: Qd=100-2P, Qs=50+3P Python kodu); arz-talep bölgesi (demand/supply) değil, kural öğesi yok
 tweet-asuzu-coklu-degerleme-tutarliligi · değerleme, kapsam dışı: TASARIM §3
+tweet-atr-tabanli-stop-seviyesi-1987562052194644270 · tarama çıktısı, kural öğesi yok (konu: E K2): TAVHL için "STOP: 247.20, ATR: 8.90, AL" etiketi, giriş fiyatı ve koşul yok
+tweet-aylik-ortalama-maliyet-birikim-1783840694043623592 · kişisel yatırım alışkanlığı (aylık düzenli alım, ortalama maliyet, hedef 2028-2030); kural öğesi yok
+tweet-az-yatirimcili-fon-risk-kontrolu-1979721927809012208 · eğitim, fon riski uyarısı (11 yatırımcılı fon örneği); eşik yok (fon kapsamı: E K26)
 tweet-beklenen-fk-coklu-regresyon-modeli · değerleme, kapsam dışı: TASARIM §3
+tweet-beklenti-al-gerceklesen-sat-2085043282694779123 · görüş: slogan, ölçülür giriş veya çıkış koşulu yok
+tweet-beta-formul-rejime-gore-secim-2001638298473894378 · değerleme: beta tanımı (kovaryans / varyans); görsel rejime göre beta yönü verir (boğada Beta > 1, ayıda Beta < 1, yatayda Beta ≈ 1.0); rejim tanımı ve hesap penceresi yok; aynı içerik gorsel-paket-108-beta-risk-pusulasi; kapsam dışı: TASARIM §3
 tweet-birikim-sureci-kotu-haber-akilli-para · sohbet: Wyckoff anlatısı, kural yok
 tweet-bist-hft-colocation-quant-rekabet-kod-ogrenin · görüş
 tweet-cari-oran-likidite-acigi-bedelli-sermaye-artirimi · değerleme, kapsam dışı: TASARIM §3
 tweet-convex-hull-dea-sektor-rotasyonu-projesi · proje fikri
+tweet-enflasyon-farki-pi-pi-yildiz-1907020125770772606 · makro gösterge tanımı (π − π* = yerli eksi yabancı enflasyon, örnek %13 ve %2 için ≈ 0,11); eşik ve kural yok, üst gönderi notta yok
+tweet-envanter-azaltma-monte-carlo-pnl-1924523925683274094 · proje anlatısı: kavramsal Monte Carlo simülasyonu (5 envanter stratejisi, 100.000 senaryo, 3 piyasa koşulu); sayısal sonuç ve eşik yok, yalnız kavramsal ilke (yükselen trendde yavaş, düşen trendde hızlı sat)
+tweet-evds-api-mevduat-faizi-cekme-1766868425815535946 · veri çekme kodu (EVDS API, seri TP.TRY.MT02: TL 3 aya kadar mevduat faizi) ve makro görüş (faiz, enflasyon); kural öğesi yok
 tweet-excel-degerleme-calismasi-koda-donusumu · değerleme, kapsam dışı: TASARIM §3
 tweet-fcfe-ddm-capraz-kontrol-degerleme-motoru · değerleme, kapsam dışı: TASARIM §3
+tweet-finansal-veri-api-kaynaklari-1762361028178796875 · araç tercihi: veri API listesi (Nasdaq Data-on-Demand, Alpha Vantage, Intrinio, IEX Cloud); BIST için kural öğesi yok
 tweet-fiyat-grafigi-otesi-makro-bakis · haber: makro eğitim
+tweet-fon-cikisi-satis-baskisi-tahmini-2099970636386812395 · proje fikri ve soru: fon çıkışının satış baskısını tahmin etme, geçmiş KAP raporlarıyla güven skoru; model, formül ve sonuç yok (konu: yeni fon çıkışı bölümü, E)
+tweet-fon-net-akis-getiri-tarama-2094913511986020386 · tarama çıktısı, kural öğesi yok (fon sıralama tablosu: 1G/5G/20G net akış, 20G getiri, Sharpe sütunları; konu: fon-risk-radari)
+tweet-fon-ortak-agirlik-degisimi-birikim-2096343856476496081 · vaat / proje fikri: fon ağırlık değişimi ve ortak hareket analizi duyurusu, ölçü ve eşik yok (konu: fon-risk-radari)
+tweet-fon-para-akisi-analizi-2097019577112600707 · fon yorumu (KHP para piyasası fonu), eşik yok; kural öğesi yok (konu: fon-risk-radari)
 tweet-froto-nakit-piyasa-degeri-18-89 · değerleme, kapsam dışı: TASARIM §3
 tweet-gordon-buyume-modeli-temettu-degerleme · değerleme, kapsam dışı: TASARIM §3
+tweet-gun-saat-satis-heatmap-pivot-1764250055114899657 · dış kapsam: pazarlama satış analitiği (gün-saat ısı haritası, perakende verisi), BIST işlem kuralı yok
+tweet-hareketli-ortalama-backtest-araci-1979931015771517315 · araç tercihi: harici hareketli ortalama backtest sitesi bağlantısı ("Kaydedin lazım olur"), kural öğesi yok
+tweet-iq-csharp-python-veri-hatti-1964627639425270263 · araç tercihi: veri hattı (IQ verisi C# kodu ile çekilir, Python'da işlenir; API yok), kural öğesi yok
+tweet-iq-excel-python-akd-verisi-1970561329590354082 · araç tercihi: veri alımı (IQ Excel eklentisi + Python; AKD verisi, yf yetmez), kural öğesi yok
+tweet-is-yatirim-bilanco-veri-toplama-1942613749073879070 · eğitim: bilanço verisini İş Yatırım'dan otomatik toplayıp klasörde havuzlama önerisi; veri yöntemi, değerleme tarafı (kapsam dışı: TASARIM §3), kural öğesi yok
+tweet-isyatirim-financial-data-source-1889446483449037295 · araç tercihi: İş Yatırım finansal verisi (class tipi kodla erişim), değerleme verisi (kapsam dışı: TASARIM §3), kural öğesi yok
+tweet-kmeans-silhouette-pca-kume-gorsellestirme-1762356653779763260 · eğitim: müşteri kümeleme (K-means, silhouette, PCA) kod örneği; ürün/kargo verisi, trade kuralı yok (havuz etiketi: dış kapsam)
 tweet-nihai-hedef-tek-tus-temel-teknik-degerleme-llm-nlp · vaat: hedef beyanı
 tweet-optimal-momentum-plus-simulasyon-tamamlandi · vaat
 tweet-ozkaynak-artisi-varlik-finansman-yatirim-verimliligi · değerleme, kapsam dışı: TASARIM §3
