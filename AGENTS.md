@@ -24,7 +24,7 @@ Each fact has one owner file. The other files only give a reference to it. Read 
 | `CODING_STANDARDS.md`, `DEFINITION_OF_DONE.md` | the Tansu code rules (`## Tansu`; the general rules are in the file that `CODING_STANDARDS.md` points to) and the done criteria (`## Tansu`) |
 | `docs/sorgu/sonuc-3-4.md`, `docs/sorgu/izleme/karar.md` (local, not in git) | the reasons for the decisions (read them when necessary and when they exist) <!-- driftlint-ignore: local-only, gitignored, absent in CI --> |
 
-The drift check covers all these files. Correct a file when it contradicts another file, contains old information,
+The drift check covers all these files. The drift check is your review, not only driftlint (see the `docs/agents/` row). Correct a file when it contradicts another file, contains old information,
 or copies a fact of another file.
 
 If a document and the code contradict, or if the document says nothing about the case, stop. Correct the document

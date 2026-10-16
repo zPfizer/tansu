@@ -30,7 +30,7 @@ A worktree has no `.venv`. Codex cannot read the packages of the global Python u
      1. `C:/Users/levent/.claude/CLAUDE.md`.
      2. `AGENTS.md` and `CLAUDE.md` of the project folder. `CLAUDE.md` holds `@AGENTS.md`.
      3. `.claude/skills/tansu-yeni-is/SKILL.md` and `.claude/skills/tansu-yeni-is/ortak-adimlar.md` of the project folder. Also the `SKILL.md` of the flow skill that the job uses.
-     4. For an audit: `CODING_STANDARDS.md` and `DEFINITION_OF_DONE.md` of the project folder. Also the general standards file that `CODING_STANDARDS.md` points to (give its full path).
+     4. For an audit: `CODING_STANDARDS.md`, `DEFINITION_OF_DONE.md`, `docs/agents/is-kurallari.md`, and `docs/agents/kod-kurallari.md` of the project folder. Also the general standards file that `CODING_STANDARDS.md` points to (give its full path).
 
      Codex does not resolve `@` links. Resolve them yourself. Tell Codex to read the files first. Tell Codex to read every file as UTF-8. Without this line, Codex read Turkish text as mojibake.
    - The text of each requested skill. A skill name can have a plugin part before `:` (for example `mattpocock-skills:code-review`). Use the part after `:` as `<skill>` and the part before `:` as `<plugin>`. Find the newest file with `find ~/.claude/plugins/cache -path "*/<plugin>/*" -path "*/skills/*" -path "*/<skill>/SKILL.md" -not -path "*/.openclaw/*" | sort -V | tail -1`. Without a plugin part, omit `-path "*/<plugin>/*"`, and look first in `<project>/.claude/skills/<skill>/SKILL.md`. Paste the text into the prompt. If no file is found, stop before the Codex run and report a failed run (no log exists yet).
