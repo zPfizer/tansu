@@ -82,6 +82,24 @@ dizin kaynak değerini yinelemez.
 | Mum sinyalinde trend filtresi | B §43 | X |
 | Bollinger Keltner dışında + alt banttan sekme (fikir) | B §44 | X |
 | Bollinger Keltner sıkışması ve kırılım | B §45 | K |
+| BULL/BEAR etiketi: 5 günlük sinyal toplamı (FROTO) | B §46 | K |
+| Bullish Hikkake: iç bar, sahte kırılım, iç bar altı stop | B §47 | K |
+| Bullish Tasuki (üç mum kodu, GARAN) | B §48 | H |
+| Dark Cloud Cover: düşüş uyarısı, stop ilk mum tepesi | B §49 | K |
+| Doji + RSI(14) 30/70 taraması | B §50 | H |
+| Doji + boğa teyit mumu: stop ve hedef | B §51 | K |
+| RSI pozitif uyumsuzluk taraması + teyit katmanları | B §52 | K |
+| WaveTrend (10, 21) aşırı satım taraması | B §53 | K |
+| CMF para girişi filtresi (3 gün pozitif, önceki 3 gün negatif) | B §54 | K |
+| EMA dizilimi son gün taraması | B §55 | H |
+| Kapanış EMA'ların üstünde + RSI14 > 50 (+ CMF dönüşü) | B §56 | K |
+| EMA5 x EMA13/14 kesişimi + RSI 50 | B §57 | K |
+| EMA dizilimi + RSI trend kırılımı + MACD sıfır üstü | B §58 | K |
+| EMA5 ve EMA10 x EMA20 kesişimi + MACD + OBV + RSI 50 | B §59 | K |
+| EMA5 x EMA(EMA5) kesişimi + CCI(20) | B §60 | K |
+| Momentum teyit listesi (AGROT, BYDNR) | B §61 | X |
+| EMA sıkışması sonrası hacimli kapanış | B §62 | K |
+| EMA12 x EMA144/169 tüneli kesişimi | B §63 | K |
 | X arşivi kısa kayıtları | A §17, B §34 | X |
 | X arşivi kısa kayıtları (Elliott) | C §30 | X |
 
@@ -276,9 +294,19 @@ tweet-beta-formul-rejime-gore-secim-2001638298473894378 · değerleme: beta tan�
 tweet-birikim-sureci-kotu-haber-akilli-para · sohbet: Wyckoff anlatısı, kural yok
 tweet-bist-hft-colocation-quant-rekabet-kod-ogrenin · görüş
 tweet-bollinger-macd-adx-adxr-panel-1761494383709290807 · grafik, koşul yok (iki görsel: Bollinger, MACD, ADX ve ADXR paneli, "20-day SMA" etiketi; Ham yalnız "#MIATK soran olmuştu"; görsel metni)
+tweet-bollinger-orta-bant-rsi50-kesisim-1840463074622685613 · sohbet (kod paylaşımı: wetransfer sorunu, numpy sürümü) ve tarama çıktısı, kural öğesi yok (konu: B §39); PENGD görselinin kırpılmış kopyası, RSI satırı yok
 tweet-cari-oran-likidite-acigi-bedelli-sermaye-artirimi · değerleme, kapsam dışı: TASARIM §3
+tweet-cci-posc-macd-gosterge-seti-1761507718693548409 · grafik, koşul yok (THYAO; Ham yalnız etiket; iki gönderide sekiz gösterge grafiği: EMA5 üzerinden EMA5, CCI ve 20 günlük EMA, Price Oscillator (POSC), MACD ve sinyal, Ichimoku, 13 ve 60 günlük WMA, Stokastik %K/%D, Momentum ve 8 günlük MA; görsel metni). Çizim ayarlarıdır, giriş veya eşik yok (ilgili: B §34 kısa kayıtlarındaki çoklu gösterge seti, YORUM)
+tweet-coklu-osilator-negatif-uyumsuzluk-2049565175494181237 · grafik, koşul yok (ISDMR; Ham: "Enteresan değil mi"). Görselde (açıldı) fiyat tepesinden yatay çizgi ve üç osilatör panelinde alçalan tepe çizgisi (çoklu negatif uyumsuzluk çizimi); osilatör adları, eşik ve sinyal tanımı yok
 tweet-convex-hull-dea-sektor-rotasyonu-projesi · proje fikri
+tweet-cufflinks-quantfig-macd-rsi-grafik-kodu-1860765789856379348 · eğitim ve araç tercihi: grafik kodu (cufflinks QuantFig ile XU100, 2022-2024; MACD 12/26/9 ve RSI(20) 70/30 çizim ayarı); giriş koşulu yok
+tweet-divergence-macd-cross-1911093378961256668 · vaat ("Asla yanılmaz:))") ve tarama çıktısı, kural öğesi yok (konu: B §52); örnek kripto (MKR-USD), kripto kapsamı: karar Levent'te bekliyor
+tweet-doji-mum-rsi-30-70-sinyal-1848385134174589367 · tarama çıktısı, kural öğesi yok (konu: B §50); üç sembol: BFREN Sat, CCOLA ve KAREL Al
+tweet-doji-mum-rsi-30-70-tarama-1851724305836499212 · tarama çıktısı, kural öğesi yok (konu: B §50); tek sembol: SOKM Al
 tweet-elliott-abc-fvg-algoritma-1989365905504256144 · örnek grafik, koşul yok (görsel: 1-2-3-A-B-C etiketi, sarı FVG kutusu, Matriks ekranı; Ham: "İşte böyle çalışıyor algoritma"; konu: C §17)
+tweet-ema-5-13-21-kesisim-sinyal-1849524500439744798 · grafik, koşul yazılı değil: ARCLK için EMA5/13/21 kesişimi al (siyah ok) ve sat (turuncu) işareti; kod WeTransfer bağlantısında, notta yok; eğitim amaçlı davet
+tweet-ema-dizilim-rsi-cmf-tarama-1847735111942336850 · sohbet ("otomasyona geçeceğiz"); görsel mum formasyonu işaretleme kodu parçası, koşul yok
+tweet-ema-hizalama-rsi-50-tarama-1851721104156774497 · tarama çıktısı, kural öğesi yok (konu: B §56)
 tweet-enflasyon-farki-pi-pi-yildiz-1907020125770772606 · makro gösterge tanımı (π − π* = yerli eksi yabancı enflasyon, örnek %13 ve %2 için ≈ 0,11); eşik ve kural yok, üst gönderi notta yok
 tweet-envanter-azaltma-monte-carlo-pnl-1924523925683274094 · proje anlatısı: kavramsal Monte Carlo simülasyonu (5 envanter stratejisi, 100.000 senaryo, 3 piyasa koşulu); sayısal sonuç ve eşik yok, yalnız kavramsal ilke (yükselen trendde yavaş, düşen trendde hızlı sat)
 tweet-evds-api-mevduat-faizi-cekme-1766868425815535946 · veri çekme kodu (EVDS API, seri TP.TRY.MT02: TL 3 aya kadar mevduat faizi) ve makro görüş (faiz, enflasyon); kural öğesi yok

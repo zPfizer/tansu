@@ -792,6 +792,7 @@ Küçük sonraki adım: kural 3 ve 4 için kendi pivot kararınızı yazın (L, 
 - Kaynak güveni: Ham ve görsel birinci el; kural yok, güven düşük. Hazırlık K.
 - Ek kaynaklar (X arşivi, 16.10):
   - `tweet-fibonacci-618-golden-cross-1908471693472919651` — Golden cross adayı + Fibo tepkisi birleşimi: "bu kardeşimiz hem 61.8 den tepki almış hem de yakında golden cross olacak:)" (Ham). Görselde (açıldı) EMA çizgileri etiketsiz (turuncu, noktalı siyah); sembol adı ve tarih yok (Ocak–Mart 2025 ekseni). Aynı serinin A1CAP grafiğinde turuncu = EMA 50, noktalı siyah = EMA 200: çift EMA50/EMA200 olabilir (YORUM). "Yakında" ölçütü, giriş, stop, sonuç yok. Parametre: Golden cross çifti = EMA50/EMA200 olabilir (YORUM; renk eşleşmesi, A1CAP görseli açıldı); "yakında" eşiği yok
+  - `tweet-ema-50-200-golden-cross-1908437183423209509` — DOAS (05.04.2025): "golden cross'a adım adım" (Ham). Görsel (açıldı): başlık "DOAS.IS - Mum Grafik ve EMA Kesişimi (50/200)", lejant EMA 50, EMA 200, Al, Sat; EMA50 EMA200'ü ~Eylül 2024'te aşağı keser ve Sat işareti çıkar; Mart 2025'te EMA50 EMA200'e yaklaşır, Al işareti henüz yok. Ham: "Sistemime 190'lardan takılmıştı." Parametre: Golden cross çifti = EMA50 / EMA200 (görsel, açıldı: başlık "EMA Kesişimi (50/200)"); "Sistemime 190'lardan takılmıştı" cümlesinin anlamı belirsiz (YORUM: fiyat 190 düzeyinden sistem listesine girdi)
 
 ---
 
