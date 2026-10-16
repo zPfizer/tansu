@@ -70,6 +70,8 @@ Genel bulgu: Tansu bazı notlarda giriş, stop ve hedefi birlikte verir: `gorsel
 - Kaynak güveni: etiket/sayı birinci el; algoritma bilinmiyor.
 - Ek kaynaklar (X arşivi, 16.10):
   - `tweet-haftalik-kanal-alt-bant-yesil-kapanis-1956082078212305072` — Tepki koşulu ve periyot: haftalık kanalda alt banda gelip yeşil kapanış. "Haftalık kanalda kanal alt bandına gelip yeşil kapatmalı" (Ham). Zincirdeki yanıt: hisse beklenen yere gelmezse başkasına geçilir, tarama kodu filtrelerle yeniden çalıştırılır: "Hisse beklediğim yere gelmezse başkasına geçerim." (Ham) Parametre: kanal periyodu = haftalık; tepki koşulu = alt banda temas + yeşil (yükselen) mum kapanışı; yeşil = Close > Open YORUM (Ham).
+  - `tweet-auto-trend-channel-min-max-slope-1952070959529336857` — Başka bir kanal aracı: AKFGY'de otomatik trend kanalı, destek çizgisi "Support (min slope)", direnç çizgisi "Resistance (max slope)" (görsel metni, açıldı); kanal paralel değil, iki çizgi ayrı eğimli. Ham: "akfgy 30 günlük kanal desteğinde." Giriş, stop, sonuç yok. Parametre: Kanal penceresi = son 45 mum (AKFGY, görsel, açıldı); Ham "30 günlük kanal" der; destek = en küçük eğimli, direnç = en büyük eğimli çizgi (lejant; algoritma YORUM)
+  - `tweet-auto-trend-channel-min-max-slope-1952071338971091397` — Aynı otomatik trend kanalı aracı, AYCES: "AYCES.IS Otomatik Trend Kanalı (Son 27 mum)", "Support (min slope)", "Resistance (max slope)" (görsel metni, açıldı). Destek yükselir, direnç alçalır: daralan üçgen. Ham yok ("metin yok"), koşul ve sonuç yok. Parametre: Kanal penceresi = son 27 mum (AYCES; pencere hisseye göre değişir: AKFGY 45) (görsel, açıldı)
 
 ---
 
@@ -211,6 +213,7 @@ Genel bulgu: Tansu bazı notlarda giriş, stop ve hedefi birlikte verir: `gorsel
 - Ek kaynaklar (X arşivi, 16.10):
   - `tweet-bos-fibo-golden-zone-order-block-alim-2002131073137062285` — Tekrar, birinci el kaynak olarak: aynı strateji metni Tansu'nun kendi X gönderisi (19.12.2025; bölümdeki -105 metni "Ham'da yazar yok" idi). Beş adım aynıdır; ek ayrıntılar: giriş yalnız fiyat Fib 0.5 ("Discount") altına inince aranır, hedef bölge 0.618–0.786 ve yeşil kutu (Order Block veya FVG) teması şart; BOS "önceki önemli bir tepeyi yukarı yönlü kırıp üzerinde kapanış" demektir. "Stop Loss (SL): Fibonacci 1.0 seviyesinin (hareketin başladığı en dip noktanın) hemen altına koyulur." (Ham). TP1 Fib 0.0, ileri hedef uzatma (−0.27 "vb."). "Hemen altına": tampon sayısı yok. Tansu "taramasını yaparsınız" der: tarama kendisinde yok. Görsel (görsel, açıldı): bölümdeki yaklaşık okumalar yerine yazılı değerler 0.236: 201.05, 0.786: 164.11 (küçük yazı; 0.0 ve 1.0 uçlarıyla formül 164.41 verir, bu yüzden 0.786 değeri belirsiz). Parametre: Fib 0.236 = 201.05; Fib 0.786 = 164.11 (görsel, açıldı; bölümdeki 201.69 ve 163.75 yaklaşık okumadır)
   - `tweet-fib-382-giris-618-stop-bos-1838978628757143953` — Aynı yapı (itki, BOS, HH, Fib), farklı seviyeler: "38.2% ENTRY" ve "61.8% SL"; başlık "1. IMPULSIVE MOVE (AROUND 38.2% FIBONACCI LEVEL)" (görsel, açıldı). Ham: "Şu durumu kodlayıp taramasını yapalım bakalım ne çıkacak" (kodlama niyeti, sonuç yok). §10'daki 0.618–0.786 giriş ve Fib 1.0 stop yerine daha sığ varyant. Şema, sembol ve sonuç yok. Parametre: Giriş = Fib 0,382 geri alımı; stop = Fib 0,618 (görsel, açıldı); anahtar seviye (KEY LEVELS) kutusu itki başında (görsel, açıldı)
+  - `tweet-bayrak-talep-fvg-fibo-uyumu-2003159460018368565` — Konfluans kontrol listesi: "Bayrak demand zone fvg fibo herşey hazır" (Ham). Dört görselde (açıldı): itki sonrası eğimli bayrak kanalı (G4), yeşil talep bölgesi ve üstünde sarı FVG kutusu (G2, G3), kesikli yatay Fibo düzeyleri ve BOS etiketi (G3). Yeni öğe: bayrak. Sembol, sayı, giriş, stop, sonuç yok.
 
 ---
 
@@ -296,6 +299,29 @@ Genel bulgu: Tansu bazı notlarda giriş, stop ve hedefi birlikte verir: `gorsel
 
 ## 17. X arşivi kısa kayıtları (16.10)
 - Kanal stratejisi backtest sonucu (kural yok; `tweet-kanal-stratejisi-backtest-2088957194892923386`; Ham ve görsel birinci el, iki görsel de açıldı; Tansu'nun X gönderisi, 2026-08-16): Tansu: "Şöyle bşr strateji kodluyorum", "İlk veriler fena değil", "Biraz geliştirip bakarız" (Ham). Görsel 2 çıktısı: "Toplam İşlem : 4", "Kazanan İşlem : 4", "Win Rate : 100.0%", "Ortalama Getiri : 13.00%", "Bileşik Toplam Getiri: 60.8%". Dört işlem (giriş → çıkış, getiri %): 2024-11-05 90.60 → 2024-12-03 115.58 (27.57); 2025-02-03 115.49 → 2025-03-03 127.45 (10.35); 2025-03-19 116.14 → 2025-06-10 117.55 (1.21); 2025-09-03 128.60 → 2026-01-21 145.13 (12.86). Hesap kontrolü (bizim): ortalama (27,57 + 10,35 + 1,21 + 12,86) / 4 = 12,9975; bileşik 1,2757 × 1,1035 × 1,0121 × 1,1286 = 1,608; ikisi de tabloyla uyumlu. PnL sütunu fiyat farkından 0,10–0,13 düşüktür (örnek 115,58 − 90,60 = 24,98; tabloda 24.88); fark nedeni yazılmamış (YORUM: maliyet olabilir). Görsel 1: mum grafiği, üstte düz basamaklı çizgi, altta kesikli basamaklı çizgi (iki bant), yeşil yukarı ve kırmızı ters üçgenler; yeşil üçgenler alt banda, kırmızılar üst banda yakındır (YORUM: alt banttan al, üst banttan sat). Üçgenler yaklaşık 5 yeşil ve 5 kırmızıdır; tablodaki 4 işlemle tam uyuşmaz (YORUM: grafik daha geniş pencere). Kanalın tanımı, giriş ve çıkış koşulu, sembol (fiyat 90–145 TL), maliyet, stop ve yön yazılı değil. Basamaklı bantlar yükselen paralel kanal değildir (YORUM): §2 ile aynı yöntem sayılmaz. Tansu'nun kanıtı: dört işlem, tek sembol, "%100 kazanma"; Tansu sonucu kendisi "ilk veriler" sayar. Günlük bedava veriyle: kural tanımsız, sonuç yeniden üretilemez. Hazırlık X. Kaynak güveni: Ham ve görsel birinci el; kural yok: düşük.
+
+---
+
+## 18. 60 günlük aralık kırılımı (range breakout) + bullish mum formasyonu teyidi (DITAS)
+
+- Kaynak: `tweet-60-gun-range-breakout-belthold-1926353549723590759` (24.05.2025; Ham ve görsel, açıldı). Tansu'nun X gönderisidir (birinci el).
+- Tansu'nun ifadesi (verbatim): "Son mum çubuğu hem 60 günlük zirve seviyesini yukarı kırmış, hem de aynı gün içinde CDLBELTHOLD adı verilen bir bullish (yükseliş yönlü) mum formasyonu oluşturmuş." Kod anlatımı (Ham): "60 Günlük Range Hesabı: Son 60 günün zirve (range_high) ve dip (range_low) değerleri hesaplanır." "Breakout Kontrolü: Son günün en yüksek fiyatı ve kapanışı, 60 günlük zirveyi geçiyorsa sinyal kabul edilir." "Bullish Mum Formasyonu Tespiti: talib kütüphanesi ile son mumda herhangi bir bullish formasyon oluşmuş mu kontrol edilir." Uyarı (Ham): "Kırılım sonrası fiyatın bu seviyenin altında kalıp kalmadığını izlemek gerekir. Formasyonun geçerliliği için sonraki gün hacim ve fiyat teyidi önemlidir." "Bu kod henüz bitmedi buraya eklenecekler var." Görsel başlığı (açıldı): `DITAS | Range Breakout ve CDLBELTHOLD Mum Formasyonu`; yeşil kesikli `60G Zirve`, kırmızı kesikli `60G Dip`; son mum zirve çizgisinin üstüne kapanmış (kırmızı kutu ve ok).
+- Tanım (YORUM, Ham'dan): 1. `range_high` = son 60 günün en yüksek değeri, `range_low` = en düşük değeri. 2. Kırılım: son günün High'ı ve Close'u `range_high`'ın üstündedir (Ham). 3. Mum: talib CDL işlevlerinden en az biri son mumda bullish (pozitif) verir; örnek CDLBELTHOLD. 4. Sinyal = 2 ve 3 aynı gün. "Sonraki gün hacim ve fiyat teyidi" kod değil, uyarıdır.
+- Parametreler:
+
+| parametre | değer | kaynak |
+|---|---|---|
+| Aralık penceresi | 60 gün | Ham |
+| Kırılım ölçütü | High > range_high ve Close > range_high | Ham |
+| Mum teyidi | talib bullish formasyon (herhangi biri); örnek CDLBELTHOLD | Ham |
+| Veri | yfinance, 01.01.2024 - 24.05.2025 (örnek); grafik son 180 gün | Ham |
+| DITAS çizgileri | 60G zirve ≈16,8; 60G dip ≈11,0 | görsel, açıldı (piksel ölçümü, YORUM) |
+| Hacim eşiği, giriş, stop, hedef | yok | - |
+
+- Belirsiz kalanlar: pencere bugünü içerir mi (içerirse bugünün High'ı kendi zirvesini aşamaz; YORUM: önceki 60 gün); zirvenin High'a mı Close'a mı göre alındığı; hangi CDL işlevlerinin sayıldığı; hacim ve fiyat teyidi ölçütü; stop ve hedef. TA-Lib dış bağımlılıktır; BELTHOLD mumu elle de yazılabilir (YORUM). Aynı mum dedektörü B §41'de RSI trend kırılımıyla birleşir.
+- Tansu'nun kanıtı: yok (tek örnek, sonuç yok). "Trendin devam etme ihtimali yüksek" yorumdur, ölçülmemiş.
+- Günlük bedava veriyle uygulanabilir mi: evet (günlük OHLCV).
+- Kaynak güveni: Ham ve görsel birinci el; kırılım koşulu net, mum seçimi ve teyit eksik: orta-düşük. Hazırlık K.
 
 ---
 

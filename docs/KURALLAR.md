@@ -68,6 +68,20 @@ dizin kaynak değerini yinelemez.
 | Elliott 0-1-a-b-c: c dibi ve 1. tepe direnci (LIDFA, AKBNK) | C §27 | K |
 | Elliott 0-5 sonrası ABC: Fibonacci merdiveni, C teyidi, P-BOM (IDGYO, CRDFA) | C §28 | K |
 | Elliott taramaları (C taraması, 3. itki dalgası taraması) | C §29 | X |
+| 60 günlük aralık kırılımı + bullish mum teyidi (DITAS) | A §18 | K |
+| Fibonacci %78,6 tepki taraması: birleşim koşulları ve onay (EMA20, düşen trend kırılımı) | C §31 | K |
+| Tüm Fibonacci düzeylerinde destek dönüşü ve direnç kırılımı taraması | C §32 | K |
+| Fibonacci %161,8 uzantısı: haftalık dip taraması (fiyat ve RSI) | C §33 | X |
+| RSI üzerinde 144 günlük Fibonacci (0,786 ve 0,618 dönüşü, 0,382 reddi) | C §34 | K |
+| ADX ve ±DI kesişimi, ADX tepesi | B §37 | K |
+| Bollinger 3 SS banda temas + zıt renkli mum | B §38 | K |
+| Bollinger orta bandı üstünde kapanış + RSI 50 kesişimi (aynı bar) | B §39 | K |
+| Bollinger sıkışması + RSI 50 kesişimi | B §40 | K |
+| BELTHOLD + RSI düşen trend kırılımı | B §41 | K |
+| RSI(14) 30/70 son gün taraması | B §42 | H |
+| Mum sinyalinde trend filtresi | B §43 | X |
+| Bollinger Keltner dışında + alt banttan sekme (fikir) | B §44 | X |
+| Bollinger Keltner sıkışması ve kırılım | B §45 | K |
 | X arşivi kısa kayıtları | A §17, B §34 | X |
 | X arşivi kısa kayıtları (Elliott) | C §30 | X |
 
@@ -102,6 +116,7 @@ E K1–K3: kaynakları birinci eldir, bu yüzden H'dir. K1 ve K2 Ham'dadır (twe
 | Aylık mevsimsellik eleme tablosu | D, "Aylık mevsimsellik: istatistiksel eleme tablosu" | K |
 | Portföy VIF kontrolü | D, "Portföy VIF kontrolü" | K |
 | Haftanın günü mevsimselliği (giriş günü filtresi) | D, "Haftanın günü mevsimselliği" | K |
+| Aracı kurum dağılımı (AKD): ilk 5 kurum toplama takibi | D, "Aracı kurum dağılımı (AKD)" | X |
 
 ## 3. Seçim
 
@@ -241,9 +256,12 @@ kaynak-cme-group-volatilite-opsiyon-veri-araclari · kapsam dışı: TASARIM §3
 kaynak-ekonometri-hangi-soru-hangi-yontem-haritasi · eğitim: yöntem haritası
 kaynak-stefan-jansen-ml-algo-trading · eğitim: kitap önerisi
 tansu-calisma-kurallari · süreç notu, işlem kuralı değil
+tweet-200sma-250sma-rsi30-kilit-noktalar-1979927243942944965 · görüş ve vaat: 200SMA, 250SMA ve RSI 30 "kilit nokta" denir, koşul ve örnek yok (konu: E K3 SMA250 çıkışı, E K5 RSI 30 girişi)
 tweet-9aydan-yilsonu-satis-net-kar-tahmini · değerleme, kapsam dışı: TASARIM §3
+tweet-abcd-formasyon-python-tespiti-2053210859061535153 · örnek grafik, koşul yok (THYAO AB=CD çıktısı; Ham: "python ne güne duruyor"; konu: C §3)
 tweet-akd-matrix-iq-gunluk-veritabani-1964445184328159257 · araç tercihi, veri kaynağı (AKD Matrix IQ'dan alınıyor, günlük veri tabanı planı); kural öğesi yok
 tweet-akd-veri-kaynagi-api-1941449822050848997 · araç tercihi, veri kaynağı (AKD için Matrix IQ ve Algolab); kural öğesi yok; tekrar: tweet-akd-matrix-iq-gunluk-veritabani-1964445184328159257
+tweet-alim-satim-listesi-index-esitleme-1852430160085020742 · araç tercihi, kod yardımcısı (alım ve satım fiyat listesini endeks uzunluğuna eşitler), kural öğesi yok
 tweet-analitik-ag-sureci-hisse-secimi-1944868638307311952 · eğitim (Analitik Ağ Süreci yöntem anlatımı); eşik, parametre ve ölçülen sonuç yok
 tweet-arima-hiperparametre-acf-pacf-grid-search · eğitim: model seçimi
 tweet-arz-talep-bolgesinde-formasyon-bekleyisi · sohbet; tekrar: tweet-formasyon-arz-talep-confluence-kapisi ham kaydı
@@ -257,6 +275,7 @@ tweet-beklenti-al-gerceklesen-sat-2085043282694779123 · görüş: slogan, ölç
 tweet-beta-formul-rejime-gore-secim-2001638298473894378 · değerleme: beta tanımı (kovaryans / varyans); görsel rejime göre beta yönü verir (boğada Beta > 1, ayıda Beta < 1, yatayda Beta ≈ 1.0); rejim tanımı ve hesap penceresi yok; aynı içerik gorsel-paket-108-beta-risk-pusulasi; kapsam dışı: TASARIM §3
 tweet-birikim-sureci-kotu-haber-akilli-para · sohbet: Wyckoff anlatısı, kural yok
 tweet-bist-hft-colocation-quant-rekabet-kod-ogrenin · görüş
+tweet-bollinger-macd-adx-adxr-panel-1761494383709290807 · grafik, koşul yok (iki görsel: Bollinger, MACD, ADX ve ADXR paneli, "20-day SMA" etiketi; Ham yalnız "#MIATK soran olmuştu"; görsel metni)
 tweet-cari-oran-likidite-acigi-bedelli-sermaye-artirimi · değerleme, kapsam dışı: TASARIM §3
 tweet-convex-hull-dea-sektor-rotasyonu-projesi · proje fikri
 tweet-elliott-abc-fvg-algoritma-1989365905504256144 · örnek grafik, koşul yok (görsel: 1-2-3-A-B-C etiketi, sarı FVG kutusu, Matriks ekranı; Ham: "İşte böyle çalışıyor algoritma"; konu: C §17)
@@ -265,6 +284,11 @@ tweet-envanter-azaltma-monte-carlo-pnl-1924523925683274094 · proje anlatısı: 
 tweet-evds-api-mevduat-faizi-cekme-1766868425815535946 · veri çekme kodu (EVDS API, seri TP.TRY.MT02: TL 3 aya kadar mevduat faizi) ve makro görüş (faiz, enflasyon); kural öğesi yok
 tweet-excel-degerleme-calismasi-koda-donusumu · değerleme, kapsam dışı: TASARIM §3
 tweet-fcfe-ddm-capraz-kontrol-degerleme-motoru · değerleme, kapsam dışı: TASARIM §3
+tweet-fibo-144-bar-786-bandi-1842305345110302780 · tarama çıktısı, kural öğesi yok (konu: C §23); tek hisse (AKSA) grafiği, Tansu taramanın @fiboborsa stratejisinden çıktığını söylüyor
+tweet-fibo-786-bandi-tepki-teyit-gostergeleri-1847021977669628220 · tarama çıktısı, kural öğesi yok (konu: C §23); MACKO ve ULUUN için gösterge ekranı §23'teki ekranla aynı, eşik yok
+tweet-fibonacci-78-6-tepki-taramasi-1843361242519617709 · tarama çıktısı, kural öğesi yok (konu: C §23); IHAAS için EMA 89/144/233 ekranı §23/§24'te var
+tweet-fibonacci-786-bandi-tepki-tarama-1851718708936282217 · tarama çıktısı, kural öğesi yok (konu: C §23); 30.10.2024 tarama listesi, EUREN grafiği
+tweet-fibonacci-786-ema-rsi-tarama-1847613665018630286 · tarama çıktısı, kural öğesi yok (konu: C §23); VKGYO grafiği, Telegram bot ('Tbot admin') ekran görüntüsü; tarama botla gönderiliyor
 tweet-finansal-veri-api-kaynaklari-1762361028178796875 · araç tercihi: veri API listesi (Nasdaq Data-on-Demand, Alpha Vantage, Intrinio, IEX Cloud); BIST için kural öğesi yok
 tweet-fiyat-grafigi-otesi-makro-bakis · haber: makro eğitim
 tweet-fon-cikisi-satis-baskisi-tahmini-2099970636386812395 · proje fikri ve soru: fon çıkışının satış baskısını tahmin etme, geçmiş KAP raporlarıyla güven skoru; model, formül ve sonuç yok (konu: yeni fon çıkışı bölümü, E)
@@ -272,6 +296,7 @@ tweet-fon-net-akis-getiri-tarama-2094913511986020386 · tarama çıktısı, kura
 tweet-fon-ortak-agirlik-degisimi-birikim-2096343856476496081 · vaat / proje fikri: fon ağırlık değişimi ve ortak hareket analizi duyurusu, ölçü ve eşik yok (konu: fon-risk-radari)
 tweet-fon-para-akisi-analizi-2097019577112600707 · fon yorumu (KHP para piyasası fonu), eşik yok; kural öğesi yok (konu: fon-risk-radari)
 tweet-froto-nakit-piyasa-degeri-18-89 · değerleme, kapsam dışı: TASARIM §3
+tweet-gartley-harmonik-fibo-oran-1962604746000277528 · tarama çıktısı, kural öğesi yok (konu: C §7); görselde yalnız etiketler: XA 2.66, AB -1.72, BC 0.82, CD -1.04, Fibo 0.618 28.06, Fibo 0.786 27.88; Ham şaka, koşul yok. Hesap (bizim): AB/XA ≈ 0,65, BC/AB ≈ 0,48, CD/BC ≈ 1,27, yani §7 aralıklarıyla uyumlu bir örnek; fiyat çizgilerinin hangi bacaktan çekildiği belli değil
 tweet-gordon-buyume-modeli-temettu-degerleme · değerleme, kapsam dışı: TASARIM §3
 tweet-gun-saat-satis-heatmap-pivot-1764250055114899657 · dış kapsam: pazarlama satış analitiği (gün-saat ısı haritası, perakende verisi), BIST işlem kuralı yok
 tweet-hareketli-ortalama-backtest-araci-1979931015771517315 · araç tercihi: harici hareketli ortalama backtest sitesi bağlantısı ("Kaydedin lazım olur"), kural öğesi yok
@@ -279,6 +304,7 @@ tweet-iq-csharp-python-veri-hatti-1964627639425270263 · araç tercihi: veri hat
 tweet-iq-excel-python-akd-verisi-1970561329590354082 · araç tercihi: veri alımı (IQ Excel eklentisi + Python; AKD verisi, yf yetmez), kural öğesi yok
 tweet-is-yatirim-bilanco-veri-toplama-1942613749073879070 · eğitim: bilanço verisini İş Yatırım'dan otomatik toplayıp klasörde havuzlama önerisi; veri yöntemi, değerleme tarafı (kapsam dışı: TASARIM §3), kural öğesi yok
 tweet-isyatirim-financial-data-source-1889446483449037295 · araç tercihi: İş Yatırım finansal verisi (class tipi kodla erişim), değerleme verisi (kapsam dışı: TASARIM §3), kural öğesi yok
+tweet-kelebek-abcd-fib-uzanti-d-hedef-2092340608480297126 · tarama çıktısı, kural öğesi yok (konu: C §3): KRPLS D hedefleri 11.29 [TAMAM], 10.05 [TAMAM], 7.83 [BOZULDU] ve uzantı ızgarası (0.000 8.42 … 2.000 11.30) §3'ün KRPLS örnekleriyle aynı; G3'te X-B çizgili harmonik, D 11.20 [TAMAMLANDI] (konu: C §9 şablonu), G2'de kırılım etiketleri (Temas, RSI Kırılım); Ham: "Bu da serbest dusus" yorum
 tweet-kmeans-silhouette-pca-kume-gorsellestirme-1762356653779763260 · eğitim: müşteri kümeleme (K-means, silhouette, PCA) kod örneği; ürün/kargo verisi, trade kuralı yok (havuz etiketi: dış kapsam)
 tweet-nihai-hedef-tek-tus-temel-teknik-degerleme-llm-nlp · vaat: hedef beyanı
 tweet-nispi-ppp-kur-enflasyon-testi-1907020119080935479 · makro, kur ve enflasyon farkı testi (nispi PPP), kural öğesi yok, kapsam dışı
@@ -294,6 +320,7 @@ tweet-rasyo-kumeleme-mlp-hisse-secimi-2086819758138134758 · değerleme, kapsam 
 tweet-regresyon-ml-rasyolardan-piyasa-degeri-sapmasi · değerleme, kapsam dışı: TASARIM §3
 tweet-relatif-degerleme-piyasa-norm-bantlari · değerleme, kapsam dışı: TASARIM §3
 tweet-roc-nopat-yatirilan-sermaye-hesabi · değerleme, kapsam dışı: TASARIM §3
+tweet-rsi-fibo-786-donus-1925626094935236883 · tarama çıktısı, kural öğesi yok (konu: C §34); ASTOR 22.05.2025, başlık "RSI Fibo 78.6 Dönüş & Mum Grafik", mum etiketleri CDLRICKSHAWMAN, CDLHARAMICROSS, CDLHARAMI; Ham: "Ne arasan var:)" ve "Bilgi amaçlıdır"
 tweet-sirket-degerlendirme-sektor-isletme-finansal-degerleme-kontrol-listesi · değerleme, kapsam dışı: TASARIM §3
 tweet-takas-virman-gercek-satis-ayrimi-1936386099225448628 · görüş: takas yorumu ilkesi (aracı kurumlar arası virman satış sayılmaz; birkaç gün veya hafta boyunca desen, hacim ve fiyat teyidi); eşik ve tarama koşulu yok; takas ve AKD verisi bedava günlük veride yok
 tweet-telegram-bot-python-mesaj-1847042700467745116 · araç tercihi: Telegram bot ile algoritma çıktısı gönderme kodu; kural öğesi yok (TASARIM Telegram'ı "Yok" listesine koyar)
