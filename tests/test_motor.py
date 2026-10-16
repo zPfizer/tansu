@@ -941,3 +941,33 @@ def test_sinama_modul_1_varyanti_kutu_stopu_ve_hedef_cikisi():
     )
     assert (t.giris_fiyat, t.cikis_fiyat, t.gerceklesen_kayip) == (109.0, 114.5, 0.0)
     assert t.planlanan_risk == pytest.approx(13.0, abs=1e-9)
+
+
+@pytest.mark.parametrize(
+    "ad, kat, satir, beklenen",
+    [
+        # atr15 katı 1,0 olursa stop 100 - 1*2 = 98. Gün 2 düşük 97 <= 98 -> min(98, 98) = 98. Risk 2, kayıp 2.
+        ("atr15", 1.0, r(98, 99, 97, 97.5), (1, 100, 2, 98, "stop", 2, 2)),
+        # atr2 katı 3,0 olursa stop 100 - 3*2 = 94. Gün 2 düşük 93 <= 94 -> min(94, 96) = 94. Risk 6, kayıp 6.
+        ("atr2", 3.0, r(96, 97, 93, 95), (1, 100, 2, 94, "stop", 6, 6)),
+    ],
+)
+def test_baslangic_stopu_atr_kati_aileler_stop_kat_tablosundan_gelir(
+    monkeypatch, ad, kat, satir, beklenen
+):
+    monkeypatch.setitem(aileler.STOP_KAT, ad, kat)
+    assert _ozet([S0, GIRIS, satir], Parametre(stop=ad)) == _ak(beklenen)
+
+
+def test_ayni_gune_iki_donem_sinyali_ilk_donemin_kutusu_kullanilir():
+    # KURALLAR §3 Modül 1: aynı güne iki dönemin sinyali düşerse ilk dönemin kutusu kullanılır.
+    # İlk satır kutu alt 95, ikinci 98. İlk kazanırsa stop 95: giriş günü düşük 99 > 95; gün 2 düşük 94 <= 95
+    # -> min(95, 96) = 95. Risk 5, kayıp 5. (Son satır kazansaydı stop 98 ve dolum 96 olurdu.)
+    kurulum = pd.DataFrame(
+        {"kutu_alt": [95.0, 98.0], "hedef": [float("nan")] * 2},
+        index=GUNLER[[0, 0]],
+    )
+    satirlar = [S0, GIRIS, r(96, 97, 94, 95)]
+    assert _ozet(satirlar, Parametre(stop="kutu"), kurulum) == _ak(
+        (1, 100, 2, 95, "stop", 5, 5)
+    )

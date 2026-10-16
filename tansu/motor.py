@@ -12,7 +12,6 @@ import pandas as pd
 from tansu import aileler, gostergeler
 
 STOP_ATR = 2.0  # TASARIM 5.5: acil stop = giriş - 2 ATR
-STOP_ATR15 = 1.5  # KURALLAR §3 Modül 1: `atr15` başlangıç stopu
 ETKIN_ATR = 1.5  # `dip` kuralı giriş + 1,5 ATR görülünce etkin olur
 YARI_ATR = 3.0  # `atr3` yarı satış seviyesi: giriş + 3 ATR
 BASABAS_R = 1.5  # yüksek giriş + 1,5 R görülünce stop girişe çıkar
@@ -87,7 +86,8 @@ def adim(p: Pozisyon, m) -> Pozisyon:
         stop = (
             p.kutu_alt
             if kutu
-            else m["aof"] - (STOP_ATR15 if p.ayar.stop == "atr15" else STOP_ATR) * p.atr
+            else m["aof"]
+            - aileler.STOP_KAT.get(p.ayar.stop, aileler.STOP_KAT["atr2"]) * p.atr
         )
         p = replace(
             p,
@@ -174,6 +174,7 @@ def _kutu_hedef(kurulum) -> dict:
     """Sinyal günü → (kutu_alt, hedef); NaN None olur (kutu yoksa `atr2` yedeği, hedef yoksa hedef çıkışı yok)."""
     if kurulum is None:
         return {}
+    kurulum = kurulum[~kurulum.index.duplicated()]  # aynı güne iki dönem: ilki kazanır
     return {
         t: tuple(None if pd.isna(x) else float(x) for x in (a, h))
         for t, a, h in zip(kurulum.index, kurulum["kutu_alt"], kurulum["hedef"])
@@ -181,11 +182,10 @@ def _kutu_hedef(kurulum) -> dict:
 
 
 def kurulum_bilgisi(f: pd.DataFrame, p: aileler.Parametre):
-    """Kutu stopu ya da hedef kullanan ayar için `aileler.kurulum` (aynı güne düşen iki dönemin ilki); yoksa None."""
+    """Kutu stopu ya da hedef kullanan ayar için `aileler.kurulum`; yoksa None (aynı gün tekrarını `_kutu_hedef` ayıklar)."""
     if p.stop != "kutu" and p.hedef == "yok":
         return None
-    k = aileler.kurulum(f, p)
-    return k[~k.index.duplicated()]
+    return aileler.kurulum(f, p)
 
 
 def tara(

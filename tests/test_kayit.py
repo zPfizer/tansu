@@ -306,6 +306,38 @@ def test_komutlar_kayit_ve_sinama(tmp_path, capsys):
     )
 
 
+@pytest.mark.parametrize(
+    "arg, beklenen",
+    [
+        (["--varyant", "tansu"], aileler.VARYANTLAR["tansu"]),
+        ([], aileler.Parametre()),
+    ],
+    ids=["tansu", "varsayilan_bugun"],
+)
+def test_varyant_secimi_kayit_ve_sinama_komutlarina_gecer(monkeypatch, arg, beklenen):
+    # TASARIM 5.11: `kayit|sinama --varyant <ad>` seçer, varsayılan `bugun`.
+    from tansu.__main__ import main
+
+    gelen = []
+    monkeypatch.setattr(
+        kayit, "kayitla", lambda p: gelen.append(("kayit", p)) or {"kural_id": "x"}
+    )
+
+    def sahte_tekrar(son, p):
+        gelen.append(("tekrar", p))
+        return 7
+
+    def sahte_kosu(*a, p, **k):
+        gelen.append(("kosu", p))
+        raise kayit.KayitHatasi("durdu")
+
+    monkeypatch.setattr(kayit, "tekrar_sayisi", sahte_tekrar)
+    monkeypatch.setattr(kayit, "kosu", sahte_kosu)
+    assert main(["kayit", *arg]) == 0
+    assert main(["sinama", "--kimlik", "k", *arg]) == 1
+    assert gelen == [("kayit", beklenen), ("tekrar", beklenen), ("kosu", beklenen)]
+
+
 def test_sinama_son_tam_tekrari_calistirir_ve_gunluge_yazar(
     tmp_path, monkeypatch, capsys
 ):

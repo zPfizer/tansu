@@ -1,4 +1,4 @@
-"""Komut girişi: `python -m tansu sadakat | kayit | sinama | denetim | evren-indir | sektor-indir | gunluk [tarih] [--kok veri] [--kimlik KIMLIK] [--resmi] [--son]` (TASARIM 3)."""
+"""Komut girişi: `python -m tansu sadakat | kayit | sinama | denetim | evren-indir | sektor-indir | gunluk [tarih] [--kok veri] [--kimlik KIMLIK] [--resmi] [--son] [--varyant AD]` (TASARIM 3; `--varyant` yalnız kayit ve sinama, varsayılan bugun)."""
 
 import argparse
 import datetime as dt
@@ -6,7 +6,17 @@ import json
 import sys
 from pathlib import Path
 
-from tansu import denetim, evren, gunluk, kayit, kaynak, sadakat, simulator, veri
+from tansu import (
+    aileler,
+    denetim,
+    evren,
+    gunluk,
+    kayit,
+    kaynak,
+    sadakat,
+    simulator,
+    veri,
+)
 
 
 def _kimlik_bul(kok: Path) -> str:
@@ -123,8 +133,14 @@ def main(argv=None) -> int:
         default=denetim.TEKRAR,
         help="denetim: her tekrarda K1 tekrarı B",
     )
+    ap.add_argument(
+        "--varyant",
+        choices=list(aileler.VARYANTLAR),
+        default="bugun",
+        help="kayit ve sinama: EMA ailesi varyantı (KURALLAR §3 Modül 1)",
+    )
     a = ap.parse_args(argv)
-    kok = Path(a.kok)
+    kok, p = Path(a.kok), aileler.VARYANTLAR[a.varyant]
     try:
         if a.komut == "denetim":
             return _denetim(a.n, a.tekrar)
@@ -135,13 +151,14 @@ def main(argv=None) -> int:
         elif a.komut == "sektor-indir":
             print(_sektor_indir(kok, a.kimlik or _en_yeni(kok)))
         elif a.komut == "kayit":
-            print("Kural kaydı yazıldı:", kayit.kayitla()["kural_id"])
+            print("Kural kaydı yazıldı:", kayit.kayitla(p)["kural_id"])
         elif a.komut == "sinama":
             s = kayit.kosu(
                 a.kimlik or _en_yeni(kok),
                 kok,
+                p=p,
                 resmi=a.resmi,
-                tekrar=kayit.tekrar_sayisi(a.son),
+                tekrar=kayit.tekrar_sayisi(a.son, p),
                 son=a.son,
             )
             print(
