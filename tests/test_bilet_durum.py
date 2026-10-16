@@ -1,0 +1,99 @@
+"""Bilet Status denetimi (S5): her `.scratch/**/issues/*.md` bileti tek `**Status:**` satırı taşır ve
+değer `docs/agents/issue-tracker.md` "Status field" ile `docs/agents/triage-labels.md` sözleşmesinden çıkar."""
+
+import re
+from pathlib import Path
+
+KOK = Path(__file__).resolve().parents[1]
+
+STATUS = re.compile(r"^\*\*Status:\*\*\s*(.+?)\s*$")
+
+
+def _izinli_degerler(kok):
+    """(tam eşleşen değerler, parantezli değerlerin başları): sözleşme dosyalarından çıkar."""
+    tam, bas = set(), set()
+    izleyici = (kok / "docs" / "agents" / "issue-tracker.md").read_text(
+        encoding="utf-8"
+    )
+    icinde = False
+    for satir in izleyici.splitlines():
+        if satir.startswith("## "):
+            icinde = satir == "## Status field"
+        if icinde and satir.startswith("- `"):
+            deger = satir.split("`")[1]
+            if " (" in deger:
+                bas.add(deger.split(" (")[0])
+            else:
+                tam.add(deger)
+    etiketler = (kok / "docs" / "agents" / "triage-labels.md").read_text(
+        encoding="utf-8"
+    )
+    for satir in etiketler.splitlines():
+        if satir.startswith("| `"):
+            tam.update(re.findall(r"`([^`]+)`", satir.split("|")[2]))
+    return tam, bas
+
+
+def _izinli_mi(deger, tam, bas):
+    return deger in tam or any(
+        re.fullmatch(rf"{re.escape(b)} \(\s*\S.*\)", deger) for b in bas
+    )
+
+
+def bilet_ihlalleri(kok):
+    """Her bilet için 'yol:satır: neden' (yol köke göreli, `/` ayraçlı)."""
+    tam, bas = _izinli_degerler(kok)
+    ihlal = []
+    for yol in sorted(kok.glob(".scratch/**/issues/*.md")):
+        goreli = yol.relative_to(kok).as_posix()
+        satirlar = yol.read_text(encoding="utf-8").splitlines()
+        durumlar = [
+            (no, eslesme.group(1))
+            for no, satir in enumerate(satirlar, 1)
+            if (eslesme := STATUS.match(satir))
+        ]
+        if not durumlar:
+            ihlal.append(f"{goreli}:1: Status satırı yok")
+        elif len(durumlar) > 1:
+            ihlal.append(f"{goreli}:{durumlar[1][0]}: birden çok Status satırı")
+        elif not _izinli_mi(durumlar[0][1], tam, bas):
+            ihlal.append(
+                f"{goreli}:{durumlar[0][0]}: izin verilmeyen değer: {durumlar[0][1]}"
+            )
+    return ihlal
+
+
+def _sozlesme_kopyala(hedef):
+    (hedef / "docs" / "agents").mkdir(parents=True, exist_ok=True)
+    for ad in ("issue-tracker.md", "triage-labels.md"):
+        (hedef / "docs" / "agents" / ad).write_text(
+            (KOK / "docs" / "agents" / ad).read_text(encoding="utf-8"),
+            encoding="utf-8",
+        )
+
+
+def test_bilet_ihlalleri_sahte_kokte_tam_liste(tmp_path):
+    _sozlesme_kopyala(tmp_path)
+    bilet = tmp_path / ".scratch" / "x" / "issues"
+    bilet.mkdir(parents=True)
+    ornekler = {
+        "01-gecerli.md": "# T\n**Status:** ready-for-agent\n",
+        "02-kapali.md": "# T\n**Status:** kapali\n",
+        "03-yok.md": "# T\n\nStatus: done\n",
+        "04-iki.md": "# T\n**Status:** claimed\n**Status:** resolved\n",
+        "05-eski-done.md": "# T\n**Status:** done\n",
+        "06-done-pr.md": "# T\n**Status:** done (PR #9, abc1234)\n",
+        "07-done-bos.md": "# T\n**Status:** done ()\n",
+    }
+    for ad, metin in ornekler.items():
+        (bilet / ad).write_text(metin, encoding="utf-8")
+    assert bilet_ihlalleri(tmp_path) == [
+        ".scratch/x/issues/02-kapali.md:2: izin verilmeyen değer: kapali",
+        ".scratch/x/issues/03-yok.md:1: Status satırı yok",
+        ".scratch/x/issues/04-iki.md:3: birden çok Status satırı",
+        ".scratch/x/issues/07-done-bos.md:2: izin verilmeyen değer: done ()",
+    ]
+
+
+def test_gercek_biletler_sozlesmeye_uyar():
+    assert bilet_ihlalleri(KOK) == []
