@@ -82,7 +82,42 @@ Setten çıkan sorgular ve sebepleri:
 - "KAP duyurularını da çekelim": TASARIM'daki durumu doğrulanmadı. Bildirim özelliğiyle değişti.
 - "Şu linki sakla", "Bu oturumu yeni bir oturuma devret": Tansu isteği değil. Levent'in gerçek devir isteğiyle değişti.
 
+## Set 2 ölçümü (16.10, geçerli)
+
+- Kopya: `git worktree add --detach` ile 9461195 (`%TEMP%\tansu-eval-kopya`), `hooks` anahtarı silindi. Model `claude-opus-5-5`. Sorgu başına 3 koşu, 4 koşu paralel, toplam 171 koşu.
+- Sonuç tablosu: `olcum-set2.tsv`. Sütunlar: no, kosu, beklenen, kaynak, ayrica_dogru, ilk_beceri (ilk Skill çağrısı; yoksa `yok`), dogru, gecerli, engellenen (engellenen yasak araç çağrıları). Ham akış dosyaları depoda yok.
+- Ayrıca doğru beceri doğru sayılır. `yok` satırında bir `tansu-*` becerisi yanlış tetiktir.
+
+Komut (Git Bash, kopyanın kökünde; `S` set dosyası, `O` çıktı klasörü; aynı anda en çok 4 koşu):
+
+```bash
+sorgu=$(sed -n "${n}p" $S | cut -f4)
+claude -p "$sorgu" --model claude-opus-5-5 --max-turns 6 --output-format stream-json --verbose --include-hook-events --settings '{"disableAllHooks": true}' --disallowedTools "Bash PowerShell Edit Write NotebookEdit Agent" --allowedTools "Skill Read Grep Glob" --permission-mode default --strict-mcp-config --no-session-persistence < /dev/null > $O/r$n-$k.json 2> $O/r$n-$k.err
+```
+
+Oranlar (doğru koşu / geçerli koşu; oranı en az 0,5 olan satır):
+
+| Beceri | Koşu | Satır |
+|---|---|---|
+| `tansu-yeni-is` | 24/24 (1,00) | 8/8 |
+| `tansu-hata` | 24/24 (1,00) | 8/8 |
+| `tansu-belge` | 21/24 (0,88) | 7/8 |
+| `tansu-karar` | 20/24 (0,83) | 7/8 |
+| `tansu-eval` | 24/24 (1,00) | 8/8 |
+| `yok` | 50/51 (0,98) | 17/17 |
+
+- Kaçanlar: 22. satır (belge, "AGENTS.md'ye yeni bir git kuralı") 3 koşunun 3'ünde beceri yüklemedi. 28. satır (karar, Yahoo ya da İş Yatırım; ayrıca doğru `tansu-grill`) 3'ün 3'ünde beceri yüklemedi. 25. satır (karar, gerçek) 3'ün 2'sinde doğru.
+- Yanlış tetik: 49. satır "Yapılması gerekeni yap." 1. koşuda `tansu-eval` yükledi. Zor olumsuzlar 53 ve 57'de yanlış tetik yok.
+- Gerçek olumlu satırlar: 17 (belge) 3/3, 25 (karar) 2/3, 33 (eval) 3/3.
+- Karar: 22. ve 28. satır için açıklama değişmez. İki becerinin oranı 0,8'in üstündedir. Tek satıra göre açıklama ayarlamak aşırı uydurmadır (YONETIM oturumu, 16.10).
+
+Geçerlilik:
+- Eksik koşu 0, hook olayı 0. Kopyanın `git status --porcelain` ve `git log -1` değeri önce ve sonra aynı.
+- Beynin değeri değişti, ama değişikliği eval yapmadı. Değişiklik o sırada çalışan YONETIM oturumunun Levent onaylı görünürlük düzeltmesiydi (beyin 8f6bdff). Eval koşularında hook olayı yoktu ve hiçbir yazma aracı çalışmadı.
+- 6 koşu yasak bir aracı denedi (r19-2, r19-3, r33-1, r33-3 Bash; r21-3 Write; r24-3 Edit). Hepsi engellendi ("No such tool available"). O günkü kurala göre bu 6 koşu yeniden koşuldu. Tablo yeniden koşuları tutar.
+- 24. satır 3. koşu her yeniden koşuda Edit denedi. Yeni kurala göre engellenen deneme koşuyu geçersiz yapmaz. Bu yüzden koşu geçerlidir.
+- Açık bulundu: 8 koşu ToolSearch ile ertelenmiş araç yükledi. r10-1, Monitor ile pytest koşmayı denedi. `--permission-mode default` bunu engelledi. Önlem: `tansu-eval` "Isolation" `ToolSearch` ve `Monitor` araçlarını da yasaklar.
+
 ## Açık iş
 
-1. Levent'i tanıyan bir Claude oturumu seti denetler (`tansu-eval` "Review the set"). Levent set okumaz (Levent 16.10).
-2. Denetçinin onayından sonra `sorgular-2.tsv` ile sorgu başına 3 koşu. Kural: `tansu-eval` "Skill trigger eval".
+Yok. Açıklama ayarı gerekmedi (yukarıdaki karar).
