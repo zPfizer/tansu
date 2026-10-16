@@ -944,6 +944,46 @@ def test_sonraki_cift_gecersiz_gun_sayilmaz(tmp_path):
     assert o["ileri_5"] == pytest.approx(0.0526316, abs=1e-7)
 
 
+def test_ema_sonsuz_duzeltilmis_fiyat_karantina_gunu(tmp_path):
+    # seri_a() ama son satırın (04.02) düzeltilmiş AOF, kapanış, yüksek ve düşüğü sonsuz (ham alanlar aynı: veri katmanı
+    # karantinaya almaz). TASARIM 5.14 uç durum 2: düzeltilmiş fiyatı sonsuz gün bu modülde karantina günüdür.
+    # Giriş 03.02 AOF 104; 04.02 karantina çıkışı son temiz AOF 104'te: 104·0,999/(104·1,001) − 1 = −0,001998.
+    # Tutma 1; maruziyet 1/3 (yalnız 03.02 pozisyonda; dönem 02.02-04.02). Al-tut: 02.02 AOF 103'ten son geçerli
+    # kapanışa (03.02, 104): 104·0,999/(103·1,001) − 1 = 0,0076913. Çıktıda sonsuz ya da NaN yok.
+    a = seri_a()
+    a[7].update(aof=float("inf"), kapanis=float("inf"))
+    a[7].update(yuksek=float("inf"), dusuk=float("inf"))
+    f = ema_tek(tmp_path, a)
+    h = f["hisseler"][0]
+    o = h["olcu"]
+    assert h["hisse"] == "A" and o["islem"] == 1
+    assert o["net"] == pytest.approx(-0.001998, abs=1e-6)
+    assert o["ort_tutma"] == pytest.approx(1.0)
+    assert o["maruziyet"] == pytest.approx(1 / 3)
+    assert h["al_tut"] == pytest.approx(0.0076913, abs=1e-7)
+    assert h["donem"] == {"bas": "2026-02-02", "son": "2026-02-04"}
+    json.dumps(f, allow_nan=False)
+
+
+def test_cift_sonsuz_duzeltilmis_fiyat_karantina_gunu(tmp_path):
+    # A'nın 258. günü düzeltilmiş AOF, kapanış, yüksek ve düşük sonsuz (ham alanlar aynı) → bu modülde karantina günü.
+    # 256. gün hedef A: 257. gün A 95'ten alınır. 258. gün karantina: açık pozisyon son temiz AOF'tan (257. gün, 95) çıkar:
+    # 95·0,999/(95·1,001) − 1 = −0,001998; tutma 258 − 257 = 1; maruziyet 1 gün (257) / dönem 251-269 = 19 gün.
+    # Sonrası: Z 258-262'de NaN, 263. günün hedefi yok, sonraki günlerde |z| < 1 → başka işlem yok (karantina ayrıca
+    # 250 satır giriş açmaz). Al-tut 50/50, sonsuz gün yok sayılır: ikisi de 100'den 100'e: 0,999/1,001 − 1 = −0,001998.
+    sonsuz = float("inf")
+    satir = {"aof": sonsuz, "kapanis": sonsuz, "yuksek": sonsuz, "dusuk": sonsuz}
+    s = cift_calistir(cift_anlik(tmp_path, {258: satir}))
+    h = hisse(s, "cift_rotasyonu", "A-B")
+    o = h["olcu"]
+    assert o["islem"] == 1 and o["net"] == pytest.approx(-0.001998, abs=1e-6)
+    assert o["ort_tutma"] == pytest.approx(1.0)
+    assert o["maruziyet"] == pytest.approx(1 / 19)
+    assert h["al_tut"] == pytest.approx(-0.001998, abs=1e-6)
+    assert h["donem"] == donem(251, 269)
+    sade(s)
+
+
 def test_cift_tek_gunluk_donem_gecersiz_fiyat_atlanir(tmp_path):
     # A ve B 252 satır: tek aday gün 252. (dizin 251). A'nın o günü AOF'u 0 → bozuk → geçerli fiyat günü değil →
     # dönemin son gününe dek dönem başı bulunmaz → çift sınanmaz, `atlanan` listesinde.

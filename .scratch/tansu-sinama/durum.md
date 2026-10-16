@@ -78,8 +78,9 @@ Sürüm 1 3. denetim turunun bulguları ve testleri (hepsi b464df1 koduyla kald�
 |---|---|---|
 | Son gün karantinalı: karantina çıkışı, veri sonu değil | `cift_isleri`, `cift_tablolari` | `test_cift_son_satir_karantina_karantina_cikisi_veri_sonu_degil`, `test_cift_sonsuz_son_kapanis_son_gecerli_fiyat_ve_karantina_cikisi` |
 | İleri yürümenin son yılı dönemin son günü | `_ema_donem`, `_ema_is` | `test_ema_ileri_son_yil_donemin_son_gunu` |
-| Sıfır ya da sonsuz fiyat yok sayılır | `_ema_gecerli`, `_cift_gecerli`, `_ema_is`, `_cift_is` | `test_ema_al_tut_donem_basi_aof_sifir_sonraki_gecerli_gun`, `test_ema_al_tut_son_kapanis_sonsuz_son_gecerli_kapanis`, `test_sonraki_gecersiz_gun_sayilmaz` |
-| AOF'u olmayan gün dönem başı olamaz | `_ema_donem`, `cift_isleri` | `test_ema_donem_basi_sifir_aof_tek_gun_atlanir`, `test_cift_donem_basi_gecersiz_gun_atlanir[aof_sifir]`, `test_cift_donem_basi_gecersiz_gun_atlanir[limit_asimi]` |
+| Sıfır ya da sonsuz fiyat yok sayılır | `_gecerli`, `_ema_is`, `_cift_is` | `test_ema_al_tut_donem_basi_aof_sifir_sonraki_gecerli_gun`, `test_ema_al_tut_son_kapanis_sonsuz_son_gecerli_kapanis`, `test_sonraki_gecersiz_gun_sayilmaz`, `test_sonraki_cift_gecersiz_gun_sayilmaz` |
+| AOF'u olmayan gün dönem başı olamaz | `_ema_donem`, `cift_isleri` | `test_ema_donem_basi_sifir_aof_tek_gun_atlanir`, `test_cift_donem_basi_gecersiz_gun_sonraki_gune_kayar[aof_sifir]`, `test_cift_donem_basi_gecersiz_gun_sonraki_gune_kayar[limit_asimi]` |
+| Sonsuz düzeltilmiş AOF ya da kapanış: karantina günü (v2 denetim tur 1) | `ema_tablolari`, `cift_isleri` | `test_ema_sonsuz_duzeltilmis_fiyat_karantina_gunu`, `test_cift_sonsuz_duzeltilmis_fiyat_karantina_gunu` |
 | Tek günlük çift dönemi | `cift_isleri`, `_sonuc` (`donem`) | `test_cift_tek_gunluk_donem_gecersiz_fiyat_atlanir`, `test_cift_tek_gunluk_donem_donem_alani` |
 
 Koşu (sürüm 1, eski kod): `kayit/deneme.jsonl` `olay=tansu_sinama`, koşu 20261016T201747-0a886d (anlık görüntü 20261014-1930).
