@@ -39,3 +39,4 @@ Task scope skips Sharpen, Spec, and Tickets. It runs Build, Test gate, and Proof
 | the work changes an HTML report | show the proof with `anthropic-skills:built-in-browser`. |
 | the work meets an operational limit or quota (for example a rate limit of a data source) | `thinking-margin-of-safety`. |
 | the work is a batch content job with a fixed line rule (map lines, labels, tags) | use task scope: skip Sharpen, Spec, and Tickets. The job prompt holds the rule and the proof. (Retro 15.10) |
+| the brief names a decided spec file (the edit set and its tests, decided by Levent or by the session that started the job) | Sharpen, Spec, and Tickets do not run. The PR body names the spec file in `Akış notu:`. Build runs `mattpocock-skills:implement` on the spec file. |

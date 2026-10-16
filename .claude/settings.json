@@ -91,7 +91,10 @@
       "PowerShell(*git add . *)",
       "PowerShell(*git add -- .)",
       "PowerShell(*git add -A*)",
-      "PowerShell(*git add --all*)"
+      "PowerShell(*git add --all*)",
+      "Bash(cat *)",
+      "Bash(sed -n*)",
+      "Bash(sed -i*)"
     ]
   },
   "enabledPlugins": {

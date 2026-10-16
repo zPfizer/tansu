@@ -1,5 +1,9 @@
 import ast
+import json
+import re
 from pathlib import Path
+
+KOK = Path(__file__).resolve().parents[1]
 
 
 def test_modul_bagimliliklari_tek_yonlu_geri_import_yok():
@@ -41,3 +45,46 @@ def test_modul_bagimliliklari_tek_yonlu_geri_import_yok():
             for hedef in hedefler:
                 if hedef in sira:
                     assert sira[hedef] < sira[ad], (ad, hedef, dugum.lineno)
+
+
+def _bolum(yol, baslik):
+    # Başlık satırından sonraki `## ` başlığa kadar olan satırlar (başlık satırı dahil).
+    satirlar = (KOK / yol).read_text(encoding="utf-8").splitlines()
+    ilk = next(i for i, s in enumerate(satirlar) if s.startswith(baslik))
+    son = next(
+        (i for i in range(ilk + 1, len(satirlar)) if satirlar[i].startswith("## ")),
+        len(satirlar),
+    )
+    return satirlar[ilk:son]
+
+
+def test_dizin_kaynak_degerini_yinelemez():
+    # KURALLAR 2: "bu dizin kaynak değerini yinelemez"; parametre değeri A–E bölümünde durur.
+    desen = re.compile(
+        r"\b\d+ ?(?:bar|günlük|haftalık|aylık|yıllık)\b|\d+(?:[.,]\d+)? ?ATR\b"
+    )
+    bulunan = [
+        satir
+        for satir in _bolum("docs/KURALLAR.md", "## 2. Dizin")
+        if desen.search(satir)
+    ]
+    assert bulunan == []
+
+
+def test_coding_standards_seen_once_ve_rules():
+    seen = _bolum("CODING_STANDARDS.md", "## Seen once")
+    assert [s for s in seen if s.startswith("- 15.10")] == []
+    assert "Read the whole note" in "\n".join(_bolum("CODING_STANDARDS.md", "## Rules"))
+
+
+def test_settings_deny_okuma_kabuklarini_engeller():
+    ayar = json.loads((KOK / ".claude" / "settings.json").read_text(encoding="utf-8"))
+    deny = ayar["permissions"]["deny"]
+    for kural in ("Bash(cat *)", "Bash(sed -n*)", "Bash(sed -i*)"):
+        assert kural in deny
+
+
+def test_okuyucu_araclari_yalniz_okur():
+    metin = (KOK / ".claude" / "agents" / "okuyucu.md").read_text(encoding="utf-8")
+    araclar = [s for s in metin.splitlines() if s.startswith("tools:")]
+    assert araclar == ["tools: Read, Grep, Glob"]

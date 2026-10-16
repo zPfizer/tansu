@@ -19,9 +19,9 @@ This file starts short. It grows from real mistakes.
 - **Read the target before you dictate a fact:** Read the file first. Then write a fact about it into a job prompt or a callout. Use the claim of the file. (14.10: a prompt dictated "version 3.0" for a note whose line 13 said "v3.5.1 + 12 commits". The auditor failed the round. 15.10: an audit prompt said 47 sampled lines. The records held 56.)
 - **Sample before the full run:** Before a batch job runs on all items, run it on a sample. Read the distribution of the output. Then run the full set. (14.10: a tag job flagged 251 of 503 notes because of a loose flag rule. A 25-note sample would have shown it.)
 - **Wire it and run it:** Connect each new hook, command, or module to the live path in the same change. Show one real run through that path. (07.10: a new hook was not in `settings.json`. 05.10: the Tansu CLI read result keys that the change removed.)
+- **Read the whole note:** A reader reads each note with `Read`, without `offset` or `limit`. It never cuts a note with `head`, `cut`, `sed -n`, or a slice. It reports the line count, and the main agent checks the count with `wc -l`. (15.10: 9 writer and 11 reader subagents cut note bodies and still reported "Notes read: N". 16.10: a document correction made 25 cut Ham reads. 16.10: a reader prompt named no full-print command.)
 
 ## Seen once
-- 15.10: 9 writer and 11 reader subagents cut note bodies (`head -c`, `cut -c`, `x[:400]`) and still reported "Notes read: N". The Codex auditor found it in round 2. A reader prompt names a full-print command and the main agent checks the reported line and character counts with a script.
 - 16.10: a skill trigger eval ran `claude -p` with `--allowedTools` only and assumed the sessions were read only. They acted on the queries and edited `.claude/agents/vekil.md`, `.claude/skills/tansu-grill/SKILL.md`, and the brain Threads. Rule in `tansu-eval` "Skill trigger eval".
 
 ## Tansu
@@ -45,3 +45,4 @@ them when you write code.
   wrote the formulas of TASARIM again.)
 - **Do not write a missing thing as if it exists (Olmayanı var gibi yazma):** The documents describe only what exists
   today. Planned work stays in the spec and the ticket. When the work is in place, it goes into the document.
+- **Open the source before a new fact (Kaynağı aç):** Before you write a new fact sentence in a document, open the Ham line or the image. If you cannot find it, write "okunamıyor" or YORUM. (16.10: a correction wrote a new unsupported sentence into TASARIM three times. 16.10: a batch reading wrote three claims that the source does not state, without YORUM.)

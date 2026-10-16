@@ -2,14 +2,31 @@ name: dod
 
 on:
   pull_request:
-    types: [opened, edited, synchronize, reopened]
+    types: [opened, edited, synchronize, reopened, ready_for_review]
 
 jobs:
   dod:
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      # Kod dosyasi degistiyse PR_KOD_VAR=1 olur; o zaman "kapi: pytest (belge)" satiri yetmez.
+      - name: kod degisikligi var mi
+        env:
+          BASE: ${{ github.base_ref }}
+        run: |
+          set -eu
+          if ! git rev-parse --verify --quiet "origin/$BASE^{commit}" > /dev/null; then
+            echo "HATA: origin/$BASE bulunamadi; kod degisikligi denetlenemedi."
+            exit 1
+          fi
+          if git diff --name-only "origin/$BASE...HEAD" | grep -Eq '\.(py|ps1|yml|toml)$'; then
+            echo "PR_KOD_VAR=1" >> "$GITHUB_ENV"
+          fi
       - run: python .github/dod_kontrol.py
         env:
           PR_GOVDE: ${{ github.event.pull_request.body }}
+          PR_BAS_SHA: ${{ github.event.pull_request.head.sha }}

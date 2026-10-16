@@ -30,7 +30,7 @@ If a document and the code contradict, or if the document says nothing about the
 first. Write the reason. Then write the code.
 
 ## Every job
-1. Write the intent of Levent and the flow letter in one line at the top of the first reply.
+1. Write the intent of Levent and the flow letter in one line at the top of the first reply. All text that Levent can see is Turkish, also the wrap_up text.
 2. Read the section "Current state" (Şimdiki durum) of this file.
 3. If the work type is unclear: `mattpocock-skills:ask-matt`.
 4. Send a design or technical question that needs the preference of Levent to the `vekil` subagent first. Levent gets only these: direction of the project, money, outgoing work, secrets, and delete. Levent also gets a Task Scheduler change and work that cannot be undone.
@@ -66,7 +66,7 @@ Each skill lives in `.claude/skills/<name>/SKILL.md` and owns the steps of its f
 
 **I. Session**
 1. **Long work:** `chief-of-staff`.
-2. **Close of a session:** `verification-before-completion`, then `tansu-yeni-is` "Close".
+2. **Close of a session:** `verification-before-completion`, then `tansu-yeni-is` "Close". A read-only analysis job runs only `verification-before-completion`.
 3. **Weekly:** `mattpocock-skills:retro` over the last 10 work sessions, with reader agents on session digests.
 4. **Handoff:** To give the work to a new session: `mattpocock-skills:handoff`.
 5. **Eval work:** Run flow J (`tansu-eval`).
@@ -95,9 +95,11 @@ Each skill lives in `.claude/skills/<name>/SKILL.md` and owns the steps of its f
 ## Auditor and rounds
 - In this section, "auditor" means the Codex auditor (code) or the reviewer of the `mattpocock-skills:code-review` pass (documents only). `tansu-yeni-is` "Review" says which one runs. The Codex audit is only for code changes.
 - The auditor is a different agent from the writer.
-- The auditor also checks that the writer followed the steps of the flow skill. The flow skills are `tansu-yeni-is` and the other skills under `.claude/skills/`. The auditor reads the `Akış:` line of the PR body. It checks the diff and the PR body against the steps of that skill. It names each step that has no trace.
+- The auditor also checks that the writer followed the steps of the flow skill. The flow skills are `tansu-yeni-is` and the other skills under `.claude/skills/`. The auditor reads the `Akış:` line of the PR body. It checks the diff and the PR body against the steps of that skill. It names each step that has no trace. It compares the PR line `Çağrılan beceriler:` with the steps of the skill. The session that started the job compares the list with the session transcript.
 - The auditor of a delete or archive job checks the final file list and the links. It also checks the changes outside the scope.
 - The verdicts are GEÇTİ, NOTLU GEÇTİ, and KALDI. NOTLU GEÇTİ: low-risk test gaps and style notes. KALDI: a false claim, a broken behavior, a missed instruction, or a security or privacy risk. An audit without a verdict counts as KALDI. The prompt of a `mattpocock-skills:code-review` pass asks for a verdict in the same words.
+- A claim that is false against the source is KALDI at any risk level. The auditor does not grade it low. A doubt in the verdict text (for example "KALDI olabilir") makes the verdict KALDI. The auditor writes `Yanlış iddia sayısı: N` for its pass. A pass with N greater than 0 is KALDI. The PR body copies the N of the pass whose verdict it copies.
+- A fix commit that adds or changes claim text gets one more pass, also after NOTLU GEÇTİ. The pass reads only the changed lines. When the auditor names an error class, the orchestrator searches the whole diff for that pattern before the second pass.
 - Every audit prompt and every code-review pass prompt states the goal of the job. When the goal is to simplify, a deliberately deleted line is not a finding. A deletion is a finding only if a needed rule was lost without a reason. The rest of the diff gets the full review.
 - Code change at feature and outgoing scope: at most 3 Codex audit rounds. Every audit prompt names the round number. The auditor gives the round number with the verdict.
 - If round 3 returns KALDI (failed): stop the job. Do not open a fourth round. Find the root cause and define the job again. Send Levent the root cause in one line.
@@ -111,6 +113,8 @@ Each skill lives in `.claude/skills/<name>/SKILL.md` and owns the steps of its f
 - **Names (Adlar):** Code, file, column, and CSV header names are Turkish ASCII (`aile`, `adim`, `evren`). Report and card
   text uses Turkish characters. Use `pathlib` for paths. Open each file with an explicit `encoding="utf-8"` (for CSV,
   `utf-8-sig`).
+- **Line ends (Satır sonları):** `core.autocrlf=true`. The working copy is CRLF, the repository is LF. Do not convert line ends. Change files with `Edit`.
+- **Shell reads (Kabuk okumaları):** Read a file with `Read`. `permissions.deny` in `.claude/settings.json` blocks `cat`, `sed -n`, and `sed -i` in Bash.
 - **Test gate (Test kapısı):** Before a commit, `tansu-yeni-is` "Test gate" must be green. The tests do not
   access the network and do not write to the real `kayit/` files (`tests/conftest.py` changes the path to `tmp_path`).
 - **Test first (Önce test):** Write a red test first. Then write the minimum code. Write tests only against the interfaces (yüzler) in TASARIM.

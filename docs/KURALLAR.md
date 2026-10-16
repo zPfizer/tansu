@@ -61,18 +61,18 @@ dizin kaynak değerini yinelemez.
 | Bottle pattern (iki mum) | B §33 | K |
 | SMA kesişimi (TUPRS, EURUSD) | B §35 | K |
 | Üç kırmızı mum SELL sinyali | B §36 | K |
-| Fibonacci düzeyi + bant sistemi (144 bar) | C §23 | K |
+| Fibonacci düzeyi + bant sistemi | C §23 | K |
 | EMA200 yukarı kesen tarama, golden cross adayı (CMENT) | C §24 | K |
-| 1 yıllık kapanış aralığı Fibonacci + EMA seviye haritası (DOAS) | C §25 | X |
+| Kapanış aralığı Fibonacci + EMA seviye haritası (DOAS) | C §25 | X |
 | Siyah Kuğu (bullish) oran aralıkları | C §26 | K |
 | Elliott 0-1-a-b-c: c dibi ve 1. tepe direnci (LIDFA, AKBNK) | C §27 | K |
 | Elliott 0-5 sonrası ABC: Fibonacci merdiveni, C teyidi, P-BOM (IDGYO, CRDFA) | C §28 | K |
 | Elliott taramaları (C taraması, 3. itki dalgası taraması) | C §29 | X |
-| 60 günlük aralık kırılımı + bullish mum teyidi (DITAS) | A §18 | K |
+| Aralık kırılımı + bullish mum teyidi (DITAS) | A §18 | K |
 | Fibonacci %78,6 tepki taraması: birleşim koşulları ve onay (EMA20, düşen trend kırılımı) | C §31 | K |
 | Tüm Fibonacci düzeylerinde destek dönüşü ve direnç kırılımı taraması | C §32 | K |
 | Fibonacci %161,8 uzantısı: haftalık dip taraması (fiyat ve RSI) | C §33 | X |
-| RSI üzerinde 144 günlük Fibonacci (0,786 ve 0,618 dönüşü, 0,382 reddi) | C §34 | K |
+| RSI üzerinde Fibonacci (0,786 ve 0,618 dönüşü, 0,382 reddi) | C §34 | K |
 | ADX ve ±DI kesişimi, ADX tepesi | B §37 | K |
 | Bollinger 3 SS banda temas + zıt renkli mum | B §38 | K |
 | Bollinger orta bandı üstünde kapanış + RSI 50 kesişimi (aynı bar) | B §39 | K |
@@ -82,7 +82,7 @@ dizin kaynak değerini yinelemez.
 | Mum sinyalinde trend filtresi | B §43 | X |
 | Bollinger Keltner dışında + alt banttan sekme (fikir) | B §44 | X |
 | Bollinger Keltner sıkışması ve kırılım | B §45 | K |
-| BULL/BEAR etiketi: 5 günlük sinyal toplamı (FROTO) | B §46 | K |
+| BULL/BEAR etiketi: sinyal toplamı (FROTO) | B §46 | K |
 | Bullish Hikkake: iç bar, sahte kırılım, iç bar altı stop | B §47 | K |
 | Bullish Tasuki (üç mum kodu, GARAN) | B §48 | H |
 | Dark Cloud Cover: düşüş uyarısı, stop ilk mum tepesi | B §49 | K |
