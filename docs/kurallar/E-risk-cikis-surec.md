@@ -113,9 +113,9 @@ Uyarı 4: 05.10 ön denemesi "4 ATR hedef" ve "kapanış EMA50 altı bozulma" ku
 ## K4. İz süren stop (trailing)
 
 - Kaynak: G-125 (görsel + Ham); Ham, tweet-statik-dinamik-iz-suren-stop-atr:20.
-- Tansu'nun ifadesi (Ham, tweet-statik-dinamik-iz-suren-stop-atr:20): İki biçim de Tansu'nundur. Statik: "Hedef = Giriş + (1.5 × Giriş ATR) → Sabit kalır". Dinamik: "Hedef = Giriş + (1.5 × O Günün ATR) → Her gün değişir". Tansu dinamiği tercih eder: "Bu daha zekice bir trailing stop yöntemidir." Giriş + 1,5 ATR aktivasyonu ve bundan sonraki barlarda ilk önceki dip altı kapanışta %50 satış anlatılır. G-125 grafiğinde çizgi/bantlar vardır; formül okunmaz.
+- Tansu'nun ifadesi (Ham, tweet-statik-dinamik-iz-suren-stop-atr:20): İki biçim de bu Ham metnindedir (Ham'da yazar yok). Statik: "Hedef = Giriş + (1.5 × Giriş ATR) → Sabit kalır". Dinamik: "Hedef = Giriş + (1.5 × O Günün ATR) → Her gün değişir". Ham metni dinamiği tercih eder: "Bu daha zekice bir trailing stop yöntemidir." Giriş + 1,5 ATR aktivasyonu ve bundan sonraki barlarda ilk önceki dip altı kapanışta %50 satış anlatılır. G-125 grafiğinde çizgi/bantlar vardır; formül okunmaz.
 - Tanım (kaynak sırası; Ham, tweet-statik-dinamik-iz-suren-stop-atr:20):
-   1. Aktivasyon eşiği iki biçimdedir: statik `giriş + 1,5×ATR_giriş` (sabit), dinamik `giriş + 1,5×ATR_t` (ATR_t o günün ATR'si, her gün değişir). YORUM: bizim seçim `High ≥ giriş + 1,5×ATR_giriş` (statik); Tansu dinamiği önerir. High teması mı kapanış mı kullanıldığı kaynakta açık değildir.
+   1. Aktivasyon eşiği iki biçimdedir: statik `giriş + 1,5×ATR_giriş` (sabit), dinamik `giriş + 1,5×ATR_t` (ATR_t o günün ATR'si, her gün değişir). YORUM: bizim seçim `High ≥ giriş + 1,5×ATR_giriş` (statik); Ham metni dinamiği önerir. High teması mı kapanış mı kullanıldığı kaynakta açık değildir.
    2. Giriş + 1,5 ATR aktivasyonu geçilir; satış koşulu bundan sonraki barlarda aranır.
    3. Bu barlardan ilk `Close[t] < Low[t−1]` kapanışında %50 satış sinyali oluşur.
    4. %50'nin ilk mi kalan miktara mı uygulandığı açık değildir (Ham, G125:20).
@@ -126,7 +126,7 @@ Uyarı 4: 05.10 ön denemesi "4 ATR hedef" ve "kapanış EMA50 altı bozulma" ku
 | aktivasyon | giriş + 1,5 ATR (statik: giriş ATR'si, sabit; dinamik: o günün ATR'si, her gün değişir) | Ham, tweet-statik-dinamik-iz-suren-stop-atr:20 |
 | satış sırası | aktivasyondan sonraki barlarda ilk dip-altı kapanış | Ham, tweet-statik-dinamik-iz-suren-stop-atr:20 |
 | aktivasyon temeli (High/Close) | yok | YORUM |
-| trailing ATR sabit mi | statik (sabit) ve dinamik (her gün) iki biçim var; Tansu dinamiği önerir | Ham, tweet-statik-dinamik-iz-suren-stop-atr:20; YORUM: bizim seçim statik; Tansu dinamiği önerir |
+| trailing ATR sabit mi | statik (sabit) ve dinamik (her gün) iki biçim var; Ham metni dinamiği önerir | Ham, tweet-statik-dinamik-iz-suren-stop-atr:20; YORUM: bizim seçim statik; Ham metni dinamiği önerir |
 | Chandelier / yalnız yukarı / max stop | kaynakta yok | YORUM alternatifleri; aktarılan dip-altı satış kuralının parçası değil |
 
 - Belirsiz kalanlar: aktivasyonun High/Close bazı, dinamik biçimde ATR'nin hangi bardan okunduğu, aynı bar sırası, %50 paydası ve dolum zamanı. Chandelier ve max stop zinciri kaynak kuralı değildir (Ham, tweet-statik-dinamik-iz-suren-stop-atr:20).
@@ -268,7 +268,7 @@ Uyarı 4: 05.10 ön denemesi "4 ATR hedef" ve "kapanış EMA50 altı bozulma" ku
   4. Riski merkeze koy: setup ne kadar güzel olursa olsun tek işlemde büyük sermaye riske edilmez. Pozisyon büyüklüğü stop mesafesine göre. Belirli risk yüzdesi önerilmiyor.
   5. İşlem günlüğü: "Aday tarihi → giriş → neden girdik → invalidation → TP → sonuç → maksimum olumlu/olumsuz hareket" (MFE/MAE'ye denk; YORUM). Birkaç aylık kayıtla gerçek istatistik.
   6. Yalnız katkı sağlayanı tut: göstergeleri ve filtreleri sonuçlara katkısına göre ölç; katkısı olmayanı sadeleştirme adayı yap.
-  - Ek paylaşım (`kaynak-tansu-2095201144544846208`, 2 Eylül 2026, 20:24, Ham): "Analize indikatörün AL sinyaliyle başlanmıyor." İnceleme sırası: bölge → kırılımlar → likidite hareketleri → 4 saatlik teyit.
+  - Ek paylaşım (`kaynak-tansu-2095201144544846208`, 2 Eylül 2026, 17:24 UTC, Ham): "Analize indikatörün AL sinyaliyle başlanmıyor." İnceleme sırası: bölge → kırılımlar → likidite hareketleri → 4 saatlik teyit.
 - Tanım (bizim backtest için çıkan):
   1. Her aday için sinyal tarihi t0 kaydet. Sonuç: getiri(t0+1), (t0+3), (t0+5) işlem günü (gün tanımı belirsiz, aşağıda).
   2. Aday sonrası fiyat değişimi ile uygulanabilir giriş/çıkış sonucunu ayrı ölç (not, Cevo sentezi, YORUM).
@@ -421,7 +421,7 @@ Eksik (Tansu söylemedi), hepsi YORUM ile doldurulmalı ve YORUM etiketli kalmal
 5. Birden fazla açık pozisyonda toplam risk sınırı ve korelasyon.
 6. TP1 "%10" kimliği; TP2 miktarı; %50 paydası.
 7. Trailing aktivasyonunun High/Close bazı, ATR zamanı ve dolum ayrıntıları (Chandelier k çarpanı kaynak kuralı değildir).
-8. Kâr hedefi için sabit ATR çarpanı yok; Ham'da "Hedef" diye yazılan giriş + 1,5 ATR eşiği iz süren moda geçiş eşiğidir (K4; statik ve dinamik biçim, Tansu dinamiği önerir). "4 ATR hedef" 05.10 ön denemesinin kararıydı; kaldırıldı, güncel karar: hedef yok (TASARIM §5.5; bilet 04, 14.10).
+8. Kâr hedefi için sabit ATR çarpanı yok; Ham'da "Hedef" diye yazılan giriş + 1,5 ATR eşiği iz süren moda geçiş eşiğidir (K4; statik ve dinamik biçim, Ham metni dinamiği önerir). "4 ATR hedef" 05.10 ön denemesinin kararıydı; kaldırıldı, güncel karar: hedef yok (TASARIM §5.5; bilet 04, 14.10).
 9. EMA50 çıkışı kaynak kuralı değildir (05.10 ön denemesinin kararıydı; kaldırıldı). NotebookLM örneği SMA250 altında kapanışta çıkışı gösterir; ortalama seçimi okura aittir (Ham, G115:20; NotebookLM, g1). Projenin gün sonu stopu ile harmonik bozulma ayrıdır.
 10. Zaman stopu: Tansu'da yalnız "tepki penceresi" (10 gün/20 bar) var; pozisyon zaman stopu yok.
 11. Komisyon ve kayma varsayımı.
@@ -450,7 +450,7 @@ Grup 2. Adaylar ve filtreler (K18)
 
 Grup 3. Risk (K1-K5, K23, G-118)
 - [ ] Lot stop mesafesinden hesaplanır; %1 (G-115 Ham) ve 2 ATR (NotebookLM görseli) paylaşılan örnektir, genel risk oranı seçimi YORUM'dur (NotebookLM, G115/g1).
-- [ ] Aileye özgü çıkış ve risk yöntemini raporla. YORUM: bu kontrol listesinde ayrı stop kullanımı aranır; rotasyon grafiği genel stop politikasını açıklamaz (Ham, G125:20; Araç, kaynak-vakbn-garan-rotasyon-2096358189696520213 görsel 2 [TASARIM'daki "Rota/g2" kısaltması]; Eğitim, G118/g1). İstisna: seçilmiş çift rotasyonu bölmesi stopsuzdur, çıkışı karşı uçta geçiştir (TASARIM §5.5–5.6; KURALLAR §3); bu madde o bölmeye uygulanmaz. (bilet 04, 14.10)
+- [ ] Aileye özgü çıkış ve risk yöntemini raporla. YORUM: bu kontrol listesinde ayrı stop kullanımı aranır; rotasyon grafiği genel stop politikasını açıklamaz (Ham, G125:20; Araç, kaynak-vakbn-garan-rotasyon-2096358189696520213 görsel 2; Eğitim, G118/g1). İstisna: seçilmiş çift rotasyonu bölmesi stopsuzdur, çıkışı karşı uçta geçiştir (TASARIM §5.5–5.6; KURALLAR §3); bu madde o bölmeye uygulanmaz. (bilet 04, 14.10)
 - [ ] Planlanan kayıp ve gerçekleşen kaybı kıyasla (boşluk etkisi).
 - [ ] Stop seviyesini R/R oranına göre belirle: "her zaman bu orana göre belirleyin" (Ham, tweet-yuksek-ihtimalli-gunluk-islem-bes-kapi:49; eşik B §20); bütün sistemlerde ortak Tansu sırası olduğu söylenmemiştir (G123:42–49).
 - [ ] Plana sadakat: kural dışı çıkış/giriş yok.

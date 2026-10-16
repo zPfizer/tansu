@@ -101,8 +101,8 @@ yorumumuzdur**; ekranda "Tansu'nun sistemi" diye sunulmaz. (P5)
 (Kesilecekler 1–6, C-1)
 
 **İkinci dalga:**
-- AB=CD. Tansu'nun SMRTG sınaması C fiyatından giriyor. Görsel işlem yönünü yazmaz; üç işlemde C ve D fiyatı
-  tablodaki getiriyle aşağı yönde uyuşur (YORUM: bizim hesabımız). BIST'te bireysel
+- AB=CD. ISKPL Ham'ı C'den alımı anlatır. SMRTG sınama görseli fiyat ve işlem yönü yazmaz; üç işlemde
+  pikselden okunan C ve D fiyatı tablodaki getiriyle aşağı yönde uyuşur (YORUM: bizim hesabımız). BIST'te bireysel
   açığa satış pratik değil. Alış yönlü hali Tansu'nun gösterdiği kural olmaz. (B-1)
 - AEFES kanal, AKFIS kurulumu ve fiili dolaşım taraması.
 
