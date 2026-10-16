@@ -88,4 +88,5 @@ ortak karantina bayrağını kullanır (`ema_tablolari`, `cift_tablolari`). Aç�
 
 Koşu (sürüm 1, eski kod): `kayit/deneme.jsonl` `olay=tansu_sinama`, koşu 20261016T201747-0a886d (anlık görüntü 20261014-1930).
 Koşu (sürüm 2, kod 02341c8, `kirli: false`): 20261016T214244-65c468, aynı anlık görüntü.
-Koşu (sürüm 2, denetim tur 1 sonrası kod 157fb8d, `kirli: false`): 20261016T221419-5e57c1, aynı anlık görüntü; site Sınama sekmesi bu koşudan.
+Koşu (sürüm 2, denetim tur 1 sonrası kod 157fb8d, `kirli: false`): 20261016T221419-5e57c1, aynı anlık görüntü.
+Koşu (sürüm 2, son kod 79beda0, `kirli: false`): 20261016T224844-bda57c, aynı anlık görüntü; site Sınama sekmesi bu koşudan.

@@ -36,3 +36,4 @@ Sürüm 2 (17.10), son kodla geliştirme koşusu `20261016T214244-65c468` (kod 0
 1.205 iş, 24 işçi, 9,84 sn; komutun ilerleme satırında CPU %94-95. Sürüm 1 koşusu 8,72 sn idi: fark 2 katın altında,
 kapı yeniden ölçülmedi. GPU kullanılmadı: hesap kütüphanesi kurulu değil.
 Denetim tur 1 sonrası kod 157fb8d, koşu `20261016T221419-5e57c1`: 1.205 iş, 24 işçi, 9,56 sn; ilerleme satırında CPU %87.
+Son kod 79beda0 (işçiler `spawn` ile), koşu `20261016T224844-bda57c`: 1.205 iş, 24 işçi, 8,88 sn; ilerleme satırında CPU %86.
