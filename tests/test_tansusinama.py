@@ -40,9 +40,9 @@ def ema_anlik(tmp_path, b=None, a=None):
     return anlik_hazirla(tmp_path, {"A": a or seri_a(), "B": b or duz(1e9)})
 
 
-def cift_anlik(tmp_path, a_satir=None, ek=None):
+def cift_anlik(tmp_path, a_satir=None, ek=None, b_gun=270):
     """`a_satir`: A'nın dizin → alan değişiklikleri (ham alanlar kilit ve karantinayı sürer, Z düzeltilmiş kapanıştan
-    hesaplanır); değer None ise A'nın o günü satırı yoktur. `ek`: ek hisse serileri."""
+    hesaplanır); değer None ise A'nın o günü satırı yoktur. `ek`: ek hisse serileri; `b_gun`: B'nin satır sayısı."""
     a = [95.0 if 255 <= i < 262 else 100.0 for i in range(270)]
     sabit = [mum(g, 100.0) for g in GUNLER]
     a_mum = [mum(g, k) for g, k in zip(GUNLER, a)]
@@ -50,7 +50,7 @@ def cift_anlik(tmp_path, a_satir=None, ek=None):
         if alan is not None:
             a_mum[i].update(alan)
     a_mum = [m for i, m in enumerate(a_mum) if (a_satir or {}).get(i, 1) is not None]
-    seriler = {"A": a_mum, "B": sabit, "C": sabit, **(ek or {})}
+    seriler = {"A": a_mum, "B": sabit[:b_gun], "C": sabit, **(ek or {})}
     return anlik_hazirla(tmp_path, seriler)
 
 
@@ -587,6 +587,118 @@ def test_sonraki_cift_alinan_bacagin_kapanisi_olan_gunler(tmp_path):
     assert o["islem"] == 1
     assert o["ileri_1"] == pytest.approx(0.0) and o["ileri_3"] == pytest.approx(0.0)
     assert o["ileri_5"] == pytest.approx(0.0526316, abs=1e-7)
+
+
+def ema_tek(tmp_path, a, p=P):
+    s = ts.calistir(
+        ema_anlik(tmp_path, a=a),
+        {},
+        aileler=("ema_sikismasi",),
+        isci=1,
+        p=p,
+        bas=BAS,
+        ilerleme=lambda m: None,
+        izgara=IZGARA,
+    )
+    return s["aileler"]["ema_sikismasi"]
+
+
+def test_ema_son_satir_karantina_nan_kapanis_cikis_donemde(tmp_path):
+    # seri_a() ama son satırın (04.02) düzeltilmiş kapanışı NaN: satır bozuk → karantina. Giriş 03.02 AOF 104; karantina
+    # çıkışı 04.02 günü, son temiz AOF 104'te: getiri 104·0,999/(104·1,001) − 1 = −0,001998. Son geçerli kapanış 03.02 (104).
+    # Dönem satırları 02.02, 03.02, 04.02 (kapanış ileri doldurulur): özkaynak 1,0; 1/1,001 = 0,999001; ·0,999 = 0,998002.
+    # En büyük düşüş −0,001998; tutma 1; maruziyet 1/3. Al-tut 02.02 AOF 103'ten son geçerli kapanış 104'e:
+    # 104·0,999/(103·1,001) − 1 = 0,0076913; fark = −0,001998 − 0,0076913 = −0,0096893.
+    a = seri_a()
+    a[7]["kapanis"] = float("nan")
+    f = ema_tek(tmp_path, a)
+    h = f["hisseler"][0]
+    o = h["olcu"]
+    assert f["atlanan"] == [] and h["hisse"] == "A" and o["islem"] == 1
+    assert o["net"] == pytest.approx(-0.001998, abs=1e-6)
+    assert o["max_dd"] == pytest.approx(-0.001998, abs=1e-6)
+    assert o["ort_tutma"] == pytest.approx(1.0) and o["maruziyet"] == pytest.approx(
+        1 / 3
+    )
+    assert h["al_tut"] == pytest.approx(0.0076913, abs=1e-7)
+    assert o["fark"] == pytest.approx(-0.0096893, abs=1e-7)
+
+
+def test_ema_aofu_olmayan_hisse_atlanir_tek_gunluk_donem_calisir(tmp_path):
+    # Isınma 8 gün: dönem başı 8. satır (04.02). A'nın o satırında AOF yok → dönem başından itibaren AOF yok → A sınanmaz
+    # ve `atlanan` listesindedir. B (düz 100): dönem tek gün; işlem yok (sinyalden sonra gün yok), net 0,0; tek özkaynak
+    # değeri 1,0: Sharpe ve Calmar yok, maruziyet 0/1 = 0,0. Al-tut 100'den 100'e: 0,999/1,001 − 1 = −0,001998;
+    # Fark: strateji 0,0 eksi al-tut (−0,001998) = +0,001998.
+    a = seri_a()
+    a[7]["aof"] = a[7]["ham_aof"] = float("nan")
+    f = ema_tek(tmp_path, a, dataclasses.replace(P, isinma=8))
+    assert f["atlanan"] == ["A"] and [h["hisse"] for h in f["hisseler"]] == ["B"]
+    h = f["hisseler"][0]
+    o = h["olcu"]
+    assert (o["islem"], o["net"], o["maruziyet"]) == (0, 0.0, 0.0)
+    assert o["sharpe"] is None and o["calmar"] is None
+    assert h["al_tut"] == pytest.approx(-0.001998, abs=1e-6)
+    assert o["fark"] == pytest.approx(0.001998, abs=1e-6)
+
+
+def test_cift_tam_252_ortak_gun_tek_gunluk_donem_sinanir(tmp_path):
+    # A ve B 252 satır, ikisi de sabit 100: 252. ortak gün son gün; dönem başı = dönem sonu (tek gün). İşlem yok, net 0,0;
+    # maruziyet 0,0, Sharpe ve Calmar yok. Al-tut 50/50: 100'den 100'e: 0,999/1,001 − 1 = −0,001998; fark +0,001998.
+    sabit = [mum(g, 100.0) for g in GUNLER[:252]]
+    s = ts.calistir(
+        anlik_hazirla(tmp_path, {"A": sabit, "B": sabit}),
+        {"A": "X", "B": "X"},
+        aileler=("cift_rotasyonu",),
+        isci=1,
+        bas="2015-12-01",
+        ilerleme=lambda m: None,
+        izgara=TEK_HUCRE,
+    )
+    f = s["aileler"]["cift_rotasyonu"]
+    assert f["atlanan"] == [] and [h["hisse"] for h in f["hisseler"]] == ["A-B"]
+    h = f["hisseler"][0]
+    o = h["olcu"]
+    assert (o["islem"], o["net"], o["maruziyet"]) == (0, 0.0, 0.0)
+    assert o["sharpe"] is None and o["calmar"] is None
+    assert h["al_tut"] == pytest.approx(-0.001998, abs=1e-6)
+    assert o["fark"] == pytest.approx(0.001998, abs=1e-6)
+
+
+def test_cift_donem_basi_veri_sonundan_sonra_ise_atlanir(tmp_path):
+    # `bas` 269. gün; A'nın o günü satırı yok (son geçerli kapanışı 268) → iki bacağın da kapanışı ve AOF'u olan gün yok.
+    s = ts.calistir(
+        cift_anlik(tmp_path, {269: None}),
+        SEKTOR_ABC,
+        aileler=("cift_rotasyonu",),
+        isci=1,
+        bas=str(GUNLER[269].date()),
+        ilerleme=lambda m: None,
+        izgara=TEK_HUCRE,
+    )
+    f = s["aileler"]["cift_rotasyonu"]
+    assert f["atlanan"] == ["A-B"] and f["hisseler"] == []
+
+
+def test_cift_alinan_bacagin_son_gun_kapanisi_yoksa_onceki_kapanisla_cikar(tmp_path):
+    # A'nın 262. ve 268. günü satırı yok; B 269 satır (son 268). Z 262-266'da NaN → 263. gün hedefi yok, geçiş yok: A 257.
+    # günde 95'ten alınır ve tutulur. Veri sonu 268 (iki bacağın son kapanışlarının küçüğü); A'nın o günü satırı yok →
+    # kapanış ileri doldurulur: 267. gün 100. Çıkış 268. gün 100'den: 100·0,999/(95·1,001) − 1 = 0,0505284.
+    # Tutma 268 − 257 = 11; maruziyet 11 gün (257-267) / dönem 251-268 = 18 gün.
+    kayit_ = {262: None, 268: None}
+    s = ts.calistir(
+        cift_anlik(tmp_path, kayit_, b_gun=269),
+        SEKTOR_ABC,
+        aileler=("cift_rotasyonu",),
+        isci=1,
+        bas="2015-12-01",
+        ilerleme=lambda m: None,
+        izgara=TEK_HUCRE,
+    )
+    h = hisse(s, "cift_rotasyonu", "A-B")
+    o = h["olcu"]
+    assert o["islem"] == 1 and o["net"] == pytest.approx(0.0505284, abs=1e-7)
+    assert o["ort_tutma"] == pytest.approx(11.0)
+    assert o["maruziyet"] == pytest.approx(11 / 18)
 
 
 def test_atlanan_isinmasi_dolmayan_hisse_ve_kisa_cift(tmp_path):
