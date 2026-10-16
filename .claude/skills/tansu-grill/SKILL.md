@@ -13,7 +13,7 @@ files for his view on that subject, and show the result in the proposal.
 
 ## 2. Risk scan
 
-For each decision, ask these questions against AGENTS.md "Environment" and `docs/agents/kod-kurallari.md` and TASARIM. Write the answer:
+For each decision, ask these questions against AGENTS.md "Environment", `docs/agents/kod-kurallari.md`, `docs/agents/git.md`, and TASARIM. Write the answer:
 - Does the decision obey the terms of use of the data source? (TASARIM §4)
 - Does the decision keep the trial log (deneme günlüğü) rule and the `veri/` rule? <!-- driftlint-ignore: veri/ is gitignored local data, absent in CI -->
 - After the rule record (kural kaydı), does a changed rule count as a new trial (deneme)? (TASARIM §5.8)

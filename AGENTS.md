@@ -18,7 +18,7 @@ Each fact has one owner file. The other files only give a reference to it. Read 
 | `docs/kurallar/A-yapi-bolge.md` … `E-risk-cikis-surec.md` | the reading of the pool (havuz): what Tansu said. Rule: each note in the pool must have a reference here or must be in the "kural içermez" list |
 | `docs/sadakat.md` | the fidelity (sadakat) measurement |
 | `AGENTS.md` | the entry, the environment, the current state, "Every job", and the work flow table |
-| `docs/agents/` | the job rules: Scope, Who writes, Auditor and rounds (`is-kurallari.md`); the code and test rules (`kod-kurallari.md`); git (`git.md`); Task Scheduler (`zamanlayici.md`); the short flows E, H, I and the skill naming rules (`akislar.md`); the issue tracker, the triage labels, and the domain docs |
+| `docs/agents/` | the job rules: Scope, Who writes, Auditor and rounds (`is-kurallari.md`); the code and test rules (`kod-kurallari.md`); git (`git.md`); Task Scheduler (`zamanlayici.md`); the short flows E, H, I and the skill naming rules (`akislar.md`); the issue tracker, the triage labels, and the domain docs. driftlint does not scan this folder; `tests/test_sahipler.py` checks its paths |
 | `.claude/skills/` | the work flow procedures, one skill per job type |
 | `docs/strateji-taslak/`, `docs/strateji-modulleri-taslak.md` (local, not in git) | proposals that wait for approval. They own no fact. They are outside the drift check. These local files need not exist <!-- driftlint-ignore: local-only, gitignored, absent in CI --> |
 | `CODING_STANDARDS.md`, `DEFINITION_OF_DONE.md` | the Tansu code rules (`## Tansu`; the general rules are in the file that `CODING_STANDARDS.md` points to) and the done criteria (`## Tansu`) |

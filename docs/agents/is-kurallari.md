@@ -26,6 +26,6 @@
 - Every audit prompt and every code-review pass prompt states the goal of the job. When the goal is to simplify, a deliberately deleted line is not a finding. A deletion is a finding only if a needed rule was lost without a reason. The rest of the diff gets the full review.
 - Code change at feature and outgoing scope: at most 3 Codex audit rounds. Every audit prompt names the round number. The auditor gives the round number with the verdict.
 - If round 3 returns KALDI (failed): stop the job. Do not open a fourth round. Find the root cause and define the job again. Send Levent the root cause in one line.
-- A documents-only change to a locked file or at feature scope gets one `mattpocock-skills:code-review` pass. If the pass returns KALDI, fix the findings and run one more pass. If that pass returns KALDI, stop and send Levent the root cause in one line. Another document change has task scope and no auditor.
+- A documents-only change gets one `mattpocock-skills:code-review` pass when it changes a locked file (except as "Who writes" says), has feature scope, or is outgoing work. If the pass returns KALDI, fix the findings and run one more pass. If that pass returns KALDI, stop and send Levent the root cause in one line. Another document change has task scope and no auditor.
 - Add the items that an auditor finds to the source report. A report is complete only after a re-audit passes.
 - If the Codex sandbox fails with `CreateProcessWithLogonW 1909`, a small round may go to a Sonnet subagent.
