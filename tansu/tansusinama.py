@@ -302,10 +302,13 @@ def _getirili(t) -> pd.DataFrame:
 
 
 def ema_tablolari(m, p, izgara, bas) -> list:
-    """Bir hissenin ızgara hücrelerinin işlem tabloları (düz ızgara sırasında, `getiri` sütunlu); dönem `_ema_donem`'dir."""
+    """Bir hissenin ızgara hücrelerinin işlem tabloları (düz ızgara sırasında, `getiri` sütunlu); dönem `_ema_donem`'dir.
+    Düzeltilmiş AOF'u ya da kapanışı sonsuz gün motora karantina günü olarak verilir (TASARIM 5.14 uç durum 2); `m` değişmez."""
     bas, _ = _ema_donem(m, p, bas)
     f = m.dropna(subset=["kapanis"])
-    zincir = motor.Zincir(m)
+    zincir = motor.Zincir(
+        m.assign(karantina=m["karantina"] | np.isinf(m["aof"]) | np.isinf(m["kapanis"]))
+    )
     tablolar = []
     for h in _hucreler(izgara):
         sig = aileler_.sinyal(f, replace(p, **h))
@@ -415,8 +418,10 @@ def _cift_simule(hedef, bas_k, d) -> tuple:
 
 def cift_tablolari(y, x, gunler, C, A, F, bas_k, izgara) -> tuple:
     """Bir çiftin ızgara hücrelerinin (düz ızgara sırasında) işlem tabloları ve günlük özkaynakları; `cift_isleri` girdisiyle.
-    `G`: bacak başına geçerli fiyat günü (TASARIM 5.14); `Cf`, `SA`: son geçerli kapanış ve son temiz AOF, ileri taşınır."""
-    G = _gecerli(F["I"], F["Kar"], A, C)
+    `G`: bacak başına geçerli fiyat günü (TASARIM 5.14); `Cf`, `SA`: son geçerli kapanış ve son temiz AOF, ileri taşınır.
+    Düzeltilmiş AOF'u ya da kapanışı sonsuz bacak günü karantina günüdür (uç durum 2): `Kar`, `SA` ve `E` onu görür."""
+    Kar = F["Kar"] | np.isinf(C) | np.isinf(A)
+    G = _gecerli(F["I"], Kar, A, C)
     d = {
         "gunler": gunler,
         "C": C,
@@ -425,8 +430,8 @@ def cift_tablolari(y, x, gunler, C, A, F, bas_k, izgara) -> tuple:
         "A": A,
         "T": F["T"],
         "B": F["B"],
-        "Kar": F["Kar"],
-        "E": pd.DataFrame(F["Kar"].astype(float))
+        "Kar": Kar,
+        "E": pd.DataFrame(Kar.astype(float))
         .rolling(motor.KARANTINA_GUN, min_periods=1)
         .max()
         .to_numpy()
