@@ -5,7 +5,7 @@ description: "Use when the user asks to write, change, or translate a rule, a do
 
 # Rule, document, instruction (flow C)
 
-Run AGENTS.md "Every job" first. Run the steps in order. Run an "If" row only when its condition is true. Call each skill by the exact name in backticks.
+Run AGENTS.md "Every job" first. Run the steps in order. Run an "If" row only when its condition is true. Call each skill by the exact name in backticks. The shared steps of `tansu-yeni-is` (Test gate, Review, Proof, Pull request, Merge, Close) also apply when the change goes to a pull request.
 
 1. **Write for agents:** `mattpocock-skills:writing-for-agents`.
 2. **Record:** `mattpocock-skills:domain-modeling`. `tansu-yeni-is` "Document first" says where a term and a decision go.
@@ -21,3 +21,20 @@ Run AGENTS.md "Every job" first. Run the steps in order. Run an "If" row only wh
 | the work is a Claude interface mode or hook | `plugin-authoring`. |
 | the document is long | `anthropic-skills:doc-coauthoring`. |
 | the change affects behavior | run `tansu-eval` "Add the case" and `tansu-eval` "Check the judge". |
+| the job reads pool notes into `docs/kurallar` in batches (a brief is given, the job only appends) | do not run the steps Write for agents, Record, and Language. Do not run the row "the document is long". Apply "Pool reading rules" below and the shared steps of `tansu-yeni-is`. The PR has `Akış: tansu-belge`, and `Çağrılan beceriler:` lists `toplu havuz okuma`. |
+
+## Pool reading rules
+These rules bind the readers and the writers of a pool batch. They also bind a document correction from the pool.
+1. Read the whole note with `Read`. Never cut it with `head`, `cut`, `sed -n`, or a slice. Report the line count. The main agent checks it with `wc -l`.
+2. A sentence that says what Tansu says, starts with "Kural:", or ends with "sayılır" is followed by a verbatim quote. Without a quote, it starts with "Okuma (YORUM):".
+3. A step that the note does not write starts with YORUM.
+4. When `## Görsel metni` is empty or absent, open the image. Open images with `Read`. For small text, crop with PIL through a one-line `python -X utf8 -c` and open the crop. If the 4x crop is not clear, write "okunamıyor". Never fill a cell from another cell. Never derive a number from a chart axis. Never use the Browser tool.
+5. Do not add your own note into verbatim text.
+6. Copy note names and ids from the record files or the pool. Never type them.
+7. A claim that something is empty or missing carries the grep command and its output line.
+8. A writer brief has no fixed section number. The writer finds the highest number with `grep -n '^## [0-9]' <file>`. When a new section refutes an old "yok" or "verilmemiş" sentence, list all hits with `git grep -n -i <word> docs`. Mark each hit "uyumlandı" or "ilgisiz".
+9. Do not use `replace_all` in a document. Read each hit.
+10. A `yok` reason that says there is no threshold needs a search of the Ham text and the images for a number or a period first.
+11. Every reader record has `gorsel_acildi` (true or false) and `belirsiz` (true or false). The review sample contains every record with `belirsiz: true`. A PR sentence about opened images counts only the records with `gorsel_acildi: true`.
+12. Before the PR, `python tests/atif_araclari.py alinti <records>` must print 0 lines. Close each hit one by one. Never pass a group of hits as an artifact. Write `ek` and `yok` records with `python tests/atif_araclari.py entegre <tarih> <records>`. Run the real pool test with `TANSU_BEKLENEN_ACIK` and `TANSU_PARTI` (`tansu-yeni-is` "Test gate").
+13. Every open question of a reader or a writer appears in the PR as "taşındı: <place>" or "düştü: <reason>".

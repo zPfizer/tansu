@@ -2,17 +2,44 @@
 
 Havuza yeni not gelince test kırmızı olur. Beyin yoksa (CI) atlanır, yerel test kapısı denetler.
 Havuz yalnız okunur; test hiçbir şey yazmaz.
+
+Parti işi sırasında iki ortam değişkeni testi ayarlar (parti işi bitince ikisi de boş kalır):
+- `TANSU_BEKLENEN_ACIK=<n>`: havuzda henüz atıfsız `n` not beklenir (varsayılan 0: hiç not açık olamaz).
+  `n` > 0 iken test, açık not sayısının tam `n` olduğunu ve her açık maddenin düz not adı olduğunu
+  ("belirsiz atıf" satırı olmadığını) denetler.
+- `TANSU_PARTI=E09,E10`: virgüllü parti kimlikleri; her kimlik `PARTI_KLASORU/<kimlik>.txt` dosyasıdır.
+  Bu dosyalardaki her not havuzda olmalı ve belgede atıfı olmalıdır (`parti_sorunlari`). Parti dosyası
+  yoksa test kırmızı olur.
 """
+
+import os
 
 import pytest
 
-from atif_araclari import HAVUZ, KOK, havuz_sorunlari
+from atif_araclari import (
+    HAVUZ,
+    KOK,
+    PARTI_KLASORU,
+    havuz_sorunlari,
+    main,
+    parti_sorunlari,
+)
 
 
 def test_havuzdaki_her_not_atifli_ya_da_kural_icermez_listesinde():
     if not HAVUZ.exists():
         pytest.skip("Evde beyin havuzu yok.")
-    assert havuz_sorunlari(KOK, HAVUZ) == []
+    beklenen = int(os.environ.get("TANSU_BEKLENEN_ACIK", "0"))
+    if beklenen == 0:
+        assert havuz_sorunlari(KOK, HAVUZ) == []
+    else:
+        acik = havuz_sorunlari(KOK, HAVUZ)
+        assert len(acik) == beklenen
+        assert not [s for s in acik if s.startswith("belirsiz atıf")]
+    kimlikler = [k.strip() for k in os.environ.get("TANSU_PARTI", "").split(",")]
+    dosyalar = [PARTI_KLASORU / f"{k}.txt" for k in kimlikler if k]
+    if dosyalar:
+        assert parti_sorunlari(KOK, HAVUZ, dosyalar) == []
 
 
 def _depo(kok, kurallar, a):
@@ -188,3 +215,53 @@ def test_havuz_kapsami_yalniz_a_e_ve_kural_icermez_listesidir(
     _kurallar_depo(tmp_path, kurallar, dosyalar)
     sonuc = havuz_sorunlari(tmp_path, _havuz(tmp_path, ["not-bir"]))
     assert sonuc == ([] if kapsanir else ["not-bir"])
+
+
+def _parti(kok, *satirlar, ad="E99.txt"):
+    yol = kok / ad
+    yol.write_text("\n".join(satirlar) + "\n", encoding="utf-8")
+    return yol
+
+
+def test_parti_sorunlari_acik_ve_havuzda_olmayan_notlari_verir(tmp_path):
+    # `not-bir` atıflı; `not-iki` açık; `not-uc` havuzda yok. Havuzdaki öbür açık not (`not-dis`) partide
+    # değilse parti sorunu değildir.
+    _depo(tmp_path, "## X\n", "`not-bir.md`\n")
+    havuz = _havuz(tmp_path, ["not-bir", "not-iki", "not-dis"])
+    parti = _parti(tmp_path, "not-bir", "", "not-iki  ", "not-uc")
+    assert parti_sorunlari(tmp_path, havuz, [parti]) == [
+        "E99.txt: not-iki: belgede atıf yok",
+        "E99.txt: not-uc: havuzda yok",
+    ]
+
+
+def test_parti_sorunlari_temiz_parti_bos_doner(tmp_path):
+    _depo(tmp_path, "## X\n", "`not-bir.md` `not-iki.md`\n")
+    havuz = _havuz(tmp_path, ["not-bir", "not-iki", "not-dis"])
+    parti = _parti(tmp_path, "not-bir", "not-iki")
+    assert parti_sorunlari(tmp_path, havuz, [parti]) == []
+
+
+def test_parti_sorunlari_belirsiz_atif_partinin_notunu_acik_saymaz(tmp_path):
+    # `T-atr` iki nota gider: belirsiz atıf satırı düz not adı değildir, parti sorunu sayılmaz.
+    _depo(tmp_path, "## X\n", "T-atr `not-bir.md`\n")
+    havuz = _havuz(tmp_path, ["tweet-atr-a", "tweet-atr-b", "not-bir"])
+    parti = _parti(tmp_path, "not-bir")
+    assert parti_sorunlari(tmp_path, havuz, [parti]) == []
+
+
+def test_parti_dosyasi_yoksa_hata(tmp_path):
+    _depo(tmp_path, "## X\n", "x\n")
+    with pytest.raises(FileNotFoundError):
+        parti_sorunlari(tmp_path, _havuz(tmp_path, ["not-bir"]), [tmp_path / "yok.txt"])
+
+
+def test_main_parti_sorun_varsa_1_doner(tmp_path, capsys):
+    _depo(tmp_path, "## X\n", "`not-bir.md`\n")
+    havuz = _havuz(tmp_path, ["not-bir", "not-iki"])
+    iyi = _parti(tmp_path, "not-bir", ad="iyi.txt")
+    kotu = _parti(tmp_path, "not-iki", ad="kotu.txt")
+    assert main(["parti", str(iyi)], havuz=havuz, kok=tmp_path) == 0
+    assert capsys.readouterr().out == ""
+    assert main(["parti", str(kotu)], havuz=havuz, kok=tmp_path) == 1
+    assert capsys.readouterr().out == "kotu.txt: not-iki: belgede atıf yok\n"

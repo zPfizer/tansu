@@ -25,13 +25,34 @@ GECERLI = """## Kabul ölçütleri (Levent kontrol eder)
 - [x] Tansu: `## Tansu` maddeleri — kanıt: çıktı
 ## Bağımsız inceleme
 Denetçi: Ayşe
+Denetçi kararı (aynen): GEÇTİ, bulgu yok.
+Yanlış iddia sayısı: 0
+İkinci geçiş: yok
 Sonuç: GEÇTİ
 ## Gerçek veri kanıtı
 ```text
 Gerçek koşu çıktısı
 ```
+kapi: pytest -> 0
+kapi: ruff check -> 0
+kapi: ruff format -> 0
+kapi: git diff --check -> 0
+kapi: HEAD 0123456789abcdef0123456789abcdef01234567 temiz
+Çağrılan beceriler: tansu-yeni-is, verification-before-completion, mattpocock-skills:pr, mattpocock-skills:code-review
 Akış: tansu-yeni-is
 """
+SHA = "0123456789abcdef0123456789abcdef01234567"
+SHA_BASKA = "fedcba9876543210fedcba9876543210fedcba98"
+BECERI_SATIRI = (
+    "Çağrılan beceriler: tansu-yeni-is, verification-before-completion, "
+    "mattpocock-skills:pr, mattpocock-skills:code-review\n"
+)
+TUM_BECERILER = (
+    "verification-before-completion, mattpocock-skills:pr, "
+    "mattpocock-skills:code-review, mattpocock-skills:writing-for-agents, "
+    "mattpocock-skills:domain-modeling, asd-ste100"
+)
+KARAR_SATIRI = "Denetçi kararı (aynen): GEÇTİ, bulgu yok.\n"
 AKIS_SATIRI = "Akış: tansu-yeni-is\n"
 AKIS_HATASI = (
     "Kural 7: PR gövdesinde Akış: <ad> satırı olmalı; "
@@ -61,7 +82,7 @@ def test_kural_1_baslik_eksik(baslik):
 def test_kural_2_isaretsiz_kutu():
     assert hatalar(
         GECERLI.replace(AKIS_SATIRI, "  - [ ] Bekliyor\n" + AKIS_SATIRI)
-    ) == ["Kural 2: işaretsiz kutu var; satır: 21."]
+    ) == ["Kural 2: işaretsiz kutu var; satır: 30."]
 
 
 def test_kural_3_kabul_kutusu_yok():
@@ -113,12 +134,18 @@ def test_bos_govde(govde):
         "Kural 4: ## Definition of Done bölümünde 10 kanıtlı işaretli satır yok.",
         "Kural 5: ## Bağımsız inceleme bölümünde Denetçi: ve Sonuç: geçti ya da NOTLU GEÇTİ yok.",
         "Kural 6: ## Gerçek veri kanıtı bölümünde içi dolu bir kod bloğu yok.",
+        "Kural 8: gövde boş; Çağrılan beceriler: satırı yok.",
+        "Kural 9: gövde boş; ## Bağımsız inceleme bölümünde Denetçi kararı (aynen):, "
+        "Yanlış iddia sayısı: ve İkinci geçiş: satırı yok.",
+        "Kural 10: gövde boş; ## Gerçek veri kanıtı bölümünde kapi: satırları yok.",
     ]
 
 
 @pytest.mark.parametrize("karar", ["geçti", "GEÇTİ", "NOTLU GEÇTİ"])
 def test_kural_5_kabul_edilen_kararlar(karar):
-    assert hatalar(GECERLI.replace("Sonuç: GEÇTİ", "Sonuç: " + karar)) == []
+    govde = GECERLI.replace("Sonuç: GEÇTİ", "Sonuç: " + karar)
+    govde = govde.replace("(aynen): GEÇTİ", "(aynen): " + karar)
+    assert hatalar(govde) == []
 
 
 @pytest.mark.parametrize(
@@ -188,7 +215,9 @@ def test_kural_5_sonuc_satiri_tek_olmali(ek):
 @pytest.mark.parametrize("sarmal", ["{}", "`{}`"])
 def test_kural_7_akis_adi_kabul_edilir(ad, sarmal):
     satir = "Akış: " + sarmal.format(ad) + "\n"
-    assert hatalar(GECERLI.replace(AKIS_SATIRI, satir)) == []
+    govde = GECERLI.replace(AKIS_SATIRI, satir)
+    govde = govde.replace(BECERI_SATIRI, f"Çağrılan beceriler: {ad}, {TUM_BECERILER}\n")
+    assert hatalar(govde) == []
 
 
 @pytest.mark.parametrize(
@@ -224,3 +253,269 @@ def test_kural_5_sonuc_sablon_yorumu_satir_sayilmaz():
     yorum = '<!-- CI accepts only the exact text "Sonuç: geçti". -->\n'
     govde = GECERLI.replace("Sonuç: GEÇTİ", yorum + "Sonuç: GEÇTİ")
     assert hatalar(govde) == []
+
+
+R8_TEK = "Kural 8: PR gövdesinde Çağrılan beceriler: satırı tek olmalı ({} satır var)."
+R8_BOS = "Kural 8: Çağrılan beceriler: listesi boş."
+R8_EKSIK = "Kural 8: Çağrılan beceriler: listesinde eksik: {}."
+ORTAK = "verification-before-completion, mattpocock-skills:pr, mattpocock-skills:code-review"
+BELGE_EK = "mattpocock-skills:writing-for-agents, mattpocock-skills:domain-modeling, asd-ste100"
+
+
+def _akis(ad, beceriler):
+    govde = GECERLI.replace(AKIS_SATIRI, f"Akış: {ad}\n")
+    return govde.replace(BECERI_SATIRI, f"Çağrılan beceriler: {beceriler}\n")
+
+
+@pytest.mark.parametrize(
+    ("ad", "beceriler", "beklenen"),
+    [
+        ("tansu-karar", "tansu-karar", []),
+        ("tansu-eval", "tansu-eval", []),
+        ("tansu-eval", "baska", [R8_EKSIK.format("tansu-eval")]),
+        ("tansu-yeni-is", "tansu-yeni-is", [R8_EKSIK.format(ORTAK)]),
+        ("tansu-hata", "tansu-hata, " + ORTAK, []),
+        ("tansu-hata", "tansu-hata", [R8_EKSIK.format(ORTAK)]),
+        ("tansu-yeni-is", "`tansu-yeni-is` , `" + ORTAK.replace(", ", "`,`") + "`", []),
+        (
+            "tansu-yeni-is",
+            "tansu-yeni-is, mattpocock-skills:pr",
+            [
+                R8_EKSIK.format(
+                    "verification-before-completion, mattpocock-skills:code-review"
+                )
+            ],
+        ),
+        ("tansu-belge", f"tansu-belge, {ORTAK}", [R8_EKSIK.format(BELGE_EK)]),
+        ("tansu-belge", f"tansu-belge, {ORTAK}, {BELGE_EK}", []),
+        ("tansu-belge", f"tansu-belge, {ORTAK}, toplu havuz okuma", []),
+        (
+            "tansu-belge",
+            "toplu havuz okuma",
+            [R8_EKSIK.format("tansu-belge, " + ORTAK)],
+        ),
+        ("tansu-yeni-is", "tansu-yeni-is, " + ORTAK + ", toplu havuz okuma", []),
+    ],
+)
+def test_kural_8_beceri_listesi(ad, beceriler, beklenen):
+    assert hatalar(_akis(ad, beceriler)) == beklenen
+
+
+@pytest.mark.parametrize("beceriler", ["", " ", ",", " , ,", "``"])
+def test_kural_8_liste_bos(beceriler):
+    govde = GECERLI.replace(BECERI_SATIRI, f"Çağrılan beceriler:{beceriler}\n")
+    assert hatalar(govde) == [R8_BOS]
+
+
+def test_kural_8_satir_yok_ya_da_cift():
+    assert hatalar(GECERLI.replace(BECERI_SATIRI, "")) == [R8_TEK.format(0)]
+    assert hatalar(GECERLI + BECERI_SATIRI) == [R8_TEK.format(2)]
+
+
+def test_kural_8_gecersiz_akista_yalniz_satir_ve_bos_kontrolu():
+    govde = GECERLI.replace(AKIS_SATIRI, "Akış: yok\n")
+    assert hatalar(govde) == [AKIS_HATASI]
+    govde = govde.replace(BECERI_SATIRI, "Çağrılan beceriler:\n")
+    assert hatalar(govde) == [AKIS_HATASI, R8_BOS]
+
+
+R9 = "Kural 9: ## Bağımsız inceleme bölümünde {}."
+
+
+@pytest.mark.parametrize(
+    ("yeni", "ayrinti"),
+    [
+        ("GEÇTİ, KALDI olabilir.", "Denetçi kararı KALDI içeriyor"),
+        ("GEÇTİ, kaldı gibi.", "Denetçi kararı KALDI içeriyor"),
+        ("GEÇTİ", None),
+        ("geçti, bulgu yok.", None),
+        ("bulgu yok.", "Denetçi kararında GEÇTİ ya da NOTLU GEÇTİ sözcüğü yok"),
+        (
+            "NOTLU GEÇTİ, bulgu var.",
+            "Denetçi kararındaki sözcük (NOTLU GEÇTİ) Sonuç: değerinden (GEÇTİ) farklı",
+        ),
+        (
+            "NOTLU GEÇTİ ve GEÇTİ.",
+            "Denetçi kararındaki sözcük (NOTLU GEÇTİ, GEÇTİ) Sonuç: değerinden (GEÇTİ) farklı",
+        ),
+        ("", "Denetçi kararı (aynen): metni boş"),
+        ("   ", "Denetçi kararı (aynen): metni boş"),
+    ],
+)
+def test_kural_9_karar_metni(yeni, ayrinti):
+    govde = GECERLI.replace(KARAR_SATIRI, f"Denetçi kararı (aynen): {yeni}\n")
+    assert hatalar(govde) == ([] if ayrinti is None else [R9.format(ayrinti)])
+
+
+def test_kural_9_sonuc_notlu_gecti_ister_notlu_karar():
+    govde = GECERLI.replace("Sonuç: GEÇTİ", "Sonuç: NOTLU GEÇTİ")
+    assert hatalar(govde) == [
+        R9.format(
+            "Denetçi kararındaki sözcük (GEÇTİ) Sonuç: değerinden (NOTLU GEÇTİ) farklı"
+        )
+    ]
+
+
+def test_kural_9_kaldi_tam_sozcuk_olarak_aranir():
+    govde = GECERLI.replace("Sonuç: GEÇTİ", "Sonuç: NOTLU GEÇTİ")
+    govde = govde.replace(
+        "(aynen): GEÇTİ, bulgu yok.", "(aynen): NOTLU GEÇTİ, iki not kaldırıldı"
+    )
+    assert hatalar(govde) == []
+    govde = GECERLI.replace(
+        "(aynen): GEÇTİ, bulgu yok.", "(aynen): GEÇTİ (KALDI olabilir)"
+    )
+    assert hatalar(govde) == [R9.format("Denetçi kararı KALDI içeriyor")]
+
+
+def test_kural_9_karar_satiri_tek_olmali():
+    assert hatalar(GECERLI.replace(KARAR_SATIRI, "")) == [
+        R9.format("Denetçi kararı (aynen): satırı tek olmalı (0 satır var)")
+    ]
+    assert hatalar(GECERLI.replace(KARAR_SATIRI, KARAR_SATIRI * 2)) == [
+        R9.format("Denetçi kararı (aynen): satırı tek olmalı (2 satır var)")
+    ]
+
+
+@pytest.mark.parametrize(
+    ("eski", "yeni", "ayrinti"),
+    [
+        (
+            "Yanlış iddia sayısı: 0\n",
+            "",
+            "Yanlış iddia sayısı: satırı tek olmalı (0 satır var)",
+        ),
+        (
+            "Yanlış iddia sayısı: 0\n",
+            "Yanlış iddia sayısı: 0\nYanlış iddia sayısı: 0\n",
+            "Yanlış iddia sayısı: satırı tek olmalı (2 satır var)",
+        ),
+        (
+            "Yanlış iddia sayısı: 0",
+            "Yanlış iddia sayısı: ",
+            "Yanlış iddia sayısı: değeri tam sayı olmalı",
+        ),
+        (
+            "Yanlış iddia sayısı: 0",
+            "Yanlış iddia sayısı: iki",
+            "Yanlış iddia sayısı: değeri tam sayı olmalı",
+        ),
+        (
+            "Yanlış iddia sayısı: 0",
+            "Yanlış iddia sayısı: -1",
+            "Yanlış iddia sayısı: değeri tam sayı olmalı",
+        ),
+        ("İkinci geçiş: yok\n", "", "İkinci geçiş: satırı tek olmalı (0 satır var)"),
+        (
+            "İkinci geçiş: yok\n",
+            "İkinci geçiş: yok\nİkinci geçiş: yok\n",
+            "İkinci geçiş: satırı tek olmalı (2 satır var)",
+        ),
+        (
+            "İkinci geçiş: yok",
+            "İkinci geçiş: belki",
+            "İkinci geçiş: yok ya da geçti olmalı",
+        ),
+        ("İkinci geçiş: yok", "İkinci geçiş: ", "İkinci geçiş: yok ya da geçti olmalı"),
+    ],
+)
+def test_kural_9_sayi_ve_ikinci_gecis(eski, yeni, ayrinti):
+    assert hatalar(GECERLI.replace(eski, yeni)) == [R9.format(ayrinti)]
+
+
+@pytest.mark.parametrize(
+    ("ikinci", "ayrinti"),
+    [
+        ("yok", "İkinci geçiş: geçti olmalı (yanlış iddia sayısı 0'dan büyük)"),
+        ("geçti", None),
+    ],
+)
+def test_kural_9_yanlis_iddia_varsa_ikinci_gecis_gerekir(ikinci, ayrinti):
+    govde = GECERLI.replace("Yanlış iddia sayısı: 0", "Yanlış iddia sayısı: 2")
+    govde = govde.replace("İkinci geçiş: yok", f"İkinci geçiş: {ikinci}")
+    assert hatalar(govde) == ([] if ayrinti is None else [R9.format(ayrinti)])
+
+
+R10 = "Kural 10: ## Gerçek veri kanıtı bölümünde {}."
+KAPI_PYTEST = "kapi: pytest -> 0 ya da kapi: pytest (belge) -> 0"
+KAPI_HEAD = "kapi: HEAD <40 küçük harfli onaltılı hane> temiz"
+KAPI_SATIRLARI = (
+    ("kapi: pytest -> 0\n", KAPI_PYTEST),
+    ("kapi: ruff check -> 0\n", "kapi: ruff check -> 0"),
+    ("kapi: ruff format -> 0\n", "kapi: ruff format -> 0"),
+    ("kapi: git diff --check -> 0\n", "kapi: git diff --check -> 0"),
+    (f"kapi: HEAD {SHA} temiz\n", KAPI_HEAD),
+)
+
+
+@pytest.mark.parametrize(("satir", "etiket"), KAPI_SATIRLARI)
+def test_kural_10_satir_eksik(satir, etiket):
+    assert hatalar(GECERLI.replace(satir, "")) == [R10.format("eksik satır: " + etiket)]
+
+
+@pytest.mark.parametrize(
+    ("satir", "yeni"),
+    [
+        ("kapi: pytest -> 0", "kapi: pytest -> 1"),
+        ("kapi: pytest -> 0", "kapi: pytest -> 0 fazla"),
+        ("kapi: ruff check -> 0", "kapi: ruff check -> 2"),
+        ("kapi: ruff format -> 0", "kapi: ruff format -> 1"),
+        ("kapi: git diff --check -> 0", "kapi: git diff --check -> 1"),
+        (f"kapi: HEAD {SHA} temiz", f"kapi: HEAD {SHA} kirli"),
+        (f"kapi: HEAD {SHA} temiz", f"kapi: HEAD {SHA[:39]} temiz"),
+        (f"kapi: HEAD {SHA} temiz", f"kapi: HEAD {SHA.upper()} temiz"),
+    ],
+)
+def test_kural_10_satir_yanlis(satir, yeni):
+    etiket = dict((s.rstrip("\n"), e) for s, e in KAPI_SATIRLARI)[satir]
+    assert hatalar(GECERLI.replace(satir, yeni)) == [
+        R10.format("eksik satır: " + etiket)
+    ]
+
+
+def test_kural_10_pytest_belge_ve_bosluk_kabul_edilir():
+    govde = GECERLI.replace("kapi: pytest -> 0", "kapi: pytest (belge) -> 0  ")
+    assert hatalar(govde) == []
+    assert hatalar(govde.replace("\n", " \r\n")) == []
+
+
+def test_kural_10_head_pr_basi_ile_eslesir():
+    assert hatalar(GECERLI, SHA) == []
+    assert hatalar(GECERLI, None) == []
+    assert hatalar(GECERLI, SHA_BASKA) == [
+        R10.format(
+            f"kapi: HEAD değeri PR başından farklı; beklenen: {SHA_BASKA}, bulunan: {SHA}"
+        )
+    ]
+
+
+def test_kural_11_inceleme_yer_tutucusu():
+    assert hatalar(GECERLI + "İNCELEME\n") == [
+        "Kural 11: PR gövdesinde İNCELEME yer tutucusu kalmış."
+    ]
+
+
+def test_dod_yml_taslak_ve_sha():
+    yol = Path(__file__).resolve().parents[1] / ".github" / "workflows" / "dod.yml"
+    metin = yol.read_text(encoding="utf-8")
+    for parca in (
+        "draft == false",
+        "ready_for_review",
+        "PR_BAS_SHA: ${{ github.event.pull_request.head.sha }}",
+    ):
+        assert parca in metin
+
+
+def test_kapi_betigi():
+    yol = Path(__file__).resolve().parents[1] / "kurulum" / "kapi.ps1"
+    metin = yol.read_bytes().decode("ascii")
+    for parca in (
+        "-m pytest -q",
+        "ruff check .",
+        "ruff format --check .",
+        "git diff --check kaynak/master",
+        "kapi: HEAD",
+        "temiz",
+        "kirli",
+    ):
+        assert parca in metin

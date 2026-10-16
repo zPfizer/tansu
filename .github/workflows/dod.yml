@@ -2,10 +2,11 @@ name: dod
 
 on:
   pull_request:
-    types: [opened, edited, synchronize, reopened]
+    types: [opened, edited, synchronize, reopened, ready_for_review]
 
 jobs:
   dod:
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:
@@ -13,3 +14,4 @@ jobs:
       - run: python .github/dod_kontrol.py
         env:
           PR_GOVDE: ${{ github.event.pull_request.body }}
+          PR_BAS_SHA: ${{ github.event.pull_request.head.sha }}
