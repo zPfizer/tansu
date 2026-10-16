@@ -784,3 +784,129 @@ def test_varyantlar_ema_10_20_50_ve_kutu_govde_temelden_tek_boyut_degisir():
         assert {a for a in alanlar if alanlar[a] != temel[a]} == {alan}, ad
         assert alanlar[alan] == deger, ad
     assert len(aileler.VARYANTLAR) == 20
+
+
+# --- Modül 1 sürüm 2, bilet 04: giriş türleri `arz` ve `ucgen` (KURALLAR §3 "Modül 1", Giriş türü) ---
+
+
+def _arz_cercevesi(kapanislar, ust=97.0):
+    """`_arz_ve_ucgen("yok")` gün 0-32 (P1 gün 0-13, arz bölgesi gün 17'de bilinir: proximal 100, distal 113; P2 gün 20-32,
+    kutu 95,95 - `ust`); sonra gün 33 ...: yüksek = kapanış + 0,5, düşük = kapanış - 1."""
+    f = _arz_ve_ucgen("yok").iloc[:33]
+    return _mumlar(
+        [*f["kapanis"], *kapanislar],
+        [*f["yuksek"][:20], *[ust] * 13, *[c + 0.5 for c in kapanislar]],
+        [*f["dusuk"], *[c - 1 for c in kapanislar]],
+    )
+
+
+# P2 (gün 20-32, esik 0,005) gün 33'te biter (EMA2 107, EMA3 104,25: oran 0,026). Pencere gün 33, 34, 35. Kutu üstü `ust`.
+# Arz bölgesi (gün 14 yeşil, gün 17'de bilinir): proximal 100, distal 113 (yüksek_b); hiçbir kapanış 113'ü geçmeden bozulmaz.
+# Üst kutu: dönem bitişinde (gün 32) aktif ve proximal 100 > kutu üstü. ust 97: var. ust 101: 100 > 101 hayır -> üst kutu yok.
+# P1 (gün 0-13): bölge gün 17'de bilinir, 13'te bilinmez -> üst kutu yok; `arz` P1'de sinyal vermez, `kutu` gün 14'te (112 > 101) verir.
+# A) 112,5; 114; 115: 112,5 > 113 hayır; 114 > 113 evet -> gün 34 (gün 35 de üstünde ama dönem başına tek sinyal).
+#    `kutu`: 112,5 > 97 -> P2 sinyali gün 33; P1 sinyali gün 14.
+# B) 112,5; 113; 112: 113 > 113 hayır (distal dahil değil) -> sinyal yok.
+# C) ust 101, kapanışlar A gibi: üst kutu yok -> sinyal yok (114 > 113 olsa da). `kutu`: P2 gün 33 (112,5 > 101).
+@pytest.mark.parametrize(
+    "kapanislar, ust, arz, kutu",
+    [
+        ((112.5, 114.0, 115.0), 97.0, [34], [14, 33]),
+        ((112.5, 113.0, 112.0), 97.0, [], [14, 33]),
+        ((112.5, 114.0, 115.0), 101.0, [], [14, 33]),
+    ],
+    ids=["distal-ustunde", "distalde-esit", "ust-kutu-yok"],
+)
+def test_giris_arz_ust_kutunun_distali_ustunda_ilk_kapanis(kapanislar, ust, arz, kutu):
+    f = _arz_cercevesi(kapanislar, ust)
+    assert _gunler(f, Parametre(giris="kutu", **dict(KUCUK, esik=0.005))) == kutu
+    p = Parametre(giris="arz", **dict(KUCUK, esik=0.005))
+    assert _gunler(f, p) == arz
+    if arz:
+        k = aileler.kurulum(f, p).iloc[0]
+        assert (k["kutu_alt"], k["kutu_ust"]) == (95.95, ust)
+
+
+def _ucgen_giris_cercevesi(kapanislar, ilk_tepe=105.0, son_tepe=105.5, dusuk=None):
+    """`_ucgen_cercevesi` gibi 13 düz gün (kapanış 100; ilk salınım tepesi gün 2, son tepe gün 8; dipler 96, 97, 98 yükselen),
+    sonra gün 13 ...: yüksek = kapanış + 0,5, düşük = kapanış - 1."""
+    yuk = [101, 102, ilk_tepe, 102, 101, 101, 102, 102.5, son_tepe, 102, 101, 101, 101]
+    dus = dusuk or [99, 99, 99, 96, 99, 99, 97, 99, 99, 98, 99, 99, 99]
+    return _mumlar(
+        [100.0] * 13 + list(kapanislar),
+        yuk + [c + 0.5 for c in kapanislar],
+        dus + [c - 1 for c in kapanislar],
+    )
+
+
+# Dönem gün 0-12 (kapanış 100), gün 13'te biter (EMA2 105,3, EMA3 104: oran 0,013 > 0,004). Pencere gün 13, 14, 15. Kutu üstü
+# = en yüksek yüksek = 105,5 (son tepe), kutu altı 96. Üçgen: tepeler gün 2 (105) ve gün 8 (105,5): 105,5 <= 105*1,01;
+# dipler 96, 97, 98 yükseliyor. Üst çizgi (gün 2, 105) ile (gün 8, 105,5): eğim 0,5/6 = 1/12.
+# Çizgi: gün 13 = 105,5 + 5/12 = 105,9167; gün 14 = 105,5 + 6/12 = 106; gün 15 = 105,5 + 7/12 = 106,0833.
+# Kapanışlar 105,9; X; 107. Gün 13: 105,9 > 105,9167 hayır. Gün 14: X = 106,01 > 106 evet -> sinyal 14.
+# X = 105,99 > 106 hayır; gün 15: 107 > 106,0833 evet -> sinyal 15. `kutu`: 105,9 > 105,5 -> gün 13 (çizgiden önce).
+@pytest.mark.parametrize("x, beklenen", [(106.01, [14]), (105.99, [15])])
+def test_giris_ucgen_ust_cizgi_ilk_ve_son_tepeden_gecer_dogrusal_uzar(x, beklenen):
+    f = _ucgen_giris_cercevesi([105.9, x, 107.0])
+    assert _gunler(f, Parametre(giris="kutu", **KUCUK)) == [13]
+    p = Parametre(giris="ucgen", **KUCUK)
+    assert _gunler(f, p) == beklenen
+    k = aileler.kurulum(f, p).iloc[0]
+    assert (k["kutu_alt"], k["kutu_ust"]) == (96.0, 105.5)
+
+
+# Hafif düşen üst çizgi (simetrik üçgen): tepeler gün 2 (105,5) ve gün 8 (105): 105 <= 105,5*1,01. Eğim -0,5/6 = -1/12.
+# Çizgi: gün 13 = 105 - 5/12 = 104,5833; gün 14 = 104,5; gün 15 = 104,4167. Kutu üstü 105,5 (ilk tepe).
+# Kapanışlar 104,6; 104,7; 104,8. Gün 13: 104,6 > 104,5833 evet -> `ucgen` sinyal 13.
+# `kutu`: üç kapanış da 105,5'in altında -> sinyal yok.
+def test_giris_ucgen_hafif_dusen_ust_cizgi_kutudan_once_sinyal_verir():
+    f = _ucgen_giris_cercevesi([104.6, 104.7, 104.8], ilk_tepe=105.5, son_tepe=105.0)
+    assert _gunler(f, Parametre(giris="kutu", **KUCUK)) == []
+    p = Parametre(giris="ucgen", **KUCUK)
+    assert _gunler(f, p) == [13]
+    assert aileler.kurulum(f, p).iloc[0]["kutu_ust"] == 105.5
+
+
+# Düşükler düz (99): salınım dipleri eşit, "her dip bir öncekinden yüksek" sağlanmaz -> üçgen yok -> `ucgen` sinyal vermez.
+# Aynı kapanışlarla (105,9; 106,01; 107) `kutu` gün 13'te sinyal verir (105,9 > 105,5).
+def test_giris_ucgen_ucgen_yoksa_sinyal_yok():
+    f = _ucgen_giris_cercevesi([105.9, 106.01, 107.0], dusuk=[99.0] * 13)
+    assert _gunler(f, Parametre(giris="kutu", **KUCUK)) == [13]
+    assert _gunler(f, Parametre(giris="ucgen", **KUCUK)) == []
+
+
+# K1 havuzu (KURALLAR §3 K1 ön şartı): `arz` ve `ucgen` (a) türünde 10 günlük pencere havuzunu `kutu` gibi kullanır.
+# `_arz_cercevesi` penceresi: P1 gün 14-16, P2 gün 33-35 (pencere 3) -> 6 gün. Sinyal günleri havuzdadır.
+def test_arz_ve_ucgen_k1_havuzu_kutu_ile_ayni_pencere_gunleri():
+    f = _arz_cercevesi((112.5, 114.0, 115.0))
+    ortak = dict(KUCUK, esik=0.005)
+    kutu = pencere_gunleri(f, Parametre(**ortak))
+    assert kutu.sum() == 6
+    p = Parametre(giris="arz", **ortak)
+    np.testing.assert_array_equal(pencere_gunleri(f, p), kutu)
+    assert on_sart(f, p)[34]
+    fu = _ucgen_giris_cercevesi([105.9, 106.01, 107.0])
+    pu = Parametre(giris="ucgen", **KUCUK)
+    np.testing.assert_array_equal(
+        pencere_gunleri(fu, pu), pencere_gunleri(fu, Parametre(**KUCUK))
+    )
+    assert on_sart(fu, pu)[14]
+
+
+# Geleceği görmeme (TASARIM 5.12): veri n. günde kesilirse n'e kadarki sinyaller tam verininkiyle aynıdır.
+@pytest.mark.parametrize(
+    "giris, f, ayar",
+    [
+        ("arz", _arz_cercevesi((112.5, 114.0, 115.0)), dict(KUCUK, esik=0.005)),
+        ("ucgen", _ucgen_giris_cercevesi([105.9, 106.01, 107.0]), KUCUK),
+    ],
+)
+def test_giris_arz_ve_ucgen_t_den_sonraki_gunler_t_oncesi_karari_degistirmez(
+    giris, f, ayar
+):
+    p = Parametre(giris=giris, **ayar)
+    tam = aileler.kurulum(f, p)
+    assert len(tam) == 1  # sınama boş değil
+    for n in range(6, len(f) + 1):
+        kesik = aileler.kurulum(f.iloc[:n], p)
+        pd.testing.assert_frame_equal(tam[tam.index <= f.index[n - 1]], kesik)

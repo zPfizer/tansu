@@ -8,7 +8,7 @@ import pandas as pd
 from tansu import gostergeler
 
 SECENEKLER = {  # KURALLAR §3 Modül 1: her alanın izinli değerleri
-    "giris": ("kutu", "ema", "mum", "retest", "agresif"),
+    "giris": ("kutu", "ema", "mum", "retest", "agresif", "arz", "ucgen"),
     "teyit": ("yok", "gosterge", "trend"),
     "stop": ("atr2", "atr15", "kutu"),
     "hedef": ("yok", "tansu"),
@@ -74,7 +74,7 @@ def _kosu_basi(f: pd.DataFrame, p: Parametre) -> np.ndarray:
 
 
 def pencere_gunleri(f: pd.DataFrame, p: Parametre = Parametre()) -> np.ndarray:
-    """Giriş penceresi açık günler (bool, `f` sırasında). Sıkışma dönemi bitmiş, `pencere` gün; `retest` için `RETEST_GUN` gün daha. `agresif` için pencere yoktur: t-1'de biten koşu en az `min_gun` gündür."""
+    """Giriş penceresi açık günler (bool, `f` sırasında). Sıkışma dönemi bitmiş, `pencere` gün (`arz` ve `ucgen` de `kutu` gibi); `retest` için `RETEST_GUN` gün daha. `agresif` için pencere yoktur: t-1'de biten koşu en az `min_gun` gündür."""
     if p.giris == "agresif":
         return _kosu_basi(f, p) >= 0
     oran = gostergeler.sikisma_orani(f["kapanis"], p.periyotlar)
@@ -122,16 +122,28 @@ def _dogru(x: np.ndarray, a, u: int) -> float:
     return x[a[1]] + (x[a[1]] - x[a[0]]) / (a[1] - a[0]) * (u - a[1])
 
 
-def _ucgen_hedef(yuksek: np.ndarray, dusuk: np.ndarray) -> float:
-    """Üçgen hedefi (KURALLAR §3 Modül 1): dönem içi tepe ve diplerden; üçgen yoksa NaN."""
-    tepe, dip = yuksek[_salinim(yuksek, True)], dusuk[_salinim(dusuk, False)]
+def _ucgen(yuksek: np.ndarray, dusuk: np.ndarray):
+    """Üçgen (KURALLAR §3 Modül 1, Üçgen hedefi maddesi): dönem içi salınım tepe ve dip konumları `(tepe, dip)`; üçgen yoksa None."""
+    tepe, dip = (
+        np.flatnonzero(_salinim(yuksek, True)),
+        np.flatnonzero(_salinim(dusuk, False)),
+    )
     if (
         len(tepe) < 2
         or len(dip) < 3
-        or (tepe[1:] > tepe[0] * YAKIN).any()
-        or (np.diff(dip) <= 0).any()
+        or (yuksek[tepe[1:]] > yuksek[tepe[0]] * YAKIN).any()
+        or (np.diff(dusuk[dip]) <= 0).any()
     ):
+        return None
+    return tepe, dip
+
+
+def _ucgen_hedef(yuksek: np.ndarray, dusuk: np.ndarray) -> float:
+    """Üçgen hedefi (KURALLAR §3 Modül 1): dönem içi tepe ve diplerden; üçgen yoksa NaN."""
+    u = _ucgen(yuksek, dusuk)
+    if u is None:
         return np.nan
+    tepe, dip = yuksek[u[0]], dusuk[u[1]]
     return tepe.max() + (tepe[0] - dip[0])
 
 
@@ -255,7 +267,7 @@ def kurulum(f: pd.DataFrame, p: Parametre = Parametre()) -> pd.DataFrame:
         ok &= ((h > h.shift(1)) & (psar < f["kapanis"]) & (k > d)).to_numpy()
     tepe = np.flatnonzero(_salinim(yuk, True)) if p.teyit == "trend" else None
     dip = np.flatnonzero(_salinim(dus, False)) if p.teyit == "trend" else None
-    arz = _bolge_listesi(f, "arz") if p.hedef == "tansu" else []
+    arz = _bolge_listesi(f, "arz") if p.hedef == "tansu" or p.giris == "arz" else []
     emax = mum = None
     if p.giris == "ema":
         emax = (
@@ -278,11 +290,13 @@ def kurulum(f: pd.DataFrame, p: Parametre = Parametre()) -> pd.DataFrame:
             and (p.teyit != "trend" or _trend_teyit(i, kap, yuk, dus, tepe, dip))
         )
 
-    def tetik(i, ust):
+    def tetik(i, ust, seviye=None):
         if p.giris == "ema":
             return kap[i] > emax[i]
         if p.giris == "kutu":
             return kap[i] > ust
+        if p.giris in ("arz", "ucgen"):
+            return kap[i] > seviye(i)
         return mum[i] and kap[i] > ust
 
     def kapi(i, alt, ucgen):
@@ -328,6 +342,21 @@ def kurulum(f: pd.DataFrame, p: Parametre = Parametre()) -> pd.DataFrame:
                 else np.nan
             )
             sira, hacim = range(bit + 1, min(bit + 1 + p.pencere, n)), True
+            seviye = None  # `arz`, `ucgen`: i günü için kapanışın geçeceği seviye; yoksa bu dönemde sinyal yok
+            if p.giris == "arz":
+                # dönem bitişinde aktif arz bölgelerinden proximal'ı kutu üstünden büyük olanların en küçük proximal'lısı
+                ustte = [z for z in arz if z[1] <= bit < z[2] and z[3] > ust]
+                if ustte:
+                    distal = min(ustte, key=lambda z: z[3])[4]
+                    seviye = lambda i: distal
+            elif p.giris == "ucgen":
+                # üst çizgi: ilk ve son salınım tepesinden geçer, gün sırasıyla uzar
+                u = _ucgen(yuk[bas : bit + 1], dus[bas : bit + 1])
+                if u is not None:
+                    tepe2 = bas + u[0][[0, -1]]
+                    seviye = lambda i: _dogru(yuk, tepe2, i)
+            if p.giris in ("arz", "ucgen") and seviye is None:
+                sira = []
             if p.giris == "retest":
                 # ilk güçlü mum k; sonra k+1 ... k+5 içinde kutu üstüne değen ilk gün j
                 k = next((i for i in sira if tetik(i, ust)), None)
@@ -345,7 +374,7 @@ def kurulum(f: pd.DataFrame, p: Parametre = Parametre()) -> pd.DataFrame:
             for i in sira:
                 if p.stop == "kutu" and (kap[bit + 1 : i] < alt).any():
                     break  # Tansu: kutu altı kapanışta analiz iptal olur (KURALLAR §3 Stop `kutu`)
-                if (p.giris == "retest" or tetik(i, ust)) and aday(i, hacim):
+                if (p.giris == "retest" or tetik(i, ust, seviye)) and aday(i, hacim):
                     gecti, hedef = kapi(i, alt, ucgen)
                     if gecti:
                         konumlar.append(i)

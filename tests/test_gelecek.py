@@ -142,6 +142,23 @@ def kurulum_varyantlari():
         )
         ornek[ad] = p
         ornek[ad + "_gevsek"] = replace(p, hacim_kat=0.0, momentum=False, rr_min=0.0)
+    for giris in (
+        "arz",
+        "ucgen",
+    ):  # bilet 04: yeni giriş türleri (üst kutu ve üst çizgi t'de bilinenlerden)
+        p = replace(
+            aileler.VARYANTLAR["tansu"],
+            giris=giris,
+            isinma=60,
+            sma_n=50,
+            esik=0.03,
+            min_gun=2,
+            pencere=30,
+        )
+        ornek["giris_" + giris] = p
+        ornek["giris_" + giris + "_gevsek"] = replace(
+            p, hacim_kat=0.0, momentum=False, rr_min=0.0
+        )
     return ornek
 
 
