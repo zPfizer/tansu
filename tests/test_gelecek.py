@@ -205,7 +205,7 @@ def tansusinama_cift_(tam, kes_, t):
     bas, son = pd.Timestamp("2012-01-01"), pd.Timestamp("2015-12-31")
     semboller = ["S000", "S001", "S002", "S004", "S005", "S006"]
     isler = [
-        tansusinama.cift_isleri(a, a.sektor, semboller, bas, izgara)
+        tansusinama.cift_isleri(a, a.sektor, semboller, bas, izgara)[0]
         for a in (tam, kes_)
     ]
     assert len(isler[0]) > 0

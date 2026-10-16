@@ -21,13 +21,13 @@ import numpy as np
 import pandas as pd
 import psutil
 
-from tansu import aileler as ail
+from tansu import aileler as aileler_
 from tansu import ciftbolme, kayit, motor, rapor, saglamlik, simulator, veri
 
 MASRAF = 0.001  # TASARIM 5.14: her yönde %0,10, kayma yok
 SUPHELI_KAZANMA = 0.90  # TASARIM 5.14: kazanma oranı bu değerden küçük değilse "şüpheli: aşırı uyum" (YORUM)
 AZ_ISLEM = 5  # TASARIM 5.14: Tansu'nun tablosundaki süzgeç "İşlem >= 5"
-ISCI_BELLEK_GB = 0.25  # ölçülen işçi başı tepe bellek 0,17 GB + pay (performans.md)
+ISCI_BELLEK_GB = 0.25  # ölçülen işçi başı tepe bellek 0,17 GB + pay (TASARIM 5.14 Makine ve paralellik)
 BASLANGIC = simulator.BASLANGIC
 EGITIM_YIL = 2  # TASARIM 5.14 ileri yürüme: en az 2 tam eğitim yılı
 CIFT_ISINMA = 252  # TASARIM 5.14 Dönem: çiftte ısınma 252 işlem günü
@@ -43,7 +43,8 @@ def islem_getirisi(giris, cikis, m=MASRAF) -> float:
 
 
 def makine() -> dict:
-    """Mantıksal ve fiziksel çekirdek, boş ve toplam bellek (GB), GPU adı (nvidia-smi yoksa ya da yanıt vermezse None)."""
+    """Mantıksal ve fiziksel çekirdek, boş ve toplam bellek (GB), GPU adı (nvidia-smi yoksa ya da yanıt vermezse None);
+    TASARIM 5.14 Makine ve paralellik."""
     bellek = psutil.virtual_memory()
     gpu, smi = None, shutil.which("nvidia-smi")
     if smi:
@@ -223,7 +224,12 @@ def _sonuc(kimlik, izgara, tablolar, hucre_raporu, al_tut, bas, son) -> dict:
     i = b["en_iyi"] if b["secilen"] is None else b["secilen"]
     egri, pozisyonda, tutma, bakis = hucre_raporu(i)
     olcu = olculer(tablolar[i]["getiri"], tutma, egri, pozisyonda)
-    olcu.update(bakis, hucre=hucreler[i], secildi=b["secilen"] is not None)
+    olcu.update(
+        bakis,
+        hucre=hucreler[i],
+        secildi=b["secilen"] is not None,
+        fark=olcu["net"] - al_tut,
+    )
     durum, etiket = _durum(b)
     return {
         **kimlik,
@@ -283,7 +289,7 @@ def ema_tablolari(m, p, izgara, bas) -> list:
     zincir = motor.Zincir(m)
     tablolar = []
     for h in _hucreler(izgara):
-        sig = ail.sinyal(f, replace(p, **h))
+        sig = aileler_.sinyal(f, replace(p, **h))
         t, _ = zincir.calistir(m.index.get_indexer(sig[sig >= bas]))
         tablolar.append(_getirili(t))
     return tablolar
@@ -380,7 +386,8 @@ def _cift_simule(hedef, bas_k, d) -> tuple:
     return _getirili(pd.DataFrame(islemler, columns=sutunlar)), egri
 
 
-def _cift_is(ad, y, x, sektor, gunler, C, A, F, bas_k, izgara) -> dict:
+def cift_tablolari(y, x, gunler, C, A, F, bas_k, izgara) -> tuple:
+    """Bir çiftin ızgara hücrelerinin (düz ızgara sırasında) işlem tabloları ve günlük özkaynakları; `cift_isleri` girdisiyle."""
     d = {
         "gunler": gunler,
         "C": C,
@@ -404,6 +411,11 @@ def _cift_is(ad, y, x, sektor, gunler, C, A, F, bas_k, izgara) -> dict:
         t, egri = _cift_simule(hedef, bas_k, d)
         tablolar.append(t)
         egriler.append(egri)
+    return tablolar, egriler, d
+
+
+def _cift_is(ad, y, x, sektor, gunler, C, A, F, bas_k, izgara) -> dict:
+    tablolar, egriler, d = cift_tablolari(y, x, gunler, C, A, F, bas_k, izgara)
     n = len(gunler)
 
     def hucre_raporu(i):
@@ -436,16 +448,20 @@ def _is_calistir(girdi) -> tuple:
     return aile, ad, (_ema_is if aile == simulator.AILE else _cift_is)(ad, *args)
 
 
-def _ema_isleri(anlik, semboller, p, izgara, bas) -> list:
-    isler = []
+def _ema_isleri(anlik, semboller, p, izgara, bas) -> tuple:
+    """(işler, atlanan adlar): ısınması dolmayan hisse sınanmaz (TASARIM 5.14 Dönem)."""
+    isler, atlanan = [], []
     for s in semboller:
         m = motor.mumlar(anlik, s, p, motor.ATR_N)
-        if _ema_donem(m, p, bas) is not None:
+        if _ema_donem(m, p, bas) is None:
+            atlanan.append(s)
+        else:
             isler.append((simulator.AILE, s, m, p, izgara, bas))
-    return isler
+    return isler, atlanan
 
 
-def _cift_isleri(anlik, sektor, semboller, bas, izgara) -> list:
+def cift_isleri(anlik, sektor, semboller, bas, izgara) -> tuple:
+    """(işler, atlanan adlar): aynı sektördeki çiftler; 252 ortak günü olmayan ya da dönemi boş çift sınanmaz (TASARIM 5.14)."""
     gunler = anlik.gunler
     f = anlik.fiyat[anlik.fiyat["sembol"].isin(semboller)]
     C = f.pivot(index="tarih", columns="sembol", values="kapanis").reindex(gunler)
@@ -472,18 +488,20 @@ def _cift_isleri(anlik, sektor, semboller, bas, izgara) -> list:
     for s in C.columns:
         if s in sektor:
             gruplar.setdefault(sektor[s], []).append(s)
-    isler = []
+    isler, atlanan = [], []
     for sek, liste in sorted(gruplar.items()):
         for y, x in itertools.combinations(liste, 2):
             j = [kol[y], kol[x]]
             ortak = np.flatnonzero(var[:, j[0]] & var[:, j[1]])
-            if len(ortak) < CIFT_ISINMA:
-                continue  # 252 işlem günü verisi olmayan hisse aday olmaz (TASARIM 5.6)
+            if len(ortak) < CIFT_ISINMA:  # 252 işlem günü verisi yok (TASARIM 5.6)
+                atlanan.append(f"{y}-{x}")
+                continue
             son_k = min(
                 np.flatnonzero(var[:, j[0]])[-1], np.flatnonzero(var[:, j[1]])[-1]
             )
             bas_k = max(bas_konum, int(ortak[CIFT_ISINMA - 1]))
             if bas_k >= son_k:
+                atlanan.append(f"{y}-{x}")
                 continue
             kes = slice(0, son_k + 1)
             isler.append(
@@ -501,7 +519,7 @@ def _cift_isleri(anlik, sektor, semboller, bas, izgara) -> list:
                     izgara,
                 )
             )
-    return isler
+    return isler, sorted(atlanan)
 
 
 def _ilerle(ilerleme, bitti, toplam, t0) -> None:
@@ -563,7 +581,7 @@ def calistir(
     aileler=AILELER,
     isci=None,
     hisse=None,
-    p=ail.Parametre(),
+    p=aileler_.Parametre(),
     bas=BASLANGIC,
     ilerleme=print,
     izgara=None,
@@ -573,11 +591,17 @@ def calistir(
     t0 = time.monotonic()
     izgara = {**IZGARA, **(izgara or {})}
     semboller = sorted(anlik.fiyat["sembol"].unique())[:hisse]
-    isler = []
+    isler, atlanan = [], {}
     if simulator.AILE in aileler:
-        isler += _ema_isleri(anlik, semboller, p, izgara[simulator.AILE], bas)
+        yeni, atlanan[simulator.AILE] = _ema_isleri(
+            anlik, semboller, p, izgara[simulator.AILE], bas
+        )
+        isler += yeni
     if ciftbolme.AILE in aileler:
-        isler += _cift_isleri(anlik, sektor, semboller, bas, izgara[ciftbolme.AILE])
+        yeni, atlanan[ciftbolme.AILE] = cift_isleri(
+            anlik, sektor, semboller, bas, izgara[ciftbolme.AILE]
+        )
+        isler += yeni
     mak = makine()
     isci = isci or isci_sayisi(
         mak["fiziksel_cekirdek"], mak["bellek_bos_gb"], len(isler)
@@ -591,6 +615,7 @@ def calistir(
         ailelerin[aile] = {
             "eksenler": izgara[aile],
             "hisseler": hisseler,
+            "atlanan": atlanan[aile],
             "ozet": _ozet(hisseler),
         }
     return kayit._temiz(

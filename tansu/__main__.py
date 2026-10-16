@@ -116,7 +116,8 @@ def _tansu_sinama(a, kok: Path) -> int:
         o = f["ozet"]
         print(
             f"{aile}: {o['toplam']} iş, sağlam bölge var {o['saglam_bolge_var']}, yok {o['saglam_bolge_yok']}, "
-            f"para çıkmaz {o['para_cikmaz']}; seçilenlerde al-tutu geçen {o['altut_gecen']}"
+            f"para çıkmaz {o['para_cikmaz']}; seçilenlerde al-tutu geçen {o['altut_gecen']}; "
+            f"atlanan {len(f['atlanan'])}"
         )
     print(
         f"Tansu sınaması {s['kosu_id']}: {s['makine']['isci']} işçi, {s['makine']['sure_sn']} sn, {yol}"
