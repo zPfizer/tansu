@@ -878,7 +878,9 @@ Levent 16.10: "Tansu ne diyorsa onu yap." Komut: `python -m tansu tansu-sinama`.
     günü kapsar.
   - Uç durumlar: (1) son gün karantinalıysa (kapanışı olsun olmasın) açık pozisyon o gün karantina kuralıyla son temiz AOF'tan
     çıkar (5.3; çiftte 5.6), "veri sonu" çıkışı olmaz. (2) Sıfır ya da sonsuz fiyatlı gün bu modülün fiyat okumalarında yok sayılır;
-    hiçbir çıktı sonsuz ya da NaN olmaz. (3) AOF'u olmayan gün dönem başı olamaz; dönem başı sonraki geçerli fiyat günüdür. (4) Dönem tek gün olabilir:
+    hiçbir çıktı sonsuz ya da NaN olmaz. Veri katmanı sıfır ve NaN fiyatlı günü karantinaya alır (5.1), tutarlı sonsuz
+    düzeltilmiş fiyatlı günü almaz. Bu yüzden düzeltilmiş AOF'u ya da kapanışı sonsuz olan gün bu modülde iki ailede karantina
+    günüdür: açık pozisyon o gün son temiz AOF'tan çıkar ve 250 satır giriş açılmaz (5.3, 5.6); motora bu bayrakla verilir. (3) AOF'u olmayan gün dönem başı olamaz; dönem başı sonraki geçerli fiyat günüdür. (4) Dönem tek gün olabilir:
     işlem olmaz (giriş ertesi günü ister), net 0,0, maruziyet 0, Sharpe ve Calmar yok; al-tut aynı günün AOF'undan alıp
     kapanışından satar. Testler iki ailede: (1) NaN, sonsuz ve sonlu kapanışlı karantinalı son gün; (2) ve (3) dönem başında,
     son günde ve 1, 3, 5 gün sayımında geçersiz gün; (4) tek günlük dönem.
