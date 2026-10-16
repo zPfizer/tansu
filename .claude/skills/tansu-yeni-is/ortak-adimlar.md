@@ -8,12 +8,12 @@ Use one branch for each ticket. Cut every branch from `kaynak/master`, not from 
 ## Test gate
 Run `kurulum\kapi.ps1`. It runs pytest, `ruff check .`, `ruff format --check .`, and `git diff --check kaynak/master`, and it prints `kapi:` summary lines. Run it before each commit. Everything must be green. When `TANSU_BEKLENEN_ACIK` is unset, the gate counts the open pool notes itself, prints `kapi: acik havuz notu = <n>`, and uses that count. A variable that you set wins.
 
-After the last commit, run it again on the clean tree. This also applies after a fix commit or a merge of `master`. Paste that output into `## Gerçek veri kanıtı` of the PR body. The last line must be `kapi: HEAD <sha> temiz`, and the sha must be the PR head sha. An untracked file also makes the tree `kirli`. A code change needs the full run (CI rejects `-Belge` then).
+After the last commit, run it again on the clean tree. This also applies after a fix commit or a merge of `kaynak/master`. Paste that output into `## Gerçek veri kanıtı` of the PR body. The last line must be `kapi: HEAD <sha> temiz`, and the sha must be the PR head sha. An untracked file also makes the tree `kirli`. A code change needs the full run (CI rejects `-Belge` then).
 
 When only documents changed, `kurulum\kapi.ps1 -Belge` runs the document tests. The full run is in CI. For a pool batch, set `TANSU_PARTI=<batch ids>`. Do not deselect a red test.
 
 ## Review
-Merge `master` into the branch first. Then check the change by its type.
+Merge `kaynak/master` into the branch first. Then check the change by its type.
 - A change with code: run `mattpocock-skills:code-review` (a Claude subagent). Then run the Codex audit (subagent type `codex`). Add the text of the code-review skill to the auditor prompt.
 - A change to documents only (no code): run one `mattpocock-skills:code-review` pass by a Sonnet subagent on the diff. Run no Codex audit.
 
