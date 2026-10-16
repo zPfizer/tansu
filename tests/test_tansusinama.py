@@ -718,7 +718,7 @@ def donem(bas, son):
 
 
 def test_cift_son_satir_karantina_karantina_cikisi_veri_sonu_degil(tmp_path):
-    # Sürüm 2 (TASARIM 5.14, dönemin son günü): çiftte dönemin son günü iki bacağın son satırlarının erken olanıdır; fiyatı
+    # TASARIM 5.14, dönemin son günü: çiftte dönemin son günü iki bacağın son satırlarının erken olanıdır; fiyatı
     # geçerli olmak zorunda değildir. A'nın 262. günü satırı yok (Z 262-266 NaN, 263. gün geçişi yok): A 257. günde
     # 95'ten alınır ve tutulur. 268. gün A temiz: AOF 99 (düşük 99 ≤ AOF ≤ yüksek 100). 269. gün (A ve B'nin son satırı) A'nın
     # düzeltilmiş kapanışı NaN → satır bozuk → karantina. Açık pozisyon 269. gün karantina kuralıyla son temiz AOF'tan
@@ -759,8 +759,6 @@ def test_ema_ileri_son_yil_donemin_son_gunu(tmp_path):
     for ad in ("B", "A"):
         h = hisse(s, "ema_sikismasi", ad)
         assert h["ileri"]["yillar"] == [{"yil": 2026, "hucre": None}], ad
-    for ad in ("B", "A"):
-        h = hisse(s, "ema_sikismasi", ad)
         assert h["donem"] == {"bas": "2023-01-05", "son": "2026-01-01"}, ad
 
 
@@ -868,7 +866,7 @@ def test_cift_sonsuz_son_kapanis_son_gecerli_fiyat_ve_karantina_cikisi(tmp_path)
         ),
     ],
 )
-def test_cift_donem_basi_gecersiz_gun_atlanir(tmp_path, bozuk_satir):
+def test_cift_donem_basi_gecersiz_gun_sonraki_gune_kayar(tmp_path, bozuk_satir):
     # İki durumda da A'nın 251. günü (ilk aday: 252. ortak kapanış günü) karantinalı, kapanışı ve AOF'u (sıfır durumunda
     # AOF 0) vardır: AOF 0 → bozuk; ham kapanış 110,6 > 100·1,1·1,005 = 110,55 (önceki ham kapanış 100, ±%10) → limit aşımı.
     # Geçerli fiyat günü değil → dönem başı 252. gün (iki bacak geçerli: A'nın 252. günü AOF 99, düşük 99, kapanış 100).
@@ -881,6 +879,69 @@ def test_cift_donem_basi_gecersiz_gun_atlanir(tmp_path, bozuk_satir):
     assert h["al_tut"] == pytest.approx(0.0030424, abs=1e-7)
     assert h["donem"] == donem(252, 269)
     assert h["olcu"]["islem"] == 0 and h["olcu"]["net"] == 0.0
+
+
+def test_cift_son_gun_limit_asimi_karantina_cikisi(tmp_path):
+    # Test 1 ile aynı kurulum (262. gün A'da yok: A 257. günde 95'ten alınır ve tutulur; 268. gün A temiz, AOF 99). 269. gün
+    # (son satır) A'nın ham kapanışı 110,6 > 100·1,1·1,005 = 110,55 (önceki ham kapanış 100, ±%10) → limit aşımı → karantina;
+    # kapanış sonlu. Düzeltilmiş kapanış 105 (yüksek 105: satır tutarlı): geçerli kapanış sayılsaydı al-tut ve veri sonu
+    # çıkışı bunu okurdu. Açık pozisyon 269. gün karantina kuralıyla son temiz AOF'tan (268. gün, 99) çıkar, "veri sonu" olmaz.
+    # Getiri = 99·0,999/(95·1,001) − 1 = 98,901/95,095 − 1 = 0,0400231. Tutma 269 − 257 = 12; maruziyet 12 gün (257-268) /
+    # dönem 251-269 = 19 gün. Al-tut 50/50: A 251. gün AOF 100'den son geçerli kapanışa (268. gün, 100), B 100'den 100'e:
+    # ikisi de 0,999/1,001 − 1 = −0,001998 (269. gün 105 okunsaydı A için 105·0,999/(100·1,001) − 1 = +0,0479).
+    temiz_99 = {"aof": 99.0, "ham_aof": 99.0, "dusuk": 99.0, "ham_dusuk": 99.0}
+    asim = {
+        "kapanis": 105.0,
+        "yuksek": 105.0,
+        "ham_kapanis": 110.6,
+        "ham_aof": 110.6,
+        "ham_yuksek": 110.6,
+        "ham_dusuk": 110.6,
+    }
+    s = cift_calistir(cift_anlik(tmp_path, {262: None, 268: temiz_99, 269: asim}))
+    h = hisse(s, "cift_rotasyonu", "A-B")
+    o = h["olcu"]
+    assert o["islem"] == 1 and o["net"] == pytest.approx(0.0400231, abs=1e-7)
+    assert o["ort_tutma"] == pytest.approx(12.0)
+    assert o["maruziyet"] == pytest.approx(12 / 19)
+    assert h["al_tut"] == pytest.approx(-0.001998, abs=1e-6)
+    assert h["donem"] == donem(251, 269)
+
+
+def test_ema_son_gun_limit_asimi_karantina_cikisi(tmp_path):
+    # seri_a() ama son satırın (04.02) ham alanları 116: ham kapanış 116 > 104·1,1·1,005 = 114,97 (önceki ham kapanış 104,
+    # ±%10) → limit aşımı → karantina; kapanış sonlu (düzeltilmiş 110). Giriş 03.02 AOF 104; 04.02 karantina çıkışı son
+    # temiz AOF 104'te (veri sonu çıkışı 110 olmaz): 104·0,999/(104·1,001) − 1 = −0,001998.
+    # Al-tut: 02.02 AOF 103'ten son geçerli kapanışa (03.02, 104): 104·0,999/(103·1,001) − 1 = 0,0076913.
+    a = seri_a()
+    a[7].update(ham_kapanis=116.0, ham_aof=116.0, ham_yuksek=116.0, ham_dusuk=116.0)
+    h = ema_tek(tmp_path, a)["hisseler"][0]
+    o = h["olcu"]
+    assert h["hisse"] == "A" and o["islem"] == 1
+    assert o["net"] == pytest.approx(-0.001998, abs=1e-6)
+    assert h["al_tut"] == pytest.approx(0.0076913, abs=1e-7)
+    assert h["donem"] == {"bas": "2026-02-02", "son": "2026-02-04"}
+
+
+def test_sonraki_cift_gecersiz_gun_sayilmaz(tmp_path):
+    # A'nın 259, 260 ve 261. günlerinde hacim 0 (satır var, kapanış 95; işlem görmeyen gün → geçerli fiyat günü değil).
+    # Z düzeltilmiş kapanıştan hesaplanır, değişmez: 256. gün hedef A (257. gün alım, 95), 263. gün hedef B. B'nin 264. günü
+    # hacim 0 → geçiş yapılmaz; sonraki günlerde |z| < 1 (264. gün z = 0,73; 265. gün z = 0,45) → sinyal yok. Tek işlem: A,
+    # veri sonuna dek tutulur. A'nın sinyal günü (256) sonrası geçerli kapanışları: 257: 95, 258: 95, 262: 100, 263: 100,
+    # 264: 100 (259-261 sayılmaz). Sinyal günü kapanışı 95.
+    # ileri_1 (257) = 95/95 − 1 = 0; ileri_3 (262) = 100/95 − 1 = 0,0526316; ileri_5 (264) = 100/95 − 1 = 0,0526316.
+    # (Geçersiz günler sayılsaydı: 3. gün 259 → 0; 5. gün 261 → 0.)
+    b = [mum(g, 100.0) for g in GUNLER]
+    b[264]["hacim"] = 0.0
+    sifir = {"hacim": 0.0}
+    s = cift_calistir(
+        cift_anlik(tmp_path, {259: sifir, 260: dict(sifir), 261: dict(sifir)}, {"B": b})
+    )
+    o = hisse(s, "cift_rotasyonu", "A-B")["olcu"]
+    assert o["islem"] == 1
+    assert o["ileri_1"] == pytest.approx(0.0)
+    assert o["ileri_3"] == pytest.approx(0.0526316, abs=1e-7)
+    assert o["ileri_5"] == pytest.approx(0.0526316, abs=1e-7)
 
 
 def test_cift_tek_gunluk_donem_gecersiz_fiyat_atlanir(tmp_path):
