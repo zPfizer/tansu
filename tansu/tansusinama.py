@@ -9,6 +9,7 @@ import concurrent.futures
 import datetime as dt
 import itertools
 import json
+import multiprocessing
 import os
 import shutil
 import subprocess
@@ -593,7 +594,10 @@ def _kos(isler, isci, ilerleme, t0) -> dict:
         for girdi in isler:
             kaydet(*_is_calistir(girdi))
     else:
-        with concurrent.futures.ProcessPoolExecutor(max_workers=isci) as havuz:
+        # TASARIM 5.14 Makine ve paralellik: işçiler her platformda `spawn` ile başlar
+        with concurrent.futures.ProcessPoolExecutor(
+            max_workers=isci, mp_context=multiprocessing.get_context("spawn")
+        ) as havuz:
             vadeler = [havuz.submit(_is_calistir, girdi) for girdi in isler]
             for v in concurrent.futures.as_completed(vadeler):
                 kaydet(*v.result())
