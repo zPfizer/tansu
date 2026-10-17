@@ -10,7 +10,7 @@ Run `kurulum\kapi.ps1`. It runs pytest, `ruff check .`, `ruff format --check .`,
 The gate always runs the count. If the pool folder is missing, it prints `kapi: acik havuz notu = HATA` and stops with exit code 1, also when `TANSU_BEKLENEN_ACIK` is set.
 `TANSU_PY` (a full path) sets the Python of the gate. The default is the main venv. If that file is missing or the count is not a whole number, the gate prints a `kapi:` error line and stops with exit code 1. A command that cannot start stops the gate with a PowerShell error and exit code 1.
 
-After the last commit, run it again on the clean tree. This also applies after a fix commit or a merge of `origin/master`. Paste that output in a code block into `## Gerçek veri kanıtı` of the PR body. An untracked file also makes the tree `kirli`. A code change needs the full run.
+After the last commit, run it again on the clean tree. This also applies after a fix commit or a merge of `origin/master`. An untracked file also makes the tree `kirli`. A code change needs the full run. Do not paste the gate output into the PR body: CI on Windows proves the tests, format, and lint. `## Gerçek veri kanıtı` holds only the output of the real-data run.
 
 When only documents changed, `kurulum\kapi.ps1 -Belge` runs the document tests. The full run is in CI. For a pool batch, set `TANSU_PARTI=<batch ids>`. Do not deselect a red test.
 

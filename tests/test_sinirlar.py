@@ -188,7 +188,7 @@ def test_havuz_hicbir_nota_gitmeyen_kisa_atif_yok_sayilir(tmp_path):
 def test_pr_sablonu_yorumu_uc_metni_ve_tek_satiri_soyler():
     sablon = (KOK / ".github" / "pull_request_template.md").read_text(encoding="utf-8")
     yorum = next(
-        satir for satir in sablon.splitlines() if satir.startswith("<!-- CI accepts")
+        satir for satir in sablon.splitlines() if satir.startswith("<!-- CI tam olarak")
     )
     for metin in (
         '"Sonuç: geçti"',
@@ -198,7 +198,7 @@ def test_pr_sablonu_yorumu_uc_metni_ve_tek_satiri_soyler():
         "KALDI",
     ):
         assert metin in yorum
-    assert re.search(r"exactly one Sonuç line", yorum)
+    assert re.search(r"tam olarak bir Sonuç satırı", yorum)
 
 
 def test_ci_aracleri_tam_surume_sabitli_ve_agents_bunu_soyler():
