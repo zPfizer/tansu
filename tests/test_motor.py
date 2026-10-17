@@ -1018,7 +1018,7 @@ def test_sinama_modul_1_varyanti_kutu_stopu_ve_hedef_cikisi():
     assert t.planlanan_risk == pytest.approx(13.0, abs=1e-9)
 
 
-# Bilet 06: KURALLAR §3 "Modül 1" Varyantlar tablosunun 23 adı (literal). Her varyant, sentetik dünyada (8 hisse, 700 gün; ısınma,
+# Bilet 06 ve 07: KURALLAR §3 "Modül 1" Varyantlar tablosunun 24 adı (literal). Her varyant, sentetik dünyada (8 hisse, 700 gün; ısınma,
 # SMA ve sıkışma ayarı gevşek) motordan hatasız geçer: bir kez kendi kapılarıyla, bir kez kapılar (hacim, momentum, R/R) gevşekken.
 # Her koşu motor tablosunun sütunlarını verir; çıkış nedenleri tanımlı kümededir; fiyatlar sonlu ve pozitiftir. Bütün koşuların
 # TOPLAM işlem sayısı sıfırdan büyüktür (sınama boş değil); tek bir varyant boş olabilir (`giris_ucgen` bu dünyada işlem üretmez).
@@ -1026,6 +1026,7 @@ VARYANT_ADLARI = [
     "bugun",
     "tansu",
     "ema_5_8_13",
+    "ema_20_50_100",
     "ema_10_20_50",
     "ema_50_100_200",
     "giris_kutu",
@@ -1050,7 +1051,7 @@ VARYANT_ADLARI = [
 
 
 def test_her_varyant_motordan_gecer_kisa_sentetik_seride_hata_yok():
-    assert len(VARYANT_ADLARI) == 23
+    assert len(VARYANT_ADLARI) == 24
     dunya = denetim.dunya(11, hisse=8, gun=700)
     nedenler = {"stop", "sma250", "hedef", "cikis_kurali", "karantina", "veri_sonu"}
     sutunlar = [
@@ -1238,3 +1239,40 @@ def test_dip_etkinligi_tam_esikte_kayan_nokta_yuzunden_kacmaz():
     assert _ozet_atr(satirlar, Parametre(cikis="dip"), 0.4) == _ak(
         (1, 5.2, 4, 5.2, "veri_sonu", 0.8, 0)
     )
+
+
+@pytest.mark.parametrize(
+    "yuksek, beklenen",
+    [
+        # Bilet 07 (Codex tur 1; KURALLAR §3 ATR merdiveni): ATR_sinyal = 0 ise n tanımsızdır, merdiven basamağı yoktur.
+        # Kutu alt 95 -> ilk stop 95, giriş 100, R = 5; başabaş eşiği 100 + 1,5 * 5 = 107,5. Gün 2 yüksek 105 < 107,5:
+        # stop 95 kalır; gün 3 düşük 99,5 > 95; veri sonu kapanışı 101. Risk 5, kayıp max(0, 100 - 101) = 0.
+        (105, (1, 100, 3, 101, "veri_sonu", 5, 0)),
+        # Gün 2 yüksek 108 >= 107,5: başabaş sayıyla aynen çalışır, stop 100 olur. Gün 3 düşük 99,5 <= 100 -> min(100, 102) = 100.
+        (108, (1, 100, 3, 100, "stop", 5, 0)),
+    ],
+)
+def test_atr_sifirken_merdiven_basamagi_yok_motor_cokmez(yuksek, beklenen):
+    satirlar = [
+        S0,
+        GIRIS,
+        r(101, yuksek, 100.5, 104, onceki_dusuk=0),
+        r(102, 103, 99.5, 101, onceki_dusuk=0),
+    ]
+    t, dusen = motor.islemler(
+        _mumlar(satirlar, 0),
+        GUNLER[[0]],
+        Parametre(stop="kutu", cikis="dip"),
+        _kurulum(95.0),
+    )
+    assert dusen == 0 and len(t) == 1
+    x = t.iloc[0]
+    assert (
+        GUNLER.get_loc(x.giris_tarih),
+        x.giris_fiyat,
+        GUNLER.get_loc(x.cikis_tarih),
+        x.cikis_fiyat,
+        x.neden,
+        x.planlanan_risk,
+        x.gerceklesen_kayip,
+    ) == _ak(beklenen)

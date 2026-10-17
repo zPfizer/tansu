@@ -181,9 +181,10 @@ def _cikis_kurali(p, m):
 
 
 def _merdiven(p, m):
-    """ATR merdiveni ve başabaş (çıkış paketi): ertesi gün için stop, yalnız yukarı gider."""
+    """ATR merdiveni ve başabaş (çıkış paketi): ertesi gün için stop, yalnız yukarı gider.
+    ATR_sinyal = 0 ise n tanımsızdır, merdiven basamağı yoktur (KURALLAR §3 ATR merdiveni); başabaş aynen çalışır."""
     n = (
-        round((m["yuksek"] - p.giris_fiyat) / p.atr, 9) // 1
+        round((m["yuksek"] - p.giris_fiyat) / p.atr, 9) // 1 if p.atr else 0
     )  # tam basamak kayan nokta hatasıyla düşmesin
     stop = max(p.stop, p.giris_fiyat + (n - 2) * p.atr) if n >= 2 else p.stop
     if _ulasti(m["yuksek"], p.giris_fiyat + BASABAS_R * (p.giris_fiyat - p.ilk_stop)):

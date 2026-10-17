@@ -432,6 +432,7 @@ VARYANTLAR = {
     "bugun": Parametre(),
     "tansu": _TANSU,
     "ema_5_8_13": replace(_TANSU, periyotlar=(5, 8, 13)),
+    "ema_20_50_100": replace(_TANSU, periyotlar=(20, 50, 100)),
     "ema_10_20_50": replace(_TANSU, periyotlar=(10, 20, 50)),
     "ema_50_100_200": replace(_TANSU, periyotlar=(50, 100, 200)),
     "giris_kutu": replace(_TANSU, giris="kutu"),

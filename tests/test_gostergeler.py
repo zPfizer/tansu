@@ -18,7 +18,10 @@ def test_sikisma_orani_en_buyuk_eksi_en_kucuk_bolu_en_yavas_ema():
     oran = gostergeler.sikisma_orani(
         pd.Series([10.0, 12.0, 11.0, 13.0]), periyotlar=(1, 3)
     )
-    assert oran.tolist() == pytest.approx([0.0, 1 / 11, 0.0, 1 / 12], abs=1e-12)
+    # 1/11 = 0.09090909090909091; 1/12 = 0.08333333333333333
+    assert oran.tolist() == pytest.approx(
+        [0.0, 0.09090909090909091, 0.0, 0.08333333333333333], abs=1e-12
+    )
 
 
 def test_sikisma_donemleri_en_az_3_gun_ve_esik_dahil():
@@ -43,7 +46,10 @@ def test_sma_hareketli_ortalama():
     # n=3, [1; 2; 3; 4; 6]: ilk iki değer NaN; (1+2+3)/3=2; (2+3+4)/3=3; (3+4+6)/3=13/3.
     sonuc = gostergeler.sma(pd.Series([1.0, 2.0, 3.0, 4.0, 6.0]), 3)
     assert sonuc.isna().tolist() == [True, True, False, False, False]
-    assert sonuc.iloc[2:].tolist() == pytest.approx([2.0, 3.0, 13 / 3], abs=1e-12)
+    # 13 / 3 = 4.333333333333333
+    assert sonuc.iloc[2:].tolist() == pytest.approx(
+        [2.0, 3.0, 4.333333333333333], abs=1e-12
+    )
 
 
 def test_atr_wilder_ilk_deger_ilk_n_tr_ortalamasi():
@@ -59,7 +65,10 @@ def test_atr_wilder_ilk_deger_ilk_n_tr_ortalamasi():
         3,
     )
     assert atr.isna().tolist() == [True, True, False, False, False]
-    assert atr.iloc[2:].tolist() == pytest.approx([2.0, 7 / 3, 26 / 9], abs=1e-12)
+    # 7 / 3 = 2.3333333333333335; 26 / 9 = 2.888888888888889
+    assert atr.iloc[2:].tolist() == pytest.approx(
+        [2.0, 2.3333333333333335, 2.888888888888889], abs=1e-12
+    )
 
 
 def test_atr_bas_nan_satirlar_tohum_n_1_konumunda_nan_atlanarak():
@@ -76,7 +85,10 @@ def test_atr_bas_nan_satirlar_tohum_n_1_konumunda_nan_atlanarak():
         3,
     )
     assert atr.isna().tolist() == [True, True, False, False, False, False]
-    assert atr.iloc[2:].tolist() == pytest.approx([4.0, 10 / 3, 38 / 9, 103 / 27])
+    # 10 / 3 = 3.3333333333333335; 38 / 9 = 4.222222222222222; 103 / 27 = 3.814814814814815
+    assert atr.iloc[2:].tolist() == pytest.approx(
+        [4.0, 3.3333333333333335, 4.222222222222222, 3.814814814814815]
+    )
 
 
 def test_piyasa_durumu_kapanis_sma_ustunde_mi():
@@ -100,7 +112,10 @@ def test_rsi_wilder_ilk_deger_ilk_n_degisimin_ortalamasi():
     # Gün 5 (değişim +2): kazanç (2/3*2+2)/3 = 10/9; kayıp (5/9*2)/3 = 10/27; RSI = 100 * (30/27) / (40/27) = 75.
     sonuc = gostergeler.rsi(pd.Series([10.0, 11, 10, 12, 11, 13]), 3)
     assert sonuc.isna().tolist() == [True, True, True, False, False, False]
-    assert sonuc.iloc[3:].tolist() == pytest.approx([75.0, 600 / 11, 75.0], abs=1e-9)
+    # 600 / 11 = 54.54545454545455
+    assert sonuc.iloc[3:].tolist() == pytest.approx(
+        [75.0, 54.54545454545455, 75.0], abs=1e-9
+    )
 
 
 def test_momentum_squeeze_linreg_son_nokta():
@@ -119,7 +134,10 @@ def test_momentum_squeeze_linreg_son_nokta():
         3,
     )
     assert sonuc.isna().tolist() == [True, True, True, True, False, False]
-    assert sonuc.iloc[4:].tolist() == pytest.approx([107 / 72, 11 / 72], abs=1e-9)
+    # 107 / 72 = 1.4861111111111112; 11 / 72 = 0.1527777777777778
+    assert sonuc.iloc[4:].tolist() == pytest.approx(
+        [1.4861111111111112, 0.1527777777777778], abs=1e-9
+    )
 
 
 def test_macd_histogram_makd_eksi_sinyal():
@@ -127,7 +145,11 @@ def test_macd_histogram_makd_eksi_sinyal():
     # EMA2: 10; 34/3; 100/9; 334/27. EMA3: 10; 11; 11; 12. MACD: 0; 1/3; 1/9; 10/27.
     # Sinyal (MACD'nin EMA2'si): 0; 2/9; 4/27; 8/27. Histogram = MACD - sinyal: 0; 1/9; -1/27; 2/27.
     sonuc = gostergeler.macd_histogram(pd.Series([10.0, 12, 11, 13]), 2, 3, 2)
-    assert sonuc.tolist() == pytest.approx([0.0, 1 / 9, -1 / 27, 2 / 27], abs=1e-9)
+    # 1 / 9 = 0.1111111111111111; -1 / 27 = -0.037037037037037035; 2 / 27 = 0.07407407407407407
+    assert sonuc.tolist() == pytest.approx(
+        [0.0, 0.1111111111111111, -0.037037037037037035, 0.07407407407407407],
+        abs=1e-9,
+    )
 
 
 def test_psar_wilder_yukselen_trend_sonra_donus():
@@ -162,9 +184,15 @@ def test_stokastik_k_ve_d():
         2,
     )
     assert k.isna().tolist() == [True, True, False, False, False]
-    assert k.iloc[2:].tolist() == pytest.approx([75.0, 100 / 3, 75.0], abs=1e-9)
+    # 100 / 3 = 33.333333333333336
+    assert k.iloc[2:].tolist() == pytest.approx(
+        [75.0, 33.333333333333336, 75.0], abs=1e-9
+    )
     assert d.isna().tolist() == [True, True, True, False, False]
-    assert d.iloc[3:].tolist() == pytest.approx([325 / 6, 325 / 6], abs=1e-9)
+    # 325 / 6 = 54.166666666666664
+    assert d.iloc[3:].tolist() == pytest.approx(
+        [54.166666666666664, 54.166666666666664], abs=1e-9
+    )
 
 
 def test_adx_wilder_dm_tr_yumusatma_dx_ve_ilk_adx():
@@ -188,8 +216,9 @@ def test_adx_wilder_dm_tr_yumusatma_dx_ve_ilk_adx():
         2,
     )
     assert sonuc.isna().tolist() == [True, True, True, False, False, False]
+    # 200 / 3 = 66.66666666666667; 190 / 3 = 63.333333333333336; 2885 / 39 = 73.97435897435898
     assert sonuc.iloc[3:].tolist() == pytest.approx(
-        [200 / 3, 190 / 3, 2885 / 39], abs=1e-9
+        [66.66666666666667, 63.333333333333336, 73.97435897435898], abs=1e-9
     )
 
 
