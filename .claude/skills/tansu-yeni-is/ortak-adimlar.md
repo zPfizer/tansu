@@ -8,6 +8,7 @@ Use one branch for each ticket. Cut every branch from `kaynak/master`, not from 
 ## Test gate
 Run `kurulum\kapi.ps1`. It runs pytest, `ruff check .`, `ruff format --check .`, and `git diff --check kaynak/master`, and it prints `kapi:` summary lines. Run it before each commit. Everything must be green. When `TANSU_BEKLENEN_ACIK` is unset, the gate counts the open pool notes itself, prints `kapi: acik havuz notu = <n>`, and uses that count. A variable that you set wins.
 The gate always runs the count. If the pool folder is missing, it prints `kapi: acik havuz notu = HATA` and stops with exit code 1, also when `TANSU_BEKLENEN_ACIK` is set.
+`TANSU_PY` (a full path) sets the Python of the gate. The default is the main venv. If that file is missing or the count is not a whole number, the gate prints a `kapi:` error line and stops with exit code 1. A command that cannot start stops the gate with a PowerShell error and exit code 1.
 
 After the last commit, run it again on the clean tree. This also applies after a fix commit or a merge of `kaynak/master`. Paste that output into `## Gerçek veri kanıtı` of the PR body. The last line must be `kapi: HEAD <sha> temiz`, and the sha must be the PR head sha. An untracked file also makes the tree `kirli`. A code change needs the full run (CI rejects `-Belge` then).
 
