@@ -10,11 +10,13 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["path", "line", "severity", "text"],
+        "required": ["path", "line", "severity", "origin", "class", "text"],
         "properties": {
           "path": { "type": "string" },
           "line": { "type": "integer" },
           "severity": { "type": "string", "enum": ["KALDI", "NOT"] },
+          "origin": { "type": "string", "enum": ["yeni", "önceden vardı"] },
+          "class": { "type": "string" },
           "text": { "type": "string" }
         }
       }
