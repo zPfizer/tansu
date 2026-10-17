@@ -1,6 +1,6 @@
 param([switch]$Belge)
 
-# Test gate. Run it from any folder. Paste the "kapi:" lines into the PR body.
+# Test gate. Run it from any folder. The PR body does not take the "kapi:" lines; CI proves the tests.
 # A command that cannot start stops the script (python, git). Native stderr is not redirected.
 $ErrorActionPreference = 'Stop'
 Set-Location (Split-Path -Parent $PSScriptRoot)
