@@ -3,17 +3,19 @@
 These steps belong to flow A (`tansu-yeni-is`). Flow B (`tansu-hata`) runs them too. Other files refer to a step as `tansu-yeni-is` "Review", `tansu-yeni-is` "Merge", and so on. Never refer to a step by its number.
 
 ## Branch
-Use one branch `pr/NN-<ad>` from `master` for each ticket. Give it its own worktree: `git worktree add ../TANSU-bNN -b pr/NN-<ad> master`. Clear the context between tickets. A worktree has no `.venv`. In a worktree, use the main venv `C:\Users\levent\Desktop\TANSU\.venv\Scripts\python.exe`. <!-- driftlint-ignore: local-only path of the main repository venv, absent in CI -->
+Use one branch for each ticket. Cut every branch from `kaynak/master`, not from local `master`. Give it its own worktree: `git worktree add ../TANSU-bNN -b pr/NN-<ad> kaynak/master`. `NN` is the next PR number (`gh pr list --state all --limit 1` gives the last one). Leave `NN` out if you have no number (`pr/<ad>`). A SessionStart hook (`kurulum/oturum_baslangic.py`) fast-forwards the main checkout on `master` to `kaynak/master`. It acts only in the main checkout, only on `master`, and only by fast-forward. Untracked files and changes under `kayit/` do not block it. Any other tracked change does. When it cannot move `master`, it prints one warning line. Clear the context between tickets. A worktree has no `.venv`. In a worktree, use the main venv `C:\Users\levent\Desktop\TANSU\.venv\Scripts\python.exe`. <!-- driftlint-ignore: local-only path of the main repository venv, absent in CI -->
 
 ## Test gate
-Run `kurulum\kapi.ps1`. It runs pytest, `ruff check .`, `ruff format --check .`, and `git diff --check kaynak/master`, and it prints `kapi:` summary lines. Run it before each commit. Everything must be green.
+Run `kurulum\kapi.ps1`. It runs pytest, `ruff check .`, `ruff format --check .`, and `git diff --check kaynak/master`, and it prints `kapi:` summary lines. Run it before each commit. Everything must be green. When `TANSU_BEKLENEN_ACIK` is unset, the gate counts the open pool notes itself, prints `kapi: acik havuz notu = <n>`, and uses that count. A variable that you set wins.
+The gate always runs the count. If the pool folder is missing, it prints `kapi: acik havuz notu = HATA` and stops with exit code 1, also when `TANSU_BEKLENEN_ACIK` is set.
+`TANSU_PY` (a full path) sets the Python of the gate. The default is the main venv. If that file is missing or the count is not a whole number, the gate prints a `kapi:` error line and stops with exit code 1. A command that cannot start stops the gate with a PowerShell error and exit code 1.
 
-After the last commit, run it again on the clean tree. This also applies after a fix commit or a merge of `master`. Paste that output into `## Gerçek veri kanıtı` of the PR body. The last line must be `kapi: HEAD <sha> temiz`, and the sha must be the PR head sha. An untracked file also makes the tree `kirli`. A code change needs the full run (CI rejects `-Belge` then).
+After the last commit, run it again on the clean tree. This also applies after a fix commit or a merge of `kaynak/master`. Paste that output into `## Gerçek veri kanıtı` of the PR body. The last line must be `kapi: HEAD <sha> temiz`, and the sha must be the PR head sha. An untracked file also makes the tree `kirli`. A code change needs the full run (CI rejects `-Belge` then).
 
-When only documents changed, `kurulum\kapi.ps1 -Belge` runs the document tests. The full run is in CI. While pool notes are open, set `TANSU_BEKLENEN_ACIK=<count>`. For a pool batch, also set `TANSU_PARTI=<batch ids>`. Do not deselect a red test.
+When only documents changed, `kurulum\kapi.ps1 -Belge` runs the document tests. The full run is in CI. For a pool batch, set `TANSU_PARTI=<batch ids>`. Do not deselect a red test.
 
 ## Review
-Merge `master` into the branch first. Then check the change by its type.
+Merge `kaynak/master` into the branch first. Then check the change by its type.
 - A change with code: run `mattpocock-skills:code-review` (a Claude subagent). Then run the Codex audit (subagent type `codex`). Add the text of the code-review skill to the auditor prompt.
 - A change to documents only (no code): run one `mattpocock-skills:code-review` pass by a Sonnet subagent on the diff. Run no Codex audit.
 
@@ -46,4 +48,4 @@ Claude merges with `gh pr merge --merge`. Levent gets only the completion note (
 ## Close
 Move the spec and the tickets of a finished job to `.scratch/arsiv/`. Only GLOSSARY and TASARIM stay for good. A session that Levent started writes the result to the brain with the `beyin` skill (Threads and a receipt). A side session follows the receipt sentence below. If a branch merged, remove its worktree with `git worktree remove <path>`. Do not use `--force`. If git refuses, stop and tell Levent. After a merge, also remove the local branch with `git branch -d <branch>` and show `git worktree list`.
 
-A side session (another session started it) writes only one receipt: `py -3 C:\Users\levent\Desktop\YONETIM\beyin\beyin.py receipt --harness claude --event-id <job> --ref "<produced file>" --summary "<text>"`. <!-- driftlint-ignore: local-only path of the brain tool, absent in CI --> `--ref` names the produced files (report, gate file). The session that started it writes Threads.
+A side session (another session started it) writes only one receipt: `py -3 C:\Users\levent\Desktop\YONETIM\beyin\beyin.py receipt --harness claude --event-id <job> --ref "<vault note>" --summary "<text>"`. <!-- driftlint-ignore: local-only path of the brain tool, absent in CI --> `--ref` is a note path inside the brain vault (for example the module card's source note or `knowledge/concepts/kod-standartlari-genel.md`). Write the output paths of the repository in `--summary`. A `--ref` outside the vault fails. The session that started it writes Threads.

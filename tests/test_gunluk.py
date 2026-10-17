@@ -13,11 +13,12 @@ import csv
 import datetime as dt
 import json
 import os
+from dataclasses import replace
 
 import pandas as pd
 import pytest
 
-from tansu import aileler, gunluk, kayit, rapor, veri
+from tansu import aileler, gunluk, kayit, motor, rapor, veri
 from tansu.kaynak import KaynakHatasi
 from tests.test_veri import SahteKaynak, satir
 
@@ -366,6 +367,36 @@ def test_kart_durumlari_ve_kapanan_kart_yalniz_kapandigi_gun_gorunur(
             assert [(k["hisse"], k["tarih"], k["durum"]) for k in kartlar] == [
                 ("XXXX", "2026-10-05", durum)
             ]
+
+
+@pytest.mark.parametrize(
+    "ayar, kurulum_var",
+    [(P, False), (replace(P, stop="kutu"), True)],
+    ids=["varsayilan_cikis", "kutu_stopu"],
+)
+def test_kartlar_ayari_ve_kurulum_bilgisini_motora_verir(
+    tmp_path, monkeypatch, ayar, kurulum_var
+):
+    # TASARIM 6 "Varyant": varsayılan olmayan ayar kendi çıkışlarıyla taranır; kutu stopunda kurulum tablosu da gider.
+    kagit_aile()
+    gelen = []
+    gercek = motor.tara
+
+    def kayitli(mumlar, sinyaller, ayar=None, kurulum=None):
+        gelen.append((ayar, kurulum is not None))
+        return gercek(mumlar, sinyaller, ayar, kurulum)
+
+    monkeypatch.setattr(motor, "tara", kayitli)
+    gunluk.gunluk(
+        TARIH,
+        tmp_path,
+        simdi=SIMDI,
+        kaynak=kaynak(),
+        semboller=["XXXX"],
+        p=ayar,
+        atr_n=2,
+    )
+    assert gelen == [(ayar, kurulum_var)]
 
 
 class Kayitli(Sayacli):

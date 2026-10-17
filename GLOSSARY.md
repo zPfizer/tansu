@@ -68,10 +68,20 @@ olduğunu söyler; sayı, formül ve işleyiş, atıf verilen bölümdedir (TASA
 | SMA | Basit hareketli ortalama: bir veri serisinin son n gününün eşit ağırlıklı ortalaması. |
 | Gerçek aralık | Bir günün fiyat aralığı, önceki kapanışa göre oluşan boşluk dahil (TASARIM §5.5). |
 | Wilder ortalaması | EMA'ya benzer ama ağırlığı daha yavaş azalan ortalama. EMA ve SMA'dan ayrıdır (TASARIM §5.5). |
-| EMA sıkışması kırılımı | Seçili EMA'lar birbirine yaklaştıktan sonra kapanışın sıkışma dönemindeki en yükseği aşması (KURALLAR §3). |
+| EMA sıkışması kırılımı | Seçili EMA'lar birbirine yaklaştıktan sonra fiyatın kırılması. Varsayılan giriş, kapanışın sıkışma dönemindeki en yükseği aşmasıdır; öbür giriş türleri varyanttır (KURALLAR §3). |
 | Sıkışma oranı | Seçili EMA'ların birbirine ne kadar yakın olduğunu ölçen oran (KURALLAR §3). |
 | Sıkışma dönemi | Sıkışma oranının eşiği aşmadığı art arda günler (KURALLAR §3). |
 | Giriş penceresi | Sıkışma dönemi bittikten sonra giriş sinyalinin oluşabileceği dönem (KURALLAR §3). |
+| Kutu | Sıkışma dönemindeki fiyat aralığı: alt sınır en düşük düşük, üst sınır en yüksek yüksektir. Tansu'nun talep bölgesi (yeşil kutu) sözüyle eşlemek YORUM'dur (KURALLAR §3). |
+| Üst kutu | `arz` girişinde, sıkışma dönemi bittiğinde kutunun üstünde duran en yakın aktif arz bölgesi (KURALLAR §3). |
+| Talep bölgesi | Fiyatın aşağıda alıcı bulması beklenen bölge. Sınırları proximal ve distal çizgidir (KURALLAR §3, `docs/kurallar/A-yapi-bolge.md`). |
+| Arz bölgesi | Fiyatın yukarıda satışla karşılaşması beklenen bölge. Sınırları proximal ve distal çizgidir (KURALLAR §3, `docs/kurallar/A-yapi-bolge.md`). |
+| Proximal ve distal çizgi | Bölgenin iki sınırı. Proximal çizgi fiyata yakın sınırdır, distal çizgi uzak sınırdır (KURALLAR §3, `docs/kurallar/A-yapi-bolge.md`). |
+| Varyant | EMA sıkışması kırılımının, temel kuraldan tek boyutu değişen sınanabilir hâli. Her varyant ayrı kural kimliği ve ayrı denemedir (KURALLAR §3, TASARIM §5.11). |
+| R/R kapısı | Hedefi olan bir sinyalin, ödülün riske oranı eşiğin altındaysa aday sayılmaması (KURALLAR §3). |
+| Momentum squeeze | Fiyatın sıkışma sırasındaki ivmesini gösteren gösterge. Tansu tanım vermez; tanımımız YORUM'dur (KURALLAR §3). |
+| ADX | Trendin ne kadar güçlü olduğunu gösteren gösterge; trendin yönünü göstermez. Gösterge teyidinde artıyor olması istenir (KURALLAR §3). |
+| Düşüş süzgeci | Sıkışma döneminin, güçlü bir düşüşten sonra gelmiyorsa sayılmaması. Varsayılan olarak kapalıdır; açık hâli bir varyanttır (KURALLAR §3). |
 | Çift rotasyonu | Bir çiftin iki hissesi arasında Z'ye göre geçiş yapmaya dayanan aile (KURALLAR §3). |
 | Bacak | İki anlamı vardır. Çiftte: iki hisseden biri; iki bacağın rolleri Y ve X'tir (TASARIM §5.6). Formasyonda: iki dönüş noktası arasındaki fiyat hareketi, ör. CD bacağı (KURALLAR §2). |
 | Geçiş | Çiftte tutulan bacağı satıp öteki bacağı almak (TASARIM §5.6). |
@@ -111,11 +121,14 @@ olduğunu söyler; sayı, formül ve işleyiş, atıf verilen bölümdedir (TASA
 | Risk paketi | Tek hisse bölmesinin boyutlama ve çıkış kuralları: işlem başı risk, pozisyon tavanı, likidite sınırı, stop ve bozulma çıkışı (TASARIM §5.5–5.6). |
 | Stop | Zararı kesme seviyesi (TASARIM §5.5). |
 | Bozulma | İki anlamı vardır. Projede: kapanışın uzun dönem ortalamasının altına inmesi, yani gün sonu stopu (TASARIM §5.5). Harmonik kaynaklarda: formasyonun geçersizleşmesi (KURALLAR §2). |
-| Hedef | Kâr hedefi, kâr alma seviyesidir; formasyon hedefi (D), harmonik kurulumun tamamlanma seviyesidir. Çift rotasyonunda hedef, geçilecek bacaktır (TASARIM §5.5–5.6, KURALLAR §2). |
+| Hedef | Kâr hedefi, kâr alma seviyesidir; formasyon hedefi (D), harmonik kurulumun tamamlanma seviyesidir. Çift rotasyonunda hedef, geçilecek bacaktır. EMA sıkışması kırılımında hedef, üstteki arz bölgesi ya da üçgen formasyonunun hedefidir (TASARIM §5.5–5.6, KURALLAR §2–3). |
 | R | Hisse başına planlanan risk tutarı (TASARIM §5.3). |
 | Planlanan risk | Stop seviyesinde çıkılacağı varsayımıyla pozisyonun tamamında planlanan kayıp tutarı (TASARIM §5.3). |
 | Fiili risk | Planlanan riskin özkaynağa oranı. |
 | Gerçekleşen kayıp | Masraf hariç, giriş ve çıkış fiyatlarından doğan kayıp tutarı (TASARIM §5.3). |
+| Yarı satış | Pozisyonun yarısının tek seferde satılması; kalan yarı öbür çıkış kurallarıyla çıkar (KURALLAR §3, TASARIM §5.5). |
+| ATR merdiveni | Fiyat girişten her ATR basamağı kadar yükseldikçe stopun yalnız yukarı çekilmesi (KURALLAR §3). |
+| Başabaş çıkışı | Fiyat belli bir R kadar ilerledikten sonra giriş fiyatına dönünce pozisyondan çıkmak (KURALLAR §3). |
 | Çift | Aralarında eşbütünleşme olan iki hisse (TASARIM §5.6). |
 | Çift payı | Çift bölmesinde bir çifte ayrılan sermaye (TASARIM §5.6). |
 | Tutuş dönemi | Çift bölmesinde bir bacağın alımından satımına geçen süre. Bu bölmede işlemin karşılığıdır (TASARIM §5.6). |

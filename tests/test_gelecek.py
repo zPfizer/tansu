@@ -4,7 +4,12 @@ Tek parametrik test: bileşen × kesim günü. Sentetik dünya (`denetim.dunya`,
 anlık görüntüde t'den sonraki fiyat satırları ve faiz değişimleri yoktur; tam görüntünün t'ye kadarki çıktısı aynı olmalı.
 Kapsam: evren, göstergeler, EMA ve çift sinyalleri, çift seçimi, likidite medyanı, faiz hizalaması (ve K2 sepeti), Tansu
 sınaması (EMA hücre işlemleri ve ileri yürüme seçimleri).
+Modül 1: yeni göstergeler (RSI, momentum squeeze, ADX, MACD, PSAR, stokastik) ve EMA kurulumu (varyant örnekleri: kutu, hedef,
+`arz` ve `ucgen` girişleri, düşüş süzgeci; arz ve talep bölgeleri) ve çıkış paketi (`motor.sinama` ile `tansu` ve `cikis_rsi70`:
+yarı satış sütunları, `Pozisyon.kar`).
 """
+
+from dataclasses import replace
 
 import numpy as np
 import pandas as pd
@@ -71,6 +76,23 @@ def gostergeler_(tam, kes_, t):
                 seri(a, s, "yuksek"), seri(a, s, "dusuk"), seri(a, s), 14
             ),
             "sikisma": lambda a: gostergeler.sikisma_orani(seri(a, s)),
+            "rsi": lambda a: gostergeler.rsi(seri(a, s), 14),
+            "momentum": lambda a: gostergeler.momentum_squeeze(
+                seri(a, s, "yuksek"), seri(a, s, "dusuk"), seri(a, s)
+            ),
+            "adx": lambda a: gostergeler.adx(
+                seri(a, s, "yuksek"), seri(a, s, "dusuk"), seri(a, s)
+            ),
+            "macd": lambda a: gostergeler.macd_histogram(seri(a, s)),
+            "psar": lambda a: gostergeler.psar(
+                seri(a, s, "yuksek"), seri(a, s, "dusuk")
+            ),
+            "stokastik_k": lambda a: gostergeler.stokastik(
+                seri(a, s, "yuksek"), seri(a, s, "dusuk"), seri(a, s)
+            )[0],
+            "stokastik_d": lambda a: gostergeler.stokastik(
+                seri(a, s, "yuksek"), seri(a, s, "dusuk"), seri(a, s)
+            )[1],
         }.items():
             pd.testing.assert_series_equal(f(tam).loc[:t], f(kes_), obj=f"{s} {ad}")
     xu = lambda a: a.fiyat.groupby("tarih")["xu100"].first()  # noqa: E731
@@ -103,6 +125,111 @@ def ema_sinyal_(tam, kes_, t):
     assert toplam > 0 or t < pd.Timestamp(
         "2014-06-01"
     )  # sınama boş değil: t öncesinde sinyal var
+
+
+def kurulum_varyantlari():
+    """Örnek varyantlar; ısınma, SMA ve sıkışma ayarı gevşek (900 günlük dünyada çok sinyal çıksın). Her biri sıkı ve kapıları gevşek (hacim, momentum, R/R yok)."""
+    ornek = {}
+    for ad in (
+        "tansu",
+        "giris_ema",
+        "giris_retest",
+        "giris_agresif",
+        "teyit_acik",
+        "teyit_trend",
+    ):
+        p = replace(
+            aileler.VARYANTLAR[ad],
+            isinma=60,
+            sma_n=50,
+            esik=0.03,
+            min_gun=2,
+            pencere=30,
+        )
+        ornek[ad] = p
+        ornek[ad + "_gevsek"] = replace(p, hacim_kat=0.0, momentum=False, rr_min=0.0)
+    # bilet 04 ve 05: yeni giriş türleri (üst kutu, üst çizgi) ve düşüş süzgeci; `tansu` temelinden tek alan (`dusus_agresif`: iki alan, `giris` ve `dusus`)
+    for ad, alan in (
+        ("giris_arz", dict(giris="arz")),
+        ("giris_ucgen", dict(giris="ucgen")),
+        ("dusus_sonrasi", dict(dusus=True)),
+        ("dusus_agresif", dict(giris="agresif", dusus=True)),
+    ):
+        p = replace(
+            aileler.VARYANTLAR["tansu"],
+            isinma=60,
+            sma_n=50,
+            esik=0.03,
+            min_gun=2,
+            pencere=30,
+            **alan,
+        )
+        ornek[ad] = p
+        ornek[ad + "_gevsek"] = replace(p, hacim_kat=0.0, momentum=False, rr_min=0.0)
+    return ornek
+
+
+def kurulum_(tam, kes_, t):
+    """EMA kurulumu (kutu, hedef; varyant örnekleri) ve arz/talep bölgeleri: t'den sonrası t öncesini değiştirmez."""
+    sinyal_sayisi = hedef_sayisi = bolge_sayisi = 0
+    varyantlar = kurulum_varyantlari()
+    for s in sorted(tam.fiyat["sembol"].unique()):
+        ft, fk = (
+            a.fiyat[a.fiyat["sembol"] == s].set_index("tarih")[
+                ["kapanis", "yuksek", "dusuk", "hacim"]
+            ]
+            for a in (tam, kes_)
+        )
+        for ad, p in varyantlar.items():
+            ktam, kkes = aileler.kurulum(ft, p), aileler.kurulum(fk, p)
+            pd.testing.assert_frame_equal(ktam[ktam.index <= t], kkes, obj=f"{s} {ad}")
+            sinyal_sayisi += len(kkes)
+            hedef_sayisi += int(kkes["hedef"].notna().sum())
+        for yon in ("arz", "talep"):
+            zt, zk = aileler.bolgeler(ft, yon), aileler.bolgeler(fk, yon)
+            zt = zt[zt["bilinen"] <= t].reset_index(drop=True)
+            # t'den sonraki bozulma t'de bilinmez; temas sayısı t'den sonraki günleri de sayar, karşılaştırılmaz
+            zt["bitis"] = zt["bitis"].where(zt["bitis"] <= t)
+            pd.testing.assert_frame_equal(
+                zt.drop(columns="temas"),
+                zk.drop(columns="temas"),
+                obj=f"{s} {yon}",
+            )
+            bolge_sayisi += len(zk)
+    # sınama boş değil: kesimde sinyal, hedef ve bölge var
+    assert sinyal_sayisi > 0 and hedef_sayisi > 0 and bolge_sayisi > 0
+
+
+def cikis_ayari(ad):
+    """Çıkış paketi varyantı; ısınma, SMA ve sıkışma ayarı gevşek, hacim, momentum ve R/R kapıları kapalı (çok işlem çıksın)."""
+    return replace(
+        aileler.VARYANTLAR[ad],
+        isinma=60,
+        sma_n=50,
+        esik=0.03,
+        min_gun=2,
+        pencere=30,
+        hacim_kat=0.0,
+        momentum=False,
+        rr_min=0.0,
+    )
+
+
+def cikis_paketi_(tam, kes_, t):
+    """Modül 1 çıkış paketi: `tansu` (kutu stopu, hedef, `atr3` yarı satışı) ve `cikis_rsi70` (`Pozisyon.kar` önşartı) ile
+    `motor.sinama` işlemleri, `yari_tarih` ve `yari_fiyat` dahil: t'den önce kapananlar kesilmişle tam görüntüde aynıdır.
+    Kesilmişte t'de veri sonu çıkışı olabilir: t'de ve sonrasında kapananlar karşılaştırılmaz."""
+    toplam = yari = 0
+    for ad in ("tansu", "cikis_rsi70"):
+        p = cikis_ayari(ad)
+        tb, kb = (
+            x[x["cikis_tarih"] < t].reset_index(drop=True)
+            for x in (motor.sinama(tam, p)[0], motor.sinama(kes_, p)[0])
+        )
+        pd.testing.assert_frame_equal(tb, kb, obj=ad, check_dtype=False)
+        toplam += len(kb)
+        yari += int(kb["yari_tarih"].notna().sum())
+    assert toplam > 0 and yari > 0  # sınama boş değil: işlem ve yarı satış var
 
 
 def cift_sinyal_(tam, kes_, t):
@@ -241,6 +368,8 @@ def tansusinama_cift_(tam, kes_, t):
         evren_,
         gostergeler_,
         ema_sinyal_,
+        kurulum_,
+        cikis_paketi_,
         cift_sinyal_,
         cift_secimi_,
         zemin_,
@@ -253,6 +382,27 @@ def tansusinama_cift_(tam, kes_, t):
 def test_t_den_sonrasi_veri_t_oncesi_ciktiyi_degistirmez(tam, bilesen, kesim):
     t = pd.Timestamp(kesim)
     bilesen(tam, kes(tam, t), t)
+
+
+def test_yari_satisli_islemin_kapandigi_gunden_sonra_kesilen_veri_islemi_degistirmez(
+    tam,
+):
+    """Çıkış paketi (TASARIM 5.12): `KESIM` günlerinde yarı satışlı işlem azdır (`tansu` 6, `cikis_rsi70` 7, `cikis_rsi50` 26; en geç 2014-12-25'te kapanır). Burada veri, yarı satışlı bir
+    işlemin kapandığı günden sonraki işlem gününde kesilir; işlem (`yari_tarih`, `yari_fiyat`, çıkış) kesilmişte aynı olmalı."""
+    toplam = 0
+    for ad in ("tansu", "cikis_rsi70", "cikis_rsi50"):
+        p = cikis_ayari(ad)
+        x = motor.sinama(tam, p)[0]
+        for _, i in x[x["yari_tarih"].notna()].head(2).iterrows():
+            t = tam.gunler[tam.gunler > i["cikis_tarih"]][0]
+            k = motor.sinama(kes(tam, t), p)[0]
+            ayni = k[
+                (k["sembol"] == i["sembol"]) & (k["giris_tarih"] == i["giris_tarih"])
+            ]
+            assert len(ayni) == 1, (ad, i["sembol"], t)
+            pd.testing.assert_series_equal(ayni.iloc[0], i, check_names=False)
+            toplam += 1
+    assert toplam == 6  # sınama boş değil: üç varyantta ikişer yarı satışlı işlem
 
 
 def _karantina_(ham, duz, olay_tarihi, son):

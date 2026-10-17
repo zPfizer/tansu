@@ -34,6 +34,7 @@ class EmaK1:
         durum = gostergeler.piyasa_durumu(xu[xu > 0])
         uye_gun = uye.groupby("sembol")["tarih"].agg(list)
         self.zincir, self.gercek, self.sayi = {}, {}, Counter()
+        self.kurulum = {}  # sembol -> gerçek sinyallerin kutu alt ve hedefi (yoksa None); rastgele giriş kutusuzdur
         self.havuz = {"a": defaultdict(list), "ek": defaultdict(list)}
         self.komsu, self.komsusuz = (
             {},
@@ -42,7 +43,7 @@ class EmaK1:
         for s in sorted(uye_gun.index):
             m = motor.mumlar(anlik, s, p, atr_n)
             f = m.dropna(subset=["kapanis"])
-            z = self.zincir[s] = motor.Zincir(m)
+            z = self.zincir[s] = motor.Zincir(m, p)
             konum = m.index.get_indexer(f.index)
             uygun = (
                 m.index.isin(uye_gun[s]) & ~z.engelli
@@ -61,6 +62,7 @@ class EmaK1:
                 for i in np.flatnonzero(maske):
                     self.havuz[tur][m.index[i]].append((s, int(i)))
             sig = aileler.sinyal(f, p)
+            self.kurulum[s] = motor.kurulum_bilgisi(f, p)
             # örtüşen iki sıkışma döneminin penceresi aynı güne sinyal verebilir: bir hisse bir günde tek sinyaldir
             gercek = sorted(
                 {
@@ -115,11 +117,12 @@ class EmaK1:
                     sec[havuz[k][0]].append(havuz[k][1])
         return {s: sorted(v) for s, v in sorted(sec.items())}
 
-    def tablo(self, secim) -> tuple:
-        """(işlem tablosu, düşen sinyal sayısı): `motor.sinama` ile aynı sütunlar."""
+    def tablo(self, secim, gercek=False) -> tuple:
+        """(işlem tablosu, düşen sinyal sayısı): `motor.sinama` ile aynı sütunlar. `gercek`: `secim` gerçek sinyallerdir,
+        kutu stopu ve hedef kullanılır; rastgele girişte kutu yoktur (`atr2` yedeği, hedef yok)."""
         kapali, sembol, dusen = [], [], 0
         for s in sorted(secim):
-            k, d = self.zincir[s].kapali(secim[s])
+            k, d = self.zincir[s].kapali(secim[s], self.kurulum[s] if gercek else None)
             kapali += k
             sembol += [s] * len(k)
             dusen += d
@@ -133,10 +136,10 @@ def ema_k1(
 ) -> dict:
     """EMA ailesi K1: gerçek kural ve `tekrar` rastgele kol (a, b, ek); p = (1 + k) / (1 + B). Aile p'si a ve b'nin büyüğü."""
     k = EmaK1(anlik, p, atr_n, uye, kirilim)
-    istatistik = lambda secim: ortalama_fazla(
-        simulator.k1_islemler(k.tablo(secim)[0], b, masraf)
+    istatistik = lambda secim, gercek_mi=False: ortalama_fazla(
+        simulator.k1_islemler(k.tablo(secim, gercek_mi)[0], b, masraf)
     )  # noqa: E731
-    gercek = istatistik(k.gercek)
+    gercek = istatistik(k.gercek, True)
     p_tur = {}
     for sira, tur in enumerate(("a", "b", "ek")):
         rng = np.random.default_rng([tohum, sira])

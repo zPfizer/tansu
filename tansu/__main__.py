@@ -1,4 +1,4 @@
-"""Komut girişi: `python -m tansu sadakat | kayit | sinama | tansu-sinama | denetim | evren-indir | sektor-indir | gunluk [tarih] [--kok veri] [--kimlik KIMLIK] [--resmi] [--son] [--isci N] [--hisse N] [--aile AILE] [--sektor-kok veri]` (TASARIM 3, 5.14)."""
+"""Komut girişi: `python -m tansu sadakat | kayit | sinama | tansu-sinama | denetim | evren-indir | sektor-indir | gunluk [tarih] [--kok veri] [--kimlik KIMLIK] [--resmi] [--son] [--varyant AD] [--isci N] [--hisse N] [--aile AILE] [--sektor-kok veri]` (TASARIM 3, 5.14; `--varyant` yalnız kayit ve sinama, varsayılan bugun)."""
 
 import argparse
 import datetime as dt
@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 
 from tansu import (
+    aileler,
     ciftbolme,
     denetim,
     evren,
@@ -164,6 +165,12 @@ def main(argv=None) -> int:
         help="denetim: her tekrarda K1 tekrarı B",
     )
     ap.add_argument(
+        "--varyant",
+        choices=list(aileler.VARYANTLAR),
+        default="bugun",
+        help="kayit ve sinama: EMA ailesi varyantı (KURALLAR §3 Modül 1)",
+    )
+    ap.add_argument(
         "--isci", type=int, help="tansu-sinama: işçi sayısı (varsayılan: makineye göre)"
     )
     ap.add_argument("--hisse", type=int, help="tansu-sinama: adına göre ilk N hisse")
@@ -178,7 +185,7 @@ def main(argv=None) -> int:
         help="tansu-sinama: günlük anlık görüntüde sektör yoksa sektörün okunacağı kök",
     )
     a = ap.parse_args(argv)
-    kok = Path(a.kok)
+    kok, p = Path(a.kok), aileler.VARYANTLAR[a.varyant]
     try:
         if a.komut == "denetim":
             return _denetim(a.n, a.tekrar)
@@ -191,13 +198,14 @@ def main(argv=None) -> int:
         elif a.komut == "sektor-indir":
             print(_sektor_indir(kok, a.kimlik or _en_yeni(kok)))
         elif a.komut == "kayit":
-            print("Kural kaydı yazıldı:", kayit.kayitla()["kural_id"])
+            print("Kural kaydı yazıldı:", kayit.kayitla(p)["kural_id"])
         elif a.komut == "sinama":
             s = kayit.kosu(
                 a.kimlik or _en_yeni(kok),
                 kok,
+                p=p,
                 resmi=a.resmi,
-                tekrar=kayit.tekrar_sayisi(a.son),
+                tekrar=kayit.tekrar_sayisi(a.son, p),
                 son=a.son,
             )
             print(

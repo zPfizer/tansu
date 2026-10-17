@@ -157,6 +157,10 @@ Genel bulgu: Tansu bazı notlarda giriş, stop ve hedefi birlikte verir: `gorsel
 - Tansu'nun kanıtı: yok (DOAS: sert yükselişin supply'da yorulduğu örnek; fiyat sonra demand'e düştü).
 - Günlük veriyle uygulanabilir: bölge tespiti evet (kural 7-9'a bağlı); D.Touch/D.Teyit tanımı YORUM gerektirir.
 - Kaynak güveni: tablo birinci el; semantik düşük.
+- Modül 1'de kullanımı: KURALLAR §3 (hedef: fiyatın üstündeki arz bölgesi; çıktı tablosunda temas ve teyit sütunları, ikisi de YORUM).
+- Ek kaynaklar (X arşivi, 16.10):
+  - `tweet-altin-aktif-talep-arz-bolgesi-tablosu-2088348115099095392` — ALTIN (GC=F) bölge tablosu (14.08.2026): "hedefimiz 4631 call duvarı aktif arz alanı ise 4677-4775" (Ham). Görsel (görsel, açıldı): başlık "GC=F - Demand & Supply Bölgesi Analizi"; tablo sütunları "Son Fiyat | Max | Min | Aktif Demand | D.Touch | D.Teyit | Aktif Supply | S.Touch | S.Teyit"; tek veri satırı "4,432.00 | 5,586.20 | 3,310.10 | 3,896.08 - 4,001.30 | 6 | 2025-11-13 | 4,677.60 - 4,775.63 | 1 | 2026-05-27" (görsel metni). Ham'daki aktif arz alanı ile tablodaki Aktif Supply aynı aralıktır. Grafikte mavi, sarı, kırmızı ve gri kutular vardır; renklerin anlamı yazılı değil; kutunun başlangıcı ile D.Teyit ve S.Teyit tarihi arasındaki ilişki görselden okunamıyor. Parametre: D.Touch = 6 ve S.Touch = 1 (görsel metni; temas tanımı yok, YORUM); teyit tarihi D.Teyit = 2025-11-13 ve S.Teyit = 2026-05-27 (görsel metni; tanım yok, YORUM)
+  - `tweet-arz-talep-bolgesi-hedef-2085799233915912673` — DOAS örneği (07.08.2026): "üsteki supply alanına kadar yolu açık." ve "Aşağısı baya sağlam talep alanlerı" (Ham). Görsel (görsel, açıldı): fiyatın üstünde kırmızı arz kutuları, altında yeşil talep kutuları, EMA çizgileri; yazı yalnız yapı etiketleridir: "HH", "LH", "BOS", "HH", "HL", "LL", "BOS" (görsel metni). Tablo, sayı ve bölge sınırı yok. Parametre: hedef = fiyatın üstündeki supply alanı (Ham; birden çok arz kutusu varken hangisi olduğu yazılı değil, YORUM: en yakın)
 
 ---
 
@@ -166,6 +170,7 @@ Genel bulgu: Tansu bazı notlarda giriş, stop ve hedefi birlikte verir: `gorsel
 - Tanım: arz bölgesi: distal = max(high[base]); proximal = min(min(open,close)[base]). Talepte proximal/giriş ve distal/stop ilişkisi eğitim şemasında vardır (Eğitim, G15/g1). YORUM: distal = min(low[base]), proximal = max(max(open,close)[base]); base veya leg-out seçiminin evrensel formülü verilmez.
 - Parametreler: base seçimi (kaç mum, gövde/range oranı) YOK; YORUM.
 - Giriş: proximal çizgi; stop = distal çizgi (Eğitim, G15/g1: giriş/proximal ve distal/stop ilişkisi).
+- Modül 1'de kullanımı: KURALLAR §3 (arz ve talep bölgesinin proximal ve distal çizgisi; çizgi seçimi YORUM).
 - Tansu'nun kanıtı: yok. Günlük veriyle: evet. Kaynak güveni: diyagram net ama Tansu'ya atfı doğrulanmadı; Ham: "Distal line ve proximal line'ı kavrarsak bu işişn %50'si biter, kalan %50'si de taramasını anlayabilmek".
 
 ---
@@ -176,6 +181,7 @@ Genel bulgu: Tansu bazı notlarda giriş, stop ve hedefi birlikte verir: `gorsel
 - Tanım: yükselişte leg-in (yeşil büyük mum) -> 1+ küçük base mumu (renk önemli değil) -> leg-out (büyük yeşil). Eğitim şemasında proximal = giriş; distal = stop, base veya leg-out dibindedir (Eğitim, G15/g1). YORUM: proximal base üst gövde seviyesi civarı; distal base low veya leg-out low'un küçüğü; evrensel seçim formülü açık değildir.
 - Parametreler: base mum sayısı, "küçük" gövde eşiği, leg-out büyüklüğü: yok (YORUM).
 - Giriş / stop: görselde var (proximal/entry, distal/stop); hedef yok. Not'un base kapıları listesi Claude önerisidir.
+- Modül 1'de kullanımı: KURALLAR §3 (RBR yapısı ayrıca aranmaz; bölge sponsor mumdan kurulur).
 - Kanıt yok. Günlük veriyle evet. Güven: ders diyagramı; Ham'da yazar yok (yalnız görsel); genel eğitim materyali.
 
 ---
@@ -185,6 +191,7 @@ Genel bulgu: Tansu bazı notlarda giriş, stop ve hedefi birlikte verir: `gorsel
 - Tansu'nun ifadesi: tweet (Ham): demand bölgesinin en düşük fiyatı `zone_low`; oluşum sonrası ilk mum `close < zone_low` (veya daha katı: `low < zone_low`) ise kutu o tarihte biter. Görselde kırmızı ok, gri kutunun kırılım tarihinde bittiği yeri gösteriyor (birinci el).
 - Tanım: oluşum sonrası ilk `Close < zone_low` mumunda kutu biter (Ham, `gorsel-paket-13`:21). `Low < zone_low` daha katı ayrı seçenektir; aracın hangi seçeneği kullandığı açık değildir.
 - Parametreler: buffer yok. YORUM: 0.
+- Modül 1'de kullanımı: KURALLAR §3 (bölge bozulması: talepte ilk kapanış distal çizginin altında, arzda aynası).
 - Giriş/stop/hedef: yok (bozulma kuralı olarak stop mantığına doğrudan bağlanabilir). Kanıt yok. Günlük evet. Güven: orta.
 
 ---
@@ -265,6 +272,9 @@ Genel bulgu: Tansu bazı notlarda giriş, stop ve hedefi birlikte verir: `gorsel
 - Tanım: -18: zone_upper = max(open,close) of highest-high candle; zone_lower = min(low). -44/-41: uzun yatay kutu başlangıcı Point A, üst bandın aşıldığı Point B; -44'te sarı MA benzeri çizgi ve mavi noktalı trailing/zarf var (kimliği yok).
 - Parametreler: tümü yok (filtre, süre, kutu yüksekliği); YORUM: süre ve ATR-normalize yükseklik.
 - Giriş/stop/hedef: yok. Kanıt: seçilmiş; -41 hipotez ("uzun konsolidasyon -> güçlü kırılım") test edilmemiş. Günlük veriyle: evet (kural yazılabilir) ama gizli filtre kopyalanamaz. Güven: düşük.
+- Modül 1'de kullanımı: KURALLAR §3 (kutu sınırı: alt sınır en düşük mumun fitil ucu; üst sınır varsayılanda bizim seçimimiz, gün yüksekliği, YORUM; `kutu_govde` varyantında gövde ucu).
+- Ek kaynaklar (X arşivi, 16.10):
+  - `tweet-yatay-konsolidasyon-7-30-gun-yuzde10-1939569795696922684` — Yatay kanal (konsolidasyon) anlatımı ve tarama kodu (30.06.2025). Stop: "stop-loss seviyelerini bu bandın hemen dışına koymak rasyonel bir risk yönetimidir." (Ham). Giriş: "Kanalın yukarısı hacimle kırılırsa alım" (Ham). Görsel (görsel, açıldı): "AKMGY.IS | 30 gün yatay (183.30 - 200.00) | Başlangıç idx: 588" ve "AKMGY.IS: 30 gün boyunca yatay kanal, % değişim: 9.11% (2025-05-14 ~ 2025-06-27)" (görsel metni). Parametre: kanal = son 2 ayda en az 7 en fazla 30 gün boyunca %10'dan fazla hareket etmeyen bölge (Ham); stop mesafesi = bandın hemen dışı, tampon sayısı yok (Ham)
 
 ---
 

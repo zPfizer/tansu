@@ -47,6 +47,7 @@ Görsel kökü: `...\assets\<klasör>\`. Not dosyaları kökte. Aşağıda "gp-N
 - Kanıt: tek KRDMD örneği, seçilmiş pozitif. Sistematik tablo yok. Ratio sıkışma boyunca ~0.5-1, sonra %10+ (görsel okuması).
 - Günlük bedava veriyle uygulanabilir mi: EVET (sıkışma dedektörü); giriş kuralı yok. Parametreler (4 EMA, %1.2, 3 gün) ve KURALLAR §3'ün seçtiği oran formülü günlük kapanışla hesaplanır (bilet 04, 14.10).
 - Kaynak güveni: parametreler birinci el; giriş yok; ratio formülü kaynakta yok (YORUM; KRDMD'de sadakatle eşleşti).
+- Modül 1'de kullanımı: KURALLAR §3 (sıkışma dönemi, EMA setleri, giriş penceresi; EMA setleri varyantlardır).
 - Ek kaynaklar (X arşivi, 16.10):
   - `tweet-ema-sikisma-tarama-1996662869107134897` — Aynı sıkışma dedektörü farklı EMA setiyle (PAPIL): başlık "EMA Sıkışma Analizi (Sıkışma: %0.03)", "En Sıkışık An (%0.03)" işareti (görsel, açıldı). Tansu: "sıkışmayı yakalayın bakın keyfinize." (Ham). Tolerans, süre ve pencere görselde yok. Parametre: EMA seti (PAPIL örneği) = 10/20/50; en sıkışık an oranı = %0,03 (görsel, açıldı)
 
@@ -61,6 +62,7 @@ Görsel kökü: `...\assets\<klasör>\`. Not dosyaları kökte. Aşağıda "gp-N
 - Kanıt: tek örnek, tek gün; sonuç beyanı yok.
 - Uygulanabilir mi: HAYIR (özel parametre, gizli). Fikir olarak Kural 1 ile birleştirilebilir.
 - Güven: görsel birinci el, kural gizli.
+- Modül 1'de kullanımı: KURALLAR §3 (momentum squeeze süzgeci; Pre Signal ayrıca kodlanmaz).
 - Ek kaynaklar (X arşivi, 16.10):
   - `tweet-ema-sikisma-momentum-conflict-2045457969215631398` — BULL/BEAR/CONFLICT sayacının mantığı (YORUM: aynı araç): "EMA sıkışması bull sinyal aldınız ama momentum squeeze neg ve negatif büyüyor" "O zaman burada conflict sinyal vardır, bull yönde aksiyon alınmaz" (Ham, 18.04.2026; iki satır). Momentum squeeze negatif ve büyüyorsa EMA sıkışma alımı yok; araç adı ve formül yok. Parametre: CONFLICT = EMA sıkışması bull yönlü iken momentum squeeze negatif ve büyüyor; bu durumda bull aksiyon yok (Ham; ICBCT sayacıyla eşleşme YORUM; momentum squeeze göstergesi ve eşiği yok)
 
@@ -73,6 +75,9 @@ Görsel kökü: `...\assets\<klasör>\`. Not dosyaları kökte. Aşağıda "gp-N
 - Kanıt: tek seçilmiş örnek; sembol/periyot yok; sağ uçta ikinci sıkışma (karar bekliyor).
 - Uygulanabilir mi: KISMEN. EMA kısmı kolay; demand bölgesi tanımı ayrı kural ailesi (A grubu). Eşikler Tansu'dan gelmiyor.
 - Güven: Ham (kural metni birinci el); görsel etiketsiz.
+- Modül 1'de kullanımı: KURALLAR §3 (kutu, giriş türleri, kutu stopu, arz bölgesi hedefi).
+- Ek kaynaklar (X arşivi, 16.10):
+  - `tweet-ema-sikismasi-talep-bolgesi-kirilim-2002087132089770127` — Aynı metin (gp-106), Tansu'nun kendi X gönderisi olarak (19.12.2025; görsel metni yok; bölümdeki yazarsız Ham notu bu gönderi için geçerli değil). Güvenli giriş: "Alım sinyali, bu mumun kapanışıdır veya bu mumun ardından gelen küçük geri çekilmedir (Retest)." (Ham). Agresif giriş: "EMA'lar hala sıkışıkken, fiyat talep bölgesinin alt sınırına değdiğinde alım yapmak." (Ham). Stop: "Stop noktası, EMA sıkışmasının olduğu Talep Bölgesinin (Yeşil Kutu) hemen altı olmalıdır." (Ham). Hedef: "İlk hedef, grafiğin sağ üstünde gördüğün Kırmızı Bölge (Supply/Arz) alanıdır." (Ham). Parametre: EMA seti = 5-8-13 ("Ben 5-8-13 kullandım." Ham; Ham'da ayrıca "örneğin EMA 20, 50, 100" geçer); bölge sınırı, "güçlü" ve "gövdesi uzun" ölçüsü ve sayısal stop tamponu yok (Ham)
 
 ## 4. EMA5/8/13 dizilimi + yükselen destek tepkisi / retest (AKSGY, gp-117, gp-103, gp-64)
 
@@ -1287,6 +1292,11 @@ Görsel kökü: `...\assets\<klasör>\`. Not dosyaları kökte. Aşağıda "gp-N
 - Tansu'nun kanıtı: yok. Seçilmiş örnek grafikleri; AKSUE'de sıkışmadan sonra fiyat 14'ten 18-20 bandına çıkmıştır (görsel, açıldı; sonuç ölçülmemiş). Kural yeniden üretilebilir bir sistem değildir.
 - Günlük bedava veriyle uygulanabilir mi: evet (EMA, SAR, MACD, hacim günlük OHLCV'dendir). Giriş cümlesi kodlanabilir, eşikler varsayım gerektirir; trend çizgisi ve stokastik tanımsızdır.
 - Kaynak güveni: Ham ve görsel birinci el; kural sözlü, eşiksiz, çıkışsız: orta-düşük. Hazırlık K.
+- Modül 1'de kullanımı: KURALLAR §3 (hacim süzgeci, gösterge ve trend teyitleri, üçgen hedefi).
+- Ek kaynaklar (X arşivi, 16.10):
+  - `tweet-qullamaggie-tarzi-hacimli-breakout-tarama-1979546907505545421` — Okur sorusuna cevap (18.10.2025); genel kırılım kuralı, EMA sıkışmasına özel değil: "Breakout anında hacmin ortalamanın en az 2-3 katı olması lazım." (Ham). Kırılma kapanışa bakar: "Gün içi kırılma yetmez, kapanış o seviyenin üstünde olmalı." (Ham). Parametre: hacim eşiği = hacim ortalamasının en az 2-3 katı (Ham; ortalamanın penceresi ve türü yok); kırılım ölçüsü = kapanış, gün içi değil (Ham)
+  - `tweet-ema-sikismasi-ucgen-kirilim-hacim-1954300245707497649` — ECILC örneği (09.08.2025): üç şey birlikte, "üssel ortalama sıkışması, simetrik üçgen sıkışması ve hacimle teyit" (Ham). Hacim: "Kırılma barında hacim, alt penceredeki ortalama çizgisinin üzerine çıkıyor" (Ham). Hedef: "hedefi de üçgenin taban yüksekliğini yukarı projekte ederek düşünmek mantıklıdır." (Ham). Görsel (görsel, açıldı): "ECILC | breakout: 2025-08-07", EMA50, EMA100, EMA200 (görsel metni). Parametre: EMA seti = 50/100/200 (Ham ve görsel metni); hedef = üçgenin taban yüksekliği yukarı projekte edilir (Ham; "taban yüksekliği"nin ölçüsü ve projeksiyonun başladığı fiyat yok, YORUM)
+  - `tweet-ema-sikisma-yukselen-ucgen-tarama-1952086678639669635` — Yükselen üçgen taraması adımları (03.08.2025; THYAO.IS görseli): "kısa ve orta vadeli hareketli ortalamalar (örneğin 10 ve 20 günlük EMA) birbirine yakınsa" sıkışma bölgesidir; "En az iki tane birbirine yakın tepeler (yatay direnç seviyesi) ve üç veya daha fazla yükselen dip aranır." ve "Eğer tepeler sabit (yani birbirine çok yakın) ve dipler artıyorsa, bu bir yükselen üçgen formasyonudur." (Ham). Görsel başlığı: "THYAO.IS - Yükselen Üçgen Bölgeleri" (görsel metni). Parametre: tepe sayısı ≥ 2, dip sayısı ≥ 3 (Ham); "birbirine yakın" ölçüsü ve zaman dilimi yok ("belirlenen zaman dilimleri", Ham; YORUM)
 
 ## 63. EMA12'nin EMA144 ve EMA169 tünelini yukarı kesmesi: giriş taraması ve EMA13 > 144 > 169 dizilim taraması
 
