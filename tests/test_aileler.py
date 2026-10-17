@@ -633,7 +633,7 @@ def test_talep_bolgesi_olusum_bilinen_gun_bozulma_ve_temas():
 
 def test_varyantlar_24_ad_temelden_tek_boyut_degisir():
     # Bilet 06 (KURALLAR §3 "Modül 1" Varyantlar, 667a0fd): 20 varyanta `giris_arz`, `giris_ucgen`, `dusus_sonrasi` eklendi.
-    # Bilet 07 (Codex tur 1): `ema_20_50_100` eklendi, 24 varyant.
+    # KURALLAR §3 "Modül 1" Varyantlar tablosu 24 ad sayar; `ema_20_50_100` yalnız periyotları değiştirir.
     temel = aileler.VARYANTLAR["tansu"]
     assert temel == Parametre(
         periyotlar=(20, 50, 100, 200),
@@ -978,11 +978,16 @@ def test_gosterge_teyidi_momentum_ve_adx_artisi_da_ister(
 
 
 def test_parametre_dusus_varsayilani_kapali_agresifle_hata_vermez():
-    # Varsayılan kural değişmez (dusus kapalı). KURALLAR §3 Modül 1 Düşüş (fa74ec1): agresif girişte dönem başı t-1'de biten
+    # Varsayılan kural değişmez (dusus kapalı). KURALLAR §3 Modül 1 Düşüş: agresif girişte dönem başı t-1'de biten
     # koşunun ilk günüdür; birleşim parametre hatası vermez.
     assert Parametre().dusus is False
     assert aileler.VARYANTLAR["tansu"].dusus is False
-    assert Parametre(giris="agresif", dusus=True).dusus is True
+    # Parametre dikişi: birleşim kurulur ve küçük seride `kurulum` hatasız bir tablo verir (sinyal değerleri aşağıdaki testlerde).
+    f = _mumlar([100.0] * 10)
+    assert isinstance(
+        aileler.kurulum(f, Parametre(giris="agresif", dusus=True, **DUSUS)),
+        pd.DataFrame,
+    )
 
 
 def _dusus_cercevesi(onceki, sonra, son):
@@ -1043,7 +1048,7 @@ def test_dusus_t_den_sonraki_gunler_t_oncesi_karari_degistirmez():
         pd.testing.assert_frame_equal(tam[tam.index <= f.index[n - 1]], kesik)
 
 
-# --- Modül 1 sürüm 2, bilet 08: düşüş süzgeci agresif girişte (KURALLAR §3 Modül 1 Düşüş, fa74ec1) ---
+# --- Düşüş süzgeci agresif girişte (KURALLAR §3 Modül 1 Düşüş) ---
 
 
 def _dusus_agresif_cercevesi(onceki, dusuk_26):
@@ -1106,7 +1111,7 @@ def test_dusus_donem_basinda_atr_nan_ise_donem_sayilmaz(monkeypatch):
     assert _gunler(f, Parametre(dusus=True, **DUSUS)) == []
 
 
-# --- Modül 1 sürüm 2, bilet 10: düşüş süzgeci sınırları (TDD yeniden koşusu boşlukları; davranış belgede var) ---
+# --- Düşüş süzgeci sınırları: eşik eşitliği, pencere kenarları, ATR günü (KURALLAR §3 Modül 1 Düşüş) ---
 
 
 def _atr_ver(monkeypatch, f, atr):
@@ -1185,7 +1190,7 @@ def _dusus_agresif_sinir_cercevesi(gun, yuksek):
     return _mumlar(kapanis, yuksek=yuk)
 
 
-# Agresif giriş, aynı yardımcı (`dusus_yok`): `DUSUS` ayarı; gün 22'de sıçrama 96 -> 100: EMA2 gün 22 = 96 + 4 * 2/3 = 98,667, oran 0,0135 > eşik;
+# Agresif giriş, aynı yardımcı (`donem_elenir`): `DUSUS` ayarı; gün 22'de sıçrama 96 -> 100: EMA2 gün 22 = 96 + 4 * 2/3 = 98,667, oran 0,0135 > eşik;
 # gün 23: EMA2 = 100 - 4/9 = 99,556, oran 0,00446 <= 0,005 -> koşu başı gün 23; t = 26 (koşu 23-25, 3 gün); gün 26 düşük 99: kutu alt 99.
 # ATR14 elle sabit 2: eşik = 99 + 3 * 2 = 105. Pencere = gün 3-22 (23 - 20 = 3). Fitil yüksek 105 = eşik: gün 3 ilk gün -> sayılır;
 # gün 2 pencerenin dışında -> sayılmaz; gün 22 son gün -> sayılır; gün 23 koşu başı günü dışında -> sayılmaz.
@@ -1201,6 +1206,40 @@ def test_dusus_agresif_giriste_pencere_kosu_basindan_onceki_tam_20_gun(
     f = _dusus_agresif_sinir_cercevesi(gun, 105.0)
     _atr_ver(monkeypatch, f, np.full(len(f), 2.0))
     assert _gunler(f, Parametre(giris="agresif", dusus=True, **DUSUS)) == beklenen
+
+
+# Karşı durum: agresif girişte koşu başında ATR14 hesaplanamıyorsa (NaN) süzgeç hesaplanamaz ve sinyal düşer (KURALLAR §3 Modül 1 Düşüş).
+# Çerçeve "dusus-30" (agresif): ATR varken (3,659) sinyal gün 28 kalır (99 + 3 * 3,659 = 109,98 <= 131); `dusus` kapalıyken ATR NaN
+# olsa da sinyaller [3, 28] aynıdır (ATR yalnız süzgeçte kullanılır); `dusus` açık ve ATR NaN: karşılaştırma yanlış, sinyal yok.
+def test_dusus_agresif_giriste_kosu_basinda_atr_nan_ise_sinyal_duser(monkeypatch):
+    f = _dusus_agresif_cercevesi(130.0, 99.0)
+    agresif = Parametre(giris="agresif", dusus=True, **DUSUS)
+    assert _gunler(f, agresif) == [28]
+    _atr_ver(monkeypatch, f, np.full(len(f), np.nan))
+    assert _gunler(f, Parametre(giris="agresif", dusus=False, **DUSUS)) == [3, 28]
+    assert _gunler(f, agresif) == []
+
+
+# Karşı durum: dönem başı tam 20. gün (konum 20) ilk günüdür ki 20 günlük pencere dolu (gün 0-19): süzgeç hesaplanır, dönem eksik gün
+# yüzünden düşmez; konum 19'da pencere 19 gün olur, süzgeç hesaplanamaz ve dönem sayılmaz (KURALLAR §3 Modül 1 Düşüş).
+# Çerçeve: gün 0-(a-1) kapanış 130, gün a-39 kapanış 100, gün 40-42 kapanış 103; yüksek = kapanış + 1, düşük = kapanış - 1.
+# Atlama J = 30 (130 -> 100) gün a'da: EMA2 gün a+k-1 = 100 + 30/3^k; k = 4: 30/81 = 0,370, oran 0,00369 <= 0,005 (k = 3: 30/27 = 1,11,
+# oran 0,011 > eşik) -> dönem başı a + 3. a = 17 -> 20; a = 16 -> 19. Kutu alt 99 (dönem düşükleri 99), kutu üstü 101; ATR14 elle sabit 2:
+# eşik 99 + 3 * 2 = 105; dönem başından önceki günlerde yüksek 131 >= 105. Gün 40 kapanış 103 > 101 -> sinyal gün 40.
+# (Gün 0-(a-1) düz dönemi: kapanış 130'dan sonra 100'e düşer, kutu üstünü geçmez, sinyal yok; dönem başı 0 < 20 de sayılmaz.)
+@pytest.mark.parametrize(
+    "atlama, beklenen",
+    [(17, [40]), (16, [])],
+    ids=["donem-basi-20", "donem-basi-19"],
+)
+def test_dusus_donem_basi_tam_20_gunden_baslar_19da_sayilmaz(
+    monkeypatch, atlama, beklenen
+):
+    kapanis = [130.0] * atlama + [100.0] * (40 - atlama) + [103.0] * 3
+    f = _mumlar(kapanis)
+    _atr_ver(monkeypatch, f, np.full(len(f), 2.0))
+    assert _gunler(f, Parametre(dusus=False, **DUSUS)) == [40]
+    assert _gunler(f, Parametre(dusus=True, **DUSUS)) == beklenen
 
 
 def _arz_secim_cercevesi():

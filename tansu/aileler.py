@@ -330,8 +330,9 @@ def kurulum(f: pd.DataFrame, p: Parametre = Parametre()) -> pd.DataFrame:
             kap[i] > stop and (hedef - kap[i]) / (kap[i] - stop) >= p.rr_min
         ), hedef
 
-    def dusus_yok(bas, alt):
-        """`dusus` açıkken güçlü düşüşten sonra gelmeyen dönem sayılmaz: dönem başından (`bas`) önceki 20 günün en yüksek yükseği < kutu alt + 3 × ATR14 (dönem başı günü), ya da süzgeç hesaplanamıyor (yalnız `bas`'tan önceki günler)."""
+    def donem_elenir(bas, alt):
+        """True: `dusus` açık ve güçlü düşüş şartı yok ya da hesaplanamıyor, dönem sayılmaz.
+        Şart: `bas`'tan önceki 20 günün en yüksek yükseği >= alt + 3 × ATR14[bas] (KURALLAR §3 Modül 1 Düşüş)."""
         return p.dusus and not (
             bas >= DUSUS_GUN
             and yuk[bas - DUSUS_GUN : bas].max() >= alt + DUSUS_ATR * atr[bas]
@@ -346,7 +347,7 @@ def kurulum(f: pd.DataFrame, p: Parametre = Parametre()) -> pd.DataFrame:
                 continue
             if not (dus[t] <= dus[bas:t].min() <= kap[t]) or not aday(t, hacim=False):
                 continue
-            if dusus_yok(bas, dus[t]):  # agresifte kutu alt: koşu + t kutusunun altı
+            if donem_elenir(bas, dus[t]):  # agresifte kutu alt: koşu + t kutusunun altı
                 continue
             ucgen = (
                 _ucgen_hedef(yuk[bas:t], dus[bas:t]) if p.hedef == "tansu" else np.nan
@@ -361,7 +362,7 @@ def kurulum(f: pd.DataFrame, p: Parametre = Parametre()) -> pd.DataFrame:
         for d in gostergeler.sikisma_donemleri(oran, p.esik, p.min_gun):
             bas, bit = f.index.get_loc(d["bas"]), f.index.get_loc(d["bit"])
             ust, alt = ust_bul(bas, bit + 1), dus[bas : bit + 1].min()
-            if dusus_yok(bas, alt):
+            if donem_elenir(bas, alt):
                 continue
             ucgen = (
                 _ucgen_hedef(yuk[bas : bit + 1], dus[bas : bit + 1])

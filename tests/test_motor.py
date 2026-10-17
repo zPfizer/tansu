@@ -208,7 +208,7 @@ SENARYO = {
 
 
 def _mumlar(satirlar, atr):
-    df = pd.DataFrame(satirlar, index=GUNLER[: len(satirlar)])
+    df = pd.DataFrame(satirlar, index=pd.bdate_range(GUNLER[0], periods=len(satirlar)))
     df["atr"] = float(atr)
     for ad, varsayilan in (
         ("islem", True),
@@ -518,8 +518,8 @@ def _kurulum(alt=float("nan"), hedef=float("nan")):
     return pd.DataFrame({"kutu_alt": [alt], "hedef": [hedef]}, index=GUNLER[[0]])
 
 
-def _ozet(satirlar, ayar, kurulum=None):
-    t, dusen = motor.islemler(_mumlar(satirlar, 2), GUNLER[[0]], ayar, kurulum)
+def _ozet(satirlar, ayar, kurulum=None, atr=2):
+    t, dusen = motor.islemler(_mumlar(satirlar, atr), GUNLER[[0]], ayar, kurulum)
     assert dusen == 0 and len(t) == 1
     x = t.iloc[0]
     return (
@@ -1018,7 +1018,7 @@ def test_sinama_modul_1_varyanti_kutu_stopu_ve_hedef_cikisi():
     assert t.planlanan_risk == pytest.approx(13.0, abs=1e-9)
 
 
-# Bilet 06 ve 07: KURALLAR §3 "Modül 1" Varyantlar tablosunun 24 adı (literal). Her varyant, sentetik dünyada (8 hisse, 700 gün; ısınma,
+# KURALLAR §3 "Modül 1" Varyantlar tablosunun 24 adı (literal). Her varyant, sentetik dünyada (8 hisse, 700 gün; ısınma,
 # SMA ve sıkışma ayarı gevşek) motordan hatasız geçer: bir kez kendi kapılarıyla, bir kez kapılar (hacim, momentum, R/R) gevşekken.
 # Her koşu motor tablosunun sütunlarını verir; çıkış nedenleri tanımlı kümededir; fiyatlar sonlu ve pozitiftir. Bütün koşuların
 # TOPLAM işlem sayısı sıfırdan büyüktür (sınama boş değil); tek bir varyant boş olabilir (`giris_ucgen` bu dünyada işlem üretmez).
@@ -1244,7 +1244,7 @@ def test_dip_etkinligi_tam_esikte_kayan_nokta_yuzunden_kacmaz():
 @pytest.mark.parametrize(
     "yuksek, beklenen",
     [
-        # Bilet 07 (Codex tur 1; KURALLAR §3 ATR merdiveni): ATR_sinyal = 0 ise n tanımsızdır, merdiven basamağı yoktur.
+        # KURALLAR §3 ATR merdiveni: ATR_sinyal = 0 ise n tanımsızdır, merdiven basamağı yoktur.
         # Kutu alt 95 -> ilk stop 95, giriş 100, R = 5; başabaş eşiği 100 + 1,5 * 5 = 107,5. Gün 2 yüksek 105 < 107,5:
         # stop 95 kalır; gün 3 düşük 99,5 > 95; veri sonu kapanışı 101. Risk 5, kayıp max(0, 100 - 101) = 0.
         (105, (1, 100, 3, 101, "veri_sonu", 5, 0)),
@@ -1259,20 +1259,42 @@ def test_atr_sifirken_merdiven_basamagi_yok_motor_cokmez(yuksek, beklenen):
         r(101, yuksek, 100.5, 104, onceki_dusuk=0),
         r(102, 103, 99.5, 101, onceki_dusuk=0),
     ]
-    t, dusen = motor.islemler(
-        _mumlar(satirlar, 0),
-        GUNLER[[0]],
-        Parametre(stop="kutu", cikis="dip"),
-        _kurulum(95.0),
+    assert _ozet(
+        satirlar, Parametre(stop="kutu", cikis="dip"), _kurulum(95.0), atr=0
+    ) == _ak(beklenen)
+
+
+DUZ = dict(periyotlar=(1, 2), esik=0.005, min_gun=3, pencere=3, isinma=15, sma_n=2)
+
+
+def test_duz_seride_agresif_sinyal_atr_sifir_motor_merdiven_basamagi_yok():
+    # KURALLAR §3 ATR merdiveni, düz seri: 15 gün kapanış = yüksek = düşük = 100 (gerçek aralık 0, ATR14 gün 13'ten 0). Isınma 15 ->
+    # agresif sinyal ilk kez gün 14'te (koşu gün 0'dan beri; `kurulum` ATR14'ü hep 0 görür). Motor: giriş günü 15 AOF 100, ATR_sinyal 0
+    # -> ilk stop 100 - 2 * 0 = 100. Gün 15 düşük 101 > 100 (açık kalır). Gün 16 yüksek 110: ATR 0 olmasa n = ⌊10 / ATR⌋ olurdu;
+    # n tanımsızdır, basamak yok, stop 100 kalır (başabaş eşiği 100 + 1,5 * 0 = 100, stop = max(100, 100)). Gün 17 düşük 99 <= 100,
+    # AOF 100,5: dolum min(100, 100,5) = 100, neden stop. Risk 100 - 100 = 0, kayıp 0.
+    satirlar = (
+        [r(100, 100, 100, 100)] * 15
+        + [r(100, 102, 101, 101, onceki_dusuk=0)]
+        + [r(105, 110, 104, 108, onceki_dusuk=0)]
+        + [r(100.5, 101, 99, 100, onceki_dusuk=104)]
     )
+    m = _mumlar(satirlar, 0)
+    ayar = Parametre(giris="agresif", cikis="dip", **DUZ)
+    k = aileler.kurulum(m.iloc[:15].assign(hacim=100.0), ayar)
+    assert list(k.index) == [
+        m.index[14]
+    ]  # düz seride tek agresif sinyal, ATR14 = 0 günü
+    assert gostergeler.atr(m["yuksek"], m["dusuk"], m["kapanis"]).iloc[14] == 0
+    t, dusen = motor.islemler(m, k.index, ayar, k)
     assert dusen == 0 and len(t) == 1
     x = t.iloc[0]
     assert (
-        GUNLER.get_loc(x.giris_tarih),
+        m.index.get_loc(x.giris_tarih),
         x.giris_fiyat,
-        GUNLER.get_loc(x.cikis_tarih),
+        m.index.get_loc(x.cikis_tarih),
         x.cikis_fiyat,
         x.neden,
         x.planlanan_risk,
         x.gerceklesen_kayip,
-    ) == _ak(beklenen)
+    ) == _ak((15, 100, 17, 100, "stop", 0, 0))
