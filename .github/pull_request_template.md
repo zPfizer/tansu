@@ -2,6 +2,9 @@
 
 Değişikliği bir veya iki cümleyle açıklayın.
 
+Closes #<issue>
+<!-- Numara, dalın issue'sunun numarasıdır. Birleştirmede GitHub issue'yu kapatır. CI bu satırı denetler (Kural 15). -->
+
 Akış:
 Çağrılan beceriler:
 <!-- Liste, bu oturumdaki Skill çağrılarının çağrı sırasıyla kopyasıdır. Çağrılmayan beceri yazılmaz. CI, akışa göre gereken adları arar. -->
