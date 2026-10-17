@@ -16,7 +16,7 @@ When only documents changed, `kurulum\kapi.ps1 -Belge` runs the document tests. 
 
 ## Review
 Merge `origin/master` into the branch first. Then check the change by its type.
-- A change with code: run `mattpocock-skills:code-review` (a Claude subagent). Then run the Codex audit (subagent type `codex`). Add the text of the code-review skill to the auditor prompt.
+- A change with code: run `mattpocock-skills:code-review` (a Claude subagent). Then run the Codex audit with the OpenAI Codex plugin: start the subagent `codex:codex-rescue` with a read-only request. The audit rules come from the YONETIM brief. Add the text of the code-review skill to the auditor prompt.
 - A change to documents only (no code): run one `mattpocock-skills:code-review` pass by a Sonnet subagent on the diff. Run no Codex audit.
 
 Run the review in this order.
