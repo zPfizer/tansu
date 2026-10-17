@@ -3,9 +3,13 @@
 An exception ends with exit 1. Claude Code shows the error and does not block. An unknown event ends with exit 0.
 - PreToolUse Edit, Write, MultiEdit: an instruction file needs a call of asd-ste100 by the acting agent.
 - PreToolUse Edit, Write, MultiEdit: a code file needs calls of mattpocock-skills:tdd and ponytail:ponytail.
-- PreToolUse Bash, PowerShell: a shell read of an existing file is blocked (use the Read tool).
-- PreToolUse Bash: a heredoc, a run of kapi.ps1 (powershell or pwsh with kapi.ps1, or kapi.ps1 as the command),
-  and git <ref>:.<path> without MSYS_NO_PATHCONV=1 are blocked.
+- PreToolUse Bash, PowerShell: blocks the common forms of shell file reads (use the Read tool).
+- PreToolUse Bash: blocks the common forms of heredocs, kapi.ps1 execution, and Git object paths without MSYS_NO_PATHCONV=1.
+
+Known limits:
+- Bash patterns do not cover all shell syntax or expansion. Assigned and nested file reads can pass.
+- git log --grep HEAD:.claude/settings.json is search data, but the hook blocks it.
+- Uncertain heredoc syntax can block literal data.
 - SubagentStop: an answer longer than the word limit of the subagent prompt is sent back once.
 
 The skill gate mirrors AGENTS.md "Every job" (STE before instruction text)
@@ -105,10 +109,12 @@ def _dosya_mu(belirtec, cwd):
 
 
 def _komutlar(komut):
-    """Her komut parçası için (komut adı, belirteçler, öndeki NAME=değer atamaları)."""
-    for parca in re.findall(
+    """Komut adı, belirteçler, öndeki NAME=değer atamaları ve sonraki ayırıcı."""
+    for eslesme in re.finditer(
         r"""(?:\\.|"(?:\\.|[^"\\])*"|'[^']*'|[^|;&\n"'\\])+""", komut
     ):
+        parca = eslesme[0]
+        ayirici = re.match(r"[|;&]+", komut[eslesme.end() :])
         try:
             belirtecler = shlex.split(
                 parca, posix=False
@@ -122,18 +128,27 @@ def _komutlar(komut):
         belirtecler = [b.strip("\"'") for b in belirtecler]
         if belirtecler:
             ad = Path(belirtecler[0].replace("\\", "/")).name.lower()
-            yield ad.removesuffix(".exe"), belirtecler, atamalar
+            yield (
+                ad.removesuffix(".exe"),
+                belirtecler,
+                atamalar,
+                ayirici[0] if ayirici else "",
+            )
 
 
 def _okuma_komutu(komut, cwd):
     """Dosya okuyan ilk komutun adını döner; yoksa None."""
     # ponytail: any later token that is an existing file counts as the operand.
     # Ceiling: "$x = Get-Content f" and nested calls pass; a file named like an option value (head -n 5, file "5") blocks.
-    for ad, belirtecler, _ in _komutlar(komut):
+    dizinler = [Path(cwd)]
+    for ad, belirtecler, _, ayirici in _komutlar(komut):
         if ad == "cd" and len(belirtecler) == 2:
-            cwd = Path(cwd) / belirtecler[1]
+            yeni = [d / belirtecler[1] for d in dizinler]
+            dizinler = dizinler + yeni if ayirici in ("||", "&") else yeni
         if ad in OKUMA_KOMUTLARI and any(
-            not b.startswith("-") and _dosya_mu(b, cwd) for b in belirtecler[1:]
+            not b.startswith("-") and _dosya_mu(b, d)
+            for b in belirtecler[1:]
+            for d in dizinler
         ):
             return ad
     return None
@@ -152,18 +167,34 @@ def _ilk_sozcuk(belirtec):
 
 def _kapi_calistirir(komut):
     """Bash komut adını veya PowerShell'in dosya/komut girişini denetler."""
-    for ad, belirtecler, _ in _komutlar(komut):
+    for ad, belirtecler, _, _ in _komutlar(komut):
         if ad.endswith("kapi.ps1"):
             return True
         if ad not in ("powershell", "pwsh"):
             continue
-        for i, b in enumerate(belirtecler[1:], 1):
+        girdiler = iter(belirtecler[1:])
+        for b in girdiler:
+            if b.lower() in (
+                "-executionpolicy",
+                "-ep",
+                "-windowstyle",
+                "-w",
+                "-inputformat",
+                "-inp",
+                "-outputformat",
+                "-o",
+                "-configurationname",
+                "-version",
+                "-v",
+                "-workingdirectory",
+                "-wd",
+            ):
+                next(girdiler, None)
+                continue
             if b.lower() in ("-file", "-f", "-command", "-c"):
-                if i + 1 == len(belirtecler):
-                    break
-                deger = belirtecler[i + 1]
+                deger = next(girdiler, "")
                 if b.lower() in ("-command", "-c"):
-                    deger = _ilk_sozcuk(" ".join(belirtecler[i + 1 :]))
+                    deger = _ilk_sozcuk(" ".join([deger, *girdiler]))
                 if deger.lower().endswith("kapi.ps1"):
                     return True
                 break
@@ -177,7 +208,7 @@ def _kapi_calistirir(komut):
 def _msys_eksik(komut):
     """git <ref>:.<yol> parçası, MSYS_NO_PATHCONV=1 öneki ya da önceki 'export MSYS_NO_PATHCONV=1' olmadan var mı."""
     verildi = False
-    for ad, belirtecler, atamalar in _komutlar(komut):
+    for ad, belirtecler, atamalar, _ in _komutlar(komut):
         if ad == "export" and any(
             b.replace('"', "").replace("'", "") == "MSYS_NO_PATHCONV=1"
             for b in belirtecler[1:]
@@ -198,10 +229,7 @@ def _tirnaksiz(komut):
     return re.sub(
         r'"(?:\\.|[^"\\])*"|\'[^\']*\'|\(\(.*?\)\)',
         lambda m: (
-            " ".join(
-                _tirnaksiz(a or b)
-                for a, b in re.findall(r"\$\((.*?)\)|`(.*?)`", m[0], re.S)
-            )
+            _tirnaksiz(m[0][1:-1])
             if m[0][0] == '"' and re.search(r"\$\(|`", m[0])
             else "Q"
         ),
@@ -214,7 +242,7 @@ def _kabuk(girdi):
     komut = girdi["tool_input"]["command"]
     mesaj = None
     if girdi["tool_name"] == "Bash":
-        if re.search(r"(?<!<)<<(?!<)-?[ \t]*['\"\\\w]", _tirnaksiz(komut)):
+        if re.search(r"(?<!<)<<(?!<)", _tirnaksiz(komut)):
             mesaj = (
                 "No heredoc. Give a commit message with several -m arguments or -F <file>. "
                 "Put Python code in a file or in one-line -c."

@@ -41,7 +41,11 @@ first. Write the reason. Then write the code.
 - **Shell reads (Kabuk okumaları):** Read a file with `Read`. `permissions.deny` in `.claude/settings.json` blocks `cat`, `sed -n`, and `sed -i` in Bash.
 - **Hooks (Kancalar):** `kurulum/kanca.py` checks tool calls and answers. `.claude/settings.json` registers it. Its message names the rule and the fix.
   - It blocks an edit of an instruction file or a code file before the skill calls that "Every job" and `tansu-yeni-is` "Build" require.
-  - It blocks a shell read of a file, a Bash heredoc, `kapi.ps1` from Bash, and `git <ref>:.<path>` in Bash without `MSYS_NO_PATHCONV=1`.
+  - It blocks the common forms of shell file reads, Bash heredocs, `kapi.ps1` from Bash, and Git object paths without `MSYS_NO_PATHCONV=1`.
+  - Known limits:
+    - Bash patterns do not cover all shell syntax or expansion. `$x = Get-Content f` and nested file reads can pass.
+    - `git log --grep HEAD:.claude/settings.json` is search data, but the hook blocks it.
+    - Uncertain heredoc syntax can block literal data. Use a plain quoted literal for text.
   - It sends back a subagent answer that is over the word limit of its prompt. It sends it back one time only.
     It finds the limit in these forms: "at most N words", "under N words", "en fazla N sözcük", "en fazla N kelime".
 - **Waiting (Bekleme):** Claude Code blocks `sleep` and `Start-Sleep`. Run a long command alone in one call. Run the gate with the affected test files.

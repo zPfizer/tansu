@@ -292,6 +292,27 @@ def test_cd_sonrasi_dosya_okumasi_engellenir():
     assert "not with head." in s.stderr
 
 
+@pytest.mark.parametrize(
+    ("dizin", "ayirici", "dosya"),
+    [
+        ("__pr42_missing_dir__", "||", "AGENTS.md"),
+        ("docs", "&", "AGENTS.md"),
+        ("docs", "||", "agents/kod-kurallari.md"),
+        ("docs", "&", "agents/kod-kurallari.md"),
+    ],
+)
+def test_cd_belirsiz_sonucta_iki_dizini_de_denetler(dizin, ayirici, dosya):
+    s = _kabuk(f"cd {dizin} {ayirici} head {dosya}")
+    assert s.returncode == 2
+    assert "not with head." in s.stderr
+
+
+def test_heredoc_tirnakli_kapanis_parantezi_ardinda_engellenir():
+    s = _kabuk("echo \"$(printf '%s' 'x)'; python - <<EOF\nprint(1)\nEOF\n)\"")
+    assert s.returncode == 2
+    assert "No heredoc." in s.stderr
+
+
 def test_heredoc_engellenir():
     komut = "git commit -m \"$(cat <<'EOF'\nmesaj\nEOF\n)\""
     s = _kabuk(komut)
@@ -313,6 +334,7 @@ def test_heredoc_engellenir():
         "cat <<123\nx\n123",
         "python - <<\\EOF\nprint(1)\nEOF",
         "python - <<E\\OF\nprint(1)\nEOF",
+        "python - <<$EOF\nprint(1)\n$EOF",
         "python - <<E'OF'\nprint(1)\nEOF",
         'python - <<"EOF"\nprint(1)\nEOF',
     ],
@@ -379,6 +401,20 @@ def test_bash_ten_kapi_ps1_engellenir(komut):
 def test_kapi_ps1_adini_anan_komutlar_gecer(komut):
     s = _kabuk(komut)
     assert (s.returncode, s.stdout, s.stderr) == (0, "", "")
+
+
+@pytest.mark.parametrize(
+    "komut",
+    [
+        "powershell -ExecutionPolicy Bypass -File kurulum/kapi.ps1",
+        "powershell -ExecutionPolicy Bypass kurulum/kapi.ps1",
+        'pwsh -WindowStyle Hidden -Command "& kurulum/kapi.ps1"',
+    ],
+)
+def test_kapi_secenek_degerinden_sonra_engellenir(komut):
+    s = _kabuk(komut)
+    assert s.returncode == 2
+    assert "with the PowerShell tool, not from Bash." in s.stderr
 
 
 def test_powershell_aracindan_kapi_ps1_gecer():
