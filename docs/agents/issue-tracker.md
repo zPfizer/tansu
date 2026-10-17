@@ -1,6 +1,6 @@
 # Issue tracker: GitHub
 
-Specs and tickets of this repo are GitHub issues in `zPfizer/tansu-kaynak` (remote `origin`). Use the `gh` CLI for all operations. `gh` finds the repo from `git remote -v`.
+Specs and tickets of this repo are GitHub issues in `zPfizer/tansu` (remote `origin`). Use the `gh` CLI for all operations. `gh` finds the repo from `git remote -v`.
 
 `.scratch/` is local and gitignored. It holds temporary job files and the old read-only ticket archive. The old archive also remains in git history. GitHub and CI do not require these local files. An open ticket has one place: its issue.
 
@@ -15,9 +15,9 @@ A large job uses a GitHub issue, a branch, and a PR (Levent 17.10). A small chan
 - **Labels**: `gh issue edit <number> --add-label "..."` / `--remove-label "..."`.
 - **Close**: `gh issue close <number> --comment "..."`.
 - **Spec**: one issue, title `Spec: <name>`. The tickets name it in a `Parent: #N` line.
-- **Issue body**: three bold lines: `**Amaç:**` (what to build), `**Kaynak:**` (where the facts come from), and `**Bitti koşulu:**` (when the issue is done). Each issue also has one triage label and a milestone.
+- **Issue body**: three bold lines: `**Amaç:**` (what to build), `**Kaynak:**` (where the facts come from), and `**Bitti koşulu:**` (when the issue is done). Each issue also has one triage label and a milestone. Every open issue belongs to one open milestone. Name each open milestone `v0.<n>.0 — <short Turkish benefit>`, in work order. Its description states the benefit, then `Sıra: #a, #b, #c`. Source: Levent 18.10.
 - **Branch**: `<N>-<ad>`, made by `gh issue develop <N> --name <N>-<ad> --base master` (`tansu-yeni-is` "Branch").
-- **PR**: the PR body has a `Closes #N` line. The merge closes the issue.
+- **PR**: the body has a `Closes #N` line. The title starts with `#<N> · <short title>` and uses that issue number. GitHub shares one number sequence for issues and PRs. The merge closes the issue. Source: Levent 18.10.
 
 ## State of a ticket
 

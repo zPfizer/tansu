@@ -4,10 +4,11 @@ import subprocess
 import sys
 
 
-# Beş kural (Levent 17.10: "Sadeleştir."). Testi, biçimi ve lint'i ci iş akışı kanıtlar.
+# Altı kural (Levent 17.10: "Sadeleştir."; başlık kuralı Levent 18.10). Testi, biçimi ve lint'i ci iş akışı kanıtlar.
 KURAL_1 = "Kural 1: PR gövdesinde Closes #<issue> satırı olmalı."
 KURAL_2 = "Kural 2: ## Kabul ölçütleri bölümünde en az bir kutu olmalı ve her kutu işaretli olmalı."
 KURAL_3 = "Kural 3: ## Gerçek veri kanıtı bölümünde içi dolu bir kod bloğu olmalı."
+KURAL_6 = "Kural 6: PR başlığı #<N> · ile başlamalı ve N, Closes #<N> satırındaki sayı olmalı."
 KAPATMA = re.compile(
     r" *(close|closes|closed|fix|fixes|fixed|resolve|resolves|resolved) #[0-9]+\s*",
     re.IGNORECASE,
@@ -140,6 +141,7 @@ def hatalar(
     bas_sha: str | None = None,
     taban: str | None = None,
     dizin=None,
+    baslik: str | None = None,
 ) -> list[str]:
     govde = _yorumsuz(govde or "")
     satirlar = govde.splitlines()
@@ -155,6 +157,12 @@ def hatalar(
         sonuc.append("Kural 4: ## Bağımsız inceleme: " + ayrinti + ".")
     if ayrinti := _denetlenen_hatasi(govde, bas_sha, taban, dizin):
         sonuc.append(ayrinti)
+    baslik_eslesmesi = re.match(r"#([0-9]+) · ", baslik or "")
+    if not baslik_eslesmesi or not any(
+        re.fullmatch(rf" *closes #{baslik_eslesmesi.group(1)}\s*", satir, re.IGNORECASE)
+        for satir in satirlar
+    ):
+        sonuc.append(KURAL_6)
     return sonuc
 
 
@@ -165,6 +173,7 @@ if __name__ == "__main__":
         "origin/" + os.environ["GITHUB_BASE_REF"]
         if os.environ.get("GITHUB_BASE_REF")
         else None,
+        baslik=os.environ.get("PR_BASLIK"),
     )
     for sorun in sorunlar:
         print(sorun)

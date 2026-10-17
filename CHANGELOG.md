@@ -12,7 +12,11 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ### Değişti
 
-- Değişiklik açıklamaları kısaldı ve Türkçe yönergeler içeriyor. Otomatik kabul denetimi 15 kuraldan 5 kurala indi.
+- GitHub deposunun adı tansu oldu; eski adres yeni adrese yönleniyor.
+- Değişiklik başlıkları kapattıkları işin numarasıyla başlıyor; otomatik kabul denetimi bu eşleşmeyi kontrol ediyor.
+- Açık işler, çalışma sırasına göre numaralanmış ve sağlayacakları sonuçla adlandırılmış sürüm hedeflerine bağlandı.
+
+- Değişiklik açıklamaları kısaldı ve Türkçe yönergeler içeriyor. Otomatik kabul denetimi 15 kuraldan 6 kurala indi.
 - Bilgisayarda yalnız değişen işle ilgili testler çalışıyor. Tüm testler GitHub'da çalışıyor.
 - GitHub'daki otomatik kontroller yalnız Windows'ta çalışıyor.
 - Kod incelemesi artık OpenAI Codex eklentisiyle yapılıyor.
@@ -52,5 +56,5 @@ GitHub'daki sürüm etiketi: `v0.1`.
 
 - Kurulu zamanlanmış görevler kaldırıldı. Görev tanımları yeniden kurulum için depoda tutuluyor. (#26)
 
-[Yayımlanmamış]: https://github.com/zPfizer/tansu-kaynak/compare/v0.1...HEAD
-[0.1.0]: https://github.com/zPfizer/tansu-kaynak/releases/tag/v0.1
+[Yayımlanmamış]: https://github.com/zPfizer/tansu/compare/v0.1...HEAD
+[0.1.0]: https://github.com/zPfizer/tansu/releases/tag/v0.1

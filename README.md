@@ -10,11 +10,11 @@ Son sürüm: v0.1
 
 [Değişiklik günlüğü](CHANGELOG.md)
 
+- GitHub deposunun adı tansu oldu; eski adres yeni adrese yönleniyor.
+- Değişiklik başlıkları kapattıkları işin numarasıyla başlıyor; otomatik kabul denetimi bu eşleşmeyi kontrol ediyor.
+- Açık işler, çalışma sırasına göre numaralanmış ve sağlayacakları sonuçla adlandırılmış sürüm hedeflerine bağlandı.
 - GitHub ana sayfasından işlere, hedeflere, değişikliklere, yayımlanan sürüme ve kontrol sonuçlarına ulaşılabiliyor.
-- Değişiklik açıklamaları kısaldı ve Türkçe yönergeler içeriyor. Otomatik kabul denetimi 15 kuraldan 5 kurala indi.
 - Bilgisayarda yalnız değişen işle ilgili testler çalışıyor. Tüm testler GitHub'da çalışıyor.
-- GitHub'daki otomatik kontroller yalnız Windows'ta çalışıyor.
-- Kod incelemesi artık OpenAI Codex eklentisiyle yapılıyor.
 
 ## GitHub'da ilerleme
 

@@ -18,5 +18,6 @@ jobs:
           python-version: "3.14"
       - run: python .github/dod_kontrol.py
         env:
+          PR_BASLIK: ${{ github.event.pull_request.title }}
           PR_GOVDE: ${{ github.event.pull_request.body }}
           PR_BAS_SHA: ${{ github.event.pull_request.head.sha }}

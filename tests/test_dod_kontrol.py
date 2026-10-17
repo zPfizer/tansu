@@ -1,6 +1,8 @@
 import ast
 import importlib.util
+import os
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -27,6 +29,8 @@ Denetçi: Ayşe
 Denetlenen commit: 0123456789abcdef0123456789abcdef01234567
 Sonuç: GEÇTİ
 """
+BASLIK = "#49 · Başlık"
+R6 = "Kural 6: PR başlığı #<N> · ile başlamalı ve N, Closes #<N> satırındaki sayı olmalı."
 SHA = "0123456789abcdef0123456789abcdef01234567"
 SHA_BASKA = "fedcba9876543210fedcba9876543210fedcba98"
 R1 = "Kural 1: PR gövdesinde Closes #<issue> satırı olmalı."
@@ -36,19 +40,20 @@ R4 = "Kural 4: ## Bağımsız inceleme: {}."
 
 
 def test_gecerli():
-    assert hatalar(GECERLI) == []
-    assert hatalar(GECERLI.replace("\n", "\r\n")) == []
+    assert hatalar(GECERLI, baslik=BASLIK) == []
+    assert hatalar(GECERLI.replace("\n", "\r\n"), baslik=BASLIK) == []
 
 
 @pytest.mark.parametrize("govde", [None, "", " \r\n "])
 def test_bos_govde(govde):
-    assert hatalar(govde) == [
+    assert hatalar(govde, baslik=BASLIK) == [
         R1,
         R2,
         R3,
         R4.format("bölüm yok"),
         "Kural 5: PR gövdesinde Denetlenen commit: <40 küçük harfli onaltılı hane> "
         "satırı tek olmalı (0 satır var).",
+        R6,
     ]
 
 
@@ -64,7 +69,9 @@ def test_bos_govde(govde):
     ],
 )
 def test_kural_1_kapatma_satiri_gecer(satir):
-    assert hatalar(GECERLI.replace("Closes #49", satir)) == []
+    assert hatalar(GECERLI.replace("Closes #49", satir), baslik=BASLIK) == (
+        [] if satir.lower() == "closes #49" else [R6]
+    )
 
 
 @pytest.mark.parametrize(
@@ -81,7 +88,7 @@ def test_kural_1_kapatma_satiri_gecer(satir):
     ],
 )
 def test_kural_1_kapatma_satiri_eksik_ya_da_bozuk(satir):
-    assert hatalar(GECERLI.replace("Closes #49", satir)) == [R1]
+    assert hatalar(GECERLI.replace("Closes #49", satir), baslik=BASLIK) == [R1, R6]
 
 
 @pytest.mark.parametrize(
@@ -98,23 +105,30 @@ def test_kural_2_kabul(yeni):
         "- [x] İkinci ölçüt.\n",
         yeni,
     )
-    assert hatalar(govde) == [R2]
+    assert hatalar(govde, baslik=BASLIK) == [R2]
 
 
 def test_kural_2_isaretsiz_ikinci_kutu_ve_yorumdaki_kutu():
-    assert hatalar(GECERLI.replace("- [x] İkinci", "- [ ] İkinci")) == [R2]
-    assert hatalar(GECERLI.replace("- [x] İkinci", "<!-- - [ ] İkinci -->")) == []
+    assert hatalar(GECERLI.replace("- [x] İkinci", "- [ ] İkinci"), baslik=BASLIK) == [
+        R2
+    ]
+    assert (
+        hatalar(GECERLI.replace("- [x] İkinci", "<!-- - [ ] İkinci -->"), baslik=BASLIK)
+        == []
+    )
 
 
 @pytest.mark.parametrize("kod", ["```\n\n```", "Gerçek koşu çıktısı", "```\nçıktı"])
 def test_kural_3_kod_kaniti_yok(kod):
     govde = GECERLI.replace("```text\nGerçek koşu çıktısı\n```", kod)
-    assert hatalar(govde) == [R3]
+    assert hatalar(govde, baslik=BASLIK) == [R3]
 
 
 @pytest.mark.parametrize("karar", ["geçti", "GEÇTİ", "NOTLU GEÇTİ"])
 def test_kural_4_kabul_edilen_kararlar(karar):
-    assert hatalar(GECERLI.replace("Sonuç: GEÇTİ", f"Sonuç: {karar}")) == []
+    assert (
+        hatalar(GECERLI.replace("Sonuç: GEÇTİ", f"Sonuç: {karar}"), baslik=BASLIK) == []
+    )
 
 
 @pytest.mark.parametrize(
@@ -132,12 +146,12 @@ def test_kural_4_kabul_edilen_kararlar(karar):
     ],
 )
 def test_kural_4_inceleme(eski, yeni, ayrinti):
-    assert hatalar(GECERLI.replace(eski, yeni)) == [R4.format(ayrinti)]
+    assert hatalar(GECERLI.replace(eski, yeni), baslik=BASLIK) == [R4.format(ayrinti)]
 
 
 def test_kural_4_yorumdaki_sonuc_satir_sayilmaz():
     govde = GECERLI.replace("Sonuç: GEÇTİ", "<!-- Sonuç: KALDI -->\nSonuç: GEÇTİ")
-    assert hatalar(govde) == []
+    assert hatalar(govde, baslik=BASLIK) == []
 
 
 DENETLENEN = f"Denetlenen commit: {SHA}\n"
@@ -157,7 +171,9 @@ R5_BIRLESME = (
     ("yeni", "sayi"), [("", 0), (DENETLENEN * 2, 2), (DENETLENEN * 3, 3)]
 )
 def test_kural_5_satir_tek_olmali(yeni, sayi):
-    assert hatalar(GECERLI.replace(DENETLENEN, yeni)) == [R5_SATIR.format(sayi)]
+    assert hatalar(GECERLI.replace(DENETLENEN, yeni), baslik=BASLIK) == [
+        R5_SATIR.format(sayi)
+    ]
 
 
 @pytest.mark.parametrize(
@@ -165,21 +181,21 @@ def test_kural_5_satir_tek_olmali(yeni, sayi):
 )
 def test_kural_5_deger_40_kucuk_onaltili_olmali(deger):
     govde = GECERLI.replace(DENETLENEN, f"Denetlenen commit: {deger}\n")
-    assert hatalar(govde) == [R5_DEGER]
+    assert hatalar(govde, baslik=BASLIK) == [R5_DEGER]
 
 
 def test_kural_5_yorumdaki_satir_sayilmaz():
     govde = GECERLI.replace(DENETLENEN, DENETLENEN + "<!--\n" + DENETLENEN + "-->\n")
-    assert hatalar(govde) == []
-    assert hatalar(GECERLI.replace(DENETLENEN, "<!-- " + DENETLENEN + "-->\n")) == [
-        R5_SATIR.format(0)
-    ]
+    assert hatalar(govde, baslik=BASLIK) == []
+    assert hatalar(
+        GECERLI.replace(DENETLENEN, "<!-- " + DENETLENEN + "-->\n"), baslik=BASLIK
+    ) == [R5_SATIR.format(0)]
 
 
 def test_kural_5_pr_basi_esit_ya_da_taban_bilinmiyor():
-    assert hatalar(GECERLI, SHA) == []
-    assert hatalar(GECERLI, None) == []
-    assert hatalar(GECERLI, SHA_BASKA) == [R5_TABAN]
+    assert hatalar(GECERLI, SHA, baslik=BASLIK) == []
+    assert hatalar(GECERLI, None, baslik=BASLIK) == []
+    assert hatalar(GECERLI, SHA_BASKA, baslik=BASLIK) == [R5_TABAN]
 
 
 def _git(dizin, *arg):
@@ -226,18 +242,18 @@ def _govde_git(denetlenen):
 
 def test_kural_5_temiz_taban_birlestirmesi_gecer(depo):
     dizin, b, m = depo
-    assert hatalar(_govde_git(b), m, taban="master", dizin=dizin) == []
+    assert hatalar(_govde_git(b), m, taban="master", dizin=dizin, baslik=BASLIK) == []
 
 
 def test_kural_5_denetlenen_pr_basi_ise_git_gerekmez(depo):
     dizin, _, m = depo
-    assert hatalar(_govde_git(m), m, taban="master", dizin=dizin) == []
+    assert hatalar(_govde_git(m), m, taban="master", dizin=dizin, baslik=BASLIK) == []
 
 
 def test_kural_5_duz_commit_reddedilir(depo):
     dizin, b, _ = depo
     d = _commit(dizin, "d.txt", "D")
-    assert hatalar(_govde_git(b), d, taban="master", dizin=dizin) == [
+    assert hatalar(_govde_git(b), d, taban="master", dizin=dizin, baslik=BASLIK) == [
         R5_BIRLESME.format(b, d)
     ]
 
@@ -250,7 +266,7 @@ def test_kural_5_elle_degisen_birlestirme_reddedilir(depo):
     _git(dizin, "add", "b.txt")
     _git(dizin, "commit", "--no-edit")
     kotu = _git(dizin, "rev-parse", "HEAD")
-    assert hatalar(_govde_git(b), kotu, taban="master", dizin=dizin) == [
+    assert hatalar(_govde_git(b), kotu, taban="master", dizin=dizin, baslik=BASLIK) == [
         R5_BIRLESME.format(b, kotu)
     ]
 
@@ -262,16 +278,16 @@ def test_kural_5_taban_disi_ikinci_ebeveyn_reddedilir(depo):
     _git(dizin, "checkout", "-b", "baska", b)
     _git(dizin, "merge", "--no-edit", "yan")
     baska = _git(dizin, "rev-parse", "HEAD")
-    assert hatalar(_govde_git(b), baska, taban="master", dizin=dizin) == [
-        R5_BIRLESME.format(b, baska)
-    ]
+    assert hatalar(
+        _govde_git(b), baska, taban="master", dizin=dizin, baslik=BASLIK
+    ) == [R5_BIRLESME.format(b, baska)]
 
 
 def test_kural_5_bilinmeyen_sha_reddedilir(depo):
     dizin, _, m = depo
-    assert hatalar(_govde_git(SHA_BASKA), m, taban="master", dizin=dizin) == [
-        R5_BIRLESME.format(SHA_BASKA, m)
-    ]
+    assert hatalar(
+        _govde_git(SHA_BASKA), m, taban="master", dizin=dizin, baslik=BASLIK
+    ) == [R5_BIRLESME.format(SHA_BASKA, m)]
 
 
 def _celiski_birlesmesi(dizin):
@@ -295,7 +311,7 @@ def test_kural_5_elle_cozulen_celiski_taban_ozelligiyle_gizlenmez(depo):
     b, m = _celiski_birlesmesi(dizin)
     _git(dizin, "checkout", "master")
     _commit(dizin, ".gitattributes", "*.txt merge=union\n")
-    assert hatalar(_govde_git(b), m, taban="master", dizin=dizin) == [
+    assert hatalar(_govde_git(b), m, taban="master", dizin=dizin, baslik=BASLIK) == [
         R5_BIRLESME.format(b, m)
     ]
 
@@ -306,7 +322,7 @@ def test_kural_5_info_attributes_celiskiyi_gizlemez(depo):
     (dizin / ".git" / "info" / "attributes").write_text(
         "*.txt merge=union\n", encoding="utf-8"
     )
-    assert hatalar(_govde_git(b), m, taban="master", dizin=dizin) == [
+    assert hatalar(_govde_git(b), m, taban="master", dizin=dizin, baslik=BASLIK) == [
         R5_BIRLESME.format(b, m)
     ]
 
@@ -322,7 +338,7 @@ def test_kural_5_ayni_dosyada_iki_taraf_degisirse_reddedilir(depo):
     _git(dizin, "checkout", "yan3")
     _git(dizin, "merge", "--no-edit", "master")
     m = _git(dizin, "rev-parse", "HEAD")
-    assert hatalar(_govde_git(b), m, taban="master", dizin=dizin) == [
+    assert hatalar(_govde_git(b), m, taban="master", dizin=dizin, baslik=BASLIK) == [
         R5_BIRLESME.format(b, m)
     ]
 
@@ -337,7 +353,7 @@ def test_kural_5_silme_ve_yeniden_adlandirma_gecer(depo):
     _git(dizin, "checkout", "-b", "yan4", b)
     _git(dizin, "merge", "--no-edit", "master")
     m = _git(dizin, "rev-parse", "HEAD")
-    assert hatalar(_govde_git(b), m, taban="master", dizin=dizin) == []
+    assert hatalar(_govde_git(b), m, taban="master", dizin=dizin, baslik=BASLIK) == []
 
 
 def _kotu_birlesme(dizin, b, degistir):
@@ -360,7 +376,7 @@ def test_kural_5_fazla_dosya_ya_da_dusen_dosya_reddedilir(depo, dosya):
             (dizin / dosya).write_text("x", encoding="utf-8")
 
     kotu = _kotu_birlesme(dizin, b, degistir)
-    assert hatalar(_govde_git(b), kotu, taban="master", dizin=dizin) == [
+    assert hatalar(_govde_git(b), kotu, taban="master", dizin=dizin, baslik=BASLIK) == [
         R5_BIRLESME.format(b, kotu)
     ]
 
@@ -378,7 +394,7 @@ def test_kural_5_capraz_birlesme_reddedilir(depo):
     _git(dizin, "checkout", "ca")
     _git(dizin, "merge", "--no-edit", "cb")
     x = _git(dizin, "rev-parse", "HEAD")
-    assert hatalar(_govde_git(a1), x, taban="cb", dizin=dizin) == [
+    assert hatalar(_govde_git(a1), x, taban="cb", dizin=dizin, baslik=BASLIK) == [
         R5_BIRLESME.format(a1, x)
     ]
 
@@ -386,7 +402,7 @@ def test_kural_5_capraz_birlesme_reddedilir(depo):
 @pytest.mark.parametrize("taban", ["yok-dal", "master^{tree}"])
 def test_kural_5_taban_gecersizse_reddedilir(depo, taban):
     dizin, b, m = depo
-    assert hatalar(_govde_git(b), m, taban=taban, dizin=dizin) == [
+    assert hatalar(_govde_git(b), m, taban=taban, dizin=dizin, baslik=BASLIK) == [
         R5_BIRLESME.format(b, m)
     ]
 
@@ -394,12 +410,14 @@ def test_kural_5_taban_gecersizse_reddedilir(depo, taban):
 def test_kural_5_denetlenen_agac_ya_da_etiket(depo):
     dizin, b, m = depo
     agac = _git(dizin, "rev-parse", f"{b}^{{tree}}")
-    assert hatalar(_govde_git(agac), m, taban="master", dizin=dizin) == [
+    assert hatalar(_govde_git(agac), m, taban="master", dizin=dizin, baslik=BASLIK) == [
         R5_BIRLESME.format(agac, m)
     ]
     _git(dizin, "tag", "-a", "-m", "e", "etiket", b)
     etiket = _git(dizin, "rev-parse", "etiket")
-    assert hatalar(_govde_git(etiket), m, taban="master", dizin=dizin) == []
+    assert (
+        hatalar(_govde_git(etiket), m, taban="master", dizin=dizin, baslik=BASLIK) == []
+    )
 
 
 @pytest.mark.parametrize("alt", ["rev-list", "merge-base", "diff-tree"])
@@ -416,7 +434,7 @@ def test_kural_5_git_donus_kodu_hatasi_reddedilir(depo, monkeypatch, alt):
         return sonuc
 
     monkeypatch.setattr(_modul.subprocess, "run", sahte)
-    assert hatalar(_govde_git(b), m, taban="master", dizin=dizin) == [
+    assert hatalar(_govde_git(b), m, taban="master", dizin=dizin, baslik=BASLIK) == [
         R5_BIRLESME.format(b, m)
     ]
 
@@ -432,8 +450,8 @@ def test_sablon_gecerli_govdeye_doldurulunca_gecer():
         .replace("Sonuç: \n", "Sonuç: GEÇTİ\n")
         .replace("## Bağımsız inceleme", "```text\nçıktı\n```\n## Bağımsız inceleme")
     )
-    assert hatalar(govde, SHA) == []
-    assert len(hatalar(sablon)) == 5
+    assert hatalar(govde, SHA, baslik=BASLIK) == []
+    assert len(hatalar(sablon, baslik=BASLIK)) == 6
 
 
 def test_dod_kontrol_python_312_soz_dizimi():
@@ -450,6 +468,7 @@ def test_dod_yml_taslak_ve_sha():
         "ready_for_review",
         "PR_BAS_SHA: ${{ github.event.pull_request.head.sha }}",
         "fetch-depth: 0",
+        "PR_BASLIK: ${{ github.event.pull_request.title }}",
     ):
         assert parca in metin
 
@@ -468,3 +487,50 @@ def test_kapi_betigi():
     ):
         assert parca in metin
     assert "--untracked-files=no" not in metin
+
+
+@pytest.mark.parametrize(
+    ("baslik", "kod"),
+    [
+        (None, 1),
+        ("", 1),
+        ("Başlık", 1),
+        ("#49 Başlık", 1),
+        ("#49 ·Başlık", 1),
+        (" #49 · Başlık", 1),
+        ("#50 · Başlık", 1),
+        ("#49 · Başlık", 0),
+    ],
+)
+def test_kural_6_baslik_cli(baslik, kod):
+    ortam = {**os.environ, "PR_GOVDE": GECERLI, "PR_BAS_SHA": SHA}
+    ortam.pop("PR_BASLIK", None)
+    if baslik is not None:
+        ortam["PR_BASLIK"] = baslik
+    sonuc = subprocess.run(
+        [sys.executable, "-X", "utf8", str(_yol)],
+        env=ortam,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+    )
+    assert sonuc.returncode == kod
+    if kod:
+        assert sonuc.stdout.startswith("Kural 6:")
+    else:
+        assert sonuc.stdout.strip() == "Definition of Done listesi tam."
+
+
+@pytest.mark.parametrize(
+    ("kapatma", "beklenen"),
+    [
+        ("Closes #49\nFixes #50", []),
+        ("Closes #50\nFixes #49", [R6]),
+        ("Closes #50\nCloses #49", []),
+        ("Closes #50\n<!-- Closes #49 -->", [R6]),
+        ("  closes #49  ", []),
+    ],
+)
+def test_kural_6_kapatma_eslesmesi(kapatma, beklenen):
+    govde = GECERLI.replace("Closes #49", kapatma)
+    assert hatalar(govde, baslik=BASLIK) == beklenen
