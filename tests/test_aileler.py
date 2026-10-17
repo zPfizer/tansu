@@ -1106,6 +1106,103 @@ def test_dusus_donem_basinda_atr_nan_ise_donem_sayilmaz(monkeypatch):
     assert _gunler(f, Parametre(dusus=True, **DUSUS)) == []
 
 
+# --- Modül 1 sürüm 2, bilet 10: düşüş süzgeci sınırları (TDD yeniden koşusu boşlukları; davranış belgede var) ---
+
+
+def _atr_ver(monkeypatch, f, atr):
+    """ATR14'ü elle verilen diziyle değiştirir: eşik tam sayıyla kurulur, kayan nokta payı kalmaz."""
+    monkeypatch.setattr(
+        gostergeler, "atr", lambda *a, **kw: pd.Series(atr, index=f.index)
+    )
+
+
+def _dusus_sinir_cercevesi(gun, yuksek):
+    """Gün 0-21 kapanış 100, gün 22-39 kapanış 130, gün 40-42 kapanış 140; yüksek = kapanış + 1, düşük = kapanış - 1;
+    yalnız `gun` günün yükseği `yuksek` (fitil)."""
+    kapanis = [100.0] * 22 + [130.0] * 18 + [140.0] * 3
+    yuk = [k + 1 for k in kapanis]
+    yuk[gun] = yuksek
+    return _mumlar(kapanis, yuksek=yuk)
+
+
+# Çerçeve: `DUSUS` ayarı, "yukselis" çerçevesinin (yukarıda) kapanışları, gün 40-42 kapanışı 140. Dönem başı gün 25, dönem gün 25-39
+# (J = -30, k = 4; yukarıdaki açıklama). Kutu alt = dönem en düşük düşüğü = 130 - 1 = 129. ATR14 elle verilir (sabit 2).
+#   Eşik = kutu alt + 3 × ATR14 = 129 + 3 * 2 = 135. Pencere = dönem başından önceki 20 gün = gün 5-24 (25 - 20 = 5; son gün 24).
+#   Tek fitilin yükseği pencerede tek aşan değerdir (öbür yükseklikler en çok 131 < 135). Kutu üstü 131 (fitil dönemde ise fitil);
+#   gün 40 kapanış 140 üstte kalır: dönem sayılırsa sinyal gün 40, sayılmazsa sinyal yok.
+# Eşik sınırı: pencere ortasında (gün 15) fitil 134 -> 134 < 135 sayılmaz; 135 -> 135 >= 135 sayılır (eşitlik); 136 -> sayılır.
+@pytest.mark.parametrize(
+    "yuksek, beklenen",
+    [(134.0, []), (135.0, [40]), (136.0, [40])],
+    ids=["esigin-altinda", "esitlik", "esigin-ustunde"],
+)
+def test_dusus_en_yuksek_yuksek_tam_esige_esitse_donem_sayilir(
+    monkeypatch, yuksek, beklenen
+):
+    f = _dusus_sinir_cercevesi(15, yuksek)
+    _atr_ver(monkeypatch, f, np.full(len(f), 2.0))
+    assert _gunler(f, Parametre(dusus=True, **DUSUS)) == beklenen
+
+
+# Pencere kenarları (fitil yüksek 135 = eşik, ATR 2): gün 5 pencerenin ilk günü -> sayılır; gün 4 pencerenin dışında -> sayılmaz;
+# gün 24 pencerenin son günü -> sayılır; gün 25 dönem başı günü pencerenin dışında -> sayılmaz (pencere 20 gün: 5-24).
+@pytest.mark.parametrize(
+    "gun, beklenen",
+    [(4, []), (5, [40]), (24, [40]), (25, [])],
+    ids=["pencere-oncesi", "ilk-gun", "son-gun", "donem-basi-gunu"],
+)
+def test_dusus_penceresi_donem_basindan_onceki_tam_20_gun_donem_basi_gunu_haric(
+    monkeypatch, gun, beklenen
+):
+    f = _dusus_sinir_cercevesi(gun, 135.0)
+    _atr_ver(monkeypatch, f, np.full(len(f), 2.0))
+    assert _gunler(f, Parametre(dusus=True, **DUSUS)) == beklenen
+
+
+# ATR günü: fitil gün 15, yüksek 135. ATR14 dönem başı gününün (gün 25) değeridir; öbür günlerin ATR'si sonucu değiştirmemeli.
+#   Gün 25 ATR 2, öbürleri 4: eşik 129 + 3 * 2 = 135 <= 135 -> sayılır. Gün 25 ATR 4, öbürleri 2: eşik 129 + 3 * 4 = 141 > 135 -> sayılmaz.
+@pytest.mark.parametrize(
+    "atr_bas, atr_diger, beklenen",
+    [(2.0, 4.0, [40]), (4.0, 2.0, [])],
+    ids=["bas-gunu-atr-kucuk", "bas-gunu-atr-buyuk"],
+)
+def test_dusus_atr_donem_basi_gununun_degeridir(
+    monkeypatch, atr_bas, atr_diger, beklenen
+):
+    f = _dusus_sinir_cercevesi(15, 135.0)
+    atr = np.full(len(f), atr_diger)
+    atr[25] = atr_bas
+    _atr_ver(monkeypatch, f, atr)
+    assert _gunler(f, Parametre(dusus=True, **DUSUS)) == beklenen
+
+
+def _dusus_agresif_sinir_cercevesi(gun, yuksek):
+    """Gün 0-21 kapanış 96, gün 22-39 kapanış 100, gün 40-42 kapanış 103; yüksek = kapanış + 1, düşük = kapanış - 1;
+    yalnız `gun` günün yükseği `yuksek` (fitil)."""
+    kapanis = [96.0] * 22 + [100.0] * 18 + [103.0] * 3
+    yuk = [k + 1 for k in kapanis]
+    yuk[gun] = yuksek
+    return _mumlar(kapanis, yuksek=yuk)
+
+
+# Agresif giriş, aynı yardımcı (`dusus_yok`): `DUSUS` ayarı; gün 22'de sıçrama 96 -> 100: EMA2 gün 22 = 96 + 4 * 2/3 = 98,667, oran 0,0135 > eşik;
+# gün 23: EMA2 = 100 - 4/9 = 99,556, oran 0,00446 <= 0,005 -> koşu başı gün 23; t = 26 (koşu 23-25, 3 gün); gün 26 düşük 99: kutu alt 99.
+# ATR14 elle sabit 2: eşik = 99 + 3 * 2 = 105. Pencere = gün 3-22 (23 - 20 = 3). Fitil yüksek 105 = eşik: gün 3 ilk gün -> sayılır;
+# gün 2 pencerenin dışında -> sayılmaz; gün 22 son gün -> sayılır; gün 23 koşu başı günü dışında -> sayılmaz.
+# (Gün 0-21 koşusu 0'da başlar: koşu başı 0 < 20 -> `dusus` açıkken sayılmaz; sinyal yalnız gün 26'dan gelir.)
+@pytest.mark.parametrize(
+    "gun, beklenen",
+    [(2, []), (3, [26]), (22, [26]), (23, [])],
+    ids=["pencere-oncesi", "ilk-gun", "son-gun", "kosu-basi-gunu"],
+)
+def test_dusus_agresif_giriste_pencere_kosu_basindan_onceki_tam_20_gun(
+    monkeypatch, gun, beklenen
+):
+    f = _dusus_agresif_sinir_cercevesi(gun, 105.0)
+    _atr_ver(monkeypatch, f, np.full(len(f), 2.0))
+    assert _gunler(f, Parametre(giris="agresif", dusus=True, **DUSUS)) == beklenen
+
+
 def _arz_secim_cercevesi():
     """48 gün; yüksek = kapanış + 1, düşük = kapanış - 1 (gün 42 yükseği 100). Gün 0-13 düz 100 (ATR 2), 14-17 yükseliş
     (105; 111; 118; 122), 18-21 düşüş (121; 113; 108; 104), 22 mum 107, 23-24 (106; 98), 25-27 yükseliş (105; 110; 114),

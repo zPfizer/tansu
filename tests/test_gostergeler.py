@@ -250,3 +250,22 @@ def test_adx_yonlu_hareket_yoksa_dx_sifir_atr_sifir_dahil(yuksek, kapanis, bekle
     assert sonuc.dropna().tolist() == pytest.approx(
         [x for x in beklenen if x is not None], abs=1e-9
     )
+
+
+# KURALLAR §3 "Modül 1" gösterge teyidi: DX = 100 × |+DI − −DI| / (+DI + −DI); −DI > +DI olan günde DX pozitiftir (mutlak değer).
+# n=2. yüksek [10;9;8;7;8], düşük [8;7;6;5;6], kapanış [9;8;7;6;7].
+#   Gün 1, 2, 3: yukarı -1, aşağı 1 -> +DM 0, -DM 1; gerçek aralık = max(2; |yüksek - önceki kapanış|; |düşük - önceki kapanış|) = max(2; 1; 2) = 2.
+#   Gün 4: yukarı 1, aşağı -1 -> +DM 1, -DM 0; gerçek aralık max(2; |8-6| = 2; |6-6| = 0) = 2.
+#   Wilder (tohum gün 2 = gün 1 ve 2 ortalaması): +DM 0; 0; 0,5 (gün 2, 3, 4). -DM 1; 1; 0,5. TR 2; 2; 2.
+#   +DI = 100*+DM/TR: 0; 0; 25. -DI: 50; 50; 25.
+#   DX: gün 2 = 100*50/50 = 100; gün 3 = 100; gün 4 = 100*0/50 = 0.
+#   ADX: tohum gün 3 = (100 + 100)/2 = 100; gün 4 = (100 + 0)/2 = 50. Mutlak değer yoksa DX gün 2, 3 = -100 olur (ADX -100).
+def test_adx_eksi_di_arti_di_den_buyukse_dx_mutlak_degerdir():
+    sonuc = gostergeler.adx(
+        pd.Series([10.0, 9, 8, 7, 8]),
+        pd.Series([8.0, 7, 6, 5, 6]),
+        pd.Series([9.0, 8, 7, 6, 7]),
+        2,
+    )
+    assert sonuc.isna().tolist() == [True, True, True, False, False]
+    assert sonuc.iloc[3:].tolist() == pytest.approx([100.0, 50.0], abs=1e-9)
