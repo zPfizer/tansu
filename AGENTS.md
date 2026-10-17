@@ -1,6 +1,6 @@
 # TANSU
 
-TANSU is a daily signal and backtest (sınama) system for BIST. Tansu inspired it. The code follows the documents.
+TANSU is a daily signal and backtest (sınama) system for BIST. The code follows the documents.
 The behavior does not change before a document changes.
 
 ## Current state (Şimdiki durum)
@@ -57,17 +57,15 @@ first. Write the reason. Then write the code.
 
 ## Every job
 1. Write the intent of Levent and the flow letter in one line at the top of the first reply only. After that line, the result comes first. All text that Levent can see is Turkish, also the wrap_up text.
-2. Read the section "Current state" (Şimdiki durum) of this file.
-3. Unknown error or missing fact: run `py -3 C:\Users\levent\Desktop\YONETIM\beyin\beyin.py context "<q>" --harness claude --project TANSU --no-sync` before you search logs, code, or the web. <!-- driftlint-ignore: local-only path of the brain tool, absent in CI -->
-4. If the work type is unclear: `mattpocock-skills:ask-matt`.
-5. Send a design or technical question that needs the preference of Levent to the `vekil` subagent first. Levent gets only these: direction of the project, money, outgoing work, secrets, and delete. Levent also gets a Task Scheduler change and work that cannot be undone.
-6. Before you write an instruction or a prompt: `asd-ste100`.
-7. If you cannot show a source for a claim: `thinking-circle-of-competence`.
-8. If the problem type is unclear: `thinking-cynefin`. If the method is unclear: `thinking-model-router`.
-9. Choose the flow and the scope (`docs/agents/is-kurallari.md` "Scope").
+2. Unknown error or missing fact: run `py -3 C:\Users\levent\Desktop\YONETIM\beyin\beyin.py context "<q>" --harness claude --project TANSU --no-sync` before you search logs, code, or the web. <!-- driftlint-ignore: local-only path of the brain tool, absent in CI -->
+3. If the work type is unclear: `mattpocock-skills:ask-matt`.
+4. Send a design or technical question that needs the preference of Levent to the `vekil` subagent first. Levent gets only these: direction of the project, money, outgoing work, secrets, and delete. Levent also gets a Task Scheduler change and work that cannot be undone.
+5. Before you write an instruction or a prompt: `asd-ste100`.
+6. If you cannot show a source for a claim: `thinking-circle-of-competence`.
+7. If the problem type is unclear: `thinking-cynefin`. If the method is unclear: `thinking-model-router`.
+8. Choose the flow and the scope (`docs/agents/is-kurallari.md` "Scope").
 
 ## Work flow (İş akışı)
-Tansu has no flow F (memory) and no flow G (company output). They stay in the brain.
 Choose the flow by the work type. Call each skill by the exact name in backticks. Open the skill of the flow before the first step. Run the steps in order. Run an "If" row only when its condition is true.
 
 | Work type | Flow | Skill |
@@ -89,5 +87,5 @@ Each skill lives in `.claude/skills/<name>/SKILL.md` and owns the steps of its f
 - Issue tracker: `docs/agents/issue-tracker.md`. Triage labels: `docs/agents/triage-labels.md`. Domain docs: `docs/agents/domain.md`.
 
 ## Standards (Standartlar)
-`CODING_STANDARDS.md` and `DEFINITION_OF_DONE.md` are the standards of Tansu. `DEFINITION_OF_DONE.md` is Tansu's own copy. No shared original exists since 15.10 (Levent 15.10).
+`CODING_STANDARDS.md` and `DEFINITION_OF_DONE.md` are the standards of Tansu. `DEFINITION_OF_DONE.md` is Tansu's own copy.
 `CODING_STANDARDS.md` is different since 17.10 (Levent 17.10): it points to the shared general file and holds only the Tansu items. The `## Tansu` section at the end of each file holds the Tansu-only items. `tansu-yeni-is` "Review" reads both files and the general file.
