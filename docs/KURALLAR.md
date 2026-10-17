@@ -349,7 +349,8 @@ geometri sadakati yönsüz yapılır. (bilet 04, 14.10)
        - ATR merdiveni (E K25). Tansu: "Stop her zaman YUKARI hareket eder, aşağı inmez"
          (`tweet-atr-iz-suren-stop-tablosu-2045421697814126693`, görsel metni). n = ⌊(yüksek − giriş) / ATR_sinyal⌋. n ≥ 2
          ise stop = max(stop, giriş + (n − 2) × ATR_sinyal). Yani n = 2'de stop giriştir, n = 3'te 1 ATR'dir. Stop yalnız
-         yukarı gider. ATR sinyal günü değeridir (YORUM; E K25'te giriş günü ATR'sidir, o değer giriş AOF'undan önce
+         yukarı gider. ATR_sinyal = 0 ise (fiyatı 14 gün kıpırdamayan hisse) n tanımsızdır ve merdiven basamağı yoktur;
+         öbür kurallar sayıyla aynen uygulanır (YORUM; sıfıra bölme tanımsızdır). ATR sinyal günü değeridir (YORUM; E K25'te giriş günü ATR'sidir, o değer giriş AOF'undan önce
          bilinmez). Bu bölümdeki eşik karşılaştırmaları (n, `atr3`, `dip` etkinliği, başabaş) 9 ondalığa yuvarlanarak
          yapılır; kayan nokta hatası tam bir basamağı düşürmesin diye (YORUM).
        - Başabaş çıkışı (E K32). Tansu: "Eğer kârlı bölgeye geçtikten sonra fiyat geri dönerek tekrar tam olarak giriş
@@ -403,13 +404,14 @@ geometri sadakati yönsüz yapılır. (bilet 04, 14.10)
        momentum açık, teyit `yok`, düşüş `dusus` kapalı, kutu üstü `yuksek`, stop `kutu`, hedef `tansu`, R/R 2, çıkış `atr3` (YORUM: Tansu'nun söylediği
        kuralların birleşimi). Her varyant temelden tek boyut değiştirir. `bugun` istisnadır: varsayılan `Parametre()`
        değerleridir, yani yukarıdaki Giriş maddesinin bugünkü kuralıdır; karşılaştırma tabanıdır. Her varyant ayrı kural
-       kimliği ve ayrı denemedir (TASARIM §5.11). Tabloda 23 varyant vardır. Günlük kart `bugun` ile kalır (TASARIM §6).
+       kimliği ve ayrı denemedir (TASARIM §5.11). Tabloda 24 varyant vardır. Günlük kart `bugun` ile kalır (TASARIM §6).
 
        | Varyant | Değişen boyut ve değer | Kaynak |
        |---|---|---|
        | `bugun` | giriş `kutu`, hacim 0, momentum kapalı, teyit `yok`, stop `atr2`, hedef `yok`, çıkış `yok` | bugünkü kural (yukarıdaki Giriş maddesi) |
        | `tansu` | temel | yukarıdaki maddeler |
        | `ema_5_8_13` | periyotlar (5, 8, 13) | Tansu: "Ben 5-8-13 kullandım." (`tweet-ema-sikismasi-talep-bolgesi-kirilim-2002087132089770127`, Ham) |
+       | `ema_20_50_100` | periyotlar (20, 50, 100) | Tansu: "EMA'ların (örneğin EMA 20, 50, 100) birbirinin içine geçtiğini" (`tweet-ema-sikismasi-talep-bolgesi-kirilim-2002087132089770127`, Ham) |
        | `ema_10_20_50` | periyotlar (10, 20, 50) | Tansu: "EMA 10   EMA 20   EMA 50" (`tweet-ema-sikisma-tarama-1996662869107134897`, G1 görsel metni; PAPIL örneği) |
        | `ema_50_100_200` | periyotlar (50, 100, 200) | Tansu örnekleri: B §25, B §62 |
        | `giris_kutu` | giriş `kutu` | bugünkü giriş kuralı |
