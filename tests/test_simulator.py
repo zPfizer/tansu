@@ -227,7 +227,7 @@ def test_kapanan_hisse_acik_pozisyon_eksi_yuz_sayilir(tmp_path):
         pd.Timestamp("2026-04-30"),
         961,
     )
-    assert a.gerceklesen_kayip == pytest.approx(961 * 104.0)
+    assert a.gerceklesen_kayip == pytest.approx(99944.0)  # 961 × 104,0
     assert sim(s)["ozkaynak"].iloc[-1] == pytest.approx(899756.168, abs=1e-3)
     assert s["sim"]["bilgi"]["kapanma"] == 1
 
