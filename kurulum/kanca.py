@@ -58,7 +58,17 @@ def _cagrilar(yol):
             if blok.get("type") == "tool_use" and blok.get("name") == "Skill":
                 adlar.add(blok["input"]["skill"])
         if kayit.get("type") == "user":
-            adlar.update(re.findall(r"<command-name>/([^<]+)</command-name>", satir))
+            metinler = (
+                [icerik]
+                if isinstance(icerik, str)
+                else [
+                    b.get("text", "") for b in icerik or [] if b.get("type") == "text"
+                ]
+            )
+            for metin in metinler:
+                adlar.update(
+                    re.findall(r"<command-name>/([^<]+)</command-name>", metin)
+                )
     return adlar
 
 
@@ -87,14 +97,12 @@ def _beceri_kapisi(girdi):
 
 
 def _dosya_mu(belirtec, cwd):
-    # ponytail: any later token that is an existing file counts as the operand.
-    # Ceiling: "$x = Get-Content f" and nested calls pass; a file named like an option value (head -n 5, file "5") blocks.
     adaylar = (belirtec, re.sub(r"^/([a-zA-Z])/", r"\1:/", belirtec))
     return any((Path(cwd) / a).is_file() for a in adaylar)
 
 
 def _komutlar(komut):
-    """Her komut parçası için (komut adı, belirteçler); öndeki NAME=değer atamaları atılır."""
+    """Her komut parçası için (komut adı, belirteçler, öndeki NAME=değer atamaları)."""
     for parca in re.split(r"\|\||&&|[|;\n]", komut):
         try:
             belirtecler = shlex.split(
@@ -103,16 +111,19 @@ def _komutlar(komut):
         except ValueError:
             belirtecler = parca.split()
         belirtecler = [b.strip("\"'") for b in belirtecler]
+        atamalar = []
         while belirtecler and re.match(r"\w+=", belirtecler[0]):
-            belirtecler.pop(0)
+            atamalar.append(belirtecler.pop(0))
         if belirtecler:
             ad = Path(belirtecler[0].replace("\\", "/")).name.lower()
-            yield ad.removesuffix(".exe"), belirtecler
+            yield ad.removesuffix(".exe"), belirtecler, atamalar
 
 
 def _okuma_komutu(komut, cwd):
     """Dosya okuyan ilk komutun adını döner; yoksa None."""
-    for ad, belirtecler in _komutlar(komut):
+    # ponytail: any later token that is an existing file counts as the operand.
+    # Ceiling: "$x = Get-Content f" and nested calls pass; a file named like an option value (head -n 5, file "5") blocks.
+    for ad, belirtecler, _ in _komutlar(komut):
         if ad in OKUMA_KOMUTLARI and any(
             not b.startswith("-") and _dosya_mu(b, cwd) for b in belirtecler[1:]
         ):
@@ -121,14 +132,45 @@ def _okuma_komutu(komut, cwd):
 
 
 def _kapi_calistirir(komut):
-    """Bash'in kapi.ps1'i çalıştırıp çalıştırmadığı: komut adı powershell/pwsh ve parça kapi.ps1'i anar, ya da komut adı kapi.ps1 ile biter."""
+    """Bash'in kapi.ps1'i çalıştırıp çalıştırmadığı: komut adı kapi.ps1 ile biter, ya da komut adı powershell/pwsh ve bir belirtecin ilk sözcüğü (öndeki & veya . atılır) kapi.ps1 ile biter."""
     return any(
         ad.endswith("kapi.ps1")
         or (
             ad in ("powershell", "pwsh")
-            and any("kapi.ps1" in b.lower() for b in belirtecler)
+            and any(
+                (re.sub(r"^[&.]\s+", "", b).lower().split() or [""])[0].endswith(
+                    "kapi.ps1"
+                )
+                for b in belirtecler
+            )
         )
-        for ad, belirtecler in _komutlar(komut)
+        for ad, belirtecler, _ in _komutlar(komut)
+    )
+
+
+def _msys_eksik(komut):
+    """git <ref>:.<yol> parçası, MSYS_NO_PATHCONV=1 öneki ya da önceki 'export MSYS_NO_PATHCONV=1' olmadan var mı."""
+    verildi = False
+    for ad, belirtecler, atamalar in _komutlar(komut):
+        if ad == "export" and "MSYS_NO_PATHCONV=1" in belirtecler:
+            verildi = True
+        elif (
+            ad == "git"
+            and not verildi
+            and "MSYS_NO_PATHCONV=1" not in atamalar
+            and any(re.search(r"\S:\.[\w./-]", b) for b in belirtecler)
+        ):
+            return True
+    return False
+
+
+def _tirnaksiz(komut):
+    """Tırnaklı parçaları ve (( )) ifadelerini Q ile değiştirir; $( ) veya ters tırnak içeren çift tırnaklı parça kalır."""
+    return re.sub(
+        r'"(?:\\.|[^"\\])*"|\'[^\']*\'|\(\(.*?\)\)',
+        lambda m: m[0] if m[0][0] == '"' and re.search(r"\$\(|`", m[0]) else "Q",
+        komut,
+        flags=re.S,
     )
 
 
@@ -136,18 +178,14 @@ def _kabuk(girdi):
     komut = girdi["tool_input"]["command"]
     mesaj = None
     if girdi["tool_name"] == "Bash":
-        if re.search(r"(?<!<)<<(?!<)-?[ \t]*['\"A-Za-z_]", komut):
+        if re.search(r"(?<!<)<<(?!<)-?[ \t]*['\"\w]", _tirnaksiz(komut)):
             mesaj = (
                 "No heredoc. Give a commit message with several -m arguments or -F <file>. "
                 "Put Python code in a file or in one-line -c."
             )
         elif _kapi_calistirir(komut):
             mesaj = "Run kurulum\\kapi.ps1 with the PowerShell tool, not from Bash."
-        elif (
-            re.search(r"\bgit\b", komut)
-            and re.search(r"\S+:\.[\w./-]", komut)
-            and "MSYS_NO_PATHCONV=1" not in komut
-        ):
+        elif _msys_eksik(komut):
             mesaj = "Put MSYS_NO_PATHCONV=1 before git, or Git Bash changes the <ref>:<path> argument."
     if not mesaj and (ad := _okuma_komutu(komut, girdi.get("cwd") or ".")):
         mesaj = f"Read the file with the Read tool, not with {ad}."
@@ -180,25 +218,19 @@ def _alt_ajan_durdu(girdi):
     if girdi.get("stop_hook_active"):
         return 0
     eslesme = re.search(
-        r"(?:at most|en fazla)\s+(\d+)\s+(?:words?|sözcük|kelime)",
+        r"(?:at most|under|en fazla)\s+(\d+)\s+(?:words?|sözcük|kelime)",
         _ilk_kullanici_mesaji(girdi["agent_transcript_path"]),
         re.IGNORECASE,
     )
     sayi = len(girdi["last_assistant_message"].split())
     if eslesme and sayi > int(eslesme[1]):
         sinir = eslesme[1]
-        _yaz_json(
-            {
-                "decision": "block",
-                "reason": f"Your answer has {sayi} words. The limit of your prompt is {sinir} words. "
-                f"Write the answer again in at most {sinir} words.",
-            }
+        reason = (
+            f"Your answer has {sayi} words. The limit of your prompt is {sinir} words. "
+            f"Write the answer again in at most {sinir} words."
         )
+        print(json.dumps({"decision": "block", "reason": reason}))
     return 0
-
-
-def _yaz_json(nesne):
-    print(json.dumps(nesne))
 
 
 KANCALAR = {
