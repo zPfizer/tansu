@@ -44,11 +44,11 @@ first. Write the reason. Then write the code.
   - It blocks a shell read of a file, a Bash heredoc, `kapi.ps1` from Bash, and `git <ref>:.<path>` in Bash without `MSYS_NO_PATHCONV=1`.
   - It sends back a subagent answer that is over the word limit of its prompt. It sends back a last message that has a file name or `§` outside code blocks. It sends back each one time only.
   - After `gh pr create`, it tells you to call the ccd_pr tools.
-- **Waiting (Bekleme):** Claude Code blocks `sleep` and `Start-Sleep`. Run a long command alone in one call. The full gate takes 1.5 to 2.5 minutes.
+- **Waiting (Bekleme):** Claude Code blocks `sleep` and `Start-Sleep`. Run a long command alone in one call. The full gate took 215 s on 17.10.
   Run it in the foreground with a timeout of at most 600000 ms. Or use `run_in_background` and one Monitor on it.
   Do not put `git commit` and the full test in one call. Do not poll with a loop of status calls. In Git Bash, `pgrep` does not see PowerShell processes.
 - **Temporary files (Geçici dosyalar):** Write them under `$TEMP` or under `.scratch/<job>/tmp/` of the main checkout. Never write one to a tracked path.
-  The permission system refuses a recursive delete (`rm -rf`, `Remove-Item -Recurse`). Do not try it. List the leftover paths in the report. Levent deletes them.
+  The permission system refuses a recursive delete (`rm -rf`, `Remove-Item -Recurse`). Do not try it. List the leftover paths in a code block of the report. Levent deletes them.
 - **Shell state (Kabuk durumu):** Each shell call starts new. A `cd`, a variable, or an `export` does not carry over. `$CLAUDE_PROJECT_DIR` exists only in hooks. Use full paths.
 - **Copied values (Kopya değerler):** Copy an id, a path, a sha, or a number from a command output of this session. Do not write it from memory or from the report of another agent.
   Search a Markdown heading with `^#+ <text>`, because its level can differ.

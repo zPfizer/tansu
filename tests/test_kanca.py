@@ -4,7 +4,6 @@ Testler betiği alt süreç olarak çalıştırır; girdi birebir JSON'dur, bekl
 """
 
 import json
-import os
 import subprocess
 import sys
 from pathlib import Path
@@ -453,94 +452,3 @@ def test_son_mesaj_temizse_veya_kod_blogundaysa_gecer(son):
 def test_son_mesaj_ikinci_kez_geri_gonderilmez():
     s = _durdur("Open AGENTS.md first.", stop_hook_active=True)
     assert (s.returncode, s.stdout, s.stderr) == (0, "", "")
-
-
-# --- 05: ste-fark ---
-
-SAHTE_LINTER = (
-    "import sys\n"
-    "metin = sys.stdin.read()\n"
-    "print('linter girdisi:', metin.strip())\n"
-    "sys.exit(1 if ';' in metin else 0)\n"
-)
-
-
-def _git(kok, *args):
-    subprocess.run(
-        ["git", "-c", "user.name=T", "-c", "user.email=t@example.com"]
-        + ["-c", "commit.gpgsign=false", "-C", str(kok), *args],
-        check=True,
-        capture_output=True,
-        encoding="utf-8",
-    )
-
-
-@pytest.fixture
-def depo(tmp_path):
-    """Eski AGENTS.md satırında noktalı virgül var; hepsi kayıtlı."""
-    kok = tmp_path / "depo"
-    kok.mkdir()
-    _git(kok, "init", "-q", "-b", "master")
-    (kok / "AGENTS.md").write_text("eski; satir\n", encoding="utf-8")
-    (kok / "docs").mkdir()
-    (kok / "docs" / "TASARIM.md").write_text("tasarim\n", encoding="utf-8")
-    _git(kok, "add", "AGENTS.md", "docs/TASARIM.md")
-    _git(kok, "commit", "-q", "-m", "ilk")
-    return kok
-
-
-@pytest.fixture
-def linter(tmp_path):
-    yol = tmp_path / "sahte_linter.py"
-    yol.write_text(SAHTE_LINTER, encoding="utf-8")
-    return yol
-
-
-def _fark(depo, linter):
-    return _kos({}, "ste-fark", "HEAD", str(linter), cwd=depo)
-
-
-def test_ste_fark_eklenen_noktali_virgulde_kalir(depo, linter):
-    with (depo / "AGENTS.md").open("a", encoding="utf-8") as f:
-        f.write("yeni; satir\n")
-    s = _fark(depo, linter)
-    assert s.returncode == 1
-    assert "ste-fark: eklenen satir = 1" in s.stdout
-    assert "linter girdisi: yeni; satir" in s.stdout
-
-
-def test_ste_fark_eski_noktali_virgul_ve_temiz_ekleme_gecer(depo, linter):
-    with (depo / "AGENTS.md").open("a", encoding="utf-8") as f:
-        f.write("yeni temiz satir\n")
-    s = _fark(depo, linter)
-    assert "ste-fark: eklenen satir = 1" in s.stdout
-    assert "linter girdisi: yeni temiz satir" in s.stdout
-    assert "eski" not in s.stdout
-    assert s.returncode == 0
-
-
-def test_ste_fark_yonerge_disi_dosya_sayilmaz(depo, linter):
-    (depo / "docs" / "TASARIM.md").write_text("tasarim; degisti\n", encoding="utf-8")
-    s = _fark(depo, linter)
-    assert (s.returncode, s.stdout) == (0, "ste-fark: eklenen satir = 0\n")
-
-
-def test_ste_fark_linter_dosyasi_yoksa_kalir(depo, tmp_path):
-    with (depo / "AGENTS.md").open("a", encoding="utf-8") as f:
-        f.write("yeni temiz satir\n")
-    yok = tmp_path / "yok.py"
-    s = _fark(depo, yok)
-    assert s.returncode == 1
-    assert f"ste-fark: linter yok: {yok}" in s.stdout
-
-
-def test_ste_fark_varsayilan_linter_ev_klasorundedir(depo, tmp_path):
-    with (depo / "AGENTS.md").open("a", encoding="utf-8") as f:
-        f.write("yeni temiz satir\n")
-    ev = tmp_path / "ev"
-    ev.mkdir()
-    env = {**os.environ, "USERPROFILE": str(ev), "HOME": str(ev)}
-    s = _kos({}, "ste-fark", "HEAD", cwd=depo, env=env)
-    beklenen = ev / ".claude" / "skills" / "asd-ste100" / "scripts" / "ste-lint.py"
-    assert s.returncode == 1
-    assert f"ste-fark: linter yok: {beklenen}" in s.stdout

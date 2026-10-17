@@ -8,7 +8,6 @@ An exception ends with exit 1. Claude Code shows the error and does not block. A
 - PostToolUse Bash, PowerShell: after gh pr create, a reminder to call the ccd_pr tools.
 - SubagentStop: an answer longer than the word limit of the subagent prompt is sent back once.
 - Stop: a final message with a file name or the sign § outside code blocks is sent back once.
-- ste-fark <base> [linter]: the STE linter reads only the lines added to the instruction files since <base>.
 
 The skill gate mirrors AGENTS.md "Every job" (STE before instruction text)
 and `tansu-yeni-is` "Build" (tdd and ponytail before code).
@@ -17,33 +16,12 @@ and `tansu-yeni-is` "Build" (tdd and ponytail before code).
 import json
 import re
 import shlex
-import subprocess
 import sys
 from pathlib import Path
 
-YONERGE_ADLARI = {
-    "AGENTS.md",
-    "CLAUDE.md",
-    "CODING_STANDARDS.md",
-    "DEFINITION_OF_DONE.md",
-}
-YONERGE_YOLLARI = [
-    (".github", "pull_request_template.md"),
-    ("docs", "agents"),
-    (".claude", "agents"),
-    (".claude", "skills"),
-]
+from ste_fark import YONERGE_YOLLARI
+
 KOD_KLASORLERI = {"tansu", "tests", "kurulum", ".github"}
-STE_YOLLARI = [
-    "AGENTS.md",
-    "CLAUDE.md",
-    "CODING_STANDARDS.md",
-    "DEFINITION_OF_DONE.md",
-    ".github/pull_request_template.md",
-    "docs/agents",
-    ".claude/agents",
-    ".claude/skills",
-]
 OKUMA_KOMUTLARI = {
     "cat",
     "head",
@@ -91,9 +69,7 @@ def _ardisik(parcalar, dizi):
 
 def _gerekli_beceriler(dosya):
     parcalar = dosya.replace("\\", "/").split("/")
-    if parcalar[-1] in YONERGE_ADLARI or any(
-        _ardisik(parcalar, y) for y in YONERGE_YOLLARI
-    ):
+    if any(_ardisik(parcalar, y.split("/")) for y in YONERGE_YOLLARI):
         return ["asd-ste100"]
     if parcalar[-1].endswith((".py", ".ps1")) and KOD_KLASORLERI & set(parcalar[:-1]):
         return ["mattpocock-skills:tdd", "ponytail:ponytail"]
@@ -253,41 +229,10 @@ KANCALAR = {
 }
 
 
-def ste_fark(taban, linter=None):
-    """STE linter'ı yalnız yönerge dosyalarına eklenen satırlarla çalıştırır; çıkış kodu linter'ınkidir."""
-    fark = subprocess.run(
-        ["git", "diff", "-U0", "--no-color", taban, "--", *STE_YOLLARI],
-        check=True,
-        capture_output=True,
-        encoding="utf-8",
-    ).stdout
-    eklenen = [
-        s[1:]
-        for s in fark.splitlines()
-        if s.startswith("+") and not s.startswith("+++")
-    ]
-    print(f"ste-fark: eklenen satir = {len(eklenen)}", flush=True)
-    if not eklenen:
-        return 0
-    linter = Path(
-        linter or Path.home() / ".claude/skills/asd-ste100/scripts/ste-lint.py"
-    )
-    if not linter.exists():
-        print(f"ste-fark: linter yok: {linter}")
-        return 1
-    return subprocess.run(
-        [sys.executable, "-X", "utf8", str(linter)],
-        input="\n".join(eklenen) + "\n",
-        encoding="utf-8",
-    ).returncode
-
-
-def main(argv):
-    if argv[:1] == ["ste-fark"]:
-        return ste_fark(*argv[1:])
+def main():
     girdi = json.load(sys.stdin)
     return KANCALAR.get(girdi["hook_event_name"], lambda g: 0)(girdi)
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(main())
