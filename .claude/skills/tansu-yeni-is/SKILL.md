@@ -36,7 +36,7 @@ Task scope skips Sharpen, Spec, and Tickets. It runs Build, Test gate, and Proof
 | a step only a human can do | `mattpocock-skills:wizard`. |
 | the code has bloat | `ponytail:ponytail-review`. If a function is complex: `cyclomatic-complexity`. |
 | the work includes untrusted input (for example downloaded data) or permissions | `thinking-red-team`. |
-| the work changes an HTML report | show the proof with `anthropic-skills:built-in-browser`. Open the site with `preview_start arayuz`; the Browser tool refuses a file URL. |
+| the work changes an HTML report | show the proof with `anthropic-skills:built-in-browser`. Open the site with `preview_start arayuz`. The Browser tool refuses a file URL. |
 | the work meets an operational limit or quota (for example a rate limit of a data source) | `thinking-margin-of-safety`. |
 | the work is a batch content job with a fixed line rule (map lines, labels, tags) | use task scope: skip Sharpen, Spec, and Tickets. The job prompt holds the rule and the proof. (Retro 15.10) |
 | the brief names a decided spec file (the edit set and its tests, decided by Levent or by the session that started the job) | Sharpen, Spec, and Tickets do not run. The PR body names the spec file in `Akış notu:`. Build runs `mattpocock-skills:implement` on the spec file. |
