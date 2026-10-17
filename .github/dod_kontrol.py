@@ -43,6 +43,11 @@ KAPI_ONEKLERI = (
     "kapi: git diff --check",
     "kapi: HEAD",
 )
+KURAL_15 = "Kural 15: PR gövdesinde Closes #<issue> satırı olmalı."
+KAPATMA = re.compile(
+    r" *(close|closes|closed|fix|fixes|fixed|resolve|resolves|resolved) #[0-9]+\s*",
+    re.IGNORECASE,
+)
 KALDI = re.compile(r"(?<!\w)kald[ıiIİ](?!\w)", re.IGNORECASE)
 SUPHE = re.compile(r"(?<!\w)(olabilir|belki|şüphe|emin\s+değ[iİ]l)", re.IGNORECASE)
 
@@ -400,6 +405,7 @@ def hatalar(
             "Kural 9: gövde boş; ## Bağımsız inceleme bölümünde Denetçi kararı (aynen):, "
             "Yanlış iddia sayısı: ve İkinci geçiş: satırı yok.",
             "Kural 10: gövde boş; ## Gerçek veri kanıtı bölümünde kapi: satırları yok.",
+            KURAL_15,
         ]
 
     satirlar = govde.splitlines()
@@ -474,6 +480,8 @@ def hatalar(
         sonuc.append("Kural 13: " + "; ".join(parcalar) + ".")
     if inceleme is not None:
         sonuc += _bulgu_hatasi(inceleme, yeni[2])
+    if not any(KAPATMA.fullmatch(satir) for satir in satirlar):
+        sonuc.append(KURAL_15)
     return sonuc
 
 

@@ -5,6 +5,7 @@ gerçekten okunur. Bir cümle yanlışsa test kırılır ve cümle düzeltilir.
 """
 
 import re
+import subprocess
 
 import pytest
 from test_atif import _belgeler, _sorgu
@@ -215,8 +216,74 @@ def test_ci_aracleri_tam_surume_sabitli_ve_agents_bunu_soyler():
     )
 
 
-def test_driftlint_yapilandirmasi_yalniz_scratch_i_dislar():
+def test_driftlint_yapilandirmasi_yalniz_scratch_ve_worktrees_i_dislar():
     yapilandirma = (KOK / ".driftlintrc.json").read_text(encoding="utf-8")
     assert re.fullmatch(
-        r'\s*\{\s*"ignore":\s*\[\s*"\.scratch/\*\*"\s*\]\s*\}\s*', yapilandirma
+        r'\s*\{\s*"ignore":\s*\[\s*"\.scratch/\*\*"\s*,\s*"\.claude/worktrees/\*\*"\s*\]\s*\}\s*',
+        yapilandirma,
     )
+
+
+# Uzak depo adı origin'dir. Eski ad yalnız .scratch/ altında kalır; depo adı ve modül adı eşleşmez.
+# Sözcük parçalı yazılır: bu dosya kendini bulmasın.
+ESKI = "kay" + "nak"
+ESKI_AD_DESENI = re.compile(
+    rf"(?<![\w-]){ESKI}/master"
+    rf"|\b(?:fetch|push|pull)(?: -\S+)* {ESKI}\b"
+    rf"|-u {ESKI}\b"
+    rf"|remotes/{ESKI}\b"
+    rf"|remote add {ESKI}\b"
+)
+
+
+@pytest.mark.parametrize(
+    ("satir", "eslesir"),
+    [
+        ("git fetch " + ESKI, True),
+        ("git fetch -q " + ESKI, True),
+        (ESKI + "/master", True),
+        ("git push -q -u " + ESKI + " <dal>", True),
+        ("git pull --ff-only " + ESKI + " master", True),
+        ("refs/remotes/" + ESKI + "/x", True),
+        ("git remote add " + ESKI + " url", True),
+        ("zPfizer/tansu-" + ESKI, False),
+        ("tansu/" + ESKI + ".py", False),
+        ("tests/test_" + ESKI + ".py", False),
+        (ESKI + "-a-b-12", False),
+        ("`" + ESKI + "` modülü", False),
+        ("veri " + ESKI + "ları", False),
+        ("origin/master", False),
+    ],
+)
+def test_eski_ad_deseni_yakin_kacirmalari_eslemez(satir, eslesir):
+    assert bool(ESKI_AD_DESENI.search(satir)) is eslesir
+
+
+def test_izlenen_dosyalar_uzak_depo_adini_eski_adla_yazmaz():
+    cikti = subprocess.run(
+        ["git", "ls-files", "-z"],
+        cwd=KOK,
+        check=True,
+        capture_output=True,
+        encoding="utf-8",
+    ).stdout
+    bulunan = []
+    for goreli in cikti.split("\0"):
+        if not goreli or goreli.startswith(".scratch/"):
+            continue
+        yol = KOK / goreli
+        if not yol.is_file():
+            continue
+        veri = yol.read_bytes()
+        if b"\0" in veri:
+            continue
+        try:
+            satirlar = veri.decode("utf-8").splitlines()
+        except UnicodeDecodeError as hata:
+            pytest.fail(f"{goreli}: UTF-8 değil ({hata})")
+        bulunan += [
+            f"{goreli}:{no}"
+            for no, satir in enumerate(satirlar, 1)
+            if ESKI_AD_DESENI.search(satir)
+        ]
+    assert not bulunan, "\n".join(bulunan)
