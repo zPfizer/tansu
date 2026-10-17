@@ -88,7 +88,11 @@ def _kural(t, days, gunler, g, C, Lq, masraf):
     if (satir < 0).any():
         raise KeyError("sinyal günü likidite tablosunda yok")
     lq = dict(
-        zip(t.index, Lq.to_numpy()[satir, [Lq.columns.get_loc(s) for s in t["sembol"]]])
+        zip(
+            t.index,
+            Lq.to_numpy()[satir, [Lq.columns.get_loc(s) for s in t["sembol"]]],
+            strict=True,
+        )
     )
     acik, alinan, reddedilen = {}, {}, 0
     nakit, ozk_onceki, ozk, pay = SERMAYE, SERMAYE, [], []
@@ -125,7 +129,7 @@ def _kural(t, days, gunler, g, C, Lq, masraf):
         fiyat = [Cn[pos[i], kol[sembol[k]]] for k in acik]
         mv = sum(
             a * (p if np.isfinite(p) else gfiyat[k])
-            for (k, a), p in zip(acik.items(), fiyat)
+            for (k, a), p in zip(acik.items(), fiyat, strict=True)
         )
         ozk_onceki = nakit + mv
         ozk.append(ozk_onceki)
@@ -244,7 +248,7 @@ def zemin(anlik, evr, days, ekstra, kg) -> dict:
 def k2_egri(pay, rb, g, baslangic=SERMAYE) -> np.ndarray:
     """K2 özkaynağı: her gün sepet getirisi hisse payı kadar, kalanı gecelik faiz (TASARIM 5.7)."""
     k2, e = [], baslangic
-    for p, r, gece in zip(pay, rb, g):
+    for p, r, gece in zip(pay, rb, g, strict=True):
         e *= 1 + p * r + (1 - p) * gece
         k2.append(e)
     return np.array(k2)
@@ -264,7 +268,10 @@ def _suzgec(islemler, evr, ilk, kg) -> tuple:
     t = islemler.loc[islemler["sinyal_tarih"] >= ilk].copy()
     ay = t["sinyal_tarih"].dt.to_period("M")
     t = t.loc[
-        np.array([s in evr.get(a, ()) for s, a in zip(t["sembol"], ay)], dtype=bool)
+        np.array(
+            [s in evr.get(a, ()) for s, a in zip(t["sembol"], ay, strict=True)],
+            dtype=bool,
+        )
     ].reset_index(drop=True)
     sayi = 0
     for (
@@ -294,7 +301,13 @@ def k1_baglam(anlik, evr, bas=BASLANGIC) -> dict:
     ilk = ilk_gun(anlik, bas)
     days = gunler[gunler >= ilk]  # kapanma günleri de takvimdedir
     kap = evren_modulu.kapananlar(anlik)
-    kg = dict(zip(kap["sembol"], zip(kap["son_islem"], kap["kapanma_gunu"])))
+    kg = dict(
+        zip(
+            kap["sembol"],
+            zip(kap["son_islem"], kap["kapanma_gunu"], strict=True),
+            strict=True,
+        )
+    )
     z = zemin(anlik, evr, days, set(), kg)
     onceki = np.concatenate([[1.0], z["sepet"].to_numpy()[:-1]])
     return {
@@ -367,7 +380,13 @@ def calistir(
     }
     kap = evren_modulu.kapananlar(anlik)
     bilgi["kapananlar"] = len(kap)
-    kg = dict(zip(kap["sembol"], zip(kap["son_islem"], kap["kapanma_gunu"])))
+    kg = dict(
+        zip(
+            kap["sembol"],
+            zip(kap["son_islem"], kap["kapanma_gunu"], strict=True),
+            strict=True,
+        )
+    )
     t, bilgi["kapanma"] = _suzgec(islemler, evr, ilk, kg)
     days = pd.DatetimeIndex(sorted({*days, *t["giris_tarih"], *t["cikis_tarih"]}))
     z = zemin(anlik, evr, days, set(t["sembol"]), kg)

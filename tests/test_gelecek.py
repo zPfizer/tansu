@@ -70,27 +70,27 @@ def evren_(tam, kes_, t):
 def gostergeler_(tam, kes_, t):
     for s in ("S000", "S007"):
         for ad, f in {
-            "ema": lambda a: gostergeler.ema(seri(a, s), 20),
-            "sma": lambda a: gostergeler.sma(seri(a, s), 50),
-            "atr": lambda a: gostergeler.atr(
+            "ema": lambda a, s=s: gostergeler.ema(seri(a, s), 20),
+            "sma": lambda a, s=s: gostergeler.sma(seri(a, s), 50),
+            "atr": lambda a, s=s: gostergeler.atr(
                 seri(a, s, "yuksek"), seri(a, s, "dusuk"), seri(a, s), 14
             ),
-            "sikisma": lambda a: gostergeler.sikisma_orani(seri(a, s)),
-            "rsi": lambda a: gostergeler.rsi(seri(a, s), 14),
-            "momentum": lambda a: gostergeler.momentum_squeeze(
+            "sikisma": lambda a, s=s: gostergeler.sikisma_orani(seri(a, s)),
+            "rsi": lambda a, s=s: gostergeler.rsi(seri(a, s), 14),
+            "momentum": lambda a, s=s: gostergeler.momentum_squeeze(
                 seri(a, s, "yuksek"), seri(a, s, "dusuk"), seri(a, s)
             ),
-            "adx": lambda a: gostergeler.adx(
+            "adx": lambda a, s=s: gostergeler.adx(
                 seri(a, s, "yuksek"), seri(a, s, "dusuk"), seri(a, s)
             ),
-            "macd": lambda a: gostergeler.macd_histogram(seri(a, s)),
-            "psar": lambda a: gostergeler.psar(
+            "macd": lambda a, s=s: gostergeler.macd_histogram(seri(a, s)),
+            "psar": lambda a, s=s: gostergeler.psar(
                 seri(a, s, "yuksek"), seri(a, s, "dusuk")
             ),
-            "stokastik_k": lambda a: gostergeler.stokastik(
+            "stokastik_k": lambda a, s=s: gostergeler.stokastik(
                 seri(a, s, "yuksek"), seri(a, s, "dusuk"), seri(a, s)
             )[0],
-            "stokastik_d": lambda a: gostergeler.stokastik(
+            "stokastik_d": lambda a, s=s: gostergeler.stokastik(
                 seri(a, s, "yuksek"), seri(a, s, "dusuk"), seri(a, s)
             )[1],
         }.items():
@@ -308,14 +308,14 @@ def tansusinama_(tam, kes_, t):
             )
             for a in (tam, kes_)
         ]
-        for tb, kb in zip(*tablolar):
+        for tb, kb in zip(*tablolar, strict=True):
             pd.testing.assert_frame_equal(
                 tb.loc[tb["cikis_tarih"] < t, sutunlar].reset_index(drop=True),
                 kb.loc[kb["cikis_tarih"] < t, sutunlar].reset_index(drop=True),
                 check_dtype=False,  # boş tablonun sütunları object kalır
             )
             toplam += int((tb["cikis_tarih"] < t).sum())
-        for liste, tb in zip(secimler, tablolar):
+        for liste, tb in zip(secimler, tablolar, strict=True):
             yillar = tansusinama.ileri(tb, sekil, bas, son)["yillar"]
             liste.append([y for y in yillar if y["yil"] <= t.year])
     assert toplam > 0 or t < pd.Timestamp("2014-06-01")  # sınama boş değil
@@ -345,16 +345,16 @@ def tansusinama_cift_(tam, kes_, t):
         "cikis_fiyat",
     ]
     toplam, secimler = 0, [[], []]
-    for jt, jk in zip(*isler):
+    for jt, jk in zip(*isler, strict=True):
         tablolar = [tansusinama.cift_tablolari(*j[2:4], *j[5:])[0] for j in (jt, jk)]
-        for tb, kb in zip(*tablolar):
+        for tb, kb in zip(*tablolar, strict=True):
             pd.testing.assert_frame_equal(
                 tb.loc[tb["cikis_tarih"] < t, sutunlar].reset_index(drop=True),
                 kb.loc[kb["cikis_tarih"] < t, sutunlar].reset_index(drop=True),
                 check_dtype=False,  # boş tablonun sütunları object kalır
             )
             toplam += int((tb["cikis_tarih"] < t).sum())
-        for liste, tb in zip(secimler, tablolar):
+        for liste, tb in zip(secimler, tablolar, strict=True):
             yillar = tansusinama.ileri(tb, sekil, bas, son)["yillar"]
             liste.append([y for y in yillar if y["yil"] <= t.year])
     assert toplam > 0 or t < pd.Timestamp("2014-06-01")  # sınama boş değil

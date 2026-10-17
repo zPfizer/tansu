@@ -32,7 +32,9 @@ GUNLER = pd.bdate_range("2025-01-01", periods=270)
 def seri_a():
     return [
         mum(g, k, y, k - 0.5, 1e9)
-        for g, k, y in zip(pd.bdate_range("2026-01-26", periods=8), KAP_A, YUK_A)
+        for g, k, y in zip(
+            pd.bdate_range("2026-01-26", periods=8), KAP_A, YUK_A, strict=True
+        )
     ]
 
 
@@ -45,7 +47,7 @@ def cift_anlik(tmp_path, a_satir=None, ek=None, b_gun=270):
     hesaplanır); değer None ise A'nın o günü satırı yoktur. `ek`: ek hisse serileri; `b_gun`: B'nin satır sayısı."""
     a = [95.0 if 255 <= i < 262 else 100.0 for i in range(270)]
     sabit = [mum(g, 100.0) for g in GUNLER]
-    a_mum = [mum(g, k) for g, k in zip(GUNLER, a)]
+    a_mum = [mum(g, k) for g, k in zip(GUNLER, a, strict=True)]
     for i, alan in (a_satir or {}).items():
         if alan is not None:
             a_mum[i].update(alan)
@@ -224,7 +226,8 @@ def test_makine_cekirdek_bellek_ve_gpu():
 def yillik(*getiriler):
     """2016-2021 yıllık işlem: 03.02 giriş, 03.10 çıkış."""
     return [
-        (f"{y}-03-02", f"{y}-03-10", r) for y, r in zip(range(2016, 2022), getiriler)
+        (f"{y}-03-02", f"{y}-03-10", r)
+        for y, r in zip(range(2016, 2022), getiriler, strict=True)
     ]
 
 
@@ -560,7 +563,11 @@ def test_sonraki_hissenin_kendi_kapanisi_olan_gunler_sayilir(tmp_path):
     gun = list(pd.bdate_range("2026-01-26", periods=10))
     kap = [100.0] * 5 + [103.0, 104.0, None, 110.0, 111.0]
     yuk = [100.5, 100.5, 101, 100.5, 100.5, 103.5, 104.5, None, 110.5, 111.5]
-    a = [mum(g, k, y, k - 0.5, 1e9) for g, k, y in zip(gun, kap, yuk) if k is not None]
+    a = [
+        mum(g, k, y, k - 0.5, 1e9)
+        for g, k, y in zip(gun, kap, yuk, strict=True)
+        if k is not None
+    ]
     s = ts.calistir(
         ema_anlik(tmp_path, duz(1e9, adet=10), a),
         {},
@@ -811,7 +818,7 @@ def test_sonraki_gecersiz_gun_sayilmaz(tmp_path):
     gun = list(pd.bdate_range("2026-01-26", periods=10))
     kap = [100.0] * 5 + [103.0, 104.0, 105.0, 110.0, 111.0]
     yuk = [100.5, 100.5, 101, 100.5, 100.5, 103.5, 104.5, 105.5, 110.5, 111.5]
-    a = [mum(g, k, y, k - 0.5, 1e9) for g, k, y in zip(gun, kap, yuk)]
+    a = [mum(g, k, y, k - 0.5, 1e9) for g, k, y in zip(gun, kap, yuk, strict=True)]
     a[7].update(kapanis=0.0, ham_kapanis=0.0)
     s = ts.calistir(
         ema_anlik(tmp_path, duz(1e9, adet=10), a),
