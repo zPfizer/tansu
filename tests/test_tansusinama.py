@@ -16,7 +16,7 @@ import pandas as pd
 import pytest
 
 from tansu import __main__ as komut
-from tansu import kayit
+from tansu import aileler, kayit, motor
 from tansu import tansusinama as ts
 from tests.test_k1 import anlik_hazirla
 from tests.test_simulator import BAS, KAP, P, YUK, duz, mum
@@ -989,6 +989,53 @@ def test_cift_sonsuz_duzeltilmis_fiyat_karantina_gunu(tmp_path):
     assert h["al_tut"] == pytest.approx(-0.001998, abs=1e-6)
     assert h["donem"] == donem(251, 269)
     sade(s)
+
+
+@pytest.mark.parametrize(
+    "sonsuz, girisler",
+    [(False, [256, 266]), (True, [266])],
+    ids=["temiz", "sonsuz"],
+)
+def test_ema_sonsuz_duzeltilmis_fiyat_giris_engeli_250_satir(
+    tmp_path, sonsuz, girisler
+):
+    # TASARIM 5.14: 14. dizindeki sonsuz fiyat 14-263 aralığında giriş açtırmaz.
+    # Temiz seride 255 ve 265 sinyalleri ertesi gün giriş açar; engel yalnız ilkini önler.
+    a = duz(1e9, adet=270)
+    # İlk örüntü sonsuz yükseği içeren sıkışmayı sınama döneminden önce bitirir.
+    for bas in (30, 250, 260):
+        for i, satir in enumerate(seri_a(), start=bas):
+            a[i] = {**satir, "tarih": a[i]["tarih"]}
+    if sonsuz:
+        a[14].update(dict.fromkeys(("aof", "kapanis", "yuksek", "dusuk"), float("inf")))
+    m = motor.mumlar(ema_anlik(tmp_path, a=a), "A", P)
+    assert not m["karantina"].iloc[14]  # Ham fiyatlar temiz: veri katmanı engellemez.
+    sinyaller = aileler.sinyal(m, P)
+    assert sinyaller[sinyaller >= m.index[250]].tolist() == m.index[[255, 265]].tolist()
+    tablolar = ts.ema_tablolari(m, P, EMA_IZGARA, m.index[250])
+    assert tablolar[0]["giris_tarih"].tolist() == m.index[girisler].tolist()
+
+
+@pytest.mark.parametrize(
+    "sonsuz, girisler",
+    [(False, [257, 264]), (True, [264])],
+    ids=["temiz", "sonsuz"],
+)
+def test_cift_sonsuz_duzeltilmis_fiyat_giris_engeli_250_satir(
+    tmp_path, sonsuz, girisler
+):
+    # TASARIM 5.14: 14. dizindeki sonsuz fiyat 14-263 aralığında giriş açtırmaz.
+    # 257. gün A girişi engellenir; 264. gün B girişi engelden sonraki ilk satırdadır.
+    satir = dict.fromkeys(("aof", "kapanis", "yuksek", "dusuk"), float("inf"))
+    anlik = cift_anlik(tmp_path, {14: satir} if sonsuz else None)
+    isler, atlanan = ts.cift_isleri(
+        anlik, {"A": "X", "B": "X"}, ["A", "B"], "2015-12-01", CIFT_IZGARA
+    )
+    assert atlanan == []
+    _, _, y, x, _, gunler, C, A, F, bas_k, izgara = isler[0]
+    assert not F["Kar"][14].any()  # Ham fiyatlar temiz: veri katmanı engellemez.
+    tablolar, _, _ = ts.cift_tablolari(y, x, gunler, C, A, F, bas_k, izgara)
+    assert tablolar[0]["giris_tarih"].tolist() == gunler[girisler].tolist()
 
 
 def test_cift_tek_gunluk_donem_gecersiz_fiyat_atlanir(tmp_path):
