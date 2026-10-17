@@ -1,4 +1,5 @@
 import importlib.util
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -28,6 +29,7 @@ Denetçi: Ayşe
 Denetçi kararı (aynen): GEÇTİ, bulgu yok.
 Yanlış iddia sayısı: 0
 İkinci geçiş: yok
+Bulgu sayısı: 0
 Sonuç: GEÇTİ
 ## Gerçek veri kanıtı
 ```text
@@ -38,8 +40,15 @@ kapi: ruff check -> 0
 kapi: ruff format -> 0
 kapi: git diff --check -> 0
 kapi: HEAD 0123456789abcdef0123456789abcdef01234567 temiz
-Çağrılan beceriler: tansu-yeni-is, verification-before-completion, mattpocock-skills:pr, mattpocock-skills:code-review
 Akış: tansu-yeni-is
+Çağrılan beceriler: tansu-yeni-is, verification-before-completion, mattpocock-skills:pr, mattpocock-skills:code-review
+Denetlenen commit: 0123456789abcdef0123456789abcdef01234567
+## Risk
+Küçük risk.
+## Nasıl geri alınır
+PR geri alınır.
+## Bulgu yanıtları
+bulgu yok
 """
 SHA = "0123456789abcdef0123456789abcdef01234567"
 SHA_BASKA = "fedcba9876543210fedcba9876543210fedcba98"
@@ -609,7 +618,8 @@ def test_kural_10_pytest_belge_ve_bosluk_kabul_edilir():
 def test_kural_10_head_pr_basi_ile_eslesir():
     assert hatalar(GECERLI, SHA) == []
     assert hatalar(GECERLI, None) == []
-    assert hatalar(GECERLI, SHA_BASKA) == [
+    govde = GECERLI.replace(DENETLENEN, f"Denetlenen commit: {SHA_BASKA}\n")
+    assert hatalar(govde, SHA_BASKA) == [
         R10.format(
             f"kapi: HEAD değeri PR başından farklı; beklenen: {SHA_BASKA}, bulunan: {SHA}"
         )
@@ -691,6 +701,254 @@ def test_kural_11_inceleme_yer_tutucusu():
     assert hatalar(GECERLI + "<!-- İNCELEME -->\nİNCELEME\n") == [
         "Kural 11: PR gövdesinde İNCELEME yer tutucusu kalmış."
     ]
+
+
+DENETLENEN = f"Denetlenen commit: {SHA}\n"
+R12_SATIR = (
+    "Kural 12: PR gövdesinde Denetlenen commit: <40 küçük harfli onaltılı hane> "
+    "satırı tek olmalı ({} satır var)."
+)
+R12_DEGER = "Kural 12: Denetlenen commit: değeri 40 küçük harfli onaltılı hane olmalı."
+R12_TABAN = "Kural 12: Denetlenen commit PR başı değil ve taban dal bilinmiyor."
+R12_BIRLESME = (
+    "Kural 12: Denetlenen commit ({}) PR başı ({}) değil; "
+    "sonraki commit'ler temiz bir taban birleştirmesi değil."
+)
+
+
+@pytest.mark.parametrize(
+    ("yeni", "sayi"), [("", 0), (DENETLENEN * 2, 2), (DENETLENEN * 3, 3)]
+)
+def test_kural_12_satir_tek_olmali(yeni, sayi):
+    assert hatalar(GECERLI.replace(DENETLENEN, yeni)) == [R12_SATIR.format(sayi)]
+
+
+@pytest.mark.parametrize(
+    "deger", ["", "yok", SHA.upper(), SHA[:39], SHA + "0", "g" * 40, "`" + SHA + "`"]
+)
+def test_kural_12_deger_40_kucuk_onaltili_olmali(deger):
+    govde = GECERLI.replace(DENETLENEN, f"Denetlenen commit: {deger}\n")
+    assert hatalar(govde) == [R12_DEGER]
+
+
+def test_kural_12_yorumdaki_satir_sayilmaz():
+    govde = GECERLI.replace(DENETLENEN, DENETLENEN + "<!--\n" + DENETLENEN + "-->\n")
+    assert hatalar(govde) == []
+    assert hatalar(GECERLI.replace(DENETLENEN, "<!-- " + DENETLENEN + "-->\n")) == [
+        R12_SATIR.format(0)
+    ]
+
+
+def test_kural_12_pr_basi_esit_ya_da_taban_bilinmiyor():
+    assert hatalar(GECERLI, SHA) == []
+    assert hatalar(GECERLI, None) == []
+    assert hatalar(GECERLI, SHA_BASKA) == [
+        R10.format(
+            f"kapi: HEAD değeri PR başından farklı; beklenen: {SHA_BASKA}, bulunan: {SHA}"
+        ),
+        R12_TABAN,
+    ]
+
+
+def _git(dizin, *arg):
+    return subprocess.run(
+        ["git", *arg],
+        cwd=dizin,
+        check=True,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+    ).stdout.strip()
+
+
+def _commit(dizin, dosya, metin):
+    (dizin / dosya).write_text(metin, encoding="utf-8")
+    _git(dizin, "add", dosya)
+    _git(dizin, "commit", "-m", metin)
+    return _git(dizin, "rev-parse", "HEAD")
+
+
+@pytest.fixture
+def depo(tmp_path):
+    for arg in (
+        ("init", "-b", "master"),
+        ("config", "user.name", "Deneme"),
+        ("config", "user.email", "deneme@example.com"),
+        ("config", "commit.gpgsign", "false"),
+        ("config", "core.autocrlf", "false"),
+    ):
+        _git(tmp_path, *arg)
+    _commit(tmp_path, "a.txt", "A")
+    _git(tmp_path, "checkout", "-b", "pr")
+    b = _commit(tmp_path, "b.txt", "B")
+    _git(tmp_path, "checkout", "master")
+    _commit(tmp_path, "c.txt", "C")
+    _git(tmp_path, "checkout", "pr")
+    _git(tmp_path, "merge", "--no-edit", "master")
+    return tmp_path, b, _git(tmp_path, "rev-parse", "HEAD")
+
+
+def _govde_git(denetlenen, bas):
+    govde = GECERLI.replace(DENETLENEN, f"Denetlenen commit: {denetlenen}\n")
+    return govde.replace(f"kapi: HEAD {SHA}", f"kapi: HEAD {bas}")
+
+
+def test_kural_12_temiz_taban_birlestirmesi_gecer(depo):
+    dizin, b, m = depo
+    assert hatalar(_govde_git(b, m), m, taban="master", dizin=dizin) == []
+
+
+def test_kural_12_denetlenen_pr_basi_ise_git_gerekmez(depo):
+    dizin, _, m = depo
+    assert hatalar(_govde_git(m, m), m, taban="master", dizin=dizin) == []
+
+
+def test_kural_12_duz_commit_reddedilir(depo):
+    dizin, b, _ = depo
+    d = _commit(dizin, "d.txt", "D")
+    assert hatalar(_govde_git(b, d), d, taban="master", dizin=dizin) == [
+        R12_BIRLESME.format(b, d)
+    ]
+
+
+def test_kural_12_elle_degisen_birlestirme_reddedilir(depo):
+    dizin, b, _ = depo
+    _git(dizin, "checkout", "-b", "kotu", b)
+    _git(dizin, "merge", "--no-commit", "--no-ff", "master")
+    (dizin / "b.txt").write_text("elle", encoding="utf-8")
+    _git(dizin, "add", "b.txt")
+    _git(dizin, "commit", "--no-edit")
+    kotu = _git(dizin, "rev-parse", "HEAD")
+    assert hatalar(_govde_git(b, kotu), kotu, taban="master", dizin=dizin) == [
+        R12_BIRLESME.format(b, kotu)
+    ]
+
+
+def test_kural_12_taban_disi_ikinci_ebeveyn_reddedilir(depo):
+    dizin, b, _ = depo
+    _git(dizin, "checkout", "-b", "yan", "master")
+    _commit(dizin, "y.txt", "Y")
+    _git(dizin, "checkout", "-b", "baska", b)
+    _git(dizin, "merge", "--no-edit", "yan")
+    baska = _git(dizin, "rev-parse", "HEAD")
+    assert hatalar(_govde_git(b, baska), baska, taban="master", dizin=dizin) == [
+        R12_BIRLESME.format(b, baska)
+    ]
+
+
+def test_kural_12_bilinmeyen_sha_reddedilir(depo):
+    dizin, _, m = depo
+    assert hatalar(_govde_git(SHA_BASKA, m), m, taban="master", dizin=dizin) == [
+        R12_BIRLESME.format(SHA_BASKA, m)
+    ]
+
+
+RISK = "## Risk\nKüçük risk.\n"
+GERI = "## Nasıl geri alınır\nPR geri alınır.\n"
+YANIT = "## Bulgu yanıtları\nbulgu yok\n"
+
+
+@pytest.mark.parametrize(
+    ("eski", "baslik"),
+    [(RISK, "## Risk"), (GERI, "## Nasıl geri alınır"), (YANIT, "## Bulgu yanıtları")],
+)
+def test_kural_13_baslik_eksik(eski, baslik):
+    assert hatalar(GECERLI.replace(eski, "")) == [
+        f"Kural 13: eksik başlıklar: {baslik}."
+    ]
+
+
+@pytest.mark.parametrize(
+    ("eski", "yeni", "baslik"),
+    [
+        (RISK, "## Risk\n", "## Risk"),
+        (RISK, "## Risk\n  \n", "## Risk"),
+        (GERI, "## Nasıl geri alınır\n<!-- komut -->\n", "## Nasıl geri alınır"),
+        (GERI, "## Nasıl geri alınır\n<!--\nçok\nsatır\n-->\n", "## Nasıl geri alınır"),
+    ],
+)
+def test_kural_13_bolum_bos(eski, yeni, baslik):
+    assert hatalar(GECERLI.replace(eski, yeni)) == [f"Kural 13: boş bölüm: {baslik}."]
+
+
+def test_kural_13_eksik_ve_bos_birlikte():
+    govde = GECERLI.replace(RISK, "").replace(GERI, "## Nasıl geri alınır\n")
+    assert hatalar(govde) == [
+        "Kural 13: eksik başlıklar: ## Risk; boş bölüm: ## Nasıl geri alınır."
+    ]
+
+
+R14_TEK = "Kural 14: Bulgu sayısı: satırı tek olmalı ({} satır var)."
+R14_SAYI = "Kural 14: Bulgu sayısı: değeri tam sayı olmalı."
+R14_SAYIM = "Kural 14: Bulgu yanıtları tablosunda {} satır olmalı ({} satır var)."
+R14_SATIR = "Kural 14: Bulgu yanıtları satırı geçersiz: {}."
+R14_YOK = (
+    'Kural 14: Bulgu sayısı 0 ise Bulgu yanıtları bölümünde yalnız "bulgu yok" '
+    "satırı olur."
+)
+BULGU = "Bulgu sayısı: 0\n"
+TABLO = "| Bulgu | Yanıt | Commit ya da neden |\n|---|---|---|\n"
+
+
+def _bulgular(sayi, yanit):
+    govde = GECERLI.replace(BULGU, f"Bulgu sayısı: {sayi}\n")
+    return govde.replace(YANIT, "## Bulgu yanıtları\n" + yanit)
+
+
+def test_kural_14_sayi_satiri_eksik_ya_da_cift():
+    assert hatalar(GECERLI.replace(BULGU, "")) == [R14_TEK.format(0)]
+    assert hatalar(GECERLI.replace(BULGU, BULGU * 2)) == [R14_TEK.format(2)]
+
+
+@pytest.mark.parametrize("deger", ["", "iki", "-1", "1.5"])
+def test_kural_14_sayi_tam_sayi_olmali(deger):
+    govde = GECERLI.replace(BULGU, f"Bulgu sayısı: {deger}\n")
+    assert hatalar(govde) == [R14_SAYI]
+
+
+def test_kural_14_iki_gecerli_satir_gecer():
+    tablo = TABLO + "| a | düzeltildi | abc1234 |\n| b | `bilerek` | neden |\n"
+    assert hatalar(_bulgular(2, tablo)) == []
+    tablo = TABLO + "| a | yanlış | x |\n| b | önemsiz | y |\n"
+    assert hatalar(_bulgular(2, tablo)) == []
+
+
+def test_kural_14_satir_sayisi_sayiya_esit_olmali():
+    tablo = TABLO + "| a | düzeltildi | abc1234 |\n"
+    assert hatalar(_bulgular(2, tablo)) == [R14_SAYIM.format(2, 1)]
+    assert hatalar(_bulgular(1, tablo + tablo[len(TABLO) :])) == [
+        R14_SAYIM.format(1, 2)
+    ]
+    assert hatalar(_bulgular(1, TABLO)) == [R14_SAYIM.format(1, 0)]
+
+
+@pytest.mark.parametrize(
+    ("satirlar", "numaralar"),
+    [
+        ("| a | düzeltildi | x |\n| b | tamam | y |\n", "2"),
+        ("| a | düzeltildi |  |\n| b | yanlış | y |\n", "1"),
+        ("|  | düzeltildi | x |\n| b | yanlış | y |\n", "1"),
+        ("| a | düzeltildi |  |\n|  | yanlış | y |\n", "1, 2"),
+        ("| a | düzeltildi |\n| b | yanlış | y | z |\n", "1, 2"),
+        ("| a | Düzeltildi | x |\n| b | yanlış | y |\n", "1"),
+    ],
+)
+def test_kural_14_gecersiz_satir(satirlar, numaralar):
+    assert hatalar(_bulgular(2, TABLO + satirlar)) == [R14_SATIR.format(numaralar)]
+
+
+def test_kural_14_sifir_bulgu():
+    assert hatalar(_bulgular(0, "bulgu yok\n")) == []
+    assert hatalar(_bulgular(0, TABLO + "bulgu yok\n")) == []
+    assert hatalar(_bulgular(0, "yok\n")) == [R14_YOK]
+    assert hatalar(_bulgular(0, "")) == [R14_YOK]
+    govde = _bulgular(0, "bulgu yok\n" + TABLO + "| a | düzeltildi | x |\n")
+    assert hatalar(govde) == [R14_YOK]
+
+
+def test_kural_14_bolum_yoksa_tablo_denetlenmez():
+    govde = GECERLI.replace(BULGU, "Bulgu sayısı: 3\n").replace(YANIT, "")
+    assert hatalar(govde) == ["Kural 13: eksik başlıklar: ## Bulgu yanıtları."]
 
 
 def test_dod_yml_taslak_ve_sha():
