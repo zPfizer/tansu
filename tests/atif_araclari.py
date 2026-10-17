@@ -893,6 +893,9 @@ def main(argv, havuz=HAVUZ, kok=KOK):
         print(KULLANIM, file=sys.stderr)
         return 2
     if komut == "acik-sayi":
+        if not havuz.exists():
+            print(f"acik-sayi: havuz klasoru yok: {havuz}", file=sys.stderr)
+            return 1
         print(len(havuz_sorunlari(kok, havuz)))
         return 0
     if komut == "entegre":

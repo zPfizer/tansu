@@ -275,6 +275,14 @@ def test_main_acik_sayi_acik_not_sayisini_yazar(tmp_path, capsys):
     assert capsys.readouterr().out == "2\n"
 
 
+def test_main_acik_sayi_havuz_yoksa_hata_verir(tmp_path, capsys):
+    yok = tmp_path / "yok-havuz"
+    assert main(["acik-sayi"], havuz=yok, kok=tmp_path) == 1
+    cikti = capsys.readouterr()
+    assert cikti.out == ""
+    assert cikti.err != ""
+
+
 def test_main_acik_sayi_hepsi_atifliysa_sifir_yazar(tmp_path, capsys):
     _depo(tmp_path, "## X\n", "G12 G13\n")
     havuz = _havuz(tmp_path, NOTLAR[:2])
