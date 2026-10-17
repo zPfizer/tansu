@@ -59,7 +59,10 @@ def test_yonerge_dosyasi_beceri_cagrisiz_engellenir(tmp_path):
     iz = _iz(tmp_path / "ana.jsonl")
     s = _kos(_duzenle("AGENTS.md", iz))
     assert s.returncode == 2
-    assert "Call the Skill tool with asd-ste100, then retry." in s.stderr
+    assert (
+        'Follow AGENTS.md "Every job" and tansu-yeni-is "Build", then retry.'
+        in s.stderr
+    )
 
 
 def test_yonerge_dosyasi_beceri_cagrisiyla_gecer(tmp_path):
@@ -89,7 +92,7 @@ def test_her_yonerge_dosyasi_engellenir(tmp_path, dosya):
     iz = _iz(tmp_path / "ana.jsonl")
     s = _kos(_duzenle(dosya, iz, arac="Write"))
     assert s.returncode == 2
-    assert "asd-ste100" in s.stderr
+    assert 'AGENTS.md "Every job"' in s.stderr
 
 
 def test_arac_sonucundaki_komut_satiri_sayilmaz(tmp_path):
@@ -121,15 +124,15 @@ def test_kod_dosyasi_iki_beceriyi_de_ister(tmp_path):
     iz = _iz(tmp_path / "ana.jsonl")
     s = _kos(_duzenle("C:\\a\\TANSU-retro\\tests\\test_x.py", iz, arac="MultiEdit"))
     assert s.returncode == 2
-    assert "Call the Skill tool with mattpocock-skills:tdd, then retry." in s.stderr
-    assert "Call the Skill tool with ponytail:ponytail, then retry." in s.stderr
+    assert 'tansu-yeni-is "Build"' in s.stderr
+    assert "Call the Skill tool" not in s.stderr
 
 
 def test_kod_dosyasi_yalniz_eksik_beceriyi_ister(tmp_path):
     iz = _iz(tmp_path / "ana.jsonl", "tdd")
     s = _kos(_duzenle("kurulum/kanca.py", iz))
     assert s.returncode == 2
-    assert "ponytail:ponytail" in s.stderr
+    assert 'tansu-yeni-is "Build"' in s.stderr
     assert "tdd" not in s.stderr
 
 
@@ -160,7 +163,7 @@ def test_alt_ajan_kendi_dokumunden_okunur(tmp_path):
     _iz(tmp_path / "ana" / "subagents" / "agent-a1.jsonl")
     s = _kos(_duzenle("AGENTS.md", ana, agent_id="a1"))
     assert s.returncode == 2
-    assert "asd-ste100" in s.stderr
+    assert 'AGENTS.md "Every job"' in s.stderr
 
 
 def test_alt_ajanin_kendi_cagrisi_sayilir(tmp_path):
@@ -277,6 +280,18 @@ def test_boru_okumasi_ve_dosyasiz_komutlar_gecer(tmp_path, dosya, komut):
     assert (s.returncode, s.stdout, s.stderr) == (0, "", "")
 
 
+@pytest.mark.parametrize("ayirici", [";", "|", "&&", "||"])
+def test_tirnak_icindeki_ayirici_komut_baslatmaz(ayirici):
+    s = _kabuk(f'echo "note{ayirici} head AGENTS.md"')
+    assert (s.returncode, s.stdout, s.stderr) == (0, "", "")
+
+
+def test_cd_sonrasi_dosya_okumasi_engellenir():
+    s = _kabuk("cd docs && head agents/kod-kurallari.md")
+    assert s.returncode == 2
+    assert "not with head." in s.stderr
+
+
 def test_heredoc_engellenir():
     komut = "git commit -m \"$(cat <<'EOF'\nmesaj\nEOF\n)\""
     s = _kabuk(komut)
@@ -296,6 +311,10 @@ def test_heredoc_engellenir():
         "git commit -F - <<-EOF\nx\nEOF",
         "cat <<_son\nx\n_son",
         "cat <<123\nx\n123",
+        "python - <<\\EOF\nprint(1)\nEOF",
+        "python - <<E\\OF\nprint(1)\nEOF",
+        "python - <<E'OF'\nprint(1)\nEOF",
+        'python - <<"EOF"\nprint(1)\nEOF',
     ],
 )
 def test_heredoc_bicimleri_engellenir(komut):
@@ -317,6 +336,7 @@ def test_heredoc_bicimleri_engellenir(komut):
         ('echo "<<EOF"', "Bash"),
         ('git commit -m "see <<EOF"', "Bash"),
         ("echo '<<EOF'", "Bash"),
+        ("echo \"$(printf '%s' '<<EOF')\"", "Bash"),
     ],
 )
 def test_heredoc_olmayan_komutlar_gecer(komut, arac):
@@ -353,6 +373,7 @@ def test_bash_ten_kapi_ps1_engellenir(komut):
         "powershell -File kurulum/baska.ps1",
         "echo kapi.ps1 | powershell -Command -",
         'powershell -Command "Write-Output kapi.ps1"',
+        "powershell -Command Write-Output kapi.ps1",
     ],
 )
 def test_kapi_ps1_adini_anan_komutlar_gecer(komut):
@@ -390,6 +411,8 @@ def test_git_ref_yolu_msys_olmadan_engellenir(komut):
         ("export MSYS_NO_PATHCONV=1 && git show HEAD:.claude/x", "Bash"),
         ("git show HEAD:AGENTS.md", "Bash"),
         ("git show HEAD:.claude/settings.json", "PowerShell"),
+        ("git log --grep=HEAD:.claude/settings.json", "Bash"),
+        ('MSYS_NO_PATHCONV="1" git show HEAD:.claude/settings.json', "Bash"),
     ],
 )
 def test_git_ref_yolu_kosullari_gecer(komut, arac):

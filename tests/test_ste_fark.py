@@ -65,13 +65,14 @@ def _fark(depo, linter):
     return _kos("HEAD", str(linter), cwd=depo)
 
 
-def test_ste_fark_eklenen_noktali_virgulde_kalir(depo, linter):
+@pytest.mark.parametrize("satir", ["yeni; satir", "++ Check the file; run the gate."])
+def test_ste_fark_eklenen_noktali_virgulde_kalir(depo, linter, satir):
     with (depo / "AGENTS.md").open("a", encoding="utf-8") as f:
-        f.write("yeni; satir\n")
+        f.write(satir + "\n")
     s = _fark(depo, linter)
     assert s.returncode == 1
     assert "ste-fark: eklenen satir = 1" in s.stdout
-    assert "linter girdisi: yeni; satir" in s.stdout
+    assert f"linter girdisi: {satir}" in s.stdout
 
 
 def test_ste_fark_eski_noktali_virgul_ve_temiz_ekleme_gecer(depo, linter):
@@ -121,3 +122,16 @@ def test_ste_fark_taban_dal_noktasindan_sonra_ilerlediyse_dal_eklemez(depo, lint
     _git(depo, "switch", "-q", "dal")
     s = _kos("master", str(linter), cwd=depo)
     assert (s.returncode, s.stdout) == (0, "ste-fark: eklenen satir = 0\n")
+
+
+def test_ste_fark_ikinci_dosya_basligini_lintera_gondermez(depo, linter):
+    with (depo / "AGENTS.md").open("a", encoding="utf-8") as f:
+        f.write("++ Check the file; run the gate.\n")
+    (depo / "CLAUDE.md").write_text("Read the file.\n", encoding="utf-8")
+    _git(depo, "add", "CLAUDE.md")
+    s = _fark(depo, linter)
+    assert s.returncode == 1
+    assert s.stdout == (
+        "ste-fark: eklenen satir = 2\n"
+        "linter girdisi: ++ Check the file; run the gate.\nRead the file.\n"
+    )

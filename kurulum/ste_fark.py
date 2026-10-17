@@ -36,11 +36,15 @@ def ste_fark(taban, linter=None):
         capture_output=True,
         encoding="utf-8",
     ).stdout
-    eklenen = [
-        s[1:]
-        for s in fark.splitlines()
-        if s.startswith("+") and not s.startswith("+++")
-    ]
+    eklenen = []
+    parca_icinde = False
+    for s in fark.splitlines():
+        if s.startswith("diff --git "):
+            parca_icinde = False
+        elif s.startswith("@@ "):
+            parca_icinde = True
+        elif parca_icinde and s.startswith("+"):
+            eklenen.append(s[1:])
     print(f"ste-fark: eklenen satir = {len(eklenen)}", flush=True)
     if not eklenen:
         return 0

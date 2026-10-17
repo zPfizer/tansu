@@ -91,8 +91,11 @@ def _beceri_kapisi(girdi):
         return 0
     cagrilan = _cagrilar(_iz_yolu(girdi))
     eksik = [b for b in gerekli if not {b, b.rpartition(":")[2]} & cagrilan]
-    for ad in eksik:
-        print(f"Call the Skill tool with {ad}, then retry.", file=sys.stderr)
+    if eksik:
+        print(
+            'Follow AGENTS.md "Every job" and tansu-yeni-is "Build", then retry.',
+            file=sys.stderr,
+        )
     return 2 if eksik else 0
 
 
@@ -103,17 +106,20 @@ def _dosya_mu(belirtec, cwd):
 
 def _komutlar(komut):
     """Her komut parçası için (komut adı, belirteçler, öndeki NAME=değer atamaları)."""
-    for parca in re.split(r"\|\||&&|[|;\n]", komut):
+    for parca in re.findall(
+        r"""(?:\\.|"(?:\\.|[^"\\])*"|'[^']*'|[^|;&\n"'\\])+""", komut
+    ):
         try:
             belirtecler = shlex.split(
                 parca, posix=False
             )  # posix=False: Windows yolları bozulmaz
         except ValueError:
             belirtecler = parca.split()
-        belirtecler = [b.strip("\"'") for b in belirtecler]
         atamalar = []
         while belirtecler and re.match(r"\w+=", belirtecler[0]):
-            atamalar.append(belirtecler.pop(0))
+            anahtar, deger = belirtecler.pop(0).split("=", 1)
+            atamalar.append(anahtar + "=" + deger.strip("\"'"))
+        belirtecler = [b.strip("\"'") for b in belirtecler]
         if belirtecler:
             ad = Path(belirtecler[0].replace("\\", "/")).name.lower()
             yield ad.removesuffix(".exe"), belirtecler, atamalar
@@ -124,6 +130,8 @@ def _okuma_komutu(komut, cwd):
     # ponytail: any later token that is an existing file counts as the operand.
     # Ceiling: "$x = Get-Content f" and nested calls pass; a file named like an option value (head -n 5, file "5") blocks.
     for ad, belirtecler, _ in _komutlar(komut):
+        if ad == "cd" and len(belirtecler) == 2:
+            cwd = Path(cwd) / belirtecler[1]
         if ad in OKUMA_KOMUTLARI and any(
             not b.startswith("-") and _dosya_mu(b, cwd) for b in belirtecler[1:]
         ):
@@ -143,43 +151,60 @@ def _ilk_sozcuk(belirtec):
 
 
 def _kapi_calistirir(komut):
-    """Bash'in kapi.ps1'i çalıştırıp çalıştırmadığı: komut adı kapi.ps1 ile biter, ya da komut adı powershell/pwsh ve -File değeri (bütün) veya başka bir belirtecin ilk sözcüğü kapi.ps1 ile biter."""
-    return any(
-        ad.endswith("kapi.ps1")
-        or (
-            ad in ("powershell", "pwsh")
-            and any(
-                (b if onceki.lower() in ("-file", "-f") else _ilk_sozcuk(b))
-                .lower()
-                .endswith("kapi.ps1")
-                for onceki, b in zip(belirtecler, belirtecler[1:])
-            )
-        )
-        for ad, belirtecler, _ in _komutlar(komut)
-    )
+    """Bash komut adını veya PowerShell'in dosya/komut girişini denetler."""
+    for ad, belirtecler, _ in _komutlar(komut):
+        if ad.endswith("kapi.ps1"):
+            return True
+        if ad not in ("powershell", "pwsh"):
+            continue
+        for i, b in enumerate(belirtecler[1:], 1):
+            if b.lower() in ("-file", "-f", "-command", "-c"):
+                if i + 1 == len(belirtecler):
+                    break
+                deger = belirtecler[i + 1]
+                if b.lower() in ("-command", "-c"):
+                    deger = _ilk_sozcuk(" ".join(belirtecler[i + 1 :]))
+                if deger.lower().endswith("kapi.ps1"):
+                    return True
+                break
+            if not b.startswith("-"):
+                if b.lower().endswith("kapi.ps1"):
+                    return True
+                break
+    return False
 
 
 def _msys_eksik(komut):
     """git <ref>:.<yol> parçası, MSYS_NO_PATHCONV=1 öneki ya da önceki 'export MSYS_NO_PATHCONV=1' olmadan var mı."""
     verildi = False
     for ad, belirtecler, atamalar in _komutlar(komut):
-        if ad == "export" and "MSYS_NO_PATHCONV=1" in belirtecler:
+        if ad == "export" and any(
+            b.replace('"', "").replace("'", "") == "MSYS_NO_PATHCONV=1"
+            for b in belirtecler[1:]
+        ):
             verildi = True
         elif (
             ad == "git"
             and not verildi
             and "MSYS_NO_PATHCONV=1" not in atamalar
-            and any(re.search(r"\S:\.[\w./-]", b) for b in belirtecler)
+            and any(re.match(r"[^-\s][^\s:]*:\.[\w./-]", b) for b in belirtecler)
         ):
             return True
     return False
 
 
 def _tirnaksiz(komut):
-    """Tırnaklı parçaları ve (( )) ifadelerini Q ile değiştirir; $( ) veya ters tırnak içeren çift tırnaklı parça kalır."""
+    """Tırnaklı veriyi örter, çift tırnak içindeki komutların verisini de örter."""
     return re.sub(
         r'"(?:\\.|[^"\\])*"|\'[^\']*\'|\(\(.*?\)\)',
-        lambda m: m[0] if m[0][0] == '"' and re.search(r"\$\(|`", m[0]) else "Q",
+        lambda m: (
+            " ".join(
+                _tirnaksiz(a or b)
+                for a, b in re.findall(r"\$\((.*?)\)|`(.*?)`", m[0], re.S)
+            )
+            if m[0][0] == '"' and re.search(r"\$\(|`", m[0])
+            else "Q"
+        ),
         komut,
         flags=re.S,
     )
@@ -189,7 +214,7 @@ def _kabuk(girdi):
     komut = girdi["tool_input"]["command"]
     mesaj = None
     if girdi["tool_name"] == "Bash":
-        if re.search(r"(?<!<)<<(?!<)-?[ \t]*['\"\w]", _tirnaksiz(komut)):
+        if re.search(r"(?<!<)<<(?!<)-?[ \t]*['\"\\\w]", _tirnaksiz(komut)):
             mesaj = (
                 "No heredoc. Give a commit message with several -m arguments or -F <file>. "
                 "Put Python code in a file or in one-line -c."
