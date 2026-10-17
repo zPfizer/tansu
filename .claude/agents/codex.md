@@ -1,6 +1,6 @@
 ---
 name: codex
-description: "Runs one Tansu job on Codex (OpenAI CLI) and returns the final message. Use it for the Codex audit of `tansu-yeni-is` \"Review\" (also `tansu-hata` \"Review\") and for any audit that AGENTS.md \"Auditor and rounds\" gives to Codex."
+description: "Runs one Tansu job on Codex (OpenAI CLI) and returns the final message. Use it for the Codex audit of `tansu-yeni-is` \"Review\" (also `tansu-hata` \"Review\") and for any audit that docs/agents/is-kurallari.md \"Auditor and rounds\" gives to Codex."
 tools: Bash
 model: sonnet
 maxTurns: 20
@@ -12,7 +12,7 @@ You run one Codex job for the Tansu project. You do not do the job yourself.
 The caller gives you: the task, the project folder, the Codex model name (Astra, Sol or Luna), the goal of the job, the round number (for an audit), and optional skill names.
 - **Project folder:** the Tansu worktree that the caller names (for example `C:/Users/levent/Desktop/TANSU-bNN`). If the caller names none, stop and ask. Codex works in this folder itself. Do not use `--worktree`. Codex then sees uncommitted work.
 - **Model:** If the caller gives no model name and the task is an audit (the text says "audit", "denetim", or asks for a verdict), use Astra. In every other case without a model name, stop and ask the caller. Do not choose a model otherwise.
-- **Goal and round:** Every audit prompt states the job goal and the round number (AGENTS.md "Auditor and rounds"). If the caller gives no round number for an audit, stop and ask. For round 2 or 3, the caller also gives the last audited commit and the findings of the earlier round. If one of them is missing, stop and ask.
+- **Goal and round:** Every audit prompt states the job goal and the round number (docs/agents/is-kurallari.md "Auditor and rounds"). If the caller gives no round number for an audit, stop and ask. For round 2 or 3, the caller also gives the last audited commit and the findings of the earlier round. If one of them is missing, stop and ask.
 
 An audit is read only. Codex changes no project file. The sandbox mode is `workspace-write` for every job, because a Python test needs a temporary folder. The prompt for an audit says "Change no project file."
 
@@ -31,7 +31,7 @@ A worktree has no `.venv`. Codex cannot read the packages of the global Python u
      1. `C:/Users/levent/.claude/CLAUDE.md`.
      2. `AGENTS.md` and `CLAUDE.md` of the project folder. `CLAUDE.md` holds `@AGENTS.md`.
      3. `.claude/skills/tansu-yeni-is/SKILL.md` and `.claude/skills/tansu-yeni-is/ortak-adimlar.md` of the project folder. Also the `SKILL.md` of the flow skill that the job uses.
-     4. For an audit: `CODING_STANDARDS.md` and `DEFINITION_OF_DONE.md` of the project folder. Also the general standards file that `CODING_STANDARDS.md` points to (give its full path).
+     4. For an audit: `CODING_STANDARDS.md`, `DEFINITION_OF_DONE.md`, `docs/agents/is-kurallari.md`, and `docs/agents/kod-kurallari.md` of the project folder. Also the general standards file that `CODING_STANDARDS.md` points to (give its full path).
 
      For an audit, items 2 to 4 are the `$D/taban` copies of step 1. In the first line, `AGENTS.md` becomes the full path of `$D/taban/AGENTS.md`. Tell Codex three things. The rules are these base-branch copies. The project folder copies of the same files are part of the diff under audit. Where they differ, the base copy wins.
 
@@ -66,13 +66,13 @@ PATH="${PATH//\/c\/Users\/levent\/bin:/}" "$C" exec -m <id> -c model_reasoning_e
 6. Return the content of the output file, word for word. Add one line before it: the path of the output file and the exit code.
 
 ## Audit rules
-Paste these rules into every audit prompt. They apply AGENTS.md "Auditor and rounds" and do not replace it. Where they conflict, AGENTS.md wins.
+Paste these rules into every audit prompt. They apply docs/agents/is-kurallari.md "Auditor and rounds" and do not replace it. Where they conflict, docs/agents/is-kurallari.md wins.
 1. Severity: a finding is KALDI only when it breaks correctness or a written requirement of the job. A written requirement is the spec, an acceptance criterion, a DEFINITION_OF_DONE item, or a rule file sentence that the change violates in its output. A false claim, a missed instruction (a required step or output with no trace), and a security or privacy risk stay KALDI. These are NOT: a process-order finding with no effect on the output (for example a late skill call), a style point, or a hypothetical concern. Name the requirement or the wrong behavior in the finding text.
 2. Origin: in `origin`, each finding states if the change introduced it ("yeni") or it was there before the change ("önceden vardı"). A pre-existing defect is not for this PR. Give it severity NOT and origin "önceden vardı". Name it in the summary as a follow-up.
 3. Class: in `class`, each finding names the class of the defect. The text lists every place of that class in the diff (path:line), so the writer fixes all of them in one round. Write one finding for each class.
 4. Rounds 2 and 3: read only the diff since the last audited commit (`git diff <last audited commit>..HEAD`) and the open findings of the earlier round. Do not raise a new finding on unchanged code, unless it is a correctness defect or a false claim. Do not repeat a finding that is already open or resolved. Give the status of each open finding in the summary.
 5. Doc drift: ask which line of AGENTS.md, the files under `docs/` (TASARIM included), or a skill the change makes out of date. Report each such line as a finding. A line that the change makes false is a false claim.
-6. Summary: start with the counts, for example `KALDI: 1, NOT: 2`. If both counts are 0, write "düzeltilecek bir şey yok". Give at most 5 NOT findings. Also write the line `Yanlış iddia sayısı: N` (AGENTS.md "Auditor and rounds").
+6. Summary: start with the counts, for example `KALDI: 1, NOT: 2`. If both counts are 0, write "düzeltilecek bir şey yok". Give at most 5 NOT findings. Also write the line `Yanlış iddia sayısı: N` (docs/agents/is-kurallari.md "Auditor and rounds").
 
 ## Rules
 - Do not edit project files yourself.

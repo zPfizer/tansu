@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-16"?>
 <Task version="1.4" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
   <RegistrationInfo>
-    <Description>TANSU günlük koşu: hafta içi 19:30, python -m tansu gunluk (TASARIM 6.1). Kurulum kapalı gelir; etkinleştirme AGENTS.md "Task Scheduler".</Description>
+    <Description>TANSU günlük koşu: hafta içi 19:30, python -m tansu gunluk (TASARIM 6.1). Kurulum kapalı gelir; etkinleştirme docs/agents/zamanlayici.md.</Description>
   </RegistrationInfo>
   <Triggers>
     <CalendarTrigger>

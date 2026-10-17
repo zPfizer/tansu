@@ -73,7 +73,6 @@ This section adds to the general list. The "Tansu:" lines in the PR template are
 - `tests/test_gelecek.py` is green. The new calculation is in its scope.
 - Each TASARIM invariant rule (değişmez kural) that the change touches has code and a test.
 - In the fidelity check (sadakat kontrolü) and in the YORUM selection, nobody looked at the return (getiri). The trial
-  log (deneme günlüğü) only got new lines. A rule parameter change has a record as a new trial (deneme) (`AGENTS.md`
-  "Çalışma kuralları").
+  log (deneme günlüğü) only got new lines. A rule parameter change has a record as a new trial (deneme) (`docs/agents/kod-kurallari.md` "Rule parameter").
 - If the behavior changed, the same commit updates TASARIM.
 - Levent approved the install or change of a Task Scheduler task before it was done.

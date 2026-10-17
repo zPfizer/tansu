@@ -13,7 +13,7 @@ The shared steps (Branch, Test gate, Review, Proof, Pull request, Merge, Close) 
 3. **Spec:** `mattpocock-skills:to-spec`. Key every table and spec by heading text or rule ID, never by line number. Every spec has a "Where" table (file, heading, what it holds). Subagent prompts copy that table.
 4. **Tickets:** `mattpocock-skills:to-tickets`, then `mattpocock-skills:triage`. The layout is in `docs/agents/issue-tracker.md`. Do not write a ticket by hand. If a new decision appears during the work, update the spec first. Then build the tickets again in dependency order.
 5. **Branch:** Shared step. Read "Branch" in [ortak-adimlar.md](ortak-adimlar.md) and run it.
-6. **Build:** For one ticket: `mattpocock-skills:implement`. For a full spec: `mattpocock-skills:implement-spec`. AGENTS.md "Önce test" owns the red-test rule. The skill is `mattpocock-skills:tdd`. While you write code: `ponytail:ponytail`. A subagent writes the code. A writer subagent writes only inside its own worktree. Apply the Observability item of DEFINITION_OF_DONE.md "Ship-readiness".
+6. **Build:** For one ticket: `mattpocock-skills:implement`. For a full spec: `mattpocock-skills:implement-spec`. docs/agents/kod-kurallari.md "Önce test" owns the red-test rule. The skill is `mattpocock-skills:tdd`. While you write code: `ponytail:ponytail`. A subagent writes the code. A writer subagent writes only inside its own worktree. Apply the Observability item of DEFINITION_OF_DONE.md "Ship-readiness".
 7. **Test gate:** Shared step. Read "Test gate" in [ortak-adimlar.md](ortak-adimlar.md) and run it.
 8. **Review:** Shared step. Read "Review" in [ortak-adimlar.md](ortak-adimlar.md) and run it.
 9. **Proof:** Shared step. Read "Proof" in [ortak-adimlar.md](ortak-adimlar.md) and run it.
@@ -21,7 +21,7 @@ The shared steps (Branch, Test gate, Review, Proof, Pull request, Merge, Close) 
 11. **Merge:** Shared step. Read "Merge" in [ortak-adimlar.md](ortak-adimlar.md) and run it.
 12. **Close:** Shared step. Read "Close" in [ortak-adimlar.md](ortak-adimlar.md) and run it.
 
-Task scope skips Sharpen, Spec, and Tickets. It runs Build, Test gate, and Proof. Task scope has no auditor (AGENTS.md "Scope"). For a locked file, AGENTS.md "Who writes" sets the review.
+Task scope skips Sharpen, Spec, and Tickets. It runs Build, Test gate, and Proof. Task scope has no auditor (docs/agents/is-kurallari.md "Scope"). For a locked file, docs/agents/is-kurallari.md "Who writes" sets the review.
 
 | If | Then |
 |---|---|
