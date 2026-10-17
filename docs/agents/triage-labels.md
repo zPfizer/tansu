@@ -1,6 +1,6 @@
 # Triage Labels
 
-The skills speak in terms of five canonical triage roles. This file maps those roles to the actual label strings used in this repo's issue tracker.
+The skills speak in terms of five canonical triage roles. This file maps those roles to the actual label strings used in this repo's issue tracker. The tracker is GitHub Issues (see `issue-tracker.md`).
 
 | Label in mattpocock/skills | Label in our tracker | Meaning                                  |
 | -------------------------- | -------------------- | ---------------------------------------- |
@@ -12,6 +12,4 @@ The skills speak in terms of five canonical triage roles. This file maps those r
 
 When a skill mentions a role (e.g. "apply the AFK-ready triage label"), use the corresponding label string from this table.
 
-The role string is one possible value of the `Status:` line. The contract of the line is in `issue-tracker.md`, section "Status field".
-
-Edit the right-hand column to match whatever vocabulary you actually use.
+The role string is one possible value of the `Status:` line of an old ticket file. The contract of the line is in `issue-tracker.md`, section "Status field".

@@ -38,7 +38,7 @@ if ($Belge) {
 $checkKod = $LASTEXITCODE
 & $py -m ruff format --check .
 $formatKod = $LASTEXITCODE
-git diff --check kaynak/master
+git diff --check origin/master
 $diffKod = $LASTEXITCODE
 
 $sha = (git rev-parse HEAD)

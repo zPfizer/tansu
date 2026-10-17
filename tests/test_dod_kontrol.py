@@ -44,6 +44,7 @@ kapi: HEAD 0123456789abcdef0123456789abcdef01234567 temiz
 Akış: tansu-yeni-is
 Çağrılan beceriler: tansu-yeni-is, verification-before-completion, mattpocock-skills:pr, mattpocock-skills:code-review
 Denetlenen commit: 0123456789abcdef0123456789abcdef01234567
+Closes #49
 ## Risk
 Küçük risk.
 ## Nasıl geri alınır
@@ -150,6 +151,7 @@ def test_bos_govde(govde):
         "Kural 9: gövde boş; ## Bağımsız inceleme bölümünde Denetçi kararı (aynen):, "
         "Yanlış iddia sayısı: ve İkinci geçiş: satırı yok.",
         "Kural 10: gövde boş; ## Gerçek veri kanıtı bölümünde kapi: satırları yok.",
+        "Kural 15: PR gövdesinde Closes #<issue> satırı olmalı.",
     ]
 
 
@@ -1181,6 +1183,45 @@ def test_kural_14_bolum_yoksa_tablo_denetlenmez():
     assert hatalar(govde) == ["Kural 13: eksik başlıklar: ## Bulgu yanıtları."]
 
 
+R15 = "Kural 15: PR gövdesinde Closes #<issue> satırı olmalı."
+
+
+@pytest.mark.parametrize(
+    "satir",
+    [
+        "Closes #49",
+        "closes #49",
+        "Close #1",
+        "FIXES #7",
+        "Resolved #12",
+        "  Resolves #123  ",
+    ],
+)
+def test_kural_15_kapatma_satiri_gecer(satir):
+    assert hatalar(GECERLI.replace("Closes #49", satir)) == []
+
+
+def test_kural_15_birden_cok_kapatma_satiri_gecer():
+    assert hatalar(GECERLI.replace("Closes #49", "Closes #49\nFixes #50")) == []
+
+
+@pytest.mark.parametrize(
+    "satir",
+    [
+        "",
+        "Closes #<issue>",
+        "Closes 49",
+        "Closes: #49",
+        "Closes #",
+        "Closes #49 ve #50",  # tek satır tek issue: GitHub her issue için ayrı anahtar sözcük ister
+        "Bu PR Closes #49",
+        "<!-- Closes #49 -->",  # CI yorumu siler
+    ],
+)
+def test_kural_15_kapatma_satiri_eksik_ya_da_bozuk(satir):
+    assert hatalar(GECERLI.replace("Closes #49", satir)) == [R15]
+
+
 def test_dod_kontrol_python_312_soz_dizimi():
     # dod.yml uses the runner's default python (no setup-python).
     metin = _yol.read_text(encoding="utf-8")
@@ -1210,7 +1251,7 @@ def test_kapi_betigi():
         "-m pytest -q",
         "ruff check .",
         "ruff format --check .",
-        "git diff --check kaynak/master",
+        "git diff --check origin/master",
         "kapi: HEAD",
         "temiz",
         "kirli",
