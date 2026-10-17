@@ -131,17 +131,28 @@ def _okuma_komutu(komut, cwd):
     return None
 
 
+def _ilk_sozcuk(belirtec):
+    """Belirteç tırnaklı bir komut satırıysa ilk sözcüğü (öndeki & veya . atılır)."""
+    try:
+        sozcukler = shlex.split(belirtec, posix=True)
+    except ValueError:
+        sozcukler = belirtec.split()
+    if sozcukler and sozcukler[0] in ("&", "."):
+        sozcukler = sozcukler[1:]
+    return sozcukler[0] if sozcukler else ""
+
+
 def _kapi_calistirir(komut):
-    """Bash'in kapi.ps1'i çalıştırıp çalıştırmadığı: komut adı kapi.ps1 ile biter, ya da komut adı powershell/pwsh ve bir belirtecin ilk sözcüğü (öndeki & veya . atılır) kapi.ps1 ile biter."""
+    """Bash'in kapi.ps1'i çalıştırıp çalıştırmadığı: komut adı kapi.ps1 ile biter, ya da komut adı powershell/pwsh ve -File değeri (bütün) veya başka bir belirtecin ilk sözcüğü kapi.ps1 ile biter."""
     return any(
         ad.endswith("kapi.ps1")
         or (
             ad in ("powershell", "pwsh")
             and any(
-                (re.sub(r"^[&.]\s+", "", b).lower().split() or [""])[0].endswith(
-                    "kapi.ps1"
-                )
-                for b in belirtecler
+                (b if onceki.lower() in ("-file", "-f") else _ilk_sozcuk(b))
+                .lower()
+                .endswith("kapi.ps1")
+                for onceki, b in zip(belirtecler, belirtecler[1:])
             )
         )
         for ad, belirtecler, _ in _komutlar(komut)
@@ -218,13 +229,14 @@ def _alt_ajan_durdu(girdi):
     if girdi.get("stop_hook_active"):
         return 0
     eslesme = re.search(
-        r"(?:at most|under|en fazla)\s+(\d+)\s+(?:words?|sözcük|kelime)",
+        r"(at most|under|en fazla)\s+(\d+)\s+(?:words?|sözcük|kelime)",
         _ilk_kullanici_mesaji(girdi["agent_transcript_path"]),
         re.IGNORECASE,
     )
     sayi = len(girdi["last_assistant_message"].split())
-    if eslesme and sayi > int(eslesme[1]):
-        sinir = eslesme[1]
+    # "under N" means fewer than N words, so its limit is N-1.
+    sinir = eslesme and int(eslesme[2]) - (eslesme[1].lower() == "under")
+    if eslesme and sayi > sinir:
         reason = (
             f"Your answer has {sayi} words. The limit of your prompt is {sinir} words. "
             f"Write the answer again in at most {sinir} words."

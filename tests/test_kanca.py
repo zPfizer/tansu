@@ -334,6 +334,8 @@ def test_heredoc_olmayan_komutlar_gecer(komut, arac):
         "PowerShell.exe kurulum/kapi.ps1",
         'powershell -Command "& .\\kurulum\\kapi.ps1"',
         'powershell -Command ".\\kurulum\\kapi.ps1 -Belge"',
+        'powershell -File "C:/a b/kurulum/kapi.ps1"',
+        "powershell -Command \"& 'C:/a b/kurulum/kapi.ps1' -Belge\"",
     ],
 )
 def test_bash_ten_kapi_ps1_engellenir(komut):
@@ -442,7 +444,8 @@ def test_alt_ajan_sinirdan_uzunsa_geri_gonderilir(tmp_path):
         ("Cevap en fazla 3 sözcük olsun.", "bir iki uc"),
         ("Cevap en fazla 3 kelime olsun.", "bir iki uc"),
         ("Answer in AT MOST 3 Words.", "bir iki uc"),
-        ("Answer in under 3 words.", "bir iki uc"),
+        ("Answer in under 3 words.", "bir iki"),
+        ("Answer in at most 3 words.", "bir iki uc"),
         ("Answer briefly.", "bir iki uc dort bes alti yedi"),
     ],
 )
@@ -464,13 +467,23 @@ def test_alt_ajan_sinir_icindeyse_veya_sinir_yoksa_gecer(tmp_path, istem, son):
         ),
         (
             "Answer in UNDER 3 words.",
-            "Your answer has 4 words. The limit of your prompt is 3 words.",
+            "Your answer has 4 words. The limit of your prompt is 2 words. "
+            "Write the answer again in at most 2 words.",
         ),
     ],
 )
 def test_alt_ajan_turkce_sinir_okunur(tmp_path, istem, ileti):
     s = _alt_durdur(tmp_path, istem, "bir iki uc dort")
     assert _cikti(s)["reason"].startswith(ileti)
+
+
+def test_alt_ajan_under_sinir_dahil_degildir(tmp_path):
+    s = _alt_durdur(tmp_path, "Answer in under 3 words.", "bir iki uc")
+    assert _cikti(s) == {
+        "decision": "block",
+        "reason": "Your answer has 3 words. The limit of your prompt is 2 words. "
+        "Write the answer again in at most 2 words.",
+    }
 
 
 def test_alt_ajan_ilk_kullanici_mesaji_blok_listesi_olabilir(tmp_path):
