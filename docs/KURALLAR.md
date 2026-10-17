@@ -285,8 +285,9 @@ geometri sadakati yönsüz yapılır. (bilet 04, 14.10)
          Ham). Tansu "güçlü düşüş" için sayı vermez. YORUM: açıkken dönem başından önceki 20 günün en yüksek yükseği,
          kutu alt + 3 × ATR14 (dönem başı günü) değerinden küçükse dönem sayılmaz. 20 ve 3 YORUM'dur. Yalnız dönem
          başından önceki günlere bakılır. Dönem başından önce 20 gün yoksa ya da ATR14 hesaplanamıyorsa süzgeç
-         hesaplanamaz ve dönem sayılmaz (YORUM). `agresif` girişte dönem başı yoktur; `dusus` ile `agresif` birlikte
-         tanımsızdır ve parametre hata verir (YORUM; hiçbir varyant bu birleşimi kullanmaz).
+         hesaplanamaz ve dönem sayılmaz (YORUM). `agresif` girişte dönem başı, t−1'de biten koşunun ilk günüdür; kutu
+         alt, o girişin kutusunun (koşu + t) altıdır (YORUM: agresif girişin kendi kutusu; koşu t'de bilinir). Önceki metin
+         bu birleşimi tanımsız sayıp parametre hatası veriyordu; o hata belge yazılmadan koda girmişti (Codex tur 2, 17.10).
        - Bilgi olarak okunan cümleler (kural değildir; YORUM). `tweet-qullamaggie-tarzi-hacimli-breakout-tarama-1979546907505545421`
          notundaki tarama maddeleri (RSI > 60, MACD pozitif, fiyat MA 20-50-200 üstünde) başka bir tarama stratejisidir;
          yalnız hacim ve "kapanış o seviyenin üstünde" cümleleri yukarıda kuraldır. `tweet-ema-sikisma-macd-histogram-egim-1957958199425818842`
