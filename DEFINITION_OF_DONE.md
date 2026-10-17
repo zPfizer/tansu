@@ -68,7 +68,7 @@ Tailor the list to the project once, then reuse it unchanged. A Definition of Do
 - "Done" declared before the independent review on changes that need it.
 
 ## Tansu
-This section adds to the general list. The "Tansu:" lines in the PR template are the proof fields of these items.
+This section adds to the general list. The PR template sections "Kabul ölçütleri" and "Gerçek veri kanıtı" hold the proof for these items.
 - The changed command runs from start to end on a real recorded snapshot (anlık görüntü). Its output goes into the PR.
 - `tests/test_gelecek.py` is green. The new calculation is in its scope.
 - Each TASARIM invariant rule (değişmez kural) that the change touches has code and a test.

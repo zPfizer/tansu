@@ -45,8 +45,8 @@ def test_tarama_kumesi_bilinen_dosyalari_icerir():
         ".claude/skills/tansu-yeni-is/ortak-adimlar.md",
         ".github/pull_request_template.md",
     } <= adlar
-    # .scratch tarihsel metindir (biletler, arşiv); bilerek dışarıda
-    assert not any(ad.startswith(".scratch/") for ad in adlar)
+    # .scratch/ ve arsiv/ yerel tarihsel metindir; git ve güncel atıf taraması dışında.
+    assert not any(ad.startswith((".scratch/", "arsiv/")) for ad in adlar)
 
 
 def test_karar_etiketleri_sorguda_tanimli():

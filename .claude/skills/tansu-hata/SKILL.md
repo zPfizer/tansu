@@ -10,7 +10,7 @@ The shared steps are in [ortak-adimlar.md](../tansu-yeni-is/ortak-adimlar.md). R
 
 1. **Diagnose:** `mattpocock-skills:diagnosing-bugs`.
 2. **Red test:** `mattpocock-skills:tdd`.
-3. **Fix:** A subagent writes the minimum code in its own branch (as `tansu-yeni-is` "Branch").
+3. **Fix:** A subagent writes the minimum code on an issue branch for a large job, then uses a PR (`tansu-yeni-is` "Branch", Levent 17.10). A small change that Levent requests in chat goes directly to master with a green CI run, without an issue or PR.
 4. **Test gate:** As `tansu-yeni-is` "Test gate".
 5. **Review:** As `tansu-yeni-is` "Review".
 6. **Proof:** As `tansu-yeni-is` "Proof".

@@ -1,6 +1,0 @@
-E         comparison failed
-E         comparison failed
-FAILED tests/test_tansusinama.py::test_ema_sonsuz_duzeltilmis_fiyat_karantina_gunu
-FAILED tests/test_tansusinama.py::test_cift_sonsuz_duzeltilmis_fiyat_karantina_gunu
-2 failed, 50 passed, 2 warnings in 7.19s
-5f34f7f

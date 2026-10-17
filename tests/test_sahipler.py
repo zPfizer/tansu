@@ -188,13 +188,13 @@ def test_depo_yolu_denetimi(tmp_path, metin, beklenen):
     assert yol_kirikleri(tmp_path, [tmp_path / "not.md"]) == beklenen
 
 
-def test_yerel_kok_varken_eksik_dosya_hatadir(tmp_path):
-    _depo(tmp_path)
-    (tmp_path / "docs" / "sorgu").mkdir()
-    (tmp_path / "not.md").write_text("`docs/sorgu/olmayan.md`", encoding="utf-8")
-    assert yol_kirikleri(tmp_path, [tmp_path / "not.md"]) == [
-        "not.md:1: docs/sorgu/olmayan.md"
-    ]
+@pytest.mark.parametrize("kok_adi", ["docs/sorgu", ".scratch", "arsiv"])
+def test_yerel_kok_varken_eksik_dosya_hatadir(tmp_path, kok_adi):
+    (tmp_path / ".gitignore").write_text(f"/{kok_adi}/\n", encoding="utf-8")
+    yol = _yaz(tmp_path, "not.md", f"`{kok_adi}/olmayan.md`")
+    assert yol_kirikleri(tmp_path, [yol]) == []  # yerel kök yok: CI
+    (tmp_path / kok_adi).mkdir(parents=True, exist_ok=True)
+    assert yol_kirikleri(tmp_path, [yol]) == [f"not.md:1: {kok_adi}/olmayan.md"]
 
 
 def test_tablodaki_dosyalarin_bolum_atiflari_var_olana_gider():

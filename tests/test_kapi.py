@@ -11,7 +11,7 @@ import pytest
 KOK = Path(__file__).resolve().parents[1]
 
 
-def _kapi_calistir(tmp_path, python, beklenen=None):
+def _kapi_calistir(tmp_path, python, beklenen=None, arg=("-Belge",)):
     pwsh = shutil.which("pwsh")
     assert pwsh is not None
     env = dict(
@@ -25,7 +25,7 @@ def _kapi_calistir(tmp_path, python, beklenen=None):
         env["TANSU_BEKLENEN_ACIK"] = beklenen
     # -Belge: düzeltme öncesi betik kapıyı sürdürse bile bu dosyayı yeniden koşmaz (özyineleme olmaz).
     return subprocess.run(
-        [pwsh, "-NoProfile", "-File", str(KOK / "kurulum" / "kapi.ps1"), "-Belge"],
+        [pwsh, "-NoProfile", "-File", str(KOK / "kurulum" / "kapi.ps1"), *arg],
         capture_output=True,
         encoding="utf-8",
         env=env,
@@ -62,6 +62,14 @@ def test_kapi_python_yoksa_durur(tmp_path):
     sonuc = _kapi_calistir(tmp_path, tmp_path / "yok" / "python.exe")
     assert sonuc.returncode == 1
     assert "kapi: python yok:" in sonuc.stdout
+    assert "kapi: pytest" not in sonuc.stdout
+
+
+def test_kapi_test_secilmezse_durur(tmp_path):
+    # Tam koşu yalnız CI'da (Levent 17.10): kapı test dosyası olmadan koşmaz.
+    sonuc = _kapi_calistir(tmp_path, Path(sys.executable).resolve(), arg=())
+    assert sonuc.returncode == 1
+    assert "kapi: test secilmedi" in sonuc.stdout
     assert "kapi: pytest" not in sonuc.stdout
 
 

@@ -1,8 +1,10 @@
 # Issue tracker: GitHub
 
-Specs and tickets of this repo are GitHub issues in `zPfizer/tansu-kaynak` (remote `origin`). Use the `gh` CLI for all operations. `gh` finds the repo from `git remote -v`.
+Specs and tickets of this repo are GitHub issues in `zPfizer/tansu` (remote `origin`). Use the `gh` CLI for all operations. `gh` finds the repo from `git remote -v`.
 
-`.scratch/` holds only the temporary files of a running job. The old ticket files in `.scratch/` stay as a read-only archive. An open ticket has one place: its issue.
+`.scratch/` is local and gitignored. It holds temporary job files and the old read-only ticket archive. The old archive also remains in git history. GitHub and CI do not require these local files. An open ticket has one place: its issue.
+
+A large job uses a GitHub issue, a branch, and a PR (Levent 17.10). A small change that Levent requests in chat goes directly to master with a green CI run, without an issue or PR.
 
 ## Conventions
 
@@ -13,9 +15,9 @@ Specs and tickets of this repo are GitHub issues in `zPfizer/tansu-kaynak` (remo
 - **Labels**: `gh issue edit <number> --add-label "..."` / `--remove-label "..."`.
 - **Close**: `gh issue close <number> --comment "..."`.
 - **Spec**: one issue, title `Spec: <name>`. The tickets name it in a `Parent: #N` line.
-- **Issue body**: three bold lines: `**Amaç:**` (what to build), `**Kaynak:**` (where the facts come from), and `**Bitti koşulu:**` (when the issue is done). Each issue also has one triage label and a milestone.
+- **Issue body**: three bold lines: `**Amaç:**` (what to build), `**Kaynak:**` (where the facts come from), and `**Bitti koşulu:**` (when the issue is done). Each issue also has one triage label and a milestone. Every open issue belongs to one open milestone. Name each open milestone `v0.<n>.0 — <short Turkish benefit>`, in work order. Its description states the benefit, then `Sıra: #a, #b, #c`. Source: Levent 18.10.
 - **Branch**: `<N>-<ad>`, made by `gh issue develop <N> --name <N>-<ad> --base master` (`tansu-yeni-is` "Branch").
-- **PR**: the PR body has a `Closes #N` line. The merge closes the issue.
+- **PR**: the body has a `Closes #N` line. The title starts with `#<N> · <short title>` and uses that issue number. GitHub shares one number sequence for issues and PRs. The merge closes the issue. Source: Levent 18.10.
 
 ## State of a ticket
 
@@ -34,7 +36,7 @@ A ticket is closed when the issue state is closed. A ticket is claimed when it h
 
 ## Status field
 
-This section keeps the old `Status:` contract. It applies only to the old ticket files under `.scratch/`. New work does not use it. `triage-labels.md` owns only the role strings. The old tickets write it as `**Status:** <value>`. The value is one of:
+This section keeps the old `Status:` contract. It describes only the local, read-only ticket archive under `.scratch/` and its copies in git history. GitHub and CI do not require the archive. New work does not use this contract. `triage-labels.md` owns only the role strings. The old tickets write it as `**Status:** <value>`. The value is one of:
 
 - A triage role string from `triage-labels.md`: the ticket waits for triage or for work.
 - `claimed`: work started. Set it and save before any work.
@@ -42,7 +44,7 @@ This section keeps the old `Status:` contract. It applies only to the old ticket
 - `done (PR #N, hash)`: merged. The parentheses name the PR and the merge commit.
 - `done (kısa not)`: delivered, not merged. The parentheses hold one short note: what is delivered and what moved elsewhere; the branch name is optional (example: ticket 06 of `belge-hizasi`). When the merge happens, the value becomes `done (PR #N, hash)`.
 - `resolved`: the closing value of a wayfinder child ticket (see "Wayfinding operations").
-- `done`: the legacy value of the closed tickets in `.scratch/arsiv/tansu-mvp/issues/` (before 14.10). New tickets use `done (...)` as above.
+- `done`: the legacy value of the closed tickets in the local, read-only `.scratch/arsiv/tansu-mvp/issues/` archive (before 14.10), also available in git history.
 
 A ticket is closed when its value starts with `done` or `resolved`. (bilet 05, 14.10)
 

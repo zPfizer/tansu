@@ -68,7 +68,7 @@ DOSYA_KOKLERI = (
 def izlenen_dosyalar(kok):
     """tansu/, tests/, docs/, .claude/, .github/, AGENTS.md, CLAUDE.md, GLOSSARY.md, CODING_STANDARDS.md, DEFINITION_OF_DONE.md altındaki git'e girmiş .py ve .md dosyaları.
 
-    `.scratch/` bilerek dışarıdadır: biletler ve arşiv tarihsel metindir, atıfları o günün TASARIM'ına göredir.
+    `.scratch/` ve `arsiv/` yerel tarihsel metindir; git ve güncel atıf taraması dışındadır.
     """
     cikti = subprocess.run(
         ["git", "-C", str(kok), "ls-files", "-z", "--"] + [*DOSYA_KOKLERI],
