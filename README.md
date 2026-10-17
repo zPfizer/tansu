@@ -4,6 +4,18 @@ TANSU, BIST için günlük sinyal ve geçmiş sınama sistemidir. Tansu'nun kayn
 esinlenen kuralları, para koymadan önce sınar. Sistem emir vermez; hangi kuralın
 sağlandığını gösterir. Kararı ve parayı Levent yönetir.
 
+## Yeni olanlar
+
+Son sürüm: v0.1
+
+[Değişiklik günlüğü](CHANGELOG.md)
+
+- GitHub ana sayfasından işlere, hedeflere, değişikliklere, yayımlanan sürüme ve kontrol sonuçlarına ulaşılabiliyor.
+- Değişiklik açıklamaları kısaldı ve Türkçe yönergeler içeriyor. Otomatik kabul denetimi 15 kuraldan 5 kurala indi.
+- Bilgisayarda yalnız değişen işle ilgili testler çalışıyor. Tüm testler GitHub'da çalışıyor.
+- GitHub'daki otomatik kontroller yalnız Windows'ta çalışıyor.
+- Kod incelemesi artık OpenAI Codex eklentisiyle yapılıyor.
+
 ## GitHub'da ilerleme
 
 - [Issues](../../issues) ve [milestone'lar](../../milestones): işler ve hedef sürümler.
