@@ -45,7 +45,7 @@ KAPI_ONEKLERI = (
     "kapi: driftlint",
     "kapi: HEAD",
 )
-DAL_BICIMI = re.compile(r"pr/[0-9]+-[a-z0-9-]+")
+DAL_BICIMI = re.compile(r"pr/[a-z0-9]+(-[a-z0-9]+)*")
 KALDI = re.compile(r"(?<!\w)kald[ıiIİ](?!\w)", re.IGNORECASE)
 SUPHE = re.compile(r"(?<!\w)(olabilir|belki|şüphe|emin\s+değ[iİ]l)", re.IGNORECASE)
 
@@ -395,7 +395,7 @@ def hatalar(
         []
         if dal is None or DAL_BICIMI.fullmatch(dal)
         else [
-            f"Kural 15: Dal adı geçersiz: {dal!r}; biçim pr/<sayı>-<ad> olmalı "
+            f"Kural 15: Dal adı geçersiz: {dal!r}; biçim pr/<ad> olmalı "
             "(ad: küçük harf, rakam ve tire)."
         ]
     )

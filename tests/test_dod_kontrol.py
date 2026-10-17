@@ -1191,13 +1191,26 @@ def test_kural_14_bolum_yoksa_tablo_denetlenmez():
 
 
 R15 = (
-    "Kural 15: Dal adı geçersiz: {!r}; biçim pr/<sayı>-<ad> olmalı "
+    "Kural 15: Dal adı geçersiz: {!r}; biçim pr/<ad> olmalı "
     "(ad: küçük harf, rakam ve tire)."
 )
 
 
 @pytest.mark.parametrize(
-    "dal", [None, "pr/43-retro-duzeltme-2", "pr/1-x", "pr/007-a1-b2"]
+    "dal",
+    [
+        None,
+        "pr/f01-github-issues",
+        "pr/f02-ajan-action",
+        "pr/f03-dongu",
+        "pr/01-standartlar-ci",
+        "pr/42-retro-duzeltme",
+        "pr/43-retro-duzeltme-2",
+        "pr/eval-sonuc",
+        "pr/1-x",
+        "pr/007-a1-b2",
+        "pr/x",
+    ],
 )
 def test_kural_15_gecerli_dal(dal):
     assert hatalar(GECERLI, dal=dal) == []
@@ -1208,8 +1221,15 @@ def test_kural_15_gecerli_dal(dal):
     [
         "master",
         "",
-        "pr/x-ad",
-        "pr/43",
+        "claude/xyz",
+        "pr/",
+        "pr/Buyuk",
+        "pr/a_b",
+        "pr/-a",
+        "pr/a-",
+        "pr/a--b",
+        "pr/a/b",
+        "pr/a ",
         "pr/43-",
         "pr/43-Ad",
         "pr/43-ad_x",

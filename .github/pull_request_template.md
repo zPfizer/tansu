@@ -65,7 +65,7 @@ Sonuç:
 
 ## Gerçek veri kanıtı
 
-<!-- Son commit'ten sonra, temiz ağaçta koşulan `kurulum\kapi.ps1` çıktısını yapıştırın. Çıktıda `kapi: driftlint -> 0` satırı bulunur. CI, `kapi:` satırlarını ve HEAD sha'sını denetler. CI, dal adının `pr/<sayı>-<ad>` biçiminde olmasını da arar. Tam olarak bir kapi koşusu yapıştırın. Kod değiştiyse tam koşu gerekir, `-Belge` olmaz. -->
+<!-- Son commit'ten sonra, temiz ağaçta koşulan `kurulum\kapi.ps1` çıktısını yapıştırın. Çıktıda `kapi: driftlint -> 0` satırı bulunur. CI, `kapi:` satırlarını ve HEAD sha'sını denetler. CI, dal adının `pr/<ad>` biçiminde olmasını da arar (küçük harf, rakam, tire). Tam olarak bir kapi koşusu yapıştırın. Kod değiştiyse tam koşu gerekir, `-Belge` olmaz. -->
 
 ```
 ```
