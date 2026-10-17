@@ -9,7 +9,7 @@
   - If a test is wrong, first write the reason in the document.
   - Calculate the expected values by hand. Do not calculate them again the way the code does.
   - Write the constants in a test as literals.
-- **Baseline (Taban):** Never call a failing test "expected" or "not from this job" before you run the same test on `kaynak/master` in this session. Paste both outputs.
+- **Baseline (Taban):** Never call a failing test "expected" or "not from this job" before you run the same test on `origin/master` in this session. Paste both outputs.
 - **Edit loop (Düzenleme döngüsü):** Run `ruff format` before you Read a file that you will edit, because ruff rewrites the file. Between edits, run only the tests of the changed module. Run the full gate once before each commit.
 - **Do not look at the return (Getiriye bakma):** See `docs/KURALLAR.md` §4.
 - **Rule parameter (Kural parametresi):** A rule parameter changes only with a TASARIM/KURALLAR change and as a new trial (deneme).

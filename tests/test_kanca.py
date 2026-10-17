@@ -315,7 +315,7 @@ def test_bash_ten_kapi_ps1_engellenir(komut):
     [
         "git add kurulum/kapi.ps1",
         "git log -- kurulum/kapi.ps1",
-        "git diff kaynak/master -- kurulum/kapi.ps1",
+        "git diff origin/master -- kurulum/kapi.ps1",
         "powershell -File kurulum/baska.ps1",
         "echo kapi.ps1 | powershell -Command -",
     ],

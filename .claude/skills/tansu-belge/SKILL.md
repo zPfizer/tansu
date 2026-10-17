@@ -9,7 +9,7 @@ Run AGENTS.md "Every job" first. Run the steps in order. Run an "If" row only wh
 
 1. **Write for agents:** `mattpocock-skills:writing-for-agents`.
 2. **Record:** `mattpocock-skills:domain-modeling`. `tansu-yeni-is` "Document first" says where a term and a decision go.
-3. **Language:** Write instruction and prompt text in English: `asd-ste100`. Then run `py -3 -X utf8 kurulum/ste_fark.py kaynak/master`. It lints only the lines that the branch added to the instruction files since its merge base. Stage a new file first (`git add <file>`). The exit code must be 0. The hook of AGENTS.md "Environment" blocks an instruction edit before the `asd-ste100` call.
+3. **Language:** Write instruction and prompt text in English: `asd-ste100`. Then run `py -3 -X utf8 kurulum/ste_fark.py origin/master`. It lints only the lines that the branch added to the instruction files since its merge base. Stage a new file first (`git add <file>`). The exit code must be 0. The hook of AGENTS.md "Environment" blocks an instruction edit before the `asd-ste100` call.
 4. **Result:** Write the result to the brain as `tansu-yeni-is` "Close" says.
 5. **Locked file:** A locked file has feature scope (`docs/agents/is-kurallari.md` "Scope").
 6. **Translation:** For a translation of a rule file, the writer lists every dropped word. The auditor compares each rule with the source rule. (Levent 14.10)
