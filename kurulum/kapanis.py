@@ -1,6 +1,7 @@
 """Close script: close the work folder of a merged PR.
 
-Usage: `python kurulum/kapanis.py <work folder>`. Run it after `gh pr merge <N> --merge`.
+Usage: `python kurulum/kapanis.py <work folder>`. Run it after `gh pr merge <N> --merge`,
+from the main checkout (not inside the work folder: Windows cannot remove it).
 1. Remove the work folder (no `--force`).
 2. Fast-forward `master` of the main checkout from `origin`.
 3. Delete the local branch (`git branch -d`).
@@ -32,6 +33,9 @@ def git(klasor, *args):
 
 def main(is_klasoru):
     is_ = Path(is_klasoru).resolve()
+    # Windows cannot remove a folder that is the working directory of a process.
+    if Path.cwd().resolve().is_relative_to(is_):
+        dur("kapanis: betigi ana klasorden calistir; is klasorunun icinden olmaz")
     dal = git(is_, "branch", "--show-current")
     if not dal:
         dur("kapanis: is klasoru bir dal uzerinde degil")
