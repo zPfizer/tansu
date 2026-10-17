@@ -156,6 +156,32 @@ def test_bilinmeyen_olay_sessizce_gecer():
     assert (s.returncode, s.stdout, s.stderr) == (0, "", "")
 
 
+def test_json_olmayan_girdi_cokmeyle_biter_engellemez():
+    s = subprocess.run(
+        [sys.executable, "-X", "utf8", str(BETIK)],
+        input="json degil",
+        capture_output=True,
+        encoding="utf-8",
+    )
+    assert s.returncode == 1
+    assert "JSONDecodeError" in s.stderr
+
+
+KOK = Path(__file__).resolve().parents[1]
+
+
+def test_kapinin_beceri_adlari_yonerge_dosyalarinda_durur():
+    agents = (KOK / "AGENTS.md").read_text(encoding="utf-8")
+    her_is = agents.split("\n## Every job", 1)[1].split("\n## ", 1)[0]
+    yeni_is = (KOK / ".claude/skills/tansu-yeni-is/SKILL.md").read_text(
+        encoding="utf-8"
+    )
+    yapim = next(s for s in yeni_is.splitlines() if s.startswith("6. **Build:**"))
+    assert "`asd-ste100`" in her_is
+    assert "`mattpocock-skills:tdd`" in yapim
+    assert "`ponytail:ponytail`" in yapim
+
+
 # --- 03: kabuk kuralları ---
 
 
@@ -237,11 +263,30 @@ def test_heredoc_engellenir():
 
 
 @pytest.mark.parametrize(
+    "komut",
+    [
+        "cat <<EOF\nx\nEOF",
+        "cat <<'EOF'\nx\nEOF",
+        'cat << "END"\nx\nEND',
+        "git commit -F - <<-EOF\nx\nEOF",
+        "cat <<_son\nx\n_son",
+    ],
+)
+def test_heredoc_bicimleri_engellenir(komut):
+    s = _kabuk(komut)
+    assert s.returncode == 2
+    assert "No heredoc." in s.stderr
+
+
+@pytest.mark.parametrize(
     ("komut", "arac"),
     [
         ("git commit -m bir -m iki", "Bash"),
         ("cat <<< merhaba", "Bash"),
         ('echo "<<EOF"', "PowerShell"),
+        ('python -c "print(1 << 3)"', "Bash"),
+        ("echo $((1<<2))", "Bash"),
+        ('x <<< "text"', "Bash"),
     ],
 )
 def test_heredoc_olmayan_komutlar_gecer(komut, arac):
@@ -249,10 +294,35 @@ def test_heredoc_olmayan_komutlar_gecer(komut, arac):
     assert (s.returncode, s.stdout, s.stderr) == (0, "", "")
 
 
-def test_bash_ten_kapi_ps1_engellenir():
-    s = _kabuk("powershell -File kurulum/kapi.ps1")
+@pytest.mark.parametrize(
+    "komut",
+    [
+        "powershell -File kurulum/kapi.ps1",
+        "pwsh.exe -NoProfile -File C:/x/kurulum/kapi.ps1 -Belge",
+        "./kurulum/kapi.ps1",
+        "cd x && powershell -File kapi.ps1",
+        "PowerShell.exe kurulum/kapi.ps1",
+    ],
+)
+def test_bash_ten_kapi_ps1_engellenir(komut):
+    s = _kabuk(komut)
     assert s.returncode == 2
     assert "Run kurulum\\kapi.ps1 with the PowerShell tool, not from Bash." in s.stderr
+
+
+@pytest.mark.parametrize(
+    "komut",
+    [
+        "git add kurulum/kapi.ps1",
+        "git log -- kurulum/kapi.ps1",
+        "git diff kaynak/master -- kurulum/kapi.ps1",
+        "powershell -File kurulum/baska.ps1",
+        "echo kapi.ps1 | powershell -Command -",
+    ],
+)
+def test_kapi_ps1_adini_anan_komutlar_gecer(komut):
+    s = _kabuk(komut)
+    assert (s.returncode, s.stdout, s.stderr) == (0, "", "")
 
 
 def test_powershell_aracindan_kapi_ps1_gecer():
@@ -289,34 +359,6 @@ def _cikti(s):
     """Betik başarıyla bitip JSON yazmalı; yazmadıysa assert düşer."""
     assert (s.returncode, s.stdout != "") == (0, True)
     return json.loads(s.stdout)
-
-
-def _arac_sonrasi(komut, arac="Bash"):
-    return _kos(
-        {
-            "hook_event_name": "PostToolUse",
-            "tool_name": arac,
-            "tool_input": {"command": komut},
-        }
-    )
-
-
-@pytest.mark.parametrize("arac", ["Bash", "PowerShell"])
-def test_gh_pr_create_sonrasi_hatirlatir(arac):
-    s = _arac_sonrasi("gh pr create --title x --body y", arac)
-    assert _cikti(s) == {
-        "hookSpecificOutput": {
-            "hookEventName": "PostToolUse",
-            "additionalContext": "A pull request was opened. If the ccd_pr tools exist, call get_status. "
-            "If it does not report this pull request, call bind_pr.",
-        }
-    }
-
-
-@pytest.mark.parametrize("komut", ["gh pr list", "gh pr view 42", "git push"])
-def test_baska_komutlar_sonrasi_sessiz(komut):
-    s = _arac_sonrasi(komut)
-    assert (s.returncode, s.stdout, s.stderr) == (0, "", "")
 
 
 def _alt_durdur(tmp_path, istem, son, **ek):
@@ -405,50 +447,4 @@ def test_alt_ajan_ikinci_kez_geri_gonderilmez(tmp_path):
     s = _alt_durdur(
         tmp_path, "Answer in at most 2 words.", "bir iki uc dort", stop_hook_active=True
     )
-    assert (s.returncode, s.stdout, s.stderr) == (0, "", "")
-
-
-def _durdur(son, **ek):
-    return _kos({"hook_event_name": "Stop", "last_assistant_message": son, **ek})
-
-
-def _engel(vurus):
-    return {
-        "decision": "block",
-        "reason": f"Your last message names an internal file or a section number: {vurus}. "
-        "Levent gets no internal file or rule number. Write the message again without them. "
-        "Put a command in a code block.",
-    }
-
-
-@pytest.mark.parametrize(
-    ("son", "vurus"),
-    [
-        ("Open AGENTS.md first.", "AGENTS.md"),
-        ("The rule is in § 5.1 now.", "§"),
-        ("See docs/TASARIM.md and § 5.1 and kod.py.", "TASARIM.md, kod.py, §"),
-        ("Check kayit.jsonl and ayar.json.", "kayit.jsonl, ayar.json"),
-    ],
-)
-def test_son_mesajda_dosya_adi_veya_paragraf_isareti_geri_gonderilir(son, vurus):
-    s = _durdur(son)
-    assert _cikti(s) == _engel(vurus)
-
-
-@pytest.mark.parametrize(
-    "son",
-    [
-        "Done. Run this:\n```\npytest tests/test_kanca.py\n```\nThen look at PR 42, commit a1b2c3d.",
-        "Run:\n~~~powershell\nGet-Content AGENTS.md  # § 5\n~~~",
-        "Nothing to report. See https://github.com/zPfizer/TANSU/pull/42.",
-        "Version 3.14 and e.g. this.",
-    ],
-)
-def test_son_mesaj_temizse_veya_kod_blogundaysa_gecer(son):
-    s = _durdur(son)
-    assert (s.returncode, s.stdout, s.stderr) == (0, "", "")
-
-
-def test_son_mesaj_ikinci_kez_geri_gonderilmez():
-    s = _durdur("Open AGENTS.md first.", stop_hook_active=True)
     assert (s.returncode, s.stdout, s.stderr) == (0, "", "")

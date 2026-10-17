@@ -4,10 +4,9 @@ An exception ends with exit 1. Claude Code shows the error and does not block. A
 - PreToolUse Edit, Write, MultiEdit: an instruction file needs a call of asd-ste100 by the acting agent.
 - PreToolUse Edit, Write, MultiEdit: a code file needs calls of mattpocock-skills:tdd and ponytail:ponytail.
 - PreToolUse Bash, PowerShell: a shell read of an existing file is blocked (use the Read tool).
-- PreToolUse Bash: a heredoc, the text kapi.ps1, and git <ref>:.<path> without MSYS_NO_PATHCONV=1 are blocked.
-- PostToolUse Bash, PowerShell: after gh pr create, a reminder to call the ccd_pr tools.
+- PreToolUse Bash: a heredoc, a run of kapi.ps1 (powershell or pwsh with kapi.ps1, or kapi.ps1 as the command),
+  and git <ref>:.<path> without MSYS_NO_PATHCONV=1 are blocked.
 - SubagentStop: an answer longer than the word limit of the subagent prompt is sent back once.
-- Stop: a final message with a file name or the sign § outside code blocks is sent back once.
 
 The skill gate mirrors AGENTS.md "Every job" (STE before instruction text)
 and `tansu-yeni-is` "Build" (tdd and ponytail before code).
@@ -94,8 +93,8 @@ def _dosya_mu(belirtec, cwd):
     return any((Path(cwd) / a).is_file() for a in adaylar)
 
 
-def _okuma_komutu(komut, cwd):
-    """Dosya okuyan ilk komutun adını döner; yoksa None."""
+def _komutlar(komut):
+    """Her komut parçası için (komut adı, belirteçler); öndeki NAME=değer atamaları atılır."""
     for parca in re.split(r"\|\||&&|[|;\n]", komut):
         try:
             belirtecler = shlex.split(
@@ -106,9 +105,14 @@ def _okuma_komutu(komut, cwd):
         belirtecler = [b.strip("\"'") for b in belirtecler]
         while belirtecler and re.match(r"\w+=", belirtecler[0]):
             belirtecler.pop(0)
-        if not belirtecler:
-            continue
-        ad = Path(belirtecler[0].replace("\\", "/")).name.lower().removesuffix(".exe")
+        if belirtecler:
+            ad = Path(belirtecler[0].replace("\\", "/")).name.lower()
+            yield ad.removesuffix(".exe"), belirtecler
+
+
+def _okuma_komutu(komut, cwd):
+    """Dosya okuyan ilk komutun adını döner; yoksa None."""
+    for ad, belirtecler in _komutlar(komut):
         if ad in OKUMA_KOMUTLARI and any(
             not b.startswith("-") and _dosya_mu(b, cwd) for b in belirtecler[1:]
         ):
@@ -116,16 +120,28 @@ def _okuma_komutu(komut, cwd):
     return None
 
 
+def _kapi_calistirir(komut):
+    """Bash'in kapi.ps1'i çalıştırıp çalıştırmadığı: komut adı powershell/pwsh ve parça kapi.ps1'i anar, ya da komut adı kapi.ps1 ile biter."""
+    return any(
+        ad.endswith("kapi.ps1")
+        or (
+            ad in ("powershell", "pwsh")
+            and any("kapi.ps1" in b.lower() for b in belirtecler)
+        )
+        for ad, belirtecler in _komutlar(komut)
+    )
+
+
 def _kabuk(girdi):
     komut = girdi["tool_input"]["command"]
     mesaj = None
     if girdi["tool_name"] == "Bash":
-        if re.search(r"(?<!<)<<(?!<)-?[ \t]*['\"]?\w", komut):
+        if re.search(r"(?<!<)<<(?!<)-?[ \t]*['\"A-Za-z_]", komut):
             mesaj = (
                 "No heredoc. Give a commit message with several -m arguments or -F <file>. "
                 "Put Python code in a file or in one-line -c."
             )
-        elif "kapi.ps1" in komut:
+        elif _kapi_calistirir(komut):
             mesaj = "Run kurulum\\kapi.ps1 with the PowerShell tool, not from Bash."
         elif (
             re.search(r"\bgit\b", komut)
@@ -145,22 +161,6 @@ def _on_arac(girdi):
         return _beceri_kapisi(girdi)
     if girdi["tool_name"] in ("Bash", "PowerShell"):
         return _kabuk(girdi)
-    return 0
-
-
-def _arac_sonrasi(girdi):
-    if girdi["tool_name"] in ("Bash", "PowerShell") and re.search(
-        r"\bgh\s+pr\s+create\b", girdi["tool_input"]["command"]
-    ):
-        _yaz_json(
-            {
-                "hookSpecificOutput": {
-                    "hookEventName": "PostToolUse",
-                    "additionalContext": "A pull request was opened. If the ccd_pr tools exist, call get_status. "
-                    "If it does not report this pull request, call bind_pr.",
-                }
-            }
-        )
     return 0
 
 
@@ -197,35 +197,13 @@ def _alt_ajan_durdu(girdi):
     return 0
 
 
-def _durdu(girdi):
-    if girdi.get("stop_hook_active"):
-        return 0
-    metin = re.sub(r"(```|~~~).*?\1", "", girdi["last_assistant_message"], flags=re.S)
-    vurus = re.findall(
-        r"\b[\w.-]+\.(?:md|py|ps1|json|jsonl|yml|yaml|xml|toml|txt)\b", metin
-    )
-    vurus += ["§"] if "§" in metin else []
-    if vurus:
-        _yaz_json(
-            {
-                "decision": "block",
-                "reason": "Your last message names an internal file or a section number: "
-                f"{', '.join(dict.fromkeys(vurus))}. Levent gets no internal file or rule number. "
-                "Write the message again without them. Put a command in a code block.",
-            }
-        )
-    return 0
-
-
 def _yaz_json(nesne):
     print(json.dumps(nesne))
 
 
 KANCALAR = {
     "PreToolUse": _on_arac,
-    "PostToolUse": _arac_sonrasi,
     "SubagentStop": _alt_ajan_durdu,
-    "Stop": _durdu,
 }
 
 

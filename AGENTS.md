@@ -42,8 +42,7 @@ first. Write the reason. Then write the code.
 - **Hooks (Kancalar):** `kurulum/kanca.py` checks tool calls and answers. `.claude/settings.json` registers it. Its message names the rule and the fix.
   - It blocks an edit of an instruction file or a code file before the skill calls that "Every job" and `tansu-yeni-is` "Build" require.
   - It blocks a shell read of a file, a Bash heredoc, `kapi.ps1` from Bash, and `git <ref>:.<path>` in Bash without `MSYS_NO_PATHCONV=1`.
-  - It sends back a subagent answer that is over the word limit of its prompt. It sends back a last message that has a file name or `§` outside code blocks. It sends back each one time only.
-  - After `gh pr create`, it tells you to call the ccd_pr tools.
+  - It sends back a subagent answer that is over the word limit of its prompt. It sends it back one time only.
 - **Waiting (Bekleme):** Claude Code blocks `sleep` and `Start-Sleep`. Run a long command alone in one call. The full gate took 215 s on 17.10.
   Run it in the foreground with a timeout of at most 600000 ms. Or use `run_in_background` and one Monitor on it.
   Do not put `git commit` and the full test in one call. Do not poll with a loop of status calls. In Git Bash, `pgrep` does not see PowerShell processes.

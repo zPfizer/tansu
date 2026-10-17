@@ -34,11 +34,6 @@
             "type": "command",
             "command": "C:/WINDOWS/System32/WindowsPowerShell/v1.0/powershell.exe -NoProfile -NonInteractive -EncodedCommand JgAgACcAQwA6AFwAVQBzAGUAcgBzAFwAbABlAHYAZQBuAHQAXABBAHAAcABEAGEAdABhAFwATABvAGMAYQBsAFwAUAB5AHQAaABvAG4AXABwAHkAdABoAG8AbgBjAG8AcgBlAC0AMwAuADEANAAtADYANABcAHAAeQB0AGgAbwBuAC4AZQB4AGUAJwAgACcAQwA6AFwAVQBzAGUAcgBzAFwAbABlAHYAZQBuAHQAXABEAGUAcwBrAHQAbwBwAFwAWQBPAE4ARQBUAEkATQBcAGIAZQB5AGkAbgBcAC4AYwBsAGEAdQBkAGUAXABzAGMAcgBpAHAAdABzAFwAYgBlAHkAaQBuAF8AdgAzAF8AaABvAG8AawAuAHAAeQAnACAAJwAtAC0AdgBhAHUAbAB0ACcAIAAnAEMAOgBcAFUAcwBlAHIAcwBcAGwAZQB2AGUAbgB0AFwARABlAHMAawB0AG8AcABcAFkATwBOAEUAVABJAE0AXABiAGUAeQBpAG4AJwAgACcALQAtAHMAdABhAHQAZQAnACAAJwBDADoAXABVAHMAZQByAHMAXABsAGUAdgBlAG4AdABcAC4AYgBlAHkAaQBuAC0AdgAzAFwAeQBvAG4AZQB0AGkAbQAnACAAJwAtAC0AaABhAHIAbgBlAHMAcwAnACAAJwBjAGwAYQB1AGQAZQAnADsAIABlAHgAaQB0ACAAJABMAEEAUwBUAEUAWABJAFQAQwBPAEQARQA=",
             "timeout": 20
-          },
-          {
-            "type": "command",
-            "command": "py -3.14 -X utf8 \"$CLAUDE_PROJECT_DIR/kurulum/kanca.py\"",
-            "timeout": 20
           }
         ]
       }
@@ -67,16 +62,6 @@
       }
     ],
     "PostToolUse": [
-      {
-        "matcher": "Bash|PowerShell",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "py -3.14 -X utf8 \"$CLAUDE_PROJECT_DIR/kurulum/kanca.py\"",
-            "timeout": 20
-          }
-        ]
-      },
       {
         "matcher": "Edit|Write|apply_patch",
         "hooks": [
