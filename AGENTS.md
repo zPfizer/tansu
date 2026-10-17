@@ -44,9 +44,9 @@ first. Write the reason. Then write the code.
   - It blocks a shell read of a file, a Bash heredoc, `kapi.ps1` from Bash, and `git <ref>:.<path>` in Bash without `MSYS_NO_PATHCONV=1`.
   - It sends back a subagent answer that is over the word limit of its prompt. It sends it back one time only.
     It finds the limit in these forms: "at most N words", "under N words", "en fazla N sözcük", "en fazla N kelime".
-- **Waiting (Bekleme):** Claude Code blocks `sleep` and `Start-Sleep`. Run a long command alone in one call. The full gate took 215 s on 17.10.
+- **Waiting (Bekleme):** Claude Code blocks `sleep` and `Start-Sleep`. Run a long command alone in one call. Run the gate with the affected test files.
   Run it in the foreground with a timeout of at most 600000 ms. Or use `run_in_background` and one Monitor on it.
-  Do not put `git commit` and the full test in one call. Do not poll with a loop of status calls. In Git Bash, `pgrep` does not see PowerShell processes.
+  Do not put `git commit` and the gate in one call. Do not poll with a loop of status calls. In Git Bash, `pgrep` does not see PowerShell processes.
 - **Temporary files (Geçici dosyalar):** Write them under `$TEMP` or under `.scratch/<job>/tmp/` of the main checkout. Never write one to a tracked path.
   The permission system refuses a recursive delete (`rm -rf`, `Remove-Item -Recurse`). Do not try it. List the leftover paths in a code block of the report. Levent deletes them.
 - **Shell state (Kabuk durumu):** Each shell call starts new. A `cd`, a variable, or an `export` does not carry over. `$CLAUDE_PROJECT_DIR` exists only in hooks. Use full paths.
