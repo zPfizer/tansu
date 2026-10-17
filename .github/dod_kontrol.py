@@ -2,6 +2,7 @@ import os
 import re
 import subprocess
 import sys
+from pathlib import PurePosixPath
 
 
 # Altı kural (Levent 17.10: "Sadeleştir."; başlık kuralı Levent 18.10). Testi, biçimi ve lint'i ci iş akışı kanıtlar.
@@ -9,6 +10,7 @@ KURAL_1 = "Kural 1: PR gövdesinde Closes #<issue> satırı olmalı."
 KURAL_2 = "Kural 2: ## Kabul ölçütleri bölümünde en az bir kutu olmalı ve her kutu işaretli olmalı."
 KURAL_3 = "Kural 3: ## Gerçek veri kanıtı bölümünde içi dolu bir kod bloğu olmalı."
 KURAL_6 = "Kural 6: PR başlığı #<N> · ile başlamalı ve N, Closes #<N> satırındaki sayı olmalı."
+KURAL_6_BELGE = "Kural 6: Issue'suz belge PR başlığı Belge · <başlık> biçiminde olmalı."
 KAPATMA = re.compile(
     r" *(close|closes|closed|fix|fixes|fixed|resolve|resolves|resolved) #[0-9]+\s*",
     re.IGNORECASE,
@@ -136,6 +138,40 @@ def _denetlenen_hatasi(govde, bas_sha, taban, dizin):
     )
 
 
+def _yalniz_belge(bas_sha, taban, dizin):
+    if not bas_sha or not taban:
+        return False
+    try:
+        cikti = subprocess.run(
+            [
+                "git",
+                "diff",
+                "--name-only",
+                "--no-renames",
+                "-z",
+                f"{taban}...{bas_sha}",
+            ],
+            cwd=dizin,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="surrogateescape",
+            check=True,
+        ).stdout
+    except subprocess.CalledProcessError:
+        return False
+    except OSError:
+        return False
+    # Yeniden adlandırmada eski yol da denetlenir; kodu .md yapmak muafiyet vermez.
+    dosyalar = [PurePosixPath(yol) for yol in cikti.split("\0") if yol]
+    return bool(dosyalar) and all(
+        yol.suffix == ".md"
+        and yol.parts[0] not in {".claude", ".github"}
+        and yol.name not in {"AGENTS.md", "CLAUDE.md"}
+        for yol in dosyalar
+    )
+
+
 def hatalar(
     govde: str | None,
     bas_sha: str | None = None,
@@ -146,7 +182,13 @@ def hatalar(
     govde = _yorumsuz(govde or "")
     satirlar = govde.splitlines()
     sonuc = []
-    if not any(KAPATMA.fullmatch(satir) for satir in satirlar):
+    issue_var = any(KAPATMA.fullmatch(satir) for satir in satirlar)
+    belge_pr = (
+        not issue_var
+        and any(re.fullmatch(r"Issue yok:[ \t]+\S.*", satir) for satir in satirlar)
+        and _yalniz_belge(bas_sha, taban, dizin)
+    )
+    if not issue_var and not belge_pr:
         sonuc.append(KURAL_1)
     if _kabul_hatasi(_bolum(satirlar, "## Kabul ölçütleri")):
         sonuc.append(KURAL_2)
@@ -158,7 +200,10 @@ def hatalar(
     if ayrinti := _denetlenen_hatasi(govde, bas_sha, taban, dizin):
         sonuc.append(ayrinti)
     baslik_eslesmesi = re.match(r"#([0-9]+) · ", baslik or "")
-    if not baslik_eslesmesi or not any(
+    if belge_pr:
+        if not re.fullmatch(r"Belge · \S.*", baslik or ""):
+            sonuc.append(KURAL_6_BELGE)
+    elif not baslik_eslesmesi or not any(
         re.fullmatch(rf" *closes #{baslik_eslesmesi.group(1)}\s*", satir, re.IGNORECASE)
         for satir in satirlar
     ):

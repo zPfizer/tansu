@@ -12,6 +12,7 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ### Değişti
 
+- Issue ve PR yolları belirlendi; gerekçeli, yalnız izinli belge dosyalarını değiştiren PR'lar issue olmadan kabul ediliyor. (#79)
 - Ruff B905 ve B023 kontrolleri açıldı; `zip` uzunluk tercihleri ve döngü içi fonksiyonların kullandığı değerler açıkça bağlandı. (#74)
 - GitHub deposunun adı tansu oldu; eski adres yeni adrese yönleniyor.
 - Değişiklik başlıkları kapattıkları işin numarasıyla başlıyor; otomatik kabul denetimi bu eşleşmeyi kontrol ediyor.
