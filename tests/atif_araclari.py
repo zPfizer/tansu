@@ -644,7 +644,7 @@ def alinti_sorunlari(havuz, kayit_dosyalari):
             ad = kayit["not"]
             eksik = set()
 
-            def kontrol_et(aday):
+            def kontrol_et(aday, eksik=eksik, yer=yer):
                 if kaynak(aday) is None and aday not in eksik:
                     eksik.add(aday)
                     sorunlar.append(f"{yer}{aday}: not dosyası yok")

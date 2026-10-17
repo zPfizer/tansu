@@ -212,7 +212,8 @@ def test_giris_mum_yesil_uzun_guclu_ve_kutudan_yukari(c, y, d, tepe, beklenen):
 def _mum_sonrasi(satirlar, on=14, mum_hacmi=100.0):
     """`on` düz gün (100; 101; 99; hacim 100), güçlü mum günü (104; 104,5; 100), sonra `satirlar` (kapanış, yüksek, düşük, hacim)."""
     k, y, d, h = zip(
-        *([(100, 101, 99, 100)] * on + [(104, 104.5, 100, mum_hacmi)] + satirlar)
+        *([(100, 101, 99, 100)] * on + [(104, 104.5, 100, mum_hacmi)] + satirlar),
+        strict=True,
     )
     return _mumlar(k, y, d, h)
 
@@ -1273,7 +1274,7 @@ def test_giris_arz_en_kucuk_proximal_aktif_bolge_biten_ve_esit_proximal_yok_sayi
     f = _arz_secim_cercevesi()
     ayar = dict(KUCUK, sma_n=1)
     z = aileler.bolgeler(f, "arz")
-    assert list(zip(z["proximal"], z["distal"])) == [
+    assert list(zip(z["proximal"], z["distal"], strict=True)) == [
         (118.0, 123.0),
         (104.0, 108.0),
         (110.0, 115.0),

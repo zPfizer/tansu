@@ -76,7 +76,9 @@ def _bolum(ad, s) -> list:
         satirlar.append(
             f"| Dönem | {DONEM[0].date()} – {DONEM[1].date()} | yok | üretmedi |"
         )
-    for p, t, b in zip(gostergeler.SIKISMA_PERIYOTLAR, EMALAR, s["emalar"]):
+    for p, t, b in zip(
+        gostergeler.SIKISMA_PERIYOTLAR, EMALAR, s["emalar"], strict=True
+    ):
         satirlar.append(
             f"| EMA{p} ({RAPOR_TARIHI.date()}) | {t} | {b:.4f} | "
             f"{'üretti' if abs(b - t) <= TOLERANS else 'üretmedi'} |"
@@ -112,7 +114,7 @@ def _esdeger_bolumu(olcumler) -> list:
     if not tutan:
         return baslik + ["Dönemi ve günü tam tutan aday yok.", ""]
     adlar = ", ".join(ad for ad, _ in tutan)
-    kolonlar = list(zip(*(o for _, o in tutan)))
+    kolonlar = list(zip(*(o for _, o in tutan), strict=True))
     if any(max(k) - min(k) > TOLERANS for k in kolonlar):
         return baslik + [
             f"Dönemi ve günü tutan adaylar ({adlar}) birbirinden ±{TOLERANS} dışında ayrılıyor: tek aday sayılmaz.",
@@ -120,7 +122,7 @@ def _esdeger_bolumu(olcumler) -> list:
         ]
     hedef = [ORTALAMA_YUZDE, *EMALAR]
     en_yakin = min(  # eşitlikte min ilk adayı verir
-        tutan, key=lambda a: sum(abs(b - h) for b, h in zip(a[1], hedef))
+        tutan, key=lambda a: sum(abs(b - h) for b, h in zip(a[1], hedef, strict=True))
     )[0]
     return baslik + [
         f"Eşdeğer adaylar: {adlar}. Tek aday sayılır. Seçilen aday: {en_yakin} "

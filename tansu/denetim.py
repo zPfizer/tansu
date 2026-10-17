@@ -97,7 +97,7 @@ def dunya(tohum, hisse=40, gun=2000) -> veri.Anlik:
         fiyat=f,
         olaylar=bos,
         faiz=faiz,
-        sektor={a: f"K{s}" for a, s in zip(adlar, sektor)},
+        sektor={a: f"K{s}" for a, s in zip(adlar, sektor, strict=True)},
     )
 
 
@@ -120,7 +120,8 @@ def etki_ekle(anlik, aile, etki=ETKILER[0], bas=BAS) -> veri.Anlik:
         evr = simulator.evrenler(anlik, simulator.ilk_gun(anlik, bas), gunler[-1])
         h = ciftbolme.hazirla(anlik, evr, bas)
         bitis = [*(st["bas"] for st in h["setler"][1:]), len(gunler) + 1]
-        for st, son in zip(h["setler"], bitis):
+        # Seçim yoksa bitis yalnız son sınırı içerir; işlenecek set yoktur.
+        for st, son in zip(h["setler"], bitis, strict=False):
             for y, x in st["ciftler"]:
                 hedef = ciftbolme.hedef(h["Kc"], y, x, h["p"])
                 for j in range(st["bas"] - 1, min(son - 1, len(gunler))):
@@ -148,7 +149,7 @@ def _holm_iki(ps) -> dict:
     """Holm m = 2 (iki aile), günlüksüz: gerçek koşuda m ≥ 2 olduğundan denetim en gevşek durumdur."""
     return {
         a: {"holm_p": h, "holm_m": len(ps), "varsayimsal": True, "donmus": False}
-        for a, h in zip(ps, istatistik.holm(list(ps.values())))
+        for a, h in zip(ps, istatistik.holm(list(ps.values())), strict=True)
     }
 
 

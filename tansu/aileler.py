@@ -376,13 +376,13 @@ def kurulum(f: pd.DataFrame, p: Parametre = Parametre()) -> pd.DataFrame:
                 ustte = [z for z in arz if z[1] <= bit < z[2] and z[3] > ust]
                 if ustte:
                     distal = min(ustte, key=lambda z: z[3])[4]
-                    seviye = lambda i: distal
+                    seviye = lambda i, distal=distal: distal
             elif p.giris == "ucgen":
                 # üst çizgi: ilk ve son salınım tepesinden geçer, gün sırasıyla uzar
                 u = _ucgen(yuk[bas : bit + 1], dus[bas : bit + 1])
                 if u is not None:
                     tepe2 = bas + u[0][[0, -1]]
-                    seviye = lambda i: _dogru(yuk, tepe2, i)
+                    seviye = lambda i, tepe2=tepe2: _dogru(yuk, tepe2, i)
             if p.giris in ("arz", "ucgen") and seviye is None:
                 sira = []
             if p.giris == "retest":

@@ -47,7 +47,9 @@ def oran(hucreler) -> float:
 
 def ema(anlik, b, p, atr_n, uye, izgara=IZGARA["ema_sikismasi"]) -> list:
     """EMA ızgarası; `b`: `simulator.k1_baglam`, `uye`: `simulator.uyeler`. Mum tablosu ve tek işlem önbelleği hücreler arası paylaşılır."""
-    hucreler = [dict(zip(izgara, v)) for v in itertools.product(*izgara.values())]
+    hucreler = [
+        dict(zip(izgara, v, strict=True)) for v in itertools.product(*izgara.values())
+    ]
     parametreler = [replace(p, **h) for h in hucreler]
     uye_gun = uye.groupby("sembol")["tarih"].agg(list)
     parcalar = [[] for _ in hucreler]
@@ -70,7 +72,7 @@ def ema(anlik, b, p, atr_n, uye, izgara=IZGARA["ema_sikismasi"]) -> list:
                 pd.concat(x, ignore_index=True) if x else bos, b, MASRAF
             ),
         )
-        for h, x in zip(hucreler, parcalar)
+        for h, x in zip(hucreler, parcalar, strict=True)
     ]
 
 

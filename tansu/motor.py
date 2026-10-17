@@ -199,7 +199,9 @@ def _kutu_hedef(kurulum) -> dict:
     kurulum = kurulum[~kurulum.index.duplicated()]  # aynı güne iki dönem: ilki kazanır
     return {
         t: tuple(None if pd.isna(x) else float(x) for x in (a, h))
-        for t, a, h in zip(kurulum.index, kurulum["kutu_alt"], kurulum["hedef"])
+        for t, a, h in zip(
+            kurulum.index, kurulum["kutu_alt"], kurulum["hedef"], strict=True
+        )
     }
 
 
@@ -273,7 +275,8 @@ class Zincir:
     ):
         self.mumlar, self.ayar, self.kurulum = mumlar, ayar, kurulum
         self.satirlar = [
-            {**s, "tarih": t} for t, s in zip(mumlar.index, mumlar.to_dict("records"))
+            {**s, "tarih": t}
+            for t, s in zip(mumlar.index, mumlar.to_dict("records"), strict=True)
         ]
         kar = mumlar["karantina"].to_numpy(dtype=bool)
         son = pd.Series(range(len(kar))).where(kar).ffill().to_numpy()

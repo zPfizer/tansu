@@ -47,7 +47,7 @@ def fiyatlar(bozuk=False):
     kap = [100.0] * 5 + [103.0]
     yuk = [100.5, 100.5, 101, 100.5, 100.5, 103.5]
     sonuc = []
-    for g, k, y in zip(pd.bdate_range("2026-09-28", periods=6), kap, yuk):
+    for g, k, y in zip(pd.bdate_range("2026-09-28", periods=6), kap, yuk, strict=True):
         s = satir(g, k, k)
         s.update(
             yuksek=y, ham_yuksek=y, dusuk=k - 0.5, ham_dusuk=k - 0.5, hacim=4_000_000.0
@@ -335,7 +335,7 @@ def test_kart_durumlari_ve_kapanan_kart_yalniz_kapandigi_gun_gorunur(
     fiyat.extend(fiyatlar())
     bas_uzunluk = len(fiyat)
     for tarih, (kapanis, dusuk, yuksek) in zip(
-        pd.bdate_range("2026-10-06", periods=len(devam)), devam
+        pd.bdate_range("2026-10-06", periods=len(devam)), devam, strict=True
     ):
         s = satir(tarih, kapanis, kapanis)
         s.update(

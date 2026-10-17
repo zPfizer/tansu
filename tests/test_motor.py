@@ -242,7 +242,7 @@ def test_motor_senaryosu(ad):
         for t in islemler.itertuples()
     ]
     assert len(gercek) == len(beklenen)
-    for g, b in zip(gercek, beklenen):
+    for g, b in zip(gercek, beklenen, strict=True):
         assert g[:5] == (b[0], pytest.approx(b[1]), b[2], pytest.approx(b[3]), b[4])
         assert g[5:] == (pytest.approx(b[5]), pytest.approx(b[6]))
     assert dusen == iptal
