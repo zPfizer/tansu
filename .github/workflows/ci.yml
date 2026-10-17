@@ -50,7 +50,7 @@ jobs:
       - run: ruff check tansu tests .github
       - run: ruff format --check tansu tests .github
       - run: pytest -q
-      # driftlint yalnız talimat dosyalarını bulur (AGENTS.md, CLAUDE.md, .claude/skills); .scratch/ arşivi .driftlintrc.json ile dışarıda.
+      # driftlint yalnız talimat dosyalarını bulur (AGENTS.md, CLAUDE.md, .claude/skills); yerel .scratch/ ve arsiv/ klasörleri git dışında ve .driftlintrc.json ile tarama dışında.
       # docs/agents/*.md dosyalarını bulmaz; onların ölü yolları tests/test_sahipler.py denetler.
       - uses: actions/setup-node@v4
         with:

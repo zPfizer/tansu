@@ -1044,7 +1044,7 @@ Levent 16.10: "Tansu ne diyorsa onu yap." Komut: `python -m tansu tansu-sinama`.
 
 ## 7. Uygulama sırası
 
-Adım 1–9 tamamlandı (MVP biletleri `.scratch/arsiv/tansu-mvp/issues/`, 05–06.10). Durum 14.10 ile eşlendi.
+Adım 1–9 tamamlandı (MVP biletleri yerel, salt okunur arşivde ve git geçmişinde: `.scratch/arsiv/tansu-mvp/issues/`, 05–06.10; GitHub ve CI'da bu klasör bulunmaz). Durum 14.10 ile eşlendi. <!-- driftlint-ignore: local-only archive, gitignored, absent in CI -->
 
 1. **Temizlik:** tamamlandı (05.10).
 2. **Veri deposu:** `kaynak` + `veri`.

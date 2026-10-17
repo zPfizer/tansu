@@ -7,12 +7,15 @@ on:
 jobs:
   dod:
     if: github.event.pull_request.draft == false
-    runs-on: ubuntu-latest
-    timeout-minutes: 2
+    runs-on: windows-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
       - run: python .github/dod_kontrol.py
         env:
           PR_GOVDE: ${{ github.event.pull_request.body }}

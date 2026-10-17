@@ -216,15 +216,15 @@ def test_ci_aracleri_tam_surume_sabitli_ve_agents_bunu_soyler():
     )
 
 
-def test_driftlint_yapilandirmasi_yalniz_scratch_ve_worktrees_i_dislar():
+def test_driftlint_yapilandirmasi_yalniz_yerel_arsivleri_ve_worktrees_i_dislar():
     yapilandirma = (KOK / ".driftlintrc.json").read_text(encoding="utf-8")
     assert re.fullmatch(
-        r'\s*\{\s*"ignore":\s*\[\s*"\.scratch/\*\*"\s*,\s*"\.claude/worktrees/\*\*"\s*\]\s*\}\s*',
+        r'\s*\{\s*"ignore":\s*\[\s*"\.scratch/\*\*"\s*,\s*"arsiv/\*\*"\s*,\s*"\.claude/worktrees/\*\*"\s*\]\s*\}\s*',
         yapilandirma,
     )
 
 
-# Uzak depo adı origin'dir. Eski ad yalnız .scratch/ altında kalır; depo adı ve modül adı eşleşmez.
+# Uzak depo adı origin'dir. Yerel .scratch/ ve arsiv/ tarihsel metindir; güncel ad denetimine girmez.
 # Sözcük parçalı yazılır: bu dosya kendini bulmasın.
 ESKI = "kay" + "nak"
 ESKI_AD_DESENI = re.compile(
@@ -269,7 +269,7 @@ def test_izlenen_dosyalar_uzak_depo_adini_eski_adla_yazmaz():
     ).stdout
     bulunan = []
     for goreli in cikti.split("\0"):
-        if not goreli or goreli.startswith(".scratch/"):
+        if not goreli or goreli.startswith((".scratch/", "arsiv/")):
             continue
         yol = KOK / goreli
         if not yol.is_file():
