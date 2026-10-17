@@ -35,7 +35,7 @@ Use this part when you test whether a skill triggers on the right requests. The 
 4. **Model:** Pass `--model` with the model ID of real Tansu sessions.
 5. **Tuning:** When you tune a description, split the set: 60% train and 40% held-out. Judge only on the held-out part.
 6. **Sample first:** Run a small sample first. Read its distribution. Start the full run only if the setup is clean. A clean setup has four signs:
-   - No run stops because a tool is denied.
+   - No run ends without a `result` line because a tool is denied. A blocked call that lets the run continue is allowed ("Isolation").
    - No run is missing.
    - No outside context is in the eval session. "Isolation" removes the hooks.
    - No run changes a file. "Isolation" sets the controls.
@@ -45,8 +45,8 @@ Use this part when you test whether a skill triggers on the right requests. The 
    - Run in a disposable copy: `git worktree add --detach <temporary folder outside every Tansu worktree> <branch>`. The copy must hold the committed skill files under test. Remove the copy after the runs.
    - Delete the `hooks` key in `<copy>/.claude/settings.json`. The user file `~/.claude/settings.json` also has hooks: pass `--settings '{"disableAllHooks": true}'` (bash quoting) to disable all hooks.
    - Pass `--include-hook-events`. Check that each stream file has no hook event.
-   - Pass `--disallowedTools "Bash PowerShell Edit Write NotebookEdit Agent"`, `--allowedTools "Skill Read Grep Glob"`, `--permission-mode default`, and `--strict-mcp-config`.
+   - Pass `--disallowedTools "Bash PowerShell Edit Write NotebookEdit Agent ToolSearch Monitor"`, `--allowedTools "Skill Read Grep Glob"`, `--permission-mode default`, and `--strict-mcp-config`. (Reason, 16.10: in the set 2 measure, ToolSearch loaded the deferred tool Monitor, and one run tried to run pytest with Monitor. `--permission-mode default` blocked it.)
    - Before and after the runs, record `git status --porcelain` and `git log -1` of the copy and of `C:\Users\levent\Desktop\YONETIM\beyin`. Take the "before" record after you edit the settings of the copy and before the first run. Do this check even though the hooks are off. If a value changed, stop and find the cause. If an eval run caused the change, all runs are invalid.
-   - A run that tried to call a tool from the `--disallowedTools` list or an `mcp__` tool is invalid. A run without a `result` line is invalid. An invalid run is not a miss: run it again. Check the tool names in each stream file.
+   - A run in which a tool from the `--disallowedTools` list or an `mcp__` tool ran is invalid. A blocked call does not make a run invalid. A blocked call has the result text "No such tool available" or a permission denial ("requires approval"). Any other result means that the tool ran. A run without a `result` line is invalid. An invalid run is not a miss: run it again. Check the tool names and tool results in each stream file. (Reason, 16.10: a query that asks for an edit makes the model try Edit after it loads the skill. The model tries it in each run of that query.)
 8. **Runner:** On Windows, the eval runner of skill-creator does not work. It reads pipes with `select()`. It also tests a temporary command copy that competes with the real skill. Use a runner that calls `claude -p` with the real project skills and the flags of "Model" and "Isolation". Run the runner in bash (Git Bash). It reads the first Skill tool call from `--output-format stream-json --verbose`. Give each `claude -p` call `< /dev/null`. (Reason, 16.10: in the second sample, `claude -p` read the rest of the query file from the loop's standard input. It added those lines to the prompt, and the last two queries did not run.)
 9. **Save:** Save the eval set, the exact command, and the results under `.scratch/<job>/` in the repository. The first set and two sample runs are in `.scratch/beceri-tetik-1610/`. The second set, from real requests, is `sorgular-2.tsv` there.
