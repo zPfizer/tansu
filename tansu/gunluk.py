@@ -143,9 +143,10 @@ def _kartlar(anlik, tarih, p, atr_n) -> list:
     kanit, kartlar = _kanit(simulator.AILE, tarih), []
     for s in sorted(anlik.fiyat["sembol"].unique()):
         m = motor.mumlar(anlik, s, p, atr_n)
-        poz, kapanan = motor.tara(m, aileler.sinyal(m.dropna(subset=["kapanis"]), p))[
-            2:
-        ]
+        f = m.dropna(subset=["kapanis"])
+        poz, kapanan = motor.tara(
+            m, aileler.sinyal(f, p), p, motor.kurulum_bilgisi(f, p)
+        )[2:]
         kartlar += [
             _kart(anlik, s, m, x, kanit) for x in (poz, kapanan) if x is not None
         ]

@@ -257,9 +257,10 @@ def ilk_gun(anlik, bas=BASLANGIC):
 
 def _suzgec(islemler, evr, ilk, kg) -> tuple:
     """(işlem tablosu, kapanma sayısı): evren süzgeci ve kapanan hisse (TASARIM 5.2, 5.6). Gerçek koşu ve K1 aynı yolu kullanır."""
+    tarihler = ("sinyal_tarih", "giris_tarih", "cikis_tarih", "yari_tarih")
     islemler = islemler.astype(
-        {a: "datetime64[ns]" for a in ("sinyal_tarih", "giris_tarih", "cikis_tarih")}
-    )
+        {a: "datetime64[ns]" for a in tarihler if a in islemler}
+    )  # `yari_tarih` el yapımı tabloda olmayabilir: yarı satış sayılmaz
     t = islemler.loc[islemler["sinyal_tarih"] >= ilk].copy()
     ay = t["sinyal_tarih"].dt.to_period("M")
     t = t.loc[
@@ -275,9 +276,12 @@ def _suzgec(islemler, evr, ilk, kg) -> tuple:
         if r.sembol in kg:
             son, gun = kg[r.sembol]
             if r.giris_tarih <= gun and (r.cikis_tarih > son or r.neden == "veri_sonu"):
+                # yarı satış son işlem gününe dek yapıldıysa yalnız kalan yarı sıfırlanır (TASARIM 5.5 "Yarı satışlı işlem")
+                yari_tarih = r.get("yari_tarih", pd.NaT)
+                yari = pd.notna(yari_tarih) and yari_tarih <= son
                 t.loc[k, ["cikis_tarih", "cikis_fiyat", "neden"]] = [
                     gun,
-                    0.0,
+                    r.yari_fiyat / 2 if yari else 0.0,
                     "kapanma",
                 ]
                 sayi += 1

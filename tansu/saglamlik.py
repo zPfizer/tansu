@@ -53,10 +53,13 @@ def ema(anlik, b, p, atr_n, uye, izgara=IZGARA["ema_sikismasi"]) -> list:
     parcalar = [[] for _ in hucreler]
     for s in sorted(uye_gun.index):
         m = motor.mumlar(anlik, s, p, atr_n)
-        f, zincir = m.dropna(subset=["kapanis"]), motor.Zincir(m)
+        f, zincir = m.dropna(subset=["kapanis"]), motor.Zincir(m, p)
         for i, pc in enumerate(parametreler):
             sig = aileler.sinyal(f, pc)
-            t, _ = zincir.calistir(m.index.get_indexer(sig[sig.isin(uye_gun[s])]))
+            t, _ = zincir.calistir(
+                m.index.get_indexer(sig[sig.isin(uye_gun[s])]),
+                motor.kurulum_bilgisi(f, pc),
+            )
             if len(t):
                 parcalar[i].append(t.assign(sembol=s))
     bos = motor._tablo([]).assign(sembol=[])

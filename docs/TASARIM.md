@@ -97,7 +97,8 @@ yorumumuzdur**; ekranda "Tansu'nun sistemi" diye sunulmaz. (P5)
 
 **Yok** (ilk aile kabul edilene kadar bekler, gereksiz katman):
 - Streamlit ya da başka panel, Telegram, veritabanı.
-- İz süren stop ve kısmi kâr (Ç2), süre çıkışı (Ç3).
+- Süre çıkışı (Ç3). İz süren stop ve kısmi kâr (Ç2) yalnız EMA ailesinde, test varyantı olarak vardır
+  (Levent 16.10; `KURALLAR.md` §3). Çift ailesinde ve varsayılan kuralda yoktur.
 - Dolar bazı karşılaştırma, Corwin–Schultz.
 (Kesilecekler 1–6, C-1)
 
@@ -122,8 +123,8 @@ Her modülün dışarıya küçük bir yüzü var. İçi değişse de dışı de
 | `kaynak` | sembol, tarih aralığı → ham tablo | Ağa çıkan tek yer: İş Yatırım ve borsapy (yalnız faiz, sektör ve şirket listesi) (bilet 07e, 15.10). Ham alan adları (`HG_*`, `HGDG_*`) tek bir sözlükle proje adlarına çevrilir. İş Yatırım okuma zaman aşımı (5, 120) sn: ağır sorgular 40 ve 90 sn'de zaman aşımına uğradı; C-8'deki (5, 30) bu değerle değişti. (C-8, İ: 18-075, 01-057) |
 | `veri` | indirme → anlık görüntü; olay tablosu; veri kapıları | Ayrıntı aşağıda. (B2, B-2, B-7) |
 | `evren` | tarih → o gün yeni giriş için taranabilecek hisseler | 5.2. |
-| `gostergeler` | fiyat → EMA, SMA, ATR, piyasa durumu | Vektörel; sınamada ve canlıda aynı kod. Kütüphane yok. |
-| `aileler` | hisse fiyatı → sinyal günleri | Tek hisse aileleri. |
+| `gostergeler` | fiyat → EMA, SMA, ATR, RSI, momentum squeeze, MACD, PSAR, stokastik, piyasa durumu | Vektörel; sınamada ve canlıda aynı kod. Kütüphane yok. Tanımlar `KURALLAR.md` §3'tedir. |
+| `aileler` | hisse fiyatı → sinyal günleri, kurulum bilgisi (kutu, hedef), arz ve talep bölgeleri | Tek hisse aileleri. EMA ailesinin varyantları ve bölgeler `KURALLAR.md` §3'tedir. |
 | `cift` | çift fiyatları → hangi hissede olunacağı | Kendi döngüsü. |
 | `ciftbolme` | seçim, Z geçişleri, çift bölmesi simülasyonu, VAKBN–GARAN | `cift` ve `simulator`'a dayanır (bilet 11); 5.6. |
 | `motor` | Adım: (pozisyon, bugünkü mum) → pozisyon; Motor: sinyaller → işlemler | Mum, ön hesaplı ATR ve SMA250 sütunları olan bir gün satırıdır. **Sınama ve canlı günlük aynı Adım'ı kullanır.** (A5, İ: 11-010) |
@@ -160,8 +161,9 @@ Her modülün dışarıya küçük bir yüzü var. İçi değişse de dışı de
 (`rapor` yalnız `simulator`'a dayanır; `kosu()` raporu aynı çağrıda yazar ve `rapor-<koşu>.html` adı koşu kimliğinden
 gelir, bu yüzden `kayit` `rapor`'dan sonra gelir. Önceki sıra `kayit` → `rapor` koda uymuyordu.)
 
-**Test yüzleri:** testler yalnız bu yüzlere yazılır: Adım, Motor, Simülatör, İstatistik, Evren, veri kapıları, aileler, kayıt
-(sonuc C-9), göstergeler (Wilder ATR ve EMA için elle hesaplı 5 satırlık örnek; İ: 12-018) ve rapor (sahte sonuçtan rapor ve
+**Test yüzleri:** testler yalnız bu yüzlere yazılır: Adım, Motor, Simülatör, İstatistik, Evren, veri kapıları, aileler (kurulum bilgisi ve bölgeler için
+elle hesaplı mumlar), kayıt
+(sonuc C-9), göstergeler (Wilder ATR ve EMA için elle hesaplı 5 satırlık örnek; İ: 12-018; RSI, momentum squeeze, ADX, MACD, PSAR ve stokastik için elle hesaplı kısa örnek) ve rapor (sahte sonuçtan rapor ve
 CSV: sütun listesi, ilk satır cümlesi, sabit durum listesi, yasaklı kelime AL, SAT, ÖNERİ, "Tansu'nun sistemi"; İ: 17-093) ve
 `tansusinama` (işlem getirisi, Tansu ölçüleri, sağlam bölge, ileri yürüme, işçi sayısı, 1 ve 2 işçide aynı sonuç). (bilet 03)
 
@@ -292,7 +294,7 @@ hatasından** ayırmak.
   - Evren yalnız yeni girişi sınırlar. Evrenden çıkan hissenin açık pozisyonu kendi kuralıyla
     kapanır. (B-9)
 - **İşlemi kapanan hisseler:** İş Yatırım bunları da veriyor, ama liste eksik.
-  - Kapanan hissede açık pozisyon −%100 sayılır; nedeni bilinirse son fiyat.
+  - Kapanan hissede açık pozisyon −%100 sayılır (yarı satılmış pozisyonda kalan yarı; 5.5); nedeni bilinirse son fiyat.
   - 60 işlem gününden uzun durdurma kapanma sayılır.
   - Bulunamayan semboller raporda yazılır.
 - **Sektör:** bugünkü sınıflamadan (borsapy). Kaba ve tarih bilgisiz; bilinen yanlılık. Sektörü
@@ -315,15 +317,22 @@ hatasından** ayırmak.
   - Sinyal günü kapanış SMA250 altındaysa ya da SMA250 hesaplanamıyorsa giriş yok (YORUM, bizim).
     Kaynak kesin giriş karşılaştırmasını açıklamaz (Ham, G115:20; NotebookLM, g1).
   (S2-7, B-12, İ: 07-065)
-- **Stop:** giriş fiyatından ve sinyal günü ATR'sinden hesaplanır. (M2, C10)
+- **Stop:** giriş fiyatından ve sinyal günü ATR'sinden hesaplanır. EMA ailesinin kutu stopu varyantında stop kutu
+  altından gelir (`KURALLAR.md` §3). (M2, C10)
 - **Giriş günü:** yalnız stop kontrol edilir.
 - **Stop dolumu:** gün düşüğü ≤ stop ise dolum **min(stop, AOF)**. (B-4)
+- **Hedef ve yarı satış dolumu** (EMA ailesi varyantları; tetikler `KURALLAR.md` §3):
+  - Hedef: gün yüksek ≥ hedef ise tam çıkış olur ve dolum hedef fiyatıdır. Gün düşüğü hedefin üstündeyse dolum AOF'tur.
+  - Gün içinde tetiklenen yarı satış (`atr3`): gün yüksek ≥ seviye ise pozisyonun yarısı satılır. Dolum seviyedir.
+    Gün düşüğü seviyenin üstündeyse dolum AOF'tur.
+  - Kapanışta tetiklenen yarı satış ve tam çıkış (`dip`, `rsi70`, `rsi50`) ertesi günün AOF'unda dolar.
+  - Kilitli taban gününde AOF dolumları ertesi güne kayar; hedef ya da `atr3` o gün tetiklenirse de dolum ertesi kilitsiz günün AOF'undadır (hedefte neden `hedef` kalır, yarı satış tek seferdir).
 - **Kilitli gün:**
   - Kapanışı tavan fiyatında olan gün (bir fiyat adımı toleransla) giriş yok.
   - Kapanışı taban fiyatında olan gün çıkış ertesi güne kayar.
   - Duyarlılık sürümü: yalnız düşük = yüksek, hacim > 0 ve limit fiyatında olan gün.
   (M4, B-5, İ: 01-026, karar.md)
-- **Düşen sinyal:** giriş günü yoksa, kilitli tavansa ya da karantinadaysa sinyal düşer, sonraki güne kaymaz (vekil kararı 15.10, bilet 07e). Sayısı
+- **Düşen sinyal:** giriş günü yoksa, kilitli tavansa ya da karantinadaysa sinyal düşer, sonraki güne kaymaz (vekil kararı 15.10, bilet 07e). Stop kutu altından geliyorsa ve giriş günü AOF'u ≤ kutu stopu ise de sinyal düşer (`KURALLAR.md` §3, kutu stopu). Sayısı
   raporda "iptal" olarak yazılır. Kayma yalnız çıkış dolumunda olur (kilitli taban, eksik gün; 5.13); giriş
   dolumu kaymaz. (İ: 05-044, 19-055)
 - **Aynı gün sırası:** aynı AOF gününde önce çıkışlar, sonra girişler işlenir. (İ: 08-015)
@@ -336,7 +345,7 @@ hatasından** ayırmak.
 - **Veri sonu:** veri bitince açık pozisyon son kapanıştan zorunlu çıkar. K1 ve K2 aynı kuralı
   uygular. (İ: 09-092)
 - **İşlem günlüğü:** her işlemde "planlanan risk" ve "gerçekleşen kayıp" yazılır. (İ: 08-030)
-  - R = giriş − stop (hisse başına planlanan risk). Planlanan risk = adet × R. Gerçekleşen kayıp = adet × max(0, giriş − çıkış).
+  - R = giriş − ilk stop (hisse başına planlanan risk; stop sonra yükselse de R ve planlanan risk ilk stoptan yazılır). Planlanan risk = adet × R. Gerçekleşen kayıp = adet × max(0, giriş − çıkış).
   - Karantina çıkışı: fiyat son temiz AOF, tarih karantina günüdür. Çıkış gününde (AOF'ta) çıkılmış pozisyon
     o günün kapanış sinyalini engellemez. Isınma: hissenin n. işlem günü dolduğunda (n = 500) sinyal serbesttir.
   - (Bilet 08: belge bu noktalarda sessizdi; kod bu okumayı uygular.)
@@ -381,14 +390,23 @@ Risk paketi (`kurallar/E` K1–K3): acil stop ve gün sonu stopu adları Ham met
 - **ATR:** uzunluk 14, Wilder ortalaması; ilk değer ilk 14 gerçek aralığın ortalaması; kendi kodumuz
   (YORUM). Gerçek aralık = max(yüksek − düşük, |yüksek − önceki kapanış|, |düşük − önceki kapanış|); düzeltilmiş
   seriden. (İ: 19-025, sözlük denetimi 3. tur)
-- **Hedef yok** (YORUM: bizim seçim). Tansu bazı kurallarda hedef verir: gorsel-paket-106 Ham (EMA sıkışması + talep
+- **Hedef:** EMA ailesinin varyantları hedefi dener (Levent 16.10; hedef kuralları `KURALLAR.md` §3). Varsayılan kuralda
+  hedef yoktur (YORUM: bizim seçim). Tansu bazı kurallarda hedef verir: gorsel-paket-106 Ham (EMA sıkışması + talep
   bölgesi: supply/arz bölgesi), gorsel-paket-107 Ham (1.618 dalga uzantısı), gorsel-paket-58 Ham (389.30). KRDMD örneğinde
   hedef yoktur. Çift ailesinde hedef yoktur; çıkış Z'nin 0.5'e dönmesidir (gorsel-paket-54 Ham).
 - **Çift rotasyonu:** ayrı stop yok (YORUM, bizim); karşı uçta diğer hisseye geçilir. Risk paketi bu bölmeye uygulanmaz.
   Grafikte stop görünmemesi, stop bulunmadığını kanıtlamaz (Ham, G125:20; araç, kaynak-vakbn-garan-rotasyon-2096358189696520213/g2; eğitim, G118/g1).
   (Sorgu S3)
 - **Aile kuralları:** giriş kuralları ve YORUM'lar `KURALLAR.md` §3'tedir.
-- **İz süren stop ve kısmi kâr:** kaynak Ham'dadır (tweet-statik-dinamik-iz-suren-stop-atr:20; G125:20); bir aile bu paketle kabul edildikten sonra denenir.
+- **İz süren stop ve kısmi kâr:** kaynak Ham'dadır (tweet-statik-dinamik-iz-suren-stop-atr:20; G125:20). EMA ailesinin
+  varyantları ATR merdivenini, başabaş çıkışını ve dört yarı satış kuralını dener (Levent 16.10; çıkış paketi
+  `KURALLAR.md` §3). Varsayılan kuralda bu paket yoktur; öbür aileler bu paketle kabul edildikten sonra denenir.
+- **Yarı satışlı işlem:** işlem tablosunda tek satırdır. Çıkış fiyatı (yarı satış fiyatı + son çıkış fiyatı) / 2'dir; yarılar
+  eşit adettir. Getiri ve gerçekleşen kayıp (5.3) bu ortalama fiyattan hesaplanır; masraf oranı sabit olduğu için getiri
+  kesindir. İşlem tablosunda ayrıca `yari_tarih` ve `yari_fiyat` vardır (yarı satış yoksa boş). Hisse kapanırsa (5.2) ve
+  yarı satış hissenin son işlem gününde ya da önce yapılmışsa (`yari_tarih` ≤ son işlem günü), çıkış fiyatı (`yari_fiyat` + 0) / 2
+  olur; yarı satış yoksa 0 olur. Sınır: simülatör yarı satışın nakdini son çıkış gününde görür. Yarı satış ile son çıkış
+  arasında nakdin faizi ve yeniden kullanımı eksik kalır.
 
 ### 5.6 Portföy ve bölmeler
 İlk sürümde her aile **kendi sermayesiyle ayrı** ölçülür. Sınama tek sürekli koşudur; sermaye yıldan
@@ -506,7 +524,8 @@ serisinin kaynağını ve son değişim tarihini yazar; seri boşsa koşu SORUNL
 - **Özkaynak:** nakit + açık pozisyonların düzeltilmiş kapanışla değeri (kapanışı olmayan gün son kapanış).
 - **Kapanan hisse (5.2):** kapanma günü (`evren.kapananlar`) açık olan pozisyon o gün 0 fiyatla
   kapanır (−%100, neden `kapanma`). Kapanma nedeni listesi henüz bağlı değildir (bilet 07); her kapanma
-  −%100 sayılır. Rapor bu işlemlerin sayısını yazar.
+  −%100 sayılır. Yarı satılmış pozisyon yalnız kalan yarıyı kaybeder (5.5 "Yarı satışlı işlem"). Rapor bu işlemlerin
+  sayısını yazar.
 
 ### 5.7 Karşılaştırma (asıl soru)
 
@@ -698,6 +717,11 @@ Parametreler ve ızgara önceden yazılır (`KURALLAR.md` §3). Kurallar:
   kimliği, aile) çiftleri sayar. Yarıda kalan, yani `bitti` satırı olmayan resmi koşu da m'ye sayılır (İ: 15-044);
   geliştirme koşusu sayılmaz. Aynı çift yeniden koşulursa ilk resmi p kalır. Başka bölümler (5.7, 5.12 boru hattı
   denetimi) m'yi yeniden tanımlamaz, buraya atıf verir. Yarıda kalan resmi koşunun (kural kimliği, aile) çifti Holm listesinde p = 1 ile yer alır; p = 1 sıralamada sona düşer, yani kabule yardım edemez, ve Holm ile B aynı tek m'yi kullanır. (bilet 03; vekil kararı 15.10, bilet 07d)
+- **Varyant:** EMA ailesinin her varyantının kendi parametre parmak izi vardır; bu yüzden kendi kural kimliği vardır. Her
+  varyant koşusu ayrı denemedir ve m'ye sayılır (varyantlar `KURALLAR.md` §3). Başka bir kural değişmez. Yeni
+  parametre alanları `bugun`'un da parmak izini ve kural kimliğini değiştirir (kural aynı); resmi koşudan önce yeni
+  kural kaydı yazılır (`python -m tansu kayit`). Koşu varyantı `python -m tansu kayit|sinama --varyant <ad>` seçer
+  (varsayılan `bugun`).
 - **Alanlar:**
   - tarih (UTC ISO), `kosu_id`, `kural_id`
   - `kod_hash`, `param_hash`
@@ -816,9 +840,10 @@ Genel "Geçti" yalnız hepsi sağlanınca yazılır. (İ: 17-079)
   ve faiz değişimleri t'den sonrası atılır); tam görüntünün t'ye kadarki çıktısı kesilmişle aynı olmalı. Tek parametrik
   test, bileşen × dört kesim günü: 2014-09-30, 2015-01-15, 2015-03-02 ve yılın son işlem günü 2014-12-31 (yıllık fazla
   getiri için biten yılın karşılaştırılması; bilet 07d, 15.10). Kapsam: evren (ay başı seçimi), göstergeler (EMA, SMA, Wilder ATR, sıkışma oranı,
-  piyasa durumu), EMA sinyali ve ön şart dizileri, çift Z ve hedef günleri, yıllık çift seçimi, likidite medyanı,
-  faiz hizalaması (gecelik getiri dizisi), K2 sepeti ve Tansu sınaması (EMA ve çift; 5.14: hücre işlemleri ve ileri yürüme
-  seçimleri; t'den önce biten test yılları aynı).
+  RSI, momentum squeeze, ADX, MACD, PSAR, stokastik, piyasa durumu), EMA sinyali ve ön şart dizileri, EMA kurulumu (kutu,
+  arz ve talep bölgeleri, salınım noktaları, hedef, `arz` ve `ucgen` girişleri, düşüş süzgeci), çift Z ve hedef günleri,
+  yıllık çift seçimi, likidite medyanı, faiz hizalaması (gecelik getiri dizisi), K2 sepeti ve Tansu sınaması (EMA ve çift;
+  5.14: hücre işlemleri ve ileri yürüme seçimleri; t'den önce biten test yılları aynı).
 
 ### 5.13 Veri kapıları
 Getiri görülmeden yazılır; kural kaydına girer. (B-7, İ: 19-015)
@@ -978,6 +1003,7 @@ Levent 16.10: "Tansu ne diyorsa onu yap." Komut: `python -m tansu tansu-sinama`.
    - **Durum:** AKTİF / STOP / GÜN SONU STOPU / KARANTİNA ÇIKIŞI / GİRİŞ İPTAL. (Bilet 14) AKTİF: giriş bekliyor ya da pozisyon açık. STOP: stop değdi
      (çıkış bugün ya da kilitli taban yüzünden bekliyor). GÜN SONU STOPU: kapanış SMA250'nin altına indi (5.5). KARANTİNA ÇIKIŞI: karantina nedeniyle çıkış. GİRİŞ İPTAL: bekleyen giriş iptal edildi. Kapanmış pozisyon kartı yalnız kapandığı günün CSV'sinde görünür.
      Eski kayıtlarda bu üçü tek etiket BOZULDU olarak durur (kayıt yalnız eklenir). Bunlar pozisyon durumlarıdır; Tansu'nun formasyon bozulması değildir. (vekil kararı 15.10, bilet 07c) (araç, G02/g1; Ham, tweet-abcd-geometrik-gecerlilik-kurallari:21; G13:21).
+   - **Varyant:** günlük kart, EMA ailesinin varsayılan varyantı `bugun` ile üretilir; kart durumları (yukarıdaki Durum) değişmez (`KURALLAR.md` §3).
    - (Bilet 14) **Tarih** sinyal günüdür. **Kaynak** her satırda "Tansu'dan esinlenen yorum · İş Yatırım <anlık görüntü kimliği>": yorum uyarısı ve veri kaynağı aynı
      hücrededir (İ: 17-087, bilet 03). Büyüklük (Pozisyon %,
      Adet, Fiili risk, Likidite sınırı) 1.000.000 TL kâğıt özkaynağıyla ve sinyal gününün tahmini stopuyla hesaplanır

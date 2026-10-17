@@ -9,6 +9,7 @@ Masraf %0,3. Faiz aksi söylenmedikçe 0. Beklenen değerler elle hesaplanmışt
 
 import datetime as dt
 import re
+from dataclasses import replace
 
 import pandas as pd
 import pytest
@@ -54,15 +55,15 @@ def duz(hacim, adet=8, bas="2026-01-26"):
     ]
 
 
-def kos(tmp_path, seriler, faiz=0.0, bas=BAS):
+def kos(tmp_path, seriler, faiz=0.0, bas=BAS, p=P):
     k = SahteKaynak(seriler, {s: [] for s in seriler})
     b = SahteBorsapy([("2025-01-01", faiz)], {s: "X" for s in seriler})
     kimlik = veri.indir(
         list(seriler), tmp_path, k, simdi=dt.datetime(2026, 10, 5, 19, 30), borsapy=b
     )
-    kayit.kayitla(P, ATR_N)
+    kayit.kayitla(p, ATR_N)
     return kimlik, kayit.kosu(
-        kimlik, tmp_path, p=P, atr_n=ATR_N, git=lambda: ("abc", False), bas=bas
+        kimlik, tmp_path, p=p, atr_n=ATR_N, git=lambda: ("abc", False), bas=bas
     )
 
 
@@ -226,9 +227,136 @@ def test_kapanan_hisse_acik_pozisyon_eksi_yuz_sayilir(tmp_path):
         pd.Timestamp("2026-04-30"),
         961,
     )
-    assert a.gerceklesen_kayip == pytest.approx(961 * 104.0)
+    assert a.gerceklesen_kayip == pytest.approx(99944.0)  # 961 × 104,0
     assert sim(s)["ozkaynak"].iloc[-1] == pytest.approx(899756.168, abs=1e-3)
     assert s["sim"]["bilgi"]["kapanma"] == 1
+
+
+@pytest.mark.parametrize(
+    "son_mum, cikis, son_ozkaynak",
+    [
+        # Yarı satış var (TASARIM 5.5 "Yarı satışlı işlem"). atr3 seviyesi = giriş 104 + 3 * ATR 2,28125 = 110,84375.
+        # 04.02 yüksek 112 >= seviye, düşük 107 <= seviye -> yarı satış seviyede; veri sonu kapanışı 111.
+        # A kapanır (61. gün 30.04): çıkış = (110,84375 + 0) / 2 = 55,421875. Adet 961 (tavan).
+        # Son nakit = 1.000.000 - 961 * 104 * 1,003 + 961 * 55,421875 * 0,997
+        #           = 1.000.000 - 100.243,832 + 53.100,640609 = 952.856,808609.
+        (mum(pd.Timestamp("2026-02-04"), 111, 112, 107), 55.421875, 952856.808609),
+        # Yarı satış yok: 04.02 yüksek 105,5 < 110,84375. Çıkış 0; son nakit = 1.000.000 - 100.243,832 = 899.756,168.
+        (sinyalli()[-1], 0.0, 899756.168),
+    ],
+    ids=["yari_satis_var", "yari_satis_yok"],
+)
+def test_kapanan_hissede_yari_satilan_kisim_korunur(
+    tmp_path, son_mum, cikis, son_ozkaynak
+):
+    # Gerçek yol: kayit.kosu -> motor.sinama -> simulator.calistir. Yarı satış varken eski kod iki yarıyı da 0 yapıyordu.
+    seri = sinyalli()[:-1] + [son_mum]
+    _, s = kos(
+        tmp_path,
+        {"A": seri, "Z": duz(5e8, adet=69)},
+        p=replace(P, cikis="atr3"),
+    )
+    a = sim(s)["islemler"].iloc[0]
+    assert (a.neden, a.cikis_tarih, a.adet) == (
+        "kapanma",
+        pd.Timestamp("2026-04-30"),
+        961,
+    )
+    assert a.cikis_fiyat == pytest.approx(cikis, abs=1e-9)
+    assert sim(s)["ozkaynak"].iloc[-1] == pytest.approx(son_ozkaynak, abs=1e-3)
+
+
+@pytest.mark.parametrize(
+    "yari_konum, cikis",
+    [
+        # A son kez konum 2'de işlem görür (kapanma günü konum 63), konum 64'te yeniden görünür.
+        # Yarı satış konum 2'de (= son işlem günü, dahil): çıkış (106 + 0) / 2 = 53.
+        (2, 53.0),
+        # Yarı satış konum 64'te (son işlem gününden sonra): kapanmadan önce satış yok, çıkış 0.
+        (64, 0.0),
+    ],
+)
+def test_kapanmada_yari_satis_son_islem_gunune_dahil_kadar_sayilir(yari_konum, cikis):
+    gunler = pd.bdate_range("2026-02-02", periods=70)
+    fiyat = pd.DataFrame(
+        [
+            dict(mum(g, 100.0), sembol=s)
+            for s, konum in (("A", [0, 1, 2, 64]), ("Z", range(70)))
+            for g in gunler[konum]
+        ]
+    )
+    anlik = veri.Anlik(
+        "kapanma",
+        fiyat,
+        pd.DataFrame(columns=["sembol", "tarih", "kod", "carpan"]),
+        pd.DataFrame({"tarih": [pd.Timestamp("2026-01-01")], "faiz": [0.0]}),
+    )
+    t = pd.DataFrame(
+        {
+            "sembol": ["A"],
+            "sinyal_tarih": [gunler[0]],
+            "giris_tarih": [gunler[1]],
+            "cikis_tarih": [gunler[64]],
+            "giris_fiyat": [100.0],
+            "cikis_fiyat": [105.5],  # (yarı 106 + son 105) / 2
+            "adet": [1],
+            "planlanan_risk": [4.0],
+            "neden": ["veri_sonu"],
+            "yari_tarih": [gunler[yari_konum]],
+            "yari_fiyat": [106.0],
+        }
+    )
+    s = simulator.calistir(
+        anlik,
+        t,
+        bas="2026-02-02",
+        masraflar=(0.003,),
+        evr={pd.Period("2026-02"): ["A", "Z"]},
+    )["masraf"][0.003]
+    a = s["islemler"].iloc[0]
+    assert (a.neden, a.cikis_tarih) == ("kapanma", gunler[63])
+    assert a.cikis_fiyat == pytest.approx(cikis, abs=1e-9)
+
+
+def test_kapanmada_yari_satis_sutunlari_olmayan_el_yapimi_tablo_hata_vermez_cikis_sifir():
+    # Aynı dünya (A konum 2'de son kez işlem görür, kapanma günü konum 63). El yapımı işlem tablosunda `yari_tarih` ve
+    # `yari_fiyat` sütunları yok: yarı satış sayılmaz, kapanmada çıkış fiyatı 0 (TASARIM 5.2).
+    gunler = pd.bdate_range("2026-02-02", periods=70)
+    fiyat = pd.DataFrame(
+        [
+            dict(mum(g, 100.0), sembol=s)
+            for s, konum in (("A", [0, 1, 2, 64]), ("Z", range(70)))
+            for g in gunler[konum]
+        ]
+    )
+    anlik = veri.Anlik(
+        "kapanma",
+        fiyat,
+        pd.DataFrame(columns=["sembol", "tarih", "kod", "carpan"]),
+        pd.DataFrame({"tarih": [pd.Timestamp("2026-01-01")], "faiz": [0.0]}),
+    )
+    t = pd.DataFrame(
+        {
+            "sembol": ["A"],
+            "sinyal_tarih": [gunler[0]],
+            "giris_tarih": [gunler[1]],
+            "cikis_tarih": [gunler[64]],
+            "giris_fiyat": [100.0],
+            "cikis_fiyat": [105.0],
+            "adet": [1],
+            "planlanan_risk": [4.0],
+            "neden": ["veri_sonu"],
+        }
+    )
+    s = simulator.calistir(
+        anlik,
+        t,
+        bas="2026-02-02",
+        masraflar=(0.003,),
+        evr={pd.Period("2026-02"): ["A", "Z"]},
+    )["masraf"][0.003]
+    a = s["islemler"].iloc[0]
+    assert (a.neden, a.cikis_tarih, a.cikis_fiyat) == ("kapanma", gunler[63], 0.0)
 
 
 def test_evren_disi_sinyal_islem_acmaz(tmp_path):
