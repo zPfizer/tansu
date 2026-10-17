@@ -31,6 +31,7 @@ KAPI_SATIRLARI = (
     (r"kapi: ruff check -> 0", "kapi: ruff check -> 0"),
     (r"kapi: ruff format -> 0", "kapi: ruff format -> 0"),
     (r"kapi: git diff --check -> 0", "kapi: git diff --check -> 0"),
+    (r"kapi: driftlint -> 0", "kapi: driftlint -> 0"),
     (
         r"kapi: HEAD [0-9a-f]{40} temiz",
         "kapi: HEAD <40 küçük harfli onaltılı hane> temiz",
@@ -41,8 +42,10 @@ KAPI_ONEKLERI = (
     "kapi: ruff check",
     "kapi: ruff format",
     "kapi: git diff --check",
+    "kapi: driftlint",
     "kapi: HEAD",
 )
+DAL_BICIMI = re.compile(r"pr/[0-9]+-[a-z0-9-]+")
 KALDI = re.compile(r"(?<!\w)kald[ıiIİ](?!\w)", re.IGNORECASE)
 SUPHE = re.compile(r"(?<!\w)(olabilir|belki|şüphe|emin\s+değ[iİ]l)", re.IGNORECASE)
 
@@ -385,7 +388,17 @@ def hatalar(
     kod_var: bool = False,
     taban: str | None = None,
     dizin=None,
+    dal: str | None = None,
 ) -> list[str]:
+    # PR dalı yoksa (None) denetlenmez; boş dize geçersizdir.
+    dal_hatasi = (
+        []
+        if dal is None or DAL_BICIMI.fullmatch(dal)
+        else [
+            f"Kural 15: Dal adı geçersiz: {dal!r}; biçim pr/<sayı>-<ad> olmalı "
+            "(ad: küçük harf, rakam ve tire)."
+        ]
+    )
     if govde:
         govde = _yorumsuz(govde)
     if not govde or not govde.strip():
@@ -400,7 +413,7 @@ def hatalar(
             "Kural 9: gövde boş; ## Bağımsız inceleme bölümünde Denetçi kararı (aynen):, "
             "Yanlış iddia sayısı: ve İkinci geçiş: satırı yok.",
             "Kural 10: gövde boş; ## Gerçek veri kanıtı bölümünde kapi: satırları yok.",
-        ]
+        ] + dal_hatasi
 
     satirlar = govde.splitlines()
     bolumler = [_bolum(satirlar, baslik) for baslik in BASLIKLAR]
@@ -474,7 +487,7 @@ def hatalar(
         sonuc.append("Kural 13: " + "; ".join(parcalar) + ".")
     if inceleme is not None:
         sonuc += _bulgu_hatasi(inceleme, yeni[2])
-    return sonuc
+    return sonuc + dal_hatasi
 
 
 if __name__ == "__main__":
@@ -485,6 +498,7 @@ if __name__ == "__main__":
         "origin/" + os.environ["GITHUB_BASE_REF"]
         if os.environ.get("GITHUB_BASE_REF")
         else None,
+        dal=os.environ.get("PR_DAL"),
     )
     for sorun in sorunlar:
         print(sorun)

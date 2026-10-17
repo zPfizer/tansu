@@ -30,3 +30,4 @@ jobs:
         env:
           PR_GOVDE: ${{ github.event.pull_request.body }}
           PR_BAS_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_DAL: ${{ github.event.pull_request.head.ref }}

@@ -1,6 +1,8 @@
 import ast
 import importlib.util
+import os
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -40,6 +42,7 @@ kapi: pytest -> 0
 kapi: ruff check -> 0
 kapi: ruff format -> 0
 kapi: git diff --check -> 0
+kapi: driftlint -> 0
 kapi: HEAD 0123456789abcdef0123456789abcdef01234567 temiz
 Akış: tansu-yeni-is
 Çağrılan beceriler: tansu-yeni-is, verification-before-completion, mattpocock-skills:pr, mattpocock-skills:code-review
@@ -94,7 +97,7 @@ def test_kural_1_baslik_eksik(baslik):
 def test_kural_2_isaretsiz_kutu():
     assert hatalar(
         GECERLI.replace(AKIS_SATIRI, "  - [ ] Bekliyor\n" + AKIS_SATIRI)
-    ) == ["Kural 2: işaretsiz kutu var; satır: 30."]
+    ) == ["Kural 2: işaretsiz kutu var; satır: 31."]
 
 
 def test_kural_3_kabul_kutusu_yok():
@@ -493,6 +496,7 @@ def test_yorum_icindeki_kapi_satirlari_sayilmaz():
         "kapi: ruff check -> 0\n"
         "kapi: ruff format -> 0\n"
         "kapi: git diff --check -> 0\n"
+        "kapi: driftlint -> 0\n"
         "kapi: HEAD 0123456789abcdef0123456789abcdef01234567 temiz\n"
     )
     govde = GECERLI.replace(blok, "<!--\n" + blok + "-->\n")
@@ -500,7 +504,7 @@ def test_yorum_icindeki_kapi_satirlari_sayilmaz():
         "Kural 10: ## Gerçek veri kanıtı bölümünde eksik satır: "
         "kapi: pytest -> 0 ya da kapi: pytest (belge) -> 0; "
         "kapi: ruff check -> 0; kapi: ruff format -> 0; "
-        "kapi: git diff --check -> 0; "
+        "kapi: git diff --check -> 0; kapi: driftlint -> 0; "
         "kapi: HEAD <40 küçük harfli onaltılı hane> temiz."
     ]
 
@@ -514,7 +518,7 @@ def test_yorumdan_sonra_kural_2_satir_numarasi_dogru_kalir():
     govde = GECERLI.replace(
         AKIS_SATIRI, "<!--\nuc satirli\nyorum-->\n  - [ ] Bekliyor\n" + AKIS_SATIRI
     )
-    assert hatalar(govde) == ["Kural 2: işaretsiz kutu var; satır: 33."]
+    assert hatalar(govde) == ["Kural 2: işaretsiz kutu var; satır: 34."]
 
 
 def test_kural_9_suphe_bolumun_baska_satirinda():
@@ -583,6 +587,7 @@ KAPI_SATIRLARI = (
     ("kapi: ruff check -> 0\n", "kapi: ruff check -> 0"),
     ("kapi: ruff format -> 0\n", "kapi: ruff format -> 0"),
     ("kapi: git diff --check -> 0\n", "kapi: git diff --check -> 0"),
+    ("kapi: driftlint -> 0\n", "kapi: driftlint -> 0"),
     (f"kapi: HEAD {SHA} temiz\n", KAPI_HEAD),
 )
 
@@ -600,6 +605,8 @@ def test_kural_10_satir_eksik(satir, etiket):
         ("kapi: ruff check -> 0", "kapi: ruff check -> 2"),
         ("kapi: ruff format -> 0", "kapi: ruff format -> 1"),
         ("kapi: git diff --check -> 0", "kapi: git diff --check -> 1"),
+        ("kapi: driftlint -> 0", "kapi: driftlint -> 1"),
+        ("kapi: driftlint -> 0", "kapi: driftlint -> 0 fazla"),
         (f"kapi: HEAD {SHA} temiz", f"kapi: HEAD {SHA} kirli"),
         (f"kapi: HEAD {SHA} temiz", f"kapi: HEAD {SHA[:39]} temiz"),
         (f"kapi: HEAD {SHA} temiz", f"kapi: HEAD {SHA.upper()} temiz"),
@@ -635,6 +642,7 @@ def test_kural_10_her_onek_tam_bir_kez():
         "kapi: ruff check -> 0\n"
         "kapi: ruff format -> 0\n"
         "kapi: git diff --check -> 0\n"
+        "kapi: driftlint -> 0\n"
         "kapi: HEAD fedcba9876543210fedcba9876543210fedcba98 temiz\n"
     )
     yeni = (
@@ -642,18 +650,19 @@ def test_kural_10_her_onek_tam_bir_kez():
         "kapi: ruff check -> 0\n"
         "kapi: ruff format -> 0\n"
         "kapi: git diff --check -> 0\n"
+        "kapi: driftlint -> 1\n"
         "kapi: HEAD 0123456789abcdef0123456789abcdef01234567 temiz\n"
     )
     govde = GECERLI.replace(
         "kapi: pytest -> 0\nkapi: ruff check -> 0\nkapi: ruff format -> 0\n"
-        "kapi: git diff --check -> 0\n"
+        "kapi: git diff --check -> 0\nkapi: driftlint -> 0\n"
         "kapi: HEAD 0123456789abcdef0123456789abcdef01234567 temiz\n",
         eski + yeni,
     )
     assert hatalar(govde) == [
         R10.format(
             "birden çok satır: kapi: pytest; kapi: ruff check; kapi: ruff format; "
-            "kapi: git diff --check; kapi: HEAD"
+            "kapi: git diff --check; kapi: driftlint; kapi: HEAD"
         )
     ]
 
@@ -1181,6 +1190,66 @@ def test_kural_14_bolum_yoksa_tablo_denetlenmez():
     assert hatalar(govde) == ["Kural 13: eksik başlıklar: ## Bulgu yanıtları."]
 
 
+R15 = (
+    "Kural 15: Dal adı geçersiz: {!r}; biçim pr/<sayı>-<ad> olmalı "
+    "(ad: küçük harf, rakam ve tire)."
+)
+
+
+@pytest.mark.parametrize(
+    "dal", [None, "pr/43-retro-duzeltme-2", "pr/1-x", "pr/007-a1-b2"]
+)
+def test_kural_15_gecerli_dal(dal):
+    assert hatalar(GECERLI, dal=dal) == []
+
+
+@pytest.mark.parametrize(
+    "dal",
+    [
+        "master",
+        "",
+        "pr/x-ad",
+        "pr/43",
+        "pr/43-",
+        "pr/43-Ad",
+        "pr/43-ad_x",
+        "pr/43-ad/alt",
+        "feature/pr/43-x",
+        "pr/43-ad\n",
+        "pr/４３-x",
+    ],
+)
+def test_kural_15_gecersiz_dal(dal):
+    assert hatalar(GECERLI, dal=dal) == [R15.format(dal)]
+
+
+def test_kural_15_bos_govdede_de_dal_denetlenir():
+    assert hatalar("", dal="master")[-1] == R15.format("master")
+
+
+def test_kural_15_komut_satiri_pr_dal_okur():
+    env = {
+        k: v
+        for k, v in os.environ.items()
+        if k not in ("PR_DAL", "PR_BAS_SHA", "PR_KOD_VAR", "GITHUB_BASE_REF")
+    }
+    env |= {"PR_GOVDE": GECERLI, "PYTHONIOENCODING": "utf-8"}
+
+    def calistir(**ek):
+        return subprocess.run(
+            [sys.executable, str(_yol)],
+            env=env | ek,
+            capture_output=True,
+            encoding="utf-8",
+        )
+
+    kotu = calistir(PR_DAL="master")
+    assert kotu.returncode == 1
+    assert R15.format("master") in kotu.stdout.splitlines()
+    assert calistir(PR_DAL="pr/43-retro-duzeltme-2").returncode == 0
+    assert calistir().returncode == 0
+
+
 def test_dod_kontrol_python_312_soz_dizimi():
     # dod.yml uses the runner's default python (no setup-python).
     metin = _yol.read_text(encoding="utf-8")
@@ -1194,6 +1263,7 @@ def test_dod_yml_taslak_ve_sha():
         "draft == false",
         "ready_for_review",
         "PR_BAS_SHA: ${{ github.event.pull_request.head.sha }}",
+        "PR_DAL: ${{ github.event.pull_request.head.ref }}",
         "PR_KOD_VAR",
         "fetch-depth: 0",
         "set -eu",

@@ -10,7 +10,7 @@ You run one Codex job for the Tansu project. You do not do the job yourself.
 
 ## Input
 The caller gives you: the task, the project folder, the Codex model name (Astra, Sol or Luna), the goal of the job, the round number (for an audit), and optional skill names.
-- **Project folder:** the Tansu worktree that the caller names (for example `C:/Users/levent/Desktop/TANSU-bNN`). If the caller names none, stop and ask. Codex works in this folder itself. Do not use `--worktree`. Codex then sees uncommitted work.
+- **Project folder:** the Tansu worktree that the caller names (for example `C:/Users/levent/Desktop/TANSU/.claude/worktrees/<ad>`). If the caller names none, stop and ask. Codex works in this folder itself. Do not use `--worktree`. Codex then sees uncommitted work.
 - **Model:** If the caller gives no model name and the task is an audit (the text says "audit", "denetim", or asks for a verdict), use Astra. In every other case without a model name, stop and ask the caller. Do not choose a model otherwise.
 - **Goal and round:** Every audit prompt states the job goal and the round number (docs/agents/is-kurallari.md "Auditor and rounds"). If the caller gives no round number for an audit, stop and ask. For round 2 or 3, the caller also gives the last audited commit and the findings of the earlier round. If one of them is missing, stop and ask.
 
@@ -23,8 +23,10 @@ The sandbox has no PyYAML and may lack other parsers. If a check needs a parser,
 A worktree has no `.venv`. Codex cannot read the packages of the global Python user folder. Tell Codex to run project code and tests with `C:/Users/levent/Desktop/TANSU/.venv/Scripts/python.exe`. Tell Codex to run pytest with `--basetemp=$D/pytest`, where `$D` is the job folder of step 1. Write its absolute path in the prompt in Windows form: `cygpath -m "$D"` gives `C:/Users/...`. Windows Python reads the Bash form `/c/Users/...` as `C:/c/Users/...`. Pytest then writes no folder inside the repository.
 
 ## Steps
-1. Make a job folder: `D=$(mktemp -d -p "$TEMP")`. The job folder is under `$TEMP`, never inside the repository. Parallel Codex jobs share `$TEMP`, so a fixed name collides. Find the newest `codex.exe`: `C=(/c/Users/levent/AppData/Local/OpenAI/Codex/bin/*/codex.exe)`. Use the last item. Use only this full path. Do not use `~/.codex/.sandbox-bin`.
-   For an audit, copy the rule files from the base branch, never from the change under audit. Run `git -C <project> fetch kaynak`. Then, for each repository file of step 2 items 2 to 4 and for `.claude/codex-denetim-sema.json`, run `mkdir -p "$D/taban/$(dirname <path>)"` and `MSYS_NO_PATHCONV=1 git -C <project> show kaynak/master:<path> > "$D/taban/<path>"`. Without `MSYS_NO_PATHCONV=1`, Git Bash changes a `<ref>:<path>` argument with a path that starts with a dot into a Windows path list and `git show` fails. If a file is not on kaynak/master (for example a new flow skill), use the project copy and say so in the prompt. The general standards file of item 4 is outside the repository. Give its full path as before. The diff under audit stays in the project folder.
+1. Make a job folder: `D=$(mktemp -d -p "$TEMP")`. The job folder is under `$TEMP`, never inside the repository. Parallel Codex jobs share `$TEMP`, so a fixed name collides.
+   For an audit, copy the rule files from the base branch, never from the change under audit. Run `git -C <project> fetch kaynak`. Then, for each repository file of step 2 items 2 to 4, for `.claude/codex-denetim-sema.json`, and for `kurulum/codex_calisma.py`, run `mkdir -p "$D/taban/$(dirname <path>)"` and `MSYS_NO_PATHCONV=1 git -C <project> show kaynak/master:<path> > "$D/taban/<path>"`. Without `MSYS_NO_PATHCONV=1`, Git Bash changes a `<ref>:<path>` argument with a path that starts with a dot into a Windows path list and `git show` fails. If a file is not on kaynak/master (for example a new flow skill), use the project copy and say so in the prompt. The general standards file of item 4 is outside the repository. Give its full path as before. The diff under audit stays in the project folder.
+   For a non-audit job, or when `kurulum/codex_calisma.py` is not on kaynak/master, use `<project>/kurulum/codex_calisma.py` in place of `$D/taban/kurulum/codex_calisma.py` below, and say so in the prompt.
+   Find `codex.exe` with `C=$(py -3 -I -X utf8 "$D/taban/kurulum/codex_calisma.py" yol /c/Users/levent/AppData/Local/OpenAI/Codex/bin)`. The script skips a folder that has no `codex-code-mode-host.exe`. Use only this full path. Do not use `~/.codex/.sandbox-bin`.
 2. Build one prompt file in `$D/codex-<name>-istem.md`. Write these parts in this order:
    - This first line: `Read AGENTS.md and follow it. Stay in this folder and its rules.`
    - The full paths of the instruction files. Use this order:
@@ -39,6 +41,7 @@ A worktree has no `.venv`. Codex cannot read the packages of the global Python u
    - The text of each requested skill. A skill name can have a plugin part before `:` (for example `mattpocock-skills:code-review`). Use the part after `:` as `<skill>` and the part before `:` as `<plugin>`. Find the newest file with `find ~/.claude/plugins/cache -path "*/<plugin>/*" -path "*/skills/*" -path "*/<skill>/SKILL.md" -not -path "*/.openclaw/*" | sort -V | tail -1`. Without a plugin part, omit `-path "*/<plugin>/*"`, and look first in `<project>/.claude/skills/<skill>/SKILL.md`. Paste the text into the prompt. If no file is found, stop before the Codex run and report a failed run (no log exists yet).
    - The job goal and, for an audit, the round number. Tell Codex that the auditor also checks that the writer followed the steps of the flow skill. Item 3 of the instruction files says this.
    - For an audit, the section "Audit rules" of this file, word for word. For round 2 or 3, add the last audited commit and the findings of the earlier round.
+   - Facts: the `kapi:` lines of the gate run of the audited commit (the caller gives them, and they hold `TANSU_BEKLENEN_ACIK`). The sentence "Read the project files in place. Do not copy them." Tell Codex that a count in its report comes from a command output (for example `git rev-list --count`).
    - The task from the caller.
 3. Map the model name to the id and the effort:
 
@@ -56,11 +59,7 @@ PATH="${PATH//\/c\/Users\/levent\/bin:/}" "$C" exec -m <id> -c model_reasoning_e
 
    Do not add `--worktree`. Each `--worktree` run left a folder under `C:\Users\levent\.codex\worktrees\` with temporary folders that cannot be deleted.
    For an audit, add `--output-schema "$(cygpath -m "$D")/taban/.claude/codex-denetim-sema.json"` before `-o` (the base-branch copy of step 1). If the file does not exist, report a failed run. The output is then one JSON object: `round`, `verdict` (GEÇTİ, NOTLU GEÇTİ, KALDI), `findings` (path, line, severity, origin, class, text), `summary`. Tell Codex in the prompt that it answers in this JSON only, and that `round` is the round number of the prompt. Without a schema (07.10 measurement) 1 of 25 outputs was malformed; with a schema 200 of 200 were valid.
-5. Report a failed run with the end of the log file in these cases:
-   - The exit code is not 0.
-   - The output file is empty.
-   - An audit output is not valid JSON with a `verdict`.
-   - The task asked for findings, and a non-audit output has no `path:line` finding.
+5. Check the run: `py -3 -I -X utf8 "$D/taban/kurulum/codex_calisma.py" denetle <exit code> <output file> <log file> --denetim`. Leave out `--denetim` for a non-audit job. If it prints `denetim calismadi`, report a failed run with the end of the log file. A failed run is not an audit round (docs/agents/is-kurallari.md "Auditor and rounds"). Also report a failed run when the task asked for findings and a non-audit output has no `path:line` finding.
 
    If the log shows `CreateProcessWithLogonW` error 1909, report "Codex sandbox account locked". Windows unlocks it after 10 minutes. Do not run the job a second time without the caller's order.
 6. Return the content of the output file, word for word. Add one line before it: the path of the output file and the exit code.

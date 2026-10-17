@@ -215,8 +215,9 @@ def test_ci_aracleri_tam_surume_sabitli_ve_agents_bunu_soyler():
     )
 
 
-def test_driftlint_yapilandirmasi_yalniz_scratch_i_dislar():
+def test_driftlint_yapilandirmasi_yalniz_scratch_ve_worktrees_i_dislar():
     yapilandirma = (KOK / ".driftlintrc.json").read_text(encoding="utf-8")
     assert re.fullmatch(
-        r'\s*\{\s*"ignore":\s*\[\s*"\.scratch/\*\*"\s*\]\s*\}\s*', yapilandirma
+        r'\s*\{\s*"ignore":\s*\[\s*"\.scratch/\*\*"\s*,\s*"\.claude/worktrees/\*\*"\s*\]\s*\}\s*',
+        yapilandirma,
     )

@@ -4,6 +4,7 @@
 /gunluk/
 *.egg-info/
 __pycache__/
+.claude/worktrees/
 *.pyc
 .pytest_cache/
 /docs/strateji-taslak/x-arsiv/medya/

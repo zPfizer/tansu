@@ -5,6 +5,7 @@ Değişikliği bir veya iki cümleyle açıklayın.
 Akış:
 Çağrılan beceriler:
 <!-- Liste, bu oturumdaki Skill çağrılarının çağrı sırasıyla kopyasıdır. Çağrılmayan beceri yazılmaz. CI, akışa göre gereken adları arar. -->
+<!-- Her sayı ve 'hepsi / hiçbiri' iddiası bu oturumda koşulan bir komutun çıktısından kopyalanır. Komutu ya da dosyayı yanına yaz. -->
 
 ## Kabul ölçütleri
 _Kutuları Claude kanıtıyla işaretler. Birleştirme için `tansu-yeni-is` "Merge" adımını uygulayın. İşaretsiz kutu varsa PR birleşmez._
@@ -64,7 +65,7 @@ Sonuç:
 
 ## Gerçek veri kanıtı
 
-<!-- Son commit'ten sonra, temiz ağaçta koşulan `kurulum\kapi.ps1` çıktısını yapıştırın. CI, `kapi:` satırlarını ve HEAD sha'sını denetler. Tam olarak bir kapi koşusu yapıştırın. Kod değiştiyse tam koşu gerekir, `-Belge` olmaz. -->
+<!-- Son commit'ten sonra, temiz ağaçta koşulan `kurulum\kapi.ps1` çıktısını yapıştırın. Çıktıda `kapi: driftlint -> 0` satırı bulunur. CI, `kapi:` satırlarını ve HEAD sha'sını denetler. CI, dal adının `pr/<sayı>-<ad>` biçiminde olmasını da arar. Tam olarak bir kapi koşusu yapıştırın. Kod değiştiyse tam koşu gerekir, `-Belge` olmaz. -->
 
 ```
 ```

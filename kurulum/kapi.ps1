@@ -40,6 +40,9 @@ $checkKod = $LASTEXITCODE
 $formatKod = $LASTEXITCODE
 git diff --check kaynak/master
 $diffKod = $LASTEXITCODE
+# Same driftlint version as .github/workflows/ci.yml (a test keeps them equal).
+npx --yes @alifurkangokce/driftlint@0.19.0 .
+$driftKod = $LASTEXITCODE
 
 $sha = (git rev-parse HEAD)
 if ($LASTEXITCODE -ne 0 -or "$sha" -notmatch '^[0-9a-f]{40}$') {
@@ -59,9 +62,10 @@ $parti = if ($env:TANSU_PARTI) { $env:TANSU_PARTI } else { 'yok' }
 "kapi: ruff check -> $checkKod"
 "kapi: ruff format -> $formatKod"
 "kapi: git diff --check -> $diffKod"
+"kapi: driftlint -> $driftKod"
 "kapi: TANSU_BEKLENEN_ACIK=$acik"
 "kapi: TANSU_PARTI=$parti"
 "kapi: HEAD $sha $durum"
 
-if ($pytestKod -ne 0 -or $checkKod -ne 0 -or $formatKod -ne 0 -or $diffKod -ne 0) { exit 1 }
+if ($pytestKod -ne 0 -or $checkKod -ne 0 -or $formatKod -ne 0 -or $diffKod -ne 0 -or $driftKod -ne 0) { exit 1 }
 exit 0
