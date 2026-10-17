@@ -153,6 +153,7 @@ def kurulum_varyantlari():
         ("giris_arz", dict(giris="arz")),
         ("giris_ucgen", dict(giris="ucgen")),
         ("dusus_sonrasi", dict(dusus=True)),
+        ("dusus_agresif", dict(giris="agresif", dusus=True)),
     ):
         p = replace(
             aileler.VARYANTLAR["tansu"],

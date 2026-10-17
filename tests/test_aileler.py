@@ -977,13 +977,12 @@ def test_gosterge_teyidi_momentum_ve_adx_artisi_da_ister(
     assert _gunler(f, Parametre(teyit="gosterge", **KUCUK)) == beklenen
 
 
-def test_parametre_dusus_varsayilani_kapali_agresifle_tanimsiz():
-    # Varsayılan kural değişmez (dusus kapalı). Agresif girişte "dönem başı" KURALLAR'da tanımlı değildir (koşu + t günü kutusu):
-    # birleşim sessizce yok sayılmaz, hata verir.
+def test_parametre_dusus_varsayilani_kapali_agresifle_hata_vermez():
+    # Varsayılan kural değişmez (dusus kapalı). KURALLAR §3 Modül 1 Düşüş (fa74ec1): agresif girişte dönem başı t-1'de biten
+    # koşunun ilk günüdür; birleşim parametre hatası vermez.
     assert Parametre().dusus is False
     assert aileler.VARYANTLAR["tansu"].dusus is False
-    with pytest.raises(ValueError, match="dusus"):
-        Parametre(giris="agresif", dusus=True)
+    assert Parametre(giris="agresif", dusus=True).dusus is True
 
 
 def _dusus_cercevesi(onceki, sonra, son):
@@ -1037,6 +1036,55 @@ def test_dusus_suzgeci_donem_basindan_onceki_20_gunun_yuksegi_kutu_alt_arti_3_at
 def test_dusus_t_den_sonraki_gunler_t_oncesi_karari_degistirmez():
     f = _dusus_cercevesi(130.0, 100.0, 103.0)
     p = Parametre(dusus=True, **DUSUS)
+    tam = aileler.kurulum(f, p)
+    assert len(tam) == 1  # sınama boş değil
+    for n in range(20, len(f) + 1):
+        kesik = aileler.kurulum(f.iloc[:n], p)
+        pd.testing.assert_frame_equal(tam[tam.index <= f.index[n - 1]], kesik)
+
+
+# --- Modül 1 sürüm 2, bilet 08: düşüş süzgeci agresif girişte (KURALLAR §3 Modül 1 Düşüş, fa74ec1) ---
+
+
+def _dusus_agresif_cercevesi(onceki, dusuk_26):
+    """Gün 0-21 kapanış `onceki`, gün 22-39 kapanış 100, gün 40-42 kapanış 103; yüksek = kapanış + 1, düşük = kapanış - 1,
+    yalnız gün 26 düşüğü `dusuk_26`."""
+    kapanis = [onceki] * 22 + [100.0] * 18 + [103.0] * 3
+    dusuk = [k - 1 for k in kapanis]
+    dusuk[26] = dusuk_26
+    return _mumlar(kapanis, dusuk=dusuk)
+
+
+# Ayar: `DUSUS` (yukarıdaki oran/dönem hesabı aynıdır; SMA2: kapanış 100 >= SMA 100). Sıkışma koşuları ve ATR14 `DUSUS` testiyle aynı:
+#   Gün 0-21 düz (kapanış `onceki`): koşu gün 0'da başlar, gün 21'de biter; t = 3: koşu 3 gün, düşük 99 <= 99 <= 100 -> sinyal gün 3
+#   (dönem başı 0 < 20 -> `dusus` açıkken hesaplanamaz, sayılmaz).
+#   J=30 (onceki 130): ikinci koşu gün 25'te başlar (k=4, oran 0,00369); t = 28 (koşu 25-27, 3 gün); düşük 99 <= 99 <= 100 -> sinyal gün 28.
+#     Kutu alt = 99. ATR_25 = 3,659 (2 + 2,071 * (13/14)^3). Önceki 20 gün = gün 5-24, en yüksek yüksek 131 (gün 5-21).
+#     99 + 3*3,659 = 109,98 <= 131 -> sinyal kalır.
+#   J=4 (onceki 104): ikinci koşu gün 23'te başlar (k=2, oran 0,00442); t = 26 (koşu 23-25); ATR_23 = 2,199.
+#     Önceki 20 gün = gün 3-22, en yüksek yüksek 105. Gün 26 düşüğü 99: kutu alt 99, 99 + 3*2,199 = 105,60 > 105 -> sinyal düşer.
+#     Gün 26 düşüğü 98 (<= 99, kapanış 100 >= 99): kutu alt (koşu + t) 98, 98 + 3*2,199 = 104,60 <= 105 -> sinyal kalır.
+@pytest.mark.parametrize(
+    "onceki, dusuk_26, kapali, acik",
+    [
+        (130.0, 99.0, [3, 28], [28]),
+        (104.0, 99.0, [3, 26], []),
+        (104.0, 98.0, [3, 26], [26]),
+    ],
+    ids=["dusus-30", "dusus-4-zayif", "dusus-4-t-gunu-kutuyu-derinlestirir"],
+)
+def test_dusus_agresif_giriste_kosu_basindan_onceki_20_gunun_yuksegi_kutu_alt_arti_3_atr(
+    onceki, dusuk_26, kapali, acik
+):
+    f = _dusus_agresif_cercevesi(onceki, dusuk_26)
+    assert _gunler(f, Parametre(giris="agresif", dusus=False, **DUSUS)) == kapali
+    assert _gunler(f, Parametre(giris="agresif", dusus=True, **DUSUS)) == acik
+
+
+# Geleceği görmeme: agresif girişte `dusus` yalnız koşu başından önceki günlere ve t'de bilinen kutu altına bakar.
+def test_dusus_agresif_t_den_sonraki_gunler_t_oncesi_karari_degistirmez():
+    f = _dusus_agresif_cercevesi(130.0, 99.0)
+    p = Parametre(giris="agresif", dusus=True, **DUSUS)
     tam = aileler.kurulum(f, p)
     assert len(tam) == 1  # sınama boş değil
     for n in range(20, len(f) + 1):
