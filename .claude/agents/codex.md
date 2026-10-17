@@ -31,7 +31,7 @@ A worktree has no `.venv`. Codex cannot read the packages of the global Python u
      1. `C:/Users/levent/.claude/CLAUDE.md`.
      2. `AGENTS.md` and `CLAUDE.md` of the project folder. `CLAUDE.md` holds `@AGENTS.md`.
      3. `.claude/skills/tansu-yeni-is/SKILL.md` and `.claude/skills/tansu-yeni-is/ortak-adimlar.md` of the project folder. Also the `SKILL.md` of the flow skill that the job uses.
-     4. For an audit: `CODING_STANDARDS.md`, `DEFINITION_OF_DONE.md`, `docs/agents/is-kurallari.md`, and `docs/agents/kod-kurallari.md` of the project folder. Also the general standards file that `CODING_STANDARDS.md` points to (give its full path).
+     4. For an audit: `CODING_STANDARDS.md`, `DEFINITION_OF_DONE.md`, and every `docs/agents/` file that `AGENTS.md` points to, of the project folder: `docs/agents/is-kurallari.md`, `docs/agents/kod-kurallari.md`, `docs/agents/git.md`, `docs/agents/zamanlayici.md`, `docs/agents/akislar.md`, `docs/agents/issue-tracker.md`, `docs/agents/triage-labels.md`, and `docs/agents/domain.md`. Also the general standards file that `CODING_STANDARDS.md` points to (give its full path).
 
      For an audit, items 2 to 4 are the `$D/taban` copies of step 1. In the first line, `AGENTS.md` becomes the full path of `$D/taban/AGENTS.md`. Tell Codex three things. The rules are these base-branch copies. The project folder copies of the same files are part of the diff under audit. Where they differ, the base copy wins.
 

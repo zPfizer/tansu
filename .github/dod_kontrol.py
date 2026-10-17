@@ -1,5 +1,6 @@
 import os
 import re
+import subprocess
 import sys
 
 
@@ -9,6 +10,8 @@ BASLIKLAR = (
     "## Bağımsız inceleme",
     "## Gerçek veri kanıtı",
 )
+YENI_BASLIKLAR = ("## Risk", "## Nasıl geri alınır", "## Bulgu yanıtları")
+BULGU_YANITLARI = ("düzeltildi", "yanlış", "bilerek", "önemsiz")
 AKISLAR = ("tansu-yeni-is", "tansu-hata", "tansu-belge", "tansu-karar", "tansu-eval")
 BECERI_ORTAK = [
     "verification-before-completion",
@@ -241,7 +244,148 @@ def _kapi_hatasi(bolum, bas_sha, kod_var):
     return "; ".join(sorunlar)
 
 
-def hatalar(govde: str, bas_sha: str | None = None, kod_var: bool = False) -> list[str]:
+def _temiz_birlesme(denetlenen, bas_sha, taban, dizin):
+    def git(*arg):
+        return subprocess.run(
+            ["git", "--no-replace-objects", *arg],
+            cwd=dizin,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="surrogateescape",
+            check=True,
+        ).stdout
+
+    def dosyalar(x, y):
+        cikti = git("diff-tree", "-r", "-z", "--name-only", "--no-renames", x, y)
+        return set(cikti.split("\0")) - {""}
+
+    # Denetim ağaçları karşılaştırır, birleştirmez; iki tarafın da değiştirdiği dosya yeni geçiş ister.
+    try:
+        git("merge-base", "--is-ancestor", denetlenen, bas_sha)
+        for satir in git(
+            "rev-list", "--first-parent", "--parents", f"{denetlenen}..{bas_sha}"
+        ).splitlines():
+            sha, *ebeveynler = satir.split()
+            if len(ebeveynler) != 2:
+                return False
+            birinci, ikinci = ebeveynler
+            git("merge-base", "--is-ancestor", ikinci, taban)
+            taban_ortak = git("merge-base", "--all", birinci, ikinci).split()
+            if len(taban_ortak) != 1:
+                return False
+            getirilen = dosyalar(taban_ortak[0], ikinci)
+            dal = dosyalar(taban_ortak[0], birinci)
+            if (
+                getirilen & dal
+                or not dosyalar(birinci, sha) <= getirilen
+                or not dosyalar(ikinci, sha) <= dal
+            ):
+                return False
+    except subprocess.CalledProcessError:
+        return False
+    except OSError:
+        return False
+    return True
+
+
+def _denetlenen_hatasi(govde, bas_sha, taban, dizin):
+    satirlar = re.findall(r"^Denetlenen commit:(.*)$", govde, re.MULTILINE)
+    if len(satirlar) != 1:
+        return (
+            "Kural 12: PR gövdesinde Denetlenen commit: <40 küçük harfli onaltılı hane> "
+            f"satırı tek olmalı ({len(satirlar)} satır var)."
+        )
+    sha = satirlar[0].strip()
+    if not re.fullmatch(r"[0-9a-f]{40}", sha):
+        return (
+            "Kural 12: Denetlenen commit: değeri 40 küçük harfli onaltılı hane olmalı."
+        )
+    if bas_sha is None or sha == bas_sha:
+        return ""
+    if taban is None:
+        return "Kural 12: Denetlenen commit PR başı değil ve taban dal bilinmiyor."
+    if _temiz_birlesme(sha, bas_sha, taban, dizin):
+        return ""
+    return (
+        f"Kural 12: Denetlenen commit ({sha}) PR başı ({bas_sha}) değil; "
+        "sonraki commit'ler temiz bir taban birleştirmesi değil."
+    )
+
+
+def _bulgu_hatasi(inceleme, yanit):
+    sayilar = [
+        satir.split(":", 1)[1].strip()
+        for _, satir in inceleme
+        if re.match(r"\s*Bulgu sayısı:", satir)
+    ]
+    if len(sayilar) != 1:
+        return [
+            f"Kural 14: Bulgu sayısı: satırı tek olmalı ({len(sayilar)} satır var)."
+        ]
+    if not re.fullmatch(r"\d+", sayilar[0]):
+        return ["Kural 14: Bulgu sayısı: değeri tam sayı olmalı."]
+    if yanit is None:
+        return []
+    satirlar = [satir.strip() for _, satir in yanit if satir.strip()]
+    tablo = [satir for satir in satirlar if satir.startswith("|")]
+    diger = [satir for satir in satirlar if not satir.startswith("|")]
+    ayrac = r"\|(\s*:?-+:?\s*\|){3}"
+
+    def hucreler(satir):
+        if "\\" in satir or not satir.endswith("|"):
+            return []
+        return [parca.strip() for parca in satir[1:-1].split("|")]
+
+    if tablo and (
+        len(tablo) < 2
+        or len(hucreler(tablo[0])) != 3
+        or re.fullmatch(ayrac, tablo[0])
+        or not re.fullmatch(ayrac, tablo[1])
+    ):
+        return ["Kural 14: Bulgu yanıtları tablosunda başlık ve ayraç satırı olmalı."]
+    veri = tablo[2:]
+    sayi = int(sayilar[0])
+    if sayi == 0:
+        if diger == ["bulgu yok"] and not veri:
+            return []
+        return [
+            'Kural 14: Bulgu sayısı 0 ise Bulgu yanıtları bölümünde yalnız "bulgu yok" '
+            "satırı olur."
+        ]
+    sorunlar = []
+    if len(veri) != sayi:
+        sorunlar.append(
+            f"Kural 14: Bulgu yanıtları tablosunda {sayi} satır olmalı "
+            f"({len(veri)} satır var)."
+        )
+    kotu = []
+    for sira, satir in enumerate(veri, start=1):
+        hucre = hucreler(satir)
+        if (
+            len(hucre) != 3
+            or not hucre[0]
+            or not hucre[2]
+            or hucre[1].strip(" `") not in BULGU_YANITLARI
+            or re.fullmatch(ayrac, satir)
+        ):
+            kotu.append(str(sira))
+    if kotu:
+        sorunlar.append(
+            "Kural 14: Bulgu yanıtları satırı geçersiz: " + ", ".join(kotu) + "."
+        )
+    if diger:
+        sorunlar.append("Kural 14: Bulgu yanıtları bölümünde tablo dışı satır var.")
+    return sorunlar
+
+
+def hatalar(
+    govde: str,
+    bas_sha: str | None = None,
+    kod_var: bool = False,
+    taban: str | None = None,
+    dizin=None,
+) -> list[str]:
     if govde:
         govde = _yorumsuz(govde)
     if not govde or not govde.strip():
@@ -312,6 +456,24 @@ def hatalar(govde: str, bas_sha: str | None = None, kod_var: bool = False) -> li
         sonuc.append("Kural 10: ## Gerçek veri kanıtı bölümünde " + ayrinti + ".")
     if "İNCELEME" in govde:
         sonuc.append("Kural 11: PR gövdesinde İNCELEME yer tutucusu kalmış.")
+    if ayrinti := _denetlenen_hatasi(govde, bas_sha, taban, dizin):
+        sonuc.append(ayrinti)
+    yeni = [_bolum(satirlar, baslik) for baslik in YENI_BASLIKLAR]
+    eksik = [b for b, bolum in zip(YENI_BASLIKLAR, yeni) if bolum is None]
+    bos = [
+        b
+        for b, bolum in zip(YENI_BASLIKLAR[:2], yeni)
+        if bolum is not None and not any(satir.strip() for _, satir in bolum)
+    ]
+    parcalar = [
+        metin + ", ".join(adlar)
+        for metin, adlar in (("eksik başlıklar: ", eksik), ("boş bölüm: ", bos))
+        if adlar
+    ]
+    if parcalar:
+        sonuc.append("Kural 13: " + "; ".join(parcalar) + ".")
+    if inceleme is not None:
+        sonuc += _bulgu_hatasi(inceleme, yeni[2])
     return sonuc
 
 
@@ -320,6 +482,9 @@ if __name__ == "__main__":
         os.environ.get("PR_GOVDE", ""),
         os.environ.get("PR_BAS_SHA") or None,
         os.environ.get("PR_KOD_VAR") == "1",
+        "origin/" + os.environ["GITHUB_BASE_REF"]
+        if os.environ.get("GITHUB_BASE_REF")
+        else None,
     )
     for sorun in sorunlar:
         print(sorun)
