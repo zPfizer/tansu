@@ -843,6 +843,28 @@ def test_kural_12_bilinmeyen_sha_reddedilir(depo):
     ]
 
 
+def test_kural_12_elle_cozulen_celiski_taban_ozelligiyle_gizlenmez(depo):
+    dizin, _, _ = depo
+    _git(dizin, "checkout", "master")
+    _commit(dizin, "s.txt", "a\n")
+    _git(dizin, "checkout", "-b", "yan2")
+    b = _commit(dizin, "s.txt", "b\n")
+    _git(dizin, "checkout", "master")
+    _commit(dizin, "s.txt", "c\n")
+    _git(dizin, "checkout", "yan2")
+    with pytest.raises(subprocess.CalledProcessError):
+        _git(dizin, "merge", "--no-edit", "master")
+    (dizin / "s.txt").write_text("b\nc\n", encoding="utf-8")
+    _git(dizin, "add", "s.txt")
+    _git(dizin, "commit", "--no-edit")
+    m = _git(dizin, "rev-parse", "HEAD")
+    _git(dizin, "checkout", "master")
+    _commit(dizin, ".gitattributes", "*.txt merge=union\n")
+    assert hatalar(_govde_git(b, m), m, taban="master", dizin=dizin) == [
+        R12_BIRLESME.format(b, m)
+    ]
+
+
 RISK = "## Risk\nKüçük risk.\n"
 GERI = "## Nasıl geri alınır\nPR geri alınır.\n"
 YANIT = "## Bulgu yanıtları\nbulgu yok\n"
@@ -935,6 +957,14 @@ def test_kural_14_satir_sayisi_sayiya_esit_olmali():
 )
 def test_kural_14_gecersiz_satir(satirlar, numaralar):
     assert hatalar(_bulgular(2, TABLO + satirlar)) == [R14_SATIR.format(numaralar)]
+
+
+@pytest.mark.parametrize(
+    "satir",
+    ["|| A | düzeltildi | x |\n", "| A | düzeltildi | x ||\n"],
+)
+def test_kural_14_fazla_boru_hucre_silmez(satir):
+    assert hatalar(_bulgular(1, TABLO + satir)) == [R14_SATIR.format("1")]
 
 
 def test_kural_14_sifir_bulgu():

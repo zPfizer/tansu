@@ -11,6 +11,7 @@ BASLIKLAR = (
     "## Gerçek veri kanıtı",
 )
 YENI_BASLIKLAR = ("## Risk", "## Nasıl geri alınır", "## Bulgu yanıtları")
+BOS_AGAC = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
 BULGU_YANITLARI = ("düzeltildi", "yanlış", "bilerek", "önemsiz")
 AKISLAR = ("tansu-yeni-is", "tansu-hata", "tansu-belge", "tansu-karar", "tansu-eval")
 BECERI_ORTAK = [
@@ -261,7 +262,14 @@ def _temiz_birlesme(denetlenen, bas_sha, taban, dizin):
             if len(ebeveynler) != 2:
                 return False
             birinci, ikinci = ebeveynler
-            birlesme = git("merge-tree", "--write-tree", birinci, ikinci)
+            # Birleştirme sürücüsü yok sayılır; sürücü isteyen birleştirme reddedilir, yeni geçiş gerekir.
+            birlesme = git(
+                f"--attr-source={BOS_AGAC}",
+                "merge-tree",
+                "--write-tree",
+                birinci,
+                ikinci,
+            )
             if (
                 git("merge-base", "--is-ancestor", ikinci, taban).returncode
                 or birlesme.returncode
@@ -331,7 +339,7 @@ def _bulgu_hatasi(inceleme, yanit):
         )
     kotu = []
     for sira, satir in enumerate(veri, start=1):
-        hucre = [parca.strip() for parca in satir.strip("|").split("|")]
+        hucre = [parca.strip() for parca in re.sub(r"^\||\|$", "", satir).split("|")]
         if (
             len(hucre) != 3
             or not hucre[0]
