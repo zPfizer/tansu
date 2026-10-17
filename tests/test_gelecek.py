@@ -148,7 +148,7 @@ def kurulum_varyantlari():
         )
         ornek[ad] = p
         ornek[ad + "_gevsek"] = replace(p, hacim_kat=0.0, momentum=False, rr_min=0.0)
-    # bilet 04 ve 05: yeni giriş türleri (üst kutu, üst çizgi) ve düşüş süzgeci; `tansu` temelinden tek alan
+    # bilet 04 ve 05: yeni giriş türleri (üst kutu, üst çizgi) ve düşüş süzgeci; `tansu` temelinden tek alan (`dusus_agresif`: iki alan, `giris` ve `dusus`)
     for ad, alan in (
         ("giris_arz", dict(giris="arz")),
         ("giris_ucgen", dict(giris="ucgen")),
@@ -387,7 +387,7 @@ def test_t_den_sonrasi_veri_t_oncesi_ciktiyi_degistirmez(tam, bilesen, kesim):
 def test_yari_satisli_islemin_kapandigi_gunden_sonra_kesilen_veri_islemi_degistirmez(
     tam,
 ):
-    """Çıkış paketi (TASARIM 5.12): `KESIM` günlerinde yarı satışlı işlem azdır (9 yıl önce biter). Burada veri, yarı satışlı bir
+    """Çıkış paketi (TASARIM 5.12): `KESIM` günlerinde yarı satışlı işlem azdır (`tansu` 6, `cikis_rsi70` 7, `cikis_rsi50` 26; en geç 2014-12-25'te kapanır). Burada veri, yarı satışlı bir
     işlemin kapandığı günden sonraki işlem gününde kesilir; işlem (`yari_tarih`, `yari_fiyat`, çıkış) kesilmişte aynı olmalı."""
     toplam = 0
     for ad in ("tansu", "cikis_rsi70", "cikis_rsi50"):

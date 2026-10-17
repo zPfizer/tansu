@@ -254,7 +254,7 @@ def test_adx_yonlu_hareket_yoksa_dx_sifir_atr_sifir_dahil(yuksek, kapanis, bekle
 
 # KURALLAR §3 "Modül 1" gösterge teyidi: DX = 100 × |+DI − −DI| / (+DI + −DI); −DI > +DI olan günde DX pozitiftir (mutlak değer).
 # n=2. yüksek [10;9;8;7;8], düşük [8;7;6;5;6], kapanış [9;8;7;6;7].
-#   Gün 1, 2, 3: yukarı -1, aşağı 1 -> +DM 0, -DM 1; gerçek aralık = max(2; |yüksek - önceki kapanış|; |düşük - önceki kapanış|) = max(2; 1; 2) = 2.
+#   Gün 1, 2, 3: yukarı -1, aşağı 1 -> +DM 0, -DM 1; gerçek aralık = max(2; |yüksek - önceki kapanış|; |düşük - önceki kapanış|) = max(2; 0; 2) = 2.
 #   Gün 4: yukarı 1, aşağı -1 -> +DM 1, -DM 0; gerçek aralık max(2; |8-6| = 2; |6-6| = 0) = 2.
 #   Wilder (tohum gün 2 = gün 1 ve 2 ortalaması): +DM 0; 0; 0,5 (gün 2, 3, 4). -DM 1; 1; 0,5. TR 2; 2; 2.
 #   +DI = 100*+DM/TR: 0; 0; 25. -DI: 50; 50; 25.

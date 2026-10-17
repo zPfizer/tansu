@@ -455,7 +455,7 @@ def test_rr_kapisi_stop_tahmini_kutu_atr15_atr2(stop, rr_min, beklenen):
 
 def test_rr_kapisi_hedef_bulunmazsa_uygulanmaz_hedef_yok_iken_de():
     # Düşükler düz (99): salınım dipleri eşit, "her dip bir öncekinden yüksek" sağlanmaz -> üçgen yok; arz bölgesi yok.
-    # Hedef bulunmaz -> kapı uygulanmaz: oran 0,54 < 2 olsa da gün 13 sinyal. Hedef sütunu NaN.
+    # Hedef bulunmaz -> kapı uygulanmaz: `rr_min` varsayılan 2 olsa da gün 13 sinyal. Hedef sütunu NaN.
     # hedef "yok" iken (varsayılan) üçgen bulunsa da kapı ve hedef yok.
     f = _ucgen_cercevesi([99] * 13 + [107])
     k = aileler.kurulum(f, Parametre(hedef="tansu", stop="kutu", **KUCUK))
@@ -696,7 +696,7 @@ def test_stop_kutu_dusuk_sutununu_ister():
     ]  # varsayılan kural dusuk istemez
 
 
-# Retest: gün 19 = k+5, pencere (gün 14-16) dışında kalır, ama on_sart günüdür (pencere k'dan sonra 5 gün daha açık).
+# Retest: gün 19 = k+5, pencere (gün 14-16) dışında kalır, ama on_sart günüdür (`retest` penceresi 3 + 5 = 8 gün açıktır: gün 14-21).
 # Agresif: sıkışma sürerken pencere yoktur; gün 5, t-1'de biten koşu 5 gün (>= 3) olduğu için on_sart günüdür.
 # Elle hesap: aynı veriler yukarıdaki retest "k5-gun" ve agresif testlerindedir; sinyal günleri 19 ve 5.
 def test_retest_ve_agresif_sinyal_gunleri_on_sart_gunudur():
@@ -853,7 +853,7 @@ def _ucgen_giris_cercevesi(kapanislar, ilk_tepe=105.0, son_tepe=105.5, dusuk=Non
     )
 
 
-# Dönem gün 0-12 (kapanış 100), gün 13'te biter (EMA2 105,3, EMA3 104: oran 0,013 > 0,004). Pencere gün 13, 14, 15. Kutu üstü
+# Dönem gün 0-12 (kapanış 100), gün 13'te biter (EMA2 103,93, EMA3 102,95: oran 0,0096 > 0,004). Pencere gün 13, 14, 15. Kutu üstü
 # = en yüksek yüksek = 105,5 (son tepe), kutu altı 96. Üçgen: tepeler gün 2 (105) ve gün 8 (105,5): 105,5 <= 105*1,01;
 # dipler 96, 97, 98 yükseliyor. Üst çizgi (gün 2, 105) ile (gün 8, 105,5): eğim 0,5/6 = 1/12.
 # Çizgi: gün 13 = 105,5 + 5/12 = 105,9167; gün 14 = 105,5 + 6/12 = 106; gün 15 = 105,5 + 7/12 = 106,0833.
@@ -1061,7 +1061,8 @@ def _dusus_agresif_cercevesi(onceki, dusuk_26):
 
 
 # Ayar: `DUSUS` (yukarıdaki oran/dönem hesabı aynıdır; SMA2: kapanış 100 >= SMA 100). Sıkışma koşuları ve ATR14 `DUSUS` testiyle aynı:
-#   Gün 0-21 düz (kapanış `onceki`): koşu gün 0'da başlar, gün 21'de biter; t = 3: koşu 3 gün, düşük 99 <= 99 <= 100 -> sinyal gün 3
+#   Gün 0-21 düz (kapanış `onceki`): koşu gün 0'da başlar, gün 21'de biter; t = 3: koşu 3 gün, düşük `onceki` - 1 <= `onceki` - 1 <= `onceki`
+#   (`onceki` 130: 129 <= 129 <= 130; `onceki` 104: 103 <= 103 <= 104) -> sinyal gün 3
 #   (dönem başı 0 < 20 -> `dusus` açıkken hesaplanamaz, sayılmaz).
 #   J=30 (onceki 130): ikinci koşu gün 25'te başlar (k=4, oran 0,00369); t = 28 (koşu 25-27, 3 gün); düşük 99 <= 99 <= 100 -> sinyal gün 28.
 #     Kutu alt = 99. ATR_25 = 3,659 (2 + 2,071 * (13/14)^3). Önceki 20 gün = gün 5-24, en yüksek yüksek 131 (gün 5-21).
@@ -1317,7 +1318,7 @@ def test_giris_ucgen_ust_cizgi_ilk_ve_son_tepeden_gecer_uc_tepeyle_ayirt_edilir(
 # 130 -> 100 sıçramasında EMA2 farkı her gün üçte birine iner: gün 22 = 10; gün 23 = 3,33; gün 24 = 1,11 (EMA2 101,11).
 #   Oranlar: gün 22 = 0,091; gün 23 = 0,032; gün 24 = 1,11 / 101,11 = 0,011 > 0,005. Gün 25: EMA2 = (2/3) 99,9 + (1/3) 101,11 =
 #   100,3037; oran = (100,3037 - 99,9) / 100,3037 = 0,00402 <= 0,005 -> dönem başı gün 25 (serinin ilk günü değil).
-# Gün 26-30 oranı daha küçük (EMA2 farkı 0,30; 0,10; 0,034; 0,011; 0,004). Gün 31: EMA2 = 101,6 - (101,6 - 100,0012) / 3 = 101,067;
+# Gün 26-30 oranı daha küçük (EMA2 farkı 0,10; 0,034; 0,011; 0,0037; 0,0012). Gün 31: EMA2 = 101,6 - (101,6 - 100,0012) / 3 = 101,067;
 #   oran = (101,6 - 101,067) / 101,067 = 0,00527 > 0,005 -> dönem gün 25-30'da biter. Pencere gün 31, 32, 33.
 # Gövde ucu = max(önceki kapanış, kapanış) = max(100; 99,9) = 100 (kapanış tek başına 99,9 olurdu). Gün 0-21 dönemi: kutu üstü
 # 130 (ilk gün: önceki kapanış yok -> kapanış), kapanışlar 100 -> sinyal yok.

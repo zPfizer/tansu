@@ -1021,7 +1021,7 @@ def test_sinama_modul_1_varyanti_kutu_stopu_ve_hedef_cikisi():
 # KURALLAR §3 "Modül 1" Varyantlar tablosunun 24 adı (literal). Her varyant, sentetik dünyada (8 hisse, 700 gün; ısınma,
 # SMA ve sıkışma ayarı gevşek) motordan hatasız geçer: bir kez kendi kapılarıyla, bir kez kapılar (hacim, momentum, R/R) gevşekken.
 # Her koşu motor tablosunun sütunlarını verir; çıkış nedenleri tanımlı kümededir; fiyatlar sonlu ve pozitiftir. Bütün koşuların
-# TOPLAM işlem sayısı sıfırdan büyüktür (sınama boş değil); tek bir varyant boş olabilir (`giris_ucgen` bu dünyada işlem üretmez).
+# TOPLAM işlem sayısı sıfırdan büyüktür (sınama boş değil); kendi kapılarıyla 7 koşu boştur; kapılar gevşekken yalnız `giris_ucgen` boştur (bu dünyada işlem üretmez).
 VARYANT_ADLARI = [
     "bugun",
     "tansu",
