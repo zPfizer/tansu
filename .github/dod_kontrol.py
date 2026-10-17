@@ -11,7 +11,6 @@ BASLIKLAR = (
     "## Gerçek veri kanıtı",
 )
 YENI_BASLIKLAR = ("## Risk", "## Nasıl geri alınır", "## Bulgu yanıtları")
-BOS_AGAC = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
 BULGU_YANITLARI = ("düzeltildi", "yanlış", "bilerek", "önemsiz")
 AKISLAR = ("tansu-yeni-is", "tansu-hata", "tansu-belge", "tansu-karar", "tansu-eval")
 BECERI_ORTAK = [
@@ -248,35 +247,43 @@ def _kapi_hatasi(bolum, bas_sha, kod_var):
 def _temiz_birlesme(denetlenen, bas_sha, taban, dizin):
     def git(*arg):
         return subprocess.run(
-            ["git", *arg], cwd=dizin, capture_output=True, text=True, encoding="utf-8"
-        )
+            ["git", "--no-replace-objects", *arg],
+            cwd=dizin,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="surrogateescape",
+            check=True,
+        ).stdout
 
+    def dosyalar(x, y):
+        cikti = git("diff-tree", "-r", "-z", "--name-only", "--no-renames", x, y)
+        return set(cikti.split("\0")) - {""}
+
+    # Denetim ağaçları karşılaştırır, birleştirmez; iki tarafın da değiştirdiği dosya yeni geçiş ister.
     try:
-        if git("merge-base", "--is-ancestor", denetlenen, bas_sha).returncode:
-            return False
-        zincir = git("rev-list", "--first-parent", f"{denetlenen}..{bas_sha}")
-        if zincir.returncode:
-            return False
-        for sha in zincir.stdout.split():
-            ebeveynler = git("rev-list", "--parents", "-n", "1", sha).stdout.split()[1:]
+        git("merge-base", "--is-ancestor", denetlenen, bas_sha)
+        for satir in git(
+            "rev-list", "--first-parent", "--parents", f"{denetlenen}..{bas_sha}"
+        ).splitlines():
+            sha, *ebeveynler = satir.split()
             if len(ebeveynler) != 2:
                 return False
             birinci, ikinci = ebeveynler
-            # Birleştirme sürücüsü yok sayılır; sürücü isteyen birleştirme reddedilir, yeni geçiş gerekir.
-            birlesme = git(
-                f"--attr-source={BOS_AGAC}",
-                "merge-tree",
-                "--write-tree",
-                birinci,
-                ikinci,
-            )
+            git("merge-base", "--is-ancestor", ikinci, taban)
+            taban_ortak = git("merge-base", "--all", birinci, ikinci).split()
+            if len(taban_ortak) != 1:
+                return False
+            getirilen = dosyalar(taban_ortak[0], ikinci)
+            dal = dosyalar(taban_ortak[0], birinci)
             if (
-                git("merge-base", "--is-ancestor", ikinci, taban).returncode
-                or birlesme.returncode
-                or birlesme.stdout.splitlines()[:1]
-                != [git("rev-parse", f"{sha}^{{tree}}").stdout.strip()]
+                getirilen & dal
+                or not dosyalar(birinci, sha) <= getirilen
+                or not dosyalar(ikinci, sha) <= dal
             ):
                 return False
+    except subprocess.CalledProcessError:
+        return False
     except OSError:
         return False
     return True
@@ -320,12 +327,27 @@ def _bulgu_hatasi(inceleme, yanit):
         return ["Kural 14: Bulgu sayısı: değeri tam sayı olmalı."]
     if yanit is None:
         return []
-    satirlar = [satir.strip() for _, satir in yanit]
-    tablo = [satir for satir in satirlar if satir.startswith("|")][1:]
-    veri = [satir for satir in tablo if not re.fullmatch(r"[|:\- ]+", satir)]
+    satirlar = [satir.strip() for _, satir in yanit if satir.strip()]
+    tablo = [satir for satir in satirlar if satir.startswith("|")]
+    diger = [satir for satir in satirlar if not satir.startswith("|")]
+    ayrac = r"\|(\s*:?-+:?\s*\|){3}"
+
+    def hucreler(satir):
+        if "\\" in satir or not satir.endswith("|"):
+            return []
+        return [parca.strip() for parca in satir[1:-1].split("|")]
+
+    if tablo and (
+        len(tablo) < 2
+        or len(hucreler(tablo[0])) != 3
+        or re.fullmatch(ayrac, tablo[0])
+        or not re.fullmatch(ayrac, tablo[1])
+    ):
+        return ["Kural 14: Bulgu yanıtları tablosunda başlık ve ayraç satırı olmalı."]
+    veri = tablo[2:]
     sayi = int(sayilar[0])
     if sayi == 0:
-        if "bulgu yok" in satirlar and not veri:
+        if diger == ["bulgu yok"] and not veri:
             return []
         return [
             'Kural 14: Bulgu sayısı 0 ise Bulgu yanıtları bölümünde yalnız "bulgu yok" '
@@ -339,18 +361,21 @@ def _bulgu_hatasi(inceleme, yanit):
         )
     kotu = []
     for sira, satir in enumerate(veri, start=1):
-        hucre = [parca.strip() for parca in re.sub(r"^\||\|$", "", satir).split("|")]
+        hucre = hucreler(satir)
         if (
             len(hucre) != 3
             or not hucre[0]
             or not hucre[2]
-            or hucre[1].strip("`") not in BULGU_YANITLARI
+            or hucre[1].strip(" `") not in BULGU_YANITLARI
+            or re.fullmatch(ayrac, satir)
         ):
             kotu.append(str(sira))
     if kotu:
         sorunlar.append(
             "Kural 14: Bulgu yanıtları satırı geçersiz: " + ", ".join(kotu) + "."
         )
+    if diger:
+        sorunlar.append("Kural 14: Bulgu yanıtları bölümünde tablo dışı satır var.")
     return sorunlar
 
 

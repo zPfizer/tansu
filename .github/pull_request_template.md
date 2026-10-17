@@ -38,7 +38,7 @@ Yanlış iddia sayısı:
 İkinci geçiş:
 Denetlenen commit:
 Bulgu sayısı:
-<!-- Denetlenen commit, kopyalanan geçişin okuduğu commit'in tam sha'sıdır (40 küçük harfli onaltılı hane). CI, bu sha PR başı değilse PR'ı reddeder. Tek istisna: PR başına kadar yalnız temiz bir taban dal birleştirmesi (elle değişiklik yok) gelmişse CI kabul eder. Bulgu sayısı, kopyalanan geçişin bulgu sayısıdır (tam sayı, 0 ya da daha çok). -->
+<!-- Denetlenen commit, kopyalanan geçişin okuduğu commit'in tam sha'sıdır (40 küçük harfli onaltılı hane). CI, bu sha PR başı değilse PR'ı reddeder. Tek istisna: sonraki commit'lerin hepsi taban dal birleştirmesiyse ve her birleştirme yalnız bu dalın değiştirmediği dosyaları getirip her dosyayı bir taraftan değişmeden alıyorsa CI kabul eder. İki tarafın da değiştirdiği bir dosya yeni geçiş ister. Bulgu sayısı, kopyalanan geçişin bulgu sayısıdır (tam sayı, 0 ya da daha çok). -->
 <!-- CI kuralları: CI, her kuraldan önce tüm HTML yorumlarını siler. Denetçi kararı satırı, denetçinin karar satırının kelimesi kelimesine kopyasıdır. CI, bölümde KALDI sözcüğünü görürse PR'ı reddeder. "KALDI olabilir" gibi bir şüphe de KALDI sayılır (docs/agents/is-kurallari.md "Auditor and rounds"). CI, KALDI sözcüğünü ve şüphe sözcüklerini (olabilir, belki, şüphe, emin değil) bölümün tamamında arar; yalnız Sonuç satırını dışarıda bırakır. Satır sonları boşluk sayılır, alan satırları da aranır. Bulursa PR'ı reddeder. Kopyadaki karar sözcüğü Sonuç satırındakiyle aynı olmalıdır. Yanlış iddia sayısı, kopyalanan (son) geçişin sayısıdır ve 0 olmalıdır. İkinci geçiş satırı "yok" veya "geçti" olur: düzeltme geçişi koşuldu mu. CI, "İNCELEME" yer tutucusunu reddeder. -->
 <!-- CI accepts exactly one Sonuç line, and only one of these three exact texts: "Sonuç: geçti", "Sonuç: GEÇTİ", "Sonuç: NOTLU GEÇTİ". CI rejects "Geçti", KALDI, and a second Sonuç line. -->
 Sonuç: 
@@ -53,7 +53,7 @@ Sonuç:
 
 ## Bulgu yanıtları
 
-<!-- Kopyalanan geçişin her bulgusu için bir satır yazın. Yanıt şunlardan biri olur: düzeltildi, yanlış, bilerek, önemsiz. Son sütuna commit ya da neden yazın. Satır sayısı Bulgu sayısına eşit olmalıdır. Bulgu sayısı 0 ise yalnız "bulgu yok" satırı kalır (tablo satırı olmaz). -->
+<!-- Kopyalanan geçişin her bulgusu için bir satır yazın. Yanıt şunlardan biri olur: düzeltildi, yanlış, bilerek, önemsiz. Son sütuna commit ya da neden yazın. Satır sayısı Bulgu sayısına eşit olmalıdır. Bulgu sayısı 0 ise başlık ve ayraç dışında yalnız "bulgu yok" satırı kalır. Her tablo satırı | ile başlar ve biter; hücrede | ve ters bölü olmaz. Tablo dışında başka satır olmaz. -->
 
 | Bulgu | Yanıt | Commit ya da neden |
 |---|---|---|
