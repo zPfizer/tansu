@@ -60,7 +60,7 @@ Not: YORUM: bu katalogda ekranlar Tansu'ya atfedilen araç çıktıları olarak 
   - Tablo başlığı: `Hisse | Tip | Sistem | Durum | Reaksiyon | D Hedefi | Giriş | Stop (X)`.
   - SOKE satırı: Tip `SAT (taktik KISA, D'ye kadar) — D'de AL'a döner`, Sistem `Pesavento` ve `Carney` (iki ayrı satır), Durum `AKTIF`, Reaksiyon `-`, D Hedefi `12.53`, Giriş `-`, Stop `-`.
   - LUKSK satırı: Tip `AL (Buy)`, Sistem `Pesavento` ve `Carney`, Durum `TAMAMLANDI`, Reaksiyon `TEPKI_VERDI`, D Hedefi `86.95`, Giriş `86.95`, Stop (X) `73.00`.
-  - Grafik etiketleri: `D: 226,80 [TAMAMLANDI]`, `D: 11,29 [TAMAMLANDI]`, `D (hedef: 11.29 [TAMAM])`, `D (hedef: 10.05 [TAMAM])`, `D (hedef: 7.83 [BOZULDU])`, `D: 49.66 [AKTİF]`, `D (hedef) 70.25` (Backtest Modu).
+  - Grafik etiketleri: `D: 226,80 [TAMAMLANDI]`, `D: 11.20 [TAMAMLANDI]`, `D (hedef: 11.29 [TAMAM])`, `D (hedef: 10.05 [TAMAM])`, `D (hedef: 7.83 [BOZULDU])`, `D: 49.66 [AKTİF]`, `D (hedef) 70.25` (Backtest Modu).
   - KAPLM üst notu (okunabilen kısım): `D gerçekleşti ama 20 bar içinde TEPKİ GELMEDİ (son 10 günde BELİRSİZLEŞTİ) | [Ek bilgi] C sonrası fiyat son 10 günde BEKLENEN yönde: DÜŞÜYOR (Bullish/AL paternde CD bacağı aşağı olmalı...`. Cümlenin sonu kesik.
   - Başlık biçimi: `KAPLM.IS - Eşleşen Patern (Bullish) [TAMAMLANDI]`; `DGATE.IS - Kelebek Formasyonu (AL (Buy)) [AKTİF] — SİSTEM: Pesavento — Tarama eşleşmesi`.
 - Tanım (etiketlerin anlamı, görselden ve tutarlılıktan çıkarım):

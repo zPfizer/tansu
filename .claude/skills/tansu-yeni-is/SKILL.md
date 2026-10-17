@@ -10,7 +10,7 @@ The shared steps (Branch, Test gate, Review, Proof, Pull request, Merge, Close) 
 
 1. **Sharpen:** Define what to build: `thinking-jobs-to-be-done`. Then run `/tansu-grill` (the `vekil` subagent answers).
 2. **Document first:** Write a settled term to `GLOSSARY.md` at once. Write a decision to `docs/TASARIM.md`. Read `docs/TASARIM.md` first. Read `docs/sorgu/` when it exists. It is local and not in git. Do not ask again for a decision that exists. For a document-code conflict, apply AGENTS.md "Belgeler ve sahipleri". <!-- driftlint-ignore: local-only, gitignored, absent in CI -->
-3. **Spec:** `mattpocock-skills:to-spec`.
+3. **Spec:** `mattpocock-skills:to-spec`. Key every table and spec by heading text or rule ID, never by line number. Every spec has a "Where" table (file, heading, what it holds). Subagent prompts copy that table.
 4. **Tickets:** `mattpocock-skills:to-tickets`, then `mattpocock-skills:triage`. The layout is in `docs/agents/issue-tracker.md`. Do not write a ticket by hand. If a new decision appears during the work, update the spec first. Then build the tickets again in dependency order.
 5. **Branch:** Shared step. Read "Branch" in [ortak-adimlar.md](ortak-adimlar.md) and run it.
 6. **Build:** For one ticket: `mattpocock-skills:implement`. For a full spec: `mattpocock-skills:implement-spec`. AGENTS.md "Önce test" owns the red-test rule. The skill is `mattpocock-skills:tdd`. While you write code: `ponytail:ponytail`. A subagent writes the code. A writer subagent writes only inside its own worktree. Apply the Observability item of DEFINITION_OF_DONE.md "Ship-readiness".
@@ -36,7 +36,7 @@ Task scope skips Sharpen, Spec, and Tickets. It runs Build, Test gate, and Proof
 | a step only a human can do | `mattpocock-skills:wizard`. |
 | the code has bloat | `ponytail:ponytail-review`. If a function is complex: `cyclomatic-complexity`. |
 | the work includes untrusted input (for example downloaded data) or permissions | `thinking-red-team`. |
-| the work changes an HTML report | show the proof with `anthropic-skills:built-in-browser`. |
+| the work changes an HTML report | show the proof with `anthropic-skills:built-in-browser`. Open the site with `preview_start arayuz`. The Browser tool refuses a file URL. |
 | the work meets an operational limit or quota (for example a rate limit of a data source) | `thinking-margin-of-safety`. |
 | the work is a batch content job with a fixed line rule (map lines, labels, tags) | use task scope: skip Sharpen, Spec, and Tickets. The job prompt holds the rule and the proof. (Retro 15.10) |
 | the brief names a decided spec file (the edit set and its tests, decided by Levent or by the session that started the job) | Sharpen, Spec, and Tickets do not run. The PR body names the spec file in `Akış notu:`. Build runs `mattpocock-skills:implement` on the spec file. |
