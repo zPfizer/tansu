@@ -1,6 +1,11 @@
-param([switch]$Belge)
+param([switch]$Belge, [Parameter(ValueFromRemainingArguments = $true)][string[]]$Testler)
 
 # Test gate. Run it from any folder. The PR body does not take the "kapi:" lines; CI proves the tests.
+# It runs only the given tests of the change; the full suite runs only in CI (Levent 17.10).
+if (-not $Belge -and -not $Testler) {
+    'kapi: test secilmedi; degisikligin test dosyalarini ver (ornek: kurulum\kapi.ps1 tests\test_x.py)'
+    exit 1
+}
 # A command that cannot start stops the script (python, git). Native stderr is not redirected.
 $ErrorActionPreference = 'Stop'
 Set-Location (Split-Path -Parent $PSScriptRoot)
@@ -30,9 +35,9 @@ if ($Belge) {
     $pytestKod = $LASTEXITCODE
     $pytestAd = 'pytest (belge)'
 } else {
-    & $py -m pytest -q
+    & $py -m pytest -q @Testler
     $pytestKod = $LASTEXITCODE
-    $pytestAd = 'pytest'
+    $pytestAd = 'pytest (ilgili)'
 }
 & $py -m ruff check .
 $checkKod = $LASTEXITCODE
