@@ -21,7 +21,7 @@ Run AGENTS.md "Every job" first. Run the steps in order. Run an "If" row only wh
 | the work is a Claude interface mode or hook | `plugin-authoring`. |
 | the document is long | `anthropic-skills:doc-coauthoring`. |
 | the change affects behavior | run `tansu-eval` "Add the case" and `tansu-eval` "Check the judge". |
-| the job reads pool notes into `docs/kurallar` in batches (a brief is given, the job only appends) | do not run the steps Write for agents, Record, and Language. Do not run the row "the document is long". Apply "Pool reading rules" below and the shared steps of `tansu-yeni-is`. The PR has `Akış: tansu-belge`, and `Çağrılan beceriler:` lists `toplu havuz okuma`. |
+| the job reads pool notes into `docs/kurallar` in batches (a brief is given, the job only appends) | do not run the steps Write for agents, Record, and Language. Do not run the row "the document is long". Apply "Pool reading rules" below and the shared steps of `tansu-yeni-is`. |
 
 ## Pool reading rules
 These rules bind the readers and the writers of a pool batch. They also bind a document correction from the pool.

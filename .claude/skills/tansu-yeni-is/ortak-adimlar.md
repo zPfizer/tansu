@@ -10,7 +10,7 @@ Run `kurulum\kapi.ps1`. It runs pytest, `ruff check .`, `ruff format --check .`,
 The gate always runs the count. If the pool folder is missing, it prints `kapi: acik havuz notu = HATA` and stops with exit code 1, also when `TANSU_BEKLENEN_ACIK` is set.
 `TANSU_PY` (a full path) sets the Python of the gate. The default is the main venv. If that file is missing or the count is not a whole number, the gate prints a `kapi:` error line and stops with exit code 1. A command that cannot start stops the gate with a PowerShell error and exit code 1.
 
-After the last commit, run it again on the clean tree. This also applies after a fix commit or a merge of `origin/master`. Paste that output into `## Gerçek veri kanıtı` of the PR body. The last line must be `kapi: HEAD <sha> temiz`, and the sha must be the PR head sha. An untracked file also makes the tree `kirli`. A code change needs the full run (CI rejects `-Belge` then).
+After the last commit, run it again on the clean tree. This also applies after a fix commit or a merge of `origin/master`. Paste that output in a code block into `## Gerçek veri kanıtı` of the PR body. An untracked file also makes the tree `kirli`. A code change needs the full run.
 
 When only documents changed, `kurulum\kapi.ps1 -Belge` runs the document tests. The full run is in CI. For a pool batch, set `TANSU_PARTI=<batch ids>`. Do not deselect a red test.
 
@@ -20,11 +20,11 @@ Merge `origin/master` into the branch first. Then check the change by its type.
 - A change to documents only (no code): run one `mattpocock-skills:code-review` pass by a Sonnet subagent on the diff. Run no Codex audit.
 
 Run the review in this order.
-1. Before Review, write the PR body draft with `Akış:` and `Çağrılan beceriler:` to `.scratch/<job>/pr-govde.md` of the main checkout `C:\Users\levent\Desktop\TANSU`, not of the worktree. An untracked file in the worktree makes `kurulum\kapi.ps1` print `kirli`. <!-- driftlint-ignore: local-only path of the main repository, absent in CI --> Open the PR as a draft (see "Pull request"). Give the path to the auditor.
+1. Before Review, write the PR body draft to `.scratch/<job>/pr-govde.md` of the main checkout `C:\Users\levent\Desktop\TANSU`, not of the worktree. An untracked file in the worktree makes `kurulum\kapi.ps1` print `kirli`. <!-- driftlint-ignore: local-only path of the main repository, absent in CI --> Open the PR as a draft (see "Pull request"). Give the path to the auditor.
 2. The orchestrator starts the two axes of `mattpocock-skills:code-review` itself, as two parallel Sonnet subagents. No auditor agent sits between them. Each subagent prompt says: "Do not start a subagent."
-3. The audit prompt asks for the verdict and the line `Yanlış iddia sayısı: N`. Apply docs/agents/is-kurallari.md "Auditor and rounds" (false claim, doubt, second pass, error class). Copy the verdict line of the auditor word for word into `Denetçi kararı (aynen):`.
+3. The audit prompt asks for the verdict and the line `Yanlış iddia sayısı: N`. Apply docs/agents/is-kurallari.md "Auditor and rounds" (false claim, doubt, second pass, error class). Write the verdict of the auditor into `Sonuç:`.
 4. Every `mattpocock-skills:code-review` pass prompt says: a finding is KALDI only when it breaks correctness or a written requirement of the job (the spec, an acceptance criterion, a DEFINITION_OF_DONE item, or a rule sentence that the output violates). A false claim, a broken behavior, and a security or privacy risk stay KALDI. A process-order point with no effect on the output is a note.
-5. Write the sha of the commit that the copied pass read into `Denetlenen commit:` and its finding count into `Bulgu sayısı:`. Give each finding of that pass one row in `## Bulgu yanıtları`, with the response `düzeltildi`, `yanlış`, `bilerek`, or `önemsiz`.
+5. Write the sha of the commit that the last pass read into `Denetlenen commit:`. Fix each KALDI finding before the merge.
 
 Both checks read `CODING_STANDARDS.md`, `DEFINITION_OF_DONE.md`, and the general standards file that `CODING_STANDARDS.md` points to. After a change in a calculation, search the changed modules for prose that states the formula. This covers docstrings, comments, report text, and HTML. Tie each one to its TASARIM sentence. When the coverage of a test changes, update the owning TASARIM sentence in the same commit.
 
@@ -34,9 +34,7 @@ Run `verification-before-completion`. Check the `## Tansu` items of `DEFINITION_
 ## Pull request
 Push the branch to `origin`. `mattpocock-skills:pr` and `.github/pull_request_template.md` write the PR body together.
 
-The PR body has a `Closes #<N>` line for the issue of the branch. When the PR merges into the default branch, GitHub closes the linked issue. CI checks the line (`.github/dod_kontrol.py`, Kural 15). Source: docs.github.com "Linking a pull request to an issue" (https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/linking-a-pull-request-to-an-issue): "When you merge a linked pull request into the default branch of a repository, its linked issue is automatically closed."
-
-The PR body has an `Akış:` line with the flow skill used. The auditor checks the steps of that skill (docs/agents/is-kurallari.md "Auditor and rounds"). `Çağrılan beceriler:` is a copy of the Skill calls of this session in call order. Do not write a skill that you did not call.
+The PR body has a `Closes #<N>` line for the issue of the branch. When the PR merges into the default branch, GitHub closes the linked issue. CI checks the line (`.github/dod_kontrol.py`, Kural 1). Source: docs.github.com "Linking a pull request to an issue" (https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/linking-a-pull-request-to-an-issue): "When you merge a linked pull request into the default branch of a repository, its linked issue is automatically closed."
 
 Open a draft PR with this command chain: `git fetch -q origin && git merge-base --is-ancestor origin/master HEAD && git push -q -u origin <branch> && gh pr create --draft --base master --head <branch> --title "<title>" --body-file <pr-govde.md>`. After the verdict, fill `## Bağımsız inceleme`. Run `gh pr edit <N> --body-file <file>`, then `gh pr ready <N>`. The `dod` check skips a draft PR and runs at `gh pr ready`.
 
