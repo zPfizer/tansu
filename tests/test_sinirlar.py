@@ -5,6 +5,7 @@ gerçekten okunur. Bir cümle yanlışsa test kırılır ve cümle düzeltilir.
 """
 
 import re
+import subprocess
 
 import pytest
 from test_atif import _belgeler, _sorgu
@@ -215,8 +216,45 @@ def test_ci_aracleri_tam_surume_sabitli_ve_agents_bunu_soyler():
     )
 
 
-def test_driftlint_yapilandirmasi_yalniz_scratch_i_dislar():
+def test_driftlint_yapilandirmasi_yalniz_scratch_ve_worktrees_i_dislar():
     yapilandirma = (KOK / ".driftlintrc.json").read_text(encoding="utf-8")
     assert re.fullmatch(
-        r'\s*\{\s*"ignore":\s*\[\s*"\.scratch/\*\*"\s*\]\s*\}\s*', yapilandirma
+        r'\s*\{\s*"ignore":\s*\[\s*"\.scratch/\*\*"\s*,\s*"\.claude/worktrees/\*\*"\s*\]\s*\}\s*',
+        yapilandirma,
     )
+
+
+def test_izlenen_dosyalar_uzak_depo_adini_eski_adla_yazmaz():
+    # Uzak depo adı origin'dir. Eski ad yalnız .scratch/ altında kalır; depo adı ve modül adı eşleşmez.
+    eski = "kay" + "nak"
+    desen = re.compile(
+        rf"(?<![\w-]){eski}/master"
+        rf"|\b(?:fetch|push|pull)(?: -\S+)* {eski}\b"
+        rf"|-u {eski}\b"
+        rf"|remotes/{eski}\b"
+        rf"|remote add {eski}\b"
+    )
+    cikti = subprocess.run(
+        ["git", "ls-files", "-z"],
+        cwd=KOK,
+        check=True,
+        capture_output=True,
+        encoding="utf-8",
+    ).stdout
+    bulunan = []
+    for goreli in cikti.split("\0"):
+        if not goreli or goreli.startswith(".scratch/"):
+            continue
+        yol = KOK / goreli
+        if not yol.is_file():
+            continue
+        try:
+            satirlar = yol.read_text(encoding="utf-8").splitlines()
+        except UnicodeDecodeError:
+            continue
+        bulunan += [
+            f"{goreli}:{no}"
+            for no, satir in enumerate(satirlar, 1)
+            if desen.search(satir)
+        ]
+    assert not bulunan, "\n".join(bulunan)

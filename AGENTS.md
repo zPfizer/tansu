@@ -31,8 +31,8 @@ If a document and the code contradict, or if the document says nothing about the
 first. Write the reason. Then write the code.
 
 ## Environment (Ortam)
-- Windows, PowerShell. Python is `.venv\Scripts\python.exe`. The main branch is `master`. The remote repository is `kaynak` (GitHub, private). There is no other backup.
-- **Current rules (Güncel kurallar):** The current rules are on `kaynak/master`. Before a job, run `git fetch kaynak`. Read the rules from `kaynak/master`. A checkout that is behind `kaynak/master` gives old rules.
+- Windows, PowerShell. Python is `.venv\Scripts\python.exe`. The main branch is `master`. The remote repository is `origin` (GitHub `zPfizer/tansu-kaynak`, private). There is no other backup.
+- **Current rules (Güncel kurallar):** The current rules are on `origin/master`. Before a job, run `git fetch origin`. Read the rules from `origin/master`. A checkout that is behind `origin/master` gives old rules.
 - Setup: `py -3.14 -m venv .venv`, then `.venv\Scripts\python.exe -m pip install -r requirements.lock.txt -e ".[dev]"`.
 - **Names (Adlar):** Code, file, column, and CSV header names are Turkish ASCII (`aile`, `adim`, `evren`). Report and card
   text uses Turkish characters. Use `pathlib` for paths. Open each file with an explicit `encoding="utf-8"` (for CSV,
@@ -71,7 +71,7 @@ Each skill lives in `.claude/skills/<name>/SKILL.md` and owns the steps of its f
 - Before you commit or run a git command that changes the repository: `docs/agents/git.md`.
 - Before you touch a Task Scheduler task or a file in `kurulum/`: `docs/agents/zamanlayici.md`.
 - For a source, question, or session job, and before you name a skill or refer to a step in a document: `docs/agents/akislar.md`.
-- Issue tracker: `docs/agents/issue-tracker.md`. Triage labels: `docs/agents/triage-labels.md`. Domain docs: `docs/agents/domain.md`.
+- Issue tracker (GitHub Issues): `docs/agents/issue-tracker.md`. Triage labels: `docs/agents/triage-labels.md`. Domain docs: `docs/agents/domain.md`.
 
 ## Standards (Standartlar)
 `CODING_STANDARDS.md` and `DEFINITION_OF_DONE.md` are the standards of Tansu. `DEFINITION_OF_DONE.md` is Tansu's own copy.
