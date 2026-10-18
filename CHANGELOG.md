@@ -9,6 +9,7 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 ### Eklendi
 
 - Yeni motorun davranış sözleşmesi; bağımsız işlem, dönem, kayıt ve motor sınırları ile açık yöntem ve sahip kapıları belgelendi. Eski politikalar korundu. (#82)
+- Güncel taramadaki 47 notun 48 görseli yeniden okundu; kurtarılan metinler ve okunamayan parçaların gerekçeleri kaydedildi. (#62)
 - Üçgen girişinin 30 hissedeki sıfır işlemi, yükselmeyen salınım dipleriyle açıklandı; kod değişmedi. (#56)
 - Yeni modül varyantının siteye girmeden önce resmi olmayan gölge koşuda sinyal üretmesi ve çıktıları Levent'in onaylaması kuralı yazıldı. (#71)
 - Ajan araç çağrıları ve yanıtları kancayla denetleniyor; talimatlara eklenen satırlar STE denetiminden geçiyor. (#42, issue #52)
@@ -17,7 +18,7 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ### Değişti
 
-- Motor sözleşmesinde kısmi çıkışlar açık işlemde korunuyor; gerçekleşmiş kısmi sonuçlar, kalan adet değerlemesi ve nihai işlem sonucu ayrıldı. (#82)
+- İş gövdeleri triage biçiminde yazılıyor; sade açıklama, ajan brifi ve bağlı işler şablonda yer alıyor. (#103)
 - Yerel kapıya driftlint eklendi; inceleme girdileri, başarısız çalıştırma ve bir defalık tur sıfırlama kuralları güncel akışa uyarlandı. (#47, issue #53)
 - Sadakat raporunda hesap tarihi kaynak tarihinden ayrıldı; X arşivi atıfları ve çift Z adaylarının yorum sınırları açıklandı. (#61)
 - Issue ve PR yolları belirlendi; gerekçeli, yalnız izinli belge dosyalarını değiştiren PR'lar issue olmadan kabul ediliyor. (#79)

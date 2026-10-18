@@ -7,6 +7,7 @@ description: "Use when the user asks for new work in Tansu: a new feature, rule,
 
 Run AGENTS.md "Every job" first. Run the steps in order. Run an "If" row only when its condition is true. Call each skill by the exact name in backticks.
 The shared steps (Branch, Test gate, Review, Proof, Pull request, Merge, Close) are in [ortak-adimlar.md](ortak-adimlar.md). Flow B (`tansu-hata`) runs them too.
+Before creating an issue, follow [Issue body](../../../docs/agents/issue-tracker.md#issue-body).
 
 1. **Sharpen:** Define what to build: `thinking-jobs-to-be-done`. Then run `/tansu-grill` (the `vekil` subagent answers).
 2. **Document first:** Write a settled term to `GLOSSARY.md` at once. Write a decision to `docs/TASARIM.md`. Read `docs/TASARIM.md` first. Read `docs/sorgu/` when it exists. It is local and not in git. Do not ask again for a decision that exists. For a document-code conflict, apply AGENTS.md "Belgeler ve sahipleri". <!-- driftlint-ignore: local-only, gitignored, absent in CI -->
