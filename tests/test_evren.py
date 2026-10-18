@@ -6,12 +6,69 @@ Ocak 0-21 (09.01 = 6), Şubat 22-41, Mart 42-63 (31.03 = 63), Nisan 64-85 (01.04
 """
 
 import pandas as pd
+import pytest
 
 from tansu import evren as ev
 from tansu.veri import Anlik
+from tansu import veri
 
 TAKVIM = pd.bdate_range("2026-01-01", "2026-04-30")
 NISAN = pd.Timestamp("2026-04-01")
+
+
+def test_resmi_bist30_degisim_gununde_yeni_liste_ve_kaynak():
+    # Kaynak CSV: MGROS bitis=2021-04-01, SASA baslangic=2021-04-01.
+    yanit = veri.uyelik_hazirla(
+        veri.UyelikIstegi(
+            ("2021-03-31", "2021-04-01"), "donemsel_bist30_v1", "bist30_2021_2025_v1"
+        )
+    )
+    assert set(yanit["gunler"]) == {"2021-03-31", "2021-04-01"}
+    once, sonra = (yanit["gunler"][t] for t in ("2021-03-31", "2021-04-01"))
+    assert len(once["semboller"]) == len(sonra["semboller"]) == 30
+    assert set(sonra["semboller"]) - set(once["semboller"]) == {"SASA"}
+    assert set(once["semboller"]) - set(sonra["semboller"]) == {"MGROS"}
+    kanit = next(k for k in sonra["kanitlar"] if k["sembol"] == "SASA")
+    assert kanit["kaynak_id"] == "2021Q2"
+    assert kanit["yururluk_baslangici"] == "2021-04-01"
+    assert kanit["yururluk_bitisi"] == "2025-12-31"
+
+
+def test_bist30_eksik_gunlerin_tamami_ve_surum_hatada():
+    with pytest.raises(veri.VeriHatasi) as hata:
+        veri.uyelik_hazirla(
+            veri.UyelikIstegi(
+                ("2020-12-31", "2021-01-01", "2025-12-31", "2026-01-01"),
+                "donemsel_bist30_v1",
+                "bist30_2021_2025_v1",
+            )
+        )
+    assert hata.value.eksik_tarihler == ["2020-12-31", "2026-01-01"]
+    assert "bist30_2021_2025_v1" in str(hata.value)
+
+
+@pytest.mark.parametrize("bozuk", ["eksik_uye", "cakisma", "kaynak", "aralik"])
+def test_bist30_bozuk_kayitla_kosu_baslamaz(monkeypatch, bozuk):
+    oku = pd.read_csv
+
+    def bozuk_oku(*args, **kwargs):
+        t = oku(*args, **kwargs)
+        if bozuk == "eksik_uye":
+            return t[t["sembol"] != "AKBNK"]
+        if bozuk == "cakisma":
+            return pd.concat([t, t[t["sembol"] == "AKBNK"]], ignore_index=True)
+        t.loc[t["sembol"] == "AKBNK", "kaynak_id" if bozuk == "kaynak" else "bitis"] = (
+            "" if bozuk == "kaynak" else "2020-01-01"
+        )
+        return t
+
+    monkeypatch.setattr(pd, "read_csv", bozuk_oku)
+    with pytest.raises(veri.VeriHatasi):
+        veri.uyelik_hazirla(
+            veri.UyelikIstegi(
+                ("2021-02-05",), "donemsel_bist30_v1", "bist30_2021_2025_v1"
+            )
+        )
 
 
 def anlik(semboller):

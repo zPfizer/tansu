@@ -1083,8 +1083,34 @@ maskesini ve son temiz AOF'u korur. `legacy_tansu_v1` buna sonsuz kapanış/AOF 
 pozitif kapanış/AOF koşulunu ekler (§5.14). İlk geçerli fiyattan önce son fiyat tarihi boştur;
 sonraki eksik/karantinalı günlerde yalnız değerleme fiyatı ve tarihi taşınır, işlem bayrağı üretilmez.
 İstenen dönemin başı kalite geçmişini sıfırlamaz. Son gün sonrası veri değerlemeye katılmaz.
-Üyelik sürümü isteğin referansıdır; tarihli BIST 30 üyeliği #86'nın işidir.
+Üyelik sürümü isteğin referansıdır; aşağıdaki S05 yolu bu referansı tarihli üyeliğe bağlar.
 `tests/test_gelecek.py`, ortak çift hazırlığının her iki eski politika için önek değişmezliğini sınar.
+
+**S05 tarihli üyelik (#86):** `veri.UyelikIstegi` değerlendirme tarihlerini, `evren_politikasi`
+ve `uyelik_surumu` alanlarını taşır. `veri.uyelik_hazirla` her tarih için sembolleri ve
+üyelik aralığı kanıtlarını döndürür. `donemsel_bist30_v1`, depodaki
+`tansu/referans/bist30_2021_2025_v1/uyelik.csv` tablosunu kullanır; sürümü
+`bist30_2021_2025_v1` olur. Kaynak kaydı aynı klasördeki `kaynaklar.md` dosyasıdır.
+Girdi CSV'sinin `bitis` günü hariçtir. Çıktının `yururluk_bitisi` günü dahildir;
+dönüşüm bir gün çıkarır. Açık bitişler yalnız doğrulanmış kapsamın sonu olan
+2025-12-31'e kadar geçerlidir. Kapsam 2021-01-01–2025-12-31'dir. Dayanak: [L2],
+#86'nın doğrulanmış veri girdisi ve aynı klasördeki kaynak kaydı.
+
+İstenen günün 30 ayrı üyesi yoksa koşu durur. Hata bütün eksik tarihleri ve üyelik
+sürümünü taşır; yaklaşık veya bugünkü listeye dönüş yoktur. Aynı sembolün çakışan
+aralıkları ve boş kaynak kimliği hatadır. `VeriIstegi.evren_politikasi` seçilirse E1
+istenen dönemin değerlendirme günlerini doğrular; ısınma günleri üyelik istemez.
+Yanıt üyelik kanıtını ve tablo parmak izini veri referansına bağlar. Dayanak: [L2], [W8].
+
+`motor.sinama(..., veri_paketi=...)` E1 yanıtıyla üyelik denetimini seçer. Sinyal
+günü ile sonraki giriş günü ayrı denetlenir. Giriş gününde üye olmayan aday
+gerçekleşmez; nedeni ve iki tarih sonuç tablosunun `attrs` alanında korunur.
+Gerçekleşen girişin satırı üyelik kanıtını taşır. Üyelikten çıkmak açık işlemi
+zorunlu kapatmaz. Sonuç `attrs` alanı üyelik sürümünü, politikayı ve E1 veri
+referansını taşır. Fiyat, karantina ve çıkış davranışı mevcut motorun kurallarını
+korur; bu yol #90'ın yeni risk/dolum motoru değildir. Parametre verilmezse eski
+`motor.sinama` ve yaklaşık `evren.evren` seçimleri değişmez. Dayanak: [L2], [W8];
+#86 kapsamı ve giriş denetimi kabul ölçütü.
 
 Motorlar sorumluluk sınırıdır; ayrı servis zorunluluğu değildir. E1–E3 düz veri kayıtlarıyla çalışır;
 panel, CLI, HTML veya kullanıcı arayüzü durumu hesaplama girdisinin yerine geçmez. Bu görev ayrımı

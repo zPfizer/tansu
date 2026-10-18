@@ -50,6 +50,111 @@ class KaynakYok(VeriHatasi):
 
 
 @dataclass(frozen=True)
+class UyelikIstegi:
+    """Değerlendirme günleri ve açık politika/sürüm seçimi (TASARIM 5.15)."""
+
+    tarihler: tuple[str, ...]
+    evren_politikasi: str
+    uyelik_surumu: str
+
+
+class UyelikKapsamHatasi(VeriHatasi):
+    """Eksik değerlendirme günleri koşuyu durdurur (TASARIM 5.15)."""
+
+    def __init__(self, surum, tarihler):
+        self.uyelik_surumu = surum
+        self.eksik_tarihler = sorted(set(tarihler))
+        super().__init__(
+            f"{surum}: üyelik kapsamı eksik: {', '.join(self.eksik_tarihler)}"
+        )
+
+
+def _uyelik_tablosu(yol):
+    tablo = pd.read_csv(yol, encoding="utf-8-sig", dtype=str, keep_default_na=False)
+    if set(tablo.columns) != {"sembol", "baslangic", "bitis", "kaynak_id"}:
+        raise VeriHatasi("üyelik tablosu sütunları geçersiz")
+    if tablo[["sembol", "baslangic", "kaynak_id"]].eq("").any().any():
+        raise VeriHatasi("üyelik tablosunda zorunlu alan boş")
+    try:
+        tablo["bas"] = pd.to_datetime(tablo["baslangic"], format="%Y-%m-%d")
+        tablo["son"] = pd.to_datetime(
+            tablo["bitis"].replace("", "2026-01-01"), format="%Y-%m-%d"
+        ) - pd.Timedelta(days=1)
+    except ValueError as hata:
+        raise VeriHatasi("üyelik tablosunda tarih geçersiz") from hata
+    if (tablo["bas"] > tablo["son"]).any():
+        raise VeriHatasi("üyelik aralığı ters")
+    for _, grup in tablo.sort_values("bas").groupby("sembol"):
+        if (grup["bas"] <= grup["son"].cummax().shift()).any():
+            raise VeriHatasi("aynı sembolde çakışan üyelik aralığı")
+    return tablo
+
+
+def uyelik_hazirla(istek: UyelikIstegi) -> dict:
+    """Tarihli üyelik yanıtı (TASARIM 5.15)."""
+    if (istek.evren_politikasi, istek.uyelik_surumu) != (
+        "donemsel_bist30_v1",
+        "bist30_2021_2025_v1",
+    ):
+        raise VeriHatasi("bilinmeyen evren politikası/üyelik sürümü")
+    yol = Path(__file__).parent / "referans" / istek.uyelik_surumu / "uyelik.csv"
+    tablo = _uyelik_tablosu(yol)
+    gunler, eksik = {}, []
+    for tarih in istek.tarihler:
+        t = pd.Timestamp(tarih)
+        if pd.isna(t) or t != t.normalize() or t.tzinfo is not None:
+            raise VeriHatasi("üyelik isteği gün olmalıdır")
+        kayitlar = []
+        for r in tablo.itertuples():
+            bas, son = r.bas, r.son
+            if bas <= t <= son:
+                kayitlar.append(
+                    {
+                        "kayit_id": f"{istek.uyelik_surumu}/{r.sembol}/{r.baslangic}",
+                        "kayit_turu": "uyelik_araligi",
+                        "sema_surumu": "s05_v1",
+                        "olusturma_zamani": dt.datetime.now(dt.UTC).isoformat(),
+                        "sembol": r.sembol,
+                        "endeks": "BIST30",
+                        "uyelik_surumu": istek.uyelik_surumu,
+                        "yururluk_baslangici": bas.date().isoformat(),
+                        "yururluk_bitisi": son.date().isoformat(),
+                        "kaynak_id": r.kaynak_id,
+                        "duyuru_zamani": None,
+                        "bos_nedenleri": {"duyuru_zamani": "saat_kaniti_yok"},
+                        "kaynaklar": [
+                            {
+                                "tur": "uyelik_kaynagi",
+                                "konum": yol.with_name("kaynaklar.md").as_posix(),
+                                "kaynak_id": r.kaynak_id,
+                                "tarih": dt.datetime.now(ISTANBUL).date().isoformat(),
+                                "alinti": None,
+                                "bos_nedenleri": {"alinti": "tablo_kaynagi"},
+                                "karar_durumu": "dogrulandi",
+                            }
+                        ],
+                    }
+                )
+        gunler[t.date().isoformat()] = {
+            "semboller": sorted(r["sembol"] for r in kayitlar),
+            "kanitlar": kayitlar,
+        }
+        if (
+            not pd.Timestamp("2021-01-01") <= t <= pd.Timestamp("2025-12-31")
+            or len(kayitlar) != 30
+        ):
+            eksik.append(t.date().isoformat())
+    if eksik:
+        raise UyelikKapsamHatasi(istek.uyelik_surumu, eksik)
+    return {
+        "gunler": gunler,
+        "evren_politikasi": istek.evren_politikasi,
+        "uyelik_surumu": istek.uyelik_surumu,
+        "tablo_parmak_izi": _sha256(yol),
+    }
+
+
+@dataclass(frozen=True)
 class VeriIstegi:
     """Kayıtlı yerel veri isteği; sürümler çağırana aittir (TASARIM 5.15)."""
 
@@ -62,6 +167,7 @@ class VeriIstegi:
     duzeltme_surumu: str
     takvim_ref: str
     isinma_donemi: tuple[str, str] | None = None
+    evren_politikasi: str | None = None
 
 
 def veri_hazirla(istek: VeriIstegi, kimlik, kok) -> dict:
@@ -69,6 +175,19 @@ def veri_hazirla(istek: VeriIstegi, kimlik, kok) -> dict:
     bas, son, kapsam_bas = _istek_donemi(istek)
     a = oku(kimlik, kok)
     gunler = a.gunler[a.gunler <= son]
+    uyelik = None
+    if istek.evren_politikasi is not None:
+        uyelik = uyelik_hazirla(
+            UyelikIstegi(
+                tuple(
+                    dict.fromkeys(
+                        [_tarih(bas), *map(_tarih, gunler[gunler >= bas]), _tarih(son)]
+                    )
+                ),
+                istek.evren_politikasi,
+                istek.uyelik_surumu,
+            )
+        )
     semboller = list(istek.semboller)
     f = a.fiyat[a.fiyat["sembol"].isin(semboller)]
     C, A = (
@@ -121,13 +240,20 @@ def veri_hazirla(istek: VeriIstegi, kimlik, kok) -> dict:
         if {"eksik", "karantina"}.intersection(r["kalite_bayraklari"])
     ]
     fiili = f[f["tarih"].between(kapsam_bas, son)]["tarih"]
+    referans = _veri_referansi(istek, kimlik, kok, meta, fiili)
+    if uyelik is not None:
+        referans.update(
+            evren_politikasi=istek.evren_politikasi,
+            uyelik_tablo_parmak_izi=uyelik["tablo_parmak_izi"],
+        )
     return {
+        **({"uyelik": uyelik} if uyelik is not None else {}),
         "piyasa": piyasa,
         "olaylar": olaylar,
         "kaynaklar": kaynaklar,
         "semboller": semboller,
         "gunler": [_tarih(t) for t in gunler[secilen]],
-        "referans": _veri_referansi(istek, kimlik, kok, meta, fiili),
+        "referans": referans,
         "kalite": {
             "bozuk_satirlar": hatalar,
             "karantina_araliklari": _karantina_araliklari(d, semboller, secilen),
