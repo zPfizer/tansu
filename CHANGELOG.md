@@ -17,6 +17,7 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ### Değişti
 
+- Motor sözleşmesinde kısmi çıkışlar açık işlemde korunuyor; gerçekleşmiş kısmi sonuçlar, kalan adet değerlemesi ve nihai işlem sonucu ayrıldı. (#82)
 - Yerel kapıya driftlint eklendi; inceleme girdileri, başarısız çalıştırma ve bir defalık tur sıfırlama kuralları güncel akışa uyarlandı. (#47, issue #53)
 - Sadakat raporunda hesap tarihi kaynak tarihinden ayrıldı; X arşivi atıfları ve çift Z adaylarının yorum sınırları açıklandı. (#61)
 - Issue ve PR yolları belirlendi; gerekçeli, yalnız izinli belge dosyalarını değiştiren PR'lar issue olmadan kabul ediliyor. (#79)
