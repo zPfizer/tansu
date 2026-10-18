@@ -9,6 +9,8 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 ### Eklendi
 
 - Yedi hesap sınırı sentetik sınır testleriyle korunuyor; kural kaydı durum testi kapsamı korunarak hızlandırıldı. (#109)
+- Sürümlü BIST 30 başvuru tablosu, tarihli üyelik kanıtı ve giriş günü denetimi eklendi; eksik kapsam koşuyu durdurur, eski evren politikaları korunur. (#86)
+- Kayıtlı görüntü, piyasa kayıtları ve çift girdileri ortak veri motorunda hazırlandı; eski iki kalite politikası ve manifest doğrulaması korundu. (#85)
 - Havuzdaki kalan 1.259 not okundu; ek kaynaklar, yeni okumalar ve gerekçeli kapsam dışı kayıtları belgelere işlendi. (#59)
 - Yeni motorun davranış sözleşmesi; bağımsız işlem, dönem, kayıt ve motor sınırları ile açık yöntem ve sahip kapıları belgelendi. Eski politikalar korundu. (#82)
 - Modül 1'in dokuz parçasını sade Türkçeyle, tarihli Tansu alıntıları ve henüz olmayan işlerin işaretleriyle açıklayan bağımsız sayfa eklendi. (#72)
@@ -36,6 +38,10 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 - Bilgisayarda yalnız değişen işle ilgili testler çalışıyor. Tüm testler GitHub'da çalışıyor.
 - GitHub'daki otomatik kontroller yalnız Windows'ta çalışıyor.
 - Kod incelemesi artık OpenAI Codex eklentisiyle yapılıyor.
+
+### Düzeltildi
+
+- Veri katmanının motor katmanına ters bağımlılığı kaldırıldı; karantina süresinin tek sahibi veri katmanı oldu, değer ve davranış korundu. (#85)
 
 ### Kaldırıldı
 

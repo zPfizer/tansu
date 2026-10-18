@@ -10,12 +10,12 @@ from dataclasses import dataclass, replace
 import pandas as pd
 
 from tansu import aileler, gostergeler
+from tansu.veri import KARANTINA_GUN, UyelikKapsamHatasi, VeriHatasi
 
 STOP_ATR = 2.0  # TASARIM 5.5: acil stop = giriş - 2 ATR
 ETKIN_ATR = 1.5  # `dip` kuralı giriş + 1,5 ATR görülünce etkin olur
 YARI_ATR = 3.0  # `atr3` yarı satış seviyesi: giriş + 3 ATR
 BASABAS_R = 1.5  # yüksek giriş + 1,5 R görülünce stop girişe çıkar
-KARANTINA_GUN = 250  # TASARIM 5.1: karantinadan sonra yeni sinyal yok
 ATR_N = 14
 
 
@@ -46,6 +46,7 @@ class Pozisyon:
         frozenset()
     )  # tetiklenmiş farklı senaryolar (`dip`, `rsi70`, `rsi50`, `sma50`)
     yari_bekleyen: bool = False  # yarı satış tetiklendi, ertesi AOF'ta dolar
+    uyelik_kaniti: dict | None = None  # TASARIM 5.15: yalnız tarihli üyelik yolunda
     kar: bool = False  # `rsi70` önşartı (KURALLAR §3 Modül 1, rsi70 "Etkinleşme önşartı"): girişten sonra bir kapanış hem giriş fiyatının hem SMA50'nin üstünde oldu; giriş günü sayılmaz
 
 
@@ -272,8 +273,13 @@ class Zincir:
         mumlar: pd.DataFrame,
         ayar: aileler.Parametre = aileler.Parametre(),
         kurulum=None,
+        *,
+        uyelik=None,
+        sembol=None,
     ):
         self.mumlar, self.ayar, self.kurulum = mumlar, ayar, kurulum
+        self.uyelik, self.sembol = uyelik, sembol
+        self.uyelik_retleri = []
         self.satirlar = [
             {**s, "tarih": t}
             for t, s in zip(mumlar.index, mumlar.to_dict("records"), strict=True)
@@ -312,22 +318,57 @@ class Zincir:
         """(kapanmış pozisyonlar, düşen sinyal sayısı): tablo kurmadan; K1 çok hissenin pozisyonlarını tek tabloda toplar."""
         kb = _kutu_hedef(self.kurulum if kurulum is None else kurulum)
         kapali, dusen, blok = [], 0, 0
+        self.uyelik_retleri = []
         for i in sorted(set(konumlar)):
             if i < blok or self.engelli[i]:
+                continue
+            kanit, ret = self._uyelik_girisi(i)
+            if ret is not None:
+                self.uyelik_retleri.append(ret)
+                dusen += 1
+                blok = i + 1
                 continue
             p, j = self.tek(i, kb.get(self.satirlar[i]["tarih"], (None, None)))
             if p is None or p.neden == "iptal":
                 dusen += 1
                 blok = len(self.satirlar) if p is None else j
             else:
+                if kanit is not None:
+                    p = replace(p, uyelik_kaniti=kanit)
                 kapali.append(p)
                 blok = len(self.satirlar) + 1 if j is None else j
         return kapali, dusen
 
+    def _uyelik_girisi(self, i):
+        """Sinyal ve giriş günü ayrı kalır; çıkışa uygulanmaz (TASARIM 5.15)."""
+        if self.uyelik is None or i + 1 == len(self.satirlar):
+            return None, None
+        sinyal, giris = (
+            self.satirlar[j]["tarih"].date().isoformat() for j in (i, i + 1)
+        )
+        for tarih, neden in (
+            (sinyal, "sinyal_gununde_uye_degil"),
+            (giris, "giris_gununde_uye_degil"),
+        ):
+            gun = self.uyelik["gunler"][tarih]
+            if self.sembol not in gun["semboller"]:
+                return None, {
+                    "sembol": self.sembol,
+                    "sinyal_tarih": sinyal,
+                    "giris_tarih": giris,
+                    "neden": neden,
+                    "uyelik_surumu": self.uyelik["uyelik_surumu"],
+                    "uyelik_kaniti": gun,
+                }
+        return next(k for k in gun["kanitlar"] if k["sembol"] == self.sembol), None
+
     def calistir(self, konumlar, kurulum=None) -> tuple:
         """(işlem tablosu, düşen sinyal sayısı); `islemler(mumlar, sinyaller, ayar, kurulum)` ile aynı."""
         kapali, dusen = self.kapali(konumlar, kurulum)
-        return _tablo(kapali), dusen
+        tablo = _tablo(kapali)
+        if self.uyelik is not None:
+            tablo["uyelik_kaniti"] = [p.uyelik_kaniti for p in kapali]
+        return tablo, dusen
 
 
 def _tablo(pozisyonlar) -> pd.DataFrame:
@@ -412,33 +453,85 @@ def _mumlar_kur(anlik, sembol, p, atr_n) -> pd.DataFrame:
     return m
 
 
+def _uyelik_kosusu(anlik, paket):
+    """E1 kanıtı koşunun her değerlendirme gününü kapsar (TASARIM 5.15)."""
+    u, ref = paket["uyelik"], paket["referans"]
+    if (
+        ref["goruntu_id"] != anlik.kimlik
+        or ref["uyelik_surumu"] != u["uyelik_surumu"]
+        or ref["uyelik_tablo_parmak_izi"] != u["tablo_parmak_izi"]
+        or ref["evren_politikasi"] != u["evren_politikasi"]
+    ):
+        raise VeriHatasi("koşunun veri/üyelik referansı uyuşmuyor")
+    bas, son = (pd.Timestamp(ref["istenen_donem"][ad]) for ad in ("baslangic", "bitis"))
+    tarihler = anlik.gunler[(anlik.gunler >= bas) & (anlik.gunler <= son)]
+    eksik = []
+    for t in tarihler:
+        tarih = t.date().isoformat()
+        gun = u["gunler"].get(tarih, {"semboller": [], "kanitlar": []})
+        semboller = set(gun["semboller"])
+        if len(semboller) != 30 or semboller != {k["sembol"] for k in gun["kanitlar"]}:
+            eksik.append(tarih)
+    if eksik:
+        raise UyelikKapsamHatasi(u["uyelik_surumu"], eksik)
+    return u, bas, son
+
+
 def sinama(
-    anlik, p: aileler.Parametre = aileler.Parametre(), atr_n: int = ATR_N, uye=None
+    anlik,
+    p: aileler.Parametre = aileler.Parametre(),
+    atr_n: int = ATR_N,
+    uye=None,
+    *,
+    veri_paketi=None,
 ) -> tuple:
     """Anlık görüntünün sembolleri için (işlem listesi, düşen sinyal sayısı).
 
     `uye`: (sembol, tarih) tablosu (`simulator.uyeler`); verilirse yalnız o hisse-günlerdeki sinyaller motora girer,
     yani simülatörün alabileceği sinyaller (TASARIM 5.6 evren süzgeci). `p` aynı zamanda çıkış ayarıdır; kutu stopu
-    ya da hedef kullanan ayarda kurulum bilgisi de motora girer."""
-    parcalar, dusen = [], 0
+    ya da hedef kullanan ayarda kurulum bilgisi de motora girer.
+    `veri_paketi`: E1 yanıtıyla tarihli üyelik denetimi (TASARIM 5.15); sonuç attrs alanı
+    veri referansını ve üyelik retlerini, işlem satırı giriş kanıtını taşır."""
+    parcalar, dusen, retler = [], 0, []
+    uyelik = None
+    if veri_paketi is not None:
+        if uye is not None:
+            raise VeriHatasi("eski üyelik tablosu ile E1 üyeliği birlikte seçilemez")
+        uyelik, bas, son = _uyelik_kosusu(anlik, veri_paketi)
     gunler = None if uye is None else uye.groupby("sembol")["tarih"].agg(list)
     for s in anlik.fiyat["sembol"].unique():
+        if veri_paketi is not None and s not in veri_paketi["semboller"]:
+            continue
         if gunler is not None and s not in gunler.index:
             continue
         m = mumlar(anlik, s, p, atr_n)
+        if uyelik is not None:
+            m = m.loc[:son]
         f = m.dropna(subset=["kapanis"])
         sig = aileler.sinyal(f, p)
+        if uyelik is not None:
+            sig = sig[sig >= bas]
         if gunler is not None:
             sig = sig[sig.isin(gunler[s])]
         # ponytail: kurulum ikinci kez hesaplanır (sinyal zaten onu hesaplamıştı); yalnız kutu stopu ve hedef varyantlarında
-        t, d = Zincir(m, p).calistir(
+        zincir = Zincir(m, p, uyelik=uyelik, sembol=s)
+        t, d = zincir.calistir(
             m.index.get_indexer(sig), kurulum_bilgisi(f, p)
         )  # `islemler` ile bire bir (test), ama tek geçişte hızlı
         if len(t):  # boş tablolar sütun türünü object'e bozar
             parcalar.append(t.assign(sembol=s))
         dusen += d
-    return (
+        retler.extend(zincir.uyelik_retleri)
+    sonuc = (
         pd.concat(parcalar, ignore_index=True)
         if parcalar
         else _tablo([]).assign(sembol=[])
-    ), dusen
+    )
+    if uyelik is not None:
+        sonuc.attrs.update(
+            uyelik_surumu=uyelik["uyelik_surumu"],
+            evren_politikasi=uyelik["evren_politikasi"],
+            veri_referanslari=[veri_paketi["referans"]],
+            uyelik_retleri=retler,
+        )
+    return sonuc, dusen

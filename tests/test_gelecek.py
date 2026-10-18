@@ -37,6 +37,67 @@ KESIM = [
 BAS = "2013-12-02"
 
 
+def test_bist30_gelecekteki_uyelik_degisse_de_onceki_liste_degismez(monkeypatch):
+    istek = veri.UyelikIstegi(
+        ("2021-02-05", "2021-04-01"), "donemsel_bist30_v1", "bist30_2021_2025_v1"
+    )
+    once = veri.uyelik_hazirla(istek)
+    oku = pd.read_csv
+
+    def gelecek_degisti(*args, **kwargs):
+        t = oku(*args, **kwargs)
+        t.loc[t["sembol"] == "ASTOR", "sembol"] = "GELECEK"
+        return t
+
+    monkeypatch.setattr(pd, "read_csv", gelecek_degisti)
+    sonra = veri.uyelik_hazirla(istek)
+    assert (
+        "GELECEK"
+        in veri.uyelik_hazirla(
+            veri.UyelikIstegi(
+                ("2023-07-03",), istek.evren_politikasi, istek.uyelik_surumu
+            )
+        )["gunler"]["2023-07-03"]["semboller"]
+    )
+    for tarih in istek.tarihler:
+        assert once["gunler"][tarih]["semboller"] == sonra["gunler"][tarih]["semboller"]
+        assert [k["kayit_id"] for k in once["gunler"][tarih]["kanitlar"]] == [
+            k["kayit_id"] for k in sonra["gunler"][tarih]["kanitlar"]
+        ]
+
+
+@pytest.mark.parametrize("politika", ["legacy_portfoy_v1", "legacy_tansu_v1"])
+def test_veri_motoru_cift_girdileri_onek_degismez(politika):
+    gunler = pd.date_range("2024-01-01", periods=5)
+    C = np.array(
+        [[10.0, 20.0], [np.nan, 21.0], [np.inf, 22.0], [13.0, 0.0], [14.0, 24.0]]
+    )
+    A = C.copy()
+    F = {"I": np.ones((5, 2), dtype=bool)}
+    F.update({k: np.zeros((5, 2), dtype=bool) for k in ("T", "B", "Kar")})
+    F["I"][1, 0] = False
+    F["Kar"][3, 1] = True
+    tam = veri.cift_girdileri(gunler, C, A, F, politika)
+    for son in range(1, 6):
+        kesik = veri.cift_girdileri(
+            gunler[:son], C[:son], A[:son], {k: v[:son] for k, v in F.items()}, politika
+        )
+        for ad in (
+            "C",
+            "A",
+            "I",
+            "T",
+            "B",
+            "Kar",
+            "G",
+            "E",
+            "SA",
+            "Cf",
+            "son_gecerli_fiyat_tarihi",
+        ):
+            np.testing.assert_array_equal(kesik[ad], tam[ad][:son], err_msg=ad)
+
+
 @pytest.fixture(scope="module")
 def tam():
     return denetim.dunya(11, hisse=24, gun=900)

@@ -13,7 +13,7 @@ import numpy as np
 import pandas as pd
 from statsmodels.tsa.stattools import coint
 
-from tansu import cift, evren, motor, simulator
+from tansu import cift, evren, simulator, veri
 
 AILE = "cift_rotasyonu"
 
@@ -88,15 +88,6 @@ def hedef(Kc, y, x, p=Parametre()) -> np.ndarray:
     dz = cift.dz(z)
     return np.where(
         (z <= -p.z_esik) & (dz > 0), 1, np.where((z >= p.z_esik) & (dz < 0), -1, 0)
-    )
-
-
-def _bayrak(g, ad, gunler, kolonlar) -> pd.DataFrame:
-    return (
-        g.pivot(index="tarih", columns="sembol", values=ad)
-        .reindex(index=gunler, columns=kolonlar)
-        .fillna(False)
-        .astype(bool)
     )
 
 
@@ -368,21 +359,12 @@ def hazirla(anlik, evr, bas=simulator.BASLANGIC, p=Parametre(), aday_esik=None) 
     kol = {h: j for j, h in enumerate(z["C"].columns)}
     gt = anlik.gun_tablosu
     gt = gt[gt["sembol"].isin(kol)]
-    bayrak = {
-        k: _bayrak(gt, ad, gunler, list(kol))
-        for k, ad in (
-            ("I", "islem"),
-            ("T", "kilit_tavan"),
-            ("B", "kilit_taban"),
-            ("Kar", "karantina"),
-        )
-    }
-    E = (
-        bayrak["Kar"]
-        .astype(float)
-        .rolling(motor.KARANTINA_GUN, min_periods=1)
-        .max()
-        .astype(bool)
+    ortak = veri.cift_girdileri(
+        gunler,
+        z["C"],
+        z["A"],
+        veri.cift_bayraklari(gt, gunler, list(kol)),
+        "legacy_portfoy_v1",
     )
     onbellek = {}
 
@@ -397,15 +379,10 @@ def hazirla(anlik, evr, bas=simulator.BASLANGIC, p=Parametre(), aday_esik=None) 
         "kol": kol,
         "g": z["g"],
         "rb": z["rb"],
-        "C": z["C"].to_numpy(),
-        "A": z["A"].to_numpy(),
+        "C": ortak["C"],
+        "A": ortak["A"],
         "Lq": z["Lq"].to_numpy(),
-        "I": bayrak["I"].to_numpy(),
-        "T": bayrak["T"].to_numpy(),
-        "B": bayrak["B"].to_numpy(),
-        "Kar": bayrak["Kar"].to_numpy(),
-        "E": E.to_numpy(),
-        "SA": z["A"].where(bayrak["I"] & ~bayrak["Kar"]).ffill().to_numpy(),
+        **{k: ortak[k] for k in ("I", "T", "B", "Kar", "E", "SA")},
         "hedef": hedef_,
         "olu": {h: gunler.get_loc(gun) for h, (_, gun) in kg.items() if gun in gunler},
     }
