@@ -50,6 +50,18 @@ Not: YORUM: bu katalogda ekranlar Tansu'ya atfedilen araç çıktıları olarak 
 - Ek kaynaklar (X arşivi, 16.10):
   - `tweet-swing-pivot-oteleme-backtest-2093465820932235288` — BOM sinyalinin backtest modülünde pivotun gerçekten swing low olduğundan emin olmak için pivot X bar ötelenir (pivot teyit gecikmesi, ileri bakma sızıntısını önler): "noktanin gerçekten swing lowpivot olduğundan emin olmak için X bar kadar öteleyerek kodladım" (Ham). X değeri yok; Tansu hafta sonu ayrıntılı bakacağını söyler, sonuç yok. Görselde HVN, Gaussian Fit, HH, BOS, D-HL, BOM etiketleri var (görsel metni). YORUM: bölümdeki `pivot_known_at = i + R` fikriyle aynıdır; R değeri belli değil; BOM kuralı A §16'da tanımsız kalır.
   - `tweet-zigzag-atr-gridsearch-secimi-1908636901365407759` — Zikzak eşiğinin türü: Tansu zikzak sistemini ATR ile kurar ve ATR periyodunu hisse bazında gridsearch ile seçer. "Artık PnL ya da profit factor'e göre tercihimi yapıyorum." (Ham). Döküm (görsel, açıldı): sütunlar Symbol, ATR_Period, Total_PnL, Win_Rate (%), Profit_Factor, Trades; ATR periyotları 5–34; işlem sayısı 3–12 (küçük örneklem); en düşük PF 3,0 (YORUM: PF ≥ 3 süzgeci, E K19 ile uyumlu); Symbol sütunu boş, döküm hangi hisseye ait belli değil. Görsel 1: mum grafiği, siyah zikzak çizgisi, yeşil ▲ ve kırmızı ▼ işaretleri (görsel, açıldı). Zikzak eşiğinin ATR çarpanı, arama aralığının adımı ve örneklem dışı doğrulama yok. Hisse bazlı optimizasyon: karar Levent'te bekliyor (E K29). Parametre: Zikzak eşiği = ATR tabanlı; ATR periyodu hisse bazında gridsearch ile seçilir, görülen aralık 5–34; seçim ölçütü PnL veya profit factor (Ham; görsel, açıldı)
+  - `tweet-atr-geri-cekilme-dip-tepe-algoritmasi-1911038743839900154` — Okuma (YORUM): ATR kadar tepeden düşüş tek başına dip onayı değildir; yukarı tepki gerekir. Ham: "Sadece fiyatın 97.5 seviyesinin altına düşmesi tek başına yeterli değil." ve "Fiyat o seviyeye düştükten sonra yukarı yönlü bir tepki vermesi gerekir." 100 tepe ve 2,5 ATR örnek değerleridir.
+  - `tweet-atr-yon-degisimi-dip-tepe-1927454690960101506` — Okuma (YORUM): ATR dip/tepe çalışması alım ve satış bölgesi olarak sunulur. Ham: "Dip ➡️ Alım bölgesi" ve "Tepe ➡️ Satış bölgesi". Sınama beyanı: "Biz burada train/test bölmedik çünkü neyi neye karşı test edeceğiz?" Bu beyan genelleştirilmiş doğrulama kanıtı değildir.
+  - `tweet-harmonik-formasyon-zigzag-sigma-1843421214317945155` — Okuma (YORUM): Harmonik kodlama çıktısı farklı sigma değerlerini listeler. Açılan G1: "Sigma 0.015: Completed.", "Sigma 0.02: Completed." ve "Sigma 0.025: Completed." Bu çıktı tek genel sigma seçimi veya başarı oranı değildir.
+  - `tweet-kelebek-swing-15-gun-d-hedef-2091947979921891468` — Okuma (YORUM): XU100 kelebek örneğinde pencerenin birimi açıkça gündür. Ham: "15 günlük swing penceresi ile yapılmıştır" (24.08.2026). Bu örnek, diğer harmonik tarayıcıların aynı ayarı kullandığını kanıtlamaz.
+  - `tweet-kirmizi-tepe-yesil-dip-isaret-okuma-1909002131635331358` — Kural: Bu araçtaki dip/tepe işaretleri sinyal sayılmaz. Ham: "kırmızı toplar tepeler yeşil toplar dipler yani bunları sinyal olarak görmemek lazım." Devamı: "dip oluşturmadı ise yeni tepeleri işaretliyor." (06.04.2025).
+  - `tweet-mum-govde-igne-destek-direnc-1764349976069501071` — `tweet-mum-govde-igne-destek-direnc-1764349976069501071` (2024-03-03): Ham: "mumların gövde kalınlıklarını iğne uzunluklarını bir önceki mumla olan mesafesini". Okuma (YORUM): destek/direnç için mum gövdesi, fitili, mesafesi ve çevresindeki mum sayısı değerlendirilir.
+  - `tweet-pivot-r1-s1-seviyeleri-kod-1848461886192271748` — `tweet-pivot-r1-s1-seviyeleri-kod-1848461886192271748` (2024-10-21): Açılan görsel: "data_ohlc['Pivot'] = (data_ohlc['High'] + data_ohlc['Low'] + data_ohlc['Close']) / 3". Okuma (YORUM): burada aritmetik pivot P=(H+L+C)/3, R1=2P−L ve S1=2P−H hesaplanır; kapanışın her seviyenin altında olup olmadığı işaretlenir. Bu hesap swing-pivot tespiti değildir; aynı terimin farklı kullanımıdır.
+  - `tweet-repaint-free-peak-trough-detector-1908628358008889494` — - `tweet-repaint-free-peak-trough-detector-1908628358008889494` (2025-04-05; Ham): Pivot teyidi (Ham): "Önce fiyatın dönmesini bekliyor." "Fiyat yeterince ters yönde hareket edince" karar verir. Veri sınırı: "Ve bu kararı ileriye bakmadan, sadece o günün ve öncekinin verisiyle veriyor."
+  - `tweet-repaint-free-peak-trough-detector-1908945733903892945` — - `tweet-repaint-free-peak-trough-detector-1908945733903892945` (2025-04-06; Ham): Ham: "Her bir tepe veya dip tespiti, sadece o anki ve geçmişteki fiyat hareketlerine dayanıyor." Okuma (YORUM): repaint-free iddiasıdır; paylaşılan döngü ifadesi tek başına kodun bağımsız doğrulaması değildir.
+  - `tweet-seviye-1-tepe-dip-taramasi-1908991599969026513` — - `tweet-seviye-1-tepe-dip-taramasi-1908991599969026513` (2025-04-06; Tansu'nun X gönderisi). Ham: "Şimdi bu forte kardeşimiz bir tepe oluşturmuş" / "Bunun dibi oluşunca ne olacak benim taramama yakalanacak:)". Okuma (YORUM): FORTE tepe sonrası dip bekleme örneğidir.
+  - `tweet-seviyeli-uc-nokta-tepe-dip-1908897010742067310` — - `tweet-seviyeli-uc-nokta-tepe-dip-1908897010742067310` (2025-04-06; Tansu'nun X gönderisi). Ham: "Btc hem orta vadede hem de uzun vadede dip oluşumu tamamlanmamış...". Okuma (YORUM): çok ölçekli dip teyidi bekleme örneğidir.
+  - `tweet-son-10-gun-dip-taramasi-1924944817441710378` — Okuma (YORUM): Son 10 günlük dip taramasının kullanım ayrımı. Ham: “Son 10 gün içinde dip yapmış hisseler taramasına bir örnek.”, “Level 1 taramasıdır yani day trade için uygundur.” ve “Trend takibi için level2 taraması uygundur sinyal sayısı daha azdır.”
 
 ---
 
@@ -132,6 +144,8 @@ Not: YORUM: bu katalogda ekranlar Tansu'ya atfedilen araç çıktıları olarak 
 - Kaynak güveni: etiketler, D formülü ve kural maddeleri birinci el (görsel ve Ham; ölçümle).
 
 ---
+- Ek kaynaklar (X arşivi, 18.10):
+  - `tweet-ab-cd-hedef-bozulma-seviyesi-call-duvari-2090898115452698762` — Okuma (YORUM): Altın örneğinin fiyatları örneğe özgüdür. Ham: "call duvarımız 4909USD bu artık net", "büyük formasyona göre ana hedef 6072" ve "4909 sonrası bir realizasyon olursa ve fiyat 3913$ altına inerse bu formasyon bozulur ve artık hedef 3575$ olur".
 
 ## 4. AB=CD hedef merdiveni (Hedef 0.618 / 1.000 / 1.618)
 
@@ -286,6 +300,13 @@ Not: YORUM: bu katalogda ekranlar Tansu'ya atfedilen araç çıktıları olarak 
   - `tweet-gartley-fibonacci-oranlari-prz-rr-1995826149021110275` — Tansu'nun kendi gönderisinde Gartley kural seti ve Excel tablosu (tekrar; §7'deki Eğitim tablosuyla aynı içerik). Ham: PRZ "XA 0.786 ile BC uzantısının kesiştiği dar bir fiyat aralığıdır"; "Kural: Eğer Ödül / Risk < 1.5 ise (veya stratejinize göre 2), formasyon teknik olarak doğru olsa bile işleme girilmez"; BIST için %3-%5 tolerans önerisi; risk = |D − X| (Ham). Görselde stop satırının Excel mantığı: "SL = X_Fiyat (veya X - ATR*2)" (görsel, açıldı). Ham: "Verelim mi şimdi bu akşam bir gartley..." (sonuç yok). Parametre: Stop (Excel mantığı) = X veya X − 2×ATR (görsel, açıldı); A noktası = X'ten sonraki en yüksek/düşük nokta (görsel, açıldı); tolerans = %3–5 (Ham); min R:R = 1,5 veya 2 (Ham)
   - `tweet-harmonik-0-4-fibonacci-oranlari-1952841278686937489` — Tansu'nun koda dökmek isteyene verdiği 0-4 şeması (yanıt gönderisi): nokta 4, 0→1 hamlesinin "0.786" geri alımındadır; nokta 3, 1→2 bacağının "0.382 or 0.886" geri alımındadır; nokta 4, 2→3 bacağının "1.272 or 1.618" uzantısındadır (görsel, açıldı). Ham: "Buna göre yazarsınız kodunuzu". Eşleme 0=X, 1=A, 2=B, 3=C, 4=D (YORUM); §7'deki BC/AB, BC uzantısı ve D oranlarıyla aynıdır. "or" iki uç mu, iki ayrı değer mi belli değil (YORUM); 0,618 (AB/XA) şemada yok. Parametre: BC/AB = 0,382 veya 0,886; D = BC uzantısı 1,272 veya 1,618; D = XA 0,786 (görsel, açıldı; nokta eşlemesi YORUM)
   - `tweet-harmonik-ad-fibonacci-kar-alma-1999959077716394236` — TP kuralı Tansu'nun kendi yanıtında sözle: "kâr alma (TP) hedeflerini belirlemek için Fibonacci A noktasından D noktasına çekilir." TP1 = A-D hareketinin 0,382'si, TP2 = 0,618'i (Ham). §7'nin Eğitim tablosuyla (TP1 = D + (A−D)×0,382; TP2 = D + (A−D)×0,618) uyumlu; standart Fibonacci aracında 0 = D'dir (YORUM). Formasyon türü ve pozisyon payı (%50 / kalan) bu gönderide yok. Parametre: TP1 = A–D hareketinin 0,382'si; TP2 = A–D hareketinin 0,618'i (Ham)
+  - `tweet-bullish-gartley-tespiti-1924548476827758734` — Ham: "Gel bakalım gartley kardeş:)" (19.05.2025). Açılan grafikte "Bullish Gartley Found for", "XA: 1.56", "BC: 0.98", "Fibo 0.618: 22.08", "Fibo 0.786: 21.88" etiketleri bulunur. Okuma (YORUM): Bunlar tek grafiğin bacak ve Fibonacci değerleridir; genel oran toleransı olarak kullanılmaz.
+  - `tweet-demand-supply-bolgesi-gartley-d-hedef-2091607448469533021` — SOKE için izleme seviyeleri (23.08.2026): “12.36 / 13.96 ya gel bakarız” (Ham). Okuma (YORUM): bunlar örneğe özgü seviyelerdir; Gartley oranı ya da genel giriş eşiği değildir.
+  - `tweet-gartley-carney-pesavento-esnek-gecis-2092334867405008976` — `tweet-gartley-carney-pesavento-esnek-gecis-2092334867405008976` (2026-08-25): Esnek sisteme geçiş: "sistem carrney rakamlarinin gerceklesmeyecegini gordugunde esnek versiyona gecer direk" (Ham içindeki Tansu alıntısı). Okuma (YORUM): Carney/Pesavento geçiş gerekçesini belirtir, mevcut oranları değiştirmez.
+  - `tweet-gartley-guclu-teyit-ret-etiketi-2092318619321446897` — Okuma (YORUM): Beklenen dönüşün gelmediği örnek. Ham: "Bazen donmesi gereken yerden ucar giderrrr". Açılan görselde "RET (beklenen dönüş gelmedi)" ve "GÜÇLÜ TEYİT (A kırıldı)" etiketleri birlikte bulunur.
+  - `tweet-gartley-talep-bolgesi-tp-stop-2090515278199136740` — Okuma (YORUM): KUYAS örneğinde dört hedefli ayrı çıktı. Ham: "Şöyle bir gartley var". Açılan görsel etiketleri: "TP4: 72.18", "TP3 (C): 70.00", "TP2: 66.94", "STOP: 60.50". Örnek seviyeleri genel hedef formülü değildir.
+  - `tweet-gartley-tarama-tablo-d-hedef-stop-x-2091620234339754065` — Okuma (YORUM): Tarayıcının somut durum tablosu. Ham: "gartley". Açılan G1 sütunu "Stop (X)", LUKSK satırında "AL (Buy)", "TAMAMLANDI", "TEPKI_VERDI", giriş 86.95 ve stop 73.00 gösterir. Bu değerler örnek çıktıdır.
+  - `tweet-harmonik-xabcd-fibo-tespiti-1902100801641918827` — Okuma (YORUM): Bu tek Gartley örneği genel oran veya tolerans değişikliği getirmez. Ham: "gartley'in güzelliği:)" (18.03.2025).
 
 ---
 
@@ -322,6 +343,20 @@ Not: YORUM: bu katalogda ekranlar Tansu'ya atfedilen araç çıktıları olarak 
 - Kaynak güveni: DOAS seviyeleri birinci el. ALARK birinci el (Ham), ama oran vermez.
 
 ---
+- Ek kaynaklar (X arşivi, 18.10):
+  - `tweet-butterfly-pivot-destek-direnc-seviyeleri-1977443352464212078` — Ham: "Kelebek severiz..." (12.10.2025). Açılan görsel: "Bullish Butterfly Found for CANTE.IS", "Completion: 2025-10-09 00:00:00", "PIVOT: 2.1", "R3: 2.34 | R2: 2.25 | R1: 2.19", "S1: 2.04 | S2: 1.95 | S3: 1.89". Okuma (YORUM): Bu seviyeler CANTE örneğine aittir; genel pivot hesap formülünü belirlemez.
+  - `tweet-harmonik-kelebek-fibo-hedef-stop-2001047262479127028` — Okuma (YORUM): AHGAZ için hedef ve stop yönetimi örneği. Ham: "Stop olmasını da bilmemiz lazım". Açılan G1: "Hedef 1 (0.382): 25.95", "Hedef 2 (0.618): 26.83" ve "Stop Loss: 23.96". Örnek seviyeleri genel formül değildir.
+  - `tweet-harmonik-kelebek-hedef-stop-2001060547618300157` — Okuma (YORUM): PRZMA dört hedefli sonuç örneği. Ham: "Tamda hedeflere ulaşmış". Açılan G1: "TP4 (Ext): 13.51", "TP3 (C): 13.18", "TP2: 12.71", "TP1: 12.43" ve "STOP: 11.78". Kaynak iddiası bütün işlemlerin başarısı değildir.
+  - `tweet-harmonik-kelebek-tp-stop-seviyeleri-2090514210228740261` — Okuma (YORUM): DERIM dört hedef ve stop çizgili Kelebek örneği. Açılan G1: "TP4: 40.76", "TP3 (C): 39.50", "TP2: 37.74", "TP1: 36.64" ve "STOP: 34.19". Bunlar tek grafiğin düzeyleridir.
+  - `tweet-harmonik-tarama-alfa-beta-suzme-1884663624578589117` — Okuma (YORUM): Bu not harmonik adayları rasyolarla karşılaştırma örneğidir. Ham: "Harmonik taramadan butterfly çıktı. Devamı da değerli rasyolar. (Diğer taramadan çıkan harmonikler ile karşılaştrma)" (29.01.2025). Karşılaştırma, genel bir eleme eşiği olarak kullanılmaz.
+  - `tweet-harmonik-xabcd-fibo-tespiti-1904247058326008128` — Okuma (YORUM): Tamamlanmış formasyonun tarihli örneği. Ham: "21'nde tamamlanmış butterfly formasyonumuz. Çok tatlı" (24.03.2025). Örnek bacakları genel parametre yapılmaz.
+  - `tweet-kelebek-al-d-1272-hedef-trend-kirilim-2092304472772874620` — Okuma (YORUM): ICBCT için hedefe gelmeden bekleme örneği. Ham: "Gelsin bakarız:)" ve "acelemiz yok" (25.08.2026). Bu ifade mevcut giriş ve stop hesabını değiştirmez.
+  - `tweet-kelebek-carney-1272-d-hedef-1618-risk-2091513071982219698` — Okuma (YORUM): KRPLS kısa yönlü Carney örneği. Ham: "shortcular buyurun" (23.08.2026). Açılan G1 başlığı: "Kelebek Formasyonu (SAT (Sell))" ve "SİSTEM: Carney"; D etiketi: "D: 11.20 [TAMAMLANDI]". Bu tarihli D değeri genel hedef oranı yapılmaz.
+  - `tweet-kelebek-d-supply-bolgesi-hacim-profili-2091571953781846246` — Okuma (YORUM): KRPLS kısa yönlü örneğinde arz bölgesi ek bağlamdır. Ham: "tam arz bölgesinde" ve alıntılanan gönderide "shortcular buyurun" (23.08.2026). Bu birliktelik genel zorunlu filtre olarak uygulanmaz.
+  - `tweet-kelebek-formasyon-pullback-hedef-2092342249690468649` — Okuma (YORUM): DGATE için farklı resimlerin hedefleri ayrı tutulur. Ham: "DGATE pullback yaparsa kucuk resme bakmamiz lazim hedef 83 kusur" ve "yonunu yukari cevirirse daha buyuk resme bakmak gerekecek ki hedef" (25.08.2026). İkinci hedef cümlesi tamamlanmaz.
+  - `tweet-kelebek-formasyonu-dip-d-noktasi-2091514074601320702` — Okuma (YORUM): Dipte D oluşumu sonrası long sinyali olasılıklı anlatılır. Ham: "var bir tane long sinyali şu anda çıktı:) tam dipte D oluşmuş" ve "tabi bunlar hep ihtimaller. piyasanın ne yapacağını kimse bilemez." (23.08.2026).
+  - `tweet-kelebek-formasyonu-fib-hedef-2092671392810487984` — Okuma (YORUM): KCHOL örneğinde bekleme yaklaşımı. Ham: "Gelirse alırız acele etmeyin." (26.08.2026). Bu cümleden yeni fiyat, stop veya Fibonacci oranı çıkarılmaz.
+  - `tweet-kelebek-satis-d-tamamlandi-trend-kirilim-2092304119780249834` — Kural: Formasyon tek başına yeterli sayılmaz. Ham: "Tek başına formasyon bir şey ifade etmez. detaylar kazandırır" (25.08.2026). Okuma (YORUM): GENIL kısa yönlü örneğinde detay inceleme uyarısıdır.
 
 ## 9. X–B trend çizgisi kırılımı (D'ye kadar taktik pozisyon)
 
@@ -350,6 +385,10 @@ Not: YORUM: bu katalogda ekranlar Tansu'ya atfedilen araç çıktıları olarak 
 - Kaynak güveni: etiketler ve kural metni birinci el (görsel ve Ham).
 
 ---
+- Ek kaynaklar (X arşivi, 18.10):
+  - `tweet-bearish-butterfly-trend-kirilimi-d-hedef-2092661533012598904` — Okuma (YORUM): ALARK bearish butterfly tamamlanmadan D hedefi yönüne long örneğidir. Ham: "Strateji 125.42'ye kadar long fırsatı uyarısı verdi" ve "Ancak pullback yapar mı izlemek lazım."
+  - `tweet-gartley-carney-xabc-fib-trend-kirilim-2091451219659104540` — `tweet-gartley-carney-xabc-fib-trend-kirilim-2091451219659104540` (2026-08-23): ICBCT örneğinde bekleme: "Gelsin bakarız:)" ve "acelemiz yok" (Ham). Görsel: "X->B trend çizgisi son 10 günde AŞAĞI yönde KIRILDI" ve "Bullish/AL paternde CD bacağı aşağı olmalı - onay" (görsel açıldı). Okuma (YORUM): on günlük pencere bu çıktıdaki bilgi alanıdır.
+  - `tweet-kelebek-cd-bacagi-long-2092669995079647404` — Kural: Bearish kelebek oluşurken kısa vadeli long fırsatı ayrı değerlendirilir. Ham: "Bearish kelebek oluşumu yapıyor, kısa vade de long fırsat yapısı var" (26.08.2026). Okuma (YORUM): Oluşum yönü ile taktik pozisyon yönü aynı olmak zorunda değildir.
 
 ## 10. D sonrası tepki penceresi ve "belirsiz" sınıfı (10 gün / 20 bar)
 
@@ -377,6 +416,9 @@ Not: YORUM: bu katalogda ekranlar Tansu'ya atfedilen araç çıktıları olarak 
 - Kaynak güveni: 20 bar etiketi ve 10 gün birinci el (görsel ve Ham).
 
 ---
+- Ek kaynaklar (X arşivi, 18.10):
+  - `tweet-gartley-tarama-d-noktasi-10-gun-2091452539514331625` — Okuma (YORUM): D sonrası on günlük hareket beklentisini destekler. Ham: "1 tanesi D noktası oluştu artık 10 gün içinde hareket bekliyorum, hareket gelmezse sistem otomatik olarak belirsiz diyor".
+  - `tweet-harmonik-formasyon-orta-vade-hedef-1870900706536051069` — Okuma (YORUM): Harmonik hedef süresini tek güne indirgememe uyarısı. Ham: "harmonik formasyonların neticesi 1-2 günde olmaz, formasyon türüne göre hedef fiyatlar belirlenir, orta vadeli olur genelde major formasyonlar." On günlük tepki penceresini hedef vadesiyle eşitlemez.
 
 ## 11. D sonrası TP merdiveni (BALAT Siyah Kuğu): CD retracement
 
@@ -472,6 +514,11 @@ Not: YORUM: bu katalogda ekranlar Tansu'ya atfedilen araç çıktıları olarak 
 - Kaynak güveni: başlıklar ve metin alıntıları birinci el (görsel ve Ham).
 
 ---
+- Ek kaynaklar (X arşivi, 18.10):
+  - `tweet-derin-yengec-harmonik-tp-stop-2089770598620713304` — CCOLA Derin Yengeç örneğinde devam teyidi (18.08.2026): “Ancak talep noktasından başlayan hareketin devamı için trenin kırılmasında fayda var. izlenmeli” (Ham; kaynakta trenin yazıyor). Okuma (YORUM): trend kırılımını izleme düşüncesini destekler; mevcut Gartley oranlarının yerine geçmez.
+  - `tweet-gartley-talep-bolgesi-kesisimi-2090515769033461784` — Okuma (YORUM): Gartley ile talep bölgesi kesişiminin seçilmiş örneği. Ham: "Şu gartley iş yapar mı:)" ve "Tam talep bölgesinden." Soru biçimi sonuç veya garanti değildir.
+  - `tweet-gartley-yutan-boga-rsi-hacim-macd-1998449727399145947` — Okuma (YORUM): Gartley örneğinde mum, RSI ve hacim teyitleri birlikte anlatılır. Ham: "Güzel bir gartley", "yutan boğa mum formasyonu", "50 üzeri bir rsı" ve "artan hacim".
+  - `tweet-harmonik-beyaz-kugu-fibo-hedef-stop-2001318656471376008` — Okuma (YORUM): Beyaz Kuğu için ayrı hedef ve stop çıktısı. Açılan G1: "Hedef 1 (0.382): 2.75", "Hedef 2 (0.618): 2.80" ve "Stop Loss: 2.65". Bu VRGYO örneği başka harmoniklerin hedef formülünü değiştirmez.
 
 ## 14. Kanal bağlamı ve negatif delta (başarısız örnek dersi)
 
@@ -497,6 +544,9 @@ Not: YORUM: bu katalogda ekranlar Tansu'ya atfedilen araç çıktıları olarak 
 - Kaynak güveni: birinci el (görseller). Dersin kuralı ikinci el.
 
 ---
+- Ek kaynaklar (X arşivi, 18.10):
+  - `tweet-harmonik-formasyon-gosterge-teyidi-1983272525116170488` — Okuma (YORUM): Harmonik ve mumun birlikte oluşması da tek başına yeterli görülmez. Ham: "harmonik formasyonlar her zaman çalışmaz hatta mum formasyonu teyidi olsa bile çalışmayabilir." ve "Mutlaka diğer gösergelerden teyit alınmalıdır."
+  - `tweet-kanal-daralma-delta-hacim-2093102305797124238` — Kural: Kanal daralması delta hacim ile birlikte değerlendirilir. Ham: "kanal daralma oranlarını delta hacim ile hibrit değerlendirir iseniz çok anlamlı sonuçlar olabiliyor" (27.08.2026). Okuma (YORUM): Bu öneri başarı garantisi veya sayısal bir kapı olarak okunmaz.
 
 ## 15. Three Drives (Üç İtiş)
 
@@ -573,6 +623,8 @@ Not: YORUM: bu katalogda ekranlar Tansu'ya atfedilen araç çıktıları olarak 
   - `tweet-elliott-ikinci-dalga-hedef-1618-1984349202730926414` — Dalga 3 hedefi formülü görselde: "3. Dalga Hedef (W1*1.618): 1557.96 TL"; "Impulse (Start-1-2): +50.8% | 2. Dalga Düzeltmesi: -31.2%" (görsel, açıldı). Ham: "Bu kardeş %150 falan yapmış:D" (sonuç iddiası, doğrulanmadı). BRYAT'taki TP2 = C + 1,618×W1 ile aynı: çapa Dalga 2 sonu (ölçüm: P2≈869 + 1,618×(1264−837) ≈ 1560; piksel, YORUM). Parametre: Wave 3 hedefi = W2 sonu + 1,618 × W1 (W1*1.618; görsel, açıldı; çapa ölçümü YORUM); araç eşikleri W1 +%50,8, W2 -%31,2 (UFUK örneği)
   - `tweet-haftalik-dalga2-yuzde50-duzeltme-1984370009616105948` — Haftalık tarama filtresi, sözle: "Haftalık periyotta %50'lik düzeltme yapan 2. dalga dibindeki hisseler 3. itki dalgası için hazırlar"; "3. itki dalgası da en uzun dalgadır." (Ham). Eşik Dalga 2'nin %50 geri alımıdır; BRYAT bölgesinin (0,50–0,786) alt ucuyla uyumlu. %50 alt sınır mı, tam değer mi belli değil (YORUM). Sembol, giriş, stop, sonuç yok. Parametre: Haftalık Dalga 2 geri alımı = %50 (Ham; alt sınır mı tam değer mi belli değil, YORUM)
   - `tweet-haftalik-elliott-ikinci-dalga-hedef-1984370692436189464` — BINHO haftalık, aynı araç şablonuyla Dalga 3 hedefi (tekrar): "Impulse (Start-1-2): +84.7% | 2. Dalga Düzeltmesi: -31.5% | 3. Dalga Hedef: 18.77 TL", etiket "3. Dalga Hedef (W1*1.618)" (görsel, açıldı). Ham: "Hocam kod fena:)". Çapa kontrolü (hesap bizim): yüzdelerden uçlar çözülür (P0 ≈ 7,12; P1 ≈ 13,15; P2 ≈ 9,01); P2 = ikinci görüntüdeki 13.10.2025 haftalık kapanışı 9,01 (görsel, açıldı); 9,01 + 1,618 × 6,03 ≈ 18,77. Çapa = Dalga 2 sonu, kapanış serisiyle (YORUM). Sonuç yok. Parametre: Wave 3 hedefi = W2 sonu + 1,618 × W1 (başlık: W1*1.618; görsel, açıldı); BINHO: W1 +%84,7, W2 −%31,5, hedef 18,77 TL; çapa W2 sonu kapanışı 9,01 ile doğrulandı (hesap, YORUM)
+  - `tweet-elliott-dalga2-fvg-inverted-hammer-1989434409204736047` — ALKA Wave 2 ve FVG örneği (14.11.2025): “Fiyat, Elliott Dalga 2 düzeltmesini yapıyor.” ve “TC noktasında oluşan inverted hammer ise pastanın üzerindeki çilektir.” (Ham). Okuma (YORUM): mum adı kaynak beyanıdır; burada bağımsız mum doğrulaması yapılmadı.
+  - `tweet-elliott-fibo-618-fvg-cakisma-2000225551684870179` — Fibonacci ve FVG birleşimi (14.12.2025): “Eğer görseldeki 0.618 (veya 0.50) seviyesi, geçmişte bırakılan bir FVG kutusu ile çakışıyorsa” (Ham). Okuma (YORUM): alıntılanan açıklama bu çakışmayı alım bölgesi olarak yorumlar; %14 getiri paylaşımı seçilmiş sonuç beyanıdır.
 
 ---
 
@@ -666,6 +718,7 @@ Not: YORUM: bu katalogda ekranlar Tansu'ya atfedilen araç çıktıları olarak 
 - Ek kaynaklar (X arşivi, 16.10):
   - `tweet-elliott-ic-dis-sayim-confluence-2086920060254212344` — Konfluans bandı tanımı: "Elliot yaptınız, iç sayım ve dış sayım tekniği ile bir hedef belirlediniz ama %5 fibi bir sapma var. İşte o %5'lik alandır confluence alanı." (Ham, yanıt gönderisi). İki hedef (iç ve dış sayım) arasındaki sapma %5 kadar olursa, aralık konfluans bölgesidir. Parametre: Küme eşiği (yakınlık) = %5 Fibonacci sapması (Ham); yüzdenin birimi (fiyat mı, oran mı) belli değil (YORUM)
   - `tweet-fibonacci-genisleme-konfluans-bolgesi-1998871553984049576` — Tekrar, birinci el kaynak olarak: §19'daki dört CAT görseli Tansu'nun kendi X gönderisinde, tek cümleyle: "Bence lazım olabilir" (Ham, 10.12.2025). G4 açıldı: "31.2%" etiketi, 61.8 / 50.0 / 38.2 düzeyleri, x1 ve x2 kümeleri; §19'daki içerikle aynı. Tansu görselleri kendi analizi diye sunmaz, öneri olarak paylaşır (YORUM); üretici ayrı kalır. Yeni parametre, eşik, giriş, stop yok.
+  - `tweet-bist100-ema50-fibo-0382-destek-1772868540992716967` — Okuma (YORUM): BIST100 örneğinde EMA50 desteği ve Fibonacci desteği birlikte yorumlanır (27.03.2024, Ham): "50 günlük EMA (8790) destek oldu, üzerine atamazsa sırası ile 8713 ve 8597 gelecek." Ham: "8597 seviyesi, 7300 den gelen yükselişin direnci aynı zamanda 9400 den gelen düşüşün de fibo desteği." Bu fiyatlar tarihli örnektir.
 
 ---
 
@@ -740,6 +793,14 @@ Küçük sonraki adım: kural 3 ve 4 için kendi pivot kararınızı yazın (L, 
 - Günlük bedava veriyle uygulanabilir mi: evet (OHLCV). Kaynak güveni: düşük (şema).
 
 ---
+- Ek kaynaklar (X arşivi, 18.10):
+  - `tweet-boyun-cizgisi-destek-testi-hacim-1988258664038195323` — Açılan MAGEN grafiği "OMUZ BAŞ OMUZ - DESTEK TESTİ" ve "Boyun Çizgisi (Destek)" etiketlerini taşır (11.11.2025). Ham: "İşte böyle oluyor". Okuma (YORUM): Grafikte boyun çizgisi teması ve hacim çubuğu işaretlenir; çizimdeki destek tepkisi genel hacim eşiği veya başarı oranı vermez.
+  - `tweet-obo-4-adim-hacim-onayli-kirilim-1998305839837561277` — `tweet-obo-4-adim-hacim-onayli-kirilim-1998305839837561277` (2025-12-09): Açılan görsel: "Fiyat, boyun çizgisini hacimli bir mumla aşağı kırdığında formasyon onaylanır."; "Başın tepesi ile boyun çizgisi arasındaki mesafe kadar düşüş beklenir."; "Sağ omuz oluşurken işlem hacminin azalması, formasyonun güvenilirliğini artırır." Okuma (YORUM): bölümdeki OBO infografiğinin Tansu paylaşımındaki örneğidir.
+  - `tweet-obo-boyun-retest-2006035158760042866` — `tweet-obo-boyun-retest-2006035158760042866` (2025-12-30): Ham: "re-test'in güzelliği...". Okuma (YORUM): açılan grafikte yatay kesikli çizgiye tekrar temas, tepe çizimleri ve hacim/osilatör işaretleri görünür; sembol veya fiyat seviyesi çıkarılmaz.
+  - `tweet-obo-boyun-tepki-devam-2008223099578142928` — `tweet-obo-boyun-tepki-devam-2008223099578142928` (2026-01-05): Ham: "Boğazdan tepki alan OBO formasyonu yuluna devam eder." Okuma (YORUM): TTKOM örneğinde boyun çizgisinden tepkiyle devam okunur.
+  - `tweet-obo-formasyon-taramasi-1900321792650052004` — `tweet-obo-formasyon-taramasi-1900321792650052004` (2025-03-13): Ham: "Omuz baş omuz taramamız da tamamdır :)". Okuma (YORUM): açılan iki grafikte boyun çizgisi ve üç tepe işaretlenir; tek örnek tarayıcı doğruluğunun istatistiksel kanıtı değildir.
+  - `tweet-obo-red-failure-2atr-stop-1988278667571519700` — `tweet-obo-red-failure-2atr-stop-1988278667571519700` (2025-11-11): Ham: "Giriş: Red yeme mumunun kapanışının ardından veya ertesi gün piyasa açılışında alım yapılır."; "Her günün kapanışında stopumuzu 2ATR kadar yukarı koyardık." Okuma (YORUM): DESPC örneği boyun çizgisi altında kalamayan kırılımın tersine long tepkisidir. Başlangıç stopu girişin iki ATR altındadır; 14 günlük ATR örnektir. Günlük stop cümlesinin dayanağı belirsizdir; mevcut iz süren stop kuralı değiştirilmez.
+  - `tweet-pattern-r-squared-filter-1900335838157824117` — `tweet-pattern-r-squared-filter-1900335838157824117` (2025-03-13): Ham: "güçlü formasyınları almak için pattern R square kullanacağım kod yazmayı planlıyorum". Okuma (YORUM): formasyon kalite filtresi planıdır; uygulanmış eşik veya performans kanıtı sayılmaz.
 
 ## 23. 144 barlık Fibonacci %78,6 düzeyi ve ±%2 bant: sistem ve tarama, çoklu gösterge ekranı
 
@@ -793,6 +854,12 @@ Küçük sonraki adım: kural 3 ve 4 için kendi pivot kararınızı yazın (L, 
 - Ek kaynaklar (X arşivi, 16.10):
   - `tweet-fibonacci-618-golden-cross-1908471693472919651` — Golden cross adayı + Fibo tepkisi birleşimi: "bu kardeşimiz hem 61.8 den tepki almış hem de yakında golden cross olacak:)" (Ham). Görselde (açıldı) EMA çizgileri etiketsiz (turuncu, noktalı siyah); sembol adı ve tarih yok (Ocak–Mart 2025 ekseni). Aynı serinin A1CAP grafiğinde turuncu = EMA 50, noktalı siyah = EMA 200: çift EMA50/EMA200 olabilir (YORUM). "Yakında" ölçütü, giriş, stop, sonuç yok. Parametre: Golden cross çifti = EMA50/EMA200 olabilir (YORUM; renk eşleşmesi, A1CAP görseli açıldı); "yakında" eşiği yok
   - `tweet-ema-50-200-golden-cross-1908437183423209509` — DOAS (05.04.2025): "golden cross'a adım adım" (Ham). Görsel (açıldı): başlık "DOAS.IS - Mum Grafik ve EMA Kesişimi (50/200)", lejant EMA 50, EMA 200, Al, Sat; EMA50 EMA200'ü ~Eylül 2024'te aşağı keser ve Sat işareti çıkar; Mart 2025'te EMA50 EMA200'e yaklaşır, Al işareti henüz yok. Ham: "Sistemime 190'lardan takılmıştı." Parametre: Golden cross çifti = EMA50 / EMA200 (görsel, açıldı: başlık "EMA Kesişimi (50/200)"); "Sistemime 190'lardan takılmıştı" cümlesinin anlamı belirsiz (YORUM: fiyat 190 düzeyinden sistem listesine girdi)
+  - `tweet-ema200-kesis-golden-cross-taramasi-1842246990521925981` — Tarama adayları ve geçmiş örnek ayrımı (04.10.2024): “Tarama sonucu İlk 2'si Golden Cross adayları.3. sü sadece örnek.” (Ham). Okuma (YORUM): aday ile tamamlanmış kesişim aynı kabul edilmez.
+  - `tweet-ema200-kesis-golden-cross-taramasi-1842522266971574456` — AKCNS taraması (05.10.2024; görsel açıldı): “AKCNS.IS hissesi son gün EMA 200'ü yukarı kesti.” Okuma (YORUM): fiyatın EMA200 kesişimidir; EMA50/EMA200 kesişiminin oluştuğunu söylemez.
+  - `tweet-golden-cross-aday-para-akisi-1847334466227724450` — Okuma (YORUM): GLCVY adayında para akışı teyidi istenir. Ham: "P a r a  a k ı ş ı n ı  k o n t r o l  ediniz".
+  - `tweet-golden-cross-ema50-ema200-1851722448305074497` — Okuma (YORUM): EMA50/200 taramasının örneği. Açılan G2: "Son gün Golden Cross AL sinyali veren hisseler (EMA50 > EMA200):". Ham: "Golden cross adaylarımız".
+  - `tweet-golden-cross-ema50-ema200-1978879623648739789` — Okuma (YORUM): Takip listesinden golden cross örneği. Ham: "Golden cross oluştu. Bizimde listemizde idi."
+  - `tweet-son-gun-ema200-yukari-kesen-1844068170853949930` — Okuma (YORUM): Son gün fiyatın EMA200'ü yukarı kesmesi ayrı bir taramadır. Ham: “Yanlış anlaşılmasın, fiyatın EMA200'ü yukarı kestiği.” ve “Golden cross>'dan bahsetmiyorum”. TDGYO dahil liste bu ayrımı örnekler.
 
 ---
 
@@ -844,6 +911,8 @@ Küçük sonraki adım: kural 3 ve 4 için kendi pivot kararınızı yazın (L, 
 - Kaynak güveni: Ham ve görsel birinci el; seçilmiş tek örnek: orta. Hazırlık K.
 
 ---
+- Ek kaynaklar (X arşivi, 18.10):
+  - `tweet-black-swan-oran-araligi-hedef-fiyat-1870258183958126788` — Ham BIST örneğini adlandırır: "formasyon hedefinin de 9644 olarak hesaplandığını duyurarak herkese iyi sabahlar dilerim." (21.12.2024). Açılan görsel: "Bullish Black Swan Found", "Target Price: 9644.60", "CD/BC = 0.40 (Target: 0.5-0.886)". Okuma (YORUM): Aynı örnek, hedef aralığına henüz ulaşmayan oranla Found etiketi taşır; mevcut bölümdeki belirsizliği korur.
 
 ## 27. Elliott 0-1-a-b-c: c dibi, 1. tepe direncini al seviyesi yapma ve iki aşamalı plan (LIDFA, AKBNK)
 
@@ -937,6 +1006,13 @@ Küçük sonraki adım: kural 3 ve 4 için kendi pivot kararınızı yazın (L, 
 - Elliott beş dalga tamamlanışı ve kanal direnci uyarısı (AGESA; `tweet-bes-dalga-kanal-direnci-uyarisi-1986050444750119097`; Ham ve görsel, açıldı; Tansu'nun X gönderisi, 05.11.2025): "#AGESA haftalık" ve "Ben diyeceğimi diyeyim de sonra aman neden bizi uyarmadın olmasın" (Ham). Görsel başlığı: "AGESA.IS — DİRENÇ YAKININDA" ve "(30 Bar | 1 Impulse, 0 Tam Desen)" (görsel, açıldı). YORUM (Tansu kural yazmaz): haftalık grafikte 0-1-2-3-4-5 beş noktalı itki sayılır; 5. nokta (≈219) kırmızı üst kanal çizgisine değer, yeşil alt çizgi buna yaklaşık paraleldir; etiket "DİRENÇ YAKININDA": fiyat kanalın üst sınırındadır. Uyarı yeni alım yerine düzeltme riskini anlatır (yön sözle yazılmaz). Paneller: RSI(14) (≈75–80, görsel okuma), ADX/DI(14), MACD Histogram. Parametre: tarama penceresi 30 bar (görsel); zaman dilimi haftalık (Ham); RSI(14), ADX/DI(14) (görsel). Kanal çizgisinin çizim kuralı, "yakın" toleransı, "Tam Desen" tanımı, uyarının eylemi ve eşik yok. 5. dalga tamamlanınca A dalgasını bekleyen Elliott ilkesiyle uyumlu okunabilir (YORUM). Tansu'nun kanıtı: yok (tek uyarı; sonuç yok). Günlük veriyle: haftalık mum günlükten türetilir; kanal ve beş dalga sayımı tanımsız, kural olarak hayır. Hazırlık X. Kaynak güveni: düşük.
 
 ---
+- Ek kaynaklar (X arşivi, 18.10):
+  - `tweet-bayrak-flama-hacimli-kirilim-1941224929585922368` — Okuma (YORUM): EGGUB tarama örneğinde hacimli kırılım vurgulanır. Ham: "Dünkü taramada çıkan EGGUB. Hacimli kırılım yapmıştı." Sonraki gün kazanç ifadesi tek örneğin beyanıdır.
+  - `tweet-bayrak-hacim-teyidi-1923098450490511571` — Okuma (YORUM): ALARK bayrak/flama örneğinde hacim vurgulanır. Ham: "Hacim önemlidir.:)" Bu ifade sayısal teyit eşiği olarak okunmaz.
+  - `tweet-bayrak-kanal-kirilim-doji-hacim-teyit-1957891785339850868` — Okuma (YORUM): DERIM kanal kırılımında mum teyidi, hacim ve 13 günlük ortalama ayrı değerlendirilir. Ham: "Kanal kırılımı yaptıktan sonra dragonfly doji ile devamı gelmemiş ama sonraki muma bakılır ise teyit almış." Uyarı: "Fakat hacim ortalamamın altında" ve "13 günlük ortalamasını geçemedi henüz".
+  - `tweet-bayrak-kanal-ust-bant-destek-hacim-1958226602883711124` — Okuma (YORUM): Bayrak tercihinde kanal üst bandı yeniden destek olur; ardından hacimli yeşil mum aranır. Ham: "kanal dışına çıkmış ertesi gün sonra kırmızı yakarak kanal üst bandını destek almış" ve "sonraki gün ise yüksek hacim ile yeşil yakarak yoluna devam edenler olur." Çizim: "LL HH mantığı ile çiziyor orada da bir regresyon çalışıyor tabi."
+  - `tweet-bayrak-kirilim-hacim-teyit-1958218459294134449` — Okuma (YORUM): Tek bayrak örneğinde teyit ve yüksek hacim birlikte belirtilir. Ham: "Bu değerli kardeşimiz teyit almış hacim de yüksek".
+  - `tweet-double-top-height-width-detector-1953795273248973235` — Çift tepe dedektörü çıktısı (08.08.2025): “Double Top”, “H = 2.99 (3.93%)”, “W = 29 bars (~41 gün)” (görsel metni). Okuma (YORUM): bunlar tek formasyonun ölçüm değerleridir, tarama eşikleri değildir.
 
 ## 31. 144 barlık Fibonacci %78,6 tepki taraması: birleşim koşulları ve onay (düşen trend kırılımı, EMA20 yukarı kesişimi, ADX/ADXR)
 
@@ -984,6 +1060,8 @@ Küçük sonraki adım: kural 3 ve 4 için kendi pivot kararınızı yazın (L, 
 - Kaynak güveni: Ham ve görsel birinci el; kural yarım: düşük. Hazırlık K.
 
 ---
+- Ek kaynaklar (X arşivi, 18.10):
+  - `tweet-fibo618-ema-roc-adx-obv-kosullari-1842222737785328011` — `tweet-fibo618-ema-roc-adx-obv-kosullari-1842222737785328011` (2024-10-04): Birleşim koşulları: "Fiyat fibo0.618 seviyesini son gün yukarıya kırmış olsun" ve "EMA10 EMA20'yi ya son gün ya da yakın geçmişte yukarıya kesmiş olsun" (görsel açıldı). Devamı: "EMA10 ve EMA20 her ikisi de EMA50, EMA100 ve EMA200 üzerinde olsun" ve "RoC50, 0 eksenini son gün yukarıya kesmiş olsun". ADX şartı: "ADX, ADXR'yi ya son gün yukarıya kesmiş olsun ya da yakın geçmişte bir zamanda kesmiş olsun ve araları açılıyor olsun." OBV şartı: "OBV20 günlük hareketli ortalamasını ya son gün kesmiş olsun ya da yakın zamanda yukarıya eksmiş ve araları açılıyor olsun."
 
 ## 33. Fibonacci %161,8 uzantısı: haftalıkta dip yakalama taraması (fiyat üzerinde ve RSI üzerinde)
 
@@ -1063,3 +1141,76 @@ Küçük sonraki adım: kural 3 ve 4 için kendi pivot kararınızı yazın (L, 
 - Tansu'nun kanıtı: yok (sistematik ölçüm yok). Seçilmiş vakalar: "Oluşum 11 Nisanda tamamlanmış ve bugün güzel tepkisini vermiş" (14.04.2025; sembol yok); EKOS "pazartesi gelen güzel tepki" (sayı yok); FLAP ve XU100 örnekleri sonuçsuz; tarama listesi (ULKER, TMPOL, MERKO, KENT, FRIGO) sonraki getiri vermez. Tansu'nun kendi uyarısı: "yoruma dayalı bir model", backtest gerekir.
 - Günlük bedava veriyle uygulanabilir mi: veri evet (günlük kapanış, RSI, 144 günlük max ve min). 0,786 için giriş ve çıkış, 0,618 için giriş ve stop vardır; "dönüş" ve "yaklaşma" eşikleri varsayım gerektirir; hedef yok. Backtest şart (Tansu da der).
 - Kaynak güveni: Ham ve görsel birinci el; düzey sayıları görselde açıldı ve hesapla doğrulandı. Yöntem Tansu'nun "yorum" modelidir, mekanik sinyal değildir; kural yarım, güven orta-düşük. Hazırlık K.
+- Ek kaynaklar (X arşivi, 18.10):
+  - `tweet-fiyat-ema89-rsi-fibo-0618-1861695457140920661` — `tweet-fiyat-ema89-rsi-fibo-0618-1861695457140920661` (2024-11-27): Koşulları soruyla tekrar eder: "Fiyat >ema89" ve "Rsi’a çekilen fibo >0.618" (Ham). Okuma (YORUM): yanıt bir teyit sorusudur; bu nottan 144 günlük dönem çıkarılmaz.
+  - `tweet-fiyat-ema89-rsifibo-0618-tarama-1861794132093554798` — `tweet-fiyat-ema89-rsifibo-0618-tarama-1861794132093554798` (2024-11-27): Tarama birleşimi: "Fiyat>ema 89" ve "Rsifibo>0.618" (Ham). Kanıt sınırı: "Söylenene göre iyi çalışıyor." Kod henüz paylaşılacak: "Kodu yazıp sizinle paylaşacağım."
+  - `tweet-momentum-devam-markov-olasiligi-1950612726146842846` — Momentum devamı için araştırma önerisi: "geçiş olasılık matrisleri ve koşullu olasılık hesaplamaları ile" ve "örneğin RSI’nın 0.786 Fibo seviyesinden yukarı kırılması" (Ham, 30.07.2025). Okuma (YORUM): kırılım sonrası devam olasılığını inceleme fikridir; ölçülmüş olasılık veya zorunlu karar eşiği değildir.
+  - `tweet-rsi-786-yutan-boga-ema-sirasi-1912218016512684110` — - `tweet-rsi-786-yutan-boga-ema-sirasi-1912218016512684110` (2025-04-15; Ham): Ham: "RSI, son 144 günlük hareketinde %78.6 Fibonacci düzeltme seviyesi olan kritik bölgeden dönüş yapmış." Varsayımsal ek teyit: "Eğer bu yapıda EMA5 > EMA8 > EMA13 > EMA34 sıralaması varsa:". Aynı Ham sonra "EMA Sıralaması (5 > 8 > 13 > 36)" yazar. Okuma (YORUM): 34/36 farkı çözülmez; birleşim gerçekleşmiş gibi aktarılmaz.
+  - `tweet-rsi-fibo-0618-tepki-ema89-tarama-1862203614174888388` — - `tweet-rsi-fibo-0618-tepki-ema89-tarama-1862203614174888388` (2024-11-28; Tansu'nun X gönderisi). Tarama (Ham): "Günlük analizde RSI'a çekilen fibo'nun 0.618'e yaklaştığı ve bu seviyeden tepki aldığı ve ema>89 hisseler taraması". Okuma (YORUM): EMA89 varyantıdır; mevcut 50 günlük filtre değiştirilmez.
+
+---
+
+## 35. TOBO: haftalık kapanış, hacim, hedef ve momentum takibi
+
+- Kaynak: `tweet-haftalik-tobo-boyun-cizgisi-hedef-1913995238978277848` (2025-04-20; Ham), `tweet-tobo-boyun-cizgisi-kirilimi-1943062535579799831` (2025-07-09; Ham), `tweet-tobo-boyun-cizgisi-kirilimi-2016217966816133431` (2026-01-27; Ham), `tweet-tobo-boyun-retest-teyidi-2000639835288355128` (2025-12-15; Ham), `tweet-tobo-formasyon-taramasi-1900327650574389290` (2025-03-13; Ham), `tweet-tobo-formasyon-taramasi-1902064499588538392` (2025-03-18; Ham), `tweet-tobo-kirilim-teyit-mumu-1948407325233995922` (2025-07-24; Ham), `tweet-zigzag-tobo-tespiti-onay-1907531655121678492` (2025-04-02; Ham). Tansu'nun X gönderileri. `tweet-tobo-boyun-cizgisi-kirilimi-1943062535579799831` görseli açıldı.
+- Tansu'nun ifadesi (verbatim):
+  - Haftalık koşul (20.04.2025): "Fiyat bu çizgiyi haftalık kapanışla yukarı kırarsa, formasyon onaylanmış olur."
+  - Hacim (20.04.2025): "Sol omuzdan başa doğru düşerken hacim azalmalı." ve "Sağ omuzdan neckline’a yaklaşırken hacim artmalı."
+  - Hedef (20.04.2025): "Baş ile boyun çizgisi arasındaki mesafe, kırılım noktasına eklenerek hedef belirlenir."
+  - Retest (20.04.2025): "Kırılım sonrası fiyat yeniden boyun çizgisine dönebilir." ve "genellikle ikinci alım fırsatıdır."
+  - Teyit bekleme (24.07.2025): "Sadece kırılım kodunu yazıyorum" ve "Teyit mumunu bekliyorum".
+  - Oluşum ile onay ayrımı (02.04.2025): "formasyon 28 Martta tamamlandı. Onayına bakacğaız".
+  - Takip sırası (13.03.2025): "Kısaca önce ters omuz baş omuz ile yakalayacağız bundan sonra sonra da momentum sistemim ile kar almaya devam edeceğiz."
+- Tanım (Okuma, YORUM):
+  1. Solda dip, ortada daha derin dip, sağda daha sığ dip aranır. 20.04.2025 Ham: "Soldaki dip (omuz)", "Ortadaki daha derin dip (baş)" ve "Sağdaki daha sığ dip (omuz)".
+  2. Boyun çizgisinin haftalık kapanışla yukarı kırılması, haftalık sürümün onayıdır. Ham: "Haftalık kapanış bu çizginin üzerinde gelirse onaylanır." 24.07.2025 yanıtındaki teyit mumunu bu haftalık kapanışla zorunlu olarak aynı olay saymak YORUM olur.
+  3. Hacim akışı ayrıca incelenir. Ham: "Boyun çizgisi kırılırken yüksek hacim varsa, bu formasyonun onaylandığını gösterir." Bu ifade için sayısal hacim katsayısı seçilmez.
+  4. Geri dönüş yaşanırsa boyun çizgisi destek olarak çalışmalıdır. Ham: "Pullback yaşanırsa, destek olarak çalışmalı." Her kırılımdan sonra retest zorunluluğu eklenmez.
+  5. Teorik hedef, baş-boyun mesafesinin kırılım noktasına eklenmesidir. Ham örneği: "Baş = 20 TL, Boyun = 30 TL → Hedef: 40 TL". Örnek fiyatlar genel eşik değildir.
+  6. Formasyon sonrası momentumla takip ayrı aşamadır. Ham: "momentum sistemim ile kar almaya devam edeceğiz." Momentum göstergesi ve çıkış formülü bu okumada seçilmez.
+- Parametreler:
+
+| öğe | kaynak ifadesi | sınır |
+|---|---|---|
+| Onay periyodu | "haftalık kapanışla" (20.04.2025) | Haftalık sürüme aittir |
+| Boyun çizgisi | "yatay veya hafif eğimli olabilir" (20.04.2025) | YORUM: eğim toleransı seçilmedi |
+| Hedef uzaklığı | "Baş ile boyun çizgisi arasındaki mesafe" (20.04.2025) | Kırılım noktasına eklenir |
+| Omuz yapısı | "Sağ omuz çok kısa veya çok uzun olmamalı." (20.04.2025) | YORUM: sayısal oran seçilmedi |
+| Takip | "Teyit mumunu bekliyorum" (24.07.2025) | YORUM: teyit mumunun algoritması seçilmedi |
+
+- Ek örnekler:
+  - `tweet-tobo-boyun-cizgisi-kirilimi-1943062535579799831` (09.07.2025): Ham "Haftalık TOBO kırılımı" der. Açılan IDGYO görselinde "STOCK 1D" yazar. Periyot uyuşmazlığı korunur; görselden günlük kural türetilmez.
+  - `tweet-tobo-boyun-cizgisi-kirilimi-2016217966816133431` (27.01.2026): "Dün momentum listemizde idi ve örnek sharpe portföyümüzde %55'lik dilime sahipti." ve "Bugün de TOBO!" (Ham). YORUM: %55 tek örneğin portföy ağırlığıdır. Bu örnek, 13.03.2025 takip sırasını bütün durumlara zorunlu kılmaz.
+  - `tweet-tobo-boyun-retest-teyidi-2000639835288355128` (15.12.2025): "Teyit için mi indi sizce?" (Ham). YORUM: Soru, teyidin gerçekleştiği iddiası değildir.
+  - `tweet-tobo-formasyon-taramasi-1902064499588538392` (18.03.2025): "Bu da son gün oluşan tobomuz:)" (Ham). Seçilmiş tarama paylaşımıdır.
+- Belirsiz kalanlar: YORUM: dip/pivot seçimi, omuz benzerliği, hafif eğim toleransı, yüksek hacim eşiği, teyit mumu, stop ve momentum çıkışının sayısal tanımları için karar gerekir. IDGYO'nun periyodu açık soru olarak PR'ye taşınır.
+- Tansu'nun kanıtı: 13.03.2025 AKYHO için "getirisi %100 gibi birşey:)" (Ham). YORUM: yaklaşık, seçilmiş sonuç iddiasıdır; sistematik başarı ölçümü sayılmaz.
+- Günlük bedava veriyle uygulanabilir mi: YORUM: günlük OHLCV'den haftalık mum üretimiyle kısmen. Otomatik tespit ve çıkış için yukarıdaki kararlar gerekir. Hazırlık K.
+- Kaynak güveni: Ham birinci eldir. Haftalık kapanış ve hedef bağı açık ifadelerle verilir. YORUM: örnek sonuçlarının güveni, kuralların tanımlı olmasıyla karıştırılmaz.
+
+---
+
+## 36. İkili dipte mum teyidi ve Adam & Eve
+
+- Kaynak: `tweet-ikili-dip-mum-tetikleyici-1991523693969670229` (20.11.2025; Ham). Tansu'nun X gönderisi.
+- Tansu'nun ifadesi (verbatim):
+  - İkinci dipte teyit: "Bu noktada oluşan bir Çekiç, Yutan Boğa veya Cımbız Dip formasyonu" ve "ikinci bacağının tamamlandığını ve desteğin çalıştığını teyit eder."
+  - Adam ve Havva: "Bazen ilk dip keskin ve" ve "ikinci dip ise daha yayvan ve yumuşak (Havva) olur."
+  - Çoklu mum: "İkinci dipte oluşan çoklu mum formasyonları (örneğin Sabah Yıldızı)" ve "akümülasyonun zamana yayıldığını ve tabanın sağlamlaştığını gösterir".
+- Tanım (Okuma, YORUM):
+  1. Fiyat dip yaptıktan sonra yükselir ve aynı dip seviyesini tekrar sınar. Ham: "fiyatın bir dip yapıp yükselmesi, ardından tekrar aynı dip seviyesini test edip (ikinci bacak) yükselişe geçmesiyle oluşur."
+  2. İkinci dipte Çekiç, Yutan Boğa veya Cımbız Dip aranması, desteğin çalıştığını teyit eden bir katmandır. Ham: "Bu noktada oluşan bir Çekiç, Yutan Boğa veya Cımbız Dip formasyonu".
+  3. Adam & Eve, keskin ilk dip ile daha yayvan ikinci dip örneğidir. İkinci dipte Sabah Yıldızı, çoklu mum örneği olarak verilir. Ham: "İkinci dipte oluşan çoklu mum formasyonları (örneğin Sabah Yıldızı)".
+  4. Teyidi belirli bir emir fiyatına veya boyun kırılımına eşitlemek bu okumada yapılmaz.
+- Parametreler:
+
+| öğe | kaynak | sınır |
+|---|---|---|
+| Yapı | "İkili Dip (Double Bottom)" (Ham) | İkinci kez aynı dip seviyesine dönüş |
+| Mum seçenekleri | "Çekiç, Yutan Boğa veya Cımbız Dip" (Ham) | İkinci dipte |
+| Adam & Eve teyit örneği | "Sabah Yıldızı" (Ham) | Çoklu mum örneği |
+
+- Belirsiz kalanlar: YORUM: dipler arası süre, fiyat eşitliği toleransı, mumların sayısal tanımı, giriş, stop ve hedef için ayrıca karar gerekir.
+- Tansu'nun kanıtı: Ham kavramsal anlatımdır. YORUM: bu kaydı gerçekleşmiş işlem sonucu saymayız.
+- Günlük bedava veriyle uygulanabilir mi: YORUM: günlük OHLC ile kısmen. Pivot, tolerans ve mum tanımları gereklidir. Hazırlık K.
+- Kaynak güveni: Ham birinci eldir. Teyit konumu ve mum adları açıktır. YORUM: algoritmik eşikler bu okumada tamamlanmadı.
