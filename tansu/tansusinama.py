@@ -424,24 +424,7 @@ def cift_tablolari(y, x, gunler, C, A, F, bas_k, izgara) -> tuple:
     """Bir çiftin ızgara hücrelerinin (düz ızgara sırasında) işlem tabloları ve günlük özkaynakları; `cift_isleri` girdisiyle.
     `G`: bacak başına geçerli fiyat günü (TASARIM 5.14); `Cf`, `SA`: son geçerli kapanış ve son temiz AOF, ileri taşınır.
     Düzeltilmiş AOF'u ya da kapanışı sonsuz bacak günü karantina günüdür (uç durum 2): `Kar`, `SA` ve `E` onu görür."""
-    Kar = F["Kar"] | np.isinf(C) | np.isinf(A)
-    G = _gecerli(F["I"], Kar, A, C)
-    d = {
-        "gunler": gunler,
-        "C": C,
-        "G": G,
-        "Cf": pd.DataFrame(C).where(G).ffill().to_numpy(),
-        "A": A,
-        "T": F["T"],
-        "B": F["B"],
-        "Kar": Kar,
-        "E": pd.DataFrame(Kar.astype(float))
-        .rolling(motor.KARANTINA_GUN, min_periods=1)
-        .max()
-        .to_numpy()
-        .astype(bool),
-        "SA": pd.DataFrame(A).where(G).ffill().to_numpy(),
-    }
+    d = veri.cift_girdileri(gunler, C, A, F, "legacy_tansu_v1")
     Kc = pd.DataFrame(C, index=gunler, columns=[y, x])
     tablolar, egriler = [], []
     for h in _hucreler(izgara):
@@ -513,19 +496,7 @@ def cift_isleri(anlik, sektor, semboller, bas, izgara) -> tuple:
     A = f.pivot(index="tarih", columns="sembol", values="aof").reindex(gunler)
     g = anlik.gun_tablosu
     g = g[g["sembol"].isin(semboller)]
-    F = {
-        ad: g.pivot(index="tarih", columns="sembol", values=sutun)
-        .reindex(index=gunler, columns=C.columns)
-        .fillna(False)
-        .astype(bool)
-        .to_numpy()
-        for ad, sutun in (
-            ("I", "islem"),
-            ("T", "kilit_tavan"),
-            ("B", "kilit_taban"),
-            ("Kar", "karantina"),
-        )
-    }
+    F = veri.cift_bayraklari(g, gunler, C.columns)
     kol = {s: j for j, s in enumerate(C.columns)}
     var = C.notna().to_numpy()
     gecerli = _gecerli(F["I"], F["Kar"], A.to_numpy(), C.to_numpy())
