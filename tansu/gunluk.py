@@ -134,23 +134,38 @@ def _kart(anlik, s, m, p, kanit) -> list:
     ]
 
 
-def _kartlar(anlik, tarih, p, atr_n) -> list:
+def _kartlar(anlik, tarih, p, atr_n, aktarim=None) -> list:
     """Kâğıt ve Canlı ailelerin kartları; her gün sinyal gününden itibaren Adım ile yeniden hesaplanır (TASARIM 6.6)."""
     if ciftbolme.AILE in {a for a in kayit.AILELER if kayit.durum_oku(a) in KARTLI}:
         raise kayit.KayitHatasi("çift ailesi Kâğıt: çift kartı henüz yazılmadı")
     if kayit.durum_oku(simulator.AILE) not in KARTLI:
+        if aktarim is not None:
+            aktarim.sonuc({"kartlar": []}, [])
         return []
     kanit, kartlar = _kanit(simulator.AILE, tarih), []
+    if aktarim is not None and aktarim.deneme_id is not None:
+        # TASARIM 5.15: aile kanıtı kayıtlı ayarın etkinleştirme kanıtı değildir.
+        kanit = f"Kayıtlı ayar önizlemesi · etkinleştirme kanıtı değil · {aktarim.deneme_id}"
     for s in sorted(anlik.fiyat["sembol"].unique()):
         m = motor.mumlar(anlik, s, p, atr_n)
         f = m.dropna(subset=["kapanis"])
         kurulum = aileler.kurulum(f, p)
+        sinyaller = None
+        if aktarim is not None:
+            aktarim.ayar_dogrula(p)
+            sinyaller = aktarim.sinyaller(m, kurulum, s)
+            for kimlik in sinyaller.values():
+                aktarim._oku(kimlik)
         poz, kapanan = motor.tara(
             m, kurulum.index, p, motor.kurulum_bilgisi(f, p, hesaplanan=kurulum)
         )[2:]
-        kartlar += [
-            _kart(anlik, s, m, x, kanit) for x in (poz, kapanan) if x is not None
-        ]
+        yeni = [_kart(anlik, s, m, x, kanit) for x in (poz, kapanan) if x is not None]
+        kartlar += yeni
+        if aktarim is not None:
+            referanslar = aktarim.pozisyonlar(
+                [x for x in (poz, kapanan) if x is not None], sinyaller
+            )
+            aktarim.sonuc({"hisse": s, "kartlar": yeni}, referanslar)
     return kartlar
 
 
@@ -255,17 +270,30 @@ def gunluk(
     semboller=None,
     p=aileler.Parametre(),
     atr_n=motor.ATR_N,
+    aktarim=None,
 ) -> int:
     """Günlük koşu; çıkış kodu: TAMAM ve BUGÜN ÇUBUK YOK 0, SORUNLU ve VERİ YOK 1. `kaynak`, `semboller`, `p` testte verilir."""
     tarih, kok = pd.Timestamp(tarih), Path(kok)
     simdi = simdi or dt.datetime.now(veri.ISTANBUL)
-    yol = rapor.RAPOR_DIZINI / "durum.txt"
+    onizleme = aktarim is not None and aktarim.deneme_id is not None
+    # TASARIM 5.15 S07: önizleme normal günlüğün tamamlanma ve kart durumunu yazmaz.
+    dizin = (
+        rapor.RAPOR_DIZINI / "onizleme" / aktarim.kosu_id
+        if onizleme
+        else rapor.RAPOR_DIZINI
+    )
+    yol = dizin / "durum.txt"
     onceki = yol.read_text(encoding="utf-8").splitlines() if yol.exists() else []
     saat = next(
         (x.split(": ", 1)[1] for x in onceki if x.startswith("Son başarılı koşu: ")),
         "yok",
     )
-    if onceki[:1] and onceki[0] in BASARILI and saat[:10] == tarih.date().isoformat():
+    if (
+        onceki[:1]
+        and onceki[0] in BASARILI
+        and saat[:10] == tarih.date().isoformat()
+        and (aktarim is None or aktarim.deneme_id is None)
+    ):
         print("Bugünün başarılı koşusu var; bir şey yapılmadı.")
         return 0
 
@@ -298,6 +326,9 @@ def gunluk(
             semboller, kok / "gunluk", kaynak or kaynak_modulu.IsYatirim(), simdi=simdi
         )
         anlik = veri.oku(kimlik, kok / "gunluk")
+        if aktarim is not None:
+            aktarim.veri_bagla(kimlik)
+            aktarim.ayar_dogrula(p)
         son, sayi = anlik.gunler[-1], anlik.fiyat["sembol"].nunique()
         bilgi = dict(kimlik=kimlik, son=son.date().isoformat(), sayi=sayi)
         if son.date() != tarih.date():
@@ -315,8 +346,8 @@ def gunluk(
                 + "). Kartlara güvenme.",
                 **bilgi,
             )
-        kartlar = _kartlar(anlik, tarih, p, atr_n)
-        csv_yol = rapor.RAPOR_DIZINI / f"kartlar-{tarih:%Y%m%d}.csv"
+        kartlar = _kartlar(anlik, tarih, p, atr_n, aktarim)
+        csv_yol = dizin / f"kartlar-{tarih:%Y%m%d}.csv"
 
         def yaz_csv(f):
             w = csv.writer(f, delimiter=";")
@@ -331,10 +362,11 @@ def gunluk(
                 f"Kart yazılamadı: {csv_yol.name} açık, kapatıp yeniden çalıştır.",
                 **bilgi,
             )
-        _kart_gunlugu(tarih, kimlik, kartlar)
+        if not onizleme:
+            _kart_gunlugu(tarih, kimlik, kartlar)
         return bitir(
             "TAMAM",
-            f"Bugün {len(kartlar)} kart var: rapor/{csv_yol.name} dosyasını aç."
+            f"Bugün {len(kartlar)} kart var: rapor/{csv_yol.relative_to(rapor.RAPOR_DIZINI).as_posix()} dosyasını aç."
             if kartlar
             else "Bugün kart yok; bir şey yapma.",
             **bilgi,

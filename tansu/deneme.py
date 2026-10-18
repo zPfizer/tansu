@@ -153,6 +153,96 @@ def _donem(donem):
         raise PilotHatasi("Isınma başlangıcı geçersiz.")
 
 
+def _strateji_kaydi(girdi):
+    """TASARIM 5.15 S07: aynı kayıt girişi, katalog veya çözülmüş eski hücre."""
+    if isinstance(girdi, str):
+        return asdict(katalog.legacy_coz(girdi))
+    s = asdict(girdi) if isinstance(girdi, katalog.StratejiKaydi) else girdi
+    if not isinstance(s, dict) or not isinstance(s.get("parametreler"), (list, tuple)):
+        raise PilotHatasi("Strateji nesnesi ve parametre listesi gerekli.")
+    for a in s["parametreler"]:
+        if not isinstance(a, dict) or not {"ad", "deger", "koken"} <= a.keys():
+            raise PilotHatasi(
+                "Parametre öğesi ad, değer ve köken içeren nesne olmalıdır."
+            )
+        _metin(a["ad"])
+    sayisal = {
+        a["ad"]: a["deger"]
+        for a in s["parametreler"]
+        if a.get("koken") == "legacy_izgara"
+    }
+    beklenen = asdict(
+        katalog.legacy_coz(s["varyant"], s["katalog_surumu"], sayisal_ayarlar=sayisal)
+    )
+
+    def icerik(kayit):
+        return {k: v for k, v in kayit.items() if k != "olusturma_zamani"}
+
+    if kanonik(icerik(s)) != kanonik(icerik(beklenen)):
+        raise PilotHatasi("Tam çözülmüş strateji katalog/ızgara kaydıyla uyuşmuyor.")
+    return s
+
+
+def _veri_kapsamini_dogrula(donemler, referanslar):
+    if not isinstance(donemler, list) or not donemler:
+        raise PilotHatasi("Dönem listesi gerekli.")
+    for donem in donemler:
+        if not isinstance(donem, dict):
+            raise PilotHatasi("Dönem nesne olmalıdır.")
+        _donem(donem)
+    if not isinstance(referanslar, (list, tuple)) or not referanslar:
+        raise PilotHatasi("Veri referans listesi gerekli.")
+    for ref in referanslar:
+        _metin(ref)
+
+
+def _ayarlar(kayit):
+    # TASARIM 5.15 S07: özet eşitliği, yapısal geçerliliğin yerine geçmez.
+    for ad in (
+        "strateji",
+        "veri_ayarlari",
+        "yontem_ayarlari",
+        "risk_ayarlari",
+        "masraf_ayarlari",
+        "eski_referans",
+    ):
+        if not isinstance(kayit[ad], dict):
+            raise PilotHatasi(f"{ad} nesne olmalıdır.")
+    _veri_kapsamini_dogrula(
+        kayit["donemler"], kayit["veri_ayarlari"]["veri_referanslari"]
+    )
+    tekrar = kayit["yontem_ayarlari"].get("tekrar", 0)
+    if type(tekrar) is not int or tekrar < 0:
+        raise PilotHatasi("Tekrar negatif olmayan tamsayı olmalıdır.")
+    _ondaliklar(kayit["risk_ayarlari"])
+    _ondaliklar(kayit["masraf_ayarlari"])
+    for ad, deger in kayit["eski_referans"].items():
+        if deger is None:
+            nedenler = kayit["eski_referans"].get("bos_nedenleri", {})
+            if not isinstance(nedenler, dict):
+                raise PilotHatasi("Eski referansın boşluk nedenleri nesne olmalıdır.")
+            _metin(nedenler.get(ad))
+    return {
+        "strateji": {
+            k: v for k, v in kayit["strateji"].items() if k != "olusturma_zamani"
+        },
+        **{
+            a: kayit[a]
+            for a in (
+                "donemler",
+                "veri_ayarlari",
+                "yontem_ayarlari",
+                "risk_ayarlari",
+                "masraf_ayarlari",
+            )
+        },
+    }
+
+
+def _ayar_ozeti(ayarlar):
+    return f"{SURUM}:sha256:{sha256(kanonik(ayarlar)).hexdigest()}"
+
+
 @dataclass(frozen=True)
 class Makbuz:
     olay_id: str
@@ -212,6 +302,90 @@ class PilotKayit:
     def oku(self):
         with self._kilit():
             return self._oku()[0]
+
+    def deneme_oku(self, deneme_id):
+        """TASARIM 5.15 S07: hesap öncesinde tam ayarı ve özgün özeti denetle."""
+        try:
+            kayit = _bul(self.oku(), deneme_id, "deneme", "deneme_id")
+            _strateji_kaydi(kayit["strateji"])
+            if _ayar_ozeti(_ayarlar(kayit)) != kayit["ayar_parmak_izi"]:
+                raise PilotHatasi("Ayar özeti uyuşmuyor.")
+            return kayit
+        except OSError as hata:
+            raise PilotYazmaHatasi(f"{deneme_id}: {hata}") from hata
+        except (ValueError, KeyError, TypeError, AttributeError, OverflowError) as hata:
+            raise PilotHatasi(
+                f"{deneme_id}: eksik veya geçersiz ayar: {hata}"
+            ) from hata
+
+    def bag_kaydet(
+        self,
+        *,
+        kosu_id,
+        asama,
+        deneme_id,
+        ayar_ozeti,
+        veri_ref,
+        referanslar,
+        icerik,
+    ):
+        """TASARIM 5.15 S07: çıktı biçimini değiştirmeyen ayrı bağlantı olayı."""
+        if asama not in ("sinyal", "islem", "sonuc"):
+            raise PilotHatasi(f"{kosu_id}: bilinmeyen aktarım aşaması")
+        _metin(kosu_id)
+        _metin(ayar_ozeti)
+        _metin(veri_ref)
+        if deneme_id is not None:
+            kayit = self.deneme_oku(deneme_id)
+            if kayit["ayar_parmak_izi"] != ayar_ozeti:
+                raise PilotHatasi(f"{deneme_id}: ayar özeti uyuşmuyor")
+        if (asama == "sinyal" and referanslar) or (
+            asama == "islem" and len(referanslar) != 1
+        ):
+            raise PilotHatasi(f"{kosu_id}: geçersiz {asama} bağı")
+
+        def denetle(olaylar):
+            for ref in referanslar:
+                onceki = _bul(olaylar, ref, "ayar_bagi")
+                beklenen_asama = "sinyal" if asama == "islem" else "islem"
+                if (
+                    onceki["asama"] != beklenen_asama
+                    or onceki["kosu_id"] != kosu_id
+                    or onceki["deneme_id"] != deneme_id
+                    or onceki["ayar_parmak_izi"] != ayar_ozeti
+                    or onceki["veri_ref_id"] != veri_ref
+                ):
+                    raise PilotHatasi(f"{ref}: sinyal/işlem/sonuç ayar bağı uyuşmuyor")
+
+        return self._ekle(
+            {
+                "kayit_turu": "ayar_bagi",
+                "asama": asama,
+                "kosu_id": kosu_id,
+                "deneme_id": deneme_id,
+                "ayar_parmak_izi": ayar_ozeti,
+                "veri_ref_id": veri_ref,
+                "referanslar": list(referanslar),
+                "icerik": icerik,
+                "kayit_durumu": "kayitli" if deneme_id is not None else "kayitsiz",
+                "kaynaklar": kayit["kaynaklar"]
+                if deneme_id is not None
+                else [
+                    {
+                        "tur": "YORUM",
+                        "konum": "docs/TASARIM.md#ayar-aktarımı",
+                        "tarih": "2026-10-18",
+                        "alinti": None,
+                        "karar_durumu": "gecici_pilot",
+                        "alinti_bos_nedeni": "S07 teknik aktarım kaydı; Tansu işlem kuralı değildir.",
+                    }
+                ],
+                "bos_nedenleri": {"deneme_id": "kayitsiz_eski_yol"}
+                if deneme_id is None
+                else {},
+            },
+            denetle,
+        )
 
     @contextmanager
     def kosu(
@@ -466,7 +640,7 @@ class PilotKayit:
                 _metin(eski_referans.get("bos_nedenleri", {}).get(ad))
         _ondaliklar(risk_ayarlari)
         _ondaliklar(masraf_ayarlari)
-        strateji = asdict(katalog.legacy_coz(varyant))
+        strateji = _strateji_kaydi(varyant)
         ayarlar = {
             "strateji": {k: v for k, v in strateji.items() if k != "olusturma_zamani"},
             "donemler": donemler,
@@ -516,7 +690,7 @@ class PilotKayit:
                 "bos_nedenleri": {"ust_deneme_id": "Kök deneme."}
                 if ust_deneme is None
                 else {},
-                "ayar_parmak_izi": f"{SURUM}:sha256:{sha256(kanonik(ayarlar)).hexdigest()}",
+                "ayar_parmak_izi": _ayar_ozeti(ayarlar),
             },
             denetle,
         )
@@ -526,7 +700,7 @@ def _bul(olaylar, kimlik, tur=None, alan="kayit_id"):
     for olay in olaylar:
         if olay.get(alan) == kimlik and (tur is None or olay["kayit_turu"] == tur):
             return olay
-    raise PilotHatasi("Kayıt bağı bulunamadı.")
+    raise PilotHatasi(f"Kayıt bağı bulunamadı: {kimlik}")
 
 
 class _Kosu:

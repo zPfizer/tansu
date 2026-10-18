@@ -305,24 +305,46 @@ def _getirili(t) -> pd.DataFrame:
     )
 
 
-def ema_tablolari(m, p, izgara, bas) -> list:
+def ema_tablolari(
+    m, p, izgara, bas, *, aktarimlar=None, sembol=None, baglar=None
+) -> list:
     """Bir hissenin ızgara hücrelerinin işlem tabloları (düz ızgara sırasında, `getiri` sütunlu); dönem `_ema_donem`'dir.
     Düzeltilmiş AOF'u ya da kapanışı sonsuz gün motora karantina günü olarak verilir (TASARIM 5.14 uç durum 2); `m` değişmez."""
     bas, _ = _ema_donem(m, p, bas)
     f = m.dropna(subset=["kapanis"])
-    zincir = motor.Zincir(
-        m.assign(karantina=m["karantina"] | np.isinf(m["aof"]) | np.isinf(m["kapanis"]))
+    mumlar = m.assign(
+        karantina=m["karantina"] | np.isinf(m["aof"]) | np.isinf(m["kapanis"])
     )
     tablolar = []
-    for h in _hucreler(izgara):
-        sig = aileler_.sinyal(f, replace(p, **h))
-        t, _ = zincir.calistir(m.index.get_indexer(sig[sig >= bas]))
+    for i, h in enumerate(_hucreler(izgara)):
+        # TASARIM 5.14: hücre ayarı, kurulum ve işlem önbelleği birlikte kalır.
+        pc = replace(p, **h)
+        aktarim = aktarimlar[i] if aktarimlar is not None else None
+        if aktarim is not None:
+            aktarim.ayar_dogrula(pc)
+            pc = aktarim.p
+        kurulum = aileler_.kurulum(f, pc)
+        if aktarim is not None and kurulum is None:
+            aktarim.sinyaller(mumlar, kurulum, sembol)
+        if aktarim is None:
+            zincir = motor.Zincir(mumlar, pc, kurulum)
+            sig = kurulum.index
+            t, _ = zincir.calistir(m.index.get_indexer(sig[sig >= bas]))
+        else:
+            t, _, referanslar = aktarim.ema(
+                mumlar, kurulum.loc[kurulum.index >= bas], sembol
+            )
+            if baglar is not None:
+                baglar.append((aktarim, referanslar))
         tablolar.append(_getirili(t))
     return tablolar
 
 
-def _ema_is(ad, m, p, izgara, bas) -> dict:
-    tablolar = ema_tablolari(m, p, izgara, bas)
+def _ema_is(ad, m, p, izgara, bas, aktarimlar=None) -> dict:
+    baglar = []
+    tablolar = ema_tablolari(
+        m, p, izgara, bas, aktarimlar=aktarimlar, sembol=ad, baglar=baglar
+    )
     bas, son = _ema_donem(m, p, bas)
     gecerli = _gecerli(m["islem"], m["karantina"], m["aof"], m["kapanis"])
     # değerleme: son geçerli kapanış ileri taşınır
@@ -340,7 +362,7 @@ def _ema_is(ad, m, p, izgara, bas) -> dict:
         ]
         return egri, pozisyonda, tutma, _sonraki(sinyaller)
 
-    return _sonuc(
+    sonuc = _sonuc(
         {"hisse": ad},
         izgara,
         tablolar,
@@ -349,6 +371,9 @@ def _ema_is(ad, m, p, izgara, bas) -> dict:
         bas,
         son,
     )
+    for i, (aktarim, referanslar) in enumerate(baglar):
+        aktarim.sonuc({"hisse": ad, "hucre": i, "net": sonuc["net"][i]}, referanslar)
+    return sonuc
 
 
 def _cift_simule(hedef, bas_k, d) -> tuple:
@@ -474,7 +499,7 @@ def _is_calistir(girdi) -> tuple:
     return aile, ad, (_ema_is if aile == simulator.AILE else _cift_is)(ad, *args)
 
 
-def _ema_isleri(anlik, semboller, p, izgara, bas) -> tuple:
+def _ema_isleri(anlik, semboller, p, izgara, bas, aktarimlar=None) -> tuple:
     """(işler, atlanan adlar): ısınması dolmayan hisse sınanmaz (TASARIM 5.14 Dönem)."""
     isler, atlanan = [], []
     for s in semboller:
@@ -482,7 +507,7 @@ def _ema_isleri(anlik, semboller, p, izgara, bas) -> tuple:
         if _ema_donem(m, p, bas) is None:
             atlanan.append(s)
         else:
-            isler.append((simulator.AILE, s, m, p, izgara, bas))
+            isler.append((simulator.AILE, s, m, p, izgara, bas, aktarimlar))
     return isler, atlanan
 
 
@@ -610,16 +635,28 @@ def calistir(
     bas=BASLANGIC,
     ilerleme=print,
     izgara=None,
+    aktarim=None,
 ) -> dict:
     """Bütün koşu (TASARIM 5.14). `hisse`: adına göre ilk N hisse (çiftte: iki bacağı da bunların içinde olan çiftler);
     `izgara`: aile → ızgara (varsayılan `IZGARA`); `isci`: yoksa makineye göre `isci_sayisi`."""
     t0 = time.monotonic()
     izgara = {**IZGARA, **(izgara or {})}
+    if aktarim is not None:
+        aktarim.aile_dogrula(aileler)
+        aktarim.veri_bagla(anlik.kimlik)
+        p = aktarim.p
     semboller = sorted(anlik.fiyat["sembol"].unique())[:hisse]
     isler, atlanan = [], {}
     if simulator.AILE in aileler:
         yeni, atlanan[simulator.AILE] = _ema_isleri(
-            anlik, semboller, p, izgara[simulator.AILE], bas
+            anlik,
+            semboller,
+            p,
+            izgara[simulator.AILE],
+            bas,
+            [aktarim.cocuk(h) for h in _hucreler(izgara[simulator.AILE])]
+            if aktarim is not None
+            else None,
         )
         isler += yeni
     if ciftbolme.AILE in aileler:
@@ -645,7 +682,9 @@ def calistir(
         }
     return kayit._temiz(
         {
-            "kosu_id": f"{dt.datetime.now(dt.timezone.utc):%Y%m%dT%H%M%S}-{uuid.uuid4().hex[:6]}",
+            "kosu_id": aktarim.kosu_id
+            if aktarim is not None
+            else f"{dt.datetime.now(dt.timezone.utc):%Y%m%dT%H%M%S}-{uuid.uuid4().hex[:6]}",
             "anlik": anlik.kimlik,
             "makine": {
                 **mak,

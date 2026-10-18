@@ -6,6 +6,7 @@ from hashlib import sha256
 import json
 import argparse
 import sys
+import math
 from types import MappingProxyType
 
 SECENEKLER = {  # KURALLAR §3 Modül 1: her alanın izinli değerleri
@@ -298,15 +299,34 @@ def _gostergeler(p):
     return tuple(_alan(*a) for a in ayarlar)
 
 
-def legacy_coz(varyant: str, katalog_surumu: str = KATALOG_SURUMU) -> StratejiKaydi:
+def legacy_coz(
+    varyant: str, katalog_surumu: str = KATALOG_SURUMU, *, sayisal_ayarlar=None
+) -> StratejiKaydi:
     """Eski tanımı okur; bu işlem panel seçimine izin vermez (TASARIM 5.15)."""
     if katalog_surumu != KATALOG_SURUMU:
         raise KatalogHatasi("bilinmeyen_surum", "Katalog sürümü tanımsız.")
     if not isinstance(varyant, str) or varyant not in _TANIMLAR:
         raise KatalogHatasi("desteklenmeyen_bilesim", "Varyant katalogda yok.")
     p = _TANIMLAR[varyant]
+    sayisal_ayarlar = {} if sayisal_ayarlar is None else sayisal_ayarlar
+    _sozluk(sayisal_ayarlar, ("esik", "min_gun", "pencere"))
+    for ad, deger in sayisal_ayarlar.items():
+        if (
+            type(deger) not in (int, float)
+            or not math.isfinite(deger)
+            or deger <= 0
+            or (ad != "esik" and type(deger) is not int)
+        ):
+            raise KatalogHatasi("gecersiz_istek", f"Geçersiz eski ızgara ayarı: {ad}")
+    p = replace(p, **sayisal_ayarlar)
     parametreler = tuple(
-        _alan(ad, deger, _BIRIMLER.get(ad, "birimsiz"))
+        replace(
+            _alan(ad, deger, _BIRIMLER.get(ad, "birimsiz")),
+            kaynaklar=(_LEGACY_KAYNAK,),
+            koken="legacy_izgara",
+        )
+        if ad in sayisal_ayarlar
+        else _alan(ad, deger, _BIRIMLER.get(ad, "birimsiz"))
         for ad, deger in asdict(p).items()
     )
     sabitler = tuple(_alan(*a) for a in _SABITLER)

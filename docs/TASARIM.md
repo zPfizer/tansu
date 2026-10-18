@@ -974,6 +974,14 @@ Levent 16.10: "Tansu ne diyorsa onu yap." Komut: `python -m tansu tansu-sinama`.
   ölçülemedi; GPU kullanılmaz. İş gün gün yol bağımlı bir döngüdür; bütün koşu 24 işçide 7,5 sn sürer.
 - **Kayıt ve çıktı:** sonuç `rapor/tansu-sinama-<koşu>.json`; deneme günlüğüne `tur=destek`, `olay=tansu_sinama` satırı
   (koşu kimliği, anlık görüntü ve manifest sha256'sı, `git_commit`, `kirli`, makine, işçi, süre). Holm ve m bunu saymaz (5.11).
+- **Ayar aktarımı:** `--varyant`, Tansu sınamasına ve günlük koşuya da seçilen eski varyantın
+  parametrelerini iletir (#88). EMA ızgarasında her hücrenin sinyali ve kurulumu aynı hücre
+  parametreleriyle bir kez üretilir. Motor hücrenin ayarını ve kurulumunu birlikte alır.
+  Her hücre ayrı `Zincir` kullanır; başka hücrenin işlem önbelleğini kullanmaz. Izgaranın
+  mevcut eksenleri gösterge dönemlerini ve ısınmayı değiştirmez; bunlar seçilen varyanttan gelir.
+  Sonuç biçimi ve eski kayıtlar değişmez. Kayıtlı yolun sınırı §5.15 "Ayar aktarımı" bölümündedir.
+  Dayanak: #88 görev girdisi, üç eksik aktarım. Sonuç testleri `tests/test_ayar_aktarimi.py`,
+  gelecek veri denetimi `tests/test_gelecek.py` kapsamındadır.
 - **Bizim ek kontrolümüz:** aynı ailenin son resmi `durum` satırı (5.11, 5.12) çıktıda ve sitede yanında durur.
 - **Hash:** `tansusinama.py` hash dışıdır (kabul kararını değiştirmez). `HASH_DISI` listesine eklenmesi `kayit.py`'nin hash'ini
   değiştirir: sonraki resmi koşudan önce `python -m tansu kayit` gerekir.
@@ -1213,6 +1221,45 @@ son ΔZ tanımlı olmalıdır; yalnız satır sayısının dolması yeterli değ
 Gelecek satırı denetimi iki aileyi ayrı çağrılarla kapsar. Dayanak: #87 yazımında
 çağıranın verdiği çift çözümleme girdisi; mevcut çift kuralları §5.6.
 
+#### Ayar aktarımı (S07, #88)
+
+`PilotKayit.deneme_kaydet` tam çözülmüş hücre stratejisini de kabul eder. Katalog çözümleyicisinin
+eski ızgara sayısal girdileri `legacy_izgara` kökenini taşır; katalog seçimini açmaz.
+Kayıt özeti §5.15 pilotunun tam çözülmüş yapılandırma özetidir. Her açık kaydetme yeni revizyondur;
+aynı denemenin tekrar çalıştırılması kimliğini korur. Eski kayıtların özetleri yeniden üretilmez.
+
+`tansu-sinama` ve `gunluk` komutlarında `--deneme-id` isteğe bağlıdır. Verildiğinde
+`--deneme-dosyasi` açık pilot yoludur; ayar yalnız bu kayıttan okunur. Kayıt, tam alanları,
+katalog/ızgara çözümünü ve içerik özetini doğrulamadan hesap başlamaz. Eksik ayar, gerekli
+kurulum veya sınırdaki özet farkı ilgili kayıt kimliğini veren hatayla durur. Kimlik verilmezse
+eski varyant davranışı korunur; otomatik kök deneme kaydedilmez.
+Kayıttaki strateji nesnesi, parametre listesi ve her parametre öğesi üye erişiminden önce
+doğrulanır. Veri/yöntem/risk/masraf nesneleri, dönem listesi ve veri referansları yapısal
+olarak geçersizse özetleri eşleşse de kayıt reddedilir.
+Kayıtlı EMA denemesi yalnız `--aile ema_sikismasi` ile çalışır. Çift ailesi veya iki aile
+birlikte istenirse hesap ve çocuk kayıt başlamadan deneme kimliğiyle hata verilir.
+Çiftin ayrı kurulum sözleşmesi yukarıdadır; EMA ayarı çift hesabına uygulanmaz.
+
+Kayıtlı EMA ızgarasının her hücresi hesap başlamadan üst denemeye bağlı çocuk olarak kaydedilir.
+E2 sinyal ve kurulumunu çocuğun kaydedilmiş ayarından üretir; E3 aynı ayarı kullanır.
+Her çocuk ayrı işlem önbelleği kullanır. Verilen mum tablosunun gösterge dönemleri temel kaydın
+ayarından gelir; mevcut ızgara eksenleri bu dönemleri veya ısınmayı değiştirmez.
+
+Sinyal, işlem ve sonuç bağları ayrı `ayar_bagi` olaylarıdır. Olaylar koşu kimliğiyle ayrılır;
+deneme, veri referansı ve ayar özeti her geçişte eşleşir. Eski işlem tablolarına, sonuç JSON'una,
+golden ve sadakat çıktılarına alan eklenmez. Kayıtsız koşunun bağında deneme kimliği gerekçeli
+boştur. Bağ olayları pilotun aynı kilit, makbuz ve yazma hatası sınırını kullanır. Kayıtsız
+komutun bağ dosyası rapor dizinindeki `ayar-baglari.jsonl` dosyasıdır. Kayıtlı komutun bağları
+açıkça verilen pilot dosyasına eklenir. Günlük etkinleştirme izni bu bağlardan türetilmez.
+Kayıtlı günlük hesap, aileye ait eski başarı satırını kendi ayarının tamamlanmış hesabı saymaz.
+Bu yolun kart kanıtı önizleme olarak etiketlenir; aileye ait eski kabul kanıtı seçilmiş
+denemenin etkinleştirme kanıtı olarak sunulmaz. Önizlemenin durum ve kart CSV dosyaları
+`rapor/onizleme/<kosu_id>/` altında ayrılır; normal `kartlar.jsonl` günlüğüne eklenmez.
+Başarılı veya başarısız önizleme normal günlüğün dosyalarını değiştirmez ve sonraki normal
+hesabı engellemez. Kayıtsız günlük davranış değişmez. Bu sıralama ve bozuk kayıt sınırları
+`tests/test_ayar_aktarimi.py` içinde sentetik fiyatlarla denetlenir.
+Dayanak: dağıtıcının 18.10, 23:44 teknik kararları; önceki pilot kimlik kuralı önceliklidir.
+
 #### Deneme kayıt pilotu (S03, #84)
 
 Bu bölüm #84'ün karar verilmiş kayıt sözleşmesini uygular. Kimlik ve serileştirme ayrıntıları
@@ -1288,7 +1335,7 @@ yazma hatası görünür hatayla dışarı çıkar. Tamamlanmamış son satır k
 eklenir; düzeltme kimlik ve ayar bağlarını geriye dönük değiştirmez.
 
 Geri dönüşte pilot yazımı durdurulur ve eski uyarlayıcı kullanılır. Pilot dosyaları ve okuyucuları
-korunur. Bu iş günlük listeyi veya eski sınamayı yeni kayıtlarla bağlamaz. Hesap formülleri
+korunur. Pilot tek başına günlük listeyi veya eski sınamayı yeni kayıtlarla bağlamaz; S07 bu aktarımı sağlar. Hesap formülleri
 değişmediğinden `tests/test_gelecek.py` kapsamına yeni hesap eklenmez. Kayıt sınırının davranış
 testleri `tests/test_kayit.py` dosyasındadır.
 
