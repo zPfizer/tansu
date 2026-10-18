@@ -6,6 +6,7 @@ description: "Use when the user asks to write, change, or translate a rule, a do
 # Rule, document, instruction (flow C)
 
 Run AGENTS.md "Every job" first. Run the steps in order. Run an "If" row only when its condition is true. Call each skill by the exact name in backticks. The shared steps of `tansu-yeni-is` (Test gate, Review, Proof, Pull request, Merge, Close) also apply when the change goes to a pull request.
+Before creating an issue, follow [Issue body](../../../docs/agents/issue-tracker.md#issue-body).
 
 1. **Write for agents:** `mattpocock-skills:writing-for-agents`.
 2. **Record:** `mattpocock-skills:domain-modeling`. `tansu-yeni-is` "Document first" says where a term and a decision go.
