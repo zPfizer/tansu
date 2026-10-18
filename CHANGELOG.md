@@ -20,6 +20,7 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ### Değişti
 
+- TASARIM'da standart long/short çıkışı çift rotasyonundan ayrıldı; aynı gün stop ve hedef durumu güncel öncelik kuralına bağlandı. (#60)
 - Açık havuz sayacı okunmadı listelerini kapsamdan ayırıyor; yalnız bu listelerde kalan üç nota okuma veya gerekçeli kural içermez kaydı eklendi. (#59)
 - Paralel dalların değişiklik günlüğünde aynı yere eklediği satırlar, yerel Git birleştirmesinde birlikte korunuyor; Kural 5 yalnız birinci ebeveynle aynı kip ve türdeki normal dosyanın birebir union sonucunu temiz sayıyor. (#102)
 - İş gövdeleri triage biçiminde yazılıyor; sade açıklama, ajan brifi ve bağlı işler şablonda yer alıyor. (#103)
