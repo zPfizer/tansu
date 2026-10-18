@@ -346,7 +346,7 @@ class PilotKayit:
             "olusturma_zamani": datetime.now(timezone.utc),
             **olay,
         }
-        satir = kanonik(olay) + b"\n"
+        satir = kanonik(olay)
         try:
             with self._kilit():
                 olaylar, _ = self._oku()
@@ -364,6 +364,9 @@ class PilotKayit:
                     if os.write(fd, satir) != len(satir):
                         raise OSError("Eksik satır yazıldı.")
                     os.fsync(fd)
+                    # TASARIM 5.15: LF yalnız aktarımı onaylanan içeriği görünür yapar.
+                    if os.write(fd, b"\n") != 1:
+                        raise OSError("Satır sonu yazılamadı.")
                 finally:
                     os.close(fd)
         except OSError as hata:

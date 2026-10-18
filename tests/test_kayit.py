@@ -614,8 +614,34 @@ def test_pilot_kosu_makbuz_izleme_ve_ekleme_duzeltmesi(tmp_path):
         pilot_sonuc(kosu)
 
 
+def test_pilot_fsync_hatasi_bitis_kurtarmada_tamamlandi_sayilmaz(tmp_path, monkeypatch):
+    depo = pilot.PilotKayit(tmp_path / "olaylar.jsonl")
+    deneme = pilot_deneme(depo)
+    with pytest.raises(pilot.PilotYazmaHatasi, match="disk aktarımı başarısız"):
+        with pilot_kosu(depo, deneme.deneme_id) as kosu:
+            sonuc = pilot_sonuc(kosu)
+            once = depo.yol.read_bytes()
+
+            def hata(fd):
+                raise OSError("disk aktarımı başarısız")
+
+            with monkeypatch.context() as ariza:
+                ariza.setattr(os, "fsync", hata)
+                pilot_bitir(kosu)
+    yeni = pilot.PilotKayit(depo.yol)
+    assert yeni.kurtar()["cozumsuz_kosular"] == [kosu.makbuz.kosu_id]
+    assert yeni.izle(sonuc.olay_id)["durum"] != "tamamlandi"
+    assert yeni.yol.read_bytes().startswith(once)
+    assert [o["kayit_turu"] for o in yeni.oku()] == ["deneme", "baslangic", "sonuc"]
+    assert yeni.kurtar()["uyarilar"]
+    pilot_deneme(yeni)
+    assert yeni.kurtar()["cozumsuz_kosular"] == [kosu.makbuz.kosu_id]
+    assert yeni.izle(sonuc.olay_id)["durum"] == "cozumsuz"
+    assert yeni.yol.read_bytes().startswith(once)
+
+
 @pytest.mark.parametrize("asama", ["baslangic", "sonuc", "bitis"])
-@pytest.mark.parametrize("ariza", ["izin", "kisa", "fsync"])
+@pytest.mark.parametrize("ariza", ["izin", "kisa", "fsync", "lf_izin", "lf_kisa"])
 def test_pilot_yazma_hatasi_hesabi_ve_sahte_basariyi_engeller(
     tmp_path, monkeypatch, asama, ariza
 ):
@@ -630,6 +656,16 @@ def test_pilot_yazma_hatasi_hesabi_ve_sahte_basariyi_engeller(
 
         if ariza == "fsync":
             monkeypatch.setattr(os, "fsync", hata)
+        elif ariza.startswith("lf_"):
+
+            def son_yaz(fd, veri):
+                if veri == b"\n":
+                    if ariza == "lf_izin":
+                        raise PermissionError("satır sonu reddedildi")
+                    return 0
+                return asil_yaz(fd, veri)
+
+            monkeypatch.setattr(os, "write", son_yaz)
         elif ariza == "kisa":
             monkeypatch.setattr(os, "write", lambda fd, veri: asil_yaz(fd, veri[:11]))
         else:
@@ -652,6 +688,10 @@ def test_pilot_yazma_hatasi_hesabi_ve_sahte_basariyi_engeller(
                 boz()
                 pilot_bitir(kosu)
     assert hesap == ([] if asama == "baslangic" else ["başladı"])
+    yeni = pilot.PilotKayit(depo.yol)
+    assert all(o["kayit_turu"] != asama for o in yeni.oku())
+    if asama != "baslangic":
+        assert yeni.kurtar()["cozumsuz_kosular"] == [kosu.makbuz.kosu_id]
 
 
 @pytest.mark.parametrize("kuyruk", [b'{"eksik":', b'["sozluk",[]]'])

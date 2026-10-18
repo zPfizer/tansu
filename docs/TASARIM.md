@@ -1221,8 +1221,12 @@ denemeleri ve sabitlenen test denemesi bağları saklanır. Monte Carlo senaryol
 yöntem veya tekrar ayarı değişikliği yeni revizyon ister. Bu alanlar yöntem ayarları ve bağlarıdır;
 pilot yöntem hesabı veya günlük uygunluk kararı üretmez.
 
-Yazıcı yerel süreçler arası kilit altında tam satır ekler ve diske aktarır. Makbuz ancak başarılı
-yazma ve aktarım sonrasında döner. Başlangıç yazılamazsa bağlam gövdesi çalışmaz; süren koşudaki
+Yazıcı yerel süreçler arası kilit altında olay içeriğini son LF olmadan ekler ve diske aktarır.
+Aktarım başarılı olduktan sonra LF ekleyerek olayı okuyucuya açar; makbuz bundan sonra döner.
+Bu sıra bütün olay türleri için aynıdır; aktarım hatasında tam JSON bile LF'siz kaldığı için
+olay sayılmaz. Son LF kaybolursa kurtarma temkinli biçimde olayı eksik sayar; kendiliğinden
+tamamlamaz. Bu yazma sırası `pilot_s03_v1` bayt kodlamasını değiştirmez.
+Başlangıç yazılamazsa bağlam gövdesi çalışmaz; süren koşudaki
 yazma hatası görünür hatayla dışarı çıkar. Tamamlanmamış son satır kurtarmada uyarı olarak kalır;
 önceki tam satırlar okunur. Sonraki ekleme eksik kuyruğu tamamlanmış olay yapmaz. Bitişsiz başlangıç
 çözümsüzdür; bağlamdan bitiş bildirmeden çıkmak kendiliğinden başarı üretmez. Düzeltmeler yalnız
