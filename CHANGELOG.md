@@ -26,6 +26,7 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ### Değişti
 
+- Tansu EMA ızgarası hücrenin ayarını ve kurulumunu motora, Tansu sınaması ve günlük komutları seçilen varyantı hesaba iletiyor; hücreler ayrı işlem önbelleği kullanıyor. (#88)
 - Kök belgeler ve iş kuralları sadeleşti: denetçi sayısı riske göre, günlüğü kodu değiştiren yazar, küçük belge düzeltmeleri PR ile giriyor; README özet bölümü kalktı. (#122)
 - Yerel test kapısı kaldırıldı; kanca yalnız önce testin yazıldığını denetliyor; PR denetimi gerçek veri kanıtını yalnız tansu/ kodu değişince, denetçiyi yalnız kod değişince istiyor ve yalnız master birleştirmesi gelen PR’a yeni inceleme turu istemiyor. (#122)
 - Katalog kaynak turunda genel ATR çıkışı ile girişe özel başabaş ve RSI çıkışları ayrıldı; 24 tanımın eksik bileşim dayanakları açık tutuldu. (#83)

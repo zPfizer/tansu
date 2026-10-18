@@ -1,4 +1,4 @@
-"""Komut girişi: `python -m tansu sadakat | kayit | sinama | tansu-sinama | denetim | evren-indir | sektor-indir | gunluk [tarih] [--kok veri] [--kimlik KIMLIK] [--resmi] [--son] [--varyant AD] [--isci N] [--hisse N] [--aile AILE] [--sektor-kok veri]` (TASARIM 3, 5.14; `--varyant` yalnız kayit ve sinama, varsayılan bugun)."""
+"""Komut girişi: `python -m tansu sadakat | kayit | sinama | tansu-sinama | denetim | evren-indir | sektor-indir | gunluk [tarih] [--kok veri] [--kimlik KIMLIK] [--resmi] [--son] [--varyant AD] [--isci N] [--hisse N] [--aile AILE] [--sektor-kok veri]` (TASARIM 3, 5.14; `--varyant` kayit, sinama, tansu-sinama ve gunluk için, varsayılan bugun)."""
 
 import argparse
 import datetime as dt
@@ -9,12 +9,15 @@ from pathlib import Path
 
 from tansu import (
     aileler,
+    aktarim,
     ciftbolme,
     denetim,
+    deneme,
     evren,
     gunluk,
     kayit,
     kaynak,
+    rapor,
     sadakat,
     simulator,
     tansusinama,
@@ -99,7 +102,7 @@ def _denetim(n, tekrar) -> int:
     return 0 if s["gecti"] else 1
 
 
-def _tansu_sinama(a, kok: Path) -> int:
+def _tansu_sinama(a, kok: Path, p, ayar_aktarimi=None) -> int:
     """Tansu sınaması (TASARIM 5.14): koşar, `rapor/tansu-sinama-<koşu>.json` ve günlük satırını yazar, özeti basar."""
     kimlik = a.kimlik or _en_yeni(kok)
     anlik = veri.oku(kimlik, kok)
@@ -108,10 +111,19 @@ def _tansu_sinama(a, kok: Path) -> int:
     if not sektor and ciftbolme.AILE in aileler:
         sektor = tansusinama.sektor_oku(a.sektor_kok)[0]
     s = tansusinama.calistir(
-        anlik, sektor or {}, aileler, isci=a.isci, hisse=a.hisse, ilerleme=print
+        anlik,
+        sektor or {},
+        aileler,
+        isci=a.isci,
+        hisse=a.hisse,
+        p=p,
+        ilerleme=print,
+        aktarim=ayar_aktarimi,
     )
     manifest = kok / "ag" / kimlik / "manifest.json"
     s["manifest_sha256"] = hashlib.sha256(manifest.read_bytes()).hexdigest()
+    if ayar_aktarimi is not None and ayar_aktarimi.deneme_id is None:
+        ayar_aktarimi.sonuc({"komut": "tansu-sinama", "aileler": list(aileler)}, [])
     yol = tansusinama.yaz(s)
     for aile, f in s["aileler"].items():
         o = f["ozet"]
@@ -168,11 +180,13 @@ def main(argv=None) -> int:
         "--varyant",
         choices=list(aileler.VARYANTLAR),
         default="bugun",
-        help="kayit ve sinama: EMA ailesi varyantı (KURALLAR §3 Modül 1)",
+        help="kayit, sinama, tansu-sinama ve gunluk: EMA varyantı (KURALLAR §3 Modül 1)",
     )
     ap.add_argument(
         "--isci", type=int, help="tansu-sinama: işçi sayısı (varsayılan: makineye göre)"
     )
+    ap.add_argument("--deneme-id", help="tansu-sinama ve gunluk: kayıtlı deneme")
+    ap.add_argument("--deneme-dosyasi", help="denemenin açık pilot dosya yolu")
     ap.add_argument("--hisse", type=int, help="tansu-sinama: adına göre ilk N hisse")
     ap.add_argument(
         "--aile",
@@ -187,12 +201,33 @@ def main(argv=None) -> int:
     a = ap.parse_args(argv)
     kok, p = Path(a.kok), aileler.VARYANTLAR[a.varyant]
     try:
+        ayar_aktarimi = None
+        if a.deneme_id and a.komut not in ("tansu-sinama", "gunluk"):
+            raise deneme.PilotHatasi(
+                f"{a.deneme_id}: bu komut deneme kimliği kullanmaz"
+            )
+        if a.deneme_id and not a.deneme_dosyasi:
+            raise deneme.PilotHatasi(f"{a.deneme_id}: --deneme-dosyasi eksik")
+        if a.komut in ("tansu-sinama", "gunluk"):
+            ayar_aktarimi = aktarim.AyarAktarimi(
+                deneme.PilotKayit(
+                    a.deneme_dosyasi or rapor.RAPOR_DIZINI / "ayar-baglari.jsonl"
+                ),
+                a.deneme_id,
+                p=p,
+            )
+            p = ayar_aktarimi.p
         if a.komut == "denetim":
             return _denetim(a.n, a.tekrar)
         if a.komut == "tansu-sinama":
-            return _tansu_sinama(a, kok)
+            return _tansu_sinama(a, kok, p, ayar_aktarimi)
         if a.komut == "gunluk":
-            return gunluk.gunluk(a.tarih or dt.datetime.now(veri.ISTANBUL).date(), kok)
+            return gunluk.gunluk(
+                a.tarih or dt.datetime.now(veri.ISTANBUL).date(),
+                kok,
+                p=p,
+                aktarim=ayar_aktarimi,
+            )
         if a.komut == "evren-indir":
             print(_evren_indir(kok))
         elif a.komut == "sektor-indir":
@@ -237,7 +272,12 @@ def main(argv=None) -> int:
                     kayit.KAYIT_DIZINI / "deneme.jsonl",
                 )
             )
-    except (kayit.KayitHatasi, veri.VeriHatasi) as e:
+    except (
+        kayit.KayitHatasi,
+        veri.VeriHatasi,
+        deneme.PilotHatasi,
+        deneme.PilotYazmaHatasi,
+    ) as e:
         print(e, file=sys.stderr)
         return 1
     return 0

@@ -153,6 +153,50 @@ def _donem(donem):
         raise PilotHatasi("Isınma başlangıcı geçersiz.")
 
 
+def _strateji_kaydi(girdi):
+    """TASARIM 5.15 S07: aynı kayıt girişi, katalog veya çözülmüş eski hücre."""
+    if isinstance(girdi, str):
+        return asdict(katalog.legacy_coz(girdi))
+    s = asdict(girdi) if isinstance(girdi, katalog.StratejiKaydi) else girdi
+    sayisal = {
+        a["ad"]: a["deger"]
+        for a in s["parametreler"]
+        if a.get("koken") == "legacy_izgara"
+    }
+    beklenen = asdict(
+        katalog.legacy_coz(s["varyant"], s["katalog_surumu"], sayisal_ayarlar=sayisal)
+    )
+
+    def icerik(kayit):
+        return {k: v for k, v in kayit.items() if k != "olusturma_zamani"}
+
+    if kanonik(icerik(s)) != kanonik(icerik(beklenen)):
+        raise PilotHatasi("Tam çözülmüş strateji katalog/ızgara kaydıyla uyuşmuyor.")
+    return s
+
+
+def _ayarlar(kayit):
+    return {
+        "strateji": {
+            k: v for k, v in kayit["strateji"].items() if k != "olusturma_zamani"
+        },
+        **{
+            a: kayit[a]
+            for a in (
+                "donemler",
+                "veri_ayarlari",
+                "yontem_ayarlari",
+                "risk_ayarlari",
+                "masraf_ayarlari",
+            )
+        },
+    }
+
+
+def _ayar_ozeti(ayarlar):
+    return f"{SURUM}:sha256:{sha256(kanonik(ayarlar)).hexdigest()}"
+
+
 @dataclass(frozen=True)
 class Makbuz:
     olay_id: str
@@ -212,6 +256,90 @@ class PilotKayit:
     def oku(self):
         with self._kilit():
             return self._oku()[0]
+
+    def deneme_oku(self, deneme_id):
+        """TASARIM 5.15 S07: hesap öncesinde tam ayarı ve özgün özeti denetle."""
+        try:
+            kayit = _bul(self.oku(), deneme_id, "deneme", "deneme_id")
+            _strateji_kaydi(kayit["strateji"])
+            if _ayar_ozeti(_ayarlar(kayit)) != kayit["ayar_parmak_izi"]:
+                raise PilotHatasi("Ayar özeti uyuşmuyor.")
+            return kayit
+        except OSError as hata:
+            raise PilotYazmaHatasi(f"{deneme_id}: {hata}") from hata
+        except (ValueError, KeyError, TypeError) as hata:
+            raise PilotHatasi(
+                f"{deneme_id}: eksik veya geçersiz ayar: {hata}"
+            ) from hata
+
+    def bag_kaydet(
+        self,
+        *,
+        kosu_id,
+        asama,
+        deneme_id,
+        ayar_ozeti,
+        veri_ref,
+        referanslar,
+        icerik,
+    ):
+        """TASARIM 5.15 S07: çıktı biçimini değiştirmeyen ayrı bağlantı olayı."""
+        if asama not in ("sinyal", "islem", "sonuc"):
+            raise PilotHatasi(f"{kosu_id}: bilinmeyen aktarım aşaması")
+        _metin(kosu_id)
+        _metin(ayar_ozeti)
+        _metin(veri_ref)
+        if deneme_id is not None:
+            kayit = self.deneme_oku(deneme_id)
+            if kayit["ayar_parmak_izi"] != ayar_ozeti:
+                raise PilotHatasi(f"{deneme_id}: ayar özeti uyuşmuyor")
+        if (asama == "sinyal" and referanslar) or (
+            asama == "islem" and len(referanslar) != 1
+        ):
+            raise PilotHatasi(f"{kosu_id}: geçersiz {asama} bağı")
+
+        def denetle(olaylar):
+            for ref in referanslar:
+                onceki = _bul(olaylar, ref, "ayar_bagi")
+                beklenen_asama = "sinyal" if asama == "islem" else "islem"
+                if (
+                    onceki["asama"] != beklenen_asama
+                    or onceki["kosu_id"] != kosu_id
+                    or onceki["deneme_id"] != deneme_id
+                    or onceki["ayar_parmak_izi"] != ayar_ozeti
+                    or onceki["veri_ref_id"] != veri_ref
+                ):
+                    raise PilotHatasi(f"{ref}: sinyal/işlem/sonuç ayar bağı uyuşmuyor")
+
+        return self._ekle(
+            {
+                "kayit_turu": "ayar_bagi",
+                "asama": asama,
+                "kosu_id": kosu_id,
+                "deneme_id": deneme_id,
+                "ayar_parmak_izi": ayar_ozeti,
+                "veri_ref_id": veri_ref,
+                "referanslar": list(referanslar),
+                "icerik": icerik,
+                "kayit_durumu": "kayitli" if deneme_id is not None else "kayitsiz",
+                "kaynaklar": kayit["kaynaklar"]
+                if deneme_id is not None
+                else [
+                    {
+                        "tur": "YORUM",
+                        "konum": "docs/TASARIM.md#ayar-aktarımı",
+                        "tarih": "2026-10-18",
+                        "alinti": None,
+                        "karar_durumu": "gecici_pilot",
+                        "alinti_bos_nedeni": "S07 teknik aktarım kaydı; Tansu işlem kuralı değildir.",
+                    }
+                ],
+                "bos_nedenleri": {"deneme_id": "kayitsiz_eski_yol"}
+                if deneme_id is None
+                else {},
+            },
+            denetle,
+        )
 
     @contextmanager
     def kosu(
@@ -466,7 +594,7 @@ class PilotKayit:
                 _metin(eski_referans.get("bos_nedenleri", {}).get(ad))
         _ondaliklar(risk_ayarlari)
         _ondaliklar(masraf_ayarlari)
-        strateji = asdict(katalog.legacy_coz(varyant))
+        strateji = _strateji_kaydi(varyant)
         ayarlar = {
             "strateji": {k: v for k, v in strateji.items() if k != "olusturma_zamani"},
             "donemler": donemler,
@@ -516,7 +644,7 @@ class PilotKayit:
                 "bos_nedenleri": {"ust_deneme_id": "Kök deneme."}
                 if ust_deneme is None
                 else {},
-                "ayar_parmak_izi": f"{SURUM}:sha256:{sha256(kanonik(ayarlar)).hexdigest()}",
+                "ayar_parmak_izi": _ayar_ozeti(ayarlar),
             },
             denetle,
         )
@@ -526,7 +654,7 @@ def _bul(olaylar, kimlik, tur=None, alan="kayit_id"):
     for olay in olaylar:
         if olay.get(alan) == kimlik and (tur is None or olay["kayit_turu"] == tur):
             return olay
-    raise PilotHatasi("Kayıt bağı bulunamadı.")
+    raise PilotHatasi(f"Kayıt bağı bulunamadı: {kimlik}")
 
 
 class _Kosu:

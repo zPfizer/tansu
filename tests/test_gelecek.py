@@ -38,6 +38,26 @@ KESIM = [
 BAS = "2013-12-02"
 
 
+def test_kayitli_ayar_yolunda_sonraki_veri_kapanmis_islemi_degistirmez(
+    tmp_path, monkeypatch
+):
+    from tansu.aktarim import AyarAktarimi
+    from tests.test_ayar_aktarimi import fiyatlar, kayitli
+    from tests.test_k1 import anlik_hazirla
+
+    anlik = anlik_hazirla(tmp_path, {"A": fiyatlar()})
+    depo, makbuz = kayitli(tmp_path, monkeypatch)
+    aktarim = AyarAktarimi(depo, makbuz.deneme_id, veri_ref=anlik.kimlik)
+    m = motor.mumlar(anlik, "A", aktarim.p)
+    tablolar = []
+    for mumlar in (m, m.iloc[:-1]):
+        kurulum = aileler.kurulum(mumlar.dropna(subset=["kapanis"]), aktarim.p)
+        tablolar.append(aktarim.ema(mumlar, kurulum, "A")[0])
+    assert tablolar[0].cikis_fiyat.tolist() == pytest.approx([102.232142857])
+    assert tablolar[0].cikis_tarih.tolist() == [m.index[42]]
+    pd.testing.assert_frame_equal(tablolar[0], tablolar[1])
+
+
 def test_ortak_ema_kurulumu_gelecek_fiyat_degisiminden_etkilenmez(monkeypatch):
     gunler = pd.bdate_range("2021-01-04", periods=520)
     kap = [100.0] * 510 + [110.0, 112.0] + [114.0] * 8

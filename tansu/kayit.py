@@ -51,6 +51,7 @@ HASH_DISI = [
     "__init__.py",
     "__main__.py",
     "deneme.py",  # Kayıt tutma işlem sonucunu değiştirmez (TASARIM 5.11, 5.15).
+    "aktarim.py",  # E4/E6 kayıt aktarımı; eski formülleri değiştirmez (TASARIM 5.15).
     "denetim.py",
     "gunluk.py",
     "kaynak.py",

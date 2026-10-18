@@ -1,0 +1,515 @@
+"""#88: üç eski aktarım sınırında hesap sonucu (TASARIM 5.14).
+
+Sentetik seri: 40 gün 100, sonra 103, 104, 105, 106. ATR14 sinyalde
+1 + 2,5/14 = 33/28. Giriş 104. ATR1,5 stopu 104 - 99/56 = 102,232142857;
+ATR2 stopu 104 - 33/14 = 101,642857143. Ertesi düşük 102 yalnız ilkine değer.
+Kutu altı 99,5; ona değmez. Sinyalden sonraki günler yeni sinyal üretmez.
+"""
+
+import json
+from dataclasses import replace
+
+import pandas as pd
+import pytest
+
+from tansu import __main__ as komut
+from tansu import (
+    aileler,
+    deneme,
+    gunluk,
+    katalog,
+    kayit,
+    motor,
+    rapor,
+    simulator,
+    tansusinama,
+)
+from tests.test_gunluk import kagit_aile
+from tests.test_k1 import anlik_hazirla
+from tests.test_kayit import pilot_deneme
+from tests.test_simulator import P, mum
+
+
+IZGARA = {"esik": [0.005], "min_gun": [3], "pencere": [3]}
+
+
+def fiyatlar():
+    kap = [100.0] * 40 + [103.0, 104.0, 105.0, 106.0]
+    gunler = pd.bdate_range("2026-01-05", periods=len(kap))
+    return [
+        mum(g, k, k + 0.5, 102.0 if i == 42 else k - 0.5)
+        for i, (g, k) in enumerate(zip(gunler, kap, strict=True))
+    ]
+
+
+@pytest.mark.parametrize(
+    "stop,cikis,neden,risk",
+    [("atr15", 102.232142857, "stop", 1.767857143), ("kutu", 106.0, "veri_sonu", 4.5)],
+)
+def test_izgara_hucre_ayari_ve_kurulumu_sonucu_degistirir(
+    tmp_path, stop, cikis, neden, risk
+):
+    anlik = anlik_hazirla(tmp_path, {"A": fiyatlar()})
+    p = replace(P, stop=stop)
+    m = motor.mumlar(anlik, "A", p)
+    t = tansusinama.ema_tablolari(m, p, IZGARA, m.index[40])[0]
+    assert len(t) == 1
+    assert t.cikis_fiyat.tolist() == pytest.approx([cikis])
+    assert t.neden.tolist() == [neden]
+    assert t.planlanan_risk.tolist() == pytest.approx([risk])
+    assert t.giris_fiyat.tolist() == [104.0]
+    assert t.sinyal_tarih.tolist() == [m.index[40]]
+
+
+def test_stratejiler_art_arda_soguk_kosu_ile_ayni_islemleri_verir(tmp_path):
+    anlik = anlik_hazirla(tmp_path, {"A": fiyatlar()})
+    m = motor.mumlar(anlik, "A", P)
+    birlikte = tansusinama.ema_tablolari(
+        m, P, {**IZGARA, "stop": ["atr15", "atr2", "kutu"]}, m.index[40]
+    )
+    assert [t.cikis_fiyat.iloc[0] for t in birlikte] == pytest.approx(
+        [102.232142857, 106.0, 106.0]
+    )
+    for stop, t in zip(("atr15", "atr2", "kutu"), birlikte, strict=True):
+        ayri = tansusinama.ema_tablolari(
+            m.copy(deep=True), replace(P, stop=stop), IZGARA, m.index[40]
+        )[0]
+        pd.testing.assert_frame_equal(t, ayri)
+
+
+def test_tansu_komutu_secilen_ayarla_hesaplanan_sonucu_yazar(tmp_path, monkeypatch):
+    anlik = anlik_hazirla(tmp_path, {"A": fiyatlar()})
+    # Küçük sentetik gösterge dönemleri; sinyal ve işlem hesabı gerçektir.
+    monkeypatch.setitem(aileler.VARYANTLAR, "stop_atr15", replace(P, stop="atr15"))
+    monkeypatch.setattr(tansusinama, "IZGARA", {simulator.AILE: IZGARA})
+    assert (
+        komut.main(
+            [
+                "tansu-sinama",
+                "--kok",
+                str(tmp_path),
+                "--kimlik",
+                anlik.kimlik,
+                "--aile",
+                simulator.AILE,
+                "--isci",
+                "1",
+                "--varyant",
+                "stop_atr15",
+            ]
+        )
+        == 0
+    )
+    (yol,) = rapor.RAPOR_DIZINI.glob("tansu-sinama-*.json")
+    sonuc = json.loads(yol.read_text(encoding="utf-8"))
+    assert len(sonuc["aileler"][simulator.AILE]["hisseler"]) == 1
+    (hisse,) = sonuc["aileler"][simulator.AILE]["hisseler"]
+    # (5725/56) * 0,999 / (104 * 1,001) - 1 = -110549/5829824 -> -0,018963.
+    assert hisse["net"] == pytest.approx([-0.018963], abs=1e-7)
+    assert hisse["olcu"]["islem"] == 1
+
+
+def test_gunluk_komutu_secilen_ayarla_stop_durumunu_yazar(tmp_path, monkeypatch):
+    anlik = anlik_hazirla(tmp_path / "gunluk", {"A": fiyatlar()[:-1]})
+    kagit_aile()
+    monkeypatch.setitem(aileler.VARYANTLAR, "stop_atr15", replace(P, stop="atr15"))
+    monkeypatch.setattr(gunluk, "_semboller", lambda *a: ["A"])
+    # Yalnız veri indirme sınırı: saklı sentetik görüntü okunur, hesap değiştirilmez.
+    monkeypatch.setattr(gunluk.veri, "indir", lambda *a, **k: anlik.kimlik)
+    tarih = str(anlik.gunler[-1].date())
+    assert (
+        komut.main(
+            [
+                "gunluk",
+                tarih,
+                "--kok",
+                str(tmp_path),
+                "--varyant",
+                "stop_atr15",
+            ]
+        )
+        == 0
+    )
+    (satir,) = (
+        (kayit.KAYIT_DIZINI / "kartlar.jsonl").read_text(encoding="utf-8").splitlines()
+    )
+    assert len(json.loads(satir)["kartlar"]) == 1
+    (kart,) = json.loads(satir)["kartlar"]
+    assert kart["durum"] == "STOP"
+    assert kart["stop"] == "102,23"
+    assert kart["referans"] == "103,00"
+
+
+def kayitli(tmp_path, monkeypatch, stop="atr15"):
+    # Katalog verisi sentetiktir; kayıt ve hesap yüzleri değiştirilmez.
+    monkeypatch.setattr(katalog, "_TANIMLAR", {"bugun": replace(P, stop=stop)})
+    depo = deneme.PilotKayit(tmp_path / "pilot.jsonl")
+    makbuz = pilot_deneme(depo, veri_ayarlari={"veri_referanslari": ["20261005-1930"]})
+    return depo, makbuz
+
+
+def komutu_kos(argv, capsys):
+    try:
+        kod = komut.main(argv)
+    except SystemExit as hata:
+        kod = hata.code
+    return kod, capsys.readouterr().err
+
+
+def test_tam_cozulmus_kayit_tek_giristen_eklenir_ve_eskisi_degismez(tmp_path):
+    depo = deneme.PilotKayit(tmp_path / "pilot.jsonl")
+    ilk = pilot_deneme(depo)
+    once = depo.yol.read_bytes()
+    strateji = katalog.legacy_coz("stop_atr15")
+    hata = None
+    try:
+        yeni = pilot_deneme(depo, strateji, ust_deneme=ilk.deneme_id)
+    except ValueError as e:
+        hata = str(e)
+    assert hata is None, f"Tam çözülmüş kayıt reddedildi: {hata}"
+    assert yeni.deneme_id != ilk.deneme_id
+    assert yeni.ayar_ozeti != ilk.ayar_ozeti
+    assert depo.yol.read_bytes().startswith(once)
+    ayni = pilot_deneme(depo, strateji)
+    assert ayni.ayar_ozeti == yeni.ayar_ozeti
+    assert ayni.deneme_id != yeni.deneme_id  # Belge: açık kaydetme yeni revizyondur.
+
+
+def test_kayitli_tansu_komutu_cocuk_ayarini_isleme_ve_sonuca_tasir(
+    tmp_path, monkeypatch, capsys
+):
+    anlik = anlik_hazirla(tmp_path, {"A": fiyatlar()})
+    depo, m = kayitli(tmp_path, monkeypatch)
+    monkeypatch.setattr(tansusinama, "IZGARA", {simulator.AILE: IZGARA})
+    kod, hata = komutu_kos(
+        [
+            "tansu-sinama",
+            "--kok",
+            str(tmp_path),
+            "--kimlik",
+            anlik.kimlik,
+            "--aile",
+            simulator.AILE,
+            "--isci",
+            "1",
+            "--deneme-id",
+            m.deneme_id,
+            "--deneme-dosyasi",
+            str(depo.yol),
+        ],
+        capsys,
+    )
+    assert kod == 0, hata
+    olaylar = depo.oku()
+    cocuklar = [o for o in olaylar if o.get("ust_deneme_id") == m.deneme_id]
+    assert len(cocuklar) == 1
+    cocuk = cocuklar[0]
+    assert cocuk["strateji"]["parametreler"][1]["koken"] == "legacy_izgara"
+    baglar = [o for o in olaylar if o["kayit_turu"] == "ayar_bagi"]
+    assert {o["asama"] for o in baglar} == {"sinyal", "islem", "sonuc"}
+    assert {o["deneme_id"] for o in baglar} == {cocuk["deneme_id"]}
+    assert all(
+        {"tur", "konum", "tarih", "alinti", "karar_durumu"} <= set(k)
+        for o in baglar
+        for k in o["kaynaklar"]
+    )
+    assert {o["ayar_parmak_izi"] for o in baglar} == {cocuk["ayar_parmak_izi"]}
+    (islem,) = [o for o in baglar if o["asama"] == "islem"]
+    assert islem["icerik"]["cikis_fiyat"] == pytest.approx(102.232142857)
+    (sonuc,) = [o for o in baglar if o["asama"] == "sonuc"]
+    assert sonuc["icerik"]["net"] == pytest.approx(-0.018963, abs=1e-7)
+    assert sonuc["referanslar"] == [islem["kayit_id"]]
+
+
+def test_kayitli_gunluk_komutu_kayit_ayarindan_stop_durumu_uretir(
+    tmp_path, monkeypatch, capsys
+):
+    anlik = anlik_hazirla(tmp_path / "gunluk", {"A": fiyatlar()[:-1]})
+    depo, m = kayitli(tmp_path, monkeypatch)
+    kagit_aile()
+    monkeypatch.setattr(gunluk, "_semboller", lambda *a: ["A"])
+    monkeypatch.setattr(gunluk.veri, "indir", lambda *a, **k: anlik.kimlik)
+    kod, hata = komutu_kos(
+        [
+            "gunluk",
+            str(anlik.gunler[-1].date()),
+            "--kok",
+            str(tmp_path),
+            "--deneme-id",
+            m.deneme_id,
+            "--deneme-dosyasi",
+            str(depo.yol),
+        ],
+        capsys,
+    )
+    assert kod == 0, hata
+    kart = json.loads(
+        (kayit.KAYIT_DIZINI / "kartlar.jsonl").read_text(encoding="utf-8")
+    )["kartlar"][0]
+    assert kart["durum"] == "STOP"
+    assert kart["stop"] == "102,23"
+    assert "önizleme" in kart["kanit"]
+    assert "148 işlem" not in kart["kanit"]
+    baglar = [o for o in depo.oku() if o["kayit_turu"] == "ayar_bagi"]
+    assert {o["deneme_id"] for o in baglar} == {m.deneme_id}
+    assert {o["ayar_parmak_izi"] for o in baglar} == {m.ayar_ozeti}
+    assert {o["asama"] for o in baglar} == {"sinyal", "islem", "sonuc"}
+
+
+def test_sayisal_ayar_degisiminden_sonra_onceki_deneme_ve_sonuclar_degismez(
+    tmp_path, monkeypatch, capsys
+):
+    anlik = anlik_hazirla(tmp_path, {"A": fiyatlar()})
+    depo, m = kayitli(tmp_path, monkeypatch)
+    argv = [
+        "tansu-sinama",
+        "--kok",
+        str(tmp_path),
+        "--kimlik",
+        anlik.kimlik,
+        "--aile",
+        simulator.AILE,
+        "--isci",
+        "1",
+        "--deneme-id",
+        m.deneme_id,
+        "--deneme-dosyasi",
+        str(depo.yol),
+    ]
+    monkeypatch.setattr(tansusinama, "IZGARA", {simulator.AILE: IZGARA})
+    assert komutu_kos(argv, capsys)[0] == 0
+    once = depo.yol.read_bytes()
+    onceki_sonuclar = [o for o in depo.oku() if o.get("asama") == "sonuc"]
+    assert len(onceki_sonuclar) == 1
+    monkeypatch.setattr(
+        tansusinama, "IZGARA", {simulator.AILE: {**IZGARA, "min_gun": [5]}}
+    )
+    assert komutu_kos(argv, capsys)[0] == 0
+    assert depo.yol.read_bytes().startswith(once)
+    cocuklar = [o for o in depo.oku() if o.get("ust_deneme_id") == m.deneme_id]
+    assert len(cocuklar) == 2
+    assert cocuklar[0]["deneme_id"] != cocuklar[1]["deneme_id"]
+    assert cocuklar[0]["ayar_parmak_izi"] != cocuklar[1]["ayar_parmak_izi"]
+    assert [o for o in depo.oku() if o.get("asama") == "sonuc"][:1] == onceki_sonuclar
+
+
+def test_kayitli_gunluk_eski_gunluk_basarisini_ayar_kaniti_saymaz(
+    tmp_path, monkeypatch, capsys
+):
+    anlik = anlik_hazirla(tmp_path / "gunluk", {"A": fiyatlar()[:-1]})
+    depo, m = kayitli(tmp_path, monkeypatch)
+    kagit_aile()
+    monkeypatch.setitem(aileler.VARYANTLAR, "bugun", P)
+    monkeypatch.setattr(gunluk, "_semboller", lambda *a: ["A"])
+    monkeypatch.setattr(gunluk.veri, "indir", lambda *a, **k: anlik.kimlik)
+    argv = ["gunluk", str(anlik.gunler[-1].date()), "--kok", str(tmp_path)]
+    assert komutu_kos(argv, capsys)[0] == 0
+    gunluk_yol = kayit.KAYIT_DIZINI / "kartlar.jsonl"
+    once = gunluk_yol.read_bytes()
+    assert json.loads(once)["kartlar"][0]["durum"] == "AKTİF"
+    durum_yolu = rapor.RAPOR_DIZINI / "durum.txt"
+    satirlar = durum_yolu.read_text(encoding="utf-8").splitlines()
+    satirlar[1] = f"Son başarılı koşu: {anlik.gunler[-1].date()} 19:30"
+    durum_yolu.write_text("\n".join(satirlar) + "\n", encoding="utf-8")
+    assert (
+        komutu_kos(
+            argv + ["--deneme-id", m.deneme_id, "--deneme-dosyasi", str(depo.yol)],
+            capsys,
+        )[0]
+        == 0
+    )
+    sonuclar = [o for o in depo.oku() if o.get("asama") == "sonuc"]
+    assert len(sonuclar) == 1, (
+        "Eski günlük başarı kayıtlı ayar hesabının yerine kullanıldı"
+    )
+    assert sonuclar[0]["icerik"]["kartlar"][0][3] == "STOP"
+    assert gunluk_yol.read_bytes() == once
+
+
+def test_kayitli_izgara_iki_iscide_tam_baglari_yazar(tmp_path, capsys):
+    gunler = pd.bdate_range("2021-01-04", periods=514)
+    kap = [100.0] * 510 + [110.0, 112.0, 114.0, 115.0]
+    seri = [mum(g, k, k + 0.5, k - 0.5) for g, k in zip(gunler, kap, strict=True)]
+    anlik = anlik_hazirla(tmp_path, {"A": seri, "B": seri})
+    depo = deneme.PilotKayit(tmp_path / "pilot.jsonl")
+    m = pilot_deneme(depo, veri_ayarlari={"veri_referanslari": [anlik.kimlik]})
+    # Tek hücreyi E4'ün gerçek süreç havuzunda çalıştır; çocuk süreçler gerçek kataloğu okur.
+    from tansu.aktarim import AyarAktarimi
+
+    sonuc = tansusinama.calistir(
+        anlik,
+        {},
+        (simulator.AILE,),
+        isci=2,
+        ilerleme=lambda *a: None,
+        izgara={simulator.AILE: {"esik": [0.012], "min_gun": [3], "pencere": [10]}},
+        aktarim=AyarAktarimi(depo, m.deneme_id),
+    )
+    assert sonuc["aileler"][simulator.AILE]["ozet"]["toplam"] == 2
+    baglar = [o for o in depo.oku() if o["kayit_turu"] == "ayar_bagi"]
+    assert len([o for o in baglar if o["asama"] == "islem"]) == 2
+    sonuclar = [o for o in baglar if o["asama"] == "sonuc"]
+    assert len(sonuclar) == 2
+    assert {o["icerik"]["hisse"] for o in sonuclar} == {"A", "B"}
+    assert {o["kosu_id"] for o in baglar} == {sonuc["kosu_id"]}
+
+
+@pytest.mark.parametrize("bozuk", ["eksik", "ozet", "yok"])
+def test_gecersiz_deneme_hesabi_baslatmadan_kimligiyle_durur(
+    tmp_path, monkeypatch, capsys, bozuk
+):
+    depo, m = kayitli(tmp_path, monkeypatch)
+    kimlik = m.deneme_id
+    olay = depo.oku()[0]
+    if bozuk == "eksik":
+        olay["strateji"]["parametreler"] = olay["strateji"]["parametreler"][:-1]
+    elif bozuk == "ozet":
+        olay["ayar_parmak_izi"] = "yanlis"
+    else:
+        kimlik = "olmayan-deneme"
+    depo.yol.write_bytes(deneme.kanonik(olay) + b"\n")
+    # Görüntü yok: kayıt denetimi daha önce yapılmazsa yanlış aşamada durur.
+    kod, hata = komutu_kos(
+        [
+            "tansu-sinama",
+            "--kok",
+            str(tmp_path),
+            "--deneme-id",
+            kimlik,
+            "--deneme-dosyasi",
+            str(depo.yol),
+        ],
+        capsys,
+    )
+    assert kod == 1
+    assert kimlik in hata
+    assert not list(rapor.RAPOR_DIZINI.glob("tansu-sinama-*.json"))
+
+
+def test_kayitsiz_komut_eski_sonucu_korur_ve_bagini_isaretler(tmp_path, monkeypatch):
+    anlik = anlik_hazirla(tmp_path, {"A": fiyatlar()})
+    monkeypatch.setitem(aileler.VARYANTLAR, "bugun", P)
+    monkeypatch.setattr(tansusinama, "IZGARA", {simulator.AILE: IZGARA})
+    assert (
+        komut.main(
+            [
+                "tansu-sinama",
+                "--kok",
+                str(tmp_path),
+                "--kimlik",
+                anlik.kimlik,
+                "--aile",
+                simulator.AILE,
+                "--isci",
+                "1",
+            ]
+        )
+        == 0
+    )
+    yol = rapor.RAPOR_DIZINI / "ayar-baglari.jsonl"
+    assert yol.exists(), "Kayıtsız koşunun ayrı bağlantı kaydı yok"
+    baglar = deneme.PilotKayit(yol).oku()
+    assert all(
+        o["deneme_id"] is None and o["kayit_durumu"] == "kayitsiz" for o in baglar
+    )
+    assert not any(o["kayit_turu"] == "deneme" for o in baglar)
+
+
+@pytest.mark.parametrize("bozuk", ["kurulum_yok", "kutu_eksik", "ayar_degisti"])
+def test_yeni_yol_eksik_kurulumu_ve_degisen_ayari_dolumdan_once_durdurur(
+    tmp_path, monkeypatch, capsys, bozuk
+):
+    from tansu import aktarim
+
+    anlik = anlik_hazirla(tmp_path, {"A": fiyatlar()})
+    depo, m = kayitli(tmp_path, monkeypatch, stop="kutu")
+    monkeypatch.setattr(tansusinama, "IZGARA", {simulator.AILE: IZGARA})
+    kurulum = aileler.kurulum
+    ema = aktarim.AyarAktarimi.ema
+    if bozuk == "kurulum_yok":
+        monkeypatch.setattr(aileler, "kurulum", lambda *a: None)
+    elif bozuk == "kutu_eksik":
+        monkeypatch.setattr(
+            aileler, "kurulum", lambda *a: kurulum(*a).assign(kutu_alt=float("nan"))
+        )
+    else:
+
+        def degisen(self, *args):
+            self.p = replace(self.p, stop="atr2")
+            return ema(self, *args)
+
+        monkeypatch.setattr(aktarim.AyarAktarimi, "ema", degisen)
+    beklenmeyen = None
+    try:
+        kod, hata = komutu_kos(
+            [
+                "tansu-sinama",
+                "--kok",
+                str(tmp_path),
+                "--kimlik",
+                anlik.kimlik,
+                "--aile",
+                simulator.AILE,
+                "--isci",
+                "1",
+                "--deneme-id",
+                m.deneme_id,
+                "--deneme-dosyasi",
+                str(depo.yol),
+            ],
+            capsys,
+        )
+    except AttributeError as e:
+        beklenmeyen = e
+    assert beklenmeyen is None, f"Kayıt kimliği olmayan hata: {beklenmeyen}"
+    assert kod == 1
+    cocuk = next(o for o in depo.oku() if o.get("ust_deneme_id") == m.deneme_id)
+    assert cocuk["deneme_id"] in hata
+    assert not any(o.get("asama") in ("islem", "sonuc") for o in depo.oku())
+    assert not list(rapor.RAPOR_DIZINI.glob("tansu-sinama-*.json"))
+
+
+@pytest.mark.parametrize("asama", ["sinyal", "islem"])
+def test_gercek_aktarim_sinirinda_ozet_farki_sonucu_durdurur(
+    tmp_path, monkeypatch, capsys, asama
+):
+    anlik = anlik_hazirla(tmp_path, {"A": fiyatlar()})
+    depo, m = kayitli(tmp_path, monkeypatch)
+    monkeypatch.setattr(tansusinama, "IZGARA", {simulator.AILE: IZGARA})
+    yaz = deneme.PilotKayit.bag_kaydet
+    bozulan = []
+
+    def degisen(self, **kw):
+        makbuz = yaz(self, **kw)
+        if kw["asama"] == asama:
+            olaylar = self.oku()
+            olaylar[-1]["ayar_parmak_izi"] = "baska-ayar"
+            self.yol.write_bytes(b"".join(deneme.kanonik(o) + b"\n" for o in olaylar))
+            bozulan.append(makbuz.olay_id)
+        return makbuz
+
+    monkeypatch.setattr(deneme.PilotKayit, "bag_kaydet", degisen)
+    kod, hata = komutu_kos(
+        [
+            "tansu-sinama",
+            "--kok",
+            str(tmp_path),
+            "--kimlik",
+            anlik.kimlik,
+            "--aile",
+            simulator.AILE,
+            "--isci",
+            "1",
+            "--deneme-id",
+            m.deneme_id,
+            "--deneme-dosyasi",
+            str(depo.yol),
+        ],
+        capsys,
+    )
+    assert kod == 1
+    assert bozulan and bozulan[0] in hata
+    assert not any(o.get("asama") == "sonuc" for o in depo.oku())
+    if asama == "sinyal":
+        assert not any(o.get("asama") == "islem" for o in depo.oku())
+    assert not list(rapor.RAPOR_DIZINI.glob("tansu-sinama-*.json"))
