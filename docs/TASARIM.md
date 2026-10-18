@@ -189,7 +189,7 @@ Tansu sınaması (5.14) kendi sabitini kullanır. Yeni maliyet politikası §5.1
 **Motor kendi Adım döngümüzdür; vectorbt kullanılmaz.** Dolum kuralları (5.3) AOF'a ve gün
 yükseği/düşüğüne koşullu. Ölçütler kısa kendi kodumuzdur. (A3, M1, S2-41, C-2)
 
-**Kaynaklar** (`docs/arastirma/veri-kaynaklari.md`):
+**Kaynaklar** (beyin notu knowledge/concepts/tansu-veri-kaynaklari.md, depo dışı; eski dosya git geçmişinde):
 - **Fiyat:** İş Yatırım `HisseTekil`, anahtarsız.
   - Ham `HG_*` ve düzeltilmiş `HGDG_*` seriler.
   - Düzeltilmiş seri bedelsiz, bedelli ve brüt temettüyü kapsar.
@@ -1273,7 +1273,7 @@ uygular (KURALLAR §3 ve TASARIM §5.15 eski davranışın korunması).
 | Kayıt / durum | İçerik, çelişki ve kapanış kanıtı | Engellediği iş | Dayanak |
 |---|---|---|---|
 | WF — CLAUDE TEKNİK GİRDİ / yöntem kaydı eksik | D §2: kayan 12 ay eğitim, 3 ay test, çeyreklik ilerleme; ilk eğitim 2021, ilk OOS 2022-01-01–2022-03-31, son OOS 2025-10-01–2025-12-31. 2021 yalnız eğitim/keşif, beş yılın yıllık açıklayıcı sonucu yine gösterilir. Eski §5.14 genişleyen iki yıl yöntemi legacy kalır. Eğitimde seçilen ayar testte donar. 30 OOS/120 IS işlem sayıları araştırma uyarısıdır; ret eşiği değildir. Nihai kayıt pencere listesi, ısınma, seçim manifesti, açık işlem, ufuk ve veri/ayar kimliklerini birlikte taşımalıdır; ROBUST/RISK bağları eksikken tamamlanmaz. | **#93 ENGELLİ:** tam ve tutarlı WF yöntem kaydı olmadan uygulama başlamaz. | [L3]–[L5], [W1]; D §2. |
-| MC — ARAŞTIRMA UYUŞMAZLIĞI / açık | C Q81: 10.000, ardından 20.000/40.000/80.000/100.000 ve yakınsama açıklaması. D §4: varyant başına 1.000. İkisi aynı protokol değildir; biri sessizce üstün sayılmaz. Kesin tekrar ve yakınsama sözleşmesini Claude tek yöntem sürümünde bağlamalıdır. | **#94 ENGELLİ:** tekrar, örnekleme ve muhasebe dahil tam MC yöntem kaydı olmadan uygulama başlamaz. | [L5], [W2], [W9]; C Q81, D §4. |
+| MC — ARAŞTIRMA UYUŞMAZLIĞI / açık | C Q81: 10.000, ardından 20.000/40.000/80.000/100.000 ve yakınsama açıklaması. D §4: varyant başına 1.000. İkisi aynı protokol değildir; biri sessizce üstün sayılmaz. Kesin tekrar ve yakınsama sözleşmesini dağıtıcı tek yöntem sürümünde bağlamalıdır. | **#94 ENGELLİ:** tekrar, örnekleme ve muhasebe dahil tam MC yöntem kaydı olmadan uygulama başlamaz. | [L5], [W2], [W9]; C Q81, D §4. |
 | MC örnekleme — kontrol edilmiş teknik girdi | D §4: net R sırasını yerine koymadan karıştırma; N işlemi N kez yerine koymalı çekme; hisselerde ortak tarih bloklarını yeniden örnekleme; %10 işlem kaçırma stresi; sayısal ayarda ±1 ızgara adımı/aynı değerden eşit olasılıklı tam yeniden sınama. Bunlar ayrı deneylerdir; %10 kalibre edilmiş hata oranı değildir. Sabit 42 tohum önerisi, üreteç/sürüm ve ayrı akış kimliğiyle kaydedilir. Ana girdi dondurulmuş WF OOS, 2021 için keşif etiketi. Her deney örnek birimi, ufuk, gerçekleşen tekrar sayısı, çıktı yüzdelikleri ve bağımlılık varsayımını taşır. | #94; önce WF, ROBUST ve RISK kayıtları gerekir. | [W2], [W9]; D §4, `mc-wf/arastirma.md` yöntem tablosu. |
 | ROBUST — ARAŞTIRMA UYUŞMAZLIĞI / açık | B Q75: çaprazlar dahil tek indeks adımı komşuluk, kenarda eksik komşuluk bayrağı; otomatik kabul/ret yok. C Q77: en küçük komşu skorunu en büyüt; Q95: kanonik demetle eşitlik. D §3: tam iç komşuluk, kenarı merkez seçme; en geniş bileşen, medyan, iç uzaklık, sonra en kötü komşu net R ve sözlüksel sıra. Eski §5.14 eksen komşusu ayrı legacy'dir. Tek seçim ve kenar politikası onaylanmadan hiçbiri yeni varsayılan yapılmaz. Izgara sınırları ve adımlar strateji manifestinde dondurulur. | #92 seçici kısmı, #93, #94. | [T1], [W3]; B Q75, C Q76/Q77/Q95, D §3. |
 | RISK — teknik bağlama açık | D §1'in masraflı bütçesi `B=0,02*C`, `q=B/((e-s)+c*(e+s))` önerir; C net ölçüleri ve eski §5.3 masrafsız R aynı şey değildir. Masrafın %2 bütçeye girip girmediği, kısmi dolum muhasebesi ve çiftin ilk stop/risk dayanağı tek risk sürümünde bağlanmalıdır. Sıfır stopa bölme veya çifte hayali EMA stopu çözüm değildir. | #89 risk boyutlama, #92 net R eğrisi, #93, #94. | [L1], [T2], [T3], [W6]; D §1, C Q96. |
@@ -1371,7 +1371,7 @@ izni vermez. Fon/kripto kapsamı ve kalıcı kimlik onayı bu motor sürümünü
 
 ## 7. Uygulama sırası
 
-Adım 1–9 tamamlandı (MVP biletleri yerel, salt okunur arşivde ve git geçmişinde: `.scratch/arsiv/tansu-mvp/issues/`, 05–06.10; GitHub ve CI'da bu klasör bulunmaz). Durum 14.10 ile eşlendi. <!-- driftlint-ignore: local-only archive, gitignored, absent in CI -->
+Adım 1–9 tamamlandı (MVP biletleri, 05–06.10, yalnız git geçmişinde: `git show 8c5f06c^:.scratch/arsiv/tansu-mvp/issues/<dosya>`; GitHub ve CI'da bu klasör bulunmaz). Durum 14.10 ile eşlendi.
 
 1. **Temizlik:** tamamlandı (05.10).
 2. **Veri deposu:** `kaynak` + `veri`.

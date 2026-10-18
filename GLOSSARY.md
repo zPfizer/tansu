@@ -1,8 +1,7 @@
 # Sözlük
 
-Sistemin dili. Kurallar Tansu'dan esinlenen yorumlardır; Tansu'nun kendi sistemi değildir. Bu dosya terimin ne
-olduğunu söyler; sayı, formül ve işleyiş, atıf verilen bölümdedir (TASARIM = `docs/TASARIM.md`, KURALLAR =
-`docs/KURALLAR.md`).
+Kurallar Tansu'dan esinlenen yorumlardır; onun kendi sistemi değildir. Bu sözlük terimleri tanımlar.
+Sayı, formül ve işleyiş atıf verilen bölümdedir: TASARIM = `docs/TASARIM.md`, KURALLAR = `docs/KURALLAR.md`.
 
 ## Kaynak
 
@@ -61,14 +60,14 @@ olduğunu söyler; sayı, formül ve işleyiş, atıf verilen bölümdedir (TASA
 |---|---|
 | Aile | Bir kurulum türünü tanımlayan kural (KURALLAR §2–3, TASARIM §3). |
 | Sinyal | Ailenin kuralının sağlandığı gün. |
-| Düşen sinyal | Girilemeden düşen sinyal; düşme koşulları TASARIM §5.3 "Düşen sinyal" maddesindedir. (bilet 07e, 15.10) |
+| Düşen sinyal | Girilemeden düşen sinyal; düşme koşulları TASARIM §5.3 "Düşen sinyal" maddesindedir. |
 | Reddedilen sinyal | Pozisyon yeri, nakit ya da boyut sınırı yüzünden girilemeyen sinyal (TASARIM §5.3, §5.6). |
 | ATR | Ortalama gerçek aralık: bir hissenin günlük fiyat oynaklığı (TASARIM §5.5). |
 | EMA | Üssel hareketli ortalama: bir veri serisinin yakın günlere daha çok ağırlık veren ortalaması. |
 | SMA | Basit hareketli ortalama: bir veri serisinin son n gününün eşit ağırlıklı ortalaması. |
 | Gerçek aralık | Bir günün fiyat aralığı, önceki kapanışa göre oluşan boşluk dahil (TASARIM §5.5). |
 | Wilder ortalaması | EMA'ya benzer ama ağırlığı daha yavaş azalan ortalama. EMA ve SMA'dan ayrıdır (TASARIM §5.5). |
-| EMA sıkışması kırılımı | Seçili EMA'lar birbirine yaklaştıktan sonra fiyatın kırılması. Varsayılan giriş, kapanışın sıkışma dönemindeki en yükseği aşmasıdır; öbür giriş türleri varyanttır (KURALLAR §3). |
+| EMA sıkışması kırılımı | Seçili EMA'lar birbirine yaklaştıktan sonra fiyatın kırılması. Varsayılan giriş ve giriş varyantları KURALLAR §3'tedir. |
 | Sıkışma oranı | Seçili EMA'ların birbirine ne kadar yakın olduğunu ölçen oran (KURALLAR §3). |
 | Sıkışma dönemi | Sıkışma oranının eşiği aşmadığı art arda günler (KURALLAR §3). |
 | Giriş penceresi | Sıkışma dönemi bittikten sonra giriş sinyalinin oluşabileceği dönem (KURALLAR §3). |

@@ -24,6 +24,7 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ### Değişti
 
+- Kök belgeler ve iş kuralları sadeleşti: denetçi sayısı riske göre, günlüğü kodu değiştiren yazar, küçük belge düzeltmeleri PR ile giriyor; README özet bölümü kalktı. (#122)
 - Yerel test kapısı kaldırıldı; kanca yalnız önce testin yazıldığını denetliyor; PR denetimi gerçek veri kanıtını yalnız tansu/ kodu değişince, denetçiyi yalnız kod değişince istiyor ve yalnız master birleştirmesi gelen PR’a yeni inceleme turu istemiyor. (#122)
 - Katalog kaynak turunda genel ATR çıkışı ile girişe özel başabaş ve RSI çıkışları ayrıldı; 24 tanımın eksik bileşim dayanakları açık tutuldu. (#83)
 - TASARIM'da standart long/short çıkışı çift rotasyonundan ayrıldı; aynı gün stop ve hedef durumu güncel öncelik kuralına bağlandı. (#60)
@@ -37,11 +38,9 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 - GitHub deposunun adı tansu oldu; eski adres yeni adrese yönleniyor.
 - Değişiklik başlıkları kapattıkları işin numarasıyla başlıyor; otomatik kabul denetimi bu eşleşmeyi kontrol ediyor.
 - Açık işler, çalışma sırasına göre numaralanmış ve sağlayacakları sonuçla adlandırılmış sürüm hedeflerine bağlandı.
-
 - Değişiklik açıklamaları kısaldı ve Türkçe yönergeler içeriyor. Otomatik kabul denetimi 15 kuraldan 6 kurala indi.
 - Bilgisayarda yalnız değişen işle ilgili testler çalışıyor. Tüm testler GitHub'da çalışıyor.
 - GitHub'daki otomatik kontroller yalnız Windows'ta çalışıyor.
-- Kod incelemesi artık OpenAI Codex eklentisiyle yapılıyor.
 
 ### Düzeltildi
 

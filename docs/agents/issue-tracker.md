@@ -2,17 +2,16 @@
 
 Specs and tickets of this repo are GitHub issues in `zPfizer/tansu` (remote `origin`). Use the `gh` CLI for all operations. `gh` finds the repo from `git remote -v`.
 
-`.scratch/` is local and gitignored. It holds temporary job files and the old read-only ticket archive. The old archive also remains in git history. GitHub and CI do not require these local files. An open ticket has one place: its issue.
+`.scratch/` is the local, gitignored temporary job folder. The old ticket archive exists only in git history. Read a file with `git show 8c5f06c^:.scratch/<path>`. GitHub and CI do not require local archive files. An open ticket has one place: its issue.
 
 ## Issue and PR rule
 
 Source: Levent 18.10: "Issue ve PR kuralını onaylıyorum." This section owns the full rule.
 
-1. **Direct to master, no issue or PR:** Use this path only for a clear, harmless document fix: spelling, format, a broken link, or a wrong fact line. If unsure, use the PR path. This direct path is a TANSU choice. Small-team trunk guidance permits direct commits ([S12](https://trunkbaseddevelopment.com/)).
-2. **PR without an issue:** Use this path for a larger document fix that needs no decision. Put the reason in a separate body line: `Issue yok: <reason>`. Use the title `Belge · <short title>`. CI accepts this path only when every changed file is `*.md`, outside `.claude/`, `.github/`, `docs/kurallar/`, and `docs/agents/`. It also excludes `docs/TASARIM.md`, `docs/KURALLAR.md`, `CODING_STANDARDS.md`, `DEFINITION_OF_DONE.md`, and `GLOSSARY.md` because they own rules. Files named `AGENTS.md` or `CLAUDE.md` at any level are excluded because they carry agent rules. A clear typo in an excluded file can still use item 1. An empty or unknown file list fails this check. An issue exemption for document fixes also exists in [S4](https://devguide.python.org/getting-started/pull-request-lifecycle/) and [S6](https://docs.djangoproject.com/en/dev/internals/contributing/writing-code/submitting-patches/).
+2. **PR without an issue:** Use this path for a document fix that needs no decision, including a clear small fix. If its files are excluded below, use path 3. Put the reason in a separate body line: `Issue yok: <reason>`. Use the title `Belge · <short title>`. CI accepts this path only when every changed file is `*.md`, outside `.claude/`, `.github/`, `docs/kurallar/`, and `docs/agents/`. It also excludes `docs/TASARIM.md`, `docs/KURALLAR.md`, `CODING_STANDARDS.md`, `DEFINITION_OF_DONE.md`, and `GLOSSARY.md` because they own rules. Files named `AGENTS.md` or `CLAUDE.md` at any level are excluded because they carry agent rules. An empty or unknown file list fails this check. An issue exemption for document fixes also exists in [S4](https://devguide.python.org/getting-started/pull-request-lifecycle/) and [S6](https://docs.djangoproject.com/en/dev/internals/contributing/writing-code/submitting-patches/).
 3. **Issue + PR:** Use this path for code, tests, CI, hooks, settings, refactoring that keeps behavior, and any change of a rule's meaning. Use a branch for the issue. The existing `Closes #N` and `#<N> · <short title>` checks still apply. Reviewed refactoring is part of [S11](https://google.github.io/eng-practices/review/developer/small-cls.html). GitHub documents issue links in [S3](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/linking-a-pull-request-to-an-issue).
 4. **Issue only:** Use this path for deferred work. Never defer a small document error. Immediate correction is a TANSU choice. Issues can track future work ([S2](https://docs.github.com/en/issues/tracking-your-work-with-issues/learning-about-issues/about-issues)).
-5. **Direct push owner and CI:** Only Claude pushes directly to master. Claude says "done" only after green CI. On red CI, Claude reverts at once. This actor restriction and the immediate revert are TANSU choices. Trunk guidance requires a green build and fast recovery ([S13](https://trunkbaseddevelopment.com/committing-straight-to-the-trunk/)).
+5. **Direct push owner and CI:** Only the dağıtıcı (the dispatcher) pushes directly to master. The dağıtıcı says "done" only after green CI. On red CI, the dağıtıcı reverts at once. This actor restriction and the immediate revert are TANSU choices. Trunk guidance requires a green build and fast recovery ([S13](https://trunkbaseddevelopment.com/committing-straight-to-the-trunk/)).
 
 ## Conventions
 
@@ -64,7 +63,7 @@ A ticket is closed when the issue state is closed. A ticket is claimed when it h
 
 ## Status field
 
-This section keeps the old `Status:` contract. It describes only the local, read-only ticket archive under `.scratch/` and its copies in git history. GitHub and CI do not require the archive. New work does not use this contract. `triage-labels.md` owns only the role strings. The old tickets write it as `**Status:** <value>`. The value is one of:
+This section keeps the old `Status:` contract for tickets that exist only in git history. Read a file with `git show 8c5f06c^:.scratch/<path>`. GitHub and CI do not require a local archive. New work does not use this contract. `triage-labels.md` owns only the role strings. The old tickets write it as `**Status:** <value>`. The value is one of:
 
 - A triage role string from `triage-labels.md`: the ticket waits for triage or for work.
 - `claimed`: work started. Set it and save before any work.
@@ -72,7 +71,7 @@ This section keeps the old `Status:` contract. It describes only the local, read
 - `done (PR #N, hash)`: merged. The parentheses name the PR and the merge commit.
 - `done (kısa not)`: delivered, not merged. The parentheses hold one short note: what is delivered and what moved elsewhere; the branch name is optional (example: ticket 06 of `belge-hizasi`). When the merge happens, the value becomes `done (PR #N, hash)`.
 - `resolved`: the closing value of a wayfinder child ticket (see "Wayfinding operations").
-- `done`: the legacy value of the closed tickets in the local, read-only `.scratch/arsiv/tansu-mvp/issues/` archive (before 14.10), also available in git history.
+- Legacy: bare `done` marked closed MVP tickets before 14.10. Those tickets exist only in git history: `git show 8c5f06c^:.scratch/arsiv/tansu-mvp/issues/<file>`. Do not use bare `done` in a new ticket.
 
 A ticket is closed when its value starts with `done` or `resolved`. (bilet 05, 14.10)
 
