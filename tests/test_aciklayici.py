@@ -2,6 +2,37 @@
 
 from html.parser import HTMLParser
 from pathlib import Path
+import re
+
+import pytest
+
+
+def sade_metin_dogrula(gorunen):
+    for isaret in ("/", "\\", ".py", ".md", ".html", "\ufffd"):
+        assert isaret not in gorunen, (
+            f"Görünen metinde teknik ad veya bozuk karakter: {isaret}"
+        )
+    assert not re.search(r"\w+_\w+", gorunen), "Görünen metinde teknik ad: alt çizgili ad"
+
+
+@pytest.mark.parametrize(
+    "gorunen,kabul",
+    [
+        ("Kaynak: docs/aciklayici/modul-1.html", False),
+        (r"Kaynak: C:\rapor\sonuc.md", False),
+        ("Kurallar aileler.py içinde.", False),
+        ("Giriş için giris_ucgen kullanılır.", False),
+        ("Bozuk karakter: \ufffd", False),
+        ("Önce bekle. Sonra işlemi aç.", True),
+        ("Boş alanı _ işaretiyle göster.", True),
+    ],
+)
+def test_sade_metin_ornekleri(gorunen, kabul):
+    if kabul:
+        sade_metin_dogrula(gorunen)
+    else:
+        with pytest.raises(AssertionError, match="Görünen metinde"):
+            sade_metin_dogrula(gorunen)
 
 
 class Sayfa(HTMLParser):
@@ -70,10 +101,7 @@ def test_modul1_aciklayici_bolumleri_ve_sade_metin():
     ]
     assert not sayfa.dis_kaynaklar, "Sayfa dış kaynak olmadan açılmalı"
     gorunen = " ".join(sayfa.metin)
-    for isaret in ("_", "/", "\\", ".py", ".md", ".html", "\ufffd"):
-        assert isaret not in gorunen, (
-            f"Görünen metinde teknik ad veya bozuk karakter: {isaret}"
-        )
+    sade_metin_dogrula(gorunen)
     assert "Modül 1" in gorunen
     assert "henüz yok" in gorunen
     assert "#76" in gorunen
