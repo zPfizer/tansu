@@ -3,6 +3,7 @@ import re
 import subprocess
 import sys
 from pathlib import PurePosixPath
+from tempfile import TemporaryDirectory
 
 
 # Altı kural (Levent 17.10: "Sadeleştir."; başlık kuralı Levent 18.10). Testi, biçimi ve lint'i ci iş akışı kanıtlar.
@@ -70,22 +71,64 @@ def _inceleme_hatasi(bolum):
 
 
 def _temiz_birlesme(denetlenen, bas_sha, taban, dizin):
-    def git(*arg):
-        return subprocess.run(
+    def git(*arg, ham=False, ortam=None):
+        cikti = subprocess.run(
             ["git", "--no-replace-objects", *arg],
             cwd=dizin,
+            env=ortam,
             capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="surrogateescape",
             check=True,
         ).stdout
+        return cikti if ham else cikti.decode("utf-8", errors="surrogateescape")
 
     def dosyalar(x, y):
         cikti = git("diff-tree", "-r", "-z", "--name-only", "--no-renames", x, y)
         return set(cikti.split("\0")) - {""}
 
-    # Denetim ağaçları karşılaştırır, birleştirmez; iki tarafın da değiştirdiği dosya yeni geçiş ister.
+    def union_ayni(dosya, birinci, ortak, ikinci, sha):
+        kayitlar = [
+            git("ls-tree", "--format=%(objectmode) %(objecttype)", ref, "--", dosya)
+            for ref in (birinci, sha)
+        ]
+        if kayitlar[0] not in {"100644 blob\n", "100755 blob\n"} or (
+            kayitlar[1] != kayitlar[0]
+        ):
+            return False
+        # Ayrı depo, yerel info/attributes ve genel özniteliklerin kararı değiştirmesini önler.
+        with TemporaryDirectory(prefix="tansu-dod-attributes-") as gecici:
+            git("init", "--bare", "--template=", gecici)
+            ortam = {
+                **os.environ,
+                "GIT_OBJECT_DIRECTORY": git(
+                    "rev-parse", "--path-format=absolute", "--git-path", "objects"
+                ).strip(),
+                "GIT_ATTR_NOSYSTEM": "1",
+                "GIT_CONFIG_NOSYSTEM": "1",
+                "GIT_CONFIG_GLOBAL": os.devnull,
+            }
+            ozellik = git(
+                f"--git-dir={gecici}",
+                "-c",
+                f"core.attributesFile={os.devnull}",
+                "check-attr",
+                f"--source={birinci}",
+                "-z",
+                "merge",
+                "--",
+                dosya,
+                ortam=ortam,
+            )
+        if ozellik.split("\0") != [dosya, "merge", "union", ""]:
+            return False
+        bloblar = [
+            git("rev-parse", f"{ebeveyn}:{dosya}").strip()
+            for ebeveyn in (birinci, ortak, ikinci)
+        ]
+        return git(
+            "merge-file", "--object-id", "--union", "-p", *bloblar, ham=True
+        ) == git("cat-file", "blob", f"{sha}:{dosya}", ham=True)
+
+    # Ortak dosyalar yalnız kayıtlı union kuralı ve birebir union içeriğiyle geçer.
     try:
         git("merge-base", "--is-ancestor", denetlenen, bas_sha)
         for satir in git(
@@ -102,11 +145,13 @@ def _temiz_birlesme(denetlenen, bas_sha, taban, dizin):
             getirilen = dosyalar(taban_ortak[0], ikinci)
             dal = dosyalar(taban_ortak[0], birinci)
             if (
-                getirilen & dal
-                or not dosyalar(birinci, sha) <= getirilen
+                not dosyalar(birinci, sha) <= getirilen
                 or not dosyalar(ikinci, sha) <= dal
             ):
                 return False
+            for dosya in getirilen & dal:
+                if not union_ayni(dosya, birinci, taban_ortak[0], ikinci, sha):
+                    return False
     except subprocess.CalledProcessError:
         return False
     except OSError:
