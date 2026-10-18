@@ -668,7 +668,7 @@ Dolar bazı ilk sürümde yok.
       hesabını içerir; o da listededir (muhafazakâr: kayıt kodu değişince yeni kayıt gerekir). Bu, tekrar
       sayısının değerinin hash dışı olmasıyla çelişmez: günlükteki `tekrar` alanı koşuda kullanılan değerdir; B'yi
       hesaplayan kod ve sabitleri (200, 1.000, 200·m) ise kuraldır. (karar.md:28; bilet 03)
-    - Boru hattı denetimi (`denetim.py`) hash dışıdır.
+    - Boru hattı denetimi (`denetim.py`) hash dışıdır. Kayıt pilotunun hash sınıfı §5.11'de belirtilir.
   - **Kod hash'i** kaynağın `ast.dump` sha256'sıdır; yorum ve boşluk değişmez.
   - **Hash dışı:** tekrar sayısının koşuda kullanılan değeri ve tohum (koşu argümanı); günlükte ayrı alan olarak
     yazılır. Blok uzunluğu argüman değil çıktıdır: ortalama tutma süresinden hesaplanır (`istatistik.blok_uzunlugu`,
@@ -725,6 +725,7 @@ Parametreler ve ızgara önceden yazılır (`KURALLAR.md` §3). Kurallar:
 
 **Deneme günlüğü:** `kayit/deneme.jsonl`, yalnız ekleme. (M6, C-6, İ: 15-044, 15-046, 15-070, 12-030,
 20-003, 13-034)
+- **Hash dışı kayıt modülü:** `deneme.py`, `kayit.HASH_DISI` listesindedir; yalnız deneme olaylarını saklar, işlem sonucunu değiştirmez. Düz modül envanter testine girer. `kayit.py` dosyasındaki bu liste değişikliği §5.8 gereği yeni kod hash'i üretir; saklanmış eski kimlikler yeniden hesaplanmaz.
 - **Satır başlangıcı ve bitişi:** her koşu önce `olay=basladi`, sonra `olay=bitti` satırı yazar.
   `bitti` satırı olmayan `basladi` de deneme sayılır.
 - **Deneme sayısı (m), tek tanım:** Holm'un ve K1 tekrar sayısının (B, 5.7) m'si; resmi koşuların sınadığı (kural
@@ -1172,6 +1173,65 @@ E5 önce revizyon makbuzunu verir; E4/E6 bu referansla çalışır. Değişmeyen
 koşudur; kaydetme olayı yeni revizyondur. Izgara hücresi alt denemedir; MC senaryosu koşunun alt kaydıdır.
 Holm için resmi sınıf ve hipotez ailesi ayrıca yazılır; senaryo veya revizyon adedi m diye sunulmaz.
 Dayanak: [W8], [L4]; taslak kayıt tablosu, C Q87 ve eski resmi sayım §5.11.
+
+#### Deneme kayıt pilotu (S03, #84)
+
+Bu bölüm #84'ün karar verilmiş kayıt sözleşmesini uygular. Kimlik ve serileştirme ayrıntıları
+**YORUM / geçici pilot** seçimidir; kalıcı bayt biçiminin onayı #97'ye aittir. Tansu'nun işlem
+günlüğü önerisi [T3], ayar revizyonu algoritmasının kaynağı değildir. Her açık kaydetme yeni
+revizyondur; aynı değerleri kaydetmek veya önceki değere dönmek eski revizyonu yeniden kullanmaz.
+Kaydedilmiş ayarın tekrar koşusu aynı denemeye bağlı yeni koşudur. Dayanak: #84 gövdesi ve
+Levent'in 18.10 tarihli bu işe verilen girdileri; ortak kayıt sözleşmesi ve C07.
+
+E5'in pilot yüzü `tansu/deneme.py` içindeki `PilotKayit` sınıfıdır. Dosya yolu çağıranın
+açık girdisidir; eski `kayit/deneme.jsonl` pilot dosyası değildir. Pilot ayrı bir alanda tutulur.
+Eski çağıranlar ve §5.11 okuyucusu değişmez. Modülün hash sınıfı §5.11'de açıklanır;
+eski `kural_id`, `kosu_id` ve sınıf alanları yalnız eski referans olarak saklanır, yeniden üretilmez.
+Pilot revizyonları Holm m'sine eklenmez; resmi sayımın sahibi §5.11'dir.
+
+| Yüz | Girdi ve çıktı sözleşmesi |
+|---|---|
+| `deneme_kaydet` | Katalog varyantı, aktör, gerekçe, üst deneme, dönemler, veri/yöntem/risk/masraf ayarları ve eski referans → kimlik ve ayar özeti içeren kalıcı yazma makbuzu. Tam çözülmüş stratejinin sahibi `katalog.legacy_coz` olur; parametreler, kaynaklar ve katalog/şema sürümleri kayıt içinde korunur. Bu yüz eski tanımı kaydeder; panel seçimine izin vermez. |
+| `kosu` bağlamı | Kayıtlı deneme, mod, görüntü, manifest özeti, üyelik sürümü, kod kimliği, ortam, bağımlılık özeti, tohum ve iş listesi → başlangıç makbuzundan sonra koşu tutacağı. E5 hesaplama çağırmaz. Hesabı çağıran, bağlam gövdesine ancak makbuzdan sonra girer. |
+| `sonuc_kaydet`, `islem_kaydet` | Koşu tutacağı üzerinden sonuç/işlem bağları, ayar özeti, dönem, birimler, muhasebe politikası, uyarılar ve çıktı referansları → ekleme makbuzu. Deneme ve koşu bağı kayıtlı başlangıçtan gelir. |
+| `bitir` | Durum, tamamlanan/başarısız iş kimlikleri, yöntemler, ölçüler, eserler ve özetler → bitiş zamanı taşıyan makbuz. Bildirilen işler başlangıçtaki iş listesiyle muhasebeleştirilir; eksik iş başarı sayılmaz. |
+| `oku`, `kurtar`, `izle` | Olayları oku, eksik yazımı/bitmemiş koşuları göster, sonuç kimliğinden revizyona, veri ve kod kimliğine, başlangıç ve son duruma ulaş. Okuma özgün olayları değiştirmez. |
+| `duzelt` | Hedef olay, gerekçe ve yeni değerler → yeni düzeltme olayı. Özgün olay ve özgün kimlikler yerinde kalır. |
+
+Pilot şeması ve kimlik biçimi sürümlüdür. Kimlikler olay kimliğinden ayrı deneme ve koşu bağları
+taşır. Ayar özeti oluşturma zamanını ve rastgele olay kimliğini içermez; aynı çözülmüş ayarlar aynı
+özeti taşıyabilir. Nesne anahtarları sıralanır; liste sırası korunur. Metin, bayrak, tamsayı,
+sonlu kayan sayı, açık ondalık, tarih, UTC zaman, liste, demet ve null ayrı türlerle kodlanır.
+Tarih ISO takvim biçimindedir; zaman dilimli an UTC'ye çevrilir. NaN, sonsuz sayı, zaman dilimsiz
+an ve desteklenmeyen tür yazılmaz. Risk ve masraf sayıları `Decimal` ile açık ondalık olarak
+verilir; ikili kayan sayı bu alanlarda kabul edilmez. Kodlama ayrıntısı pilot sürümüyle birlikte
+okunur; #97'nin kalıcı biçimi gibi sunulmaz.
+
+`pilot_s03_v1` kodlaması, boşluksuz UTF-8 JSON tür çiftlerini kullanır. Etiketler `bos`,
+`bayrak`, `tam`, `sayi`, `ondalik`, `metin`, `tarih`, `zaman`, `liste`, `demet`, `sozluk` olur.
+Tamsayının yükü onluk metin, kayan sayının yükü `float.hex()`, ondalığın yükü `format(x, "f")`
+olur; ondalık basamak sayısı korunur. `bos` yük taşımaz. Sözlük, anahtara göre sıralanmış
+anahtar/değer çiftleri taşır; anahtar metindir. Liste ile demet farklıdır. Özet SHA-256'dır;
+olay kimliği pilotta UUID4'tür. Satırın son LF baytı yazma sınırıdır. Yarım kuyruğa eklenen
+`\t#pilot_s03_v1_kesik` işareti onun sonradan geçerli JSON sayılmasını engeller; eski baytlar
+silinmez. Bu kodlama yalnız pilot okuyucusuyla birlikte kullanılır.
+
+Izgara hücresi üst arama denemesine bağlı çocuk revizyondur. İleri yürüme seçiminde eğitim
+denemeleri ve sabitlenen test denemesi bağları saklanır. Monte Carlo senaryoları koşuya bağlıdır;
+yöntem veya tekrar ayarı değişikliği yeni revizyon ister. Bu alanlar yöntem ayarları ve bağlarıdır;
+pilot yöntem hesabı veya günlük uygunluk kararı üretmez.
+
+Yazıcı yerel süreçler arası kilit altında tam satır ekler ve diske aktarır. Makbuz ancak başarılı
+yazma ve aktarım sonrasında döner. Başlangıç yazılamazsa bağlam gövdesi çalışmaz; süren koşudaki
+yazma hatası görünür hatayla dışarı çıkar. Tamamlanmamış son satır kurtarmada uyarı olarak kalır;
+önceki tam satırlar okunur. Sonraki ekleme eksik kuyruğu tamamlanmış olay yapmaz. Bitişsiz başlangıç
+çözümsüzdür; bağlamdan bitiş bildirmeden çıkmak kendiliğinden başarı üretmez. Düzeltmeler yalnız
+eklenir; düzeltme kimlik ve ayar bağlarını geriye dönük değiştirmez.
+
+Geri dönüşte pilot yazımı durdurulur ve eski uyarlayıcı kullanılır. Pilot dosyaları ve okuyucuları
+korunur. Bu iş günlük listeyi veya eski sınamayı yeni kayıtlarla bağlamaz. Hesap formülleri
+değişmediğinden `tests/test_gelecek.py` kapsamına yeni hesap eklenmez. Kayıt sınırının davranış
+testleri `tests/test_kayit.py` dosyasındadır.
 
 #### Strateji kataloğu (S02, #83)
 
