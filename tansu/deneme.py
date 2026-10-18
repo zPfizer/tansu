@@ -251,7 +251,10 @@ class PilotKayit:
         is_listesi = list(is_listesi)
         if tohum is not None and (type(tohum) is not int or not ureteci_surumu):
             raise PilotHatasi("Tohum tamsayı ve üreteç sürümü gerekli.")
-        deneme = _bul(self.oku(), deneme_id, "deneme", "deneme_id")
+        try:
+            deneme = _bul(self.oku(), deneme_id, "deneme", "deneme_id")
+        except OSError as hata:
+            raise PilotYazmaHatasi(f"Pilot kaydı okunamadı: {hata}") from hata
         if anlik_goruntu not in deneme["veri_ayarlari"]["veri_referanslari"]:
             raise PilotHatasi("Görüntü kayıtlı veri referansında yok.")
         if deneme["yontem_ayarlari"].get("tekrar", 0) and tohum is None:
@@ -339,7 +342,10 @@ class PilotKayit:
             "durum",
         }:
             raise PilotHatasi("Düzeltme kimlik, ayar veya durum değiştiremez.")
-        hedef = _bul(self.oku(), hedef_olay)
+        try:
+            hedef = _bul(self.oku(), hedef_olay)
+        except OSError as hata:
+            raise PilotYazmaHatasi(f"Pilot kaydı okunamadı: {hata}") from hata
         return self._ekle(
             {
                 "kayit_turu": "duzeltme",

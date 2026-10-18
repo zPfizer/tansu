@@ -1267,7 +1267,9 @@ G/Ç hatası yazma hatası verir ve olay eksik kalır. LF yazma çağrısı hata
 kilit altındaki dosya uzunluğuyla bu tek baytın eklenip eklenmediğini denetler.
 LF eklendikten sonraki dosya kapatma veya kilit bırakma hatası kaydı geri almaz ve API'yi
 başarısız yapmaz; aynı makbuzun `uyarilar` alanında çağırana bildirilir. Makbuzun kimlik
-alanları değişmez; uyarılar dosya olayına eklenmez. Okuma yüzleri kilit hatalarını gizlemez.
+alanları değişmez; uyarılar dosya olayına eklenmez. Doğrudan okuma yüzleri kilit ve okuma
+hatalarını değiştirmeden iletir. `kosu()` ve `duzelt()` yayından önceki hazırlık okumasında
+oluşan G/Ç hatasını özgün hataya bağlı `PilotYazmaHatasi` olarak bildirir; henüz olay yayımlanmaz.
 Yayın sonucu doğrulanamazsa API düz başarı veya kesin yazma hatası yerine
 `PilotBelirsizHatasi` verir. Bu sınıf `PilotYazmaHatasi` alt sınıfıdır; `kayit_id`, `kosu_id`
 ve `deneme_id` taşır. Koşu ve deneme bağı olmayan olayda ilgili kimlik null olur.

@@ -748,6 +748,58 @@ def pilot_adim_arizasi(ariza, depo, asama):
     ariza.setattr(os, "write", yaz)
 
 
+@pytest.mark.parametrize("giris", ["kosu", "duzelt"])
+@pytest.mark.parametrize("asama", ["kilit_al", "oku_1"])
+def test_pilot_yazma_hazirligi_io_hatasi_kesin_basarisizdir(
+    tmp_path, monkeypatch, giris, asama
+):
+    depo = pilot.PilotKayit(tmp_path / "olaylar.jsonl")
+    deneme = pilot_deneme(depo)
+    with pilot_kosu(depo, deneme.deneme_id) as kosu:
+        sonuc = pilot_sonuc(kosu)
+        pilot_bitir(kosu)
+    once = depo.yol.read_bytes()
+    olaylar = depo.oku()
+    hesap, api_hatasi = [], None
+
+    with monkeypatch.context() as ariza:
+        pilot_adim_arizasi(ariza, depo, asama)
+        try:
+            if giris == "kosu":
+                with pilot_kosu(depo, deneme.deneme_id):
+                    hesap.append("basladi")
+            else:
+                depo.duzelt(
+                    sonuc.olay_id,
+                    gerekce="hazirlik siniri",
+                    yeni_degerler={"uyarilar": ["aciklama"]},
+                )
+        except OSError as hata:
+            api_hatasi = hata
+
+    assert type(api_hatasi) is pilot.PilotYazmaHatasi
+    assert not isinstance(api_hatasi, pilot.PilotBelirsizHatasi)
+    assert type(api_hatasi.__cause__) is OSError
+    assert str(api_hatasi.__cause__) == asama
+    assert hesap == []
+    yeni = pilot.PilotKayit(depo.yol)
+    assert yeni.yol.read_bytes() == once
+    assert yeni.oku() == olaylar
+    assert yeni.kurtar()["cozumsuz_kosular"] == []
+    assert yeni.kurtar()["uyarilar"] == []
+    iz = yeni.izle(sonuc.olay_id)
+    assert iz["durum"] == "tamamlandi"
+    assert iz["baslangic"]["kosu_id"] == kosu.makbuz.kosu_id
+    assert iz["deneme"]["deneme_id"] == deneme.deneme_id
+    assert iz["duzeltmeler"] == []
+
+    with monkeypatch.context() as ariza:
+        pilot_adim_arizasi(ariza, yeni, asama)
+        with pytest.raises(OSError) as hata:
+            yeni.oku()
+    assert type(hata.value) is OSError
+
+
 @pytest.mark.parametrize(
     "asama,gorunur",
     [
