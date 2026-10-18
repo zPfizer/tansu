@@ -19,6 +19,7 @@ ISTANBUL = ZoneInfo("Europe/Istanbul")
 BASLANGIC = dt.date(2010, 1, 1)
 OLAY_TOLERANS = 0.005  # TASARIM 5.1: olay denetiminde %0,5
 LIMIT_TOLERANS = 0.005  # TASARIM 5.1: karantina için limit aşımı payı
+KARANTINA_GUN = 250  # TASARIM 5.1: karantinadan sonra yeni sinyal yok
 YUVARLAMA = 1e-4  # TASARIM 5.13: düzeltilmiş seri 4 ondalığa yuvarlı
 LIMIT_DEGISIM = pd.Timestamp("2020-03-13")  # ±%20 → ±%10
 ADIM_DEGISIM = pd.Timestamp("2023-11-06")  # fiyat adımı tablosu değişti
@@ -613,8 +614,6 @@ def _sha256(yol: Path) -> str:
 
 def cift_girdileri(gunler, C, A, F, kalite_surumu) -> dict:
     """Eski çift yollarının politika seçimi (TASARIM 5.15, S04)."""
-    from tansu.motor import KARANTINA_GUN
-
     _kalite_surumu(kalite_surumu)
     C, A = np.asarray(C), np.asarray(A)
     bayrak = {k: np.asarray(F[k], dtype=bool) for k in ("I", "T", "B", "Kar")}

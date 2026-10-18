@@ -35,6 +35,10 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 - GitHub'daki otomatik kontroller yalnız Windows'ta çalışıyor.
 - Kod incelemesi artık OpenAI Codex eklentisiyle yapılıyor.
 
+### Düzeltildi
+
+- Veri katmanının motor katmanına ters bağımlılığı kaldırıldı; karantina süresinin tek sahibi veri katmanı oldu, değer ve davranış korundu. (#85)
+
 ### Kaldırıldı
 
 - Eski çalışma notları ve arşivler GitHub'dan çıkarıldı. Bilgisayarda ve git geçmişinde kalıyor.

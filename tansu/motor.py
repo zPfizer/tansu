@@ -10,12 +10,12 @@ from dataclasses import dataclass, replace
 import pandas as pd
 
 from tansu import aileler, gostergeler
+from tansu.veri import KARANTINA_GUN
 
 STOP_ATR = 2.0  # TASARIM 5.5: acil stop = giriş - 2 ATR
 ETKIN_ATR = 1.5  # `dip` kuralı giriş + 1,5 ATR görülünce etkin olur
 YARI_ATR = 3.0  # `atr3` yarı satış seviyesi: giriş + 3 ATR
 BASABAS_R = 1.5  # yüksek giriş + 1,5 R görülünce stop girişe çıkar
-KARANTINA_GUN = 250  # TASARIM 5.1: karantinadan sonra yeni sinyal yok
 ATR_N = 14
 
 
