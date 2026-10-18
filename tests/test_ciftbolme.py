@@ -45,7 +45,7 @@ class SektorBorsapy(SahteBorsapy):
 def seri(fiyat, bas=0, son=None, hacim=1e9):
     return [
         mum(g, float(f), hacim=hacim)
-        for g, f in zip(GUN[bas:son], np.asarray(fiyat)[bas:son])
+        for g, f in zip(GUN[bas:son], np.asarray(fiyat)[bas:son], strict=True)
     ]
 
 
@@ -326,7 +326,7 @@ def test_secim_kurallari(tmp_path):
     hisseler = list(s16["y"]) + list(s16["x"])
     assert len(set(hisseler)) == 4 and set(hisseler) <= set("ABCDE")
     assert (
-        all(y < x for y, x in zip(s16["y"], s16["x"]))
+        all(y < x for y, x in zip(s16["y"], s16["x"], strict=True))
         and (s16["p"] < 0.05).all()
         and (s16["beta"] > 0).all()
     )
@@ -361,7 +361,7 @@ def test_yil_gecisi_dusen_cift_kapanir_devam_eden_islemsiz_surer_yeni_cift_esit_
     f.update(dummy(1))
     c = kos(tmp_path, f, sektor)
     s = c["secim"]
-    cift = lambda y: set(zip(s[s["yil"] == y]["y"], s[s["yil"] == y]["x"]))  # noqa: E731
+    cift = lambda y: set(zip(s[s["yil"] == y]["y"], s[s["yil"] == y]["x"], strict=True))  # noqa: E731
     assert cift(2016) == {("A", "B"), ("C", "D")} and cift(2017) == {
         ("C", "D"),
         ("E", "F"),

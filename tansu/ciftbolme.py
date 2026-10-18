@@ -306,7 +306,7 @@ def _adaylar_yillar(Kc, evr, gunler, yillar, sektor, p) -> dict:
             sonuc = list(havuz.map(_adaylar_yil, isler))
     else:
         sonuc = list(map(_adaylar_yil, isler))
-    return {yil: (s, a) for (yil, s), a in zip(yillar.items(), sonuc)}
+    return {yil: (s, a) for (yil, s), a in zip(yillar.items(), sonuc, strict=True)}
 
 
 def setler_sec(h, p) -> tuple:
@@ -317,7 +317,11 @@ def setler_sec(h, p) -> tuple:
         satirlar.append(c)
         if s + 1 < len(h["gunler"]):
             setler.append(
-                {"bas": s + 1, "yil": yil, "ciftler": list(zip(c["y"], c["x"]))}
+                {
+                    "bas": s + 1,
+                    "yil": yil,
+                    "ciftler": list(zip(c["y"], c["x"], strict=True)),
+                }
             )
     secimler = (
         pd.concat(satirlar, ignore_index=True)
@@ -338,7 +342,13 @@ def hazirla(anlik, evr, bas=simulator.BASLANGIC, p=Parametre(), aday_esik=None) 
     days = gunler[gunler >= ilk]
     ilk_konum = gunler.get_loc(ilk)
     kap = evren.kapananlar(anlik)
-    kg = dict(zip(kap["sembol"], zip(kap["son_islem"], kap["kapanma_gunu"])))
+    kg = dict(
+        zip(
+            kap["sembol"],
+            zip(kap["son_islem"], kap["kapanma_gunu"], strict=True),
+            strict=True,
+        )
+    )
     sektor = anlik.sektor or {}
     uye = {h for liste in evr.values() for h in liste}
     sabit = tuple(p.sabit) if set(p.sabit) <= set(anlik.fiyat["sembol"]) else ()

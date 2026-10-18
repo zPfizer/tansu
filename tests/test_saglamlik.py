@@ -24,7 +24,9 @@ YUK_A = YUK[:7] + [110.5]
 def seri_a():
     return [
         mum(g, k, y, k - 0.5, 1e9)
-        for g, k, y in zip(pd.bdate_range("2026-01-26", periods=8), KAP_A, YUK_A)
+        for g, k, y in zip(
+            pd.bdate_range("2026-01-26", periods=8), KAP_A, YUK_A, strict=True
+        )
     ]
 
 

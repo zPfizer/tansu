@@ -189,7 +189,9 @@ def ileri(islemler_hucre, sekil, bas, son) -> dict:
 
 
 def _hucreler(izgara) -> list:
-    return [dict(zip(izgara, v)) for v in itertools.product(*izgara.values())]
+    return [
+        dict(zip(izgara, v, strict=True)) for v in itertools.product(*izgara.values())
+    ]
 
 
 def _sonraki(seriler) -> dict:
@@ -297,7 +299,8 @@ def _ema_egri(t, kap, bas):
 def _getirili(t) -> pd.DataFrame:
     return t.assign(
         getiri=[
-            islem_getirisi(g, c) for g, c in zip(t["giris_fiyat"], t["cikis_fiyat"])
+            islem_getirisi(g, c)
+            for g, c in zip(t["giris_fiyat"], t["cikis_fiyat"], strict=True)
         ]
     )
 

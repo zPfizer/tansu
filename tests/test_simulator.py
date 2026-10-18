@@ -45,7 +45,9 @@ def sinyalli(olcek=1.0, hacim=1e9, genis=0.5):
     """Temel seri; `genis` düşüğün kapanıştan uzaklığı (ATR'yi büyütür, sinyali değiştirmez)."""
     return [
         mum(g, k * olcek, y * olcek, (k - genis) * olcek, hacim)
-        for g, k, y in zip(pd.bdate_range("2026-01-26", periods=8), KAP, YUK)
+        for g, k, y in zip(
+            pd.bdate_range("2026-01-26", periods=8), KAP, YUK, strict=True
+        )
     ]
 
 

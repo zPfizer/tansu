@@ -9,10 +9,12 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 ### Eklendi
 
 - Ajan araç çağrıları ve yanıtları kancayla denetleniyor; talimatlara eklenen satırlar STE denetiminden geçiyor. (#42, issue #52)
+- Sonsuz düzeltilmiş fiyattan sonraki 250 satırlık giriş engeli, tek hisse ve çift yollarında ayrı testlerle korunuyor. (#58)
 - GitHub ana sayfasından işlere, hedeflere, değişikliklere, yayımlanan sürüme ve kontrol sonuçlarına ulaşılabiliyor.
 
 ### Değişti
 
+- Ruff B905 ve B023 kontrolleri açıldı; `zip` uzunluk tercihleri ve döngü içi fonksiyonların kullandığı değerler açıkça bağlandı. (#74)
 - GitHub deposunun adı tansu oldu; eski adres yeni adrese yönleniyor.
 - Değişiklik başlıkları kapattıkları işin numarasıyla başlıyor; otomatik kabul denetimi bu eşleşmeyi kontrol ediyor.
 - Açık işler, çalışma sırasına göre numaralanmış ve sağlayacakları sonuçla adlandırılmış sürüm hedeflerine bağlandı.

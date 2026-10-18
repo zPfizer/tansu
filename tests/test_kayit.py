@@ -30,7 +30,7 @@ def anlik_hazirla(tmp_path, son_kapanis=105.0, dakika=30):
     kap = [100.0] * 5 + [103.0, 104.0, son_kapanis]
     yuk = [100.5, 100.5, 101, 100.5, 100.5, 103.5, 104.5, 105.5]
     fiyat = []
-    for g, k, y in zip(gunler, kap, yuk):
+    for g, k, y in zip(gunler, kap, yuk, strict=True):
         s = satir(g, k, k)
         s.update(yuksek=y, ham_yuksek=y, dusuk=k - 0.5, ham_dusuk=k - 0.5)
         fiyat.append(s)
