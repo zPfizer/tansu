@@ -9,6 +9,7 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 ### Eklendi
 
 - Modül 1'in dokuz parçasını sade Türkçeyle, tarihli Tansu alıntıları ve henüz olmayan işlerin işaretleriyle açıklayan bağımsız sayfa eklendi. (#72)
+- Güncel taramadaki 47 notun 48 görseli yeniden okundu; kurtarılan metinler ve okunamayan parçaların gerekçeleri kaydedildi. (#62)
 - Üçgen girişinin 30 hissedeki sıfır işlemi, yükselmeyen salınım dipleriyle açıklandı; kod değişmedi. (#56)
 - Yeni modül varyantının siteye girmeden önce resmi olmayan gölge koşuda sinyal üretmesi ve çıktıları Levent'in onaylaması kuralı yazıldı. (#71)
 - Ajan araç çağrıları ve yanıtları kancayla denetleniyor; talimatlara eklenen satırlar STE denetiminden geçiyor. (#42, issue #52)

@@ -1,0 +1,139 @@
+# Okunamayan görsellerin yeniden okuması
+
+Issue #62 · 18.10.2026.
+
+Tarihsel sayı, havuzdaki `x-arsiv/eleme-rapor.md` dosyasının "Açık sorunlar" bölümünde 47 görsel olarak geçer. Eski kimlik listesi, aşağıdaki "Eski kimlik listesi için arama kanıtı" bölümünde belirtilen dosyalarda bulunamadı. Dağıtıcı, 18.10.2026 tarihinde güncel taramanın verdiği **47 not / 48 görsel** listesinin kullanılmasını istedi. Bu dosya o listenin ve yeniden okuma sonuçlarının kaydıdır; tarihsel 47 görselin kimlikleriyle eşitlik iddiası taşımaz.
+
+Kaynak kökü: `C:/Users/levent/Desktop/YONETIM/beyin/kisisel/300-Projects/Tansu X Veri Havuzu/`. Tablodaki not yolları bu köke göredir. Görsel yolu `assets/<not dosyasının uzantısız adı>/<görsel dosyası>` biçimindedir. G numarası, nottaki görsel bölümünü belirtir.
+
+Tarama, kökteki `tweet-*.md` notlarını dosya adına göre sıralar. `Görselde görünen metin, birebir. Okunamayan yer: okunamıyor.` açıklama satırını çıkarır. `### G<N> (<dosya>)` bölümlerinde `okunamıyor`, `okunamayan` veya `okunamadı` geçen görselleri seçer. Her kaynak not tam okundu; tabloda satır sayısı vardır. Ana ajan bu sayıları ayrıca hesapladı. Her görsel özgün çözünürlükte açıldı. Okuyucular: 1–12 `read_01_12`, 13–24 `read_13_24`, 25–36 `read_25_36`, 37–48 `read_37_48`. Dosyanın yazıcısı ana ajandır.
+
+**okundu**: işaretli eksik parça tamamen okundu. **kısmen**: yeni metin veya bir döküm düzeltmesi var, fakat okunamayan parça kaldı. **okunamaz**: işaretli parçadan yeni ve kesin metin çıkarılamadı. Alıntılar görünen karakterlerdir; kesik veya örtülü karakterler tamamlanmadı. "Kuralı değiştirir" sütunundaki **hayır**, bu okumanın bir kural değişikliği ortaya koymadığını belirtir; gizli metnin içeriğini bildiğimiz anlamına gelmez.
+
+## Görsel başına sonuç
+
+| No | Not yolu ve tam okuma satır sayısı | Görsel dosyası | Önce okunamayan parça | Şimdi okunan metin veya okunamaz gerekçesi | Kuralı değiştirir: evet/hayır |
+|---|---|---|---|---|---|
+| 1 | `tweet-akd-liste-eleme-kesisim-mantigi-1964614079252938928.md` (45 satır) | `1964614079252938928-1.jpg` G1 | "satıcı ve oranlar" öncesi; "Bak" öncesindeki el yazısı | **okunamaz** — üst parça görüntü dışında; sağdaki bitişik el yazısının harfleri kesin ayrışmıyor. | hayır |
+| 2 | `tweet-araci-kurum-alici-pozisyon-taramasi-1970590008487878993.md` (42 satır) | `1970590008487878993-1.png` G1 | Beşinci alıcı satırı | **okunamaz** — alt kenar satırı kesiyor; yalnız harflerin üst uçları kalmış. | hayır |
+| 3 | `tweet-araci-kurum-satis-orani-siralama-1967162325028548887.md` (49 satır) | `1967162325028548887-1.png` G1 | MERCN satış yüzdesi | **okunamaz** — üst satırın kırmızı çerçevesi ikinci satırdaki rakamları örtüyor. | hayır |
+| 4 | `tweet-araci-kurum-takas-analizi-1708956675980349611.md` (74 satır) | `1708956675980349611-1.jpg` G1 | Üst Alan tablosunun Toplam değerlerinin sonları; TACIRLER YAT. satırı | **okunamaz** — sütun sınırları sayı sonlarını, alt görüntü sınırı TACIRLER satırını kesiyor. Başka hücrelerden tamamlanmadı. | hayır |
+| 5 | `tweet-araci-kurum-yogunlasma-olcumu-1990455214315643360.md` (92 satır) | `1990455214315643360-1.png` G1 | Alıcı pastasındaki küçük dilim yüzdeleri | **okunamaz** — küçük dilimlerin yüzde etiketleri üst üste basılmış. G2 tablosundan aktarılmadı. | hayır |
+| 6 | `tweet-bayrak-hacim-teyidi-1923098450490511571.md` (45 satır) | `1923098450490511571-1.jpg` G1 | Tarih etiketlerinin başlangıçları | **okunamaz** — eğik etiketlerin başlangıçları alt kenarda kırpılmış. | hayır |
+| 7 | `tweet-birikim-dagitim-dongusu-1992282998746513749.md` (38 satır) | `1992282998746513749-1.jpg` G1 | Ana kutuların altındaki son metin | **okunamaz** — alt yazı kırpılmış; yalnız harflerin üst uçları görünüyor. | hayır |
+| 8 | `tweet-bull-bear-5-gunluk-toplam-sinyal-2042901081785557425.md` (98 satır) | `2042901081785557425-1.jpg` G1 | FROTO.IS sonrası başlık; alt panelin eksen adı ve lejandı | **okunamaz** — üç alan beyaz, opak çizimle kapatılmış. | hayır |
+| 9 | `tweet-bullish-engulfing-daily-scan-1898292620645781672.md` (36 satır) | `1898292620645781672-1.png` G1 | Başlıktaki hisse adı ve fiyat ekseni rakamları | **okunamaz** — başlık başlangıcı ve eksen değerleri beyazla örtülmüş; lejandın sağ ucu da kırpılmış. | hayır |
+| 10 | `tweet-cointegrated-pairs-network-1898476669851316502.md` (38 satır) | `1898476669851316502-1.jpg` G1 | Ağdaki örtüşen düğüm etiketleri | **kısmen** — üst sağ kümede `DWAT`, `PPH`, `USLB`. Diğer etiketler okunamaz: harfler, düğümler ve bağlantılar birbirini kapatıyor. | hayır |
+| 11 | `tweet-coklu-osilator-negatif-uyumsuzluk-2049565175494181237.md` (57 satır) | `2049565175494181237-1.png` G1 | Araç çubuğunda AL/SAT çevresindeki metin | **okunamaz** — üst kenar yazıların üst bölümünü kesmiş. | hayır |
+| 12 | `tweet-convex-hull-sektor-rotasyonu-momentum-1948891823121801615.md` (62 satır) | `1948891823121801615-1.png` G1 | Çimento Beton satırının Std (Risk) değeri | **okundu** — `Std (Risk): 295.68`. | hayır |
+| 13 | `tweet-delta-hacim-boga-ayi-orani-1950279832119472221.md` (52 satır) | `1950279832119472221-1.png` G1 | %11 ve ikinci %95 grubunun delta hacim değerleri | **okunamaz** — küçük turuncu rakamlar yatay renkli işaretlerle örtüşüyor. | hayır |
+| 14 | `tweet-diger-alici-orani-dusuk-yogun-alim-1970557694453911950.md` (64 satır) | `1970557694453911950-1.png` G1 | Başlıktaki hisse adı; alıcı/satıcı maliyetleri | **okunamaz** — hisse adı ve maliyet değerleri beyazla kapatılmış. | hayır |
+| 15 | `tweet-divergence-ema-macd-stoch-checklist-1911876515043692724.md` (64 satır) | `1911876515043692724-1.png` G1 | Yeşil açıklama; ilk tarih etiketinin başlangıcı | **okunamaz** — yeşil açıklamalar üst üste basılmış; ilk tarih sol kenarda kırpılmış. | hayır |
+| 16 | `tweet-duran-varlik-yatirim-fiyat-endeks-1956635605867053409.md` (133 satır) | `1956635605867053409-1.png` G1 | Sağ eksendeki `10.okunamıyor` | **okunamaz** — eksen etiketinin devamını gösterge açıklaması kapatıyor. | hayır |
+| 17 | `tweet-elliott-abc-hedef-rr-2094496543860564136.md` (93 satır) | `2094496543860564136-2.png` G2 | B noktası yakınındaki etiket | **okunamaz** — turuncu Fibonacci etiketi ve kahverengi gerçek oran etiketi aynı yerde basılmış. | hayır |
+| 18 | `tweet-elliott-expanded-flat-c-teyit-p-bom-2094052769493582241.md` (57 satır) | `2094052769493582241-1.png` G1 | `5→A / B Gerçek %13okunamıyor 45.88` oranının sonu | **okunamaz** — oran rakamlarını B noktasının kırmızı dairesi ve çizgisi örtüyor. | hayır |
+| 19 | `tweet-ema-sikisma-macd-histogram-egim-1957958199425818842.md` (58 satır) | `1957958199425818842-1.png` G1 | Sağ fiyat ve gösterge ekseni sayılarının devamı | **okunamaz** — sağ kenar etiketleri kesiyor; yalnız başlangıç rakamları görünüyor. | hayır |
+| 20 | `tweet-ema200-kesis-golden-cross-taramasi-1842246990521925981.md` (75 satır) | `1842246990521925981-1.png` G1 | Grafik altındaki son metin satırı | **okunamaz** — alt satır görüntü sınırında kırpılmış; yalnız harflerin üst uçları kalmış. | hayır |
+| 21 | `tweet-ema34-tepki-yutan-boga-1904263490849612222.md` (54 satır) | `1904263490849612222-1.png` G1 | İlk tarih: `2024-09-0okunamıyor` | **okunamaz** — dikey tarih sol kenarda kırpılmış; eksik basamak ayrışmıyor. | hayır |
+| 22 | `tweet-endeks-duzeltilmis-rsi-uyumsuzluk-2092709099364405261.md` (43 satır) | `2092709099364405261-1.jpg` G1 | XU100-ADJUSTED sonrası metin | **okunamaz** — devamındaki üç alan beyazla kapatılmış. | hayır |
+| 23 | `tweet-fibonacci-genisleme-konfluans-bolgesi-1998871553984049576.md` (194 satır) | `1998871553984049576-2.jpg` G2 | Gömülü grafiğin kaynak satırı, başlık devamı ve küçük fiyat etiketi | **okunamaz** — küçük grafiğin harf ve rakamları düşük çözünürlük nedeniyle bulanık. | hayır |
+| 24 | `tweet-fiyat-volatilite-birlikte-artis-defans-2053089712877797538.md` (55 satır) | `2053089712877797538-1.jpg` G1 | Orta panel başlığı, sağ açıklama ve `okunamıyorfansif)` başlangıcı | **okunamaz** — başlık ve açıklama beyazla kapatılmış; alt sol etiketin başlangıcı görüntü dışında. | hayır |
+| 25 | `tweet-gartley-talep-bolgesi-kesisimi-2090515769033461784.md` (45 satır) | `2090515769033461784-1.png` G1 | A→B değeri | **okunamaz** — A→B ve B→C etiketleri aynı küçük alanda üst üste binmiş. | hayır |
+| 26 | `tweet-hacim-cmf-adx-sinyal-skoru-tarama-1965629890100941012.md` (53 satır) | `1965629890100941012-1.png` G1 | Hisse, fiyat, tarih hücreleri; ikinci ve dördüncü sinyal değeri | **kısmen** — eski eksikler okunamaz: beyaz boya ve kırmızı çerçeve hücreleri örtüyor. Ayrıca dördüncü veri satırının `HACİM 1.5x` hücresi `✗`; notta `✓` yazıyor. Bu, örnek çıktı düzeltmesidir. | hayır |
+| 27 | `tweet-haftalik-boga-bayrak-kirilimi-1900554823331635298.md` (38 satır) | `1900554823331635298-1.jpg` G1 | Günlük Mum Grafiği ve Formasyonlar öncesindeki başlık | **okunamaz** — başlık başlangıcı beyazla örtülmüş. Lejanttaki ad buraya aktarılmadı. | hayır |
+| 28 | `tweet-harmonik-kopekbaligi-tespit-1999178373705400710.md` (87 satır) | `1999178373705400710-1.png` G1 | -0.20 öncesindeki etiket | **okundu** — `A->B: -0.20`. | hayır |
+| 29 | `tweet-harmonik-xabcd-fibo-tespiti-1902100801641918827.md` (41 satır) | `1902100801641918827-1.jpg` G1 | Bullish Gartley Found for sonrasındaki hisse | **okunamaz** — başlığın devamı beyazla örtülmüş. | hayır |
+| 30 | `tweet-hisse-korelasyon-matrisi-1949096413641543721.md` (69 satır) | `1949096413641543721-1.png` G1 | BINBN–REEDR, BINBN–LOGO, PENTA–INTEK, ODINE–INDES, INGRM–MIATK hücrelerinin işaretleri | **okunamaz** — küçük karakterler bitişik hücrelerde birleşiyor; işaretleri ayıracak çözünürlük yok. Simetrik hücrelerden tamamlanmadı. | hayır |
+| 31 | `tweet-kanal-kirilimi-vwap-momentum-filtresi-2048151591279104244.md` (49 satır) | `2048151591279104244-1.png` G1 | Başlık, lejant, alt panel başlıkları | **okunamaz** — metinler beyazla boyanmış. | hayır |
+| 32 | `tweet-macd-pozitif-uyumsuzluk-3-5-10-gun-1839397534797828274.md` (172 satır) | `1839397534797828274-4.png` G4 | 1 of 1 completed satırının başlangıcı | **okunamaz** — ilk satır üst kenarda kırpılmış; yalnız karakterlerin alt uçları var. | hayır |
+| 33 | `tweet-monte-carlo-efficient-frontier-1887602824068092161.md` (88 satır) | `1887602824068092161-1.jpg` G1 | Lejant etiketleri | **okunamaz** — yazı alanı beyazla örtülmüş; yalnız simgeler ve harf kırıntıları kalmış. | hayır |
+| 34 | `tweet-mum-formasyonu-trend-dogrulama-1842836702785642675.md` (66 satır) | `1842836702785642675-1.png` G1 | İlk ve son tarih arasındaki dikey etiketler | **okundu** — `2024-07-22T11:30:00+03`<br>`2024-07-23T11:30:00+03`<br>`2024-07-24T11:30:00+03`<br>`2024-07-25T11:30:00+03`<br>`2024-07-26T11:30:00+03`<br>`2024-07-29T11:30:00+03`<br>`2024-07-30T11:30:00+03`<br>`2024-07-31T11:30:00+03`<br>`2024-08-01T11:30:00+03`<br>`2024-08-02T11:30:00+03`<br>`2024-08-05T11:30:00+03`<br>`2024-08-06T11:30:00+03`<br>`2024-08-07T11:30:00+03`<br>`2024-08-08T11:30:00+03`<br>`2024-08-09T11:30:00+03`<br>`2024-08-12T11:30:00+03`<br>`2024-08-13T11:30:00+03`<br>`2024-08-14T11:30:00+03`<br>`2024-08-15T11:30:00+03`<br>`2024-08-16T11:30:00+03`<br>`2024-08-19T11:30:00+03`<br>`2024-08-20T11:30:00+03`<br>`2024-08-21T11:30:00+03`<br>`2024-08-22T11:30:00+03`<br>`2024-08-23T11:30:00+03`<br>`2024-08-26T11:30:00+03`<br>`2024-08-27T11:30:00+03`<br>`2024-08-28T11:30:00+03`<br>`2024-08-29T11:30:00+03`<br>`2024-09-02T11:30:00+03`<br>`2024-09-03T11:30:00+03`<br>`2024-09-04T11:30:00+03`<br>`2024-09-05T11:30:00+03`<br>`2024-09-06T11:30:00+03`<br>`2024-09-09T11:30:00+03`<br>`2024-09-10T11:30:00+03`<br>`2024-09-11T11:30:00+03`<br>`2024-09-12T11:30:00+03`<br>`2024-09-13T11:30:00+03`<br>`2024-09-16T11:30:00+03`<br>`2024-09-17T11:30:00+03`<br>`2024-09-18T11:30:00+03`<br>`2024-09-19T11:30:00+03`<br>`2024-09-20T11:30:00+03`<br>`2024-09-23T11:30:00+03`<br>`2024-09-24T11:30:00+03`<br>`2024-09-25T11:30:00+03`<br>`2024-09-26T11:30:00+03`<br>`2024-09-27T11:30:00+03`<br>`2024-09-30T11:30:00+03`<br>`2024-10-01T11:30:00+03`<br>`2024-10-02T11:30:00+03`<br>`2024-10-03T11:30:00+03` | hayır |
+| 35 | `tweet-nefk-artar-hbk-artmaz-uyumsuzluk-1893717988043342127.md` (61 satır) | `1893717988043342127-1.jpg` G1 | HBK & NEFK Zaman Serisi öncesindeki hisse | **okunamaz** — hisse adı beyazla örtülmüş. | hayır |
+| 36 | `tweet-psar-lrc-mum-formasyonu-kombinasyonu-2043779884867076189.md` (69 satır) | `2043779884867076189-1.png` G1 | Sağdaki lejant | **okunamaz** — lejant sağ sınırın dışında; yalnız bazı çizgi simgelerinin başlangıcı var. | hayır |
+| 37 | `tweet-quintuplets-bes-kapanis-alim-1919053643946303495.md` (44 satır) | `1919053643946303495-1.png` G1 | Sağ uçtaki May 1okunamıyor tarih etiketi | **okunamaz** — tarih etiketinin sağ tarafı kırpılmış; gün tamamlanamıyor. | hayır |
+| 38 | `tweet-roc50-adx-adxr-obv-artan-1841597392178536580.md` (80 satır) | `1841597392178536580-1.png` G1 | Başlıkta ve fiyat lejandında hisse adı | **okunamaz** — iki metin yeşil karalamayla kapatılmış. | hayır |
+| 39 | `tweet-roc50-adx-adxr-obv-sistemi-1841604780218622243.md` (84 satır) | `1841604780218622243-1.png` G1 | Başlıkta ve fiyat lejandında hisse adı | **okunamaz** — iki metin siyah karalamayla kapatılmış. | hayır |
+| 40 | `tweet-rolatif-momentum-z-skoru-donus-onayi-2092655008948834306.md` (958 satır) | `2092658313431273618-3.jpg` G11 | Temas:6 öncesindeki etiket; fiyat, hacim ve MACD ekseni başlangıçları | **okunamaz** — sağ etiketler üst üste binmiş; sol eksen rakamları sol kenarda kırpılmış. | hayır |
+| 41 | `tweet-rolatif-momentum-z-skoru-donus-onayi-2092655008948834306.md` (958 satır) | `2092660288227057703-4.jpg` G16 | İki Kırılım etiketi ve RSI Kırılım tarihinin eksik parçaları | **okunamaz** — mumlar, yazılar ve çizgiler metinleri örtüyor; küçük karakterler ayrışmıyor. | hayır |
+| 42 | `tweet-sharpe-eksi-040-tepki-momentum-alani-1905013305024122935.md` (44 satır) | `1905013305024122935-1.jpg` G1 | Rolling Sharpe (Tepki) öncesindeki ad | **okunamaz** — beyaz boyayla kapatılmış. | hayır |
+| 43 | `tweet-supertrend-atr7-carpan3-bant-kodu-1839989044693922032.md` (111 satır) | `1839989044693922032-1.jpg` G1 | localhost sonrası adres; df['direction'] devamı; el yazıları | **okunamaz** — adres soluk ve düşük çözünürlüklü; kod alt kenarda kesilmiş; el yazıları küçük, bulanık ve kısmen örtülü. | hayır |
+| 44 | `tweet-supertrend-tarama-rsi14-50-sart-1841917340419559794.md` (62 satır) | `1841917340419559794-1.jpg` G1 | SuperTrend Indicator öncesindeki ad | **okunamaz** — siyah karalamayla kapatılmış. | hayır |
+| 45 | `tweet-tobo-boyun-retest-teyidi-2000639835288355128.md` (69 satır) | `2000639835288355128-1.png` G1 | İki (17, 2) lejandının adı | **okunamaz** — lejandlar tarih alt başlığıyla üst üste binmiş. | hayır |
+| 46 | `tweet-trend-destegi-ema-dizilim-taramasi-2000627515707035940.md` (62 satır) | `2000627515707035940-1.png` G1 | Başlıktaki ad; ilk tarih etiketi | **okunamaz** — ad kırmızı karalamayla kapatılmış; ilk tarih sol kenarda kırpılmış. | hayır |
+| 47 | `tweet-williams-r-sma-14-geri-cekilme-2023083543526793543.md` (97 satır) | `2023083543526793543-1.jpg` G1 | En soldaki ilk tarih etiketi | **kısmen** — görünen son parça `1.11.2024`. Günün başındaki basamak sol kenarda kırpılmış; tam tarih okunamaz. | hayır |
+| 48 | `tweet-z-skoru-2-sinir-donus-onayi-cift-2056836656091541967.md` (77 satır) | `2056836656091541967-1.jpg` G1 | Başlıklardaki adlar, lejandlar, eksenler ve tutulan dönem adları | **okunamaz** — ilgili alanlar beyaz boyayla kapatılmış. | hayır |
+
+## Sayım ve sınırlar
+
+48 görsel açıldı. 3 görselde işaretli eksik parça tamamen okundu (12, 28, 34). 3 görselde kısmi okuma veya döküm düzeltmesi var (10, 26, 47). 42 görselde yeni kesin metin çıkarılamadı. Böylece 45 görselde hâlâ okunamayan parça var. Eski döküme göre değişen görsel sayısı 6'dır; buna 26. görseldeki mevcut işaretin düzeltmesi dahildir. Saptanan kural değişikliği 0'dır. Kural değişikliği için açık soru çıkmadı.
+
+Havuz notları ve görselleri değiştirilmedi. Düzeltme önerileri, dağıtıcının uygulaması için issue #62 PR gövdesinin "Havuz düzeltme önerisi" bölümündedir. `docs/kurallar/` dosyaları değiştirilmedi.
+
+Kaydedilen kaynak kümesinin SHA-256 değeri (göreli yollar ve dosya baytları, sıralı 47 not + 48 görsel): `db101e2d9d80b82a81f541ca71fd4653d36c46e9319387b9d1ab3bc1d4f4dda2`. Özet, güncel bayt eşleşmesini denetler; önceki okuyucu eylemlerini veya özetin kaydedilme zamanını tek başına kanıtlamaz.
+
+## Eski kimlik listesi için arama kanıtı
+
+Tur 1 düzeltmesinde aşağıdaki aramalar yeniden çalıştırıldı. Ağ kullanılmadı. Yerel `origin/master`: `49283312bf2fcef9dc17b40b9c81e23e369b3327`. İlk komut TANSU çalışma ağacında çalıştırıldı:
+
+```powershell
+git grep -n -i -l "okunamayan\|okunamad" origin/master -- docs ':!docs/strateji-taslak'
+```
+
+Çıktı:
+
+```text
+origin/master:docs/TASARIM.md
+origin/master:docs/arastirma/bist100_kap_bosluk.csv
+origin/master:docs/arastirma/kullanim-kosullari-fiyat-adimi.md
+origin/master:docs/arastirma/veri-kaynaklari.md
+origin/master:docs/kurallar/A-yapi-bolge.md
+origin/master:docs/kurallar/E-risk-cikis-surec.md
+Çıkış kodu: 0
+```
+
+İkinci komut ana TANSU dizininde (`C:/Users/levent/Desktop/TANSU`) çalıştırıldı:
+
+```powershell
+& 'C:/Program Files/Git/usr/bin/grep.exe' -rli '47 görsel\|okunamayan' .scratch
+```
+
+Çıktı:
+
+```text
+.scratch/arsiv/belge-hizasi/denetim/bilet-04-rapor.md
+.scratch/modul-1-kod/okuma/okuma-6.md
+.scratch/modul-1-kod/tmp/okuma-istem.md
+.scratch/retro-1610-cozum/ortak-kurallar.md
+Çıkış kodu: 0
+```
+
+Her eşleşen dosya açıldı. `docs/` satırları yerel `origin/master` içeriğine, `.scratch/` satırları ana TANSU dizinine aittir:
+
+| Dosya ve eşleşen satır | İçeriği |
+|---|---|
+| `docs/TASARIM.md`:1076,1080 | KAP kullanım koşulları ve dönem içi endeks değişikliklerinin okunamaması. |
+| `docs/arastirma/bist100_kap_bosluk.csv`:3,10 | BIST100 üyeliği boşlukları ve ayrıştırılamayan KAP PDF sütunları. |
+| `docs/arastirma/kullanim-kosullari-fiyat-adimi.md`:17 | KAP robots.txt ve yasal uyarı erişim hataları (404, HTTP 666). |
+| `docs/arastirma/veri-kaynaklari.md`:105 | DataStore sayfasının okunamaması; endeks üyeliği ürünü, fiyatı ve ücretsizliği belirsiz. |
+| `docs/kurallar/A-yapi-bolge.md`:242,248 | -117 görselindeki EMA dizilimi ve -103 görselindeki ADX eşik değerinin okunamaması. |
+| `docs/kurallar/E-risk-cikis-surec.md`:84 | G-125 stop rakamları ve giriş fiyatının okunamaması. |
+| `.scratch/arsiv/belge-hizasi/denetim/bilet-04-rapor.md`:147 | 14.10 belge hizası raporu; iki açık görsel: ICBCT ilk EMA etiketi ve G-125 stop sayısı. |
+| `.scratch/modul-1-kod/okuma/okuma-6.md`:34 | Beş notun çıkış paketi okuması; eşleşme YAPRK stop tablosundaki "okunamayan yer yok" ifadesi. |
+| `.scratch/modul-1-kod/tmp/okuma-istem.md`:8 | Modül 1 okuyucu istemi; okunamayan yere "okunamıyor" yazma talimatı. |
+| `.scratch/retro-1610-cozum/ortak-kurallar.md`:12 | 16.10 işinin ortak talimatları; birebir metindeki okunamayan yere "okunamıyor" yazma kuralı. |
+| Havuz `x-arsiv/eleme-rapor.md`:57–59 | "Açık sorunlar" tarihsel 47 sayısını ve örnek sapma kimliklerini verir. |
+
+Havuz raporu da tam açıldı. Tarihsel sayının doğrudan araması:
+
+```powershell
+& 'C:/Program Files/Git/usr/bin/grep.exe' -n '47.sinde' 'C:/Users/levent/Desktop/YONETIM/beyin/kisisel/300-Projects/Tansu X Veri Havuzu/x-arsiv/eleme-rapor.md'
+```
+
+Çıktı:
+
+```text
+57:1. Görsel metni Sonnet'le yazıldı. "okunamıyor" içeren 61 alınmış görsel Opus ile yeniden okundu ve notlara o metin kondu; 47'sinde hâlâ okunamayan parça var (beyaz karalama, kesik kenar, üst üste binen etiket, el yazısı).
+Çıkış kodu: 0
+```
+
+Eski 47 görselin tam kimlik listesi, açılan bu dosyalarda bulunamadı. Bu sonuç yalnız belirtilen arama kapsamı içindir. Bu nedenle güncel 48 görsele göre eklenen ve eksilen kimlikler belirlenemedi; farkın yalnız bir ek görsel olduğu iddia edilmez.
