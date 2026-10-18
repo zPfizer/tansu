@@ -12,7 +12,9 @@ def sade_metin_dogrula(gorunen):
         assert isaret not in gorunen, (
             f"Görünen metinde teknik ad veya bozuk karakter: {isaret}"
         )
-    assert not re.search(r"\w+_\w+", gorunen), "Görünen metinde teknik ad: alt çizgili ad"
+    assert not re.search(r"\w+_\w+", gorunen), (
+        "Görünen metinde teknik ad: alt çizgili ad"
+    )
 
 
 @pytest.mark.parametrize(
