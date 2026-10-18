@@ -275,7 +275,14 @@ def gunluk(
     """Günlük koşu; çıkış kodu: TAMAM ve BUGÜN ÇUBUK YOK 0, SORUNLU ve VERİ YOK 1. `kaynak`, `semboller`, `p` testte verilir."""
     tarih, kok = pd.Timestamp(tarih), Path(kok)
     simdi = simdi or dt.datetime.now(veri.ISTANBUL)
-    yol = rapor.RAPOR_DIZINI / "durum.txt"
+    onizleme = aktarim is not None and aktarim.deneme_id is not None
+    # TASARIM 5.15 S07: önizleme normal günlüğün tamamlanma ve kart durumunu yazmaz.
+    dizin = (
+        rapor.RAPOR_DIZINI / "onizleme" / aktarim.kosu_id
+        if onizleme
+        else rapor.RAPOR_DIZINI
+    )
+    yol = dizin / "durum.txt"
     onceki = yol.read_text(encoding="utf-8").splitlines() if yol.exists() else []
     saat = next(
         (x.split(": ", 1)[1] for x in onceki if x.startswith("Son başarılı koşu: ")),
@@ -340,7 +347,7 @@ def gunluk(
                 **bilgi,
             )
         kartlar = _kartlar(anlik, tarih, p, atr_n, aktarim)
-        csv_yol = rapor.RAPOR_DIZINI / f"kartlar-{tarih:%Y%m%d}.csv"
+        csv_yol = dizin / f"kartlar-{tarih:%Y%m%d}.csv"
 
         def yaz_csv(f):
             w = csv.writer(f, delimiter=";")
@@ -355,10 +362,11 @@ def gunluk(
                 f"Kart yazılamadı: {csv_yol.name} açık, kapatıp yeniden çalıştır.",
                 **bilgi,
             )
-        _kart_gunlugu(tarih, kimlik, kartlar)
+        if not onizleme:
+            _kart_gunlugu(tarih, kimlik, kartlar)
         return bitir(
             "TAMAM",
-            f"Bugün {len(kartlar)} kart var: rapor/{csv_yol.name} dosyasını aç."
+            f"Bugün {len(kartlar)} kart var: rapor/{csv_yol.relative_to(rapor.RAPOR_DIZINI).as_posix()} dosyasını aç."
             if kartlar
             else "Bugün kart yok; bir şey yapma.",
             **bilgi,

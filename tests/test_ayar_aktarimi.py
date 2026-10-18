@@ -7,6 +7,8 @@ Kutu altı 99,5; ona değmez. Sinyalden sonraki günler yeni sinyal üretmez.
 """
 
 import json
+import csv
+import datetime as dt
 from dataclasses import replace
 
 import pandas as pd
@@ -243,9 +245,11 @@ def test_kayitli_gunluk_komutu_kayit_ayarindan_stop_durumu_uretir(
         capsys,
     )
     assert kod == 0, hata
-    kart = json.loads(
-        (kayit.KAYIT_DIZINI / "kartlar.jsonl").read_text(encoding="utf-8")
-    )["kartlar"][0]
+    # TASARIM S07: önizleme normal kart günlüğüne yazılmaz; aynı kart CSV'de kalır.
+    (csv_yol,) = (rapor.RAPOR_DIZINI / "onizleme").glob("*/kartlar-*.csv")
+    with csv_yol.open(encoding="utf-8-sig", newline="") as f:
+        (kart,) = list(csv.DictReader(f, delimiter=";"))
+    assert not (kayit.KAYIT_DIZINI / "kartlar.jsonl").exists()
     assert kart["durum"] == "STOP"
     assert kart["stop"] == "102,23"
     assert "önizleme" in kart["kanit"]
@@ -513,3 +517,208 @@ def test_gercek_aktarim_sinirinda_ozet_farki_sonucu_durdurur(
     if asama == "sinyal":
         assert not any(o.get("asama") == "islem" for o in depo.oku())
     assert not list(rapor.RAPOR_DIZINI.glob("tansu-sinama-*.json"))
+
+
+@pytest.mark.parametrize(
+    "once_normal,bozuk", [(False, False), (True, False), (True, True)]
+)
+def test_kayitli_onizleme_normal_gunlugun_durumunu_ve_hesabini_degistirmez(
+    tmp_path, monkeypatch, once_normal, bozuk
+):
+    from tansu.aktarim import AyarAktarimi
+
+    anlik = anlik_hazirla(tmp_path / "gunluk", {"A": fiyatlar()[:-1]})
+    depo, m = kayitli(tmp_path, monkeypatch)
+    kagit_aile()
+    monkeypatch.setattr(gunluk, "_semboller", lambda *a: ["A"])
+    monkeypatch.setattr(gunluk.veri, "indir", lambda *a, **k: anlik.kimlik)
+    tarih = anlik.gunler[-1].date()
+    simdi = dt.datetime.combine(tarih, dt.time(19, 30))
+    csv_yol = rapor.RAPOR_DIZINI / f"kartlar-{tarih:%Y%m%d}.csv"
+    yollar = [
+        csv_yol,
+        rapor.RAPOR_DIZINI / "durum.txt",
+        kayit.KAYIT_DIZINI / "kartlar.jsonl",
+    ]
+    if once_normal:
+        assert gunluk.gunluk(tarih, tmp_path, simdi=simdi, p=P) == 0
+    once = {y: y.read_bytes() if y.exists() else None for y in yollar}
+    aktarim = AyarAktarimi(depo, m.deneme_id)
+    p = replace(aktarim.p, stop="kutu") if bozuk else aktarim.p
+    assert gunluk.gunluk(tarih, tmp_path, simdi=simdi, p=p, aktarim=aktarim) == int(
+        bozuk
+    )
+    sonra = {y: y.read_bytes() if y.exists() else None for y in yollar}
+    assert sonra == once, (
+        "Önizleme normal günlük durumunu/CSV'sini/kart günlüğünü değiştirdi"
+    )
+    assert gunluk.gunluk(tarih, tmp_path, simdi=simdi, p=P) == 0
+    with csv_yol.open(encoding="utf-8-sig", newline="") as f:
+        (kart,) = list(csv.DictReader(f, delimiter=";"))
+    assert (kart["durum"], kart["stop"]) == ("AKTİF", "101,64")
+    gunluk_kaydi = yollar[-1].read_text(encoding="utf-8")
+    assert m.deneme_id not in gunluk_kaydi
+    assert json.loads(gunluk_kaydi)["kartlar"][0]["durum"] == "AKTİF"
+
+
+@pytest.mark.parametrize("komut_adi", ["tansu-sinama", "gunluk"])
+@pytest.mark.parametrize(
+    "strateji",
+    [
+        None,
+        [],
+        "bugun",
+        {"parametreler": [None]},
+        {"parametreler": ["bozuk"]},
+        {"parametreler": "bozuk"},
+        {"parametreler": [{"ad": [], "deger": 3, "koken": "legacy_izgara"}]},
+    ],
+)
+def test_bozuk_ayar_yapisi_komutta_kayit_kimligiyle_gorunur_hata_verir(
+    tmp_path, capsys, komut_adi, strateji
+):
+    kimlik = "bozuk-ayar-kaydi"
+    depo = deneme.PilotKayit(tmp_path / "bozuk.jsonl")
+    depo.yol.write_bytes(
+        deneme.kanonik(
+            {
+                "sema_surumu": deneme.SURUM,
+                "kayit_turu": "deneme",
+                "deneme_id": kimlik,
+                "strateji": strateji,
+            }
+        )
+        + b"\n"
+    )
+    argv = [komut_adi] + (["2026-10-05"] if komut_adi == "gunluk" else [])
+    argv += ["--deneme-id", kimlik, "--deneme-dosyasi", str(depo.yol)]
+    beklenmeyen = None
+    try:
+        kod, hata = komutu_kos(argv, capsys)
+    except (AttributeError, KeyError, TypeError, ValueError) as e:
+        beklenmeyen = f"{type(e).__name__}: {e}"
+    assert beklenmeyen is None, f"Kayıt kimliği olmayan hata kaçtı: {beklenmeyen}"
+    assert kod == 1
+    assert kimlik in hata
+    assert not list(rapor.RAPOR_DIZINI.glob("tansu-sinama-*.json"))
+    assert not (rapor.RAPOR_DIZINI / "durum.txt").exists()
+
+
+@pytest.mark.parametrize(
+    "alan,deger",
+    [
+        ("veri_ayarlari", None),
+        ("veri_ayarlari", {"veri_referanslari": None}),
+        ("veri_ayarlari", {"veri_referanslari": "20261005-1930"}),
+        ("yontem_ayarlari", []),
+        ("yontem_ayarlari", {"tekrar": "bozuk"}),
+        ("risk_ayarlari", None),
+        ("risk_ayarlari", {"risk": 0.1}),
+        ("masraf_ayarlari", []),
+        ("masraf_ayarlari", {"masraf": 0.1}),
+        ("donemler", []),
+        ("eski_referans", {"kural_id": None, "bos_nedenleri": None}),
+    ],
+)
+def test_ozeti_tutan_bozuk_ayar_yapisi_kimligiyle_reddedilir(tmp_path, alan, deger):
+    from hashlib import sha256
+
+    depo = deneme.PilotKayit(tmp_path / "pilot.jsonl")
+    m = pilot_deneme(depo)
+    olay = depo.oku()[0]
+    olay[alan] = deger
+    ayarlar = {
+        a: olay[a]
+        for a in (
+            "donemler",
+            "veri_ayarlari",
+            "yontem_ayarlari",
+            "risk_ayarlari",
+            "masraf_ayarlari",
+        )
+    }
+    ayarlar["strateji"] = {
+        k: v for k, v in olay["strateji"].items() if k != "olusturma_zamani"
+    }
+    olay["ayar_parmak_izi"] = (
+        f"{deneme.SURUM}:sha256:{sha256(deneme.kanonik(ayarlar)).hexdigest()}"
+    )
+    depo.yol.write_bytes(deneme.kanonik(olay) + b"\n")
+    hata = None
+    try:
+        depo.deneme_oku(m.deneme_id)
+    except deneme.PilotHatasi as e:
+        hata = str(e)
+    assert hata is not None, f"Bozuk {alan} özeti tuttuğu için kabul edildi"
+    assert m.deneme_id in hata
+
+
+def test_gecersiz_kayitli_hucre_komutta_ust_deneme_kimligiyle_durur(
+    tmp_path, monkeypatch, capsys
+):
+    anlik = anlik_hazirla(tmp_path, {"A": fiyatlar()})
+    depo, m = kayitli(tmp_path, monkeypatch)
+    once = depo.yol.read_bytes()
+    monkeypatch.setattr(
+        tansusinama, "IZGARA", {simulator.AILE: {**IZGARA, "min_gun": ["bozuk"]}}
+    )
+    beklenmeyen = None
+    try:
+        kod, hata = komutu_kos(
+            [
+                "tansu-sinama",
+                "--kok",
+                str(tmp_path),
+                "--kimlik",
+                anlik.kimlik,
+                "--aile",
+                simulator.AILE,
+                "--isci",
+                "1",
+                "--deneme-id",
+                m.deneme_id,
+                "--deneme-dosyasi",
+                str(depo.yol),
+            ],
+            capsys,
+        )
+    except ValueError as e:
+        beklenmeyen = f"{type(e).__name__}: {e}"
+    assert beklenmeyen is None, (
+        f"Kayıt kimliği olmayan hücre hatası kaçtı: {beklenmeyen}"
+    )
+    assert kod == 1
+    assert m.deneme_id in hata
+    assert depo.yol.read_bytes() == once
+    assert not list(rapor.RAPOR_DIZINI.glob("tansu-sinama-*.json"))
+
+
+@pytest.mark.parametrize("aileler", [("cift_rotasyonu",), tansusinama.AILELER])
+def test_kayitli_ema_deneme_cift_hesabini_baslatmadan_reddedilir(tmp_path, aileler):
+    from tansu.aktarim import AyarAktarimi
+    from tests.test_tansusinama import cift_anlik, IZGARA as TUM_IZGARA
+
+    anlik = cift_anlik(tmp_path / "cift")
+    depo = deneme.PilotKayit(tmp_path / "pilot.jsonl")
+    makbuz = pilot_deneme(
+        depo, "stop_atr15", veri_ayarlari={"veri_referanslari": [anlik.kimlik]}
+    )
+    once = depo.yol.read_bytes()
+    hata = None
+    try:
+        tansusinama.calistir(
+            anlik,
+            {"A": "X", "B": "X", "C": "X"},
+            aileler=aileler,
+            isci=1,
+            bas="2015-12-01",
+            ilerleme=lambda *a: None,
+            izgara=TUM_IZGARA,
+            aktarim=AyarAktarimi(depo, makbuz.deneme_id),
+        )
+    except deneme.PilotHatasi as e:
+        hata = str(e)
+    assert hata is not None, "EMA denemesiyle bağsız çift hesabı kabul edildi"
+    assert makbuz.deneme_id in hata
+    assert "cift_rotasyonu" in hata
+    assert depo.yol.read_bytes() == once

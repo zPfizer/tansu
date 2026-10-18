@@ -642,6 +642,7 @@ def calistir(
     t0 = time.monotonic()
     izgara = {**IZGARA, **(izgara or {})}
     if aktarim is not None:
+        aktarim.aile_dogrula(aileler)
         aktarim.veri_bagla(anlik.kimlik)
         p = aktarim.p
     semboller = sorted(anlik.fiyat["sembol"].unique())[:hisse]

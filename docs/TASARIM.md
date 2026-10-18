@@ -1233,6 +1233,12 @@ aynı denemenin tekrar çalıştırılması kimliğini korur. Eski kayıtların 
 katalog/ızgara çözümünü ve içerik özetini doğrulamadan hesap başlamaz. Eksik ayar, gerekli
 kurulum veya sınırdaki özet farkı ilgili kayıt kimliğini veren hatayla durur. Kimlik verilmezse
 eski varyant davranışı korunur; otomatik kök deneme kaydedilmez.
+Kayıttaki strateji nesnesi, parametre listesi ve her parametre öğesi üye erişiminden önce
+doğrulanır. Veri/yöntem/risk/masraf nesneleri, dönem listesi ve veri referansları yapısal
+olarak geçersizse özetleri eşleşse de kayıt reddedilir.
+Kayıtlı EMA denemesi yalnız `--aile ema_sikismasi` ile çalışır. Çift ailesi veya iki aile
+birlikte istenirse hesap ve çocuk kayıt başlamadan deneme kimliğiyle hata verilir.
+Çiftin ayrı kurulum sözleşmesi yukarıdadır; EMA ayarı çift hesabına uygulanmaz.
 
 Kayıtlı EMA ızgarasının her hücresi hesap başlamadan üst denemeye bağlı çocuk olarak kaydedilir.
 E2 sinyal ve kurulumunu çocuğun kaydedilmiş ayarından üretir; E3 aynı ayarı kullanır.
@@ -1247,7 +1253,11 @@ komutun bağ dosyası rapor dizinindeki `ayar-baglari.jsonl` dosyasıdır. Kayı
 açıkça verilen pilot dosyasına eklenir. Günlük etkinleştirme izni bu bağlardan türetilmez.
 Kayıtlı günlük hesap, aileye ait eski başarı satırını kendi ayarının tamamlanmış hesabı saymaz.
 Bu yolun kart kanıtı önizleme olarak etiketlenir; aileye ait eski kabul kanıtı seçilmiş
-denemenin etkinleştirme kanıtı olarak sunulmaz. Kayıtsız günlük davranış değişmez.
+denemenin etkinleştirme kanıtı olarak sunulmaz. Önizlemenin durum ve kart CSV dosyaları
+`rapor/onizleme/<kosu_id>/` altında ayrılır; normal `kartlar.jsonl` günlüğüne eklenmez.
+Başarılı veya başarısız önizleme normal günlüğün dosyalarını değiştirmez ve sonraki normal
+hesabı engellemez. Kayıtsız günlük davranış değişmez. Bu sıralama ve bozuk kayıt sınırları
+`tests/test_ayar_aktarimi.py` içinde sentetik fiyatlarla denetlenir.
 Dayanak: dağıtıcının 18.10, 23:44 teknik kararları; önceki pilot kimlik kuralı önceliklidir.
 
 #### Deneme kayıt pilotu (S03, #84)

@@ -9,7 +9,7 @@ from uuid import uuid4
 
 import pandas as pd
 
-from tansu import aileler, deneme, katalog, motor
+from tansu import aileler, deneme, katalog, motor, simulator
 
 
 class AyarAktarimi:
@@ -45,6 +45,13 @@ class AyarAktarimi:
             )
         self.veri_ref = kimlik
 
+    def aile_dogrula(self, aileler):
+        """TASARIM 5.15: EMA katalog kaydıyla çift hesabı yapılmaz."""
+        if self.kayit is not None and tuple(aileler) != (simulator.AILE,):
+            raise deneme.PilotHatasi(
+                f"{self.deneme_id}: kayıtlı EMA ayarı bu ailelerle kullanılamaz: {', '.join(aileler)}; --aile ema_sikismasi gerekli"
+            )
+
     def ayar_dogrula(self, p):
         if p != self.p:
             raise deneme.PilotHatasi(
@@ -72,9 +79,14 @@ class AyarAktarimi:
             for a in s["parametreler"]
             if a["koken"] == "legacy_izgara"
         }
-        strateji = katalog.legacy_coz(
-            s["varyant"], s["katalog_surumu"], sayisal_ayarlar={**sayisal, **hucre}
-        )
+        try:
+            strateji = katalog.legacy_coz(
+                s["varyant"], s["katalog_surumu"], sayisal_ayarlar={**sayisal, **hucre}
+            )
+        except (katalog.KatalogHatasi, OverflowError) as hata:
+            raise deneme.PilotHatasi(
+                f"{self.deneme_id}: geçersiz hücre ayarı: {hata}"
+            ) from hata
         makbuz = self.depo.deneme_kaydet(
             strateji,
             aktor="S07",

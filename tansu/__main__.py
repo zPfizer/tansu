@@ -104,9 +104,11 @@ def _denetim(n, tekrar) -> int:
 
 def _tansu_sinama(a, kok: Path, p, ayar_aktarimi=None) -> int:
     """Tansu sınaması (TASARIM 5.14): koşar, `rapor/tansu-sinama-<koşu>.json` ve günlük satırını yazar, özeti basar."""
+    aileler = (a.aile,) if a.aile else tansusinama.AILELER
+    if ayar_aktarimi is not None:
+        ayar_aktarimi.aile_dogrula(aileler)
     kimlik = a.kimlik or _en_yeni(kok)
     anlik = veri.oku(kimlik, kok)
-    aileler = (a.aile,) if a.aile else tansusinama.AILELER
     sektor = anlik.sektor
     if not sektor and ciftbolme.AILE in aileler:
         sektor = tansusinama.sektor_oku(a.sektor_kok)[0]

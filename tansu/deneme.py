@@ -158,6 +158,14 @@ def _strateji_kaydi(girdi):
     if isinstance(girdi, str):
         return asdict(katalog.legacy_coz(girdi))
     s = asdict(girdi) if isinstance(girdi, katalog.StratejiKaydi) else girdi
+    if not isinstance(s, dict) or not isinstance(s.get("parametreler"), (list, tuple)):
+        raise PilotHatasi("Strateji nesnesi ve parametre listesi gerekli.")
+    for a in s["parametreler"]:
+        if not isinstance(a, dict) or not {"ad", "deger", "koken"} <= a.keys():
+            raise PilotHatasi(
+                "Parametre öğesi ad, değer ve köken içeren nesne olmalıdır."
+            )
+        _metin(a["ad"])
     sayisal = {
         a["ad"]: a["deger"]
         for a in s["parametreler"]
@@ -175,7 +183,45 @@ def _strateji_kaydi(girdi):
     return s
 
 
+def _veri_kapsamini_dogrula(donemler, referanslar):
+    if not isinstance(donemler, list) or not donemler:
+        raise PilotHatasi("Dönem listesi gerekli.")
+    for donem in donemler:
+        if not isinstance(donem, dict):
+            raise PilotHatasi("Dönem nesne olmalıdır.")
+        _donem(donem)
+    if not isinstance(referanslar, (list, tuple)) or not referanslar:
+        raise PilotHatasi("Veri referans listesi gerekli.")
+    for ref in referanslar:
+        _metin(ref)
+
+
 def _ayarlar(kayit):
+    # TASARIM 5.15 S07: özet eşitliği, yapısal geçerliliğin yerine geçmez.
+    for ad in (
+        "strateji",
+        "veri_ayarlari",
+        "yontem_ayarlari",
+        "risk_ayarlari",
+        "masraf_ayarlari",
+        "eski_referans",
+    ):
+        if not isinstance(kayit[ad], dict):
+            raise PilotHatasi(f"{ad} nesne olmalıdır.")
+    _veri_kapsamini_dogrula(
+        kayit["donemler"], kayit["veri_ayarlari"]["veri_referanslari"]
+    )
+    tekrar = kayit["yontem_ayarlari"].get("tekrar", 0)
+    if type(tekrar) is not int or tekrar < 0:
+        raise PilotHatasi("Tekrar negatif olmayan tamsayı olmalıdır.")
+    _ondaliklar(kayit["risk_ayarlari"])
+    _ondaliklar(kayit["masraf_ayarlari"])
+    for ad, deger in kayit["eski_referans"].items():
+        if deger is None:
+            nedenler = kayit["eski_referans"].get("bos_nedenleri", {})
+            if not isinstance(nedenler, dict):
+                raise PilotHatasi("Eski referansın boşluk nedenleri nesne olmalıdır.")
+            _metin(nedenler.get(ad))
     return {
         "strateji": {
             k: v for k, v in kayit["strateji"].items() if k != "olusturma_zamani"
@@ -267,7 +313,7 @@ class PilotKayit:
             return kayit
         except OSError as hata:
             raise PilotYazmaHatasi(f"{deneme_id}: {hata}") from hata
-        except (ValueError, KeyError, TypeError) as hata:
+        except (ValueError, KeyError, TypeError, AttributeError, OverflowError) as hata:
             raise PilotHatasi(
                 f"{deneme_id}: eksik veya geçersiz ayar: {hata}"
             ) from hata
