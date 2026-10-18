@@ -19,6 +19,6 @@ _Kutuları Claude kanıtıyla işaretler. İşaretsiz kutu varsa PR birleşmez (
 
 Denetçi: 
 Denetlenen commit: 
-<!-- Denetlenen commit: denetçinin okuduğu son commit'in tam sha'sı (40 hane). CI bunun PR'ın son commit'i olduğunu kontrol eder; yalnız dalın değiştirmediği dosyaları taraflardan aynen alan sonraki taban dal birleştirmeleri hariç (Kural 5). -->
+<!-- Denetlenen commit: denetçinin okuduğu son commit'in tam sha'sı (40 hane). Kural 5'in sonraki birleştirmeler için istisnaları: docs/agents/is-kurallari.md "Auditor and rounds". -->
 <!-- CI tam olarak bir Sonuç satırı kabul eder ve yalnız şu üç metni kabul eder: "Sonuç: geçti", "Sonuç: GEÇTİ", "Sonuç: NOTLU GEÇTİ". CI "Geçti", KALDI ve ikinci bir Sonuç satırını reddeder. -->
 Sonuç: 
