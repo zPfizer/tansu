@@ -100,11 +100,59 @@ def test_s08_kismi_satis_gerceklesen_adet_ve_tekrar_dolum():
     assert ilk.kalan_adet == 60
     assert ilk.kalan_alis_maliyeti == pytest.approx(9.45)
     assert pd.isna(ilk.net_fiyat_getirisi)
+    assert pd.isna(ilk.referans_getirisi), (
+        "Açık işlemin nihai referans getirisi boş kalmalı"
+    )
+    assert pd.isna(ilk.net_r), "Açık işlemin nihai R sonucu boş kalmalı"
+    assert ilk.bos_nedenleri == dict.fromkeys(
+        ("net_fiyat_getirisi", "referans_getirisi", "net_r"), "islem_acik"
+    )
+    kismi = ilk.gerceklesen_kismi_sonuclar
+    assert len(kismi) == 1  # Aynı dolum kimliğinin tekrarı kısmi sonuç da eklemez.
+    assert kismi[0]["dolum_id"] == "yari" and kismi[0]["adet"] == 40
+    assert kismi[0]["net_sonuc"] == pytest.approx(386.77)
+    assert kismi[0]["referans_getirisi"] == pytest.approx(0.0038677)
+    assert kismi[0]["net_r"] == pytest.approx(0.19357329842604393)
     dolumlar.append(dict(dolum_id="son", yon="satis", adet=60, fiyat=90))
     son = ts._getirili(pd.DataFrame([risk_satiri(dolumlar=dolumlar)])).iloc[0]
     assert son.gerceklesen_maliyet == pytest.approx(31.185)
     assert son.net_sonuc == pytest.approx(-231.185)
     assert son.kalan_adet == 0
+    assert son.referans_getirisi == pytest.approx(-0.00231185)
+    assert son.net_r == pytest.approx(-0.11570505208942001)
+    assert son.bos_nedenleri == {}
+    assert son.gerceklesen_kismi_sonuclar == kismi
+
+
+def test_s08_dolumlu_ve_dolumsuz_satirlar_ayni_tabloda():
+    t = pd.DataFrame(
+        [
+            risk_satiri(sinyal_id="aday"),
+            risk_satiri(
+                sinyal_id="dolu",
+                dolumlar=[
+                    dict(dolum_id="al", yon="alis", adet=194, fiyat=100),
+                    dict(dolum_id="sat", yon="satis", adet=194, fiyat=80),
+                ],
+            ),
+            risk_satiri(sinyal_id="bos_liste", dolumlar=[]),
+            risk_satiri(sinyal_id="none", dolumlar=None),
+        ]
+    )
+    hata = None
+    try:
+        s = ts._getirili(t).set_index("sinyal_id")
+    except TypeError as exc:
+        hata = str(exc)
+    assert hata is None, f"Geçerli karma dolum tablosu hesaplanmalı: {hata}"
+    assert s.adet.tolist() == [194] * 4
+    assert pd.isna(s.loc["aday", "gerceklesen_maliyet"])
+    assert pd.isna(s.loc["none", "gerceklesen_maliyet"])
+    assert s.loc["bos_liste", "gerceklesen_maliyet"] == 0
+    assert pd.isna(s.loc["bos_liste", "net_r"])
+    assert s.loc["bos_liste", "bos_nedenleri"]["net_r"] == "giris_dolumu_yok"
+    assert s.loc["dolu", "net_sonuc"] == pytest.approx(-3934.999)
+    assert s.loc["dolu", "net_r"] == pytest.approx(-1.9694152486831565)
 
 
 @pytest.mark.parametrize(

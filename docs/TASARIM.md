@@ -1119,7 +1119,15 @@ Gerçekleşen maliyet bütün alış masrafları ile gerçekleşmiş satış mas
 Gerçekleşen net sonuç, satılan miktarın ağırlıklı alış tutarını ve ona düşen alış masrafını içerir;
 kalan miktar ve kalan alış masrafı ayrıca döner. Böylece kısmi net sonuç nihai sonuca tekrar eklenmez.
 Gerçekleşen brüt kayıp, net sonuç, net fiyat getirisi ve nominal temele göre getiri ayrı alanlardır.
-Net fiyat getirisi yalnız tamamı satılmış işlemde hesaplanır. Stop ötesindeki kayıp kesilmez.
+Nihai `net_fiyat_getirisi`, `referans_getirisi` ve `net_r` yalnız giriş dolumu olan,
+kalan adedi sıfır işlemde hesaplanır (#82). Açıkken bu alanlar boştur; `bos_nedenleri`
+aynı alanlar için `islem_acik` taşır. Giriş dolumu yoksa neden `giris_dolumu_yok` olur.
+Kapalı işlemde payda yoksa ilgili alanın nedeni risk hesabının gerekçesidir.
+`net_sonuc` gerçekleşmiş miktarın net TL sonucudur; açıkken nihai getiri anlamına gelmez.
+`gerceklesen_kismi_sonuclar`, kalan adedi pozitif bırakan her satışın kimlik, adet ve net TL
+sonucunu, referans getirisini ve net R'sini ayrı tutar. Bu liste kapanınca da korunur;
+nihai sonuca yeniden eklenmez. Kısmi R de ilk planlanan riski kullanır; dayanak yoksa gerekçeli boştur.
+Stop ötesindeki kayıp kesilmez.
 Elle örnek: 100 adet 100 TL'den alınır, 80 TL'den satılır. Alış masrafı 15,75 TL,
 satış masrafı 12,60 TL, net sonuç −2.028,35 TL olur. Net fiyat getirisi
 7.987,40 / 10.015,75 − 1 = −0,202516037241345'tir.
@@ -1128,6 +1136,9 @@ Yeni kayma katsayısı seçilmez; bu yüz gerçekleşmiş fiyatlara ek kayma uyg
 `simulator.risk_tablosu` yeni işlem girdilerini bağımsız değerlendirir; nakit/slot nedeniyle satır atmaz.
 Bu tablo her bağımsız tek hisse sinyaline kendi sayısal miktarını verir; ortak nakit/slot süzgeci yoktur.
 İşlem geçişi veya yeni sınama eğrisi üretmez (#90). Kimlikler ve giriş sütunları korunur.
+`dolumlar` alanının bulunmaması, `None` veya NaN olması dolum bilgisi yok demektir;
+maliyet hesabı yapılmaz. Açıkça verilen boş liste ise sıfır dolum hesabıdır. Eksik olmayan
+bozuk dolum girdisi hata verir. Böylece dolumlu ve dolumsuz adaylar aynı tabloda kalabilir.
 `tansusinama._getirili` açık `risk_surumu` taşıyan girdide bu tabloyu kullanır; eski girdide eski sonuç döner.
 Günlük `_kart` açık risk isteğinde aynı E3 sonucunu gerekçeli sözlük olarak verir; eski kart listesi korunur.
 Bu hesap yüzü günlük etkinleştirme değildir (#95). Normal komutlar eski politikalarını korur.

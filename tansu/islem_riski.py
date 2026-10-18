@@ -86,8 +86,15 @@ def fiyat_getirisi(giris, cikis, masraf):
 
 
 def _tek_dolumlar(dolumlar):
+    if not isinstance(dolumlar, list):
+        raise ValueError("dolumlar liste olmalı")
     gorulen = {}
     for d in dolumlar:
+        if (
+            not isinstance(d, dict)
+            or not {"dolum_id", "adet", "fiyat", "yon"} <= d.keys()
+        ):
+            raise ValueError("dolum alanları eksik")
         kimlik = d["dolum_id"]
         if not isinstance(kimlik, str) or not kimlik:
             raise ValueError("dolum kimliği eksik")
@@ -104,8 +111,13 @@ def _dolum_gecerli(d):
     return _pozitif(adet) and _pozitif(fiyat) and math.isfinite(adet * fiyat)
 
 
+def _net_sonuc(alis, satis):
+    return satis - alis - alis * KOMISYON_BSMV - satis * KOMISYON_BSMV
+
+
 def _dolum_toplamlari(dolumlar):
     alinan = satilan = alis = satis = 0.0
+    kismi = []
     for d in _tek_dolumlar(dolumlar):
         kimlik = d["dolum_id"]
         adet, fiyat, yon = d["adet"], d["fiyat"], d["yon"]
@@ -117,22 +129,30 @@ def _dolum_toplamlari(dolumlar):
         elif yon == "satis" and satilan + adet <= alinan:
             satilan += adet
             satis += adet * fiyat
+            if satilan < alinan:
+                kismi.append(
+                    dict(
+                        dolum_id=kimlik,
+                        adet=adet,
+                        net_sonuc=_net_sonuc(alis * (adet / alinan), adet * fiyat),
+                    )
+                )
         else:
             raise ValueError(f"dolum sırası, yönü veya miktarı geçersiz: {kimlik}")
     if not math.isfinite(alis + satis + alinan + satilan):
         raise ValueError("dolum toplamı sonlu değil")
-    return alinan, satilan, alis, satis
+    return alinan, satilan, alis, satis, kismi
 
 
 def maliyet_hesapla(dolumlar, *, masraf_surumu):
     """TASARIM 5.15 S08: tek işlemin kimlikli, gerçekleşmiş dolumlarını hesaplar."""
     if masraf_surumu != MASRAF_SURUMU:
         raise ValueError(f"bilinmeyen masraf sürümü: {masraf_surumu}")
-    alinan, satilan, alis, satis = _dolum_toplamlari(dolumlar)
+    alinan, satilan, alis, satis, kismi = _dolum_toplamlari(dolumlar)
     alis_maliyeti, satis_maliyeti = alis * KOMISYON_BSMV, satis * KOMISYON_BSMV
     pay = satilan / alinan if alinan else 0.0
     maliyet_temeli = alis * pay
-    net = satis - maliyet_temeli - alis_maliyeti * pay - satis_maliyeti
+    net = _net_sonuc(maliyet_temeli, satis)
     return {
         "masraf_surumu": masraf_surumu,
         "alinan_adet": alinan,
@@ -144,10 +164,25 @@ def maliyet_hesapla(dolumlar, *, masraf_surumu):
         "gerceklesen_maliyet": alis_maliyeti + satis_maliyeti,
         "gerceklesen_kayip": max(0.0, maliyet_temeli - satis),
         "net_sonuc": net,
+        "gerceklesen_kismi_sonuclar": kismi,
         "net_fiyat_getirisi": (satis - satis_maliyeti) / (alis + alis_maliyeti) - 1
         if alinan and alinan == satilan
         else None,
     }
+
+
+def _sonuc_olculeri(net, risk, neden=None):
+    """TASARIM 5.15/#82: sonuç paydaları ve gerekçeli boş nihai/kısmi ölçüler."""
+    sonuc = {}
+    bos_nedenleri = {}
+    for alan, payda in (
+        ("referans_getirisi", risk["nominal_tutar"]),
+        ("net_r", risk["ilk_risk"]),
+    ):
+        sonuc[alan] = net / payda if neden is None and payda else None
+        if sonuc[alan] is None:
+            bos_nedenleri[alan] = neden or risk["risk_nedeni"]
+    return {**sonuc, "bos_nedenleri": bos_nedenleri}
 
 
 def hesapla(girdi):
@@ -159,17 +194,25 @@ def hesapla(girdi):
         aile=girdi["aile"],
         risk_surumu=girdi["risk_surumu"],
     )
-    if "dolumlar" in girdi:
-        sonuc.update(
-            maliyet_hesapla(girdi["dolumlar"], masraf_surumu=girdi["masraf_surumu"])
-        )
-        sonuc["referans_getirisi"] = (
-            sonuc["net_sonuc"] / sonuc["nominal_tutar"]
-            if sonuc["nominal_tutar"] is not None
+    dolumlar = girdi.get("dolumlar")
+    # TASARIM 5.15: tabloya eklenen NaN, eksik alan gibi dolum bilgisi taşımaz.
+    if dolumlar is not None and not (
+        isinstance(dolumlar, Real) and math.isnan(dolumlar)
+    ):
+        sonuc.update(maliyet_hesapla(dolumlar, masraf_surumu=girdi["masraf_surumu"]))
+        neden = (
+            "giris_dolumu_yok"
+            if not sonuc["alinan_adet"]
+            else "islem_acik"
+            if sonuc["kalan_adet"]
             else None
         )
+        sonuc.update(_sonuc_olculeri(sonuc["net_sonuc"], sonuc, neden))
+        if neden:
+            sonuc["bos_nedenleri"]["net_fiyat_getirisi"] = neden
+        for kismi in sonuc["gerceklesen_kismi_sonuclar"]:
+            kismi.update(_sonuc_olculeri(kismi["net_sonuc"], sonuc))
         ilk_risk = sonuc["ilk_risk"]
-        sonuc["net_r"] = sonuc["net_sonuc"] / ilk_risk if ilk_risk else None
         sonuc["gerceklesen_kayip_r"] = (
             sonuc["gerceklesen_kayip"] / ilk_risk if ilk_risk else None
         )

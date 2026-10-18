@@ -5,9 +5,45 @@ import pytest
 from tansu import islem_riski
 
 
+@pytest.mark.parametrize("dolumlar", [None, float("nan")])
+def test_s08_eksik_dolum_degeri_dolumsuz_aday_gibidir(dolumlar):
+    from tests.test_tansusinama import risk_satiri
+
+    beklenen = islem_riski.hesapla(risk_satiri())
+    hata = None
+    try:
+        sonuc = islem_riski.hesapla(risk_satiri(dolumlar=dolumlar))
+    except TypeError as exc:
+        hata = str(exc)
+    assert hata is None, f"Eksik dolum bilgisi aday hesabını engellememeli: {hata}"
+    assert sonuc == beklenen
+    assert "gerceklesen_maliyet" not in sonuc  # Boş liste hesabından farklıdır.
+
+
+def test_s08_yalniz_giris_dolumu_nihai_getiri_uretmez():
+    from tests.test_tansusinama import risk_satiri
+
+    s = islem_riski.hesapla(
+        risk_satiri(
+            dolumlar=[
+                dict(dolum_id="al", yon="alis", adet=194, fiyat=100),
+            ]
+        )
+    )
+    assert s["referans_getirisi"] is None and s["net_r"] is None
+    assert s["net_fiyat_getirisi"] is None
+    assert s["bos_nedenleri"] == dict.fromkeys(
+        ("net_fiyat_getirisi", "referans_getirisi", "net_r"), "islem_acik"
+    )
+    assert s["gerceklesen_kismi_sonuclar"] == []
+
+
 @pytest.mark.parametrize(
     "dolumlar",
     [
+        1.0,
+        "dolum",
+        {},
         [dict(dolum_id="x", yon="alis", adet=0, fiyat=100)],
         [dict(dolum_id="x", yon="alis", adet=1, fiyat=float("inf"))],
         [dict(dolum_id="x", yon="alis", adet=1e308, fiyat=1e308)],
