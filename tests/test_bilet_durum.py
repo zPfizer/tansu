@@ -91,10 +91,7 @@ def test_bilet_ihlalleri_sahte_kokte_tam_liste(tmp_path):
     }
     for ad, metin in ornekler.items():
         (bilet / ad).write_text(metin, encoding="utf-8")
-    arsiv = tmp_path / ".scratch" / "arsiv" / "tansu-mvp" / "issues"
-    arsiv.mkdir(parents=True)
-    (arsiv / "01-eski.md").write_text("# T\n**Status:** done\n", encoding="utf-8")
-    # Karar: yalın `done` yalnız arşiv yolunda geçerlidir (issue-tracker.md); 05 artık reddedilir.
+    # Karar: yalın `done` yalnız git geçmişindeki eski arşivdedir; yerel bilette reddedilir (issue-tracker.md).
     assert bilet_ihlalleri(tmp_path) == [
         ".scratch/x/issues/02-kapali.md:2: izin verilmeyen değer: kapali",
         ".scratch/x/issues/03-yok.md:1: Status satırı yok",

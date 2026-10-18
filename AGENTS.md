@@ -1,7 +1,7 @@
 # TANSU
 
-TANSU is a daily signal and backtest (sınama) system for BIST. The code follows the documents.
-The behavior does not change before a document changes.
+TANSU is a daily signal and backtest (sınama) system for BIST. Follow the documents.
+If they conflict with code or omit a case, stop. Fix the document first. Write the reason before the code.
 
 ## Current state (Şimdiki durum)
 This section holds temporary states only. Each line has a date and an owner. Delete a line when its end condition is true.
@@ -27,11 +27,8 @@ Each fact has one owner file. The other files only give a reference to it. Read 
 The drift check covers all these files. The drift check is your review, not only driftlint (see the `docs/agents/` row). Correct a file when it contradicts another file, contains old information,
 or copies a fact of another file.
 
-If a document and the code contradict, or if the document says nothing about the case, stop. Correct the document
-first. Write the reason. Then write the code.
-
 ## Environment (Ortam)
-- Windows, PowerShell. Python is `.venv\Scripts\python.exe`. The main branch is `master`. The remote repository is `origin` (GitHub `zPfizer/tansu`, private). There is no other backup.
+- Windows, PowerShell. Python is `.venv\Scripts\python.exe`. The main branch is `master`. The remote repository is `origin` (GitHub `zPfizer/tansu`, public). There is no other backup.
 - **Current rules (Güncel kurallar):** The current rules are on `origin/master`. Before a job, run `git fetch origin`. Read the rules from `origin/master`. A checkout that is behind `origin/master` gives old rules.
 - Setup: `py -3.14 -m venv .venv`, then `.venv\Scripts\python.exe -m pip install -r requirements.lock.txt -e ".[dev]"`.
 - **Names (Adlar):** Code, file, column, and CSV header names are Turkish ASCII (`aile`, `adim`, `evren`). Report and card
@@ -39,11 +36,9 @@ first. Write the reason. Then write the code.
   `utf-8-sig`).
 - **Line ends (Satır sonları):** `core.autocrlf=true`. The working copy is CRLF, the repository is LF. Do not convert line ends. Change files with `Edit`.
 - **Shell reads (Kabuk okumaları):** Read a file with `Read`. `permissions.deny` in `.claude/settings.json` blocks `cat`, `sed -n`, and `sed -i` in Bash.
-- **Hooks (Kancalar):** `kurulum/kanca.py` blocks a code file edit when no test under `tests/` changed first.
-  `.claude/settings.json` registers it.
-- **Waiting (Bekleme):** Claude Code blocks `sleep` and `Start-Sleep`. Run a long command alone in one call. Run only the tests of the change with pytest and `ruff check`/`ruff format --check` on the changed files. CI runs the full suite.
-  Run it in the foreground with a timeout of at most 600000 ms. Or use `run_in_background` and one Monitor on it.
-  Do not poll with a loop of status calls. In Git Bash, `pgrep` does not see PowerShell processes.
+- **Hooks (Kancalar):** `.claude/settings.json` registers `kurulum/kanca.py`. It checks only that a test under `tests/` changes before code.
+- **Waiting (Bekleme):** Claude Code blocks `sleep` and `Start-Sleep`. Run long commands alone. Run only affected pytest tests and `ruff check`/`ruff format --check` on changed files. CI runs the full suite.
+  Use the foreground with a timeout of at most 600000 ms, or `run_in_background` with one Monitor. Do not poll. Git Bash `pgrep` cannot see PowerShell processes.
 - **Temporary files (Geçici dosyalar):** Write them under `$TEMP` or under `.scratch/<job>/tmp/` of the main checkout. Never write one to a tracked path.
   The permission system refuses a recursive delete (`rm -rf`, `Remove-Item -Recurse`). Do not try it. List the leftover paths in a code block of the report. Levent deletes them.
 - **Shell state (Kabuk durumu):** Each shell call starts new. A `cd`, a variable, or an `export` does not carry over. `$CLAUDE_PROJECT_DIR` exists only in hooks. Use full paths.
@@ -55,12 +50,10 @@ first. Write the reason. Then write the code.
 ## Every job
 1. Write the intent of Levent and the flow letter in one line at the top of the first reply only. After that line, the result comes first. All text that Levent can see is Turkish, also the wrap_up text.
 2. Unknown error or missing fact: run `py -3 C:\Users\levent\Desktop\YONETIM\beyin\beyin.py context "<q>" --harness claude --project TANSU --no-sync` before you search logs, code, or the web. <!-- driftlint-ignore: local-only path of the brain tool, absent in CI -->
-3. If the work type is unclear: `mattpocock-skills:ask-matt`.
-4. Send a design or technical question that needs the preference of Levent to the `vekil` subagent first. Levent gets only these: direction of the project, money, outgoing work, secrets, and delete. Levent also gets a Task Scheduler change and work that cannot be undone.
-5. Before you write an instruction or a prompt: `asd-ste100`.
-6. If you cannot show a source for a claim: `thinking-circle-of-competence`.
-7. If the problem type is unclear: `thinking-cynefin`. If the method is unclear: `thinking-model-router`.
-8. Choose the flow and the scope (`docs/agents/is-kurallari.md` "Scope").
+3. If the work type is unclear: `mattpocock-skills:ask-matt`. Before you write an instruction or prompt: `asd-ste100`.
+4. Send design or technical questions that need Levent's preference to `vekil` first. Levent gets money, scope, direction, taste, and product decisions absent from Tansu notes. Also ask him about secrets, delete, outgoing work, Task Scheduler changes, and work that cannot be undone.
+5. If a claim has no source: `thinking-circle-of-competence`. If the problem type is unclear: `thinking-cynefin`. If the method is unclear: `thinking-model-router`.
+6. Choose the flow and the scope (`docs/agents/is-kurallari.md` "Scope").
 
 ## Work flow (İş akışı)
 Choose the flow by the work type. Call each skill by the exact name in backticks. Open the skill of the flow before the first step. Run the steps in order. Run an "If" row only when its condition is true.
@@ -84,5 +77,5 @@ Each skill lives in `.claude/skills/<name>/SKILL.md` and owns the steps of its f
 - Issue tracker (GitHub Issues): `docs/agents/issue-tracker.md`. Triage labels: `docs/agents/triage-labels.md`. Domain docs: `docs/agents/domain.md`.
 
 ## Standards (Standartlar)
-`CODING_STANDARDS.md` and `DEFINITION_OF_DONE.md` are the standards of Tansu. `DEFINITION_OF_DONE.md` is Tansu's own copy.
-`CODING_STANDARDS.md` is different since 17.10 (Levent 17.10): it points to the shared general file and holds only the Tansu items. The `## Tansu` section at the end of each file holds the Tansu-only items. `tansu-yeni-is` "Review" reads both files and the general file.
+`CODING_STANDARDS.md` points to the shared general rules. Its `## Tansu` section and that of `DEFINITION_OF_DONE.md` hold the project rules.
+Review reads both files and the shared general rules.

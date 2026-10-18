@@ -3,7 +3,7 @@
 Kapsam: Tansu X Veri Havuzu notları + görseller. Görsel yolu kökü: `beyin/kisisel/300-Projects/Tansu X Veri Havuzu/assets/`.
 Etiketler (kaynak türü tanımları GLOSSARY'dedir): **GÖRSEL** = görselde okundu (birinci el; NotebookLM görseli de birinci eldir, "NotebookLM görseli" etiketi yalnız bilgi verir), **Ham** = notun `## Ham` bölümü (birinci el), **NOT** = notun Ham dışındaki bölümleri (ikinci el), **YORUM** = benim çıkarımım / boşluk. Hiçbir parametre sessizce uydurulmadı.
 
-Genel uyarı: Tansu kod, formül, pencere, maliyet, OOS vermiyor. Görseller düşük çözünürlüklü.
+Genel uyarı: Tansu bazı parametreleri ve kod parçalarını paylaşır, ama kodlu tam bir kural paylaşmaz; çift ailesinde tam bir pencere, maliyet ve OOS seti vermez. Görseller düşük çözünürlüklü.
 
 ---
 
