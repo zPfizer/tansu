@@ -112,7 +112,9 @@ def test_kosu_basladi_ve_bitti_satiri_yazar_ve_islemi_dondurur(tmp_path):
     assert bitti["ozet"] == sonuc["ozet"]
 
 
-def test_temiz_agacta_resmi_kirli_agacta_resmi_degil(tmp_path):
+def test_temiz_agacta_resmi_kirli_agacta_resmi_degil(tmp_path, monkeypatch):
+    monkeypatch.setattr(kayit, "TAM_TABAN", 7)
+    monkeypatch.setattr(kayit, "TAM_CARPAN", 1)
     kimlik = anlik_hazirla(tmp_path)
     kayit.kayitla(P, ATR_N)
     kayit.denetim_yaz(

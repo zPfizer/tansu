@@ -37,6 +37,35 @@ KESIM = [
 BAS = "2013-12-02"
 
 
+def test_bist30_gelecekteki_uyelik_degisse_de_onceki_liste_degismez(monkeypatch):
+    istek = veri.UyelikIstegi(
+        ("2021-02-05", "2021-04-01"), "donemsel_bist30_v1", "bist30_2021_2025_v1"
+    )
+    once = veri.uyelik_hazirla(istek)
+    oku = pd.read_csv
+
+    def gelecek_degisti(*args, **kwargs):
+        t = oku(*args, **kwargs)
+        t.loc[t["sembol"] == "ASTOR", "sembol"] = "GELECEK"
+        return t
+
+    monkeypatch.setattr(pd, "read_csv", gelecek_degisti)
+    sonra = veri.uyelik_hazirla(istek)
+    assert (
+        "GELECEK"
+        in veri.uyelik_hazirla(
+            veri.UyelikIstegi(
+                ("2023-07-03",), istek.evren_politikasi, istek.uyelik_surumu
+            )
+        )["gunler"]["2023-07-03"]["semboller"]
+    )
+    for tarih in istek.tarihler:
+        assert once["gunler"][tarih]["semboller"] == sonra["gunler"][tarih]["semboller"]
+        assert [k["kayit_id"] for k in once["gunler"][tarih]["kanitlar"]] == [
+            k["kayit_id"] for k in sonra["gunler"][tarih]["kanitlar"]
+        ]
+
+
 @pytest.mark.parametrize("politika", ["legacy_portfoy_v1", "legacy_tansu_v1"])
 def test_veri_motoru_cift_girdileri_onek_degismez(politika):
     gunler = pd.date_range("2024-01-01", periods=5)

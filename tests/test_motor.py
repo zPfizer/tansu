@@ -309,6 +309,27 @@ def test_karantinadan_sonraki_250_gunde_sinyal_yok():
     assert (len(islemler), dusen) == (0, 0)
 
 
+def test_karantina_249_gunu_engeller_250_gunu_serbest_birakir():
+    # TASARIM 5.1: 249. satır engelli; 250. satır sinyali 251'de 100'den girip veri sonunda 100'den çıkar.
+    mumlar = _mumlar([r(*STD, karantina=True)] + [r(*STD)] * 251, 2)
+    canli, dusen = motor.islemler(mumlar, mumlar.index[[249, 250]])
+    onbellek, zincir_dusen = motor.Zincir(mumlar).calistir([249, 250])
+    for tablo in (canli, onbellek):
+        assert [
+            (
+                mumlar.index.get_loc(t.sinyal_tarih),
+                mumlar.index.get_loc(t.giris_tarih),
+                mumlar.index.get_loc(t.cikis_tarih),
+                t.giris_fiyat,
+                t.cikis_fiyat,
+                t.neden,
+            )
+            for t in tablo.itertuples()
+        ] == [(250, 251, 251, 100.0, 100.0, "veri_sonu")]
+    assert (dusen, zincir_dusen) == (0, 0)
+    pd.testing.assert_frame_equal(canli, onbellek)
+
+
 def test_sinama_anlik_goruntuden_sinyal_ve_islem():
     # Elle hesap (bilet 08, ajan değil): kapanış [100x5, 103, 104, 105], AOF = kapanış, yüksek/düşük = kapanış ± 0,5
     # (yüksek gün 2: 101). Küçük parametre: periyotlar (1, 2), eşik 0,005, 3 gün, pencere 3, ısınma 4, SMA(2), ATR(2).

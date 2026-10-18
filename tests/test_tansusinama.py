@@ -16,7 +16,7 @@ import pandas as pd
 import pytest
 
 from tansu import __main__ as komut
-from tansu import aileler, kayit, motor
+from tansu import aileler, kayit, motor, veri
 from tansu import tansusinama as ts
 from tests.test_k1 import anlik_hazirla
 from tests.test_simulator import BAS, KAP, P, YUK, duz, mum
@@ -27,6 +27,86 @@ EMA_IZGARA = {"esik": [0.005], "min_gun": [3], "pencere": [3]}
 CIFT_IZGARA = {"z_pencere": [5], "z_esik": [1.0, 1.5]}
 IZGARA = {"ema_sikismasi": EMA_IZGARA, "cift_rotasyonu": CIFT_IZGARA}
 GUNLER = pd.bdate_range("2025-01-01", periods=270)
+
+
+def uyelikli_veri(tmp_path, bas="2021-03-24", uzat=False):
+    kap, yuk = KAP_A + ([111.0] if uzat else []), YUK_A + ([111.5] if uzat else [])
+    gunler = pd.bdate_range(bas, periods=len(kap))
+    seri = [
+        mum(g, k, y, k - 0.5, 1e9) for g, k, y in zip(gunler, kap, yuk, strict=True)
+    ]
+    a = anlik_hazirla(tmp_path, {s: seri for s in ("AKBNK", "MGROS", "SASA")})
+    istek = veri.VeriIstegi(
+        ("AKBNK", "MGROS", "SASA"),
+        str(gunler[0].date()),
+        str(gunler[-1].date()),
+        "kayitli",
+        "legacy_portfoy_v1",
+        "bist30_2021_2025_v1",
+        "duzeltme_v1",
+        "takvim_v1",
+        evren_politikasi="donemsel_bist30_v1",
+    )
+    return a, veri.veri_hazirla(istek, a.kimlik, tmp_path)
+
+
+def test_s05_giris_gunu_uyeligi_sinyalden_ayri_denetlenir(tmp_path):
+    # Sinyal 31 Mart, dolum 1 Nisan: MGROS çıkar, SASA ancak dolum günü üyedir.
+    a, paket = uyelikli_veri(tmp_path)
+    eski, _ = motor.sinama(a, P)
+    assert set(eski["sembol"]) == {"AKBNK", "MGROS", "SASA"}
+    sonuc, dusen = motor.sinama(a, P, veri_paketi=paket)
+    assert set(sonuc["sembol"]) == {"AKBNK"}
+    assert dusen == 2
+    giris = sonuc.iloc[0]
+    assert str(giris.sinyal_tarih.date()) == "2021-03-31"
+    assert str(giris.giris_tarih.date()) == "2021-04-01"
+    assert giris.uyelik_kaniti["kaynak_id"] == "A001"
+    assert giris.uyelik_kaniti["sembol"] == "AKBNK"
+    assert sonuc.attrs["uyelik_surumu"] == "bist30_2021_2025_v1"
+    assert sonuc.attrs["veri_referanslari"] == [paket["referans"]]
+    retler = {r["sembol"]: r for r in sonuc.attrs["uyelik_retleri"]}
+    assert retler["MGROS"]["neden"] == "giris_gununde_uye_degil"
+    assert retler["SASA"]["neden"] == "sinyal_gununde_uye_degil"
+    assert retler["MGROS"]["giris_tarih"] == "2021-04-01"
+
+
+def test_s05_e1_veri_referansi_uyelik_kanitina_baglanir(tmp_path):
+    _, paket = uyelikli_veri(tmp_path)
+    assert "uyelik" in paket
+    assert (
+        paket["referans"]["uyelik_tablo_parmak_izi"]
+        == paket["uyelik"]["tablo_parmak_izi"]
+    )
+    assert paket["referans"]["evren_politikasi"] == "donemsel_bist30_v1"
+    assert paket["referans"]["goruntu_id"]
+    assert paket["referans"]["manifest_parmak_izi"]
+
+
+@pytest.mark.parametrize("eksik", ["gun", "uye"])
+def test_s05_eksik_kanit_motor_kosusunu_durdurur(tmp_path, eksik):
+    a, paket = uyelikli_veri(tmp_path)
+    if eksik == "gun":
+        del paket["uyelik"]["gunler"]["2021-04-01"]
+    else:
+        paket["uyelik"]["gunler"]["2021-04-01"]["semboller"].remove("AKBNK")
+    with pytest.raises(veri.UyelikKapsamHatasi) as hata:
+        motor.sinama(a, P, veri_paketi=paket)
+    assert hata.value.eksik_tarihler == ["2021-04-01"]
+    assert hata.value.uyelik_surumu == "bist30_2021_2025_v1"
+
+
+def test_s05_uyelikten_cikis_acik_islemi_kapatmaz(tmp_path):
+    # Sinyal 30 Mart, giriş 31 Mart; MGROS 1 Nisan'da çıkar, 2 Nisan'a dek tutulur.
+    a, paket = uyelikli_veri(tmp_path, "2021-03-23", uzat=True)
+    eski, _ = motor.sinama(a, P)
+    sonuc, _ = motor.sinama(a, P, veri_paketi=paket)
+    r = sonuc.set_index("sembol").loc["MGROS"]
+    once = eski.set_index("sembol").loc["MGROS"]
+    assert r.giris_tarih == pd.Timestamp("2021-03-31")
+    assert r.cikis_tarih == once.cikis_tarih == pd.Timestamp("2021-04-02")
+    assert r.neden == once.neden == "veri_sonu"
+    assert r.uyelik_kaniti["yururluk_bitisi"] == "2021-03-31"
 
 
 def seri_a():
