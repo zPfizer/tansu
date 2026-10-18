@@ -206,11 +206,11 @@ def _kutu_hedef(kurulum) -> dict:
     }
 
 
-def kurulum_bilgisi(f: pd.DataFrame, p: aileler.Parametre):
+def kurulum_bilgisi(f: pd.DataFrame, p: aileler.Parametre, *, hesaplanan=None):
     """Kutu stopu ya da hedef kullanan ayar için `aileler.kurulum`; yoksa None (aynı gün tekrarını `_kutu_hedef` ayıklar)."""
     if p.stop != "kutu" and p.hedef == "yok":
         return None
-    return aileler.kurulum(f, p)
+    return aileler.kurulum(f, p) if hesaplanan is None else hesaplanan
 
 
 def tara(
@@ -441,10 +441,7 @@ def _mumlar_kur(anlik, sembol, p, atr_n) -> pd.DataFrame:
     m = f[["aof", "yuksek", "dusuk", "kapanis", "hacim"]].reindex(
         g.index
     )  # eksik gün NaN kalır
-    m["sma250"] = gostergeler.sma(m["kapanis"], p.sma_n)
-    m["atr"] = gostergeler.atr(m["yuksek"], m["dusuk"], m["kapanis"], atr_n)
-    m["rsi"] = gostergeler.rsi(m["kapanis"])
-    m["sma50"] = gostergeler.sma(m["kapanis"], 50)
+    m = m.join(gostergeler.tablo(m, p.sma_n, atr_n))
     # önceki gün = son dolu gün (eksik gün atlanır)
     m["onceki_rsi"] = m["rsi"].ffill().shift(1)
     m["onceki_dusuk"] = m["dusuk"].ffill().shift(1)
@@ -508,15 +505,15 @@ def sinama(
         if uyelik is not None:
             m = m.loc[:son]
         f = m.dropna(subset=["kapanis"])
-        sig = aileler.sinyal(f, p)
+        kurulum = aileler.kurulum(f, p)
+        sig = kurulum.index
         if uyelik is not None:
             sig = sig[sig >= bas]
         if gunler is not None:
             sig = sig[sig.isin(gunler[s])]
-        # ponytail: kurulum ikinci kez hesaplanır (sinyal zaten onu hesaplamıştı); yalnız kutu stopu ve hedef varyantlarında
         zincir = Zincir(m, p, uyelik=uyelik, sembol=s)
         t, d = zincir.calistir(
-            m.index.get_indexer(sig), kurulum_bilgisi(f, p)
+            m.index.get_indexer(sig), kurulum_bilgisi(f, p, hesaplanan=kurulum)
         )  # `islemler` ile bire bir (test), ama tek geçişte hızlı
         if len(t):  # boş tablolar sütun türünü object'e bozar
             parcalar.append(t.assign(sembol=s))
