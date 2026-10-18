@@ -1,6 +1,6 @@
 # TANSU
 
-TANSU is a daily signal and backtest (sınama) system for BIST. Tansu inspired it. The code follows the documents.
+TANSU is a daily signal and backtest (sınama) system for BIST. The code follows the documents.
 The behavior does not change before a document changes.
 
 ## Current state (Şimdiki durum)
@@ -31,30 +31,45 @@ If a document and the code contradict, or if the document says nothing about the
 first. Write the reason. Then write the code.
 
 ## Environment (Ortam)
-- Windows, PowerShell. Python is `.venv\Scripts\python.exe`. The main branch is `master`. The remote repository is `kaynak` (GitHub, private). There is no other backup.
-- **Current rules (Güncel kurallar):** The current rules are on `kaynak/master`. Before a job, run `git fetch kaynak`. Read the rules from `kaynak/master`. A checkout that is behind `kaynak/master` gives old rules.
+- Windows, PowerShell. Python is `.venv\Scripts\python.exe`. The main branch is `master`. The remote repository is `origin` (GitHub `zPfizer/tansu`, private). There is no other backup.
+- **Current rules (Güncel kurallar):** The current rules are on `origin/master`. Before a job, run `git fetch origin`. Read the rules from `origin/master`. A checkout that is behind `origin/master` gives old rules.
 - Setup: `py -3.14 -m venv .venv`, then `.venv\Scripts\python.exe -m pip install -r requirements.lock.txt -e ".[dev]"`.
 - **Names (Adlar):** Code, file, column, and CSV header names are Turkish ASCII (`aile`, `adim`, `evren`). Report and card
   text uses Turkish characters. Use `pathlib` for paths. Open each file with an explicit `encoding="utf-8"` (for CSV,
   `utf-8-sig`).
 - **Line ends (Satır sonları):** `core.autocrlf=true`. The working copy is CRLF, the repository is LF. Do not convert line ends. Change files with `Edit`.
 - **Shell reads (Kabuk okumaları):** Read a file with `Read`. `permissions.deny` in `.claude/settings.json` blocks `cat`, `sed -n`, and `sed -i` in Bash.
+- **Hooks (Kancalar):** `kurulum/kanca.py` checks tool calls and answers. `.claude/settings.json` registers it. Its message names the rule and the fix.
+  - It blocks an edit of an instruction file or a code file before the skill calls that "Every job" and `tansu-yeni-is` "Build" require.
+  - It blocks the common forms of shell file reads, Bash heredocs, `kapi.ps1` from Bash, and Git object paths without `MSYS_NO_PATHCONV=1`.
+  - Known limits:
+    - Bash patterns do not cover all shell syntax or expansion. `$x = Get-Content f` and nested file reads can pass.
+    - `git log --grep HEAD:.claude/settings.json` is search data, but the hook blocks it.
+    - Uncertain heredoc syntax can block literal data. Use a plain quoted literal for text.
+  - It sends back a subagent answer that is over the word limit of its prompt. It sends it back one time only.
+    It finds the limit in these forms: "at most N words", "under N words", "en fazla N sözcük", "en fazla N kelime".
+- **Waiting (Bekleme):** Claude Code blocks `sleep` and `Start-Sleep`. Run a long command alone in one call. Run the gate with the affected test files.
+  Run it in the foreground with a timeout of at most 600000 ms. Or use `run_in_background` and one Monitor on it.
+  Do not put `git commit` and the gate in one call. Do not poll with a loop of status calls. In Git Bash, `pgrep` does not see PowerShell processes.
+- **Temporary files (Geçici dosyalar):** Write them under `$TEMP` or under `.scratch/<job>/tmp/` of the main checkout. Never write one to a tracked path.
+  The permission system refuses a recursive delete (`rm -rf`, `Remove-Item -Recurse`). Do not try it. List the leftover paths in a code block of the report. Levent deletes them.
+- **Shell state (Kabuk durumu):** Each shell call starts new. A `cd`, a variable, or an `export` does not carry over. `$CLAUDE_PROJECT_DIR` exists only in hooks. Use full paths.
+- **Copied values (Kopya değerler):** Copy an id, a path, a sha, or a number from a command output of this session. Do not write it from memory or from the report of another agent.
+  Search a Markdown heading with `^#+ <text>`, because its level can differ.
 - **Dependency (Bağımlılık):** Before you add a new package, check TASARIM §4 and the stdlib. Write an added package in `pyproject.toml`
   with `==`. A CI tool outside Python is pinned to an exact version in the workflow file.
 
 ## Every job
 1. Write the intent of Levent and the flow letter in one line at the top of the first reply only. After that line, the result comes first. All text that Levent can see is Turkish, also the wrap_up text.
-2. Read the section "Current state" (Şimdiki durum) of this file.
-3. Unknown error or missing fact: run `py -3 C:\Users\levent\Desktop\YONETIM\beyin\beyin.py context "<q>" --harness claude --project TANSU --no-sync` before you search logs, code, or the web. <!-- driftlint-ignore: local-only path of the brain tool, absent in CI -->
-4. If the work type is unclear: `mattpocock-skills:ask-matt`.
-5. Send a design or technical question that needs the preference of Levent to the `vekil` subagent first. Levent gets only these: direction of the project, money, outgoing work, secrets, and delete. Levent also gets a Task Scheduler change and work that cannot be undone.
-6. Before you write an instruction or a prompt: `asd-ste100`.
-7. If you cannot show a source for a claim: `thinking-circle-of-competence`.
-8. If the problem type is unclear: `thinking-cynefin`. If the method is unclear: `thinking-model-router`.
-9. Choose the flow and the scope (`docs/agents/is-kurallari.md` "Scope").
+2. Unknown error or missing fact: run `py -3 C:\Users\levent\Desktop\YONETIM\beyin\beyin.py context "<q>" --harness claude --project TANSU --no-sync` before you search logs, code, or the web. <!-- driftlint-ignore: local-only path of the brain tool, absent in CI -->
+3. If the work type is unclear: `mattpocock-skills:ask-matt`.
+4. Send a design or technical question that needs the preference of Levent to the `vekil` subagent first. Levent gets only these: direction of the project, money, outgoing work, secrets, and delete. Levent also gets a Task Scheduler change and work that cannot be undone.
+5. Before you write an instruction or a prompt: `asd-ste100`.
+6. If you cannot show a source for a claim: `thinking-circle-of-competence`.
+7. If the problem type is unclear: `thinking-cynefin`. If the method is unclear: `thinking-model-router`.
+8. Choose the flow and the scope (`docs/agents/is-kurallari.md` "Scope").
 
 ## Work flow (İş akışı)
-Tansu has no flow F (memory) and no flow G (company output). They stay in the brain.
 Choose the flow by the work type. Call each skill by the exact name in backticks. Open the skill of the flow before the first step. Run the steps in order. Run an "If" row only when its condition is true.
 
 | Work type | Flow | Skill |
@@ -73,8 +88,8 @@ Each skill lives in `.claude/skills/<name>/SKILL.md` and owns the steps of its f
 - Before you commit or run a git command that changes the repository: `docs/agents/git.md`.
 - Before you touch a Task Scheduler task or a file in `kurulum/`: `docs/agents/zamanlayici.md`.
 - For a source, question, or session job, and before you name a skill or refer to a step in a document: `docs/agents/akislar.md`.
-- Issue tracker: `docs/agents/issue-tracker.md`. Triage labels: `docs/agents/triage-labels.md`. Domain docs: `docs/agents/domain.md`.
+- Issue tracker (GitHub Issues): `docs/agents/issue-tracker.md`. Triage labels: `docs/agents/triage-labels.md`. Domain docs: `docs/agents/domain.md`.
 
 ## Standards (Standartlar)
-`CODING_STANDARDS.md` and `DEFINITION_OF_DONE.md` are the standards of Tansu. `DEFINITION_OF_DONE.md` is Tansu's own copy. No shared original exists since 15.10 (Levent 15.10).
+`CODING_STANDARDS.md` and `DEFINITION_OF_DONE.md` are the standards of Tansu. `DEFINITION_OF_DONE.md` is Tansu's own copy.
 `CODING_STANDARDS.md` is different since 17.10 (Levent 17.10): it points to the shared general file and holds only the Tansu items. The `## Tansu` section at the end of each file holds the Tansu-only items. `tansu-yeni-is` "Review" reads both files and the general file.

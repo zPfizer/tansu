@@ -9,7 +9,7 @@ Run AGENTS.md "Every job" first. Run the steps in order. Run an "If" row only wh
 
 1. **Write for agents:** `mattpocock-skills:writing-for-agents`.
 2. **Record:** `mattpocock-skills:domain-modeling`. `tansu-yeni-is` "Document first" says where a term and a decision go.
-3. **Language:** Write instruction and prompt text in English: `asd-ste100`.
+3. **Language:** Write instruction and prompt text in English: `asd-ste100`. Then run `py -3 -X utf8 kurulum/ste_fark.py origin/master`. It lints only the lines that the branch added to the instruction files since its merge base. Stage a new file first (`git add <file>`). The exit code must be 0. The hook of AGENTS.md "Environment" blocks an instruction edit before the `asd-ste100` call.
 4. **Result:** Write the result to the brain as `tansu-yeni-is` "Close" says.
 5. **Locked file:** A locked file has feature scope (`docs/agents/is-kurallari.md` "Scope").
 6. **Translation:** For a translation of a rule file, the writer lists every dropped word. The auditor compares each rule with the source rule. (Levent 14.10)
@@ -21,7 +21,7 @@ Run AGENTS.md "Every job" first. Run the steps in order. Run an "If" row only wh
 | the work is a Claude interface mode or hook | `plugin-authoring`. |
 | the document is long | `anthropic-skills:doc-coauthoring`. |
 | the change affects behavior | run `tansu-eval` "Add the case" and `tansu-eval` "Check the judge". |
-| the job reads pool notes into `docs/kurallar` in batches (a brief is given, the job only appends) | do not run the steps Write for agents, Record, and Language. Do not run the row "the document is long". Apply "Pool reading rules" below and the shared steps of `tansu-yeni-is`. The PR has `Akış: tansu-belge`, and `Çağrılan beceriler:` lists `toplu havuz okuma`. |
+| the job reads pool notes into `docs/kurallar` in batches (a brief is given, the job only appends) | do not run the steps Write for agents, Record, and Language. Do not run the row "the document is long". Apply "Pool reading rules" below and the shared steps of `tansu-yeni-is`. |
 
 ## Pool reading rules
 These rules bind the readers and the writers of a pool batch. They also bind a document correction from the pool.
@@ -36,5 +36,5 @@ These rules bind the readers and the writers of a pool batch. They also bind a d
 9. Do not use `replace_all` in a document. Read each hit.
 10. A `yok` reason that says there is no threshold needs a search of the Ham text and the images for a number or a period first.
 11. Every reader record has `gorsel_acildi` (true or false) and `belirsiz` (true or false). The review sample contains every record with `belirsiz: true`. A PR sentence about opened images counts only the records with `gorsel_acildi: true`.
-12. Before the PR, `python tests/atif_araclari.py alinti <records>` must print 0 lines. Also run `python tests/atif_araclari.py alinti-belge kaynak/master`. It checks the quotes on the added document lines. Stage a new document file (`git add <file>`) before the run, because the command reads tracked files only. Both commands must print 0 lines. Or the PR lists each remaining line one by one with its reason (for example "etiket, alıntı değil"). Never pass a group of lines together. Write `ek` and `yok` records with `python tests/atif_araclari.py entegre <tarih> <records>`. Run the real pool test with `TANSU_BEKLENEN_ACIK` and `TANSU_PARTI` (`tansu-yeni-is` "Test gate").
+12. Before the PR, `python tests/atif_araclari.py alinti <records>` must print 0 lines. Also run `python tests/atif_araclari.py alinti-belge origin/master`. It checks the quotes on the added document lines. Stage a new document file (`git add <file>`) before the run, because the command reads tracked files only. Both commands must print 0 lines. Or the PR lists each remaining line one by one with its reason (for example "etiket, alıntı değil"). Never pass a group of lines together. Write `ek` and `yok` records with `python tests/atif_araclari.py entegre <tarih> <records>`. Run the real pool test with `TANSU_BEKLENEN_ACIK` and `TANSU_PARTI` (`tansu-yeni-is` "Test gate").
 13. Every open question of a reader or a writer appears in the PR as "taşındı: <place>" or "düştü: <reason>".

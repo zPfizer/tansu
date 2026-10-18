@@ -1,5 +1,6 @@
-"""Bilet Status denetimi (S5): her `.scratch/**/issues/*.md` bileti tek `**Status:**` satırı taşır ve
-değer `docs/agents/issue-tracker.md` "Status field" ile `docs/agents/triage-labels.md` sözleşmesinden çıkar."""
+"""Yerel arşivin Status denetimi (S5): `.scratch/**/issues/*.md` biletleri varsa denetlenir.
+Arşiv git dışında kalır; CI arşiv gerektirmez (Levent 17.10, docs/agents/git.md).
+Değer `docs/agents/issue-tracker.md` "Status field" ile `docs/agents/triage-labels.md` sözleşmesinden çıkar."""
 
 import re
 from pathlib import Path
@@ -149,6 +150,11 @@ def test_bos_status_degeri_sayilir(tmp_path):
         ".scratch/x/issues/01-iki-biri-bos.md:3: birden çok Status satırı",
         ".scratch/x/issues/02-tek-bos.md:2: izin verilmeyen değer: ",
     ]
+
+
+def test_yerel_arsiv_yokken_bilet_gerekmez(tmp_path):
+    _sozlesme_kopyala(tmp_path)
+    assert bilet_ihlalleri(tmp_path) == []
 
 
 def test_gercek_biletler_sozlesmeye_uyar():

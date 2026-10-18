@@ -909,7 +909,10 @@ Levent 16.10: "Tansu ne diyorsa onu yap." Komut: `python -m tansu tansu-sinama`.
     günüdür: açık pozisyon o gün son temiz AOF'tan çıkar ve 250 satır giriş açılmaz (5.3, 5.6); motora bu bayrakla verilir. (3) AOF'u olmayan gün dönem başı olamaz; dönem başı sonraki geçerli fiyat günüdür. (4) Dönem tek gün olabilir:
     işlem olmaz (giriş ertesi günü ister), net 0,0, maruziyet 0, Sharpe ve Calmar yok; al-tut aynı günün AOF'undan alıp
     kapanışından satar. Testler iki ailede: (1) NaN, sonsuz ve sonlu kapanışlı karantinalı son gün; (2) ve (3) dönem başında,
-    son günde ve 1, 3, 5 gün sayımında geçersiz gün, sonsuz düzeltilmiş fiyatın karantina çıkışı; (4) tek günlük dönem.
+    son günde ve 1, 3, 5 gün sayımında geçersiz gün, sonsuz düzeltilmiş fiyatın karantina çıkışı ve sonraki 250 satırda giriş engeli
+    (`test_ema_sonsuz_duzeltilmis_fiyat_giris_engeli_250_satir` ve
+    `test_cift_sonsuz_duzeltilmis_fiyat_giris_engeli_250_satir`: tek hisse ve çift yollarında engel içinde giriş açılmaz,
+    engel sonrası açılır); (4) tek günlük dönem.
 - **İleri yürüme (ikinci mod):** "EMA değeri walk forward le optimzie edilerek model oluşturulmuştur." (Ham,
   gorsel-paket-75-isctr-ad-ema-walk-forward). YORUM (bizim): her takvim yılı test yılıdır; seçim o yıldan önce kapanmış
   bütün işlemlerle (genişleyen pencere) aynı sağlam bölge kuralıyla yapılır; en az 2 tam eğitim yılı; test yılında seçilen
@@ -1044,7 +1047,7 @@ Levent 16.10: "Tansu ne diyorsa onu yap." Komut: `python -m tansu tansu-sinama`.
 
 ## 7. Uygulama sırası
 
-Adım 1–9 tamamlandı (MVP biletleri `.scratch/arsiv/tansu-mvp/issues/`, 05–06.10). Durum 14.10 ile eşlendi.
+Adım 1–9 tamamlandı (MVP biletleri yerel, salt okunur arşivde ve git geçmişinde: `.scratch/arsiv/tansu-mvp/issues/`, 05–06.10; GitHub ve CI'da bu klasör bulunmaz). Durum 14.10 ile eşlendi. <!-- driftlint-ignore: local-only archive, gitignored, absent in CI -->
 
 1. **Temizlik:** tamamlandı (05.10).
 2. **Veri deposu:** `kaynak` + `veri`.

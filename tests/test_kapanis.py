@@ -1,6 +1,6 @@
 """Kapanış betiği (`kurulum/kapanis.py`): birleşen PR'ın iş klasörünü kapatır.
 
-Testler gerçek git depoları kurar: uzak (bare, adı `kaynak`), ana depo (master) ve `pr/1-x` dalındaki iş klasörü.
+Testler gerçek git depoları kurar: uzak (bare, adı `origin`), ana depo (master) ve `1-x` dalındaki iş klasörü.
 """
 
 import subprocess
@@ -39,9 +39,10 @@ def _kayit(klasor, ad):
     _git(klasor, "commit", "-q", "-m", ad)
 
 
-def _kapanis(is_klasoru):
+def _kapanis(is_klasoru, cwd=None):
     return subprocess.run(
         [sys.executable, "-I", "-X", "utf8", str(BETIK), str(is_klasoru)],
+        cwd=cwd,
         capture_output=True,
         encoding="utf-8",
     )
@@ -56,27 +57,27 @@ def depo(tmp_path):
     )
     subprocess.run(["git", "init", "-q", "-b", "master", str(ana)], check=True)
     _kayit(ana, "bir")
-    _git(ana, "remote", "add", "kaynak", str(uzak))
-    _git(ana, "push", "-q", "kaynak", "master")
-    _git(ana, "worktree", "add", "-q", "-b", "pr/1-x", str(is_))
+    _git(ana, "remote", "add", "origin", str(uzak))
+    _git(ana, "push", "-q", "origin", "master")
+    _git(ana, "worktree", "add", "-q", "-b", "1-x", str(is_))
     _kayit(is_, "iki")
-    _git(is_, "push", "-q", "kaynak", "pr/1-x")
-    _git(is_, "push", "-q", "kaynak", "pr/1-x:master")
+    _git(is_, "push", "-q", "origin", "1-x")
+    _git(is_, "push", "-q", "origin", "1-x:master")
     return ana, is_, _git(is_, "rev-parse", "HEAD")
 
 
 def test_kapanis_uc_kanit_satiri(depo):
     ana, is_, sha = depo
-    _git(ana, "push", "-q", "kaynak", "--delete", "pr/1-x")
+    _git(ana, "push", "-q", "origin", "--delete", "1-x")
     sonuc = _kapanis(is_)
     assert sonuc.stdout.splitlines() == [
-        f"kapanis: ana HEAD {sha} = kaynak/master",
+        f"kapanis: ana HEAD {sha} = origin/master",
         "kapanis: is klasoru yok",
         "kapanis: uzak dal yok",
     ]
     assert sonuc.returncode == 0
     assert not is_.exists()
-    assert _git(ana, "branch", "--list", "pr/1-x") == ""
+    assert _git(ana, "branch", "--list", "1-x") == ""
     assert _git(ana, "rev-parse", "HEAD") == sha
 
 
@@ -84,10 +85,10 @@ def test_kapanis_uzak_dal_duruyorsa_durur(depo):
     ana, is_, sha = depo
     sonuc = _kapanis(is_)
     assert sonuc.stdout.splitlines() == [
-        f"kapanis: ana HEAD {sha} = kaynak/master",
+        f"kapanis: ana HEAD {sha} = origin/master",
         "kapanis: is klasoru yok",
     ]
-    assert "kapanis: uzak dal var: pr/1-x" in sonuc.stderr
+    assert "kapanis: uzak dal var: 1-x" in sonuc.stderr
     assert sonuc.returncode == 1
 
 
@@ -109,6 +110,21 @@ def test_kapanis_kirli_is_klasorunu_silmez(depo):
     assert "untracked" in sonuc.stderr
     assert sonuc.returncode == 1
     assert (is_ / "yeni.txt").exists()
+
+
+@pytest.mark.parametrize("alt", ["", "alt"])
+def test_kapanis_is_klasoru_icinden_calisirsa_hic_degistirmeden_durur(depo, alt):
+    # Windows cannot delete a folder that is the working directory of a process.
+    ana, is_, sha = depo
+    (is_ / "alt").mkdir()
+    sonuc = _kapanis(is_, cwd=is_ / alt)
+    assert sonuc.stdout == ""
+    assert sonuc.stderr.startswith("kapanis: ")
+    assert "ana klasorden" in sonuc.stderr
+    assert sonuc.returncode == 1
+    assert is_.exists()
+    assert _git(ana, "branch", "--list", "1-x") != ""
+    assert _git(ana, "rev-parse", "master") != sha
 
 
 def test_kapanis_dalsiz_is_klasorunde_durur(depo):

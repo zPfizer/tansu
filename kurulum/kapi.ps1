@@ -1,8 +1,14 @@
-param([switch]$Belge)
+param([switch]$Belge, [Parameter(ValueFromRemainingArguments = $true)][string[]]$Testler)
 
-# Test gate. Run it from any folder. Paste the "kapi:" lines into the PR body.
+# Test gate. Run it from any folder. The PR body does not take the "kapi:" lines; CI proves the tests.
+# It runs only the given tests of the change; the full suite runs only in CI (Levent 17.10).
+if (-not $Belge -and -not $Testler) {
+    'kapi: test secilmedi; degisikligin test dosyalarini ver (ornek: kurulum\kapi.ps1 tests\test_x.py)'
+    exit 1
+}
 # A command that cannot start stops the script (python, git). Native stderr is not redirected.
 $ErrorActionPreference = 'Stop'
+$env:PYTHONDONTWRITEBYTECODE = '1'
 Set-Location (Split-Path -Parent $PSScriptRoot)
 $py = if ($env:TANSU_PY) { $env:TANSU_PY } else { 'C:\Users\levent\Desktop\TANSU\.venv\Scripts\python.exe' }
 if (-not (Test-Path -LiteralPath $py)) {
@@ -26,19 +32,19 @@ if ("$acikSayi" -notmatch '^\d+$') {
 if (-not $env:TANSU_BEKLENEN_ACIK -and [int]$acikSayi -gt 0) { $env:TANSU_BEKLENEN_ACIK = "$acikSayi" }
 
 if ($Belge) {
-    & $py -m pytest -q tests/test_atif.py tests/test_havuz.py tests/test_sahipler.py tests/test_standartlar.py tests/test_dod_kontrol.py
+    & $py -X utf8 -m pytest -q -p no:cacheprovider tests/test_atif.py tests/test_havuz.py tests/test_sahipler.py tests/test_standartlar.py tests/test_dod_kontrol.py
     $pytestKod = $LASTEXITCODE
     $pytestAd = 'pytest (belge)'
 } else {
-    & $py -m pytest -q
+    & $py -X utf8 -m pytest -q -p no:cacheprovider @Testler
     $pytestKod = $LASTEXITCODE
-    $pytestAd = 'pytest'
+    $pytestAd = 'pytest (ilgili)'
 }
-& $py -m ruff check .
+& $py -X utf8 -m ruff check . --no-cache
 $checkKod = $LASTEXITCODE
-& $py -m ruff format --check .
+& $py -X utf8 -m ruff format --check . --no-cache
 $formatKod = $LASTEXITCODE
-git diff --check kaynak/master
+git diff --check origin/master
 $diffKod = $LASTEXITCODE
 # Same driftlint version as .github/workflows/ci.yml (a test keeps them equal).
 npx --yes @alifurkangokce/driftlint@0.19.0 .

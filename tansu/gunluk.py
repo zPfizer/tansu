@@ -184,7 +184,7 @@ def _kart_gunlugu(tarih, kimlik, kartlar) -> None:
                 {
                     "tarih": gun,
                     "anlik": kimlik,
-                    "kartlar": [dict(zip(SUTUNLAR, k)) for k in kartlar],
+                    "kartlar": [dict(zip(SUTUNLAR, k, strict=True)) for k in kartlar],
                 },
                 ensure_ascii=False,
                 sort_keys=True,

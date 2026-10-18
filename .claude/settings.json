@@ -33,6 +33,29 @@
         ]
       }
     ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit|Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "py -3.14 -X utf8 \"$CLAUDE_PROJECT_DIR/kurulum/kanca.py\"",
+            "timeout": 20
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "py -3.14 -X utf8 \"$CLAUDE_PROJECT_DIR/kurulum/kanca.py\"",
+            "timeout": 20
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "Edit|Write|apply_patch",

@@ -187,7 +187,7 @@ def holm_hesapla(kural_id, ps, resmi) -> dict:
         cift
     ) in _yarim_ciftler():  # yarım koşunun p'si yok: en kötü durum p = 1, m'ye sayılır
         tum.setdefault(cift, 1.0)
-    duzeltilmis = dict(zip(tum, istatistik.holm(list(tum.values()))))
+    duzeltilmis = dict(zip(tum, istatistik.holm(list(tum.values())), strict=True))
     sonuc = {}
     for aile in ps:
         a = (kural_id, aile)

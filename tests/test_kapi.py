@@ -12,8 +12,10 @@ import pytest
 KOK = Path(__file__).resolve().parents[1]
 
 
-def _kapi_calistir(tmp_path, python, beklenen=None, betik=None, npx=None):
-    pwsh = shutil.which("pwsh")
+def _kapi_calistir(
+    tmp_path, python, beklenen=None, arg=("-Belge",), betik=None, npx=None
+):
+    pwsh = shutil.which("pwsh") or shutil.which("powershell")
     assert pwsh is not None
     env = dict(
         os.environ,
@@ -32,9 +34,11 @@ def _kapi_calistir(tmp_path, python, beklenen=None, betik=None, npx=None):
         [
             pwsh,
             "-NoProfile",
+            "-ExecutionPolicy",
+            "Bypass",
             "-File",
             str(betik or KOK / "kurulum" / "kapi.ps1"),
-            "-Belge",
+            *arg,
         ],
         capture_output=True,
         encoding="utf-8",
@@ -62,7 +66,7 @@ def _sahte_yorumlayici(tmp_path, metin):
 def _sahte_npx(tmp_path, kod):
     # Sahte npx argümanlarını yazar ve verilen kodla çıkar.
     klasor = tmp_path / "bin"
-    klasor.mkdir()
+    klasor.mkdir(exist_ok=True)
     if os.name == "nt":
         yol = klasor / "npx.cmd"
         yol.write_text(f"@echo npx %*\n@exit /b {kod}\n", encoding="utf-8")
@@ -74,18 +78,25 @@ def _sahte_npx(tmp_path, kod):
 
 
 def _gecici_depo(tmp_path):
-    # Kapı kendi deponun kökünde çalışır: git'li bir kopya, kaynak/master = HEAD (fark yok).
+    # Git sınırını taklit et: kapı testi gerçek bir depoyu değiştirmez.
     depo = tmp_path / "depo"
     (depo / "kurulum").mkdir(parents=True)
     betik = depo / "kurulum" / "kapi.ps1"
     shutil.copy(KOK / "kurulum" / "kapi.ps1", betik)
-    for arg in (
-        ("init", "-q"),
-        ("add", "kurulum/kapi.ps1"),
-        ("-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "-m", "x"),
-        ("update-ref", "refs/remotes/kaynak/master", "HEAD"),
-    ):
-        subprocess.run(["git", "-C", str(depo), *arg], check=True, capture_output=True)
+    klasor = tmp_path / "bin"
+    klasor.mkdir(exist_ok=True)
+    sha = "0123456789abcdef0123456789abcdef01234567"
+    if os.name == "nt":
+        (klasor / "git.cmd").write_text(
+            f'@if "%1"=="rev-parse" echo {sha}\n@exit /b 0\n', encoding="utf-8"
+        )
+    else:
+        git = klasor / "git"
+        git.write_text(
+            f'#!/bin/sh\nif [ "$1" = rev-parse ]; then echo {sha}; fi\nexit 0\n',
+            encoding="utf-8",
+        )
+        git.chmod(0o755)
     return betik
 
 
@@ -128,6 +139,14 @@ def test_kapi_python_yoksa_durur(tmp_path):
     sonuc = _kapi_calistir(tmp_path, tmp_path / "yok" / "python.exe")
     assert sonuc.returncode == 1
     assert "kapi: python yok:" in sonuc.stdout
+    assert "kapi: pytest" not in sonuc.stdout
+
+
+def test_kapi_test_secilmezse_durur(tmp_path):
+    # Tam koşu yalnız CI'da (Levent 17.10): kapı test dosyası olmadan koşmaz.
+    sonuc = _kapi_calistir(tmp_path, Path(sys.executable).resolve(), arg=())
+    assert sonuc.returncode == 1
+    assert "kapi: test secilmedi" in sonuc.stdout
     assert "kapi: pytest" not in sonuc.stdout
 
 
