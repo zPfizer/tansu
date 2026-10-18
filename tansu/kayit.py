@@ -50,6 +50,7 @@ AILELER = (simulator.AILE, ciftbolme.AILE)
 HASH_DISI = [
     "__init__.py",
     "__main__.py",
+    "deneme.py",  # Kayıt tutma işlem sonucunu değiştirmez (TASARIM 5.11, 5.15).
     "denetim.py",
     "gunluk.py",
     "kaynak.py",
