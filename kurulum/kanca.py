@@ -41,9 +41,11 @@ def _test_degisti(kok):
     if _git(kok, "status", "--porcelain", "--untracked-files=all", "--", "tests"):
         return True
     try:
-        _git(kok, "rev-parse", "--verify", "origin/master")
-    except subprocess.CalledProcessError:
-        return False
+        _git(kok, "rev-parse", "--verify", "--quiet", "refs/remotes/origin/master")
+    except subprocess.CalledProcessError as hata:
+        if hata.returncode == 1 and not hata.stdout and not hata.stderr:
+            return False
+        raise
     ortak = _git(kok, "merge-base", "HEAD", "origin/master")
     return bool(_git(kok, "diff", "--name-only", f"{ortak}..HEAD", "--", "tests"))
 
