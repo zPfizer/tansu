@@ -4,7 +4,15 @@ Specs and tickets of this repo are GitHub issues in `zPfizer/tansu` (remote `ori
 
 `.scratch/` is local and gitignored. It holds temporary job files and the old read-only ticket archive. The old archive also remains in git history. GitHub and CI do not require these local files. An open ticket has one place: its issue.
 
-A large job uses a GitHub issue, a branch, and a PR (Levent 17.10). A small change that Levent requests in chat goes directly to master with a green CI run, without an issue or PR.
+## Issue and PR rule
+
+Source: Levent 18.10: "Issue ve PR kuralını onaylıyorum." This section owns the full rule.
+
+1. **Direct to master, no issue or PR:** Use this path only for a clear, harmless document fix: spelling, format, a broken link, or a wrong fact line. If unsure, use the PR path. This direct path is a TANSU choice. Small-team trunk guidance permits direct commits ([S12](https://trunkbaseddevelopment.com/)).
+2. **PR without an issue:** Use this path for a larger document fix that needs no decision. Put the reason in a separate body line: `Issue yok: <reason>`. Use the title `Belge · <short title>`. CI accepts this path only when every changed file is `*.md`, outside `.claude/`, `.github/`, `docs/kurallar/`, and `docs/agents/`. It also excludes `docs/TASARIM.md`, `docs/KURALLAR.md`, `CODING_STANDARDS.md`, `DEFINITION_OF_DONE.md`, and `GLOSSARY.md` because they own rules. Files named `AGENTS.md` or `CLAUDE.md` at any level are excluded because they carry agent rules. A clear typo in an excluded file can still use item 1. An empty or unknown file list fails this check. An issue exemption for document fixes also exists in [S4](https://devguide.python.org/getting-started/pull-request-lifecycle/) and [S6](https://docs.djangoproject.com/en/dev/internals/contributing/writing-code/submitting-patches/).
+3. **Issue + PR:** Use this path for code, tests, CI, hooks, settings, refactoring that keeps behavior, and any change of a rule's meaning. Use a branch for the issue. The existing `Closes #N` and `#<N> · <short title>` checks still apply. Reviewed refactoring is part of [S11](https://google.github.io/eng-practices/review/developer/small-cls.html). GitHub documents issue links in [S3](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/linking-a-pull-request-to-an-issue).
+4. **Issue only:** Use this path for deferred work. Never defer a small document error. Immediate correction is a TANSU choice. Issues can track future work ([S2](https://docs.github.com/en/issues/tracking-your-work-with-issues/learning-about-issues/about-issues)).
+5. **Direct push owner and CI:** Only Claude pushes directly to master. Claude says "done" only after green CI. On red CI, Claude reverts at once. This actor restriction and the immediate revert are TANSU choices. Trunk guidance requires a green build and fast recovery ([S13](https://trunkbaseddevelopment.com/committing-straight-to-the-trunk/)).
 
 ## Conventions
 
@@ -16,8 +24,8 @@ A large job uses a GitHub issue, a branch, and a PR (Levent 17.10). A small chan
 - **Close**: `gh issue close <number> --comment "..."`.
 - **Spec**: one issue, title `Spec: <name>`. The tickets name it in a `Parent: #N` line.
 - **Issue body**: three bold lines: `**Amaç:**` (what to build), `**Kaynak:**` (where the facts come from), and `**Bitti koşulu:**` (when the issue is done). Each issue also has one triage label and a milestone. Every open issue belongs to one open milestone. Name each open milestone `v0.<n>.0 — <short Turkish benefit>`, in work order. Its description states the benefit, then `Sıra: #a, #b, #c`. Source: Levent 18.10.
-- **Branch**: `<N>-<ad>`, made by `gh issue develop <N> --name <N>-<ad> --base master` (`tansu-yeni-is` "Branch").
-- **PR**: the body has a `Closes #N` line. The title starts with `#<N> · <short title>` and uses that issue number. GitHub shares one number sequence for issues and PRs. The merge closes the issue. Source: Levent 18.10.
+- **Branch**: for the issue + PR path, use `<N>-<ad>`, made by `gh issue develop <N> --name <N>-<ad> --base master` (`tansu-yeni-is` "Branch"). For a PR without an issue, use `belge-<ad>`.
+- **PR**: use the body and title forms in "Issue and PR rule". GitHub shares one number sequence for issues and PRs. A merge with `Closes #N` closes that issue.
 
 ## State of a ticket
 

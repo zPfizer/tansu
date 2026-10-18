@@ -534,3 +534,188 @@ def test_kural_6_baslik_cli(baslik, kod):
 def test_kural_6_kapatma_eslesmesi(kapatma, beklenen):
     govde = GECERLI.replace("Closes #49", kapatma)
     assert hatalar(govde, baslik=BASLIK) == beklenen
+
+
+BELGE_GOVDE = GECERLI.replace(
+    "Closes #49", "Issue yok: Karar gerektirmeyen belge düzeltmesi."
+)
+BELGE_BASLIK = "Belge · Açıklamaları düzelt"
+R6_BELGE = "Kural 6: Issue'suz belge PR başlığı Belge · <başlık> biçiminde olmalı."
+
+
+@pytest.fixture
+def belge_depo(tmp_path):
+    for arg in (
+        ("init", "-b", "master"),
+        ("config", "user.name", "Deneme"),
+        ("config", "user.email", "deneme@example.com"),
+        ("config", "commit.gpgsign", "false"),
+        ("config", "core.autocrlf", "false"),
+    ):
+        _git(tmp_path, *arg)
+    _commit(tmp_path, "README.md", "İlk açıklama")
+    _git(tmp_path, "branch", "origin/master")
+    _git(tmp_path, "checkout", "-b", "belge")
+    sha = _commit(tmp_path, "README.md", "Düzeltilmiş açıklama")
+    return tmp_path, sha
+
+
+def test_issuesuz_belge_pr_gecer(belge_depo):
+    dizin, sha = belge_depo
+    assert (
+        hatalar(
+            _govde_git(sha).replace("Closes #49", "Issue yok: Belge düzeltmesi."),
+            sha,
+            taban="origin/master",
+            dizin=dizin,
+            baslik=BELGE_BASLIK,
+        )
+        == []
+    )
+
+
+@pytest.mark.parametrize(
+    "satir",
+    [
+        "",
+        "Issue yok:",
+        "Issue yok:   ",
+        "Issue yok: gerekçe\n<!-- açıklama -->",
+        "<!-- Issue yok: gerekçe -->",
+        "Bu PR için Issue yok: gerekçe",
+        "Issue yok gerekçe",
+    ],
+)
+def test_issuesuz_belge_gerekcesi(belge_depo, satir):
+    dizin, sha = belge_depo
+    govde = _govde_git(sha).replace("Closes #49", satir)
+    beklenen = [] if satir.startswith("Issue yok: gerekçe\n") else [R1, R6]
+    assert (
+        hatalar(govde, sha, taban="origin/master", dizin=dizin, baslik=BELGE_BASLIK)
+        == beklenen
+    )
+
+
+@pytest.mark.parametrize(
+    "baslik",
+    [
+        None,
+        "",
+        "Başlık",
+        "#49 · Başlık",
+        "Belge · ",
+        "Belge ·Başlık",
+        " Belge · Başlık",
+    ],
+)
+def test_issuesuz_belge_basligi(belge_depo, baslik):
+    dizin, sha = belge_depo
+    govde = BELGE_GOVDE.replace(SHA, sha)
+    assert hatalar(govde, sha, taban="origin/master", dizin=dizin, baslik=baslik) == [
+        R6_BELGE
+    ]
+
+
+@pytest.mark.parametrize(
+    ("dosya", "beklenen"),
+    [
+        ("CHANGELOG.md", []),
+        ("docs/açıklama.md", []),
+        ("docs/.github-notlari.md", []),
+        ("docs/TASARIM.md", [R1, R6]),
+        ("docs/KURALLAR.md", [R1, R6]),
+        ("docs/kurallar/A-yapi-bolge.md", [R1, R6]),
+        ("docs/agents/issue-tracker.md", [R1, R6]),
+        ("CODING_STANDARDS.md", [R1, R6]),
+        ("DEFINITION_OF_DONE.md", [R1, R6]),
+        ("GLOSSARY.md", [R1, R6]),
+        ("tansu/a.py", [R1, R6]),
+        ("tests/test_a.py", [R1, R6]),
+        (".github/workflows/ci.yml", [R1, R6]),
+        (".github/pull_request_template.md", [R1, R6]),
+        (".claude/skills/a/SKILL.md", [R1, R6]),
+        ("AGENTS.md", [R1, R6]),
+        ("CLAUDE.md", [R1, R6]),
+        ("docs/AGENTS.md", [R1, R6]),
+        ("docs/CLAUDE.md", [R1, R6]),
+        ("ayar.toml", [R1, R6]),
+    ],
+)
+def test_issuesuz_pr_tum_dosyalari_denetler(belge_depo, dosya, beklenen):
+    dizin, _ = belge_depo
+    (dizin / dosya).parent.mkdir(parents=True, exist_ok=True)
+    sha = _commit(dizin, dosya, "Yeni içerik")
+    govde = BELGE_GOVDE.replace(SHA, sha)
+    assert (
+        hatalar(govde, sha, taban="origin/master", dizin=dizin, baslik=BELGE_BASLIK)
+        == beklenen
+    )
+    # Issue bağlantısı varsa aynı dosya listesi eski denetimi değiştirmez.
+    assert hatalar(_govde_git(sha), sha, dizin=dizin, baslik=BASLIK) == []
+
+
+@pytest.mark.parametrize("taban", [None, "olmayan-dal", "HEAD"])
+def test_issuesuz_pr_bos_ya_da_bilinmeyen_dosya_listesi_reddedilir(belge_depo, taban):
+    dizin, sha = belge_depo
+    assert hatalar(
+        BELGE_GOVDE.replace(SHA, sha),
+        sha,
+        taban=taban,
+        dizin=dizin,
+        baslik=BELGE_BASLIK,
+    ) == [R1, R6]
+
+
+def test_issuesuz_pr_git_baslatilamazsa_reddedilir(belge_depo):
+    dizin, sha = belge_depo
+    assert hatalar(
+        BELGE_GOVDE.replace(SHA, sha),
+        sha,
+        taban="origin/master",
+        dizin=dizin / "olmayan",
+        baslik=BELGE_BASLIK,
+    ) == [R1, R6]
+
+
+def test_issuesuz_pr_koddan_belgeye_yeniden_adlandirma_reddedilir(belge_depo):
+    dizin, _ = belge_depo
+    _git(dizin, "checkout", "master")
+    _commit(dizin, "kod.py", "print('x')\n")
+    _git(dizin, "branch", "-f", "origin/master")
+    _git(dizin, "checkout", "-b", "ad-degisimi")
+    _git(dizin, "mv", "kod.py", "kod.md")
+    _git(dizin, "commit", "-m", "Ad değişimi")
+    sha = _git(dizin, "rev-parse", "HEAD")
+    assert hatalar(
+        BELGE_GOVDE.replace(SHA, sha),
+        sha,
+        taban="origin/master",
+        dizin=dizin,
+        baslik=BELGE_BASLIK,
+    ) == [R1, R6]
+
+
+@pytest.mark.parametrize("kod_degisti", [False, True])
+def test_issuesuz_pr_cli_git_dosya_listesini_kullanir(belge_depo, kod_degisti):
+    dizin, sha = belge_depo
+    if kod_degisti:
+        sha = _commit(dizin, "kod.py", "print('x')\n")
+    ortam = {
+        **os.environ,
+        "PR_GOVDE": BELGE_GOVDE.replace(SHA, sha),
+        "PR_BASLIK": BELGE_BASLIK,
+        "PR_BAS_SHA": sha,
+        "GITHUB_BASE_REF": "master",
+    }
+    sonuc = subprocess.run(
+        [sys.executable, "-X", "utf8", str(_yol)],
+        cwd=dizin,
+        env=ortam,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+    )
+    assert sonuc.returncode == (1 if kod_degisti else 0)
+    assert sonuc.stdout.strip() == (
+        R1 + "\n" + R6 if kod_degisti else "Definition of Done listesi tam."
+    )

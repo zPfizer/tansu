@@ -25,7 +25,7 @@ Son sürüm: v0.1
 - Actions: [ci](../../actions/workflows/ci.yml) testleri, biçimi ve lint'i;
   [dod](../../actions/workflows/dod.yml) PR gövdesini denetler.
 
-Büyük iş bir issue ve PR ile; Levent'in sohbette istediği küçük değişiklik, yeşil CI koşusuyla doğrudan master'a girer.
+Ne zaman issue, ne zaman PR açılacağı ve hangi belge düzeltmesinin doğrudan master'a gireceği [issue ve PR kuralında](docs/agents/issue-tracker.md#issue-and-pr-rule) yazılıdır.
 
 ## Ana belgeler
 
