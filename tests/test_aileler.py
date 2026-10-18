@@ -16,6 +16,85 @@ from tansu.aileler import (
 )
 
 
+# Issue #83: bağımsız eski tanımlar; katalogdan beklenen değer türetilmez.
+ESKI_TABAN = dict(
+    periyotlar=(20, 50, 100, 200),
+    esik=0.012,
+    min_gun=3,
+    pencere=10,
+    isinma=500,
+    sma_n=250,
+    giris="kutu",
+    hacim_kat=0.0,
+    momentum=False,
+    teyit="yok",
+    stop="atr2",
+    hedef="yok",
+    rr_min=2.0,
+    cikis="yok",
+    kutu_ust="yuksek",
+    dusus=False,
+)
+ESKI_TANSU = dict(
+    ESKI_TABAN,
+    giris="mum",
+    hacim_kat=2.0,
+    momentum=True,
+    stop="kutu",
+    hedef="tansu",
+    cikis="atr3",
+)
+ESKI_DEGISIKLIKLER = {
+    "tansu": {},
+    "ema_5_8_13": {"periyotlar": (5, 8, 13)},
+    "ema_20_50_100": {"periyotlar": (20, 50, 100)},
+    "ema_10_20_50": {"periyotlar": (10, 20, 50)},
+    "ema_50_100_200": {"periyotlar": (50, 100, 200)},
+    "giris_kutu": {"giris": "kutu"},
+    "giris_ema": {"giris": "ema"},
+    "giris_retest": {"giris": "retest"},
+    "giris_agresif": {"giris": "agresif"},
+    "giris_arz": {"giris": "arz"},
+    "giris_ucgen": {"giris": "ucgen"},
+    "kutu_govde": {"kutu_ust": "govde"},
+    "hacim_yok": {"hacim_kat": 0.0},
+    "hacim_3": {"hacim_kat": 3.0},
+    "momentum_kapali": {"momentum": False},
+    "dusus_sonrasi": {"dusus": True},
+    "teyit_acik": {"teyit": "gosterge"},
+    "teyit_trend": {"teyit": "trend"},
+    "stop_atr15": {"stop": "atr15"},
+    "stop_atr2": {"stop": "atr2"},
+    "cikis_dip": {"cikis": "dip"},
+    "cikis_rsi70": {"cikis": "rsi70"},
+    "cikis_rsi50": {"cikis": "rsi50"},
+}
+ESKI_TANIMLAR = {"bugun": ESKI_TABAN} | {
+    ad: ESKI_TANSU | fark for ad, fark in ESKI_DEGISIKLIKLER.items()
+}
+
+
+@pytest.mark.parametrize("ad,beklenen", ESKI_TANIMLAR.items())
+def test_katalog_eski_24_tanim_ve_hesap_ciktilari_korunur(ad, beklenen):
+    assert callable(getattr(aileler, "legacy_coz", None)), "Katalog uyarlayıcısı yok"
+    kayit = aileler.legacy_coz(ad)
+    assert {p.ad: p.deger for p in kayit.parametreler} == beklenen
+    assert asdict(aileler.VARYANTLAR[ad]) == beklenen
+    assert asdict(Parametre()) == ESKI_TABAN
+    f = _mumlar(
+        [100.0] * 510 + [110.0, 112.0, 114.0, 116.0, 118.0],
+        [101.0] * 510 + [111.0, 113.0, 115.0, 117.0, 119.0],
+        [99.0] * 510 + [100.0, 110.0, 112.0, 114.0, 116.0],
+        [100.0] * 510 + [500.0] * 5,
+    )
+    eski = Parametre(**beklenen)
+    yeni = aileler.VARYANTLAR[ad]
+    pd.testing.assert_frame_equal(aileler.kurulum(f, eski), aileler.kurulum(f, yeni))
+    pd.testing.assert_index_equal(sinyal(f, eski), sinyal(f, yeni))
+    if ad == "bugun":
+        assert list(sinyal(f, yeni)) == [f.index[511]]
+
+
 def _fiyat(kapanis, yuksek=None):
     gun = pd.bdate_range("2026-03-02", periods=len(kapanis))
     return pd.DataFrame(
@@ -25,6 +104,170 @@ def _fiyat(kapanis, yuksek=None):
         },
         index=gun,
     )
+
+
+def _katalog_istegi():
+    return {
+        "aile": "ema_sikisma",
+        "varyant": "tansu",
+        "katalog_surumu": "s02_v1",
+        "islem_ayarlari": dict.fromkeys(
+            (
+                "dolum_surumu",
+                "risk_surumu",
+                "masraf_surumu",
+                "muhasebe_surumu",
+                "donem_surumu",
+            ),
+            "legacy_portfoy_v1",
+        ),
+    }
+
+
+@pytest.mark.parametrize(
+    "fark,kod",
+    [
+        ({}, "desteklenmeyen_bilesim"),
+        ({"izin_durumu": "izinli"}, "bilinmeyen_alan"),
+        ({"katalog_surumu": "s02_v2"}, "bilinmeyen_surum"),
+        ({"varyant": "giris_ema+stop_atr15"}, "desteklenmeyen_bilesim"),
+        ({"sayisal_ayarlar": {"esik": 0.02}}, "duzenlenemez_alan"),
+        ({"sayisal_ayarlar": {"uydurma": 1}}, "bilinmeyen_alan"),
+        ({"islem_ayarlari": {}}, "eksik_islem_ayari"),
+        ({"islem_ayarlari": {"kayma": 0}}, "bilinmeyen_alan"),
+    ],
+)
+def test_katalog_panel_cli_ayni_hata_ve_izin_atlama_yok(fark, kod, capsys):
+    import json
+    from tansu import katalog
+
+    assert callable(getattr(katalog, "secim_dogrula", None)), "Seçim doğrulayıcısı yok"
+    istek = _katalog_istegi() | fark
+    with pytest.raises(katalog.KatalogHatasi) as hata:
+        katalog.panel_komutu(istek)
+    assert hata.value.kod == kod
+    assert katalog.cli(["coz", json.dumps(istek)]) == 2
+    assert json.loads(capsys.readouterr().err)["hata"] == kod
+
+
+def test_katalog_tam_sabitler_koken_degismezlik_ve_liste(capsys):
+    from dataclasses import FrozenInstanceError
+    from tansu import katalog
+
+    assert callable(getattr(katalog, "cli", None)), "Katalog komutu yok"
+    k = katalog.legacy_coz("tansu")
+    assert {a.ad: a.deger for a in k.sabitler} == {
+        "KIRILIM_GUN": 20,
+        "ATR_N": 14,
+        "HACIM_GUN": 20,
+        "RETEST_GUN": 5,
+        "BOLGE_GUN": 3,
+        "TREND_GUN": 5,
+        "YAKIN": 1.01,
+        "DUSUS_GUN": 20,
+        "DUSUS_ATR": 3.0,
+        "STOP_KAT": (("atr2", 2.0), ("atr15", 1.5)),
+    }
+    for a in (*k.parametreler, *k.sabitler, *k.gosterge_ayarlari):
+        assert a.tur and a.birim and a.kaynaklar
+        assert a.koken in ("Tansu", "sahip kararı", "YORUM")
+        assert a.onayli_aralik is None
+    assert k.eski_karsilastirma and k.izin_durumu == "izinsiz"
+    assert not k.izin_kaynaklari
+    assert k.ayar_parmak_izi == katalog.legacy_coz("tansu").ayar_parmak_izi
+    assert k.ayar_parmak_izi != katalog.legacy_coz("stop_atr15").ayar_parmak_izi
+    with pytest.raises(FrozenInstanceError):
+        k.varyant = "bugun"
+    with pytest.raises(FrozenInstanceError):
+        k.parametreler[0].deger = (5, 8, 13)
+    assert katalog.cli(["liste"]) == 0
+    satirlar = capsys.readouterr().out.splitlines()
+    assert [s.split("\t")[0] for s in satirlar] == list(ESKI_TANIMLAR)
+    assert all(s.endswith("\tizinsiz\teski_karsilastirma") for s in satirlar)
+
+
+@pytest.mark.parametrize(
+    "varyant,ad,koken,son,tarih",
+    [
+        (
+            "ema_5_8_13",
+            "periyotlar",
+            "Tansu",
+            "tweet-ema-sikismasi-talep-bolgesi-kirilim-2002087132089770127.md:35",
+            "2025-12-19",
+        ),
+        (
+            "ema_20_50_100",
+            "periyotlar",
+            "Tansu",
+            "tweet-ema-sikismasi-talep-bolgesi-kirilim-2002087132089770127.md:35",
+            "2025-12-19",
+        ),
+        (
+            "ema_50_100_200",
+            "periyotlar",
+            "Tansu",
+            "tweet-ema-sikismasi-ucgen-kirilim-hacim-1954300245707497649.md:24",
+            "2025-08-09",
+        ),
+        (
+            "bugun",
+            "periyotlar",
+            "Tansu",
+            "gorsel-paket-67-krdmd-ema-sikisma-ratio-formasyon.md:23",
+            "2026-08-28",
+        ),
+        (
+            "bugun",
+            "esik",
+            "Tansu",
+            "gorsel-paket-67-krdmd-ema-sikisma-ratio-formasyon.md:23",
+            "2026-08-28",
+        ),
+        (
+            "bugun",
+            "min_gun",
+            "Tansu",
+            "gorsel-paket-67-krdmd-ema-sikisma-ratio-formasyon.md:23",
+            "2026-08-28",
+        ),
+        (
+            "tansu",
+            "hacim_kat",
+            "Tansu",
+            "tweet-qullamaggie-tarzi-hacimli-breakout-tarama-1979546907505545421.md:29",
+            "2025-10-18",
+        ),
+        (
+            "hacim_3",
+            "hacim_kat",
+            "Tansu",
+            "tweet-qullamaggie-tarzi-hacimli-breakout-tarama-1979546907505545421.md:29",
+            "2025-10-18",
+        ),
+        ("tansu", "rr_min", "sahip kararı", "docs/KURALLAR.md:319", "2026-10-16"),
+    ],
+)
+def test_katalog_alan_kaynagi_bilesim_izni_degildir(varyant, ad, koken, son, tarih):
+    from tansu import katalog
+
+    kayit = katalog.legacy_coz(varyant)
+    alan = next(a for a in kayit.parametreler if a.ad == ad)
+    assert alan.koken == koken
+    kaynak = next(k for k in alan.kaynaklar if k.konum.endswith(son))
+    assert kaynak.tarih == tarih
+    assert kaynak in kayit.kaynaklar
+    if son.startswith("gorsel-paket-67"):
+        assert "Ham'da yazar yok" in kaynak.karar_durumu
+        assert "kayıt tarihi" in kaynak.karar_durumu
+    if ad == "periyotlar":
+        gosterge = next(a for a in kayit.gosterge_ayarlari if a.ad == "ema_periyotlar")
+        assert (gosterge.koken, gosterge.kaynaklar) == (alan.koken, alan.kaynaklar)
+    assert next(a for a in kayit.parametreler if a.ad == "pencere").koken == "YORUM"
+    assert next(a for a in kayit.sabitler if a.ad == "HACIM_GUN").koken == "YORUM"
+    assert kayit.izin_durumu == "izinsiz" and not kayit.izin_kaynaklari
+    with pytest.raises(katalog.KatalogHatasi, match="desteklenmeyen_bilesim"):
+        katalog.secim_dogrula(_katalog_istegi() | {"varyant": varyant})
 
 
 def test_sikismadan_sonra_pencerede_ilk_kirilim_tek_giris():

@@ -34,6 +34,7 @@ KOD_DOSYALARI = [
     "evren.py",
     "gostergeler.py",
     "istatistik.py",
+    "katalog.py",  # Parametre ve sabitleri işlem hesaplarına girer (TASARIM 5.8).
     "kayit.py",
     "motor.py",
     "saglamlik.py",

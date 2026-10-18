@@ -8,6 +8,7 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ### Eklendi
 
+- Mevcut 24 strateji tanımını ayarları ve kaynak kökenleriyle koruyan sürümlü katalog eklendi; bütün birleşim kanıtı eksik seçeneklerin panel ve komut seçimi kapalı tutuldu. (#83)
 - Yedi hesap sınırı sentetik sınır testleriyle korunuyor; kural kaydı durum testi kapsamı korunarak hızlandırıldı. (#109)
 - Sürümlü BIST 30 başvuru tablosu, tarihli üyelik kanıtı ve giriş günü denetimi eklendi; eksik kapsam koşuyu durdurur, eski evren politikaları korunur. (#86)
 - Kayıtlı görüntü, piyasa kayıtları ve çift girdileri ortak veri motorunda hazırlandı; eski iki kalite politikası ve manifest doğrulaması korundu. (#85)
@@ -23,6 +24,7 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ### Değişti
 
+- Katalog kaynak turunda genel ATR çıkışı ile girişe özel başabaş ve RSI çıkışları ayrıldı; 24 tanımın eksik bileşim dayanakları açık tutuldu. (#83)
 - TASARIM'da standart long/short çıkışı çift rotasyonundan ayrıldı; aynı gün stop ve hedef durumu güncel öncelik kuralına bağlandı. (#60)
 - Açık havuz sayacı okunmadı listelerini kapsamdan ayırıyor; yalnız bu listelerde kalan üç nota okuma veya gerekçeli kural içermez kaydı eklendi. (#59)
 - Paralel dalların değişiklik günlüğünde aynı yere eklediği satırlar, yerel Git birleştirmesinde birlikte korunuyor; Kural 5 yalnız birinci ebeveynle aynı kip ve türdeki normal dosyanın birebir union sonucunu temiz sayıyor. (#102)
@@ -43,6 +45,7 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 ### Düzeltildi
 
 - Tamamlanma denetimi, Windows üzerinde Türkçe kural uyarılarını eksiksiz yazıyor; eksik kabul kutusu yine reddediliyor. (#118)
+- Strateji kataloğundaki kural ayarları ve sabitler kod parmak izinin kapsamına alındı. (#83)
 - Veri katmanının motor katmanına ters bağımlılığı kaldırıldı; karantina süresinin tek sahibi veri katmanı oldu, değer ve davranış korundu. (#85)
 
 ### Kaldırıldı

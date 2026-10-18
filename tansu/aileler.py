@@ -1,68 +1,29 @@
 """Aileler: EMA sıkışması kırılım sinyali ve kurulum bilgisi (KURALLAR §3 madde 2 ve "Modül 1"; TASARIM 5.1 ısınma, 5.3 SMA250 şartı)."""
 
-from dataclasses import dataclass, replace
-
 import numpy as np
 import pandas as pd
 
 from tansu import gostergeler
 
-SECENEKLER = {  # KURALLAR §3 Modül 1: her alanın izinli değerleri
-    "giris": ("kutu", "ema", "mum", "retest", "agresif", "arz", "ucgen"),
-    "teyit": ("yok", "gosterge", "trend"),
-    "stop": ("atr2", "atr15", "kutu"),
-    "hedef": ("yok", "tansu"),
-    "cikis": ("yok", "atr3", "dip", "rsi70", "rsi50"),
-    "kutu_ust": ("yuksek", "govde"),
-}
-
-
-@dataclass(frozen=True)
-class Parametre:
-    periyotlar: tuple = gostergeler.SIKISMA_PERIYOTLAR
-    esik: float = gostergeler.SIKISMA_ESIK
-    min_gun: int = gostergeler.SIKISMA_MIN_GUN
-    pencere: int = 10  # YORUM: dönem bittikten sonra giriş penceresi (gün)
-    isinma: int = 500  # TASARIM 5.1: hissenin ilk gününden bu kadar işlem günü dolmadan sinyal yok
-    sma_n: int = 250
-    giris: str = "kutu"  # KURALLAR §3 Modül 1: giriş türü
-    hacim_kat: float = (
-        0.0  # 0: süzgeç yok; yoksa hacim >= kat × önceki 20 günün ortalaması
-    )
-    momentum: bool = False
-    teyit: str = "yok"
-    stop: str = (
-        "atr2"  # başlangıç stopu: R/R kapısı burada, giriş stopu `motor`'da okur
-    )
-    hedef: str = "yok"
-    rr_min: float = 2.0
-    cikis: str = "yok"  # `motor` okur
-    kutu_ust: str = "yuksek"  # KURALLAR §3 Modül 1 Kutu: yuksek = gün yüksekliği, govde = en yüksek günün gövde ucu
-    dusus: bool = False  # KURALLAR §3 Modül 1 Düşüş: açıkken güçlü düşüşten sonra gelmeyen dönem sayılmaz
-
-    def __post_init__(self):
-        for alan, izinli in SECENEKLER.items():
-            if getattr(self, alan) not in izinli:
-                raise ValueError(
-                    f"Parametre {alan}: {getattr(self, alan)!r} tanımsız; izinli: {izinli}"
-                )
-
-
-KIRILIM_GUN = 20  # YORUM (KURALLAR §3): sıkışmasız kırılım kolunda önceki gün sayısı
-ATR_N = 14  # TASARIM 5.5; `motor.ATR_N` ile aynı (`motor` bu modüle dayanır, geri import yok)
-HACIM_GUN = 20  # YORUM (KURALLAR §3 Modül 1): hacim ortalaması günü
-RETEST_GUN = 5  # YORUM: güçlü mumdan sonra geri çekilme aranan gün
-BOLGE_GUN = 3  # YORUM: bölgenin onaylanması için bakılan gün (b+1 ... b+3)
-TREND_GUN = 5  # YORUM: yükselen trende temas aranan gün (t-5 ... t)
-YAKIN = 1.01  # YORUM: "yakın" = %1 (üçgen tepeleri, trend teması)
-DUSUS_GUN = 20  # YORUM (KURALLAR §3 Modül 1 Düşüş): dönem başından önceki bakılan gün
-DUSUS_ATR = (
-    3.0  # YORUM: düşüş = en yüksek yüksek >= kutu alt + 3 × ATR14 (dönem başı günü)
+from tansu.katalog import (
+    ATR_N,
+    BOLGE_GUN,
+    DUSUS_ATR,
+    DUSUS_GUN,
+    HACIM_GUN,
+    KIRILIM_GUN,
+    RETEST_GUN,
+    STOP_KAT as _KATALOG_STOP_KAT,
+    TREND_GUN,
+    YAKIN,
+    Parametre as Parametre,
+    SECENEKLER as SECENEKLER,
+    eski_parametreler,
+    legacy_coz as legacy_coz,
 )
-STOP_KAT = {  # başlangıç stopu ATR katı: TASARIM 5.5 (2 ATR), KURALLAR §3 Modül 1 `atr15` (1,5 ATR)
-    "atr2": 2.0,
-    "atr15": 1.5,
-}
+
+VARYANTLAR = eski_parametreler()
+STOP_KAT = dict(_KATALOG_STOP_KAT)
 
 
 def _kosu_basi(f: pd.DataFrame, p: Parametre) -> np.ndarray:
@@ -419,41 +380,3 @@ def kurulum(f: pd.DataFrame, p: Parametre = Parametre()) -> pd.DataFrame:
 def sinyal(f: pd.DataFrame, p: Parametre = Parametre()) -> pd.DatetimeIndex:
     """`f`: tarih indeksli, `kapanis` ve `yuksek` (düzeltilmiş) sütunları. Sinyal günleri (kapanış günü)."""
     return kurulum(f, p).index
-
-
-# KURALLAR §3 Modül 1: Tansu'nun söylediği kuralların birleşimi (YORUM)
-_TANSU = Parametre(
-    giris="mum",
-    hacim_kat=2.0,
-    momentum=True,
-    stop="kutu",
-    hedef="tansu",
-    cikis="atr3",
-)
-# KURALLAR §3 Modül 1 varyant tablosu: temelden tek boyut değişir; `bugun` karşılaştırma tabanıdır
-VARYANTLAR = {
-    "bugun": Parametre(),
-    "tansu": _TANSU,
-    "ema_5_8_13": replace(_TANSU, periyotlar=(5, 8, 13)),
-    "ema_20_50_100": replace(_TANSU, periyotlar=(20, 50, 100)),
-    "ema_10_20_50": replace(_TANSU, periyotlar=(10, 20, 50)),
-    "ema_50_100_200": replace(_TANSU, periyotlar=(50, 100, 200)),
-    "giris_kutu": replace(_TANSU, giris="kutu"),
-    "giris_ema": replace(_TANSU, giris="ema"),
-    "giris_retest": replace(_TANSU, giris="retest"),
-    "giris_agresif": replace(_TANSU, giris="agresif"),
-    "giris_arz": replace(_TANSU, giris="arz"),
-    "giris_ucgen": replace(_TANSU, giris="ucgen"),
-    "kutu_govde": replace(_TANSU, kutu_ust="govde"),
-    "hacim_yok": replace(_TANSU, hacim_kat=0.0),
-    "hacim_3": replace(_TANSU, hacim_kat=3.0),
-    "momentum_kapali": replace(_TANSU, momentum=False),
-    "dusus_sonrasi": replace(_TANSU, dusus=True),
-    "teyit_acik": replace(_TANSU, teyit="gosterge"),
-    "teyit_trend": replace(_TANSU, teyit="trend"),
-    "stop_atr15": replace(_TANSU, stop="atr15"),
-    "stop_atr2": replace(_TANSU, stop="atr2"),
-    "cikis_dip": replace(_TANSU, cikis="dip"),
-    "cikis_rsi70": replace(_TANSU, cikis="rsi70"),
-    "cikis_rsi50": replace(_TANSU, cikis="rsi50"),
-}
