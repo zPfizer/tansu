@@ -1223,6 +1223,20 @@ pilot yöntem hesabı veya günlük uygunluk kararı üretmez.
 
 Yazıcı yerel süreçler arası kilit altında olay içeriğini son LF olmadan ekler ve diske aktarır.
 Aktarım başarılı olduktan sonra LF ekleyerek olayı okuyucuya açar; makbuz bundan sonra döner.
+Kimlik, kodlama ve makbuz hazırlığı LF'den önce biter. LF görünürlük sınırıdır: bundan önceki
+G/Ç hatası yazma hatası verir ve olay eksik kalır. LF yazma çağrısı hata bildirirse yazıcı,
+kilit altındaki dosya uzunluğuyla bu tek baytın eklenip eklenmediğini denetler.
+LF eklendikten sonraki dosya kapatma veya kilit bırakma hatası kaydı geri almaz ve API'yi
+başarısız yapmaz; aynı makbuzun `uyarilar` alanında çağırana bildirilir. Makbuzun kimlik
+alanları değişmez; uyarılar dosya olayına eklenmez. Okuma yüzleri kilit hatalarını gizlemez.
+Yayın sonucu doğrulanamazsa API düz başarı veya kesin yazma hatası yerine
+`PilotBelirsizHatasi` verir. Bu sınıf `PilotYazmaHatasi` alt sınıfıdır; `kayit_id`, `kosu_id`
+ve `deneme_id` taşır. Koşu ve deneme bağı olmayan olayda ilgili kimlik null olur.
+Mevcut yazma hatası yakalayıcıları koşuyu durdurur; belirsiz sonuç yeni bitiş olayı üretmez.
+Yeni `PilotKayit` okuyucusunun `kurtar` ve `izle` yüzleri dosyadaki olayları esas alır;
+önceki API sonucunu kullanmaz. Bitiş olayının LF'si yoksa koşu çözümsüz kalır; onaylı içerik ve LF varsa
+bitiş geçerlidir. Görünürlük doğrulanırsa sonuç kesindir: görünür olay için makbuz,
+görünmeyen olay için `PilotYazmaHatasi`. Dayanak: dağıtıcı, 18.10 22:34, Q1 kararı.
 Bu sıra bütün olay türleri için aynıdır; aktarım hatasında tam JSON bile LF'siz kaldığı için
 olay sayılmaz. Son LF kaybolursa kurtarma temkinli biçimde olayı eksik sayar; kendiliğinden
 tamamlamaz. Bu yazma sırası `pilot_s03_v1` bayt kodlamasını değiştirmez.

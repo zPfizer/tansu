@@ -3,7 +3,7 @@
 from datetime import date, datetime, timezone
 from decimal import Decimal
 from contextlib import contextmanager
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from hashlib import sha256
 import json
 import math
@@ -23,6 +23,36 @@ class PilotHatasi(ValueError):
 
 class PilotYazmaHatasi(OSError):
     """Kalıcı yazma makbuzu alınamadı."""
+
+
+class PilotBelirsizHatasi(PilotYazmaHatasi):
+    """Yayın sonucu doğrulanamadı; kimliklerle yeni okuyucudan kurtarın."""
+
+    def __init__(self, makbuz):
+        self.kayit_id = makbuz.olay_id
+        self.kosu_id = makbuz.kosu_id
+        self.deneme_id = makbuz.deneme_id
+        super().__init__(f"Pilot yayın sonucu belirsiz: {self.kayit_id}")
+
+
+def _icerik_yaz(fd, satir):
+    if os.write(fd, satir) != len(satir):
+        raise OSError("Eksik satır yazıldı.")
+    os.fsync(fd)
+
+
+def _lf_yaz(fd, beklenen_son):
+    """TASARIM 5.15: görünürlük True, False veya doğrulanamayan None olur."""
+    try:
+        if os.write(fd, b"\n") == 1:
+            return True, None
+        hata = OSError("Satır sonu yazılamadı.")
+    except OSError as yazma_hatasi:
+        hata = yazma_hatasi
+    try:
+        return os.fstat(fd).st_size == beklenen_son, hata
+    except OSError as denetim_hatasi:
+        return None, denetim_hatasi
 
 
 def _kodla(deger):
@@ -129,6 +159,7 @@ class Makbuz:
     deneme_id: str | None
     kosu_id: str | None
     ayar_ozeti: str | None
+    uyarilar: list[str] = field(default_factory=list)
 
 
 class PilotKayit:
@@ -340,14 +371,21 @@ class PilotKayit:
         }
 
     def _ekle(self, olay, denetle=None):
-        olay = {
-            "kayit_id": f"{SURUM}:{uuid4()}",
-            "sema_surumu": SURUM,
-            "olusturma_zamani": datetime.now(timezone.utc),
-            **olay,
-        }
-        satir = kanonik(olay)
+        yayinlandi = False
         try:
+            olay = {
+                "kayit_id": f"{SURUM}:{uuid4()}",
+                "sema_surumu": SURUM,
+                "olusturma_zamani": datetime.now(timezone.utc),
+                **olay,
+            }
+            satir = kanonik(olay)
+            makbuz = Makbuz(
+                olay["kayit_id"],
+                olay.get("deneme_id"),
+                olay.get("kosu_id"),
+                olay.get("ayar_parmak_izi"),
+            )
             with self._kilit():
                 olaylar, _ = self._oku()
                 if denetle:
@@ -361,22 +399,24 @@ class PilotKayit:
                     0o600,
                 )
                 try:
-                    if os.write(fd, satir) != len(satir):
-                        raise OSError("Eksik satır yazıldı.")
-                    os.fsync(fd)
+                    _icerik_yaz(fd, satir)
                     # TASARIM 5.15: LF yalnız aktarımı onaylanan içeriği görünür yapar.
-                    if os.write(fd, b"\n") != 1:
-                        raise OSError("Satır sonu yazılamadı.")
+                    yayinlandi = None
+                    yayinlandi, hata = _lf_yaz(fd, len(ham) + len(satir) + 1)
+                    if hata is not None:
+                        raise hata
                 finally:
                     os.close(fd)
-        except OSError as hata:
-            raise PilotYazmaHatasi(f"Pilot kaydı yazılamadı: {hata}") from hata
-        return Makbuz(
-            olay["kayit_id"],
-            olay.get("deneme_id"),
-            olay.get("kosu_id"),
-            olay.get("ayar_parmak_izi"),
-        )
+        except Exception as hata:
+            if yayinlandi is None:
+                raise PilotBelirsizHatasi(makbuz) from hata
+            if yayinlandi:
+                makbuz.uyarilar.append(f"Kayıt eklendi, yazım sonrası hata: {hata}")
+            elif isinstance(hata, OSError):
+                raise PilotYazmaHatasi(f"Pilot kaydı yazılamadı: {hata}") from hata
+            else:
+                raise
+        return makbuz
 
     def deneme_kaydet(
         self,

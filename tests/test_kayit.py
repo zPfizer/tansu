@@ -614,6 +614,219 @@ def test_pilot_kosu_makbuz_izleme_ve_ekleme_duzeltmesi(tmp_path):
         pilot_sonuc(kosu)
 
 
+def pilot_kilit_arizasi(ariza, asama):
+    if os.name == "nt":
+        import msvcrt as kilit
+
+        ad, al, birak = "locking", kilit.LK_LOCK, kilit.LK_UNLCK
+    else:
+        import fcntl as kilit
+
+        ad, al, birak = "flock", kilit.LOCK_EX, kilit.LOCK_UN
+    asil = getattr(kilit, ad)
+    hedef = al if asama.startswith("kilit_al") else birak
+
+    def kilitle(fd, mod, *args):
+        if mod != hedef:
+            return asil(fd, mod, *args)
+        if asama.endswith("sonra"):
+            asil(fd, mod, *args)
+        raise OSError(asama)
+
+    ariza.setattr(kilit, ad, kilitle)
+
+
+def pilot_kilit_dosyasi_arizasi(ariza, asama):
+    asil_ac = Path.open
+
+    class KilitDosyasi:
+        def __init__(self, dosya):
+            self.dosya = dosya
+            self.arama = 0
+
+        def __enter__(self):
+            self.dosya.__enter__()
+            return self
+
+        def __exit__(self, *args):
+            self.dosya.__exit__(*args)
+            if asama == "kilit_kapat":
+                raise OSError(asama)
+
+        def seek(self, *args):
+            self.arama += 1
+            if (asama, self.arama) in (("kilit_ilk_seek", 1), ("kilit_son_seek", 2)):
+                raise OSError(asama)
+            return self.dosya.seek(*args)
+
+        def fileno(self):
+            return self.dosya.fileno()
+
+    def ac(yol, *args, **kwargs):
+        if yol.suffix != ".lock":
+            return asil_ac(yol, *args, **kwargs)
+        if asama == "kilit_ac":
+            raise OSError(asama)
+        return KilitDosyasi(asil_ac(yol, *args, **kwargs))
+
+    ariza.setattr(Path, "open", ac)
+
+
+def pilot_adim_arizasi(ariza, depo, asama):
+    def hata(*args, **kwargs):
+        if asama.endswith("denetim"):
+            raise OSError("LF sonucu doğrulanamıyor")
+        raise OSError(asama)
+
+    hedefler = {
+        "kimlik": (pilot, "uuid4"),
+        "kodla": (pilot, "kanonik"),
+        "makbuz": (pilot, "Makbuz"),
+        "dizin": (Path, "mkdir"),
+        "ac": (os, "open"),
+        "icerik": (os, "write"),
+        "fsync": (os, "fsync"),
+    }
+    if asama in hedefler:
+        ariza.setattr(*hedefler[asama], hata)
+        return
+    if asama.startswith(("kilit_al", "kilit_birak")):
+        pilot_kilit_arizasi(ariza, asama)
+        return
+    if asama.startswith("kilit_"):
+        pilot_kilit_dosyasi_arizasi(ariza, asama)
+        return
+    if asama.startswith("oku_"):
+        asil_oku = Path.read_bytes
+        okumalar = 0
+
+        def oku(yol):
+            nonlocal okumalar
+            if yol == depo.yol:
+                okumalar += 1
+                if okumalar == int(asama[-1]):
+                    raise OSError(asama)
+            return asil_oku(yol)
+
+        ariza.setattr(Path, "read_bytes", oku)
+        return
+    if asama.startswith("kapat"):
+        asil_kapat = os.close
+
+        def kapat(fd):
+            asil_kapat(fd)
+            if asama == "kapat_diger":
+                raise RuntimeError(asama)
+            raise OSError(asama)
+
+        ariza.setattr(os, "close", kapat)
+        return
+    asil_yaz = os.write
+
+    def yaz(fd, veri):
+        if veri != b"\n":
+            if asama == "icerik_kisa":
+                return asil_yaz(fd, veri[:11])
+            return asil_yaz(fd, veri)
+        if asama.endswith("denetim"):
+            for nesne, ad in (
+                (os, "fstat"),
+                (os, "lseek"),
+                (os, "read"),
+                (os, "open"),
+                (Path, "read_bytes"),
+                (Path, "stat"),
+                (Path, "open"),
+            ):
+                ariza.setattr(nesne, ad, hata)
+        if asama.startswith("lf_sonra"):
+            asil_yaz(fd, veri)
+        if asama == "lf_kisa":
+            return 0
+        hata()
+
+    ariza.setattr(os, "write", yaz)
+
+
+@pytest.mark.parametrize(
+    "asama,gorunur",
+    [
+        ("kimlik", False),
+        ("kodla", False),
+        ("makbuz", False),
+        ("dizin", False),
+        ("kilit_ac", False),
+        ("kilit_ilk_seek", False),
+        ("kilit_al", False),
+        ("kilit_al_sonra", False),
+        ("oku_1", False),
+        ("oku_2", False),
+        ("ac", False),
+        ("icerik", False),
+        ("icerik_kisa", False),
+        ("fsync", False),
+        ("lf", False),
+        ("lf_kisa", False),
+        ("lf_sonra", True),
+        ("lf_once_denetim", False),
+        ("lf_sonra_denetim", True),
+        ("kapat", True),
+        ("kapat_diger", True),
+        ("kilit_son_seek", True),
+        ("kilit_birak", True),
+        ("kilit_birak_sonra", True),
+        ("kilit_kapat", True),
+    ],
+)
+def test_pilot_yazma_adimlari_makbuz_ve_kurtarma_uyusur(
+    tmp_path, monkeypatch, asama, gorunur
+):
+    depo = pilot.PilotKayit(tmp_path / "olaylar.jsonl")
+    deneme = pilot_deneme(depo)
+    makbuz, api_hatasi = None, None
+
+    try:
+        with pilot_kosu(depo, deneme.deneme_id) as kosu:
+            sonuc = pilot_sonuc(kosu)
+            once = depo.yol.read_bytes()
+            with monkeypatch.context() as ariza:
+                pilot_adim_arizasi(ariza, depo, asama)
+                makbuz = pilot_bitir(kosu)
+    except pilot.PilotYazmaHatasi as hata:
+        api_hatasi = hata
+    yeni = pilot.PilotKayit(depo.yol)
+    tamamlandi = yeni.izle(sonuc.olay_id)["durum"] == "tamamlandi"
+    belirsiz = asama.endswith("denetim")
+    if belirsiz:
+        assert type(api_hatasi).__name__ == "PilotBelirsizHatasi"
+        assert isinstance(api_hatasi, pilot.PilotBelirsizHatasi)
+        assert isinstance(api_hatasi, pilot.PilotYazmaHatasi)
+        assert makbuz is None
+        assert api_hatasi.kosu_id == kosu.makbuz.kosu_id
+        assert api_hatasi.deneme_id == deneme.deneme_id
+        assert api_hatasi.kayit_id.startswith("pilot_s03_v1:")
+        assert api_hatasi.kayit_id.encode("utf-8") in yeni.yol.read_bytes()[len(once) :]
+    else:
+        assert (makbuz is not None) == tamamlandi
+    assert tamamlandi == gorunur
+    if gorunur:
+        if belirsiz:
+            assert yeni.oku()[-1]["kayit_id"] == api_hatasi.kayit_id
+        else:
+            assert api_hatasi is None
+            assert makbuz.uyarilar
+            assert yeni.oku()[-1]["kayit_id"] == makbuz.olay_id
+        assert yeni.kurtar()["cozumsuz_kosular"] == []
+    else:
+        assert isinstance(api_hatasi, pilot.PilotYazmaHatasi)
+        if not belirsiz:
+            assert type(api_hatasi) is pilot.PilotYazmaHatasi
+        assert yeni.kurtar()["cozumsuz_kosular"] == [kosu.makbuz.kosu_id]
+        assert yeni.izle(sonuc.olay_id)["durum"] == "cozumsuz"
+        assert [o["kayit_turu"] for o in yeni.oku()] == ["deneme", "baslangic", "sonuc"]
+    assert yeni.yol.read_bytes().startswith(once)
+
+
 def test_pilot_fsync_hatasi_bitis_kurtarmada_tamamlandi_sayilmaz(tmp_path, monkeypatch):
     depo = pilot.PilotKayit(tmp_path / "olaylar.jsonl")
     deneme = pilot_deneme(depo)
