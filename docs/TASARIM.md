@@ -662,7 +662,7 @@ Dolar bazı ilk sürümde yok.
     tanımı (iki ailenin ızgarası, `saglamlik.IZGARA`).
     - **Kural:** değişmesi işlemleri, dolumları, limit/kilit/karantinayı, evreni, p değerlerini ya da kabul kararını
       değiştirebilecek her modül listededir. İndirme, rapor, günlük koşu, CLI, sadakat ve denetim kodu listede yoktur.
-    - **Liste:** aileler, cift, ciftbolme, evren, gostergeler, istatistik, kayit, motor, saglamlik, simulator, veri.
+    - **Liste:** aileler, cift, ciftbolme, evren, gostergeler, istatistik, katalog, kayit, motor, saglamlik, simulator, veri.
     - **İki not:** `veri.py` indirmeyi de içerir ama kapı ve karantina mantığı (`Anlik.gun_tablosu`, `adim`) kuraldır;
       dosya bölünmediği için bütünüyle listededir. `kayit.py` Holm, kabul girdisi ve K1 tekrar sayısının (B)
       hesabını içerir; o da listededir (muhafazakâr: kayıt kodu değişince yeni kayıt gerekir). Bu, tekrar
