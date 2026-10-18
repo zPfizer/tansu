@@ -17,7 +17,7 @@ _Kutuları dağıtıcı kanıtıyla işaretler. İşaretsiz kutu varsa PR birle�
 
 ## Bağımsız inceleme
 
-<!-- Yalnız Markdown dosyalarını değiştiren PR bu bölümü boş bırakır; denetçi gerekmez. -->
+<!-- Yalnız Markdown dosyalarını değiştiren PR bu bölümü boş bırakır. Denetçi gerekmez. -->
 Denetçi: 
 Denetlenen commit: 
 <!-- Denetlenen commit: denetçinin okuduğu son commit'in tam sha'sı (40 hane). Kural 5, yalnız tabanı getiren ve iki tarafın değiştirdiği dosyalarla sınırlı kalan birleştirmelerde yeni inceleme turu istemez (Levent 18.10). -->

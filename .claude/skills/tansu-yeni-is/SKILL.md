@@ -22,7 +22,7 @@ Before creating an issue, follow [Issue body](../../../docs/agents/issue-tracker
 11. **Merge:** Shared step. Read "Merge" in [ortak-adimlar.md](ortak-adimlar.md) and run it.
 12. **Close:** Shared step. Read "Close" in [ortak-adimlar.md](ortak-adimlar.md) and run it.
 
-Task scope skips Sharpen, Spec, and Tickets. It runs Build, Test gate, and Proof. Task scope has no auditor (docs/agents/is-kurallari.md "Scope"). For a locked file, docs/agents/is-kurallari.md "Who writes" sets the review.
+Task scope skips Sharpen, Spec, and Tickets. It runs Build, Test gate, and Proof. Task scope runs Review when risk requires a reviewer (docs/agents/is-kurallari.md "Auditor and rounds"). For a locked file, docs/agents/is-kurallari.md "Auditor and rounds" sets the review.
 
 | If | Then |
 |---|---|
