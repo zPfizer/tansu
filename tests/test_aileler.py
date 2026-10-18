@@ -74,6 +74,114 @@ ESKI_TANIMLAR = {"bugun": ESKI_TABAN} | {
 }
 
 
+def _ortak_paket(f):
+    return {
+        "semboller": ["TEST"],
+        "referans": {
+            "kayit_id": "test-veri",
+            "istenen_donem": {
+                "baslangic": str(f.index[500].date()),
+                "bitis": str(f.index[-1].date()),
+            },
+        },
+        "piyasa": [
+            {
+                "sembol": "TEST",
+                "tarih": str(t.date()),
+                "kalite_bayraklari": [],
+                **{
+                    f"duzeltilmis_{ad}": {"deger": r[ad]}
+                    for ad in ("kapanis", "yuksek", "dusuk", "aof")
+                },
+                "hacim_tl": {"deger": r["hacim"]},
+            }
+            for t, r in f.iterrows()
+        ],
+    }
+
+
+def test_ortak_kurulum_tarihli_degerler_ve_stop_girdileri():
+    f = _mumlar(
+        [100.0] * 510 + [110.0, 112.0],
+        [101.0] * 510 + [111.0, 113.0],
+        [99.0] * 510 + [100.0, 110.0],
+        [100.0] * 512,
+    )
+    f["aof"] = f["kapanis"]
+    strateji = aileler.legacy_coz("bugun")
+    sonuc = aileler.ortak_kurulum(_ortak_paket(f), f.index[-1], strateji)
+    assert len(sonuc["sinyaller"]) == 1, "Tarihli kurulum sinyalle taşınmadı"
+    s = sonuc["sinyaller"][0]
+    assert s["tarih"] == str(f.index[-1].date())
+    assert s["kutu_alt"]["deger"] == 99.0
+    assert s["kutu_ust"]["deger"] == 111.0
+    assert s["hedef"] == {"deger": None, "birim": "TL/adet", "bos_nedeni": "uygulanmaz"}
+    assert s["ilk_stop"]["bos_nedeni"] == "dolum_bekleniyor"
+    assert s["baglar"]["ayar_parmak_izi"] == strateji.ayar_parmak_izi
+    girdiler = {a["ad"]: a["deger"] for a in s["kurulum_girdileri"]}
+    assert girdiler["stop_kati"] == 2.0
+    assert girdiler["atr"] == pytest.approx(2.6683673469387754)
+    gost = {g["ad"]: g for g in sonuc["gostergeler"]}
+    assert gost["sma250"]["deger"] == pytest.approx(100.088)
+    assert gost["sma250"]["tarih"] == s["tarih"]
+    assert sonuc["isinma"]["TEST"] == {"gozlem": 512, "gerekli": 500, "tamam": True}
+
+
+@pytest.mark.parametrize("varyant", ["bugun", "tansu", "giris_agresif", "teyit_acik"])
+def test_ortak_kurulum_eski_uyarlayicilarla_eslesir(varyant):
+    f = _mumlar(
+        [100.0] * 510 + [110.0, 112.0],
+        [101.0] * 510 + [111.0, 113.0],
+        [99.0] * 510 + [100.0, 110.0],
+        [100.0] * 510 + [500.0] * 2,
+    )
+    f["aof"] = f["kapanis"]
+    p = aileler.VARYANTLAR[varyant]
+    sonuc = aileler.ortak_kurulum(
+        _ortak_paket(f), f.index[-1], aileler.legacy_coz(varyant)
+    )
+    eski = aileler.kurulum(f, p)
+    eski = eski.loc[eski.index == f.index[-1]]
+    assert [s["tarih"] for s in sonuc["sinyaller"]] == [
+        str(t.date()) for t in eski.index
+    ]
+    for yeni, (_, satir) in zip(sonuc["sinyaller"], eski.iterrows(), strict=True):
+        for ad in ("kutu_alt", "kutu_ust", "hedef"):
+            assert yeni[ad]["deger"] == (None if pd.isna(satir[ad]) else satir[ad])
+    g = {r["ad"]: r["deger"] for r in sonuc["gostergeler"]}
+    assert g["ema20"] == gostergeler.ema(f.kapanis, 20).iloc[-1]
+    assert g["atr"] == gostergeler.atr(f.yuksek, f.dusuk, f.kapanis).iloc[-1]
+
+
+def test_ortak_kurulum_eksik_gun_ve_isinma():
+    f = _mumlar([100.0] * 512, [101.0] * 512, [99.0] * 512, [100.0] * 512)
+    f["aof"] = f["kapanis"]
+    paket = _ortak_paket(f)
+    paket["referans"]["istenen_donem"]["baslangic"] = str(f.index[0].date())
+    strateji = aileler.legacy_coz("bugun")
+    ilk = aileler.ortak_kurulum(paket, f.index[0], strateji)
+    assert ilk["isinma"]["TEST"] == {"gozlem": 1, "gerekli": 500, "tamam": False}
+    assert ilk["sinyaller"] == []
+    sma = next(g for g in ilk["gostergeler"] if g["ad"] == "sma250")
+    assert sma["deger"] is None and sma["bos_nedeni"] == "isinma_veya_tanimsiz"
+    for ad in ("kapanis", "yuksek", "dusuk", "aof"):
+        paket["piyasa"][-1][f"duzeltilmis_{ad}"]["deger"] = None
+    eksik = aileler.ortak_kurulum(paket, f.index[-1], strateji)
+    assert eksik["sinyaller"] == []
+    sma = next(g for g in eksik["gostergeler"] if g["ad"] == "sma250")
+    assert sma["deger"] is None and sma["bos_nedeni"] == "eksik_veri"
+
+
+def test_ortak_kurulum_degistirilmis_stratejiyi_reddeder():
+    from dataclasses import replace
+
+    strateji = aileler.legacy_coz("bugun")
+    with pytest.raises(ValueError, match="katalogla uyuşmuyor"):
+        aileler.ortak_kurulum(
+            {}, "2024-01-01", replace(strateji, aile="cift_rotasyonu")
+        )
+
+
 @pytest.mark.parametrize("ad,beklenen", ESKI_TANIMLAR.items())
 def test_katalog_eski_24_tanim_ve_hesap_ciktilari_korunur(ad, beklenen):
     assert callable(getattr(aileler, "legacy_coz", None)), "Katalog uyarlayıcısı yok"

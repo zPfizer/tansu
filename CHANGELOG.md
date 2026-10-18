@@ -9,6 +9,7 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 ### Eklendi
 
 - Ayar değişikliği, önceki değere dönüş ve tekrar koşuları ayrı bağlarla saklayan geçici kayıt pilotu eklendi; kayıt modülü işlem hesabının dışında sınıflandı, saklanmış eski kimlikler ve resmi deneme sayısı korundu. (#84)
+- Tek hisse ve çift ailelerinde göstergeler ile işlem hazırlığı ortak hesapta üretiliyor; sinyal hazırlığıyla birlikte taşınıyor, eski çağrılar korunuyor. (#87)
 - Mevcut 24 strateji tanımını ayarları ve kaynak kökenleriyle koruyan sürümlü katalog eklendi; bütün birleşim kanıtı eksik seçeneklerin panel ve komut seçimi kapalı tutuldu. (#83)
 - Yedi hesap sınırı sentetik sınır testleriyle korunuyor; kural kaydı durum testi kapsamı korunarak hızlandırıldı. (#109)
 - Sürümlü BIST 30 başvuru tablosu, tarihli üyelik kanıtı ve giriş günü denetimi eklendi; eksik kapsam koşuyu durdurur, eski evren politikaları korunur. (#86)
