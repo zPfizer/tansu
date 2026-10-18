@@ -12,6 +12,11 @@ Geçmiş:
 Çalışma kuralı (belge koddan önce gelir): `AGENTS.md`.
 Terimler `GLOSSARY.md`'dedir.
 
+**Sürüm sınırı (#82, S01):** Aşağıdaki mevcut uygulama anlatımı `legacy_portfoy_v1` ve
+`legacy_tansu_v1` politikalarını korur. Yeni motorun davranış sözleşmesi §5.15'tedir; ürün kodu henüz bu
+sözleşmeye geçirilmedi. Eski sonuç yeni politikayla yeniden etiketlenmez. Dayanak: Levent 18.10,
+"Ortak para falan yok. Her işlem ayrı gibi düşün."; §5.15 kaynak ve uyumluluk kaydı.
+
 **05.10 ön denemesi (ilk kod ve `rapor/kanit-20261005.md`) bu belgeden önce yazıldı. Kanıt değildir;
 rakamları hiçbir kararda kullanılmaz.** (C7)
 
@@ -176,7 +181,8 @@ CSV: sütun listesi, ilk satır cümlesi, sabit durum listesi, yasaklı kelime A
 **Bağımlılık:** `tansusinama` makine ölçümü için `psutil` kullanır (boş bellek, CPU kullanımı); `requirements.lock.txt`'te
 vardır, `pyproject.toml`'da `psutil==7.2.2` olarak sabitlenir.
 
-Takvim, fiyat günlerinden çıkar (İş Yatırım XU100 günleri). Maliyet tek bir sabittir; Tansu sınaması (5.14) kendi sabitini kullanır.
+Takvim, fiyat günlerinden çıkar (İş Yatırım XU100 günleri). Mevcut yollarda maliyet tek bir sabittir;
+Tansu sınaması (5.14) kendi sabitini kullanır. Yeni maliyet politikası §5.15'tedir (Levent 18.10, "Komisyonunu alınsın.").
 
 **Motor kendi Adım döngümüzdür; vectorbt kullanılmaz.** Dolum kuralları (5.3) AOF'a ve gün
 yükseği/düşüğüne koşullu. Ölçütler kısa kendi kodumuzdur. (A3, M1, S2-41, C-2)
@@ -262,7 +268,7 @@ hatasından** ayırmak.
   | 250–500 | 0,10 | 0,25 |
   | 500–1.000 | 0,10 | 0,50 |
   | 1.000–2.500 | 0,10 | 1,00 |
-  | ≥ 2.500 | 0,10 | 2,50 (doğrulanmadı) |
+  | ≥ 2.500 | 0,10 | 2,50 (veride doğrulanmadı; resmi tablo: §5.15 [W5], 18.10.2026) |
 
   Sınama vakası: KONTR 08.07.2026. (İ: 01-023, 02-056, 05-043)
 - **Karantina:**
@@ -968,6 +974,184 @@ Levent 16.10: "Tansu ne diyorsa onu yap." Komut: `python -m tansu tansu-sinama`.
 - **Bizim ek kontrolümüz:** aynı ailenin son resmi `durum` satırı (5.11, 5.12) çıktıda ve sitede yanında durur.
 - **Hash:** `tansusinama.py` hash dışıdır (kabul kararını değiştirmez). `HASH_DISI` listesine eklenmesi `kayit.py`'nin hash'ini
   değiştirir: sonraki resmi koşudan önce `python -m tansu kayit` gerekir.
+
+### 5.15 Motor davranış sözleşmesi (S01, #82)
+
+Bu bölüm #76 motorunun belge sözleşmesidir. Uygulama, veri indirme, günlük etkinleştirme ve kalıcı kimlik
+biçiminin onayı bu işin dışındadır. Teknik engel kapanmadan ilgili yöntem uygulanmaz. Dayanak: [L1], [L5], [W1].
+
+#### Kaynaklar ve karar yetkisi
+
+Köken etiketleri ayrıdır: **LEVENT KARARI**, **CLAUDE TEKNİK KARARI / YORUM**, **ARAŞTIRMA ÖNERİSİ** ve
+**AÇIK KAPI**. Bir internet örneği Tansu kuralına, araştırma önerisi de kendiliğinden onaya dönüşmez.
+Teknik girdilerin dağıtıcı kontrol tarihi 19.10.2026'dır; bu tarih araştırma tarihi değildir. Dayanak: [L5], [W1].
+
+| Kod | Kaynak, tarih ve kanıt sınırı |
+|---|---|
+| L1 | Levent, 18.10.2026: "Başlangıç sermayesi önemsiz çünkü bu bir bir nevi sinyal platformu." ve "Yüzde iki uygun." Kaydedilen yanıt: `soru-turu/cevaplar-levent.md`, Grup 1. |
+| L2 | Levent, 18.10.2026: "Ortak para falan yok. Her işlem ayrı gibi düşün." ve "Her tarihte o dönemin BIST 30 üyelerine göre yapalım." Aynı yanıt kaydı, Grup 2 ve devamı. |
+| L3 | Levent, 18.10.2026: "Hani son fiyattan devam etsin. 2022'de sınamaya dahil olsun." Aynı kayıt, son Grup 2 yanıtı; yıllar: 2025, 2024, 2023, 2022, 2021 ve birleşik dönem. |
+| L4 | Levent, 18.10.2026: "Kazanma oranı tek başına bir strateji elemesin." ve "Bir sonucu güvenmek için yani bunları ben sonuçları gördükçe karar verebilirim bence." Aynı kayıt, Grup 3. |
+| L5 | Levent, 18.10.2026: "Tabii önce Tansu sonra internet." ve "Monte Carlo resmi olarak nasıl yapılıyorsa öyle yapılmalı. Walk forward da walk forward da olacak tabi." Aynı kayıt, teknik sorular ve Grup 3 devamı. |
+| L6 | Levent, 18.10.2026: "Komisyonunu alınsın. Ortalama bir şeyler yaz çok önemli değil." Aynı kayıt, Grup 1. Oran ve BSMV aşağıda Claude'un teknik seçimidir; vergi mevzuatı iddiası değildir. |
+| T1 | Tansu, 07.11.2025: "İyi optimizasyon, \"sağlam\" (robust) bir bölge bulmaktır." Ham: `tweet-sma-optimizasyon-saglam-bolge-asiri-uyum-1986899794032304554.md:51`; komşu tuzağı satır 53. Tam not bu işte okundu. |
+| T2 | Tansu, 09.11.2025: "Amacımız, her işlemde aynı TL riskini korumaktır." Ham: `tweet-volatiliteye-gore-pozisyon-buyuklugu-1987500065401733478.md:25`. Yüzde örneği Levent'in oranını değiştirmez. |
+| T3 | Tansu, 02.09.2026: "Pozisyon büyüklüğünü stop mesafesine göre hesaplayın." Ham: `not-backtest-giris-sadeligi-risk-islem-gunlugu.md:37`; işlem günlüğü satır 39, aday ufukları satır 31. |
+| T4 | Tansu, 04.09.2026: "Ancak hisse tabana kilitlendiğinde geçmiş hacmin hiçbir anlamı kalmayabilir, satıcı vardır ama alıcı yoktur." Ham: `tweet-fon-konsantrasyon-para-cikisi-likidite-riski-2095997339391414488.md:27`. Tam günlük dolum algoritması bu alıntıda yoktur. |
+| W1 | [AmiBroker ileri yürüme](https://www.amibroker.com/guide/h_walkforward.html), tarihsiz; araştırmada erişim 18.10.2026: geçmişte seç, sonraki kesitte sınayarak ilerle. Kesin TANSU pencere boyu vermez. |
+| W2 | [AmiBroker Monte Carlo](https://www.amibroker.com/guide/h_montecarlo.html), tarihsiz; araştırmada erişim 18.10.2026: yerine koymalı işlem örnekleme, en az 1.000 önerisi ve örtüşen işlemlerde sıralı sermaye sınırı. |
+| W3 | [AmiBroker optimizasyon](https://www.amibroker.com/guide/h_optimization.html), tarihsiz; araştırmada erişim 18.10.2026: geniş plato ilkesi. Kesin komşuluk veya merkez seçimi vermez. |
+| W4 | [Backtrader emir gerçekleşmesi](https://www.backtrader.com/docu/order-creation-execution/order-creation-execution/), tarihsiz; araştırmada erişim 18.10.2026: kapanış bilgisiyle geçmişe dönük dolum kurulmaz. AOF kullanımı TANSU yaklaşımıdır. |
+| W5 | [BIST 2020/20](https://borsaistanbul.com/en/announcement/13357/changes-price-limits-equity-and-derivatives-markets), 12.03.2020, uygulama 13.03.2020; [2023/19412](https://www.borsaistanbul.com/files/duyuru-19412.pdf), 28.08.2023, uygulama 06.11.2023; [Pay Piyasası Prosedürü](https://www.borsaistanbul.com/files/pay-piyasasi-proseduru.pdf). Araştırmada erişim 18.10.2026; tarihli limit ve adım dayanağı. |
+| W6 | [Van Tharp, Risk and R-Multiples](https://vantharpinstitute.com/tharp-think-trading-concepts/), tarihsiz; araştırmada erişim 18.10.2026: ilk riskle normalizasyon. Masrafın bütçeye katılması TANSU seçimidir. |
+| W7 | [Sharpe, The Sharpe Ratio](https://www-leland.stanford.edu/~wfsharpe/art/sr/sr.htm), 1994 sonbaharı; araştırmada erişim 18.10.2026: eş dönemli fark getirisi. İşlem listesi günlük hesap eğrisi değildir. |
+| W8 | [DVC kullanıcı kılavuzu](https://doc.dvc.org/user-guide), tarihsiz; araştırmada erişim 18.10.2026: içerik kimliği ve yeniden üretim dayanağı. Aşağıdaki alanlar S01'in YORUM sözleşmesidir; DVC bağımlılığı veya evrensel şema değildir. |
+| W9 | [arch güven aralıkları](https://bashtage.github.io/arch/bootstrap/confidence-intervals.html) ve [blok uzunluğu](https://bashtage.github.io/arch/bootstrap/generated/arch.bootstrap.optimal_block_length.html), araştırmadaki sürüm 8.0.0, tarihsiz; erişim 18.10.2026. Bağımlı serilerde blok örnekleme dayanağıdır. |
+
+L kaynaklarının kayıt kökü `YONETIM/.scratch/backtest-motoru-1810/`, T kaynaklarının kökü beyindeki
+`kisisel/300-Projects/Tansu X Veri Havuzu/` klasörüdür. Web sayfaları bu işte yeniden açılmadı; kaynaklar
+verilen araştırma dosyalarından aktarıldı. Dayanak: [L5], [W8].
+
+#### Dokuz çelişkinin karar kaydı
+
+| Kimlik | Eski politika | Yeni sözleşme ve durum | Dayanak | Etkilenen işler |
+|---|---|---|---|---|
+| C01 | §3 paneli erteler; §4 mevcut düz paketi anlatır. | LEVENT KARARI: kişisel sinyal paneli kapsamda; altı motor aşağıdaki görev sınırlarıyla yerel uygulama içinde tasarlanır. Fon ve kripto bu motor sürümünün kapsamı dışındadır; sahipte bekler. S01 bunları kurmaz. | [L1], [L5]; #82 brifi, tasarım taslağının E1–E6 tablosu; fon/kripto: bu işin kapsam talimatı. | #83–#97; panel #96. |
+| C02 | §5.2'de likidite ve piyasa değeriyle yaklaşık BIST100. | LEVENT KARARI: her tarihte o dönemin BIST 30 üyeleri. Yürürlük aralıkları ve duyuru kaynakları kayıtlıdır; bugünkü liste geçmişin yerine geçmez. Üyelik açığı ilgili koşuyu eksik bırakır. | [L2]; teknik veri sınırı [W8]. | #85, #86, #91. |
+| C03 | §5.6'da %1 risk, ortak nakit, pozisyon ve likidite tavanları. | LEVENT KARARI: işlem başına %2 risk; ortak nakit, ortak risk bütçesi ve portföy tavanı yok. İşlemler birbirinin parasını tüketmez. CLAUDE TEKNİK KARARI: tek strateji/sembol yaşam döngüsü açıkken ek aday kaydedilir, adet eklenmez (B Q73). Çiftin risk dayanağı ve masraflı risk formülü RISK kapısındadır. | [L1], [L2], [T2], [T3], [W6]. | #89, #90, #92–#95. |
+| C04 | §5.2 ve §5.6 kapanmada sıfır fiyat/−%100; 60 günlük durdurma kapanma sayılır. | LEVENT KARARI: doğrulanmış durdurma/kapanmada son geçerli fiyat değerlemede taşınır; otomatik −%100 yok. Son fiyatla idari sonlandırma, gözlenmiş satış dolumu değildir. Satış tarihi ve dolum fiyatı gerçek/model dolum yoksa boş kalır. Son fiyatın tarihi ve neden kaybolmaz. | [L3], [T4], [W4]. | #85, #90–#92. |
+| C05 | §5.8 sürekli koşunun yıllık dilimleri; §5.14 bütün dönem. | LEVENT KARARI: beş ayrı yıllık koşu ve birleşik koşu. Dönem ve ısınma sınırları aşağıdadır. Yıllık sonuçlar birleştirilerek birleşik koşu üretilmez. | [L3]; teknik sınır [W1], D §2. | #87, #90–#94. |
+| C06 | §5.4 her yönde %0,3 toplam masraf ve senaryolar; §5.14 %0,10. | CLAUDE TEKNİK KARARI (18.10, 19.10 kontrolü): yeni yolda yön başına %0,15 komisyon, komisyon üstünden %5 BSMV. Her dolumun kendi tutarı kullanılır; kayma ayrı kalır. Eski iki maliyet sürümü korunur. | [L6]; yanıt Grup 1, C giriş ve D §1; [W4]. | #89–#94. |
+| C07 | §5.11 resmi (kural kimliği, aile) çiftleri Holm m'sidir; destek hücreleri sayılmaz. | LEVENT KARARI / S01 kayıt sözleşmesi: her ayar revizyonu ayrı kayıt; aynı değerlere dönüş de yeni revizyon. Yeni revizyon sayısı Holm m'si değildir. Eski resmi sayım değişmez; yeni hipotez ailesi ayrıca beyan edilir. | [L4], [W8]; taslak kayıt tablosu, C Q87. | #84, #87, #91–#94, #97. |
+| C08 | §5.12 kabul kapıları ve §6 aile durumuyla günlük kart; §5.14 sonuçları kart dışı. | LEVENT KARARI: araştırma sonuçları görülebilir; kâr veya kazanma oranı günlük izin vermez. Günlük uygunluk tam strateji/ayar/kod/veri/politika kanıtıyla ve ayrı seçim kaydıyla bağlanır. SAHİP kapıları 86, 111, d5 açıkken #95 etkinleşmez. | [L4], [W8]; C Q86/Q111, D §5. | #95, #96. |
+| C09 | §5.14 genişleyen, en az iki eğitim yıllı ileri yürüme; özel Monte Carlo sözleşmesi yok. | LEVENT KARARI: MC ve WF gerekir. CLAUDE TEKNİK GİRDİ: aşağıdaki yöntem kayıtları. Çelişen araştırma ayrıntıları yöntem kapılarında açık tutulur; eski yorumun üzerine sessizce yazılmaz. | [L5], [T1], [W1]–[W3], [W9]. | #92, #93, #94. |
+
+#### Politikalar ve eski sonuçların okunması
+
+| Politika adı | Korunan anlam ve sürüm ilişkisi | Kaynak |
+|---|---|---|
+| `legacy_portfoy_v1` | §5.1–§5.13 ve §6'daki eski evren, risk, nakit, masraf, resmi sayım ve kabul davranışı. Eski kimlik, parametre kopyası, kod/veri parmak izi, ham p ve dondurulmuş kabul kararıyla okunur. | [L2], [W8]; eski davranışın sahibi ilgili bölümlerdir. |
+| `legacy_tansu_v1` | §5.14'teki eski evren, tam sermaye/kesirli adet, masraf, sağlam bölge ve ileri yürüme yorumu. Destek sonucu olarak kalır; eski resmi m'ye eklenmez. | [L5], [W8]; eski davranışın sahibi §5.14'tür. |
+| `bagimsiz_sinyal_s01` | Bu bölümün davranış paketi. Risk, evren, masraf, dönem, dolum, muhasebe ve yöntem sürümleri ayrı referanslardır. Eksik yöntem referansı ilgili işi engeller. Kalıcı kimlik biçimi #97'de onaylanır. | [L1]–[L6], [W8]. |
+
+Eski kayıtta yeni politika alanı yoksa okuyucu özgün komut/şema ve parametrelerden legacy eşlemesini
+gerekçesiyle gösterir. Kanıt yetmiyorsa politika bilinmiyor kalır; yeni varsayılan atanmaz. Kimlikler yeniden
+hesaplanmaz; düzeltme ve göç, özgün kaydı koruyan yeni olay ve eşleme referansı taşır. Dayanak: [W8], [L2].
+
+#### Dönem, ısınma ve açık işlem sınırları
+
+Aşağıdaki sınır sözleşmesi D §2'nin giriş anındaki ayarları koruma ve ufuk dışındaki çıkışı ayırma
+teknik girdisini kullanır (CLAUDE TEKNİK KARARI / YORUM; 19.10 kontrolü). Takvim aralığı kapalıdır;
+çalışma günleri bu aralığın borsa seanslarıdır. Görüntünün erken bitmesi istenen bitişi sessizce kısaltmaz. Dayanak: [L3], [W1], [W8].
+
+| Koşu | İstenen başlangıç | İstenen bitiş | Başlangıç / bitiş davranışı | Kaynak |
+|---|---|---|---|---|
+| 2025 | 2025-01-01 | 2025-12-31 | Bağımsız, açık işlem olmadan başlar; bitişte açık kalanlar ayrı değerlenir. | [L3], [W1]. |
+| 2024 | 2024-01-01 | 2024-12-31 | Aynı sınır sözleşmesi. | [L3], [W1]. |
+| 2023 | 2023-01-01 | 2023-12-31 | Aynı sınır sözleşmesi. | [L3], [W1]. |
+| 2022 | 2022-01-01 | 2022-12-31 | Aynı sınır sözleşmesi. | [L3], [W1]. |
+| 2021 | 2021-01-01 | 2021-12-31 | Aynı sınır sözleşmesi. | [L3], [W1]. |
+| Birleşik | 2021-01-01 | 2025-12-31 | Tek kronolojik koşu; iç yıl sınırında işlem sıfırlanmaz. | [L3], [W1]. |
+
+- Isınma aralıktan önceki veriyi kullanabilir; veri referansı bu ek kapsamı da taşır. Isınma sinyalleri işlem ve performans sayımına girmez. Seçilen göstergenin tam geçmiş ve yakınsama gereksinimi çözülmüş stratejide yazılıdır; eksikse sinyal yok ve neden kayıtlıdır. Eski §5.1 süreleri yeni varyanta gizli varsayılan olmaz. Dayanak: [W1], [W8], A Q9/Q14, B Q53.
+- İlk puanlanan kapanış ancak ısınma tamam ve üyelik geçerliyse aday üretir. Önceki yılın kapanış sinyali bağımsız yılın girişini açmaz. Son kapanışta üretilen adayın ertesi seansı ufuk dışındaysa dolum yoktur; aday ve neden korunur. Dayanak: [L3], [W4].
+- Ayrı yılın sonunda açık işlem kapalı işlem istatistiğine girmez; `acik_son`, son geçerli değer ve tarih taşır. Sonraki yılın fiyatı geriye dönük gerçekleşmiş kâr yaratmaz. Durdurma/kapanmada idari son fiyat sonucu ayrıca gösterilir. Dayanak: [L3], [W1], [W4]; D §2'nin sansürlü sonuç ayrımı.
+- Birleşik koşuda yıl sonu yalnız rapor kesitidir; işlem, girişteki ayar ve ilk risk sürümüyle sürer. Ara yılın gerçekleşmemiş değeri ile sonraki gerçek çıkış ayrı olaylardır. Nihai bitişte açık işlem aynı `acik_son` kuralını kullanır. Dayanak: [L3], [W1]; A Q8, D §2.
+- Sıfır, sonsuz veya eksik fiyat işlem fiyatı olmaz. Bozuk satır, doğrulanmış durdurmayla eş tutulmaz; kalite hatası ve etkilenen iş kaydedilir. Karantinada yeni giriş yoktur; çıkış talebi ile son temiz fiyat değerlemesi ayrı tutulur. Eski §5.1'in son temiz AOF'ta kapanışı yeni yolda gözlenmiş dolum diye yazılmaz. Dayanak: [L3], [T4], [W4], A Q14, B Q53.
+- Eğitim/test sınırında yalnız seçim tarihinde sonucu bilinen eğitim işlemleri seçime girer. Testte açık kalan işlem giriş ayarlarıyla sürer; sonraki pencere ayarı onu değiştirmez. Eğitim ısınması OOS başarı sayılmaz; aynı test sinyali bir kez sayılır. Dayanak: [W1], [W4]; A Q8/Q9, D §2.
+
+#### Dolum, risk ve ölçünün anlamı
+
+- Claude'un kayıtlı **seçenek 2** kararı geçerlidir (18.10; yanıt Q74): ham `yüksek = düşük = tavan` gününde alış dolmaz, giriş sinyali düşer; ham `yüksek = düşük = taban` gününde satış bekler, ilk uygun kilitsiz günde yeniden işlenir. Sonraki fiyat kullanılır; her engel sayılır. B Q49'un açılış eşitliği ekleme önerisi bu kararı değiştirmez. Günlük çubuk gerçek emir kuyruğunu kanıtlamaz. Dayanak: [L5], [T4], [W4], [W5]; `tavan-taban/bulgular.md`, yanıt Q74.
+- Limit ve adım ham fiyat ölçeğindedir. 2021–2025 için olağan Yıldız/Ana paylarında ±%10, adımda 06.11.2023 değişikliği kullanılır; üst limit aşağı, alt limit yukarı izinli adıma yuvarlanır. Menkul/gün istisnası, baz fiyat veya tarihli kural kanıtı yoksa bayrak bilinmiyor kalır; dolum kesinmiş gibi yazılmaz. Tablo sahibi §5.1'dir. Dayanak: [W5]; `fiyat-limiti/arastirma.md`, B1–B5.
+- Kapanıştan üretilen karar o kapanışa geriye dönük doldurulmaz. Mevcut AOF yaklaşımı açık dolum politikası olarak korunur; D §1'in gerçek açılış önerisi İş Yatırım'da açılış varmış gibi uygulanmaz. Gerçek açılış isteyen varyantta alan yoksa ölçülemedi yazılır. Dayanak: [W4]; A Q23, D §1 ve §4'teki veri kaynağı sınırı.
+- Komisyon = dolum tutarı × 0,0015; BSMV = komisyon × 0,05. Toplam bu yönde 0,001575 × tutardır. Kısmi çıkış dahil her dolum ayrı hesaplanır; alış ve satış tutarı farklı olabilir. Kayma komisyona gömülmez. Dayanak: [L6]; C giriş, D §1, `mc-wf/arastirma.md` muhasebe sınırı.
+- Her işlem aynı varsayımsal referans tutarla normalleştirilir; önceki kâr referansı büyütmez. %2 planlanan risk, gerçekleşen kayba tavan garantisi değildir. İlk risk sonradan yükselen stopla değiştirilmez. Dayanak: [L1], [L2], [T2], [T3], [W6]; D §1.
+- Stop mesafesi sıfır/negatif veya stop/giriş sonlu ve pozitif değilse boyutlama yapılmaz; aday gerekçeli hata olarak korunur. Stopu tanımsız çiftte fiyat getirisi gösterilebilir; risk adedi ve R boş, nedeni `risk_dayanagi_eksik` olur. EMA stopu çifte eklenmez. Dayanak: [T3], [W6]; D §1, RISK kapısı.
+- Kapalı işlem net fiyat getirisi, varsayımsal referansa göre yüzde sonuç ve net R ayrı ölçülerdir. Net fiyat getirisi bütün çıkış nakitleri eksi çıkış masraflarının alış tutarı ve giriş masrafı toplamına oranı eksi birdir. Net R için ilk risk tanımı ve masraf bütçesi RISK kapısı kapanmadan sayısal değer üretilmez. Dayanak: [L1], [T3], [W6]; C Q96, D §1.
+- Eğri türü `tani_net_r`, `tani_referans` veya eski `legacy_ozkaynak` olarak yazılır. Tanısal toplam hesap bakiyesi değildir; bileşik hesap getirisi, portföy yüzde düşüşü ve iflas olasılığı türetilmez. Kapalı işlem sırası düşüşü günlük değerleme düşüşünden ayrıdır. Dayanak: [L2], [W2], [W6].
+- Sharpe ancak günlük getiri serisi ve paydası tanımlıysa hesaplanır; eş dönemli risksiz getiri düşülür. Geçerli seri/faiz kaynağı yoksa, iki gözlemden azsa veya fark getirisi sapması sıfırsa sonuç gerekçeli boştur. İşlem R listesine günlük yıllıklandırma uygulanmaz. Dayanak: [W7]; C Q96/Q97. Repo Net veri ve tarih hizalaması ayrıca kanıtlanır; bugünkü faiz geçmişe taşınmaz.
+- Kazanma oranı, işlem sayısı, ortalama/medyan, masraf ve al-tut kıyası sonuçtur; günlük izin değildir. İşlemsiz hücre pozitif bölgeyi kanıtlamaz; başarısız/eksik hücre atılmaz. İlk sonuçlardan önce başarı eşiği ve ileri gözlem süresi icat edilmez. Dayanak: [L4], [T1], [W3]; C Q76, D §5.
+
+#### E1–E6 ve J01–J20 sınırları
+
+Motorlar sorumluluk sınırıdır; ayrı servis zorunluluğu değildir. E1–E3 düz veri kayıtlarıyla çalışır;
+panel, CLI, HTML veya kullanıcı arayüzü durumu hesaplama girdisinin yerine geçmez. Bu görev ayrımı
+taslağın E1–E6/J01–J20 tablolarının S01 sözleşmesidir (YORUM). Dayanak: [L1], [W8].
+
+| Motor | Küçük arayüz; sahip olduğu işler | Sınır | Kaynak |
+|---|---|---|---|
+| E1 Veri | Veri isteği → piyasa satırları, veri referansı, kalite hatası. J01 görüntü, J02 kalite, J03 tarihli üyelik. | Sağlayıcı, takvim, kalite ve üyelik; strateji seçmez. | [L2], [W8]. |
+| E2 Kural | Veri referansı + katalog/ayar isteği → tam çözülmüş strateji, göstergeler, kurulum ve sinyal. J04 gösterge, J05 katalog, J06 aile kuralı. | İzin tam bileşime aittir; dolum yapmaz. | [T3], [W8]. |
+| E3 İşlem | Sinyal + piyasa satırı + önceki durum + politika → durum, dolum ve işlem. J07 geçiş, J08 risk/masraf, J09 bağımsız simülasyon. | E2'nin ayar/kurulumunu değiştirmez; ortak nakit dağıtmaz. | [L1], [L2], [W4], [W6]. |
+| E4 Sınama | Kayıtlı deneme + veri/yöntem referansları → koşu ve sonuç. J10 dönem, J11 ölçü, J12 sağlam bölge, J13 WF, J14 MC, J15 sadakat/yöntem kanıtı. | Hesabı E1–E3'e verir; yazmayı E5'e verir. Açık yöntem kapısını aşmaz. | [L3], [L5], [W1], [W2], [W8]. |
+| E5 Kayıt | Olay ekle / kimlikle oku → kayıt makbuzu / değişmez kayıt. J16 revizyonlar, koşular, sonuç ve kanıt bağlantıları. | Yalnız kayıt tutar; E1–E4/E6 hesabını çağırmaz. Hesap başlatma E4/E6'nın işidir. | [T3], [W8]. |
+| E6 Günlük | Tarih + seçilmiş deneme + önceki durum → günlük sonuç, kart ve yeni durum. J17 günlük çalışma. | E1–E3 ve E5'i çağırır; hesabı kopyalamaz. UYGUNLUK kapısını ister. | [L4], [W8]. |
+| Çıktı bağdaştırıcısı | J18: sonuç/kanıt/kart → HTML, CSV, JSON, durum metni. | Ölçü hesaplamaz, izin vermez. | [L4], [W8]. |
+| Kişisel panel bağdaştırıcısı | J19: katalog/ayar/kayıt isteği → görünüm, hata, yeni deneme makbuzu. | Kaydedilmemiş düzenleme çalışmaz; yalnız izinli tam bileşimi ister. | [L1], [W8]. |
+| CLI bağdaştırıcısı | J20: argüman + strateji referansı → ortak motor isteği / argüman hatası. | Panelle aynı doğrulama; gizli ayar varsayılanı yoktur. | [W8]; A Q9/Q15. |
+
+#### Ortak kayıt sözleşmesi
+
+Alan grubu aynı satırda virgülle verilmişse tür, birim ve boş kuralı **her alana ayrı** uygulanır.
+`metin` UTF-8 dizge; `tarih` ISO takvim tarihi; `zaman` UTC ISO an; `sayi` sonlu sayı; `tam` tamsayı;
+`bayrak` doğru/yanlış; `liste<T>` sıralı T kayıtlarıdır. Kimlikler opak metindir; UUID veya kalıcı hash
+bayt biçimi burada onaylanmaz. Aşağıdaki şema YORUM'dur. Dayanak: [W8], [L1]; taslak ortak kayıtlar tablosu.
+
+| Ortak alan / alt kayıt | Tür ve birim | Boş değer kuralı | Sürüm ve kaynak bağı | Dayanak |
+|---|---|---|---|---|
+| `kayit_id`, `kayit_turu`, `sema_surumu` | metin; kimlik/tür/sürüm etiketi, birimsiz | Zorunlu, boş olamaz. | Her kaydın kendi şeması; bilinmeyen sürüm sessizce dönüştürülmez. | [W8]. |
+| `olusturma_zamani`, `kaynaklar` | zaman; liste<kaynak>, birimsiz | Zorunlu; kaynak listesi boş olamaz. | Kayıt üretim anı, piyasa tarihinden ayrıdır. | [W8], [T3]. |
+| `kaynak`: `tur`, `konum`, `tarih`, `alinti`, `karar_durumu` | metin, metin, tarih, metin?, metin; birimsiz | İlk üç ve durum zorunlu; alıntı yoksa gerekçeli boş. | Konum Ham path:line veya URL'dir; karar kaynağıyla veri kaynağı ayırt edilir. | [L5], [W8]. |
+| `deger`: `deger`, `birim`, `bos_nedeni` | sayi?, metin, metin? | Değer boşsa neden zorunlu; doluysa neden boş. | Yüzde depoda kesir, ekranda ×100; R, TL, adet ve gün birbirine çevrilmez. | [L1], [W6], [W8]. |
+| `baglar`: `deneme_id`, `kosu_id`, `ayar_parmak_izi`, `politika_surumu`, `veri_ref_id` | metin; birimsiz | Hesap çıktısında zorunlu. Deneme henüz koşulmadıysa koşu bağı gerekçeli boş; ham piyasa satırında deneme/koşu bağı aranmaz. | Referansın kendi şeması ve içerik kimliği korunur; tam çözülmüş ayarla eşleşir. | [W8]. |
+| `donem`: `baslangic`, `bitis`, `isinma_baslangici`, `sinir_surumu` | tarih, tarih, tarih?, metin; gün | İlk/son/sürüm zorunlu; ısınma gerekmiyorsa gerekçeli boş. | İstenen aralık ve fiili kapsam ayrı taşınır. | [L3], [W1], [W8]. |
+| `parametre`: `ad`, `deger`, `tur`, `birim`, `kaynaklar` | metin; metin/sayi/tam/bayrak/liste; metin; metin; liste<kaynak> | Zorunlu; çözülmemiş değer hesaplanabilir strateji oluşturmaz. | Sabit ve seçilmiş değer dahil; her değerin kaynağı ve kökeni kayıtlıdır. | [T3], [W8]. |
+| `olay`: `olay_id`, `tarih`, `tur`, `adet`, `fiyat`, `komisyon`, `bsmv`, `kayma`, `kaynaklar` | metin, tarih, metin, deger(adet), deger(TL/adet), deger(TL), deger(TL), deger(TL), liste<kaynak> | Kimlik/tarih/tür/kaynak zorunlu. Dolumda adet/fiyat/komisyon/BSMV dolu; kayma bilinmiyorsa gerekçeli boş. Değerleme olayı dolum gibi adet/fiyat türetmez. | Olay türü model dolumu, gözlenmiş dolum, değerleme, idari sonlandırmayı ayırır; masraf sürümü üst kayıttadır. | [L3], [L6], [T4], [W4]. |
+| `olcu`: `ad`, `deger`, `yontem_ref`, `seri_ref` | metin, deger, metin, metin? | Ad/yöntem zorunlu; seri gerektiren ölçüde seri yoksa değer gerekçeli boş. | Birim, payda ve muhasebe yönteme bağlıdır. | [W6], [W7], [W8]. |
+
+| Kayıt | Alanlar: tür / birim | Boş değer ve sürüm ilişkisi | Dayanak |
+|---|---|---|---|
+| Piyasa satırı | Ortak kimlik/kaynak; `sembol`: metin; `tarih`: tarih; `ham_acilis`, `ham_yuksek`, `ham_dusuk`, `ham_kapanis`, `ham_aof`, `duzeltilmis_acilis`, `duzeltilmis_yuksek`, `duzeltilmis_dusuk`, `duzeltilmis_kapanis`, `duzeltilmis_aof`: deger(TL/adet); `hacim_tl`: deger(TL/seans); `olay_ref`: metin?; `kalite_bayraklari`: liste<metin>; `son_gecerli_fiyat_tarihi`: tarih?. | Sembol/tarih/kalite listesi zorunlu. Fiyatlar ve hacim bulunamıyorsa gerekçeli boş; açılış AOF veya önceki kapanışla doldurulmaz. Şirket olayı yoksa olay bağı gerekçeli boş. Son geçerli fiyat henüz yoksa tarih gerekçeli boş. Görüntü, düzeltme ve kalite sürümüne bağlıdır. | [L3], [T4], [W4], [W8]. |
+| Üyelik aralığı | Ortak kimlik/kaynak; `sembol`, `endeks`, `uyelik_surumu`: metin; `yururluk_baslangici`, `yururluk_bitisi`: tarih; `duyuru_zamani`: zaman?. | Üyelik bitişi dahil aralık; alanlar zorunlu, henüz kanıtlanmayan aralık üyelik sayılmaz. Duyuru anı bilinmiyorsa gerekçeli boş. Aynı sürümde çelişen aralık çözülmeden koşulmaz. | [L2], [W8]. |
+| Veri referansı | Ortak kimlik/kaynak; `goruntu_id`, `manifest_parmak_izi`, `uyelik_surumu`, `kalite_surumu`, `duzeltme_surumu`, `takvim_ref`: metin; `istenen_donem`, `fiili_donem`: donem; `isinma_donemi`: donem?. | Kimlikler ve dönemler zorunlu; ısınma gerekmiyorsa gerekçeli boş. Fiili aralık eksikse istenen aralık değiştirilmez; hata/uyarıyla sonuç kapsamı açıklanır. | [L2], [L3], [W8]. |
+| Tam çözülmüş strateji | Ortak kimlik/kaynak; `aile`, `varyant`, `katalog_surumu`, `bilesim_id`, `izin_durumu`: metin; `parametreler`, `gosterge_ayarlari`: liste<parametre>; `dolum_surumu`, `risk_surumu`, `masraf_surumu`, `muhasebe_surumu`, `donem_surumu`: metin; `ayar_parmak_izi`: metin. | Hepsi zorunlu; gizli varsayılan yok. İzin, tüm bileşimin kanıtına bağlıdır. Eski 24 varyantın varlığı yeni panel izni değildir; belirsiz bileşim izinsiz kalır. | [L5], [T3], [W8]; A Q15. |
+| Deneme revizyonu | Ortak kimlik/kaynak; `deneme_id`, `olusturan`, `neden`, `kimlik_bicimi_surumu`: metin; `ust_deneme_id`, `eski_kural_id`: metin?; `strateji`: tam çözülmüş strateji; `donemler`: liste<donem>; `veri_referanslari`, `yontem_referanslari`: liste<metin>. | Kök denemede üst bağ, yeni kayıtta eski bağ gerekçeli boş. Dönem/veri listeleri boş olamaz. Yöntem gerekmiyorsa yöntem listesi boş olabilir; gerekli yöntem eksikse koşu başlayamaz. | [L4], [W8]. |
+| Koşu | Ortak kimlik/kaynak/bağlar; `kip`, `kod_parmak_izi`, `kaynak_rev`, `bagimlilik_parmak_izi`, `durum`: metin; `ortam`: liste<parametre>; `baslangic_zamani`: zaman; `bitis_zamani`: zaman?; `isler`, `biten_isler`, `hatali_isler`: liste<metin>; `tohum`: tam?; `ureteci_surumu`: metin?. | Başlangıç zorunlu; yarıda kalanın bitişi gerekçeli boş. Rastgele yöntem yoksa tohum/üreteç gerekçeli boş; varsa zorunlu. Bütün işler kimlikle muhasebeleştirilir. | [W2], [W8]. |
+| Sinyal | Ortak kimlik/kaynak/bağlar; `semboller`: liste<metin>; `tarih`: tarih; `yon`, `aday_durumu`: metin; `kutu_alt`, `kutu_ust`, `hedef`, `ilk_stop`: deger(TL/adet); `kurulum_girdileri`: liste<parametre>; `kural_kaniti`: liste<kaynak>. | Semboller boş olamaz; tarih/yön/durum/kanıt zorunlu. Kurulum alanı varyantta uygulanmıyorsa gerekçeli boş; gerekliyken eksikse doluma geçmez. Ayar parmak izi E2/E3 boyunca aynıdır. | [T3], [W4], [W8]. |
+| İşlem | Ortak kimlik/kaynak/bağlar; `sinyal_id`: metin; `giris_olaylari`, `cikis_olaylari`, `degerleme_olaylari`: liste<olay>; `referans_tutar`: deger(TL); `ilk_risk`: deger(TL); `adet`: deger(adet); `net_fiyat_getirisi`, `referans_getirisi`: deger(kesir); `net_r`: deger(R); `durum`: metin; `cikis_nedeni`: metin?. | Girişsiz aday işlem değildir. Açık işlemde çıkış listesi boş ve neden gerekçeli boştur; gerçekleşmiş sonuç boş kalır, değerleme ayrı durur. İlk risk yoksa R ve risk adedi gerekçeli boş. Kısmi çıkışlar tek işlem kimliğinde olay olarak kalır. | [L1], [L3], [L6], [T3], [W4], [W6]. |
+| Eğri | Ortak kimlik/kaynak/bağlar; `tur`, `muhasebe_surumu`: metin; `normalizasyon`: deger; `islem_referanslari`: liste<metin>; `satirlar`: liste<eğri satırı>. Eğri satırı: `tarih`: tarih, `deger`: deger, `degerleme_turu`: metin. | Tür/muhasebe zorunlu. R toplamında normalizasyon değeri 1 R'dir; referans eğrisinde varsayımsal TL, legacy eğride eski hesap dayanağıdır. Eksik gözlem gerekçeli boş; sıfır getiri diye tamamlanmaz. | [L2], [W2], [W6]. |
+| Sonuç | Ortak kimlik/kaynak/bağlar; `donem`: donem; `veri_referanslari`, `islem_referanslari`, `egri_referanslari`, `alt_sonuc_referanslari`, `yontem_referanslari`: liste<metin>; `olculer`: liste<olcu>; `uyarilar`: liste<metin>; `eserler`: liste<eser>; `gunluk_uygunluk`: metin. Eser: `konum`, `parmak_izi`, `bicim_surumu`: metin. | İşlem yoksa işlem listesi boş olabilir; ölçüler gerekçeli boş kalabilir. Veri/yöntem kanıtı eksik sonuç tam sayılmaz. Günlük uygunluk ayrı karardır, sonuç kârlılığından türemez. | [L4], [W8]. |
+| Hata | Ortak kimlik/kaynak; `is_id`, `asama`, `neden`, `kod`, `etki`: metin; `etkilenen_kayitlar`: liste<metin>; `deneme_id`, `kosu_id`: metin?. | Temel alanlar zorunlu; kimlik henüz üretilmediyse gerekçeli boş. Üst koşuya kaybolmadan döner; atlanan iş başarılı sayılmaz. | [W8]. |
+
+Her `?` alanın boşluğuna aynı alan adını kullanan `bos_nedenleri` metin eşlemesi eşlik eder; `deger`
+kaydı kendi nedenini taşır. Gerekçesiz null, NaN ve sonsuz değer geçerli serileştirme değildir. Tür/birim,
+şema veya referans uyuşmazlığı hata kaydı üretir. Bunlar arayüz gerekleridir; yazılım kabul kapılarının
+zorunluluğu hakkında SAHİP-111 kararı verilmiş sayılmaz. Dayanak: [W8]; C Q111.
+
+E5 önce revizyon makbuzunu verir; E4/E6 bu referansla çalışır. Değişmeyen ayarın tekrar çalışması yeni
+koşudur; kaydetme olayı yeni revizyondur. Izgara hücresi alt denemedir; MC senaryosu koşunun alt kaydıdır.
+Holm için resmi sınıf ve hipotez ailesi ayrıca yazılır; senaryo veya revizyon adedi m diye sunulmaz.
+Dayanak: [W8], [L4]; taslak kayıt tablosu, C Q87 ve eski resmi sayım §5.11.
+
+#### Yöntem kayıtları ve açık kapılar
+
+| Kayıt / durum | İçerik, çelişki ve kapanış kanıtı | Engellediği iş | Dayanak |
+|---|---|---|---|
+| WF — CLAUDE TEKNİK GİRDİ / yöntem kaydı eksik | D §2: kayan 12 ay eğitim, 3 ay test, çeyreklik ilerleme; ilk eğitim 2021, ilk OOS 2022-01-01–2022-03-31, son OOS 2025-10-01–2025-12-31. 2021 yalnız eğitim/keşif, beş yılın yıllık açıklayıcı sonucu yine gösterilir. Eski §5.14 genişleyen iki yıl yöntemi legacy kalır. Eğitimde seçilen ayar testte donar. 30 OOS/120 IS işlem sayıları araştırma uyarısıdır; ret eşiği değildir. Nihai kayıt pencere listesi, ısınma, seçim manifesti, açık işlem, ufuk ve veri/ayar kimliklerini birlikte taşımalıdır; ROBUST/RISK bağları eksikken tamamlanmaz. | **#93 ENGELLİ:** tam ve tutarlı WF yöntem kaydı olmadan uygulama başlamaz. | [L3]–[L5], [W1]; D §2. |
+| MC — ARAŞTIRMA UYUŞMAZLIĞI / açık | C Q81: 10.000, ardından 20.000/40.000/80.000/100.000 ve yakınsama açıklaması. D §4: varyant başına 1.000. İkisi aynı protokol değildir; biri sessizce üstün sayılmaz. Kesin tekrar ve yakınsama sözleşmesini Claude tek yöntem sürümünde bağlamalıdır. | **#94 ENGELLİ:** tekrar, örnekleme ve muhasebe dahil tam MC yöntem kaydı olmadan uygulama başlamaz. | [L5], [W2], [W9]; C Q81, D §4. |
+| MC örnekleme — kontrol edilmiş teknik girdi | D §4: net R sırasını yerine koymadan karıştırma; N işlemi N kez yerine koymalı çekme; hisselerde ortak tarih bloklarını yeniden örnekleme; %10 işlem kaçırma stresi; sayısal ayarda ±1 ızgara adımı/aynı değerden eşit olasılıklı tam yeniden sınama. Bunlar ayrı deneylerdir; %10 kalibre edilmiş hata oranı değildir. Sabit 42 tohum önerisi, üreteç/sürüm ve ayrı akış kimliğiyle kaydedilir. Ana girdi dondurulmuş WF OOS, 2021 için keşif etiketi. Her deney örnek birimi, ufuk, gerçekleşen tekrar sayısı, çıktı yüzdelikleri ve bağımlılık varsayımını taşır. | #94; önce WF, ROBUST ve RISK kayıtları gerekir. | [W2], [W9]; D §4, `mc-wf/arastirma.md` yöntem tablosu. |
+| ROBUST — ARAŞTIRMA UYUŞMAZLIĞI / açık | B Q75: çaprazlar dahil tek indeks adımı komşuluk, kenarda eksik komşuluk bayrağı; otomatik kabul/ret yok. C Q77: en küçük komşu skorunu en büyüt; Q95: kanonik demetle eşitlik. D §3: tam iç komşuluk, kenarı merkez seçme; en geniş bileşen, medyan, iç uzaklık, sonra en kötü komşu net R ve sözlüksel sıra. Eski §5.14 eksen komşusu ayrı legacy'dir. Tek seçim ve kenar politikası onaylanmadan hiçbiri yeni varsayılan yapılmaz. Izgara sınırları ve adımlar strateji manifestinde dondurulur. | #92 seçici kısmı, #93, #94. | [T1], [W3]; B Q75, C Q76/Q77/Q95, D §3. |
+| RISK — teknik bağlama açık | D §1'in masraflı bütçesi `B=0,02*C`, `q=B/((e-s)+c*(e+s))` önerir; C net ölçüleri ve eski §5.3 masrafsız R aynı şey değildir. Masrafın %2 bütçeye girip girmediği, kısmi dolum muhasebesi ve çiftin ilk stop/risk dayanağı tek risk sürümünde bağlanmalıdır. Sıfır stopa bölme veya çifte hayali EMA stopu çözüm değildir. | #89 risk boyutlama, #92 net R eğrisi, #93, #94. | [L1], [T2], [T3], [W6]; D §1, C Q96. |
+| BİLEŞİM — kanıt kapısı | A Q15'teki kaynak anlatısı, giriş/teyit/stop/hedefi tam bileşim kimliğine bağlanır. Ayrı ayrı izinli alanlar tam birleşimin iznini kanıtlamaz. Eski 24 tanım korunur; yeni panel izni kaynak eşlemesi ve #71 gölge çıktısı koşulundan ayrılmaz. | #83, #88, #96'nın izinli seçim kısmı. | [L5], [T3], [W8]; A Q15, taslak katalog tablosu; mevcut §4 gölge kuralı. |
+| SAHİP-64 — açık | Gerçek emir tutarı seçilmez. Sinyal platformunda yalnız açıkça varsayımsal tutarla kapasite/kayma senaryosu gösterilir; katılım ve etki katsayısı kalibre edilmiş BIST olgusu sayılmaz. | Gerçek tutarla kapasite iddiası; varsayımsal raporu engellemez. | [L1]; B Q64, [W4]. |
+| SAHİP-86 — açık | Rastgele giriş ve maruziyet eşleşmeli karşılaştırmaların yeni motorda zorunlu başarı kapısı olup olmayacağı Levent'te. Eski resmi kapılar silinmez ve yeni yola otomatik taşınmaz. | #95 günlük uygunluk kararı. | [L4]; C Q86, [W2]. |
+| SAHİP-111 — açık | Mühendislik kanıtlarının yeni motor için hangi zorunlu kabul paketini oluşturacağı Levent'te. Şema/kimlik kaydı yazmak bu sahip kararını vermez. | #95 günlük uygunluk kararı. | [L4], [W8]; C Q111. |
+| SAHİP-d5 — açık | Başarı eşiği, asgari işlem/ayrı gün sayısı ve ileri gözlem süresi ilk sonuçlardan sonra Levent'te. Sonucu görülen veri keşif sayılır; sonraki doğrulama dönemi başlamadan seçilen kapılar tarihli kayda alınır. | #95; yeni başarı veya ileri gözlem onayı. | [L4], [W1]; D §5. |
+| UYGUNLUK — açık | Sonuç gösterimi serbestliği günlük seçim değildir. #95 için tam strateji/ayar/kod/veri/politika kimliği, karşılık gelen kanıt, Levent'in sonraki kabul kararları ve tarihli etkin seçim kaydı gerekir. Aile adı veya en son kârlı sonuç yeterli değildir. S01 günlük koşu ve görev kurmaz. | **#95 ENGELLİ:** uygunluk sözleşmesi ve SAHİP-86/111/d5 kapanmadan etkinleştirme yok. | [L4], [W8]; taslak günlük seçim kaydı. |
+
+S01 açık yöntem ve sahip kapılarıyla kapanabilir; bu kapanış #93, #94 veya #95'e uygulama/etkinleştirme
+izni vermez. Fon/kripto kapsamı ve kalıcı kimlik onayı bu motor sürümünün kararı değildir. Dayanak: [L1], [L4], [L5]; #82 kapsamı ve bu işin talimatı.
 
 ## 6. Günlük işleyiş (ilk sürüm)
 

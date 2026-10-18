@@ -8,6 +8,7 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ### Eklendi
 
+- Yeni motorun davranış sözleşmesi; bağımsız işlem, dönem, kayıt ve motor sınırları ile açık yöntem ve sahip kapıları belgelendi. Eski politikalar korundu. (#82)
 - Yeni modül varyantının siteye girmeden önce resmi olmayan gölge koşuda sinyal üretmesi ve çıktıları Levent'in onaylaması kuralı yazıldı. (#71)
 - Ajan araç çağrıları ve yanıtları kancayla denetleniyor; talimatlara eklenen satırlar STE denetiminden geçiyor. (#42, issue #52)
 - Sonsuz düzeltilmiş fiyattan sonraki 250 satırlık giriş engeli, tek hisse ve çift yollarında ayrı testlerle korunuyor. (#58)
