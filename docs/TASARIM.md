@@ -1075,6 +1075,17 @@ teknik girdisini kullanır (CLAUDE TEKNİK KARARI / YORUM; 19.10 kontrolü). Tak
 
 #### E1–E6 ve J01–J20 sınırları
 
+**S04 veri uyarlayıcısı (#85):** `veri.veri_hazirla`, kayıtlı görüntüyü `oku` ile doğrular;
+isteğin dönemini ve sembol sırasını koruyan düz piyasa kayıtları, kalite sonucu ve veri referansı döndürür.
+Kalite hesabı sembol/dönem süzmesinden önce bütün görüntüde yapılır. `veri.cift_girdileri` iki eski çift
+yolunun ortak hazırlama sahibidir; çift seçimi çağıranlarda kalır. `legacy_portfoy_v1` mevcut işlem/karantina
+maskesini ve son temiz AOF'u korur. `legacy_tansu_v1` buna sonsuz kapanış/AOF karantinasını ve sonlu,
+pozitif kapanış/AOF koşulunu ekler (§5.14). İlk geçerli fiyattan önce son fiyat tarihi boştur;
+sonraki eksik/karantinalı günlerde yalnız değerleme fiyatı ve tarihi taşınır, işlem bayrağı üretilmez.
+İstenen dönemin başı kalite geçmişini sıfırlamaz. Son gün sonrası veri değerlemeye katılmaz.
+Üyelik sürümü isteğin referansıdır; tarihli BIST 30 üyeliği #86'nın işidir.
+`tests/test_gelecek.py`, ortak çift hazırlığının her iki eski politika için önek değişmezliğini sınar.
+
 Motorlar sorumluluk sınırıdır; ayrı servis zorunluluğu değildir. E1–E3 düz veri kayıtlarıyla çalışır;
 panel, CLI, HTML veya kullanıcı arayüzü durumu hesaplama girdisinin yerine geçmez. Bu görev ayrımı
 taslağın E1–E6/J01–J20 tablolarının S01 sözleşmesidir (YORUM). Dayanak: [L1], [W8].
