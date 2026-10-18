@@ -89,6 +89,9 @@ Uyarı 4: 05.10 ön denemesi "4 ATR hedef" ve "kapanış EMA50 altı bozulma" ku
   - `tweet-2atr-stop-bant-al-sinyali-1987526117389922781` — 2 ATR stopunu (YORUM: "2ATR" stop çarpanı diye okundu) volatil piyasada trendde kalma gerekçesi olarak tekrar eder: "Volatil piyasalarda 2ATR'nin gücü sizi trendde tutar" (Ham). Görsel etiketi "STOP: 0.86 / ATR: 0.39 / AL" (görsel metni). Giriş fiyatı görselde yok, bu yüzden stop = giriş − 2 ATR doğrulanamaz.
   - `tweet-atr-acil-stop-iki-kosul-cikis-1992564976113143927` — Okunabilir acil stop etiketi: "EMERGENCY STOP: 117.12 / ATR: 3.08", grafikte GİRİŞ okunun altında; ayrıca "TS: 128.18" etiketi (anlamı yazılı değil) ve "S1+S2 %100" tam çıkış (görsel, açıldı). "Sistemin 2 koşulu sağlamayınca %100 satış yaptırdığı yerden düşüşe bakınız." (Ham). S1 ve S2 koşulları yazılı değil; giriş fiyatı görselde yok.
   - `tweet-atr-stop-kar-alma-1958800350435029372` — ATR ile stop koyma tavsiyesi, AVHOL için %6-7 kâr örneğiyle: "Satmadı iseniz ve zararda iseniz Atr ile stop koymadığınız için yine sözüm yok." (Ham). Çarpan yazılı değil; tekrar, sayısal parametre yok.
+  - `tweet-atr-14-tr-formulu-2atr-esigi-1987507728718205244` — Okuma (YORUM): Bu ATR açıklaması 14 günlük basit ortalamayı verir. Ham: "ATR periyodu 14 gün olarak varsayılır." ve "Elde edilen bu 14 günlük Gerçek Aralık (TR) değerlerinin basit hareketli ortalaması (SMA) alınarak 1 ATR değeri bulunur." İki katı: "2 ATR = 1 ATR Değeri (x) 2".
+  - `tweet-atr-stop-marubozu-hacim-delta-2044863959027925319` — Okuma (YORUM): ATR stop ile kâr alma veya hacim-delta incelemesi önerilir. Ham: "ATR bazlı stop ile sürekli kar alacaksınız" ve "marubozu düşük hacim fake'dir,yüksek hacim ise dönüş sinyalidir."
+  - `tweet-gunluk-kirilim-bosluk-atr-stop-2002784596455244247` — Okuma (YORUM): Kırılım ve boşluk anlatımında farklı ATR stop örneği. Ham: "günün ATR'si neyse, giriş yerinizden o kadar uzağa stop koyarak". Retest ve hacim teyidi: "Kırılımlarda hacim onayı ve retest bekleyin". Mevcut 2 ATR kuralını değiştirmez.
 
 ## K3. Gün sonu (kapanış) stopu: SMA250
 
@@ -197,11 +200,17 @@ Uyarı 4: 05.10 ön denemesi "4 ATR hedef" ve "kapanış EMA50 altı bozulma" ku
 - Kaynak güveni: İlke düzeyi (Ham). K1 ile tutarlı.
 - Ek kaynaklar (X arşivi, 16.10):
   - `tweet-volatiliteye-gore-pozisyon-buyuklugu-1987500065401733478` — K6'nın belirsizliğini kapatır: ters orantılı portföy ağırlığı değil, sabit TL risk için değişken lot: yüksek volatilite, stop mesafesi genişler, adet azalır; düşük volatilite, stop daralır, adet artabilir: "Her işlemde, piyasa koşulları ne olursa olsun, hesabınızın yalnızca önceden belirlenmiş bir yüzdesini riske atın." ve "Amacımız, her işlemde aynı TL riskini korumaktır." (Ham). Volatilite ölçüsü ve pencere yok (ATR anılmaz); K1 formülüyle tutarlı. Parametre: risk / işlem = sermayenin %1'i (örnek) (Ham)
+  - `tweet-garch-model-secim-aic-bic-ljung-box-1952739571466211673` — `tweet-garch-model-secim-aic-bic-ljung-box-1952739571466211673` (2025-08-05): GARCH model seçimi: "Daha düşük AIC/BIC → Daha iyi model" ve "Yüksek log-likelihood iyidir." (Ham). Kontrol önerisi: "Ljung-Box testi uygulanabilir." Sınır: "Bazen basit GARCH(1,1) yeterli ve stabildir."
+  - `tweet-garch-risk-basina-getiri-secimi-1940666220354654588` — `tweet-garch-risk-basina-getiri-secimi-1940666220354654588` (2025-07-03): Risk başına getiri seçimi: "Ardından her hissenin ortalama getirisi ile ortalama tahmini volatilitesini karşılaştırırsınız." ve "Aynı getiriyi daha az oynaklıkla sunan hisse, finansal olarak daha verimli bir seçimdir." (Ham).
+  - `tweet-garch-volatilite-kaliciligi-1899583516670611844` — `tweet-garch-volatilite-kaliciligi-1899583516670611844` (2025-03-11): Volatilite kalıcılığı örneği: "Şimdi yüksek beta ile BİST'de volatilitenin kalıcı olduğunu bir kere kabul edelim." (Ham). Okuma (YORUM): model katsayısı genel işlem eşiği olarak alınmaz.
+  - `tweet-garch-volatilite-tahmini-1940416146601111638` — `tweet-garch-volatilite-tahmini-1940416146601111638` (2025-07-02): Volatiliteye göre boyut ayarı: "Örneğin, volatilite artıyorsa pozisyonlar azaltılır, düşüyorsa artırılır." (Ham).
 
 ## K7. Pozisyon büyüklüğü çarpanı: Tam / Defansif (SMRTG)
 
 - Sahibi: B §8 (gp-48 görsel okuması, çarpan değerleri, serilerin kimliği, gözlem). Burada tekrar edilmez. (bilet 04, 14.10)
 - Risk yönünden okuma: Tansu'nun çarpan fikri vardır, hesaplanabilir tanımı yoktur; kural olarak uygulanamaz.
+- Ek kaynaklar (X arşivi, 18.10):
+  - `tweet-fiyat-volatilite-birlikte-artis-defans-2053089712877797538` — `tweet-fiyat-volatilite-birlikte-artis-defans-2053089712877797538` (2026-05-09): SMRTG risk örneği: "sistemim pozisyonu kapatıp defansif pozisyoon aldı." ve "Fiyat ve volatilite aynı anda artması pek istenilen bir durum değildir sonu genelde kötü biter." (Ham).
 
 ## K8. Volatilite şok freni (yeni alım yok)
 
@@ -226,6 +235,8 @@ Uyarı 4: 05.10 ön denemesi "4 ATR hedef" ve "kapanış EMA50 altı bozulma" ku
 - Kaynak güveni: Düşük (anlatı). İşlem kuralı ve atıf doğrulanmış değildir.
 - Ek kaynaklar (X arşivi, 16.10):
   - `tweet-kayip-telafi-asimetrisi-1874416190443114907` — Kayıp-telafi asimetrisi: %10 kayıptan dönmek için %11 civarı kazanç gerekir, sermayeyi korumak önceliktir: "90 liranızı tekrar 100 lira yapmak için %11.12 kazanmanız lazım." (Ham). Parametre: örnek kayıp = %10, telafi getirisi = %11.12 (Ham; tam değer 1/0,9-1 = %11,11).
+  - `tweet-butterfly-effect-early-signals-1914692264384774310` — Küçük olayların zincirleme fiyat etkisi tartışılır (22.04.2025, Ham): "Volatilite düşükse, ani sıçrama riskine karşı tetikte olun." Erken işaret: "Normalde birlikte hareket eden iki varlık ayrışmaya başlıyorsa, bir şeyler oluyor olabilir." Okuma (YORUM): İhtimal dili korunur; bu uyarılar otomatik giriş veya çıkış koşulu değildir.
+  - `tweet-getiri-normal-dagilim-uyumu-1878081476161327393` — Okuma (YORUM): Dağılımın uç değerleri için risk uyarısı. Ham: "Marjinal değerler para kazandırır ama terste de bırakır."
 
 ## K10. Likidite ve kapasite kapısı
 
@@ -266,6 +277,9 @@ Uyarı 4: 05.10 ön denemesi "4 ATR hedef" ve "kapanış EMA50 altı bozulma" ku
 
 - Sahibi: B §21 (görsel etiketleri, hedef formülü, R/R doğrulaması). Burada tekrar edilmez. (bilet 04, 14.10)
 - Risk/çıkış yönünden okuma: hedef formülü vardır; giriş seviyesi (KIRILMA 300.75, gorsel-paket-58 Ham) vardır; stop yoktur (B §21).
+- Ek kaynaklar (X arşivi, 18.10):
+  - `tweet-fincan-kulp-kirilma-hedef-stop-1986946515508543529` — `tweet-fincan-kulp-kirilma-hedef-stop-1986946515508543529` (2025-11-07): Örnek hedef: "fincan derinliği kadar bir yükseliş beklentisiyle hesaplanmış" (Ham). Stop: "kulp seviyesinin altına, 10.41 fiyatına bir" (Ham). Okuma (YORUM): Ham örneği giriş 12.53 ve hedef 16.10 verir; bunlar genel eşik değildir.
+  - `tweet-parabol-boyun-cizgisi-kirilim-hedef-stop-1953874288156594652` — `tweet-parabol-boyun-cizgisi-kirilim-hedef-stop-1953874288156594652` (2025-08-08): Ham: "fincan kulp vs vs". Açılan ADGYO görseli: "Neckline 35.78", "Entry ~ 35.78", "Target 44.84", "Stop 26.45", "ADGYO | R:R ≈ 0.97". Okuma (YORUM): parabol/boyun kırılımı örneğinin seviyeleridir; genel R/R kabul eşiği değiştirilmez.
 
 ## K15. Durum etiketleri ve geçersizlik (AKTİF, TAMAMLANDI, TEPKİ_VERDİ, BOZULDU, TAMAM, belirsiz)
 
@@ -285,6 +299,9 @@ Uyarı 4: 05.10 ön denemesi "4 ATR hedef" ve "kapanış EMA50 altı bozulma" ku
 ---
 
 # BÖLÜM 3. Süreç ve değerlendirme kuralları
+- Ek kaynaklar (X arşivi, 18.10):
+  - `tweet-dusen-trend-kirilim-pullback-onay-1949696229383770448` — Pullback taraması (28.07.2025): “İşte pullback taraması böyle yapılır” (Ham); “Düşen Trend Kırılımı + Pullback + Onay” (görsel metni). Okuma (YORUM): kırılımı pullback ve onay aşamaları izler.
+  - `tweet-dusen-trend-kirilimi-pullback-1950609712287797598` — Düşen trend sonrası pullback tercihi (30.07.2025): “inanın bana en iyisi düşeni kıran.” ve “bir de pull back yaptıktan sonra yakalarsanız tamamdır” (Ham).
 
 ## K18. Backtest ile giriş sadeleştirme ve işlem günlüğü
 
@@ -317,6 +334,10 @@ Uyarı 4: 05.10 ön denemesi "4 ATR hedef" ve "kapanış EMA50 altı bozulma" ku
 - Tansu'nun kanıtı: Yöntem önerisi. Sonuç yok.
 - Bedava günlük veri: Evet (1/3/5 gün için). MFE/MAE günlük High/Low ile yaklaşık hesaplanır.
 - Kaynak güveni: URL'li tweet (en güvenilir süreç kaynağı); metin Ham'da birebir. Orta-yüksek.
+- Ek kaynaklar (X arşivi, 18.10):
+  - `tweet-ab-testi-iki-hisse-karsilastirma-1958791121686904877` — Okuma (YORUM): İki benzer hisseyi küçük eşit yatırımlarla karşılaştırma önerisidir. Ham: "Burada yatırımcı küçük bir portföy bölümüyle iki tarafa da eşit miktarda yatırım yapabilir." Ölçütler: "Getiri oranı, oynaklık, işlem hacmi, sektör karşılaştırması, bilanço açıklamalarına tepki gibi ölçütler seçilebilir."
+  - `tweet-momentum-filtre-getiri-karsilastirma-1866225571761455225` — `tweet-momentum-filtre-getiri-karsilastirma-1866225571761455225` (2024-12-09, Ham): Ham: “Getiri grafiği hoşumuza giderse İlk grafikte optimizasyon da yaparak momentumu takip edebiliriz.” Okuma (YORUM): momentum trend takibi ve getiri karşılaştırması birlikte ele alınır.
+  - `tweet-z-skor-cift-islem-backtest-2049220756781904348` — `tweet-z-skor-cift-islem-backtest-2049220756781904348` (2026-04-28). Çift işlem çıktısına eşlik eden uyarı: "Backteste bakınız, hayat kurtarır:)" (Ham). Okuma (YORUM): seçilmiş geçmiş sınama örneğidir.
 
 ## K19. Teknik indikatör ve sistem değerlendirme kriterleri
 
@@ -340,6 +361,20 @@ Uyarı 4: 05.10 ön denemesi "4 ATR hedef" ve "kapanış EMA50 altı bozulma" ku
   - `tweet-backtest-asiri-uyum-kontrolu-1992410986989441388` — Aşırı uyum (overfitting) kontrolü: kazanan ve kaybeden işlem sayısı yaklaşık eşit olmalı; kazanma oranı %90 ve üstü şüpheli, %58 dengeli sayılır; kayıp işlemlerin büyüklüğüne ve R/R'ye bakılır. "Kar eden ve zarar eden işlem sayıları hemen hemen aynı olmalı ki overfitting tehlikesi ortadan kalkmış olsun" (Ham). Örnek GARAN: 31 işlem, 18 kâr, 13 zarar, %58,06, kümülatif %1153,73 (görsel, açıldı). Parametre: şüpheli kazanma oranı eşiği = %90 ve üzeri (Ham: "Eğer Kazanma Oranı 90% veya üzeri olsaydı"); örnek kazanma oranı = %58,06 = 18/31 (görsel, açıldı).
   - `tweet-gridsearch-profit-factor-3-bist-1908615000765190336` — Seçim eşiği olarak profit factor: gridsearch ile BIST'te profit factor 3'ün üstündeki hisseleri listeleyip onlarda işlem yapmak amaçlanmış. "gridsearch ile bist'te profit factor >3 olan hisseleri listeleyerek onlarda trade etmek" (Ham). YORUM: örneklem içi grid aramasıyla seçilen PF aşırı uyum riski taşır (bkz. K20). Parametre: profit factor eşiği = >3 (Ham).
   - `tweet-sharpe-orani-verimlilik-olcumu-1764308357639262709` — Sharpe oranı verimlilik ölçüsü olarak sunulur: (hisse getirisi − risksiz getiri) / hisse standart sapması; "yüksek sharpe ratio yakalamak için standart sapmanın düşük olduğu hisselerde trade yapmak önemlidir" (Ham). Eşik yok. K19 madde 7 (karmaşık metrik equity eğrisinin yerine geçmez) ile gerilim: Tansu Sharpe'ı önemli ölçüt sayar, yerine geçirmeyi söylemez (YORUM).
+  - `tweet-alfa-beta-sharpe-birlikte-okuma-1943613913314017615` — Okuma (YORUM): Alfa, beta ve Sharpe birlikte değerlendirilir. Ham: "Dolayısıyla ideal senaryo, yüksek alfa – düşük beta dengesidir." Ek ölçüt: "O yüzden sadece alfa değil, alfa ile birlikte yüksek Sharpe oranı da önemlidir."
+  - `tweet-alpha-sharpe-performans-olcumu-1914033217968996791` — Okuma (YORUM): Alfa endekse göre, Sharpe birim riske göre performansı okumak için kullanılır. Ham: "İdeal bir yatırım, pozitif alpha yaratmalı ve yüksek Sharpe Oranı ile bunu istikrarlı şekilde başarmalıdır." Sharpe formülü: "(Portföy Getirisi – Risksiz Getiri) / Volatilite".
+  - `tweet-faz-hisse-sharpe-sortino-filtresi-1878409818358043106` — `tweet-faz-hisse-sharpe-sortino-filtresi-1878409818358043106` (2025-01-12; Ham): Faz hisselerinde risk başına getiri teyidi: "Her faz hissede, Sharpe ve sortino oranlarını alacaksınız artık." ve "Yani tüm şartları iyi görünen bir hissede yüksek Sharpe ve sortino yakalarsanız, mis:)" (Ham).
+  - `tweet-getiri-dagilimi-iqr-aykiri-deger-1822549636013240372` — Okuma (YORUM): Yatırımcıya getiri dağılımı incelemesi önerilir. Ham: "Eğer day trader değilseniz, yatırımcı iseniz, senetlerin getiri dağılımına bakınız. Sıra dışı değerleri spot ediniz." Bu bir inceleme adımıdır.
+  - `tweet-getiri-yogunluk-grafigi-volatilite-1822922559236555075` — Okuma (YORUM): Uzun vadeli yatırımda volatilite incelemesi. Ham: "Uzun vadeli değer yatırımcısının hisse volatilitesini mutlaka göz önünde tutması taraftarıyım".
+  - `tweet-gunluk-getiri-dagilimi-grafik-kodu-1845204252421128436` — Okuma (YORUM): İşlem öncesi getiri dağılımı incelemesi. Ham: "En azından alacağınız hissenin günlük getirilerine şöyle bir bakın. Dağılımı görün."
+  - `tweet-level1-dip-tepe-profit-factor-tarama-1908666927045886118` — Level 1 dip-tepe için çalışma notu: "Level 1 dip-tepe algoritmasında profit factor > 3 hisseleri bul" (Ham, 05.04.2025). Okuma (YORUM): devamında BIST dip sinyallerini listeleme, grafik ve PNL kontrolü istenir; PF > 3 bu algoritmaya ait seçimdir.
+  - `tweet-normalize-getiri-ayni-sermaye-karsilastirma-1878078841471611279` — `tweet-normalize-getiri-ayni-sermaye-karsilastirma-1878078841471611279` (2025-01-11): Ham: "aynı başlangıç sermayesiyle yapılan yatırımlarda, yüzdesel olarak karşılaştıracağız." Okuma (YORUM): faz 1/2/3 hisseleri aynı başlangıç tarihi ve sermayesiyle normalize edilir.
+  - `tweet-normalize-performans-karsilastirma-1878114420573749502` — `tweet-normalize-performans-karsilastirma-1878114420573749502` (2025-01-11): Ham: "başlangıç değerini 100 birim kabul ederek". Okuma (YORUM): banka hisseleri ve XU100 örneği, mutlak fiyat yerine ortak başlangıçlı yüzde performans karşılaştırmasını gösterir.
+  - `tweet-portfoy-yonetimi-getiri-risk-temelleri-2099534451353006287` — `tweet-portfoy-yonetimi-getiri-risk-temelleri-2099534451353006287` (2026-09-14): Ham: "Portföyün yalnızca kazanç üretmesi yetmez, risksiz alternatife kıyasla aldığı ilave risk karşılığında yeterli ek getiri üretmesi gerekir." Okuma (YORUM): bileşik/yıllıklandırılmış ve reel getiri; volatilite, drawdown, benchmark ve varlıklar arası ilişkiler birlikte değerlendirilir. Ham: "Günlük getirilerin standart sapmasını hesapladıktan sonra bunu 252'nin karekökü ile çarparız."; "daha sonra Ticker.history() ile özellikle son tarihler için ikinci bir kontrol yapacağız." Okuma (YORUM): kaynak, download serisini history ile tarih bazında birleştirmeyi veri kalitesi adımı olarak anlatır; mevcut veri politikasına kendiliğinden aktarılmaz.
+  - `tweet-risk-ayarli-performans-metrikleri-2096615408161759499` — - `tweet-risk-ayarli-performans-metrikleri-2096615408161759499` (2026-09-06; Ham): Riskle değerlendirme (Ham): "Bir yatırım çok kazandırmış olabilir ama önemli olan o kazancı ne kadar risk alarak yaptığıdır." "Sharpe ve Sortino buna bakar, Alpha piyasadan daha iyi olup olmadığını, Beta da piyasadan ne kadar etkilendiğini gösterir."
+  - `tweet-risksiz-getiri-tahvil-yillik-volatilite-1878173923646349656` — - `tweet-risksiz-getiri-tahvil-yillik-volatilite-1878173923646349656` (2025-01-11; Ham): Ham: "risk primim 10 yıllık devlet tahvili faizi." Örnek veri dönemi: "işlem gören tüm günlük veriler üzerinden yapılıyor (2022-01-01'den 2025-01-10'a kadar)." Okuma (YORUM): günlük getirilerden yıllık volatilite hesaplama bağlamıdır; dönem kalıcı varsayılan değildir.
+  - `tweet-risksiz-oran-10-yillik-tahvil-1913880746973946124` — - `tweet-risksiz-oran-10-yillik-tahvil-1913880746973946124` (2025-04-20; Ham): Risksiz oran (Ham): "Risk free rate olduğu işin 10 yıllık DT faizi kullanacaksınız." "Abd için ise bu oran 0.05 olur." Okuma (YORUM): ikinci sayı gönderi tarihindeki örnektir, kalıcı oran değildir.
+  - `tweet-temettu-taramasi-sabit-buyume-riski-2089833787161039283` — Okuma (YORUM): Temettü taramasında sabit büyüme varsayımına uyarı. Ham: “sürdürülemez sabit büyüme varsayımını unutmayın.” ve “Döngüsel sektörlerde tek bir yılın yüksek temettüsü taranırsa, hisse 3 kat ucuz gibi görünür ama ertesi yıl temettü sıfıra inebilir.”
 
 ## K20. Probabilistik edge, fat tail, risk of ruin
 
@@ -354,6 +389,7 @@ Uyarı 4: 05.10 ön denemesi "4 ATR hedef" ve "kapanış EMA50 altı bozulma" ku
 - Ek kaynaklar (X arşivi, 16.10):
   - `tweet-dip-taramasi-backtest-overfitting-1908882937325531171` — Tansu'nun kendi kabul ölçüsü: optimizasyondan sonra yaklaşık %50 win rate parametrelerini kullanır; "Ben matrixdeki robotlarımda da optimizasyon sonrası %50 winrate olan parametreler ile yol alırım." (Ham). ASELS dip taraması: 21 işlem, 9 kazanan, win rate %42,86, PF 1,64, max drawdown −13,74, Sharpe 0,22 (görsel, açıldı). Ham, 9/21'i overfitting olmadığının göstergesi sayar; bu sonuç tek hisse, tek dönemdir. Parametre: optimizasyon sonrası kabul edilen win rate ≈ %50 (Ham; Tansu'nun kendi robotları için ifade, eşik değil).
   - `tweet-kumarbaz-iflasi-olasilik-avantaji-1874240306461512014` — Kumarbaz iflası: kazanma ihtimali %49 ise parayı ikiye katlama ihtimali %1.80, %51 ise %98: "kazanma ihtimali %51 kaybetme ihtimali %49 ise paranızı x2 yapma ihtimaliniz %98" (Ham). Parametre: kazanma olasılığı 0,49 → x2 olasılığı %1.80; 0,51 → %98 (Ham); bahis birimi sayısı yazılmamış, hesap 100 birimde tutuyor: 1/(1+(0,51/0,49)^100) = %1,80 (YORUM, bizim hesabımız).
+  - `tweet-rastgele-yuruyus-karekok-belirsizlik-1977458197158932959` — - `tweet-rastgele-yuruyus-karekok-belirsizlik-1977458197158932959` (2025-10-12; Ham): Risk ilkesi (Ham): "Stop loss kullanmak, portföyü çeşitlendirmek, pozisyon büyüklüğünü ayarlamak hep bu rastgelelikten korunmak içindir." Okuma (YORUM): rastgele yürüyüş eğitiminden risk yönetimi gerekçesi çıkarır; belirli bir stop değeri olarak kullanılmaz.
 
 ## K21. Python ile doğrulama ve yanlışlama; Williams %R sonucu
 
@@ -367,6 +403,10 @@ Uyarı 4: 05.10 ön denemesi "4 ATR hedef" ve "kapanış EMA50 altı bozulma" ku
 - Ek kaynaklar (X arşivi, 16.10):
   - `tweet-williams-r-macd-backtest-1845098408727461989` — Tansu'nun kendi Williams %R sonucu (K21'de şimdiye dek yalnız bizim backtestimiz var): BTC, W%R(14) ile MACD birlikte 100.000 $ için 3.546 $ (%3,5) kazandırdı, al-tut %42,64; yalnız %R: strateji %81, al-tut %85. "%R ile MACD, BTC'de felaket bir senaryo yarattı. Maalesef iyi çalışmadı." (Ham). Grafikler (görsel, açıldı): 2024-01–2024-10 üç sinyal (al ≈12.01, sat ≈26.01, al ≈28.08), strateji eğrisi ≈103.000, al-tut ≈142.000; yalnız %R grafiği 2023-11'den, başlangıç 1.000, strateji ≈1.800, al-tut ≈1.850. %R çizgileri −20 (SELL, aşırı alım) ve −80 (BUY, aşırı satım). MACD periyotları, MACD'nin rolü (YORUM: filtre), maliyet, kayma ve stop yok. Tansu kötü sonucu kendisi paylaşır (seçilmemiş olumsuz vaka). BTC kripto, BIST evreni dışı: kripto kapsamı, karar Levent'te bekliyor. Parametre: Williams %R periyodu = 14; aşırı alım çizgisi = −20; aşırı satım çizgisi = −80 (görsel, açıldı)
   - `tweet-williams-r-strateji-backtest-1844502539414511699` — Tansu'nun ikinci Williams %R sonucu: strateji eğrisi al-tuttan çok yüksek bitti. "Hayırlı uğurlu olsun:D" (Ham). Görsel (görsel, açıldı): başlık "No Strategy Gain vs WR Strategy Gain"; 2023-11–2024-10, başlangıç 1.000, WR stratejisi ≈2.750, strateji yok ≈1.330 (yaklaşık okuma); W%R çizgileri −20 ve −80; fiyat ≈1.800–4.000. Sembol yazılı değil (YORUM: fiyat yolundan ETH). Kripto, BIST dışı: kripto kapsamı, karar Levent'te bekliyor. Önceki BTC sonucuyla (MACD ile %3,5; yalnız %R %81 ve al-tut %85) birlikte karışık kanıttır; tek varlık, maliyet ve kayma yok, giriş-çıkış kuralı yazılı değil.
+  - `tweet-derinlik-fiyat-korelasyon-analizi-1983480217894060348` — Derinlik varsayımını sınayan 28.10.2025 verili çalışma (29.10.2025): “EN ÖNEMLİ BULGU: İLİŞKİ ÇOK ZAYIF!” ve “Busebep ile kademe analizi büyük önem taşımaktadır.” (Ham). Okuma (YORUM): tek günün korelasyon sonucu genel bir fiyat tahmin kuralı olarak alınmaz.
+  - `tweet-derinlik-fiyat-korelasyon-analizi-1983528060700778778` — Derinlik çalışmasının grafik açıklaması (29.10.2025): “Derinlik verisi tek başına güvenilir değil.” ve “Bir hissede çok alış lotu olması, o hissenin yükseleceği anlamına gelmiyor.” (Ham). Okuma (YORUM): 28 Ekim verisine ait bulgu, derinlikten kesin yön sonucu çıkarma varsayımını sınırlar.
+  - `tweet-granger-nedensellik-test-kosullari-1922963356362703307` — Okuma (YORUM): Granger uygulaması için durağanlık ve gecikme seçimi önerilir. Ham: "Bu yüzden önce ADF testi ile serilerin durağan olup olmadığı kontrol edilmelidir." ve "AIC/BIC kriterleri ile belirlenebilir."
+  - `tweet-marubozu-volatilite-bandi-taramasi-1843736658199622086` — Marubozu ve K Volatility kodu için uyarı: "Mutlaka göz ile kontrol edin mum boyları kişiselleştirilebilir. Ben kendime göre yazdım." (Ham, 08.10.2024). Okuma (YORUM): paylaşımın mum boyu ayarları evrensel formasyon standardı sayılmaz.
 
 ## K22. Süreç ilkeleri: kitap sentezi, algoritma tasarımı, kendini yenileyen sistem, kağıt-kalem, 116
 
@@ -383,6 +423,9 @@ Uyarı 4: 05.10 ön denemesi "4 ATR hedef" ve "kapanış EMA50 altı bozulma" ku
 - Tansu'nun kanıtı: Yok.
 - Bedava günlük veri: Evet.
 - Kaynak güveni: G-116 NOTEBOOKLM görseli (birinci el; genel). Notlar Ham. Kâğıt-kalem notu düşük.
+- Ek kaynaklar (X arşivi, 18.10):
+  - `tweet-talep-bolgesinden-donus-2085813886062649480` — Okuma (YORUM): Arz-talep temelli sade analiz vurgusu. Ham: “Dediğim gibi herşey arz talep dostlar”, “Kafanızı yüzlerce indikatör ile yormayın” ve “Basit düşünün”.
+  - `tweet-trend-takibi-tepe-dip-avlamama-2020521053739467058` — Okuma (YORUM): Trend takibinde uç noktayı yakalama iddiasından kaçınma. Ham: “Asıl amacımız ASLA TEPE VEYA DİP NOKTALARI YAKALAMAYA ÇALIŞMAK DEĞİLDİR.” ve “akıntının (momentumun) yönünü tayin edip o dalgayı sürmeye odaklanmalısınız.”
 
 ## K23. Kesinlik dili, 5 kapı ve R/R eşiği
 
@@ -398,6 +441,7 @@ Uyarı 4: 05.10 ön denemesi "4 ATR hedef" ve "kapanış EMA50 altı bozulma" ku
 - Kaynak güveni: Ham. Orta.
 - Ek kaynaklar (X arşivi, 16.10):
   - `tweet-cok-konusulan-hisseden-cikis-1790005102301823000` — Kesinlik dili kaçma sinyali ilkesine benzer bir ilke: enerji hisseleri örneğinde (13.05.2024) "Bir konu borsada çok dillendirilirse arkanıza bakmadan oradan kaçın." (Ham). Gerekçe: "Malı satacak adam arıyorlardır. Arz talep!" Ölçülür koşul, eşik ve çıkış zamanı yok.
+  - `tweet-talep-bolgesi-risk-getiri-bakisi-2003179205014802645` — Okuma (YORUM): Talep bölgesindeki fırsat risk ve potansiyel getiriyle değerlendirilir. Ham: “Önemli olan talep bölgesinde yakalamak” ve “Alacağım riske bakarım bir de potansiyel getirisine.”
 
 ## K24. Başarı ölçütleri ve başarısızlık örnekleri: ML isabet, scorecard, stat-arb, 118
 
@@ -414,6 +458,11 @@ Uyarı 4: 05.10 ön denemesi "4 ATR hedef" ve "kapanış EMA50 altı bozulma" ku
 - Lojistik regresyon filtresi ve R/R koşulu (`gorsel-paket-129-doas-lojistik-regresyon-hacim-rsi-filtreli-strateji`; Ham Tansu'nun metni, görsel birinci el; bilet 04, 14.10): hacim ve RSI verisiyle lojistik regresyon modeli; doğruluk %55,00, kesinlik %55,31, duyarlılık %45,44; Tansu: finansal piyasada %70 harika, %90 mümkün değil; modeli "yeni yazılmış, üzerinde hiç çalışılmamış" diye anlatır. Kural cümlesi (birebir): "%55 başarı oranıyla para kazanmak için, her işlemde Risk/Ödül oranını en az 1:1.5 (örneğin %2 Stop, %3 Kar Al) olarak ayarlamak gerekir." Görsel: `DOAS.IS - ML + Hacim + RSI Filtreli Strateji`; EMA 21, RSI paneli (30, 70 çizgileri, "Trend Ayrımı (50)"), "SAT" ve "Güçlü AL (Vol+RSI)" işaretleri; doğruluk sayıları görselde yok, özellik ve hedef değişken tanımı yok, örneklem dışı doğrulama yok. R/R ≥ 1:1,5 eşiği K23'teki 1:2 veya 1:3 eşiğinden farklıdır; bağlamlar ayrı (K23 günlük işlem 5 kapısı, bu not ML isabet oranı); çözülmedi, K23 değişmedi.
 - Bedava günlük veri: Evet.
 - Kaynak güveni: G-118 NOTEBOOKLM görseli (birinci el); diğer görseller ve Ham BİRİNCİ EL (yüksek). Wilson aralığı ve baz oran yorumları bizim hesabımızdır (YORUM).
+- Ek kaynaklar (X arşivi, 18.10):
+  - `tweet-hata-metrigi-model-secimi-1795910557695877254` — Okuma (YORUM): Paylaşılan araştırmanın model seçim ölçütü işlem sistemi kârlılığıyla aynı ölçüt değildir. Ham: "Bildiğiniz üzere en iyi model, hata metriklerinin (MAE, MSE, RMSE) minimum olduğu modele göre belirlenir." (29.05.2024). SSE Composite ve CSI 300 araştırması bağlamı korunur.
+  - `tweet-indikator-durumu-ikili-ozellik-1860463695790305656` — Okuma (YORUM): Model girdilerinin anlamına açıklık getiren kaynak. Ham: "Bağımsız değişkenler, fiyatın teknik göstergelere göre durumlarıdır. 0 ve 1 değerleri, strateji koşullarına göre belirlenmiştir." (23.11.2024).
+  - `tweet-knn-yukselis-dusus-siniflama-1864342754844660140` — Okuma (YORUM): Sınıflandırma hedefi ve mesafe ölçüsü açıklanır. Ham: "Bağımlı değişkenim yükselecek ya da düşecek" ve "Öklid uzaklığı ile mesafeleri ölçüp sınıflandırıyorum." (04.12.2024). Bunlar doğruluk veya kârlılık kanıtı değildir.
+  - `tweet-winrate-80-tarama-backtest-tablosu-2092745592661246196` — `tweet-winrate-80-tarama-backtest-tablosu-2092745592661246196` (2026-08-26). Deneysel tarama filtresi: "Winrate %80'den büyük olanları tarattım" (Ham). Sinyal yaşı ve yapı teyidi: "Diğer hisselerin al sinyalleri çoktan gelmiş, risk almayalım." ve "Bu sistemi talep toplama bölgesi gibi analizlerle beraber kullanırız" (Ham).
 
 ## K25. ATR basamak merdiveni: kademeli kâr alma ve yalnız yukarı giden stop (1–5 ATR)
 
@@ -495,6 +544,7 @@ Uyarı 4: 05.10 ön denemesi "4 ATR hedef" ve "kapanış EMA50 altı bozulma" ku
   - `tweet-pozisyon-medyan-hacim-tasfiye-suresi-2096187367778370014` — Likidasyon ölçüsü: "pozisyon büyüklüğünü hissenin 20 günlük medyan TL işlem hacmine oranlayıp, farklı piyasa katılım oranlarında teorik tasfiye süresini hesaplıyoruz" (Ham). Geçmiş hacim taban ve stres günlerinde yanıltır; spread, derinlik ve fiyat aralığındaki alış/satış miktarı eklenmeli (Ham). Fon analizi kapsamı: karar Levent'te bekliyor.
   - `tweet-ppf-secim-likidite-karsi-taraf-cesitlendirme-2099814980212134159` — Para piyasası fonu seçimi: tek ters repoya, tek pay senedi teminatına veya tek karşı tarafa yüklenmeyen, likit, kamu kâğıdı tamponlu fon; hızlı para çıkışı zorunlu satış yaratır: "Aynı getiriyi hangisi daha temiz ve daha düşük yapısal riskle üretiyor sorusunu soralım." (Ham). Eşik yok; Tansu metni "ChatGPT dilinde" diye anar; fon analizi kapsamı: karar Levent'te bekliyor.
   - `tweet-viop-hedge-net-beta-maruziyeti-2096700133731643859` — THF net maruziyet örneği, 06.09.2026 (K26 net maruziyet maddesiyle aynı yöntem): "Kağıt üzerinde %88 hisse taşımasına rağmen VİOP short pozisyonları sonrası net hisse maruziyeti yaklaşık %65." (Ham). Portföyün yaklaşık %47'si 9 hissede; beta etkisiyle net piyasa yön riski yaklaşık %38 (Ham). Görsel (görsel, açıldı): brüt hisse %88,23; VİOP short/NAV %22,79; basit hedge oranı %25,84; net hisse %65,44; portföy beta 0,70; beta ayarlı hedge %38,19; net beta maruziyeti %38,07; veri güveni ORTA. KAP türev tablosu (görsel metni): 36 satır, 35 SHORT ve 1 LONG (F_SASA0926, ₺242 Mn); en büyüğü F_XU0301026 short ₺7,26 Mr. Kontrol: 88,23 − 22,79 = 65,44 (K26 net formülüyle uyumlu). YORUM: 0,70 × 88,23 − 22,79 = 38,97, görseldeki 38,07 değildir; beta ayarlı formül belirsiz. Fon analizi kapsamı: karar Levent'te bekliyor. Parametre: THF 06.09.2026: brüt hisse %88,23; VİOP short/NAV %22,79; net hisse %65,44; portföy beta 0,70; net beta maruziyeti %38,07 (görsel, açıldı)
+  - `tweet-fon-akis-hizi-ivme-velocity-2099959209467211874` — `tweet-fon-akis-hizi-ivme-velocity-2099959209467211874` (2026-09-15): Akış ivmesi: "Hatta yönünden çok, o hareketin ne kadar hızlandığına önem vermek gerekir." ve "Bu tek başına al-sat sinyali değil elbette." (Ham). Okuma (YORUM): TLY için 5 ve 20 günlük çıkış karşılaştırması örnektir.
 
 ## K27. Fon risk radarı: para akışı, AUM, yoğunlaşma ve likidite erken uyarı zinciri (hisse dışı fon analizi; kapsam kararı Levent'te bekliyor)
 
@@ -529,6 +579,12 @@ Uyarı 4: 05.10 ön denemesi "4 ATR hedef" ve "kapanış EMA50 altı bozulma" ku
 - Tansu'nun kanıtı: Yok. Örnek fonlar (DOH, THF, TLY, LTL, TP2 ve diğerleri) tek tek okunur; sınama ve sonuç yok.
 - Bedava günlük veri: Hayır. TEFAS fon akışı ve KAP portföy verisi TASARIM'ın günlük hisse OHLCV verisinde yok.
 - Kaynak güveni: Ham, birinci el. İlke ve uyarı düzeyi; eşik yok. Hazırlık X.
+- Ek kaynaklar (X arşivi, 18.10):
+  - `tweet-aum-fiyat-farki-para-girisi-rotasyon-2099908239471116731` — Okuma (YORUM): Fon fiyatı, AUM ve para akışı birlikte okunur; sınıflar arası çıkış-giriş birebir transfer sayılmaz. Ham: "Fon büyüklüğünün artması sadece fonun değer kazanmasından kaynaklanmıyor." ve "Veriler böyle birebir bir transferi göstermiyor."
+  - `tweet-fon-inceleme-iki-asamali-cerceve-2096196385636815320` — `tweet-fon-inceleme-iki-asamali-cerceve-2096196385636815320` (2026-09-05; Ham): Fon içi inceleme: "fon ne taşıyor, konsantrasyonu ne, portföyü nasıl değişiyor, likiditesi ve forced-selling riski nedir." (Ham). Okuma (YORUM): önce piyasa akışı ve fon risk/getiri profili, sonra fon içeriği incelenir.
+  - `tweet-fon-para-giris-hizi-yavaslama-uyarisi-2096257686266343893` — `tweet-fon-para-giris-hizi-yavaslama-uyarisi-2096257686266343893` (2026-09-05; Ham): Akış hızına dikkat: "Para hızlı giriyorsa iştah vardır; yavaşlıyorsa tereddüt başlamıştır." ve "Hele bir de çıkış hızı artıyorsa, fiyat hâlâ güçlü görünse bile ben temkinli olurum." (Ham).
+  - `tweet-granger-para-akisi-getiri-nedensellik-2101627771524927545` — Okuma (YORUM): THF incelemesi getiri kaynağına ve sürdürülebilirliğe bakmayı önerir. Ham: "Fon analizinde sadece getiriye değil, getirinin kaynağına ve sürdürülebilirliğine bakmak gerekir."
+  - `tweet-para-girisi-getiri-ayri-olcum-2099588429470187691` — `tweet-para-girisi-getiri-ayri-olcum-2099588429470187691` (2026-09-14): Ham: "para girişini fon talebinin gücü olarak, getiriyi ise ayrı bir performans göstergesi olarak değerlendiriyorum." Okuma (YORUM): THF örneğinde hedge ve net maruziyet, para girişi-getiri ilişkisinde ayrı izlenir.
 
 ## K28. Momentum listesinde marjı görünce kâr al (günlük hedef %3)
 
@@ -550,6 +606,8 @@ Uyarı 4: 05.10 ön denemesi "4 ATR hedef" ve "kapanış EMA50 altı bozulma" ku
 - Tansu'nun kanıtı: 12 hisselik tek tablo, 3 gün; seçilmiş dönem. DEY gerçekleşmiş tepedir (sonradan bilinir); tepede satış mümkün değildir, tablo "marjı görünce sat" kuralının sonucu değildir (YORUM).
 - Bedava günlük veri: Kısmen. Günlük High ve Close ile 3 günlük sonuç ve DEY hesaplanır. "Marjı görünce" satışı gün içi izleme ister. TASARIM §3 süre çıkışını ilk sürümün dışında tutar; iz süren stop ve kısmi kâr yalnız EMA ailesinin varyantlarındadır (KURALLAR §3).
 - Kaynak güveni: Ham ve görsel birinci el; eşik yok: düşük-orta. Hazırlık K.
+- Ek kaynaklar (X arşivi, 18.10):
+  - `tweet-tobo-tarama-al-sinyali-1928156672142254465` — Okuma (YORUM): PKART grafikleriyle günlük kazanç sonrası yeni taramayı bekleme ifadesi. Ham: “Al günlük banka faizini geç kenara yeni taramaları bekle:)”. Okuma (YORUM): Bu ifade mevcut yüzde hedefini yeniden tanımlamaz.
 
 ## K29. X arşivi kısa kayıtları (16.10)
 
@@ -571,6 +629,10 @@ Uyarı 4: 05.10 ön denemesi "4 ATR hedef" ve "kapanış EMA50 altı bozulma" ku
   - `tweet-tarama-sonrasi-grafik-teyidi-1841012769706905780` — Tarama listesi aday listesidir; grafik açılıp karar verilir: "Tarama sonucu çıkan her hisse alınmaz.taramada kullandığın parametreler her hisse için uygun değildir." ve "Tarama yelpaze daraltır." (Ham). Hisse bazlı parametre ihtiyacını destekleyen bir cümledir; sayı, eşik ve yöntem yok. Levent kararı 16.10: hisse bazında optimize edilir; uygulama TASARIM 5.14 (`tansu-sinama`).
   - `tweet-tarama-sonucu-gozle-dogrulama-1839014128201118148` — Yanıt (@lvntsahn; üst gönderi notta yok): taramadan çıkan sonuç göz ile incelenir ve backtest ile optimizasyon yolu açık bırakılır: "Ne olursa olsun taramadan çıkan sonuçların göz ile incelenmesi gerekir. En etkili backtest yoludur." (Ham). Sayı, eşik, optimizasyon aralığı ve ölçüt yok; göz incelemesi ölçülebilir kural değildir (YORUM). Levent kararı 16.10: hisse bazında optimize edilir; uygulama TASARIM 5.14 (`tansu-sinama`).
   - `tweet-yuzde-bes-kar-alma-kurali-2023354556990591279` — Tekrar: %5 kâr alma eşiği (Tansu'nun yanıt gönderisi, 16.02.2026). "Wall %5 i görünce kar almak lazım. BİST'te kar almadan ilerlemek büyük risk" (Ham). Yeni olan gerekçe cümlesidir (kâr almadan ilerlemek BIST'te risk). "Wall" hisse kodu mu belli değil (YORUM); %5 fiyat getirisi mi belli değil; kurulum, giriş, tam veya kısmi çıkış ve stop yok; üst gönderi notta yok.
+
+- Hacim profili ile AB=CD hedef birleşiminde satış örneği (`tweet-rolatif-momentum-z-skoru-donus-onayi-2092655008948834306`; 26.08.2026, Ham): "POC'u geçerse 144-146'ya gitmek ister. VAL aynı zamanda 147"; "Küçük resimde ABCD hedefi de 148"; "Bir nevi confluence alanı o bölge. Gelirse satmakta fayda var". Okuma (YORUM): Rölatif momentum örnekleri dizisindeki tarihli satış bölgesi yorumudur. Sayılar örneğe aittir; genel hedef formülü, bant genişliği veya satış oranı olarak kullanılmaz. Bu koşullu hedef yorumu, çift rotasyonunun mevcut çıkışını değiştirmez. Hazırlık X.
+- Kişisel yatırım dışlama ve satış notu (`tweet-yatirim-yapma-filtreleri-kendime-not-1794036593734418591`; 24.05.2024, Ham): "Kendime not"; "sharpe net kar marjı 2 den küçük şirketlere,"; "2-patron şirketlerine,"; "3-büyüme şirketlerine YATIRIM YAPMA"; "4-koç grubundan şaşma"; "5-şirkete aşık olma"; "6-vakti zamanı gelince yapıştır satışı, ACIMA"; "7-bu ülkede uzun vadeli yatırımcı olunmaz". Okuma (YORUM): Bunlar kişisel tercihlerdir. İlk satırın metrik tanımı belirsizdir; 2 sayısı Sharpe veya net kâr marjı eşiği diye ayrıştırılmaz. Kişisel kapsam ve satış zamanı ifadeleri otomatik evren veya çıkış kuralına çevrilmez. Hazırlık X.
+
 
 ## K30. Veriyi periyot kapanışında çek (tamamlanmış çubuk)
 
@@ -609,6 +671,8 @@ Uyarı 4: 05.10 ön denemesi "4 ATR hedef" ve "kapanış EMA50 altı bozulma" ku
 - Tansu'nun kanıtı: Tek örnek, XU100 SMA 35/240, al-tutun altında. Sağlam ve tuzak bölge örnekleri varsayımsaldır (Ham "örneğin"); ısı haritası veya sayı yok.
 - Bedava günlük veri: Evet (XU100.IS günlük kapanış, ızgara taraması).
 - Kaynak güveni: Orta. Ham ve görsel birinci el; ilke düzeyi, ölçü yok. Hazırlık K.
+- Ek kaynaklar (X arşivi, 18.10):
+  - `tweet-hareketli-ortalama-kesisim-optimizasyonu-2071142623520215512` — Okuma (YORUM): Sabit golden cross yerine kesişimlerin hangi rejimi gösterdiğini araştırma önerisi. Ham: "optimization should actually be used to analyze which moving average crossovers indicate the formation of bearish or bullish markets".
 
 ## K32. Under 30 Over 30: 1,5 R sonrası giriş fiyatına dönüşte başabaş çıkışı
 
@@ -751,3 +815,33 @@ Grup 6. Dil (K23)
 - [ ] Çıktıda kesinlik dili yok: koşul, olasılık, invalidation, risk/ödül.
 
 Uygulama sırası ve durumu: TASARIM §7 (K1–K3 tamamlandı).
+
+---
+
+## K34. Grid alım-satım: yüzde ızgarası ve ATR stop kodu
+
+- Kaynak: `tweet-grid-alim-satim-atr-stop-loss-kodu-1839747420302831898` (27.09.2024; Ham; Tansu'nun X gönderisi; G1, G2 ve G3 açıldı).
+- Tansu'nun ifadesi (verbatim): "Bu stratejiyi hiç kullanmadığım ve bir talep üzerine yazdığımdan çok detaya inmedim." Ham ayrıca geliştirmeyi okuyucuya bırakır: "Kurgu kimine basit gelebilir, geliştirmek sizin elinizde."
+- Tanım (açılan kaynak kodunun okuması, YORUM):
+  1. G1, her çubuk için yüksek-düşük aralığı ile önceki kapanıştan uzaklıkların en büyüğünü alır. ATR bu serinin basit hareketli ortalamasıdır: `atr = tr.rolling(self.atr_period).mean()`.
+  2. Izgara başlangıç fiyatının altına eşit yüzde adımları koyar: `lower_price = self.initial_price * (1 - (self.grid_size / 100) * level)`. Döngü `range(price_levels)` ile sıfırdan başlar.
+  3. G2, `if current_price <= price:` koşulunda alış mesajı yazar. Satış fiyatı: `sell_price = price * (1 + (self.grid_size / 100))`.
+  4. Stop, güncel fiyat ile ATR üzerinden belirlenir: `self.stop_loss = current_price - (atr_value * self.atr_multiplier)`.
+  5. Stop kontrolü: `if self.stop_loss and current_price < self.stop_loss:`. Bu koşulda kapanış mesajı yazılır. Eşitlik stop koşuluna dahil değildir.
+  6. G3 bir aylık günlük verinin son kapanışını hem başlangıç hem güncel fiyat yapar. Izgara, alış ve stop kontrolünü bu tek fiyatla çağırır. Okuma (YORUM): Bu gösterim, canlı emir iletimi veya ardışık geçmiş işlem simülasyonu değildir.
+- Parametreler (G3'teki örnek çağrı; genel kural seçimi değildir):
+
+| parametre | örnek değer | kaynak |
+|---|---|---|
+| ızgara aralığı | %0,4 | `grid_size=0.4`, G3 açıldı |
+| alış büyüklüğü | 50 lot | `position_size=50`, G3; G2 mesajında lot |
+| ATR periyodu | 14 | `atr_period=14`, G3 açıldı |
+| ATR yumuşatması | basit ortalama | `rolling(self.atr_period).mean()`, G1 açıldı |
+| stop çarpanı | 2 | `atr_multiplier=2`, G3 açıldı |
+| ızgara seviye sayısı | 10 | `bot.create_grid(10)`, G3 açıldı |
+| veri | bir ay, günlük | G3, `period="1mo", interval="1d"` |
+
+- Belirsiz kalanlar (YORUM): Kaynak örneği pozisyon kaydını, gerçekleşen satış dolumunu, aynı seviyenin tekrar alınmasını, sermaye sınırını ve işlem maliyetini tanımlayan bir işlem yaşam döngüsü sunmaz. Stop tek nesne alanıdır; birden çok alımın stop sahipliği açıklığa kavuşturulmadan uygulanamaz. Bunlar kaynak okumasının sınırlarıdır.
+- Tansu'nun kanıtı: Ham, bu stratejiyi hiç kullanmadığını söyler. Görseller kod örneğidir; kaynakta bir işlem sonuç tablosu gösterilmez. Bu kodu çalıştırıp başarı sonucu ürettiğimiz iddia edilmez.
+- Günlük bedava veriyle uygulanabilir mi: YORUM: ATR ve ızgara fiyatları günlük yüksek, düşük ve kapanışla hesaplanabilir. Gün içindeki seviye geçiş sırası ile gerçekleşen dolum, günlük veriden aynı kesinlikte çıkarılamaz. Tam işlem modeli için yukarıdaki açık noktalar gerekir.
+- Kaynak güveni: Ham ve açılan üç kod görseli birinci eldir. Hesap ifadeleri açık, uygulama gösterim düzeyindedir. Hazırlık K.
