@@ -479,6 +479,53 @@ def bolme(islemler, hacimler=None):
     )["masraf"][0.003]
 
 
+def test_nakit_yeterliyken_on_birinci_pozisyon_reddedilir():
+    # TASARIM 5.6: risk sınırı her hisseyi 10 adet yapar; 10 giriş 10030 TL tutar, nakit engel değildir.
+    t = pd.DataFrame(
+        {
+            "sembol": [f"A{i:02d}" for i in range(11)],
+            "sinyal_tarih": pd.Timestamp("2026-02-02"),
+            "giris_tarih": pd.Timestamp("2026-02-03"),
+            "cikis_tarih": pd.Timestamp("2026-02-05"),
+            "giris_fiyat": 100.0,
+            "cikis_fiyat": 100.0,
+            "adet": 1,
+            "planlanan_risk": 1000.0,
+            "neden": "veri_sonu",
+        }
+    )
+    s = bolme(t)
+    assert s["islemler"]["sembol"].tolist() == [f"A{i:02d}" for i in range(10)]
+    assert s["islemler"]["adet"].tolist() == [10] * 10
+    assert s["islemler"]["bagli"].tolist() == ["risk"] * 10
+    assert s["reddedilen"] == 1
+
+
+def test_giris_gunu_stop_portfoy_nakdini_ve_yerleri_serbest_birakir():
+    # TASARIM 5.3, 5.6: ilk gün 9970 adet; alış 999991, stop geliri 954248,64 -> nakit 954257,64.
+    t = pd.DataFrame(
+        {
+            "sembol": [f"A{i}" for i in range(10)] + ["Z"],
+            "sinyal_tarih": [pd.Timestamp("2026-02-02")] * 10
+            + [pd.Timestamp("2026-02-03")],
+            "giris_tarih": [pd.Timestamp("2026-02-03")] * 10
+            + [pd.Timestamp("2026-02-04")],
+            "cikis_tarih": [pd.Timestamp("2026-02-03")] * 10
+            + [pd.Timestamp("2026-02-05")],
+            "giris_fiyat": 100.0,
+            "cikis_fiyat": [96.0] * 10 + [100.0],
+            "adet": 1,
+            "planlanan_risk": 4.0,
+            "neden": ["stop"] * 10 + ["veri_sonu"],
+        }
+    )
+    s = bolme(t)
+    assert s["ozkaynak"].loc["2026-02-03"] == pytest.approx(954257.64)
+    assert s["yatirim"].loc["2026-02-03"] == 0.0
+    assert s["reddedilen"] == 0
+    assert s["islemler"].iloc[-1][["sembol", "adet"]].tolist() == ["Z", 954]
+
+
 def test_ayni_gun_once_cikis_sonra_giris_sonra_degerleme():
     # TASARIM 5.3, 5.6: on dolu yer çıkışlarla boşalır; yeni giriş kapanışta değerlenir.
     t = pd.DataFrame(

@@ -8,6 +8,7 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ### Eklendi
 
+- Yedi hesap sınırı sentetik sınır testleriyle korunuyor; kural kaydı durum testi kapsamı korunarak hızlandırıldı. (#109)
 - Yeni motorun davranış sözleşmesi; bağımsız işlem, dönem, kayıt ve motor sınırları ile açık yöntem ve sahip kapıları belgelendi. Eski politikalar korundu. (#82)
 - Modül 1'in dokuz parçasını sade Türkçeyle, tarihli Tansu alıntıları ve henüz olmayan işlerin işaretleriyle açıklayan bağımsız sayfa eklendi. (#72)
 - Güncel taramadaki 47 notun 48 görseli yeniden okundu; kurtarılan metinler ve okunamayan parçaların gerekçeleri kaydedildi. (#62)

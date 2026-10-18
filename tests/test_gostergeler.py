@@ -104,6 +104,15 @@ def test_piyasa_durumu_kapanis_sma_ustunde_mi():
     ]
 
 
+def test_piyasa_durumu_sma_esitliginde_olumlu_degil():
+    # TASARIM 6.3: sabit 100 serisinde dolu SMA da 100; eşitlik olumlu piyasa değildir.
+    assert gostergeler.piyasa_durumu(pd.Series([100.0] * 3), 2).tolist() == [
+        False,
+        False,
+        False,
+    ]
+
+
 def test_rsi_wilder_ilk_deger_ilk_n_degisimin_ortalamasi():
     # n=3, kapanış [10; 11; 10; 12; 11; 13]. Değişimler: +1; -1; +2; -1; +2.
     # İlk üç değişim (+1; -1; +2): kazanç ortalaması (1+0+2)/3 = 1; kayıp ortalaması (0+1+0)/3 = 1/3.
