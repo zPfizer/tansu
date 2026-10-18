@@ -339,13 +339,21 @@ def beyin_kirikleri(kok, dosyalar, havuz):
 
 
 def _havuz_metni(kok):
-    """Havuz atıflarının sayıldığı metin: docs/kurallar/A-…E-*.md'nin tamamı ve docs/KURALLAR.md'nin yalnız
+    """Havuz atıflarının sayıldığı metin: docs/kurallar/A-…E-*.md'nin okunmayan listeleri dışı ve docs/KURALLAR.md'nin yalnız
     'Kural içermeyen notlar' bölümü (başlıktan sonraki aynı düzey `## ` başlığa kadar).
 
     KURALLAR.md'nin öbür bölümleri (Dizin, Seçim, 'Kısa atıfların tam adları', ...) ve başka dosyalar sayılmaz.
     """
     parcalar = [
-        yol.read_text(encoding="utf-8")
+        re.sub(
+            r"(?m)^- Okunmadı(?: \([^\n)]*\))?:[^\n]*(?:\n[ \t]+[^\n]*)*",
+            "",
+            re.sub(
+                r"(?ms)^## Okunmayanlar / kısmen okunanlar[ \t]*\n.*?(?=^#{1,2} |\Z)",
+                "",
+                yol.read_text(encoding="utf-8"),
+            ),
+        )
         for yol in sorted((kok / "docs" / "kurallar").glob("*.md"))
         if re.fullmatch(
             r"[A-E]-.*\.md", yol.name

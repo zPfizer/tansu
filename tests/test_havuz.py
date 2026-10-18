@@ -200,7 +200,7 @@ def _kurallar_depo(kok, kurallar, dosyalar):
         ("## Kural içermeyen notlar\n\nx\n\n## Sonraki bölüm\n\nnot-bir\n", {}, False),
         ("## Kural içermeyen notlar\n\n### Alt başlık\n\nnot-bir\n", {}, True),
         ("## Kural içermeyen notlar\n\nx\n\n## Sonraki\n", {"A-x.md": "not-bir"}, True),
-        # A–E dosyaları tamamen sayılır; başka dosyalar sayılmaz
+        # A–E dosyalarındaki okuma atıfları sayılır; başka dosyalar sayılmaz
         ("## X\n", {"B-y.md": "# B\n\nnot-bir", "E-z.md": "x"}, True),
         ("## X\n", {"Z-y.md": "not-bir"}, False),
         ("## X\n", {"notlar.md": "not-bir"}, False),
@@ -273,6 +273,39 @@ def test_main_acik_sayi_acik_not_sayisini_yazar(tmp_path, capsys):
     havuz = _havuz(tmp_path, NOTLAR[:3])
     assert main(["acik-sayi"], havuz=havuz, kok=tmp_path) == 0
     assert capsys.readouterr().out == "2\n"
+
+
+@pytest.mark.parametrize(
+    ("metin", "beklenen"),
+    [
+        (
+            "## Okunmayanlar / kısmen okunanlar\n- Okunmadı (yalnız adı veya görseli): `not-bir`\n",
+            "1\n",
+        ),
+        ("## Okunmayanlar / kısmen okunanlar\n### Liste\n- `not-bir`\n", "1\n"),
+        ("- Okunmadı: `not-bir`\n", "1\n"),
+        ("- Okunmadı (yalnız adı veya görseli):\n  `not-bir`\n", "1\n"),
+        (
+            "## Okunmayanlar / kısmen okunanlar\n- Başka not\n## Okuma\n`not-bir`\n",
+            "0\n",
+        ),
+        (
+            "## Okunmayanlar / kısmen okunanlar\n- Başka not\n# Okuma\n`not-bir`\n",
+            "0\n",
+        ),
+        ("## Okunmayanlar / kısmen okunanlar hakkında\n`not-bir`\n", "0\n"),
+        ("- `not-bir` — İki görsel açıldı; sayısal eşik okunmadı.\n", "0\n"),
+        ("- Okunmadığı yer: `not-bir`\n", "0\n"),
+        ("- Okunmadı: `not-bir`\n- Okundu: `not-bir`\n", "0\n"),
+    ],
+)
+def test_main_acik_sayi_okunmayan_listesi_atif_sayilmaz(
+    tmp_path, capsys, metin, beklenen
+):
+    _depo(tmp_path, "## X\n", metin)
+    havuz = _havuz(tmp_path, ["not-bir"])
+    assert main(["acik-sayi"], havuz=havuz, kok=tmp_path) == 0
+    assert capsys.readouterr().out == beklenen
 
 
 def test_main_acik_sayi_havuz_yoksa_hata_verir(tmp_path, capsys):

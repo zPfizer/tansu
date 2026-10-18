@@ -9,6 +9,7 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 ### Eklendi
 
 - Mevcut 24 strateji tanımını ayarları ve kaynak kökenleriyle koruyan sürümlü katalog eklendi; bütün birleşim kanıtı eksik seçeneklerin panel ve komut seçimi kapalı tutuldu. (#83)
+- Havuzdaki kalan 1.259 not okundu; ek kaynaklar, yeni okumalar ve gerekçeli kapsam dışı kayıtları belgelere işlendi. (#59)
 - Yeni motorun davranış sözleşmesi; bağımsız işlem, dönem, kayıt ve motor sınırları ile açık yöntem ve sahip kapıları belgelendi. Eski politikalar korundu. (#82)
 - Modül 1'in dokuz parçasını sade Türkçeyle, tarihli Tansu alıntıları ve henüz olmayan işlerin işaretleriyle açıklayan bağımsız sayfa eklendi. (#72)
 - Güncel taramadaki 47 notun 48 görseli yeniden okundu; kurtarılan metinler ve okunamayan parçaların gerekçeleri kaydedildi. (#62)
@@ -21,6 +22,7 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 ### Değişti
 
 - Katalog kaynak turunda genel ATR çıkışı ile girişe özel başabaş ve RSI çıkışları ayrıldı; 24 tanımın eksik bileşim dayanakları açık tutuldu. (#83)
+- Açık havuz sayacı okunmadı listelerini kapsamdan ayırıyor; yalnız bu listelerde kalan üç nota okuma veya gerekçeli kural içermez kaydı eklendi. (#59)
 - Paralel dalların değişiklik günlüğünde aynı yere eklediği satırlar, yerel Git birleştirmesinde birlikte korunuyor; Kural 5 yalnız birinci ebeveynle aynı kip ve türdeki normal dosyanın birebir union sonucunu temiz sayıyor. (#102)
 - İş gövdeleri triage biçiminde yazılıyor; sade açıklama, ajan brifi ve bağlı işler şablonda yer alıyor. (#103)
 - Yerel kapıya driftlint eklendi; inceleme girdileri, başarısız çalıştırma ve bir defalık tur sıfırlama kuralları güncel akışa uyarlandı. (#47, issue #53)
