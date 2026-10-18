@@ -124,8 +124,10 @@ def test_baska_klasordeki_test_sayilmaz(depo):
         "tansu/a.ps1",
     ],
 )
-def test_kapsam_disindaki_dosyalar_git_olmadan_gecer(depo, dosya):
-    sonuc = _duzenle(depo, dosya, env={**os.environ, "PATH": ""})
+@pytest.mark.parametrize("git_var", [True, False])
+def test_kapsam_disindaki_dosyalar_gecer(depo, dosya, git_var):
+    ortam = None if git_var else {**os.environ, "PATH": ""}
+    sonuc = _duzenle(depo, dosya, env=ortam)
     assert (sonuc.returncode, sonuc.stdout, sonuc.stderr) == (0, "", "")
 
 
@@ -150,6 +152,12 @@ def test_origin_master_yoksa_yalniz_calisma_agaci_sayilir(depo, test_degisti):
     assert (sonuc.returncode, sonuc.stdout, sonuc.stderr) == (
         (0, "", "") if test_degisti else (2, "", MESAJ)
     )
+
+
+def test_origin_master_bozuksa_engellemez(depo):
+    (depo / ".git/refs/remotes/origin/master").write_text("bozuk\n", encoding="utf-8")
+    sonuc = _duzenle(depo)
+    assert (sonuc.returncode, sonuc.stdout, sonuc.stderr) == (0, "", "")
 
 
 @pytest.mark.parametrize("arac", ["Bash", "PowerShell", "Read"])
