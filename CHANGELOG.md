@@ -8,6 +8,7 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ### Eklendi
 
+- Modül 1'in dokuz parçasını sade Türkçeyle, tarihli Tansu alıntıları ve henüz olmayan işlerin işaretleriyle açıklayan bağımsız sayfa eklendi. (#72)
 - Ajan araç çağrıları ve yanıtları kancayla denetleniyor; talimatlara eklenen satırlar STE denetiminden geçiyor. (#42, issue #52)
 - Sonsuz düzeltilmiş fiyattan sonraki 250 satırlık giriş engeli, tek hisse ve çift yollarında ayrı testlerle korunuyor. (#58)
 - GitHub ana sayfasından işlere, hedeflere, değişikliklere, yayımlanan sürüme ve kontrol sonuçlarına ulaşılabiliyor.
