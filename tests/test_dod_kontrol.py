@@ -507,7 +507,8 @@ def test_sablon_gecerli_govdeye_doldurulunca_gecer():
 
 
 def test_dod_kontrol_python_312_soz_dizimi():
-    # dod.yml uses the runner's default python (no setup-python).
+    # dod.yml installs Python 3.14.
+    # Keep the Python 3.12 grammar check to catch newer syntax in the checker.
     metin = _yol.read_text(encoding="utf-8")
     ast.parse(metin, feature_version=(3, 12))
 
