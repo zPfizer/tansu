@@ -8,7 +8,7 @@ Choose the issue, PR, or direct path from [Issue and PR rule](../../../docs/agen
 For the issue + PR path, if no issue exists, make one first with the issue template. Make the branch for the issue the GitHub way: `gh issue develop <N> --name <N>-<ad> --base master`. The branch name is the issue number and a short name in lower case ASCII letters, digits, and hyphens. Then run these in the main checkout: `git fetch origin`, then `git worktree add .claude/worktrees/<N>-<ad> <N>-<ad>`. If the session already runs in a Claude Code worktree, run `git fetch origin` and `git switch <N>-<ad>` in it. Source: docs.github.com "Creating a branch for an issue" (https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/creating-a-branch-for-an-issue). Clear the context between tickets. A worktree has no `.venv`. In a worktree, use the main venv `C:\Users\levent\Desktop\TANSU\.venv\Scripts\python.exe`. <!-- driftlint-ignore: local-only path of the main repository venv, absent in CI -->
 
 ## Test gate
-Run `kurulum\kapi.ps1 <test files>` with the test files of the changed code and of the code that uses it. It runs only those tests, `ruff check .`, `ruff format --check .`, and `git diff --check origin/master`, and it prints `kapi:` summary lines. Without test files it stops with exit code 1. Never run the full test suite on the computer: CI on Windows runs it (Levent 17.10: "Bilgisayarda sadece değişikliğin ilgili olduğu test koşacak."). Run the gate before each commit. Everything must be green. When `TANSU_BEKLENEN_ACIK` is unset, the gate counts the open pool notes itself, prints `kapi: acik havuz notu = <n>`, and uses that count. A variable that you set wins.
+Run `kurulum\kapi.ps1 <test files>` with the test files of the changed code and of the code that uses it. It runs only those tests, `ruff check .`, `ruff format --check .`, `git diff --check origin/master`, and driftlint. It uses the driftlint version pinned in CI. It prints `kapi:` summary lines, including `kapi: driftlint -> <code>`. Without test files it stops with exit code 1. Never run the full test suite on the computer: CI on Windows runs it (Levent 17.10: "Bilgisayarda sadece değişikliğin ilgili olduğu test koşacak."). Run the gate before each commit. Everything must be green. When `TANSU_BEKLENEN_ACIK` is unset, the gate counts the open pool notes itself, prints `kapi: acik havuz notu = <n>`, and uses that count. A variable that you set wins.
 The gate always runs the count. If the pool folder is missing, it prints `kapi: acik havuz notu = HATA` and stops with exit code 1, also when `TANSU_BEKLENEN_ACIK` is set.
 `TANSU_PY` (a full path) sets the Python of the gate. The default is the main venv. If that file is missing or the count is not a whole number, the gate prints a `kapi:` error line and stops with exit code 1. A command that cannot start stops the gate with a PowerShell error and exit code 1.
 
@@ -22,11 +22,13 @@ Merge `origin/master` into the branch first. Then check the change by its type.
 - A change to documents only (no code): run one `mattpocock-skills:code-review` pass by a Sonnet subagent on the diff. Run no Codex audit.
 
 Run the review in this order.
-1. Before Review, write the PR body draft to `.scratch/<job>/pr-govde.md` of the main checkout `C:\Users\levent\Desktop\TANSU`, not of the worktree. An untracked file in the worktree makes `kurulum\kapi.ps1` print `kirli`. <!-- driftlint-ignore: local-only path of the main repository, absent in CI --> Open the PR as a draft (see "Pull request"). Give the path to the auditor.
-2. The orchestrator starts the two axes of `mattpocock-skills:code-review` itself, as two parallel Sonnet subagents. No auditor agent sits between them. Each subagent prompt says: "Do not start a subagent."
-3. The audit prompt asks for the verdict and the line `Yanlış iddia sayısı: N`. Apply docs/agents/is-kurallari.md "Auditor and rounds" (false claim, doubt, second pass, error class). Write the verdict of the auditor into `Sonuç:`.
-4. Every `mattpocock-skills:code-review` pass prompt says: a finding is KALDI only when it breaks correctness or a written requirement of the job (the spec, an acceptance criterion, a DEFINITION_OF_DONE item, or a rule sentence that the output violates). A false claim, a broken behavior, and a security or privacy risk stay KALDI. A process-order point with no effect on the output is a note.
-5. Write the sha of the commit that the last pass read into `Denetlenen commit:`. Fix each KALDI finding before the merge.
+1. Before Review, write the PR body draft to `.scratch/<job>/pr-govde.md` of the main checkout `C:\Users\levent\Desktop\TANSU`, not of the worktree. An untracked file in the worktree makes `kurulum\kapi.ps1` print `kirli`. <!-- driftlint-ignore: local-only path of the main repository, absent in CI --> Open the PR as a draft (see "Pull request"). Give the latest body path and job brief path to both review axes and the Codex auditor.
+2. Check each number and each "all / none / passed" claim against a command output or named file from this session. Apply the general standard "A claim matches its evidence" to the final PR body and each review prompt.
+3. The orchestrator runs `kurulum\kapi.ps1 <test files>` once on the commit under review. Select the affected tests. Give its `kapi:` lines and exit code to both review axes and the Codex auditor. Reviewers do not run the gate.
+4. The orchestrator starts the two axes of `mattpocock-skills:code-review` itself, as two parallel Sonnet subagents. No auditor agent sits between them. Each subagent prompt says: "Do not start a subagent". Each axis and Codex prompt gives the latest PR body, job brief, goal, and actual worktree path. Derive the goal from the latest brief and body. Tell each reviewer to inspect that worktree. Do not substitute the main checkout. Give no hint of the expected verdict or finding.
+5. The audit prompt asks for the verdict and the line `Yanlış iddia sayısı: N`. Apply docs/agents/is-kurallari.md "Auditor and rounds" (false claim, doubt, second pass, error class). Write the verdict of the auditor into `Sonuç:`.
+6. Every `mattpocock-skills:code-review` pass prompt states this rule: a finding is KALDI only when it breaks correctness or a written job requirement. Written requirements include the spec, acceptance criteria, DEFINITION_OF_DONE items, and rule sentences that the output violates. A false claim, a broken behavior, and a security or privacy risk stay KALDI. A process-order point with no effect on the output is a note.
+7. Write the sha of the commit that the last pass read into `Denetlenen commit:`. Fix each KALDI finding before the merge.
 
 Both checks read `CODING_STANDARDS.md`, `DEFINITION_OF_DONE.md`, and the general standards file that `CODING_STANDARDS.md` points to. After a change in a calculation, search the changed modules for prose that states the formula. This covers docstrings, comments, report text, and HTML. Tie each one to its TASARIM sentence. When the coverage of a test changes, update the owning TASARIM sentence in the same commit.
 
@@ -40,6 +42,8 @@ Use the body and title forms from `docs/agents/issue-tracker.md` "Issue and PR r
 
 For the issue + PR path, open a draft PR with this command chain: `git fetch -q origin && git merge-base --is-ancestor origin/master HEAD && git push -q -u origin <branch> && gh pr create --draft --base master --head <branch> --title "#<N> · <title>" --body-file <pr-govde.md>`. For a PR without an issue, use `belge-<ad>` for `<branch>` and `Belge · <title>` for `--title`. After the verdict, fill `## Bağımsız inceleme`. Run `gh pr edit <N> --body-file <file>`, then `gh pr ready <N>`. The `dod` check skips a draft PR and runs at `gh pr ready`.
 
+After the PR opens, the dispatcher calls the app PR status tool. If the tool does not report the PR, the dispatcher binds it.
+
 ## Merge
 Apply `docs/agents/git.md` "Change log and releases" before the change enters master and when its milestone closes.
 
@@ -47,7 +51,7 @@ Merge when two things are true.
 - CI is green. `ci` runs on Windows only: the `kayit/` append-only step, `git diff --check`, ruff, pytest, and driftlint. `dod` is the PR body.
 - The independent verdict is GEÇTİ or NOTLU GEÇTİ. For code, it is the verdict of the Codex audit. For documents only, it is the verdict of the `mattpocock-skills:code-review` pass.
 
-Wait for CI with one command: `gh pr checks <N> --watch` (timeout 300000 ms). Do not poll the status.
+Wait for CI with one command: `gh pr checks <N> --watch` (timeout 600000 ms). Do not poll the status. Wait until a failed run ends before you read its job log. Then run `gh run view --job <id> --log-failed`. It prints nothing while the job runs.
 
 Claude merges with `gh pr merge <N> --merge`. On the issue + PR path, the merge closes the linked issue. A PR without an issue closes no issue. GitHub deletes the remote branch (auto-delete is on). Levent gets only the completion note (Levent 15.10).
 
