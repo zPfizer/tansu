@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Modül 1 · Sıkışma kırılımı</title>
+  <style>
+    :root {
+      --paper: #eef1f4; --surface: #fff; --ink: #14213d;
+      --muted: #5b6b82; --line: #d5dbe3; --go: #0f766e;
+      --wait: #805007; --wait-tint: #fbf3e2;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--paper); color: var(--ink); font-family: system-ui, sans-serif; line-height: 1.6; }
+    .bar { padding: 1rem 2rem; background: var(--ink); color: white; font-weight: 800; }
+    main { max-width: 1160px; margin: auto; padding: 2.5rem 2rem 4rem; }
+    .date, .source, .meaning { color: var(--muted); font-size: .9rem; }
+    h1 { max-width: 22ch; margin: .4rem 0 1rem; font-size: clamp(2rem, 5vw, 3.6rem); line-height: 1.1; letter-spacing: -.035em; }
+    .intro { max-width: 70ch; font-size: 1.1rem; }
+    .notice { margin: 1.5rem 0; padding: 1rem 1.25rem; border-left: 4px solid var(--wait); border-radius: 0 10px 10px 0; background: var(--wait-tint); }
+    .notice p { margin: .3rem 0; }
+    nav { margin: 1.5rem 0 2rem; }
+    nav ol { display: flex; flex-wrap: wrap; gap: .5rem 1.5rem; padding-left: 1.5rem; }
+    a { color: var(--go); text-underline-offset: .2em; }
+    a:focus-visible { outline: 2px solid var(--go); outline-offset: 4px; }
+    .parts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+    section { padding: 1.5rem; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; scroll-margin-top: 1rem; }
+    .number { margin: 0; color: var(--muted); font-size: .85rem; font-weight: 700; }
+    h2 { margin: .35rem 0 .75rem; font-size: 1.25rem; line-height: 1.35; }
+    section > p { margin: .75rem 0; }
+    figure { margin: 1.25rem 0 0; padding-top: 1rem; border-top: 1px solid var(--line); }
+    blockquote { margin: 0 0 .5rem; }
+    .status { color: var(--wait); font-size: .9rem; }
+    footer { margin-top: 2rem; color: var(--muted); font-size: .9rem; }
+    @media (max-width: 700px) {
+      main { padding: 1.5rem 1rem 3rem; }
+      .bar { padding: 1rem; }
+      .parts { grid-template-columns: 1fr; }
+      section { padding: 1.25rem; }
+    }
+  </style>
+</head>
+<body>
+  <header class="bar">Tansu · Yöntemi anla</header>
+  <main>
+    <p class="date">Durum: 18.10.2026</p>
+    <h1>Modül 1: Sıkışma kırılımı</h1>
+    <p class="intro">Fiyatın dar bir aralıkta bekledikten sonra yukarı çıkışını arar. Adayı bulur, giriş şartını kontrol eder ve alınacak miktarla çıkış planını birlikte ele alır.</p>
+    <p class="meaning">EMA, son günlere daha çok ağırlık veren fiyat ortalamasıdır. Sıkışma, bu ortalamaların birbirine yaklaşmasıdır. Kırılım, fiyatın beklediği aralığın dışına çıkmasıdır.</p>
+    <aside class="notice" aria-label="Bugünkü durum">
+      <p><strong>Tam geçmiş sınama motoru: henüz yok · #76</strong></p>
+      <p>Geçmiş sınama, kuralları eski fiyatlarda deneyip ne olduğunu ölçmektir. Veri, işlem kuralları ve rapor parçaları var. Bunları Tansu'nun anlatısına göre birleştiren eksiksiz motor henüz yok.</p>
+      <p>24 seçeneğin eksiksiz karşılaştırması ve karar bekleyen ayrıntıların kesin tanımı da henüz yok. Bu sayfa, bunların tamamlandığı anlamına gelmez.</p>
+    </aside>
+    <nav aria-label="Modül 1'in parçaları">
+      <ol>
+        <li><a href="#veri">Veri</a></li>
+        <li><a href="#aday">Aday seçimi</a></li>
+        <li><a href="#giris">Giriş kuralları</a></li>
+        <li><a href="#stop">Stop</a></li>
+        <li><a href="#hedef">Hedefler</a></li>
+        <li><a href="#buyukluk">Pozisyon büyüklüğü</a></li>
+        <li><a href="#cikis">Çıkış</a></li>
+        <li><a href="#secenekler">24 seçenek</a></li>
+        <li><a href="#raporlar">Raporlar</a></li>
+      </ol>
+    </nav>
+    <div class="parts">
+      <section id="veri" aria-labelledby="baslik-veri">
+        <p class="number">01</p>
+        <h2 id="baslik-veri">Veri</h2>
+        <p>Günlük fiyatları ve işlem tutarını toplar. Tamamlanmış günün kaydını kullanmak, yarım bilgiyle karar vermeyi önler.</p>
+        <figure>
+          <blockquote>“o periyodun kapanışında veri çekmek gerekir”</blockquote>
+          <figcaption class="source">Tansu · <time datetime="2025-05-15">15.05.2025</time> · <a href="https://x.com/The_Tansu_/status/1923051430580977847">Gönderi</a></figcaption>
+        </figure>
+        <p class="meaning">Periyot, verinin kapsadığı süredir. Burada bir gündür.</p>
+      </section>
+      <section id="aday" aria-labelledby="baslik-aday">
+        <p class="number">02</p>
+        <h2 id="baslik-aday">Aday seçimi</h2>
+        <p>Ortalamaları birbirine yaklaşan hisseleri bulup incelenecek listeyi daraltır. Listeye girmek, hemen alım yapmak anlamına gelmez.</p>
+        <figure>
+          <blockquote>“Tarama yelpaze daraltır.”</blockquote>
+          <figcaption class="source">Tansu · <time datetime="2024-10-01">01.10.2024</time> · <a href="https://x.com/The_Tansu_/status/1841012769706905780">Gönderi</a></figcaption>
+        </figure>
+      </section>
+      <section id="giris" aria-labelledby="baslik-giris">
+        <p class="number">03</p>
+        <h2 id="baslik-giris">Giriş kuralları</h2>
+        <p>Beklenen yukarı hareketin hangi şartta alıma dönüşeceğini belirler. Fiyatın aralığı aşması, işlem tutarının artması veya geri dönüp kırdığı seviyede tutunması farklı seçeneklerle denenir.</p>
+        <figure>
+          <blockquote>“fiyat hacim ile ema'ların üzerinde kapansın, sonra otur izle”</blockquote>
+          <figcaption class="source">Tansu · <time datetime="2025-08-06">06.08.2025</time> · <a href="https://x.com/The_Tansu_/status/1953221966678376915">Gönderi</a></figcaption>
+        </figure>
+        <p class="meaning">Hacim, burada bir günde işlem gören para tutarıdır.</p>
+      </section>
+      <section id="stop" aria-labelledby="baslik-stop">
+        <p class="number">04</p>
+        <h2 id="baslik-stop">Stop: zararı kesme seviyesi</h2>
+        <p>Hareket beklenen yönde gitmezse nerede çıkılacağını belirler. Tansu'nun bu anlatısında sınır, alıcıların fiyatı tuttuğu yeşil bölgenin hemen altıdır.</p>
+        <figure>
+          <blockquote>“Stop noktası, EMA sıkışmasının olduğu Talep Bölgesinin (Yeşil Kutu) hemen altı olmalıdır.”</blockquote>
+          <figcaption class="source">Tansu · <time datetime="2025-12-19">19.12.2025</time> · <a href="https://x.com/The_Tansu_/status/2002087132089770127">Gönderi</a></figcaption>
+        </figure>
+        <p class="meaning">Talep bölgesi, fiyatın alıcı bulmasının beklendiği aralıktır.</p>
+      </section>
+      <section id="hedef" aria-labelledby="baslik-hedef">
+        <p class="number">05</p>
+        <h2 id="baslik-hedef">Hedefler</h2>
+        <p>Kâr almayı düşündüğümüz seviyeyi gösterir. Üstteki satış bölgesi veya daralan fiyat aralığının yüksekliğiyle hesaplanan seviye bu amaçla kullanılır.</p>
+        <figure>
+          <blockquote>“İlk hedef, grafiğin sağ üstünde gördüğün Kırmızı Bölge”</blockquote>
+          <figcaption class="source">Tansu · <time datetime="2025-12-19">19.12.2025</time> · <a href="https://x.com/The_Tansu_/status/2002087132089770127">Gönderi</a></figcaption>
+        </figure>
+        <p class="meaning">Arz bölgesi, fiyatın satışla karşılaşmasının beklendiği aralıktır.</p>
+      </section>
+      <section id="buyukluk" aria-labelledby="baslik-buyukluk">
+        <p class="number">06</p>
+        <h2 id="baslik-buyukluk">Pozisyon büyüklüğü: kaç hisse alınır?</h2>
+        <p>Göze alınan kaybı ve zararı kesme seviyesine uzaklığı kullanarak alınacak hisse sayısını hesaplar. Aynı kayıp sınırında, çıkış seviyesi uzaklaştıkça alınacak miktar azalır.</p>
+        <figure>
+          <blockquote>“Pozisyon büyüklüğünü stop mesafesine göre hesaplayın.”</blockquote>
+          <figcaption class="source">Tansu · <time datetime="2026-09-02">02.09.2026</time> · <a href="https://x.com/The_Tansu_/status/2095213493133713664">Gönderi</a></figcaption>
+        </figure>
+        <p class="status">Tüm parayla alım yapan eski sınama yolunun bu hesaba uyarlanması: henüz yok · #76.</p>
+      </section>
+      <section id="cikis" aria-labelledby="baslik-cikis">
+        <p class="number">07</p>
+        <h2 id="baslik-cikis">Çıkış</h2>
+        <p>Hedefe veya zararı kesme seviyesine gelindiğinde satışın nasıl yapılacağını belirler. Kârın bir kısmını almak ve fiyat yükseldikçe koruma seviyesini yukarı taşımak da ayrı seçeneklerdir.</p>
+        <figure>
+          <blockquote>“Yeşilde al, EMA'lar açılınca sür, Kırmızıda sat.”</blockquote>
+          <p class="meaning">Yani ortalamalar birbirinden uzaklaştıkça işlemde kal.</p>
+          <figcaption class="source">Tansu · <time datetime="2025-12-19">19.12.2025</time> · <a href="https://x.com/The_Tansu_/status/2002087132089770127">Gönderi</a></figcaption>
+        </figure>
+        <p class="meaning">Kısmi satış ve yükselen koruma seviyesi, bu kısa sözün ayrıntısı değildir. Bunları birleştirme biçimimiz yorumdur.</p>
+      </section>
+      <section id="secenekler" aria-labelledby="baslik-secenekler">
+        <p class="number">08</p>
+        <h2 id="baslik-secenekler">24 seçenek</h2>
+        <p>Ortalama sürelerini, giriş şartını, işlem tutarı şartını veya çıkışı değiştirerek hangi yaklaşımın işe yaradığını sınamaya yarar. Bu 24 seçenek, Tansu'nun adlandırdığı bir paket değil, bizim denemek için birleştirdiğimiz yorumlardır.</p>
+        <figure>
+          <blockquote>“Her göstergenin aynı anda yeşil olması gerekmeyebilir.”</blockquote>
+          <p class="meaning">Yeşil olması, göstergenin alım yönünü göstermesi demektir.</p>
+          <figcaption class="source">Tansu · <time datetime="2026-09-02">02.09.2026</time> · <a href="https://x.com/The_Tansu_/status/2095213493133713664">Gönderi</a></figcaption>
+        </figure>
+        <p class="status">24 tanım var. Hepsinin eksiksiz karşılaştırmalı sınaması ve kaynakta açık olmayan birleşimlerin kesin kararı: henüz yok · #76.</p>
+      </section>
+      <section id="raporlar" aria-labelledby="baslik-raporlar">
+        <p class="number">09</p>
+        <h2 id="baslik-raporlar">Raporlar</h2>
+        <p>Adayın ne zaman bulunduğunu, neden girildiğini ve işlemin nasıl bittiğini görünür kılar. Kazançla birlikte kaybı, masrafı ve hiç işlem oluşmamasının nedenini de göstermesi gerekir.</p>
+        <figure>
+          <blockquote>“İşlem günlüğü oluşturun.”</blockquote>
+          <figcaption class="source">Tansu · <time datetime="2026-09-02">02.09.2026</time> · <a href="https://x.com/The_Tansu_/status/2095213493133713664">Gönderi</a></figcaption>
+        </figure>
+        <p class="status">Eski raporlar var. Bütün adayların sonraki bir, üç ve beş günlük takibini ve 24 seçeneği birlikte sunan eksiksiz rapor: henüz yok · #76.</p>
+      </section>
+    </div>
+    <footer>Tansu'dan esinlenen yorum. Alıntılar, gönderilerdeki kısa sözlerdir. Açıklamalar bizim anlatımımızdır. Sistem emir vermez. Karar ve para sende.</footer>
+  </main>
+</body>
+</html>
