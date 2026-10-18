@@ -7,6 +7,7 @@ Fiyatlar CCOLA'nın İş Yatırım'daki gerçek değerleridir (08–15.08.2024).
 import datetime as dt
 import json
 
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -82,6 +83,248 @@ class SahteKaynak:
 
 
 SIMDI = dt.datetime(2026, 10, 5, 19, 30)
+
+
+def test_cift_kalite_politikalari_sonsuz_fiyati_esitlemez():
+    # #85: eski iki yolun gözlenmiş farkı; son fiyat dolum günü değildir.
+    gunler = pd.date_range("2024-01-01", periods=3)
+    C = np.array([[10.0, 20.0], [np.inf, 21.0], [12.0, 22.0]])
+    A = C.copy()
+    F = {"I": np.ones((3, 2), dtype=bool)}
+    F.update({k: np.zeros((3, 2), dtype=bool) for k in ("T", "B", "Kar")})
+    p = veri.cift_girdileri(gunler, C, A, F, "legacy_portfoy_v1")
+    t = veri.cift_girdileri(gunler, C, A, F, "legacy_tansu_v1")
+    assert p["Kar"][:, 0].tolist() == [False, False, False]
+    assert t["Kar"][:, 0].tolist() == [False, True, False]
+    assert t["SA"][:, 0].tolist() == [10.0, 10.0, 12.0]
+    assert t["E"][:, 0].tolist() == [False, True, True]
+    assert t["G"][:, 0].tolist() == [True, False, True]
+    assert np.isinf(p["SA"][1, 0])
+    assert t["son_gecerli_fiyat_tarihi"][1, 0] == np.datetime64("2024-01-01")
+
+
+def test_e1_kayitli_goruntu_referansi_eksik_deger_ve_degismezlik(tmp_path):
+    import hashlib
+
+    a = anlik(tmp_path)
+    klasor = tmp_path / "ag" / a.kimlik
+    once = {
+        p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in klasor.iterdir()
+    }
+    istek = veri.VeriIstegi(
+        ("CCOLA",),
+        "2024-08-08",
+        "2024-08-15",
+        "yerel",
+        "legacy_tansu_v1",
+        "legacy_tansu_v1",
+        "is_yatirim",
+        "xu100",
+    )
+    yanit = veri.veri_hazirla(istek, a.kimlik, tmp_path)
+    assert len(yanit["piyasa"]) == 6
+    ilk = yanit["piyasa"][0]
+    assert ilk.get("bos_nedenleri", {}).get("olay_ref") == "olay_yok"
+    assert (
+        yanit["referans"].get("bos_nedenleri", {}).get("isinma_donemi") == "istenmedi"
+    )
+    assert ilk["ham_acilis"] == {
+        "deger": None,
+        "birim": "TL/adet",
+        "bos_nedeni": "kaynakta_yok",
+    }
+    assert ilk["ham_kapanis"]["deger"] == 757.5
+    assert ilk["duzeltilmis_kapanis"]["deger"] == 66.3352
+    assert yanit["referans"]["manifest_parmak_izi"] == once["manifest.json"]
+    assert yanit["referans"]["kalite_surumu"] == "legacy_tansu_v1"
+    assert yanit["referans"]["goruntu_id"] == a.kimlik
+    assert {
+        p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in klasor.iterdir()
+    } == once
+    (klasor / "olaylar.json").write_text("{}", encoding="utf-8")
+    with pytest.raises(veri.VeriHatasi, match="manifest uyuşmuyor"):
+        veri.veri_hazirla(istek, a.kimlik, tmp_path)
+
+
+def _eski_cift_hazirligi(gunler, C, A, F, tansu):
+    """#85 öncesi ciftbolme.hazirla / tansusinama.cift_tablolari hesapları.
+
+    Bu donmuş karşılaştırma sahibi ürünün yeni hazırlama fonksiyonunu çağırmaz.
+    """
+    Kar = F["Kar"] | np.isinf(C) | np.isinf(A) if tansu else F["Kar"]
+    G = F["I"] & ~Kar
+    if tansu:
+        G = G & np.isfinite(C) & (C > 0) & np.isfinite(A) & (A > 0)
+    return {
+        "C": C,
+        "A": A,
+        "I": F["I"],
+        "T": F["T"],
+        "B": F["B"],
+        "Kar": Kar,
+        "G": G,
+        "E": pd.DataFrame(Kar.astype(float))
+        .rolling(250, min_periods=1)
+        .max()
+        .to_numpy()
+        .astype(bool),
+        "SA": pd.DataFrame(A).where(G).ffill().to_numpy(),
+        "Cf": pd.DataFrame(C).where(G).ffill().to_numpy(),
+    }
+
+
+@pytest.mark.parametrize("politika", ["legacy_portfoy_v1", "legacy_tansu_v1"])
+def test_kayitli_sentetik_goruntu_eski_hazirlamayla_ayni(
+    tmp_path, monkeypatch, politika
+):
+    import hashlib
+
+    fiyatlar = [dict(r) for i, r in enumerate(CCOLA_FIYAT) if i != 1]
+    fiyatlar[3]["kapanis"] = -1.0  # 14.08 bozuk; 09.08 eksik.
+    b = [satir(r["tarih"], 100.0, 100.0) for r in CCOLA_FIYAT]
+    k = SahteKaynak({"CCOLA": fiyatlar, "BBBB": b}, {"CCOLA": CCOLA_OLAY, "BBBB": []})
+    kimlik = veri.indir(["CCOLA", "BBBB"], tmp_path, k, simdi=SIMDI)
+    klasor = tmp_path / "ag" / kimlik
+    once = {
+        p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in klasor.iterdir()
+    }
+
+    def yasak(*args, **kwargs):
+        pytest.fail("yerel tekrar sağlayıcıya erişti")
+
+    monkeypatch.setattr(SahteKaynak, "fiyat", yasak)
+    monkeypatch.setattr(SahteKaynak, "olaylar", yasak)
+    a = veri.oku(kimlik, tmp_path)
+    beklenen = pd.concat(
+        [
+            pd.DataFrame(fiyatlar).assign(sembol="CCOLA"),
+            pd.DataFrame(b).assign(sembol="BBBB"),
+        ],
+        ignore_index=True,
+    )
+    pd.testing.assert_frame_equal(a.fiyat, beklenen)
+    assert a.olaylar["kod"].tolist() == ["02", "04", "04"]
+    assert a.olaylar["carpan"].tolist() == [
+        0.09090909138724523,
+        0.9792410463023796,
+        0.9837037037037037,
+    ]
+    g = a.gun_tablosu
+    ccola = g[g["sembol"] == "CCOLA"]
+    assert ccola["eksik"].tolist() == [False, True, False, False, False, False]
+    assert ccola["karantina"].tolist() == [False, False, False, False, True, False]
+    semboller = ["CCOLA", "BBBB"]  # Bilerek alfabetik değil.
+    C, A = [
+        a.fiyat.pivot(index="tarih", columns="sembol", values=ad)
+        .reindex(index=a.gunler, columns=semboller)
+        .to_numpy()
+        for ad in ("kapanis", "aof")
+    ]
+    F = {
+        ad: g.pivot(index="tarih", columns="sembol", values=sutun)
+        .reindex(index=a.gunler, columns=semboller)
+        .fillna(False)
+        .astype(bool)
+        .to_numpy()
+        for ad, sutun in (
+            ("I", "islem"),
+            ("T", "kilit_tavan"),
+            ("B", "kilit_taban"),
+            ("Kar", "karantina"),
+        )
+    }
+    eski = _eski_cift_hazirligi(a.gunler, C, A, F, politika == "legacy_tansu_v1")
+    yeni = veri.cift_girdileri(
+        a.gunler, C, A, veri.cift_bayraklari(g, a.gunler, semboller), politika
+    )
+    for ad, deger in eski.items():
+        np.testing.assert_array_equal(yeni[ad], deger, err_msg=ad)
+    istek = veri.VeriIstegi(
+        tuple(semboller),
+        "2024-08-08",
+        "2024-08-15",
+        "yerel",
+        politika,
+        "legacy",
+        "is_yatirim",
+        "xu100",
+    )
+    yanit = veri.veri_hazirla(istek, kimlik, tmp_path)
+    json.dumps(yanit, allow_nan=False)
+    assert [r["sembol"] for r in yanit["piyasa"]] == semboller * 6
+    eksik = yanit["piyasa"][2]
+    assert eksik["duzeltilmis_kapanis"]["deger"] is None
+    assert eksik["son_gecerli_fiyat_tarihi"] == "2024-08-08"
+    assert not eksik["islem"]
+    assert yanit["piyasa"][8]["duzeltilmis_kapanis"] == {
+        "deger": None,
+        "birim": "TL/adet",
+        "bos_nedeni": "pozitif_degil",
+    }
+    assert yanit["kalite"]["karantina_araliklari"] == [
+        {"sembol": "CCOLA", "baslangic": "2024-08-14", "bitis": "2024-08-15"}
+    ]
+    assert {
+        p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in klasor.iterdir()
+    } == once
+
+
+def test_e1_alt_kume_kaynak_gunu_kararini_degistirmez(tmp_path):
+    semboller = [f"S{i:02}" for i in range(20)]
+    fiyatlar = {
+        s: [
+            satir("2024-01-02", 100.0, 100.0),
+            satir("2024-01-03", 130.0 if i < 10 else 100.0, 130.0 if i < 10 else 100.0),
+        ]
+        for i, s in enumerate(semboller)
+    }
+    kimlik = veri.indir(
+        semboller,
+        tmp_path,
+        SahteKaynak(fiyatlar, dict.fromkeys(semboller, [])),
+        simdi=SIMDI,
+    )
+    istek = veri.VeriIstegi(
+        ("S19",),
+        "2024-01-03",
+        "2024-01-03",
+        "yerel",
+        "legacy_tansu_v1",
+        "legacy",
+        "is_yatirim",
+        "xu100",
+    )
+    sonuc = veri.veri_hazirla(istek, kimlik, tmp_path)
+    assert sonuc["piyasa"][0]["kalite_bayraklari"] == ["eksik"]
+    assert not sonuc["piyasa"][0]["islem"]
+    assert sonuc["piyasa"][0]["son_gecerli_fiyat_tarihi"] == "2024-01-02"
+
+
+@pytest.mark.parametrize(
+    "alan, deger, mesaj",
+    [
+        ("kalite_surumu", "gelecek_v999", "bilinmeyen kalite"),
+        ("semboller", ("CCOLA", "CCOLA"), "tekrarlı"),
+        ("bitis", "2024-08-01", "dönem geçersiz"),
+        ("uyelik_surumu", "", "referansı boş"),
+    ],
+)
+def test_e1_cozulmemis_istegi_kabul_etmez(tmp_path, alan, deger, mesaj):
+    from dataclasses import replace
+
+    a = anlik(tmp_path)
+    istek = veri.VeriIstegi(
+        ("CCOLA",),
+        "2024-08-08",
+        "2024-08-15",
+        "yerel",
+        "legacy_tansu_v1",
+        "legacy",
+        "is_yatirim",
+        "xu100",
+    )
+    with pytest.raises(veri.VeriHatasi, match=mesaj):
+        veri.veri_hazirla(replace(istek, **{alan: deger}), a.kimlik, tmp_path)
 
 
 def anlik(tmp_path, fiyat=CCOLA_FIYAT, olay=CCOLA_OLAY):
