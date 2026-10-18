@@ -6,6 +6,22 @@ import pandas as pd
 MODLAR = ("log_oran", "kalinti")
 
 
+def hesapla(y, x, pencere=60, ddof=1, mod="log_oran", esik=2.0):
+    """Tarih hizalı Z, ΔZ ve hedef bacak (TASARIM 5.6, 5.15)."""
+    z = z_skor(y, x, pencere, ddof, mod)
+    fark = dz(z)
+    return pd.DataFrame(
+        {
+            "z": z,
+            "dz": fark,
+            "hedef": np.where(
+                (z <= -esik) & (fark > 0), 1, np.where((z >= esik) & (fark < 0), -1, 0)
+            ),
+        },
+        index=z.index,
+    )
+
+
 def z_skor(
     y: pd.Series, x: pd.Series, pencere: int, ddof: int = 1, mod: str = "log_oran"
 ) -> pd.Series:

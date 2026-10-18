@@ -8,6 +8,30 @@ SIKISMA_ESIK = 0.012  # %1,2, dahil
 SIKISMA_MIN_GUN = 3
 
 
+def deger_kaydi(deger, birim, bos_nedeni="hesaplanamadi"):
+    """Sonlu gösterge veya gerekçeli boş değer (TASARIM 5.15)."""
+    dolu = deger is not None and np.isfinite(deger)
+    return {
+        "deger": float(deger) if dolu else None,
+        "birim": birim,
+        "bos_nedeni": None if dolu else bos_nedeni,
+    }
+
+
+def tablo(f, sma_n=250, atr_n=14):
+    """Motor ve ortak kurulumun tarih hizalı göstergeleri (TASARIM 5.15)."""
+    k, y, d = f["kapanis"], f["yuksek"], f["dusuk"]
+    return pd.DataFrame(
+        {
+            "sma250": sma(k, sma_n),
+            "atr": atr(y, d, k, atr_n),
+            "rsi": rsi(k),
+            "sma50": sma(k, 50),
+        },
+        index=f.index,
+    )
+
+
 def ema(seri: pd.Series, periyot: int) -> pd.Series:
     return seri.ewm(span=periyot, adjust=False).mean()
 
