@@ -9,6 +9,7 @@ Modül 1: yeni göstergeler (RSI, momentum squeeze, ADX, MACD, PSAR, stokastik) 
 yarı satış sütunları, `Pozisyon.kar`).
 """
 
+from copy import deepcopy
 from dataclasses import replace
 
 import numpy as np
@@ -35,6 +36,94 @@ KESIM = [
     "2014-12-31",  # yılın son işlem günü: biten yıl 2014 karşılaştırılır (yillik_fazla_)
 ]  # tam veri 2015-06'ya dek; ısınma (500 gün) 2013-11'de biter
 BAS = "2013-12-02"
+
+
+def test_ortak_ema_kurulumu_gelecek_fiyat_degisiminden_etkilenmez(monkeypatch):
+    gunler = pd.bdate_range("2021-01-04", periods=520)
+    kap = [100.0] * 510 + [110.0, 112.0] + [114.0] * 8
+    fiyat = pd.DataFrame(
+        {
+            "tarih": gunler,
+            "sembol": "TEST",
+            "xu100": 1000.0,
+            "kapanis": kap,
+            "aof": kap,
+            "yuksek": np.asarray(kap) + 1,
+            "dusuk": np.asarray(kap) - 1,
+            "hacim": 100.0,
+        }
+    )
+    for ad in ("kapanis", "aof", "yuksek", "dusuk"):
+        fiyat[f"ham_{ad}"] = fiyat[ad]
+    anlik = veri.Anlik(
+        "test", fiyat, pd.DataFrame(columns=["sembol", "tarih", "kod", "carpan"])
+    )
+    monkeypatch.setattr(veri, "oku", lambda *a: anlik)
+    # E1 manifest okuması bu sentetik görüntü için yapılmaz; gerçek veri kanıtı ayrı koşudur.
+    monkeypatch.setattr(
+        veri,
+        "_veri_referansi",
+        lambda *a: {
+            "kayit_id": "test",
+            "istenen_donem": {
+                "baslangic": str(gunler[500].date()),
+                "bitis": str(gunler[-1].date()),
+            },
+        },
+    )
+    paket = veri.veri_hazirla(
+        veri.VeriIstegi(
+            ("TEST",),
+            str(gunler[500].date()),
+            str(gunler[-1].date()),
+            "sentetik",
+            "legacy_portfoy_v1",
+            "legacy",
+            "legacy",
+            "test",
+            (str(gunler[0].date()), str(gunler[499].date())),
+        ),
+        "test",
+        ".",
+    )
+    tarih = gunler[511]
+    strateji = aileler.legacy_coz("bugun")
+    once = aileler.ortak_kurulum(paket, tarih, strateji)
+    assert len(once["sinyaller"]) == 1
+    degisen = deepcopy(paket)
+    for r in degisen["piyasa"]:
+        if pd.Timestamp(r["tarih"]) > tarih:
+            for ad in ("kapanis", "aof", "yuksek", "dusuk"):
+                r[f"duzeltilmis_{ad}"]["deger"] *= 50
+    sonra = aileler.ortak_kurulum(degisen, tarih, strateji)
+    for sonuc in (once, sonra):
+        for grup in ("gostergeler", "sinyaller"):
+            for kayit in sonuc[grup]:
+                kayit.pop("olusturma_zamani")
+    assert once == sonra
+
+
+def test_ortak_cift_kurulumu_gelecek_fiyat_degisiminden_etkilenmez():
+    from tests.test_cift import cift_paketi
+
+    paket = cift_paketi()
+    tarih = paket["piyasa"][-1]["tarih"]
+    strateji = ciftbolme.strateji_coz("Y", "X")
+    once = ciftbolme.ortak_kurulum(paket, tarih, strateji)
+    assert len(once["sinyaller"]) == 1
+    degisen = deepcopy(paket)
+    gelecek = (pd.Timestamp(tarih) + pd.Timedelta(days=1)).date().isoformat()
+    for r in paket["piyasa"][-2:]:
+        r = deepcopy(r)
+        r["tarih"] = gelecek
+        r["duzeltilmis_kapanis"]["deger"] *= 50 if r["sembol"] == "Y" else 0.01
+        degisen["piyasa"].append(r)
+    sonra = ciftbolme.ortak_kurulum(degisen, tarih, strateji)
+    for sonuc in (once, sonra):
+        for grup in ("gostergeler", "sinyaller"):
+            for kayit in sonuc[grup]:
+                kayit.pop("olusturma_zamani")
+    assert once == sonra
 
 
 def test_bist30_gelecekteki_uyelik_degisse_de_onceki_liste_degismez(monkeypatch):

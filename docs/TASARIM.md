@@ -1173,6 +1173,45 @@ koşudur; kaydetme olayı yeni revizyondur. Izgara hücresi alt denemedir; MC se
 Holm için resmi sınıf ve hipotez ailesi ayrıca yazılır; senaryo veya revizyon adedi m diye sunulmaz.
 Dayanak: [W8], [L4]; taslak kayıt tablosu, C Q87 ve eski resmi sayım §5.11.
 
+#### Ortak EMA kurulumu (S06, #87)
+
+`aileler.ortak_kurulum(veri_paketi, tarih, strateji)` E1 piyasa kayıtlarını ve katalogdan
+çözülmüş EMA stratejisini alır. Değerlendirme tarihi dahil geçmişi kullanır. Çıktı,
+o günün tarihli ve birimli gösterge kayıtlarını, sinyallerini ve ayrı ısınma bilgisini taşır.
+Gösterge değeri eksikse nedeni kaydedilir. Eski gösterge fonksiyonları hesap sahibi kalır.
+Günlük ve geçmiş sınama, `aileler.kurulum` tablosunu bir kez hesaplar. Sinyal tarihleri ve
+sonraki aşamanın kutu/hedef girdileri aynı tablodan alınır. Eski `sinyal` ve
+`motor.kurulum_bilgisi` çağrıları korunur. Dayanak: #87 arayüz brifi.
+
+İlk ve son değerlendirme günü dahildir. Isınma satırları sinyal günü sayılmaz.
+Eksik kapanış kurulum geçmişinden çıkarılır; gösterge takviminde boş gün korunur (§5.1).
+Karantina ve kilit bayrakları hesapta fiyatı değiştirmez; giriş kapısı §5.3'te kalır.
+Sıfır veya sonsuz fiyat sessizce düzeltilmez; E1 kalite bilgisi korunur. Sonlu olmayan
+gösterge değeri gerekçeli boş kaydedilir. Isınma tamamlanmadan sinyal üretilmez.
+Sonraki satırlar önceki günün göstergesini ve kurulumunu değiştirmez; `tests/test_gelecek.py`
+bu sınırı kapsar. Dayanak: #87 kabul ölçütleri, §5.1, §5.3 ve §5.12.
+
+Sinyal kaydı strateji kimliğini, ayar parmak izini, kaynakları, kutuyu, hedefi ve stop
+girdilerini taşır. ATR stopunun dolum fiyatı henüz bilinmediği için ilk stop gerekçeli
+boştur. Kutu stopu kutu altını taşır. `hedef=yok` için hedef uygulanmaz; `hedef=tansu`
+için bulunamayan hedef `hedef_bulunamadi` nedeniyle boştur. Bu, eski §3 Modül 1
+kurulumunun hedef yokluğu davranışını değiştirmez ve varsayılan hedef üretmez.
+Çift ailesi ayrı kuralını korur; EMA katalog kaydıyla çift hesabı yapılmaz.
+Dayanak: #87 sözleşme sınırı ve KURALLAR §3 Modül 1.
+
+Çift uyarlayıcısı `ciftbolme.strateji_coz(y, x, p)` mevcut `cift` ve `ciftbolme` ayarlarını
+tam kayda çözer. `katalog_surumu` boştur; gerekçesi
+"s02_v1 yalnız ema_sikisma içerir; çift ailesi katalogda yok" metnidir.
+Kaynaklar mevcut kod ve bu belgenin çift kurallarıdır. Yeni katalog üyeliği veya
+strateji seçme izni üretilmez. `ciftbolme.ortak_kurulum(veri_paketi, tarih, strateji)`
+aynı gösterge/sinyal/ısınma çıktı gruplarını kullanır. Çift hedefi geçilecek bacaktır;
+EMA kutusu veya fiyat hedefi bu kurala uygulanmaz ve gerekçeli boş kalır.
+`cift.hesapla` tarihli Z, ΔZ ve hedef bacak tablosunun ortak hesabıdır; eski
+`ciftbolme.hedef` uyarlayıcısı aynı tabloyu kullanır. Isınmanın tamamlanması için
+son ΔZ tanımlı olmalıdır; yalnız satır sayısının dolması yeterli değildir.
+Gelecek satırı denetimi iki aileyi ayrı çağrılarla kapsar. Dayanak: #87 yazımında
+çağıranın verdiği çift çözümleme girdisi; mevcut çift kuralları §5.6.
+
 #### Strateji kataloğu (S02, #83)
 
 E2'nin katalog sahibi `tansu/katalog.py` dosyasıdır. Katalog, mevcut 24 tanımı temel ve tek alan

@@ -1,5 +1,8 @@
 """Aileler: EMA sıkışması kırılım sinyali ve kurulum bilgisi (KURALLAR §3 madde 2 ve "Modül 1"; TASARIM 5.1 ısınma, 5.3 SMA250 şartı)."""
 
+from dataclasses import asdict
+from datetime import datetime, timezone
+
 import numpy as np
 import pandas as pd
 
@@ -24,6 +27,170 @@ from tansu.katalog import (
 
 VARYANTLAR = eski_parametreler()
 STOP_KAT = dict(_KATALOG_STOP_KAT)
+
+
+def ortak_kurulum(veri_paketi, tarih, strateji):
+    """E1 ve çözülmüş stratejiden günün EMA kayıtları (TASARIM 5.15)."""
+    beklenen = legacy_coz(strateji.varyant, strateji.katalog_surumu)
+    if any(
+        getattr(strateji, a) != getattr(beklenen, a)
+        for a in (
+            "aile",
+            "parametreler",
+            "sabitler",
+            "gosterge_ayarlari",
+            "ayar_parmak_izi",
+            "dolum_surumu",
+            "risk_surumu",
+            "masraf_surumu",
+            "muhasebe_surumu",
+            "donem_surumu",
+        )
+    ):
+        raise ValueError("Çözülmüş strateji katalogla uyuşmuyor")
+    tarih = pd.Timestamp(tarih)
+    donem = veri_paketi["referans"]["istenen_donem"]
+    if not pd.Timestamp(donem["baslangic"]) <= tarih <= pd.Timestamp(donem["bitis"]):
+        raise ValueError("Değerlendirme tarihi istenen dönemin dışında")
+    p = Parametre(**{a.ad: a.deger for a in strateji.parametreler})
+    meta = {
+        "sema_surumu": "kurulum_s06_v1",
+        "olusturma_zamani": datetime.now(timezone.utc).isoformat(),
+        "kaynaklar": [asdict(k) for k in strateji.kaynaklar],
+        "baglar": {
+            "deneme_id": None,
+            "kosu_id": None,
+            "ayar_parmak_izi": strateji.ayar_parmak_izi,
+            "politika_surumu": strateji.risk_surumu,
+            "veri_ref_id": veri_paketi["referans"]["kayit_id"],
+            "bos_nedenleri": {
+                "deneme_id": "hesap_onizlemesi",
+                "kosu_id": "hesap_onizlemesi",
+            },
+        },
+    }
+    sonuc = {"gostergeler": [], "sinyaller": [], "isinma": {}}
+    for s in veri_paketi["semboller"]:
+        f = _piyasa_mumlari(veri_paketi["piyasa"], s, tarih)
+        temiz = f.dropna(subset=["kapanis"])
+        sonuc["isinma"][s] = {
+            "gozlem": len(temiz),
+            "gerekli": p.isinma,
+            "tamam": len(temiz) >= p.isinma,
+        }
+        if tarih not in f.index:
+            continue
+        g = _ortak_gostergeler(f, p)
+        for ad in g:
+            sonuc["gostergeler"].append(
+                {
+                    **meta,
+                    "kayit_id": f"{s}:{tarih.date()}:{ad}:{strateji.ayar_parmak_izi}",
+                    "kayit_turu": "gosterge",
+                    "sembol": s,
+                    "tarih": str(tarih.date()),
+                    "ad": ad,
+                    **gostergeler.deger_kaydi(
+                        g.at[tarih, ad],
+                        "birimsiz"
+                        if ad
+                        in ("rsi", "adx", "stokastik_k", "stokastik_d", "sikisma_orani")
+                        else "TL/adet",
+                        "eksik_veri"
+                        if f.loc[:tarih, ["kapanis", "yuksek", "dusuk"]]
+                        .isna()
+                        .any()
+                        .any()
+                        else "isinma_veya_tanimsiz",
+                    ),
+                }
+            )
+        for i, (t, satir) in enumerate(kurulum(temiz, p).iterrows()):
+            if t == tarih:
+                sonuc["sinyaller"].append(
+                    _sinyal_kaydi(s, t, i, satir, g.at[t, "atr"], p, strateji, meta)
+                )
+    return sonuc
+
+
+def _piyasa_mumlari(satirlar, sembol, tarih):
+    satirlar = [
+        r
+        for r in satirlar
+        if r["sembol"] == sembol and pd.Timestamp(r["tarih"]) <= tarih
+    ]
+    indeks = pd.DatetimeIndex([r["tarih"] for r in satirlar])
+    if not indeks.is_monotonic_increasing or indeks.has_duplicates:
+        raise ValueError("Piyasa tarihleri sıralı ve tekil olmalı")
+    f = pd.DataFrame(
+        {
+            ad: [r[f"duzeltilmis_{ad}"]["deger"] for r in satirlar]
+            for ad in ("kapanis", "yuksek", "dusuk", "aof")
+        },
+        index=indeks,
+        dtype=float,
+    )
+    f["hacim"] = [r["hacim_tl"]["deger"] for r in satirlar]
+    return f
+
+
+def _ortak_gostergeler(f, p):
+    g = gostergeler.tablo(f, p.sma_n, ATR_N)
+    k, y, d = f["kapanis"], f["yuksek"], f["dusuk"]
+    for n in p.periyotlar:
+        g[f"ema{n}"] = gostergeler.ema(k, n)
+    g["sikisma_orani"] = gostergeler.sikisma_orani(k, p.periyotlar)
+    g["momentum"] = gostergeler.momentum_squeeze(y, d, k)
+    g["macd_histogram"] = gostergeler.macd_histogram(k)
+    g["adx"] = gostergeler.adx(y, d, k)
+    g["psar"] = gostergeler.psar(y, d)
+    g["stokastik_k"], g["stokastik_d"] = gostergeler.stokastik(y, d, k)
+    return g
+
+
+def _sinyal_kaydi(sembol, tarih, sira, satir, atr, p, strateji, meta):
+    deger = gostergeler.deger_kaydi
+    stop = satir.kutu_alt if p.stop == "kutu" else None
+    girdiler = [
+        asdict(a) for a in strateji.parametreler if a.ad in ("stop", "cikis", "rr_min")
+    ]
+    girdiler += [
+        {
+            "ad": "atr",
+            "tur": "sayi",
+            "kaynaklar": meta["kaynaklar"],
+            **deger(atr, "TL/adet"),
+        },
+        {
+            "ad": "stop_kati",
+            "tur": "sayi",
+            "kaynaklar": meta["kaynaklar"],
+            **deger(STOP_KAT.get(p.stop), "ATR", "kutu_stopu"),
+        },
+    ]
+    return {
+        **meta,
+        "kayit_id": f"{sembol}:{tarih.date()}:{sira}:{strateji.ayar_parmak_izi}",
+        "kayit_turu": "sinyal",
+        "semboller": [sembol],
+        "tarih": str(tarih.date()),
+        "strateji_id": strateji.kayit_id,
+        "aile": strateji.aile,
+        "varyant": strateji.varyant,
+        "katalog_surumu": strateji.katalog_surumu,
+        "yon": "al",
+        "aday_durumu": "legacy_sinyal",
+        "kutu_alt": deger(satir.kutu_alt, "TL/adet"),
+        "kutu_ust": deger(satir.kutu_ust, "TL/adet"),
+        "hedef": deger(
+            satir.hedef,
+            "TL/adet",
+            "uygulanmaz" if p.hedef == "yok" else "hedef_bulunamadi",
+        ),
+        "ilk_stop": deger(stop, "TL/adet", "dolum_bekleniyor"),
+        "kurulum_girdileri": girdiler,
+        "kural_kaniti": meta["kaynaklar"],
+    }
 
 
 def _kosu_basi(f: pd.DataFrame, p: Parametre) -> np.ndarray:
