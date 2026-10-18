@@ -118,7 +118,7 @@ yorumumuzdur**; ekranda "Tansu'nun sistemi" diye sunulmaz. (P5)
 
 Her modülün dışarıya küçük bir yüzü var. İçi değişse de dışı değişmez. Paket düzdür (`tansu/`). (C-3)
 
-**Yeni modül varyantının gölge koşusu (Levent kararı 18.10):** Yeni modül varyantı siteye girmeden önce
+**Yeni modül varyantının gölge koşusu (#71):** Yeni modül varyantı siteye girmeden önce
 Levent'in bilgisayarında mevcut koşularla paralel bir gölge koşuda sinyal üretir. Resmi değil, [§5.11'deki
 geliştirme koşusu](#511-çoklu-deneme-düzeltmesi-ve-deneme-günlüğü) demektir; varyant sitede seçenek olarak sunulmaz.
 Siteye giriş için varyantın [kural kaydına](#58-dönemler) bağlı tarihli sinyal listesi ve tamamlanan gölge koşunun
