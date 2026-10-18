@@ -11,7 +11,9 @@ from tansu import cift, gostergeler, kayit, veri
 
 # Tansu'nun KRDMD ekranı (docs/kurallar/B-momentum-sikisma.md §1). Tolerans: gösterilen son hanenin yarısı.
 SEMBOL = "KRDMD"
-RAPOR_TARIHI = pd.Timestamp("2026-04-09")
+RAPOR_TARIHI = pd.Timestamp(
+    "2026-04-09"
+)  # Bizim hesap tarihimiz; kaynak görselde rapor tarihi yok.
 PENCERE = 130  # "Son 130 Mum"
 DONEM = (pd.Timestamp("2025-12-17"), pd.Timestamp("2026-01-14"))
 DONEM_GUN = 20
@@ -80,7 +82,7 @@ def _bolum(ad, s) -> list:
         gostergeler.SIKISMA_PERIYOTLAR, EMALAR, s["emalar"], strict=True
     ):
         satirlar.append(
-            f"| EMA{p} ({RAPOR_TARIHI.date()}) | {t} | {b:.4f} | "
+            f"| EMA{p} (hesap tarihi {RAPOR_TARIHI.date()}; bizim hesabımız) | {t} | {b:.4f} | "
             f"{'üretti' if abs(b - t) <= TOLERANS else 'üretmedi'} |"
         )
     if len(s["donemler"]) > 1:
@@ -252,12 +254,21 @@ def _ek_aday_bolumu(anlik) -> list:
     giris = [
         "## Çift Z, ek aday turu (10.10.2026)",
         "",
-        '- `fiyat_ols` (Tansu X403: "spread = A - hedge_ratio * B"): fiyat düzeyinde '
+        "- `fiyat_ols`: Tansu, 17.04.2025, gönderi 1912875732646117781 "
+        '(`x-arsiv/tweets.jsonl:4374`): "spread = A - hedge_ratio * B". '
+        "Kaynakta sabit terim ve pencere belirtilmez. Aday tanımı bizim yorumumuz (YORUM): fiyat düzeyinde "
         "s_t = Y_t − a − h·X_t; a ve h, t'de biten w günlük OLS'den. "
         "Z_t = (s_t − ortalama(s)) / std(s); istatistikler aynı pencerenin kendi uyumunun kalıntılarından.",
-        '- `sabit_std` (Tansu X404: log farkı, hareketli ortalama, "Sabit standart sapma"): '
-        "d = log Y − log X; e = d − w günlük hareketli ortalama(d); Z_t = e_t / std(e). "
-        "Standart sapma bütün mevcut seri için tek sabit sayıdır.",
+        "- `sabit_std`: Tansu, 15.11.2024, gönderi 1857400047589048780 "
+        '(`x-arsiv/tweets.jsonl:2045`): "iki varlık arasındaki logaritmik getiri farkını ve bu farkın '
+        'hareketli ortalaması ile standart sapma bantlarının hesaplanması ilkesine dayanıyor". '
+        "Tansu, 23.11.2024, gönderi 1860462510752575670 (`x-arsiv/tweets.jsonl:2156`): "
+        '"Sabit standart sapma, aşırı bölgeleri net görmek ve işlem kararlarını basitleştirmek için tercih ettim." '
+        "Aday tanımı bizim yorumumuz (YORUM): d = log Y − log X; "
+        "e = d − w günlük hareketli ortalama(d); Z_t = e_t / std(e). "
+        "Standart sapma bütün mevcut seri için tek sabit sayıdır. "
+        "Buradaki d, log fiyat farkıdır; kaynağın log getiri farkı değildir. "
+        "Bu aday Tansu'nun formülünü doğrulamaz.",
         "- `dun_pencere` (bugünü dışlayan pencere, bilet 06 notu): `cift.z_skor` ile aynı spread "
         "(log oran veya log fiyatların OLS kalıntısı); ortalama ve standart sapma t−1'de biten w günden. "
         "Kalıntı modunda OLS uyumu da bu pencereden; Z_t = (s_t − ortalama) / std.",
@@ -310,7 +321,11 @@ def rapor_metni(anlik) -> str:
         "",
         f"Anlık görüntü: `{anlik.kimlik}`. Ham kapanış, EMA20/50/100/200 `ewm(adjust=False)`, oran = "
         f"(en büyük EMA − en küçük EMA) / EMA200, eşik ≤ %1,2, en az 3 gün, son {PENCERE} gün, "
-        f"rapor tarihi {RAPOR_TARIHI.date()}.",
+        f"hesap tarihi {RAPOR_TARIHI.date()} (bizim hesabımız).",
+        "",
+        "Kaynak arşiv kökü: `C:/Users/levent/Desktop/YONETIM/beyin/kisisel/300-Projects/Tansu X Veri Havuzu/`. "
+        "Tansu'nun KRDMD görselini içeren gönderisi: 18.04.2026, kimlik 2045420999743606827 "
+        "(`x-arsiv/tweets.jsonl:7512`). Görselde rapor tarihi yoktur.",
         "",
     ]
     olcumler = [
