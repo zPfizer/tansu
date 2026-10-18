@@ -51,7 +51,7 @@ olduğunu söyler; sayı, formül ve işleyiş, atıf verilen bölümdedir (TASA
 
 | Terim | Anlam |
 |---|---|
-| Evren | Belli bir ayda yeni giriş için taranabilen hisseler (TASARIM §5.2). |
+| Evren | Belli bir tarihte yeni giriş için taranabilen hisseler. Eski aylık politika TASARIM §5.2'de, yeni motorun tarihli üyelik politikası §5.15'tedir (Levent 18.10: "Her tarihte o dönemin BIST 30 üyelerine göre yapalım."). |
 | Hayatta kalan yanlılığı | Bugün var olan hisselere bakarak geçmişi iyimser görme hatası (TASARIM §5.2). |
 | Piyasa durumu | Endeksin o günkü durum etiketi (TASARIM §5.7, §6). |
 
@@ -122,7 +122,7 @@ olduğunu söyler; sayı, formül ve işleyiş, atıf verilen bölümdedir (TASA
 | Stop | Zararı kesme seviyesi (TASARIM §5.5). |
 | Bozulma | İki anlamı vardır. Projede: kapanışın uzun dönem ortalamasının altına inmesi, yani gün sonu stopu (TASARIM §5.5). Harmonik kaynaklarda: formasyonun geçersizleşmesi (KURALLAR §2). |
 | Hedef | Kâr hedefi, kâr alma seviyesidir; formasyon hedefi (D), harmonik kurulumun tamamlanma seviyesidir. Çift rotasyonunda hedef, geçilecek bacaktır. EMA sıkışması kırılımında hedef, üstteki arz bölgesi ya da üçgen formasyonunun hedefidir (TASARIM §5.5–5.6, KURALLAR §2–3). |
-| R | Hisse başına planlanan risk tutarı (TASARIM §5.3). |
+| R | Eski işlem tablosunda hisse başına ilk stop mesafesi (TASARIM §5.3). Yeni motorun net R sonucu, işlemin net sonucunun ilk planlanan riskine oranıdır; birim ve risk dayanağı TASARIM §5.15'tedir (Tansu, Ham, `not-backtest-giris-sadeligi-risk-islem-gunlugu.md:37`, 02.09.2026: "Pozisyon büyüklüğünü stop mesafesine göre hesaplayın."). |
 | Planlanan risk | Stop seviyesinde çıkılacağı varsayımıyla pozisyonun tamamında planlanan kayıp tutarı (TASARIM §5.3). |
 | Fiili risk | Planlanan riskin özkaynağa oranı. |
 | Gerçekleşen kayıp | Masraf hariç, giriş ve çıkış fiyatlarından doğan kayıp tutarı (TASARIM §5.3). |
@@ -156,6 +156,10 @@ olduğunu söyler; sayı, formül ve işleyiş, atıf verilen bölümdedir (TASA
 | Kural kaydı | Kuralın, parametrelerinin ve kodunun parmak izi (TASARIM §5.8). |
 | Deneme günlüğü | Koşuların, kural kayıtlarının ve aile durumlarının kaydı (TASARIM §5.11). |
 | Deneme sayısı (m) | Holm düzeltmesinde sayılan resmi deneme sayısı. Aile durumu olan "Deneme"den ve tekrar sayısından (B) ayrıdır (TASARIM §5.11). |
+| Ayar revizyonu | Uygulanan ayarların geçmişteki bir sürümüdür. Bir revizyon ile o ayarın çalıştırılması ayrı kayıtlardır; resmi deneme sayısıyla aynı değildir (TASARIM §5.15; [DVC kullanıcı kılavuzu](https://doc.dvc.org/user-guide), araştırmada erişim 18.10.2026; S01 YORUM kayıt sözleşmesi). |
+| Tam çözülmüş strateji | Seçilmiş bir bileşimin hesaplamaya girecek bütün ayarları ve kaynaklarıyla açıklanmış hali (TASARIM §5.15; [DVC kullanıcı kılavuzu](https://doc.dvc.org/user-guide), araştırmada erişim 18.10.2026; S01 YORUM kayıt sözleşmesi). |
+| Tanısal eğri | Sonuçları belirtilmiş bir muhasebe dayanağında bir araya getiren gösterim. Bağımsız işlem sonuçları hesap özkaynağı değildir (TASARIM §5.15; Levent 18.10: "Ortak para falan yok. Her işlem ayrı gibi düşün."). |
+| Günlük uygunluk | Belirli strateji ve ayar sürümünün günlük kullanım için kanıt ve karar koşullarını sağlaması. Sonuç gösteriminden ayrıdır (TASARIM §5.15; Levent 18.10: "Bir sonucu güvenmek için yani bunları ben sonuçları gördükçe karar verebilirim bence."). |
 | Tekrar sayısı (B) | K1'de rastgele kuralın kaç kez çekildiği (TASARIM §5.7). |
 | Kanıt | Bir ailenin geçmiş veride, masraflar dahil, karşılaştırmalı sınama sonucu. |
 | Fazla getiri | Kuralın getirisinin karşılaştırma sepetinin getirisinden farkı (TASARIM §5.7). |
@@ -171,7 +175,7 @@ olduğunu söyler; sayı, formül ve işleyiş, atıf verilen bölümdedir (TASA
 | Blok bootstrap | Günlük seriyi ardışık bloklar hâlinde yeniden örnekleyerek güven aralığı çıkarma yöntemi (TASARIM §5.9). |
 | Örneklem şartı | Karar verilebilmesi için gereken en az gözlem sayısı (TASARIM §5.9). |
 | Saptanabilir en küçük etki (MDE) | Verinin şanstan ayırt edebileceği en küçük fazla getiri (TASARIM §5.9, §5.12). |
-| İleri yürüme yılları | Tek sürekli koşunun yıllara kesilmiş parçaları (TASARIM §5.8). |
+| İleri yürüme yılları | Eski raporda tek sürekli koşunun yıllara kesilmiş parçalarının adı (TASARIM §5.8). Yeniden eğitimle ileri yürümeden ayrıdır (TASARIM §5.15; [AmiBroker ileri yürüme](https://www.amibroker.com/guide/h_walkforward.html), araştırmada erişim 18.10.2026). |
 | İşlem yok yılı | Çift bölmesinde hiç çift seçilemeyen yılın etiketi; işlemsiz her yıl değildir (TASARIM §5.6, §5.12). |
 | Doğrulama | Kuralın geliştirme verisi üzerindeki geçmiş sınaması; ayrılmış dönemden ve kâğıt üstü dönemden ayrıdır (TASARIM §5.8). |
 | Ayrılmış dönem | Kurallar yazılırken bakılmamış dönem: kural kaydından sonrası. |
@@ -189,7 +193,7 @@ olduğunu söyler; sayı, formül ve işleyiş, atıf verilen bölümdedir (TASA
 | Deneme / Kâğıt / Canlı | Deneme, resmi kabul almamış; Kâğıt, geçmiş sınamayı geçmiş; Canlı, kâğıt üstü dönemi de geçmiş aile durumudur (TASARIM §5.12, §6). |
 | Kâğıt üstü dönem | Kâğıt ailenin para konmadan izlendiği dönem. Canlı durumundan ayrıdır (TASARIM §5.8). |
 | Tansu sınaması | Tansu'nun kendi sınama yöntemi: her hissede ayrı ızgara, sağlam bölge, al-tut kıyası, kendi ölçü tablosu. Kabul kararına girmez (TASARIM §5.14). |
-| Sağlam bölge | Kendisi ve bütün komşuları kârlı olan ızgara hücreleri. Tek başına kârlı hücre tuzak sayılır (TASARIM §5.14). |
+| Sağlam bölge | Yakın ayarlarda da kârlılık görülen ızgara alanı. Eski kesin komşuluk TASARIM §5.14'te, yeni yöntem kapısı §5.15'tedir (Tansu, Ham, `tweet-sma-optimizasyon-saglam-bolge-asiri-uyum-1986899794032304554.md:51`, 07.11.2025: "İyi optimizasyon, \"sağlam\" (robust) bir bölge bulmaktır."). |
 | Para çıkmaz | En iyi ayarın bile masraf sonrası kazandırmadığı sonuç etiketi (TASARIM §5.14). |
 | Al-tut | Aynı hissenin aynı dönemde bir kez alınıp tutulması; kıyas çizgisidir (TASARIM §5.14). |
 | Geçerli fiyat günü | Tansu sınamasında fiyatı al-tut, değerleme ve gün sayımında kullanılabilen gün (TASARIM §5.14). |
