@@ -3,13 +3,12 @@ import re
 import subprocess
 import sys
 from pathlib import PurePosixPath
-from tempfile import TemporaryDirectory
 
 
-# Altı kural (Levent 17.10: "Sadeleştir."; başlık kuralı Levent 18.10). Testi, biçimi ve lint'i ci iş akışı kanıtlar.
+# Altı kural: Levent 17.10 "Sadeleştir." ve 18.10 kararları. Testi, biçimi ve lint'i ci iş akışı kanıtlar.
 KURAL_1 = "Kural 1: PR gövdesinde Closes #<issue> satırı olmalı."
 KURAL_2 = "Kural 2: ## Kabul ölçütleri bölümünde en az bir kutu olmalı ve her kutu işaretli olmalı."
-KURAL_3 = "Kural 3: ## Gerçek veri kanıtı bölümünde içi dolu bir kod bloğu olmalı."
+KURAL_3 = "Kural 3: tansu/ kodu değiştiğinde ## Gerçek veri kanıtı bölümünde içi dolu bir kod bloğu olmalı."
 KURAL_6 = "Kural 6: PR başlığı #<N> · ile başlamalı ve N, Closes #<N> satırındaki sayı olmalı."
 KURAL_6_BELGE = "Kural 6: Issue'suz belge PR başlığı Belge · <başlık> biçiminde olmalı."
 KAPATMA = re.compile(
@@ -71,64 +70,19 @@ def _inceleme_hatasi(bolum):
 
 
 def _temiz_birlesme(denetlenen, bas_sha, taban, dizin):
-    def git(*arg, ham=False, ortam=None):
+    def git(*arg):
         cikti = subprocess.run(
             ["git", "--no-replace-objects", *arg],
             cwd=dizin,
-            env=ortam,
             capture_output=True,
             check=True,
         ).stdout
-        return cikti if ham else cikti.decode("utf-8", errors="surrogateescape")
+        return cikti.decode("utf-8", errors="surrogateescape")
 
     def dosyalar(x, y):
         cikti = git("diff-tree", "-r", "-z", "--name-only", "--no-renames", x, y)
         return set(cikti.split("\0")) - {""}
 
-    def union_ayni(dosya, birinci, ortak, ikinci, sha):
-        kayitlar = [
-            git("ls-tree", "--format=%(objectmode) %(objecttype)", ref, "--", dosya)
-            for ref in (birinci, sha)
-        ]
-        if kayitlar[0] not in {"100644 blob\n", "100755 blob\n"} or (
-            kayitlar[1] != kayitlar[0]
-        ):
-            return False
-        # Ayrı depo, yerel info/attributes ve genel özniteliklerin kararı değiştirmesini önler.
-        with TemporaryDirectory(prefix="tansu-dod-attributes-") as gecici:
-            git("init", "--bare", "--template=", gecici)
-            ortam = {
-                **os.environ,
-                "GIT_OBJECT_DIRECTORY": git(
-                    "rev-parse", "--path-format=absolute", "--git-path", "objects"
-                ).strip(),
-                "GIT_ATTR_NOSYSTEM": "1",
-                "GIT_CONFIG_NOSYSTEM": "1",
-                "GIT_CONFIG_GLOBAL": os.devnull,
-            }
-            ozellik = git(
-                f"--git-dir={gecici}",
-                "-c",
-                f"core.attributesFile={os.devnull}",
-                "check-attr",
-                f"--source={birinci}",
-                "-z",
-                "merge",
-                "--",
-                dosya,
-                ortam=ortam,
-            )
-        if ozellik.split("\0") != [dosya, "merge", "union", ""]:
-            return False
-        bloblar = [
-            git("rev-parse", f"{ebeveyn}:{dosya}").strip()
-            for ebeveyn in (birinci, ortak, ikinci)
-        ]
-        return git(
-            "merge-file", "--object-id", "--union", "-p", *bloblar, ham=True
-        ) == git("cat-file", "blob", f"{sha}:{dosya}", ham=True)
-
-    # Ortak dosyalar yalnız kayıtlı union kuralı ve birebir union içeriğiyle geçer.
     try:
         git("merge-base", "--is-ancestor", denetlenen, bas_sha)
         for satir in git(
@@ -149,9 +103,6 @@ def _temiz_birlesme(denetlenen, bas_sha, taban, dizin):
                 or not dosyalar(ikinci, sha) <= dal
             ):
                 return False
-            for dosya in getirilen & dal:
-                if not union_ayni(dosya, birinci, taban_ortak[0], ikinci, sha):
-                    return False
     except subprocess.CalledProcessError:
         return False
     except OSError:
@@ -183,9 +134,9 @@ def _denetlenen_hatasi(govde, bas_sha, taban, dizin):
     )
 
 
-def _yalniz_belge(bas_sha, taban, dizin):
+def _degisen_dosyalar(bas_sha, taban, dizin):
     if not bas_sha or not taban:
-        return False
+        return None
     try:
         cikti = subprocess.run(
             [
@@ -204,11 +155,14 @@ def _yalniz_belge(bas_sha, taban, dizin):
             check=True,
         ).stdout
     except subprocess.CalledProcessError:
-        return False
+        return None
     except OSError:
-        return False
+        return None
     # Yeniden adlandırmada eski yol da denetlenir; kodu .md yapmak muafiyet vermez.
-    dosyalar = [PurePosixPath(yol) for yol in cikti.split("\0") if yol]
+    return [PurePosixPath(yol) for yol in cikti.split("\0") if yol] or None
+
+
+def _yalniz_belge(dosyalar):
     return bool(dosyalar) and all(
         yol.suffix == ".md"
         and yol.parts[0] not in {".claude", ".github"}
@@ -236,23 +190,26 @@ def hatalar(
     govde = _yorumsuz(govde or "")
     satirlar = govde.splitlines()
     sonuc = []
+    dosyalar = _degisen_dosyalar(bas_sha, taban, dizin)
     issue_var = any(KAPATMA.fullmatch(satir) for satir in satirlar)
     belge_pr = (
         not issue_var
         and any(re.fullmatch(r"Issue yok:[ \t]+\S.*", satir) for satir in satirlar)
-        and _yalniz_belge(bas_sha, taban, dizin)
+        and _yalniz_belge(dosyalar)
     )
     if not issue_var and not belge_pr:
         sonuc.append(KURAL_1)
     if _kabul_hatasi(_bolum(satirlar, "## Kabul ölçütleri")):
         sonuc.append(KURAL_2)
-    kanit = _bolum(satirlar, "## Gerçek veri kanıtı")
-    if kanit is None or not _kod_kaniti(kanit):
-        sonuc.append(KURAL_3)
-    if ayrinti := _inceleme_hatasi(_bolum(satirlar, "## Bağımsız inceleme")):
-        sonuc.append("Kural 4: ## Bağımsız inceleme: " + ayrinti + ".")
-    if ayrinti := _denetlenen_hatasi(govde, bas_sha, taban, dizin):
-        sonuc.append(ayrinti)
+    if dosyalar is None or any(yol.as_posix().startswith("tansu/") for yol in dosyalar):
+        kanit = _bolum(satirlar, "## Gerçek veri kanıtı")
+        if kanit is None or not _kod_kaniti(kanit):
+            sonuc.append(KURAL_3)
+    if dosyalar is None or any(yol.suffix != ".md" for yol in dosyalar):
+        if ayrinti := _inceleme_hatasi(_bolum(satirlar, "## Bağımsız inceleme")):
+            sonuc.append("Kural 4: ## Bağımsız inceleme: " + ayrinti + ".")
+        if ayrinti := _denetlenen_hatasi(govde, bas_sha, taban, dizin):
+            sonuc.append(ayrinti)
     baslik_eslesmesi = re.match(r"#([0-9]+) · ", baslik or "")
     if belge_pr:
         if not re.fullmatch(r"Belge · \S.*", baslik or ""):

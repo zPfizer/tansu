@@ -5,6 +5,7 @@ Ağa çıkmaz. bash yoksa atlanır.
 """
 
 import os
+import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -152,3 +153,31 @@ def test_ikili_dosya_silmek_kirmizi(klon):
     (klon / "kayit" / "ikili.bin").unlink()
     _kaydet(klon)
     assert _kos(klon).returncode == 1
+
+
+DRIFTLINT_SURUM = (
+    r"(?<!\S)@alifurkangokce/driftlint@"
+    r"(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)(?!\S)"
+)
+
+
+def test_ci_driftlint_surumu_bir_kez_tam_sabitlenir():
+    metin = CI.read_text(encoding="utf-8")
+    assert metin.count("@alifurkangokce/driftlint") == 1
+    assert len(re.findall(DRIFTLINT_SURUM, metin)) == 1
+
+
+@pytest.mark.parametrize(
+    ("metin", "eslesir"),
+    [
+        ("@alifurkangokce/driftlint@0.19.0", True),
+        ("@alifurkangokce/driftlint@0.19.1", True),
+        ("@alifurkangokce/driftlint", False),
+        ("@alifurkangokce/driftlint@0.19.0-extra", False),
+        ("@alifurkangokce/driftlint@0.19.01", False),
+        ("@alifurkangokce/driftlint@0.19.0.1", False),
+        ("@alifurkangokce/driftlint@0x19x0", False),
+    ],
+)
+def test_ci_driftlint_surumu_deseni(metin, eslesir):
+    assert bool(re.search(DRIFTLINT_SURUM, metin)) is eslesir
