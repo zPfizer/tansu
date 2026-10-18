@@ -116,8 +116,21 @@ def test_kapi_driftlint_kodu_yazilir_ve_hata_kapiyi_durdurur(tmp_path, kod):
     assert sonuc.returncode == kod
 
 
-def test_kapi_ve_ci_ayni_driftlint_surumunu_kullanir():
-    desen = r"@alifurkangokce/driftlint@\d+\.\d+\.\d+"
+@pytest.mark.parametrize(
+    ("metin", "eslesir"),
+    [
+        ("@alifurkangokce/driftlint@0.19.0", True),
+        ("@alifurkangokce/driftlint@0.19.1", False),
+        ("@alifurkangokce/driftlint", False),
+        ("@alifurkangokce/driftlint@0.19.0-extra", False),
+        ("@alifurkangokce/driftlint@0.19.01", False),
+        ("@alifurkangokce/driftlint@0.19.0.1", False),
+        ("@alifurkangokce/driftlint@0x19x0", False),
+    ],
+)
+def test_kapi_ve_ci_ayni_driftlint_surumunu_kullanir(metin, eslesir):
+    desen = r"@alifurkangokce/driftlint@0\.19\.0(?![\w.+-])"
+    assert bool(re.search(desen, metin)) is eslesir
     kapi = re.findall(desen, (KOK / "kurulum" / "kapi.ps1").read_text(encoding="utf-8"))
     ci = re.findall(
         desen, (KOK / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
