@@ -3,7 +3,7 @@
 These steps belong to flow A (`tansu-yeni-is`). Flow B (`tansu-hata`) runs them too. Other files refer to a step as `tansu-yeni-is` "Review", `tansu-yeni-is` "Merge", and so on. Never refer to a step by its number.
 
 ## Branch
-Choose the issue, PR, or direct path from [Issue and PR rule](../../../docs/agents/issue-tracker.md#issue-and-pr-rule).
+Choose the issue, PR, or direct path from [Issue and PR rule](../../../docs/agents/issue-tracker.md#issue-and-pr-rule). For a PR without an issue, use `belge-<ad>` as the branch name.
 
 For the issue + PR path, if no issue exists, make one first with the issue template. Make the branch for the issue the GitHub way: `gh issue develop <N> --name <N>-<ad> --base master`. The branch name is the issue number and a short name in lower case ASCII letters, digits, and hyphens. Then run these in the main checkout: `git fetch origin`, then `git worktree add .claude/worktrees/<N>-<ad> <N>-<ad>`. If the session already runs in a Claude Code worktree, run `git fetch origin` and `git switch <N>-<ad>` in it. Source: docs.github.com "Creating a branch for an issue" (https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/creating-a-branch-for-an-issue). Clear the context between tickets. A worktree has no `.venv`. In a worktree, use the main venv `C:\Users\levent\Desktop\TANSU\.venv\Scripts\python.exe`. <!-- driftlint-ignore: local-only path of the main repository venv, absent in CI -->
 
@@ -38,7 +38,7 @@ Push the branch to `origin`. `mattpocock-skills:pr` and `.github/pull_request_te
 
 Use the body and title forms from `docs/agents/issue-tracker.md` "Issue and PR rule". For a linked issue, the merge into the default branch closes it. CI checks the body and title (`.github/dod_kontrol.py`, Kural 1 and Kural 6). Source: docs.github.com "Linking a pull request to an issue" (https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/linking-a-pull-request-to-an-issue).
 
-Open a draft PR with this command chain: `git fetch -q origin && git merge-base --is-ancestor origin/master HEAD && git push -q -u origin <branch> && gh pr create --draft --base master --head <branch> --title "#<N> · <title>" --body-file <pr-govde.md>`. After the verdict, fill `## Bağımsız inceleme`. Run `gh pr edit <N> --body-file <file>`, then `gh pr ready <N>`. The `dod` check skips a draft PR and runs at `gh pr ready`.
+For the issue + PR path, open a draft PR with this command chain: `git fetch -q origin && git merge-base --is-ancestor origin/master HEAD && git push -q -u origin <branch> && gh pr create --draft --base master --head <branch> --title "#<N> · <title>" --body-file <pr-govde.md>`. For a PR without an issue, use `belge-<ad>` for `<branch>` and `Belge ? <title>` for `--title`. After the verdict, fill `## Bağımsız inceleme`. Run `gh pr edit <N> --body-file <file>`, then `gh pr ready <N>`. The `dod` check skips a draft PR and runs at `gh pr ready`.
 
 ## Merge
 Apply `docs/agents/git.md` "Change log and releases" before the change enters master and when its milestone closes.
@@ -49,11 +49,11 @@ Merge when two things are true.
 
 Wait for CI with one command: `gh pr checks <N> --watch` (timeout 300000 ms). Do not poll the status.
 
-Claude merges with `gh pr merge <N> --merge`. The merge closes the issue. GitHub deletes the remote branch (auto-delete is on). Levent gets only the completion note (Levent 15.10).
+Claude merges with `gh pr merge <N> --merge`. On the issue + PR path, the merge closes the linked issue. A PR without an issue closes no issue. GitHub deletes the remote branch (auto-delete is on). Levent gets only the completion note (Levent 15.10).
 
 Then close the worktree with `py -3 -X utf8 C:\Users\levent\Desktop\TANSU\kurulum\kapanis.py <worktree>`. <!-- driftlint-ignore: local-only path of the main repository, absent in CI --> Run the command in the main checkout `C:\Users\levent\Desktop\TANSU`, not inside the worktree: Windows cannot remove the working directory of a process, and the script stops with exit 1 before any change. <!-- driftlint-ignore: local-only path of the main repository, absent in CI --> The script removes the worktree. It runs `git pull --ff-only origin master` in the main checkout and removes the local branch. It prints three proof lines: `kapanis: ana HEAD <sha> = origin/master`, `kapanis: is klasoru yok`, and `kapanis: uzak dal yok`. Paste them in the final report. Source: docs.github.com "GitHub flow" (https://docs.github.com/en/get-started/using-github/github-flow): "After you merge your pull request, delete your branch."
 
 ## Close
-The merged PR closes the issue. Close a spec issue when its last ticket closes. Only GLOSSARY and TASARIM stay for good. A session that Levent started writes the result to the brain with the `beyin` skill (Threads and a receipt). A side session follows the receipt sentence below.
+On the issue + PR path, the merged PR closes the linked issue. Close a spec issue when its last ticket closes. Only GLOSSARY and TASARIM stay for good. A session that Levent started writes the result to the brain with the `beyin` skill (Threads and a receipt). A side session follows the receipt sentence below.
 
 A side session (another session started it) writes only one receipt: `py -3 C:\Users\levent\Desktop\YONETIM\beyin\beyin.py receipt --harness claude --event-id <job> --ref "<vault note>" --summary "<text>"`. <!-- driftlint-ignore: local-only path of the brain tool, absent in CI --> `--ref` is a note path inside the brain vault (for example the module card's source note or `knowledge/concepts/kod-standartlari-genel.md`). Write the output paths of the repository in `--summary`. A `--ref` outside the vault fails. The session that started it writes Threads.

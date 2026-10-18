@@ -167,6 +167,15 @@ def _yalniz_belge(bas_sha, taban, dizin):
     return bool(dosyalar) and all(
         yol.suffix == ".md"
         and yol.parts[0] not in {".claude", ".github"}
+        and yol.parts[:2] not in {("docs", "kurallar"), ("docs", "agents")}
+        and yol.as_posix()
+        not in {
+            "docs/TASARIM.md",
+            "docs/KURALLAR.md",
+            "CODING_STANDARDS.md",
+            "DEFINITION_OF_DONE.md",
+            "GLOSSARY.md",
+        }
         and yol.name not in {"AGENTS.md", "CLAUDE.md"}
         for yol in dosyalar
     )
