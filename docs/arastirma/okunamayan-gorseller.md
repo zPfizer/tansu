@@ -2,7 +2,7 @@
 
 Issue #62 · 18.10.2026.
 
-Tarihsel sayı, havuzdaki `x-arsiv/eleme-rapor.md` dosyasının "Açık sorunlar" bölümünde 47 görsel olarak geçer. TANSU tarafında eski kimlik listesi bulunamadı. Dağıtıcı, 18.10.2026 tarihinde güncel taramanın verdiği **47 not / 48 görsel** listesinin kullanılmasını istedi. Bu dosya o listenin ve yeniden okuma sonuçlarının kaydıdır; tarihsel 47 görselin kimlikleriyle eşitlik iddiası taşımaz.
+Tarihsel sayı, havuzdaki `x-arsiv/eleme-rapor.md` dosyasının "Açık sorunlar" bölümünde 47 görsel olarak geçer. Eski kimlik listesi, aşağıdaki "Eski kimlik listesi için arama kanıtı" bölümünde belirtilen dosyalarda bulunamadı. Dağıtıcı, 18.10.2026 tarihinde güncel taramanın verdiği **47 not / 48 görsel** listesinin kullanılmasını istedi. Bu dosya o listenin ve yeniden okuma sonuçlarının kaydıdır; tarihsel 47 görselin kimlikleriyle eşitlik iddiası taşımaz.
 
 Kaynak kökü: `C:/Users/levent/Desktop/YONETIM/beyin/kisisel/300-Projects/Tansu X Veri Havuzu/`. Tablodaki not yolları bu köke göredir. Görsel yolu `assets/<not dosyasının uzantısız adı>/<görsel dosyası>` biçimindedir. G numarası, nottaki görsel bölümünü belirtir.
 
@@ -69,4 +69,71 @@ Tarama, kökteki `tweet-*.md` notlarını dosya adına göre sıralar. `Görseld
 
 Havuz notları ve görselleri değiştirilmedi. Düzeltme önerileri, dağıtıcının uygulaması için issue #62 PR gövdesinin "Havuz düzeltme önerisi" bölümündedir. `docs/kurallar/` dosyaları değiştirilmedi.
 
-Tarama öncesi kaynak kümesinin SHA-256 değeri (göreli yollar ve dosya baytları, sıralı 47 not + 48 görsel): `db101e2d9d80b82a81f541ca71fd4653d36c46e9319387b9d1ab3bc1d4f4dda2`.
+Kaydedilen kaynak kümesinin SHA-256 değeri (göreli yollar ve dosya baytları, sıralı 47 not + 48 görsel): `db101e2d9d80b82a81f541ca71fd4653d36c46e9319387b9d1ab3bc1d4f4dda2`. Özet, güncel bayt eşleşmesini denetler; önceki okuyucu eylemlerini veya özetin kaydedilme zamanını tek başına kanıtlamaz.
+
+## Eski kimlik listesi için arama kanıtı
+
+Tur 1 düzeltmesinde aşağıdaki aramalar yeniden çalıştırıldı. Ağ kullanılmadı. Yerel `origin/master`: `49283312bf2fcef9dc17b40b9c81e23e369b3327`. İlk komut TANSU çalışma ağacında çalıştırıldı:
+
+```powershell
+git grep -n -i -l "okunamayan\|okunamad" origin/master -- docs ':!docs/strateji-taslak'
+```
+
+Çıktı:
+
+```text
+origin/master:docs/TASARIM.md
+origin/master:docs/arastirma/bist100_kap_bosluk.csv
+origin/master:docs/arastirma/kullanim-kosullari-fiyat-adimi.md
+origin/master:docs/arastirma/veri-kaynaklari.md
+origin/master:docs/kurallar/A-yapi-bolge.md
+origin/master:docs/kurallar/E-risk-cikis-surec.md
+Çıkış kodu: 0
+```
+
+İkinci komut ana TANSU dizininde (`C:/Users/levent/Desktop/TANSU`) çalıştırıldı:
+
+```powershell
+& 'C:/Program Files/Git/usr/bin/grep.exe' -rli '47 görsel\|okunamayan' .scratch
+```
+
+Çıktı:
+
+```text
+.scratch/arsiv/belge-hizasi/denetim/bilet-04-rapor.md
+.scratch/modul-1-kod/okuma/okuma-6.md
+.scratch/modul-1-kod/tmp/okuma-istem.md
+.scratch/retro-1610-cozum/ortak-kurallar.md
+Çıkış kodu: 0
+```
+
+Her eşleşen dosya açıldı. `docs/` satırları yerel `origin/master` içeriğine, `.scratch/` satırları ana TANSU dizinine aittir:
+
+| Dosya ve eşleşen satır | İçeriği |
+|---|---|
+| `docs/TASARIM.md`:1076,1080 | KAP kullanım koşulları ve dönem içi endeks değişikliklerinin okunamaması. |
+| `docs/arastirma/bist100_kap_bosluk.csv`:3,10 | BIST100 üyeliği boşlukları ve ayrıştırılamayan KAP PDF sütunları. |
+| `docs/arastirma/kullanim-kosullari-fiyat-adimi.md`:17 | KAP robots.txt ve yasal uyarı erişim hataları (404, HTTP 666). |
+| `docs/arastirma/veri-kaynaklari.md`:105 | DataStore sayfasının okunamaması; endeks üyeliği ürünü, fiyatı ve ücretsizliği belirsiz. |
+| `docs/kurallar/A-yapi-bolge.md`:242,248 | -117 görselindeki EMA dizilimi ve -103 görselindeki ADX eşik değerinin okunamaması. |
+| `docs/kurallar/E-risk-cikis-surec.md`:84 | G-125 stop rakamları ve giriş fiyatının okunamaması. |
+| `.scratch/arsiv/belge-hizasi/denetim/bilet-04-rapor.md`:147 | 14.10 belge hizası raporu; iki açık görsel: ICBCT ilk EMA etiketi ve G-125 stop sayısı. |
+| `.scratch/modul-1-kod/okuma/okuma-6.md`:34 | Beş notun çıkış paketi okuması; eşleşme YAPRK stop tablosundaki "okunamayan yer yok" ifadesi. |
+| `.scratch/modul-1-kod/tmp/okuma-istem.md`:8 | Modül 1 okuyucu istemi; okunamayan yere "okunamıyor" yazma talimatı. |
+| `.scratch/retro-1610-cozum/ortak-kurallar.md`:12 | 16.10 işinin ortak talimatları; birebir metindeki okunamayan yere "okunamıyor" yazma kuralı. |
+| Havuz `x-arsiv/eleme-rapor.md`:57–59 | "Açık sorunlar" tarihsel 47 sayısını ve örnek sapma kimliklerini verir. |
+
+Havuz raporu da tam açıldı. Tarihsel sayının doğrudan araması:
+
+```powershell
+& 'C:/Program Files/Git/usr/bin/grep.exe' -n '47.sinde' 'C:/Users/levent/Desktop/YONETIM/beyin/kisisel/300-Projects/Tansu X Veri Havuzu/x-arsiv/eleme-rapor.md'
+```
+
+Çıktı:
+
+```text
+57:1. Görsel metni Sonnet'le yazıldı. "okunamıyor" içeren 61 alınmış görsel Opus ile yeniden okundu ve notlara o metin kondu; 47'sinde hâlâ okunamayan parça var (beyaz karalama, kesik kenar, üst üste binen etiket, el yazısı).
+Çıkış kodu: 0
+```
+
+Eski 47 görselin tam kimlik listesi, açılan bu dosyalarda bulunamadı. Bu sonuç yalnız belirtilen arama kapsamı içindir. Bu nedenle güncel 48 görsele göre eklenen ve eksilen kimlikler belirlenemedi; farkın yalnız bir ek görsel olduğu iddia edilmez.
