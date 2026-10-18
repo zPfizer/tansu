@@ -216,3 +216,50 @@ def test_rapor_metni_ucuncu_satir_kurallar_4e_atif_verir(tmp_path):
     assert "Getiriye bakılmaz." not in metin
     assert "(±0,005)" in satirlar[2]
     assert "Eşdeğer adaylar" in metin
+
+
+def test_rapor_ema_hesap_tarihi_bizim_hesabimizdir(tmp_path):
+    metin = sadakat.rapor_metni(veri.oku(hazirla(tmp_path), tmp_path))
+    assert "hesap tarihi 2026-04-09 (bizim hesabımız)" in metin
+    assert "rapor tarihi 2026-04-09" not in metin
+    assert "18.04.2026" in metin
+    assert "2045420999743606827" in metin
+    assert "x-arsiv/tweets.jsonl:7512" in metin
+    assert "Görselde rapor tarihi yoktur." in metin
+    ema_satirlari = [s for s in metin.splitlines() if s.startswith("| EMA")]
+    assert len(ema_satirlari) == 12
+    assert all("hesap tarihi 2026-04-09; bizim hesabımız" in s for s in ema_satirlari)
+
+
+def test_rapor_cift_kaynak_alintilarini_yorumdan_ayirir(tmp_path):
+    semboller = ["KRDMD", "VAKBN", "GARAN"]
+    fiyatlar = {s: [satir("2026-04-09", 10.0, 10.0)] for s in semboller}
+    kaynak = SahteKaynak(fiyatlar, {s: [] for s in semboller})
+    kimlik = veri.indir(
+        semboller, tmp_path, kaynak, simdi=dt.datetime(2026, 10, 5, 19, 30)
+    )
+    metin = sadakat.rapor_metni(veri.oku(kimlik, tmp_path))
+    fiyat_ols = next(s for s in metin.splitlines() if s.startswith("- `fiyat_ols`"))
+    assert "x-arsiv/tweets.jsonl:4374" in fiyat_ols
+    assert "1912875732646117781" in fiyat_ols and "17.04.2025" in fiyat_ols
+    assert '"spread = A - hedge_ratio * B"' in fiyat_ols
+    assert "bizim yorumumuz (YORUM)" in fiyat_ols
+    assert "sabit terim ve pencere belirtilmez" in fiyat_ols
+    assert "Tansu X403" not in metin
+    sabit_std = next(s for s in metin.splitlines() if s.startswith("- `sabit_std`"))
+    assert "x-arsiv/tweets.jsonl:2045" in sabit_std
+    assert "1857400047589048780" in sabit_std and "15.11.2024" in sabit_std
+    assert (
+        '"iki varlık arasındaki logaritmik getiri farkını ve bu farkın hareketli ortalaması '
+        'ile standart sapma bantlarının hesaplanması ilkesine dayanıyor"' in sabit_std
+    )
+    assert "Tansu X404" not in metin
+    assert "x-arsiv/tweets.jsonl:2156" in sabit_std
+    assert "1860462510752575670" in sabit_std and "23.11.2024" in sabit_std
+    assert (
+        '"Sabit standart sapma, aşırı bölgeleri net görmek ve işlem kararlarını '
+        'basitleştirmek için tercih ettim."' in sabit_std
+    )
+    assert "Aday tanımı bizim yorumumuz (YORUM): d = log Y − log X" in sabit_std
+    assert "log fiyat farkıdır; kaynağın log getiri farkı değildir" in sabit_std
+    assert "Tansu'nun formülünü doğrulamaz" in sabit_std
