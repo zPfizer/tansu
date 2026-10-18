@@ -45,6 +45,7 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ### Düzeltildi
 
+- Tamamlanma denetimi, Windows üzerinde Türkçe kural uyarılarını eksiksiz yazıyor; eksik kabul kutusu yine reddediliyor. (#118)
 - Strateji kataloğundaki kural ayarları ve sabitler kod parmak izinin kapsamına alındı. (#83)
 - Veri katmanının motor katmanına ters bağımlılığı kaldırıldı; karantina süresinin tek sahibi veri katmanı oldu, değer ve davranış korundu. (#85)
 
