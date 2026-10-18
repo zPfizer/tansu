@@ -8,6 +8,7 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ### Eklendi
 
+- Sürümlü BIST 30 başvuru tablosu, tarihli üyelik kanıtı ve giriş günü denetimi eklendi; eksik kapsam koşuyu durdurur, eski evren politikaları korunur. (#86)
 - Kayıtlı görüntü, piyasa kayıtları ve çift girdileri ortak veri motorunda hazırlandı; eski iki kalite politikası ve manifest doğrulaması korundu. (#85)
 - Havuzdaki kalan 1.259 not okundu; ek kaynaklar, yeni okumalar ve gerekçeli kapsam dışı kayıtları belgelere işlendi. (#59)
 - Yeni motorun davranış sözleşmesi; bağımsız işlem, dönem, kayıt ve motor sınırları ile açık yöntem ve sahip kapıları belgelendi. Eski politikalar korundu. (#82)
