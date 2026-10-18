@@ -514,6 +514,13 @@ Genel bulgu: Tansu bazı notlarda giriş, stop ve hedefi birlikte verir: `gorsel
 - Günlük bedava veriyle uygulanabilir mi: Okuma (YORUM): fiyat yapısı ve FVG günlük OHLCV ile hesaplanabilir; belirsiz seçimler tamamlanmalıdır. Haber uyarısı yalnız OHLCV ile uygulanamaz.
 - Kaynak güveni: Ham'da giriş, stop, hedef ve sıra açıktır. Okuma (YORUM): pivot ve yürütme ayrıntıları nedeniyle hazırlık K.
 
+## 22. ACSEL direnç/VAL senaryosu ve trend izleme ilkesi (18.10)
+
+- ACSEL direnç kırılımı (`tweet-acsel-direnc-kirilimi-volume-profile-val`; 27.08.2026; Ham, Ham'da yazar yok; G1 açıldı): "Örneğin acsel direnci geçer ise nisbeten volume düşük olsa bile VAL seviyesine hareket etme potansiyeli görünüyor" (Ham). Garanti uyarısı: "Her harmonik %100 çalışır diye de bir kaide olamaz" (Ham). Okuma (YORUM): direnç aşılması koşuluyla VAL yönünde hareket olasılığı anlatılır; düşük hacim genel bir giriş izni değildir. G1'de mumlar, bölge kutuları, düşen direnç çizgileri ve sağda yatay hacim profili görülür. Sayısal fiyat veya eşik aktarılmadı.
+- Trend izleme ilkesi (`tweet-fiyatlar-trend-halinde-hareket-eder`; 28.08.2026; Ham, Ham'da yazar yok): "Asıl amacımız ASLA TEPE VEYA DİP NOKTALARI YAKALAMAYA ÇALIŞMAK DEĞİLDİR." / "akıntının (momentumun) yönünü tayin edip o dalgayı sürmeye odaklanmalısınız." (Ham). Okuma (YORUM): tepe/dip tahmini yerine momentum yönünü izleme ilkesidir. Trend ölçüsü veya ters sinyal algoritması bu ilkeden türetilmez.
+- Belirsiz kalanlar (Okuma, YORUM): ACSEL direncinin seçimi, kırılımın fitil/kapanış teyidi, hacim ölçüsü, profil penceresi, stop ve işlem zamanı; trend ilkesinde yön ve ters sinyal ölçüsü. Bunlar uygulama seçimi değildir; mevcut giriş, hacim ve çıkış koşulları değiştirilmez.
+- Kanıt sınırı (Okuma, YORUM): ACSEL koşullu beklentidir, gerçekleşmiş hedef sonucu değildir. Trend metni ilke anlatımıdır. İki notun Ham metninden bir sınama sonucu çıkarılmaz. Hazırlık K.
+
 ## Sıralı özet: koda en yakın kurallar (günlük bedava veri ile)
 
 Kodlanabilirlik sırası (kaynağın verdiği ve bizim YORUM ile doldurmamız gereken parametrelere göre):
@@ -538,7 +545,7 @@ Kodlanamayacak veya yeterince tanımsız olanlar:
 Tansu'nun kanıt durumu (tüm kurallar için): sistematik backtest veya gerçekleşen işlem istatistiği, bu dosyanın taradığı notlarda yok (tüm havuz taranmadı). Görseller seçilmiş örneklerdir (LIDER, GC=F, AKFIS, BOM pozitif; BALAT, AKSGY başarısız vaka olarak gösterilmiş).
 
 ## Okunmayanlar / kısmen okunanlar
-- Okunmadı (yalnız adı veya görseli): `tweet-acsel-direnc-kirilimi-volume-profile-val`, `tweet-formasyon-arz-talep-confluence-kapisi`, `tweet-finans-muhendisligi-destek-direnc-seviye-motoru`, `tweet-fiyatlar-trend-halinde-hareket-eder`, `gorsel-paket-99` görsel 01/02 (yalnız 03 açıldı), `gorsel-paket-101` not gövdesinin devamı.
+- Okunmadı (görsel veya gövde devamı): `gorsel-paket-99` görsel 01/02 (yalnız 03 açıldı), `gorsel-paket-101` not gövdesinin devamı. Bu notların mevcut okumaları §16'dadır.
 - Kısmen okundu (ilk ~45-140 satır): tüm -09/-10/-11/-12/-13/-15/-18/-21/-41/-44/-64/-69/-93/-99/-101/-103/-105/-117/-128 notları; gövdedeki Claude'un "Teknik Ek" formülleri ikinci el olarak işaretlendi.
 - Havuz notlarının çoğunda birebir Tansu metni "Ham" bölümünde durur (örnek: `tweet-mum-govde-hacim-anomalisi-uyarisi`); bu dosyanın eski bölümleri yalnız Claude özetinden okundu, "Ham" ile çelişirse "Ham" esastır. X gönderilerine erişilmedi.
 - Görsel çözünürlüğü düşük olduğundan (680 px) -10/-11/-12/-13 tablolarındaki bazı değerler yaklaşıktır.

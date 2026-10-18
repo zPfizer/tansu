@@ -1063,6 +1063,7 @@ tweet-yukselen-trend-destek-temas-taramasi-2016245363062005978 · MAGEN destekli
 tweet-yukselen-ucgen-kirilim-tespiti-1954244081036546156 · RALYH yükselen üçgen kırılımının tarihli grafik çıktısı ve okuyucuya yöneltilen değerlendirme sorusu.
 tweet-yutan-formasyon-taramasi-1843017197884760484 · Boğa/ayı yutan formasyon tarama kodu bağlantısı ve KCHOL örnek çıktı paylaşımı.
 tweet-zigzag-tobo-tespiti-onay-1908975769994596535 · Haftalık TOBO için örnek grafik ve iyi dilek paylaşımı.
+tweet-finans-muhendisligi-destek-direnc-seviye-motoru · Araştırma niyeti; Ham: Yakında denemeye başlayacağız. Finans mühendisliğiyle destek/direnç bulma sorusudur; işlem koşulu, model veya formül vermez (Ham; Ham'da yazar yok).
 
 ## Kısa atıfların tam adları (bilet 04, 14.10)
 
