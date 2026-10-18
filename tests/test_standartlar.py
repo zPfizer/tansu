@@ -12,6 +12,7 @@ def test_modul_bagimliliklari_tek_yonlu_geri_import_yok():
         ("kaynak",),
         ("veri",),
         ("evren", "gostergeler"),
+        ("katalog",),
         ("aileler", "cift"),
         ("motor",),
         ("simulator",),

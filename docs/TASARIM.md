@@ -41,6 +41,7 @@ Bir bölümün kodunu bulmak için: `grep -n "TASARIM 5.7" tansu/*.py`.
 | 5.12 Kabul ölçütü | `denetim`, `istatistik`, `kayit`, `rapor`, `__main__` |
 | 5.13 Veri kapıları | `veri`, `kaynak`, `gunluk`, `rapor`, `simulator` |
 | 5.14 Tansu sınaması | `tansusinama`, `__main__` |
+| 5.15 Motor davranış sözleşmesi | `katalog` |
 | 6 Günlük işleyiş | `gunluk`, `rapor`, `kayit`, `gostergeler` |
 
 ---
@@ -135,6 +136,7 @@ Siteye giriş için varyantın [kural kaydına](#58-dönemler) bağlı tarihli s
 | `veri` | indirme → anlık görüntü; olay tablosu; veri kapıları | Ayrıntı aşağıda. (B2, B-2, B-7) |
 | `evren` | tarih → o gün yeni giriş için taranabilecek hisseler | 5.2. |
 | `gostergeler` | fiyat → EMA, SMA, ATR, RSI, momentum squeeze, MACD, PSAR, stokastik, piyasa durumu | Vektörel; sınamada ve canlıda aynı kod. Kütüphane yok. Tanımlar `KURALLAR.md` §3'tedir. |
+| `katalog` | aile, varyant, katalog sürümü ve ayar isteği → tam çözülmüş strateji veya doğrulama hatası | E2 katalog sahibi; §5.15. Eski tanımların saklanması seçim izni vermez. |
 | `aileler` | hisse fiyatı → sinyal günleri, kurulum bilgisi (kutu, hedef), arz ve talep bölgeleri | Tek hisse aileleri. EMA ailesinin varyantları ve bölgeler `KURALLAR.md` §3'tedir. |
 | `cift` | çift fiyatları → hangi hissede olunacağı | Kendi döngüsü. |
 | `ciftbolme` | seçim, Z geçişleri, çift bölmesi simülasyonu, VAKBN–GARAN | `cift` ve `simulator`'a dayanır (bilet 11); 5.6. |
@@ -167,12 +169,12 @@ Siteye giriş için varyantın [kural kaydına](#58-dönemler) bağlı tarihli s
 - Yakalanmayan istisna günlüğe yazılır, çıkış kodu 1 olur.
 
 **Bağımlılık yönü** tek yönlüdür, geri import yok (İ: 11-039):
-`kaynak` → `veri` → `evren`, `gostergeler` → `aileler`, `cift` → `motor` → `simulator` → `ciftbolme` → `istatistik`
+`kaynak` → `veri` → `evren`, `gostergeler` → `katalog` → `aileler`, `cift` → `motor` → `simulator` → `ciftbolme` → `istatistik`
 → `saglamlik` → `rapor` → `kayit` → `tansusinama` → `gunluk`, `denetim` → `__main__`.
 (`rapor` yalnız `simulator`'a dayanır; `kosu()` raporu aynı çağrıda yazar ve `rapor-<koşu>.html` adı koşu kimliğinden
 gelir, bu yüzden `kayit` `rapor`'dan sonra gelir. Önceki sıra `kayit` → `rapor` koda uymuyordu.)
 
-**Test yüzleri:** testler yalnız bu yüzlere yazılır: Adım, Motor, Simülatör, İstatistik, Evren, veri kapıları, aileler (kurulum bilgisi ve bölgeler için
+**Test yüzleri:** testler yalnız bu yüzlere yazılır: katalog (tam kayıt, eski uyarlayıcı, panel komutu ve komut satırında aynı doğrulama), Adım, Motor, Simülatör, İstatistik, Evren, veri kapıları, aileler (kurulum bilgisi ve bölgeler için
 elle hesaplı mumlar), kayıt
 (sonuc C-9), göstergeler (Wilder ATR ve EMA için elle hesaplı 5 satırlık örnek; İ: 12-018; RSI, momentum squeeze, ADX, MACD, PSAR ve stokastik için elle hesaplı kısa örnek) ve rapor (sahte sonuçtan rapor ve
 CSV: sütun listesi, ilk satır cümlesi, sabit durum listesi, yasaklı kelime AL, SAT, ÖNERİ, "Tansu'nun sistemi"; İ: 17-093) ve
@@ -660,7 +662,7 @@ Dolar bazı ilk sürümde yok.
     tanımı (iki ailenin ızgarası, `saglamlik.IZGARA`).
     - **Kural:** değişmesi işlemleri, dolumları, limit/kilit/karantinayı, evreni, p değerlerini ya da kabul kararını
       değiştirebilecek her modül listededir. İndirme, rapor, günlük koşu, CLI, sadakat ve denetim kodu listede yoktur.
-    - **Liste:** aileler, cift, ciftbolme, evren, gostergeler, istatistik, kayit, motor, saglamlik, simulator, veri.
+    - **Liste:** aileler, cift, ciftbolme, evren, gostergeler, istatistik, katalog, kayit, motor, saglamlik, simulator, veri.
     - **İki not:** `veri.py` indirmeyi de içerir ama kapı ve karantina mantığı (`Anlik.gun_tablosu`, `adim`) kuraldır;
       dosya bölünmediği için bütünüyle listededir. `kayit.py` Holm, kabul girdisi ve K1 tekrar sayısının (B)
       hesabını içerir; o da listededir (muhafazakâr: kayıt kodu değişince yeni kayıt gerekir). Bu, tekrar
@@ -1170,6 +1172,101 @@ E5 önce revizyon makbuzunu verir; E4/E6 bu referansla çalışır. Değişmeyen
 koşudur; kaydetme olayı yeni revizyondur. Izgara hücresi alt denemedir; MC senaryosu koşunun alt kaydıdır.
 Holm için resmi sınıf ve hipotez ailesi ayrıca yazılır; senaryo veya revizyon adedi m diye sunulmaz.
 Dayanak: [W8], [L4]; taslak kayıt tablosu, C Q87 ve eski resmi sayım §5.11.
+
+#### Strateji kataloğu (S02, #83)
+
+E2'nin katalog sahibi `tansu/katalog.py` dosyasıdır. Katalog, mevcut 24 tanımı temel ve tek alan
+değişikliği ilişkisiyle saklar. `aileler.Parametre` ve `aileler.VARYANTLAR` eski çağrılar için
+uyarlayıcıdır; adlar, varsayılanlar, sabitler ve hesap çıktıları korunur. Katalog çözümlemesi yeni
+gösterge veya işlem hesabı yapmaz. Dayanak: #83 brifi, §5.15 ortak kayıt sözleşmesi.
+
+Saklanan tanım ile seçilebilir birleşim ayrıdır. Seçim izni, giriş, süzgeç, hedef, çıkış ve risk
+ayarlarının bütününü destekleyen birinci el Tansu kaynağı gerektirir. Tek bir parçanın kaynağı veya
+iki tek değişikliğin ayrı ayrı geçerliliği, birleşime izin vermez. Birleşim kanıtı kaynak konumu ve
+tarihiyle tam kayda taşınır. Kanıtlanmayan tanım eski karşılaştırma olarak okunur ve seçimde açık
+hatayla reddedilir. Dayanak: Levent 18.10.2026, #83 görev girdisi: "Siteden Tansu'nun anlatmadığı bir
+bileşim şu anlık kurulamasın."
+
+Tansu'nun kendi sözleriyle genel kullanım için verdiği stop veya çıkış paketi, Tansu kaynaklı
+bir girişle eşlenebilir. Bütün parçaların aynı notta bulunması şart değildir. Stratejiye özel
+bir paketin başka girişlere aktarılması veya yalnız sahip kararı, Tansu bileşim kanıtı sayılmaz.
+Dayanak: #83 kaynak turu görev girdisi, genel paket ve sahip kararı ayrımı.
+
+Çözümleyici aileyi, varyantı, katalog sürümünü, istenen sayısal ayarları ve işlem politikası
+referanslarını doğrular. Bilinmeyen alan, bilinmeyen sürüm, eksik işlem ayarı ve izinsiz birleşim
+ayrı hata kodları verir. Panel komutu ve katalog komut satırı aynı seçim doğrulayıcısını çağırır.
+Eski uyarlayıcı seçime izin veren bir yol değildir. Dayanak: #83 brifi; §5.15 E2 ve ortak kayıtlar.
+
+Tam kayıt, ortak kayıt alanlarıyla birlikte parametreleri, gösterge ayarlarını ve sürümlenmiş
+sabitleri taşır. Her ayar türünü, birimini, kaynağını ve kökenini korur. Kayıt ve içindeki ayarlar
+değişmezdir. İşlem politikası referansları gizli varsayılanla doldurulmaz; eski tanım kendi eski
+politikasını açıkça taşır. Yeni kaynak veya birleşim izni yeni katalog sürümü gerektirir.
+Dayanak: #83 brifi; §5.15 ortak kayıt sözleşmesi ve eski politikalar.
+
+Alan kökeni ile bütün bileşimin kökeni ayrı değerlendirilir. Eski birleşimin YORUM olması,
+birinci elde aynen verilen bir `periyotlar` değerini YORUM yapmaz. Böyle bir alan Tansu kaynağını
+korur; açık sahip kararının alanı sahip kararı kökenini korur. Formül veya sayısal seçimin yalnız
+bir kısmına dayanak olan not, destek kaynağı olarak eklenir; bütün hesap Tansu'nun birebir tanımı
+diye etiketlenmez. Örneğin hacim notu ortalama üstüne kat verir, fakat mevcut ortalama penceresi
+ve önceki günleri kullanma tanımının tamamını vermez
+(`tweet-qullamaggie-tarzi-hacimli-breakout-tarama-1979546907505545421.md:29`, 18.10.2025, Ham).
+Kaynak kökü T kaynaklarıyla aynıdır. Testin bütün alanları koşulsuz YORUM sayan ilk beklentisi bu
+ayrımı kaybettiği için hatalıdır; alan kaynağına göre düzeltilir. Bu düzeltme birleşim iznini açmaz.
+Dayanak: #83 alan kökeni şartı; KURALLAR §3 ve bu bölümün kaynak sınırı.
+
+`s02_v1` kataloğunda mevcut 24 tanım eski karşılaştırma olarak saklanır; seçimleri kapalıdır.
+Kaynak turunda genel ATR çıkışı ve genel risk boyutlama dayanağı doğrulandı:
+`tweet-atr-iz-suren-stop-tablosu-2045421697814126693.md:21–23` (18.04.2026, Ham ve G1),
+"tüm hisseleri" anlatımı ve genel kullanım talimatlarıyla 2 ATR'de girişe stop, 3 ATR'de
+1 ATR'ye stop ve yarı satış verir. Bu genel paket Tansu girişine eşlenebilir.
+`tweet-statik-dinamik-atr-iz-suren-stop-1989985215452758434.md:23–34` (16.11.2025, Ham)
+ayrı bir genel yöntem verir: 1,5 ATR ilerledikten sonraki önceki dip altı kapanışta yarı satış.
+`tweet-volatiliteye-gore-pozisyon-buyuklugu-1987500065401733478.md:47–48` (09.11.2025, Ham)
+her işlemde önceden belirlenmiş hesap yüzdesini riske etmeyi söyler. Genel paket dayanağı,
+mevcut ortak paketin bütününe kendiliğinden izin vermez.
+
+Özellikle `tweet-under30-over30-1-5r-basabas-cikis-1992547498343161903.md:22–32`
+(23.11.2025, Ham) 1,5 R başabaş çıkışını Under 30 Over 30 girişiyle anlatır.
+`tweet-rsi30-donus-yari-ve-tam-cikis-kurallari-1991721699922870638.md:20–34`
+(21.11.2025, Ham) RSI50/SMA50 çıkışlarını RSI30 dönüşüyle anlatır. Bunların bütün EMA
+girişlerine aktarımı doğrulanmadı. `gorsel-paket-115-position-sizing-yuzde1-2atr-sma250.md:20–22`
+(kayıt 28.08.2026, Ham'da yazar yok, NotebookLM görseli) SMA250 ve 2 ATR'yi örnekler;
+Ham başka ortalamalara da izin verir. Bütün girişlerde zorunlu SMA250 çıkışı ve eski
+portföyün tavan/likidite politikası için bütün bileşim desteği doğrulanmadı. R/R kapısının
+sahip kararı kökeni korunur (KURALLAR §3). Bu eksikler yalnız sayısal YORUM değildir;
+farklı strateji kapsamlarının ve risk politikalarının birlikte uygulanmasıdır.
+
+Giriş parçaları ayrıca kaynaklıdır. Örneğin
+`tweet-ema-sikismasi-talep-bolgesi-kirilim-2002087132089770127.md:33` (19.12.2025, Ham, devamı 50.
+satıra kadar) talep bölgesindeki giriş, stop ve arz hedefini birlikte anlatır. Genel ATR
+paketiyle eşleme mümkündür; bu, yukarıdaki özel başabaş ve risk politikası eksiğini kapatmaz.
+`tweet-ema-sikismasi-ucgen-kirilim-hacim-1954300245707497649.md:22` (09.08.2025, Ham, devamı 30.
+satıra kadar) EMA, üçgen ve hacmi birlikte anlatır; mevcut `giris_ucgen` tanımının ek süzgeç ve
+çıkış paketinin bütününe kanıt değildir. Kaynak kökü yukarıdaki T kaynaklarıyla aynıdır.
+Doğru `context --no-sync` aramaları bu ortamda `read-only runtime is not initialized`
+hatasıyla durdu. Adı verilen adaylar, ek Ham notları ve görseller doğrudan okundu; bütün
+havuzda kaynak bulunmadığı iddia edilmez. Bu, bileşim kanıtı eksiğidir; sayısal ayrıntıların
+YORUM olması tek başına ret gerekçesi değildir. Olumlu seçim kanıtlanmadığı için #83'ün
+kaynaklı bileşim kabul ölçütü açıktır; yalnız sahip kararıyla seçim açılmaz.
+
+`legacy_coz` tam eski kaydı okur. `secim_dogrula` seçim isteğini doğrular; `panel_komutu` ve
+`python -m tansu.katalog coz` bu yüzü kullanır. `python -m tansu.katalog liste` saklanan tanımları
+izin durumlarıyla gösterir. Bu yüzlerin kayıt şeması `strateji_s02_v1`, katalog sürümü `s02_v1`'dir.
+İstekteki işlem ayarları `dolum_surumu`, `risk_surumu`, `masraf_surumu`, `muhasebe_surumu` ve
+`donem_surumu` referanslarını açıkça taşır. Bunlar §5.15 ortak kaydının alanlarıdır; yeni işlem
+politikasının uygulanması anlamına gelmez.
+
+Sayısal alan ancak tanımsız eşik olarak işaretlenmişse ve onaylı arama aralığı varsa düzenlenebilir.
+Bu iki koşul birlikte sağlansa bile tam birleşim izni ayrıca aranır. S02 girdilerinde onaylı arama
+aralığı verilmediğinden katalog bu sürümde sayısal düzenleme açmaz. Dayanak: #83 brifi ve karar sınırı.
+
+Uyum testinin elle hesaplı örneği (`tests/test_aileler.py`): ilk 510 kapanış 100, ardından 110 ve
+112 olduğunda `bugun` için ilk sıçrama günü hâlâ sıkışmadır. EMA20 yaklaşık 100,95238, EMA200
+100,09950; oran yaklaşık 0,00852'dir. Ertesi gün EMA20 yaklaşık 102,00454, EMA200 100,21792;
+oran yaklaşık 0,01783'tür. Bu nedenle pencere 0 tabanlı 511. günde açılır. Testin ilk 510. gün
+beklentisi hatalıydı; beklenen gün bu gerekçeyle düzeltilir. Eski ve yeni çözümün eşitliği şartı
+değişmez. Bu örnek yeni kural veya Tansu kaynak kanıtı değildir; sıkışma ve pencere tanımını
+uygular (KURALLAR §3 ve TASARIM §5.15 eski davranışın korunması).
 
 #### Yöntem kayıtları ve açık kapılar
 
