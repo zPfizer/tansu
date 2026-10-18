@@ -1,11 +1,13 @@
 import ast
 import importlib.util
 import os
+import shlex
 import subprocess
 import sys
 from pathlib import Path
 
 import pytest
+import yaml
 
 
 _yol = Path(__file__).resolve().parents[1] / ".github" / "dod_kontrol.py"
@@ -505,7 +507,8 @@ def test_sablon_gecerli_govdeye_doldurulunca_gecer():
 
 
 def test_dod_kontrol_python_312_soz_dizimi():
-    # dod.yml uses the runner's default python (no setup-python).
+    # dod.yml installs Python 3.14.
+    # Keep the Python 3.12 grammar check to catch newer syntax in the checker.
     metin = _yol.read_text(encoding="utf-8")
     ast.parse(metin, feature_version=(3, 12))
 
@@ -521,6 +524,38 @@ def test_dod_yml_taslak_ve_sha():
         "PR_BASLIK: ${{ github.event.pull_request.title }}",
     ):
         assert parca in metin
+
+
+@pytest.mark.parametrize(
+    ("govde", "beklenen", "kod"),
+    [
+        (GECERLI.replace("- [x] İkinci", "- [ ] İkinci"), R2, 1),
+        (GECERLI, "Definition of Done listesi tam.", 0),
+    ],
+    ids=["kural_2", "gecerli"],
+)
+def test_dod_is_akisi_cp1252_cikti(govde, beklenen, kod):
+    kok = _yol.parents[1]
+    akis = yaml.safe_load(
+        (kok / ".github/workflows/dod.yml").read_text(encoding="utf-8")
+    )
+    adim = next(adim for adim in akis["jobs"]["dod"]["steps"] if "run" in adim)
+    degerler = {
+        "${{ github.event.pull_request.title }}": BASLIK,
+        "${{ github.event.pull_request.body }}": govde,
+        "${{ github.event.pull_request.head.sha }}": SHA,
+    }
+    ortam = {**os.environ, "PYTHONIOENCODING": "cp1252:strict"}
+    ortam.update({ad: degerler.get(deger, deger) for ad, deger in adim["env"].items()})
+    komut = shlex.split(adim["run"])
+    sonuc = subprocess.run(
+        [sys.executable, *komut[1:]], cwd=kok, env=ortam, capture_output=True
+    )
+    assert sonuc.stdout.decode("utf-8").splitlines() == [beklenen], sonuc.stderr.decode(
+        "utf-8", errors="replace"
+    )
+    assert sonuc.returncode == kod
+    assert sonuc.stderr == b""
 
 
 def test_kapi_betigi():
