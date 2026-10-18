@@ -118,6 +118,12 @@ yorumumuzdur**; ekranda "Tansu'nun sistemi" diye sunulmaz. (P5)
 
 Her modülün dışarıya küçük bir yüzü var. İçi değişse de dışı değişmez. Paket düzdür (`tansu/`). (C-3)
 
+**Yeni modül varyantının gölge koşusu (Levent kararı 18.10):** Yeni modül varyantı siteye girmeden önce
+Levent'in bilgisayarında mevcut koşularla paralel bir gölge koşuda sinyal üretir. Resmi değil, [§5.11'deki
+geliştirme koşusu](#511-çoklu-deneme-düzeltmesi-ve-deneme-günlüğü) demektir; varyant sitede seçenek olarak sunulmaz.
+Siteye giriş için varyantın [kural kaydına](#58-dönemler) bağlı tarihli sinyal listesi ve tamamlanan gölge koşunun
+çıktısı gerekir. Levent bu çıktıları gördükten sonra varyantın siteye girişine karar verir.
+
 | Modül | Girdi → çıktı | Not |
 |---|---|---|
 | `kaynak` | sembol, tarih aralığı → ham tablo | Ağa çıkan tek yer: İş Yatırım ve borsapy (yalnız faiz, sektör ve şirket listesi) (bilet 07e, 15.10). Ham alan adları (`HG_*`, `HGDG_*`) tek bir sözlükle proje adlarına çevrilir. İş Yatırım okuma zaman aşımı (5, 120) sn: ağır sorgular 40 ve 90 sn'de zaman aşımına uğradı; C-8'deki (5, 30) bu değerle değişti. (C-8, İ: 18-075, 01-057) |
