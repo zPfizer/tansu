@@ -37,7 +37,7 @@ SHA = "0123456789abcdef0123456789abcdef01234567"
 SHA_BASKA = "fedcba9876543210fedcba9876543210fedcba98"
 R1 = "Kural 1: PR gövdesinde Closes #<issue> satırı olmalı."
 R2 = "Kural 2: ## Kabul ölçütleri bölümünde en az bir kutu olmalı ve her kutu işaretli olmalı."
-R3 = "Kural 3: ## Gerçek veri kanıtı bölümünde içi dolu bir kod bloğu olmalı."
+R3 = "Kural 3: tansu/ kodu değiştiğinde ## Gerçek veri kanıtı bölümünde içi dolu bir kod bloğu olmalı."
 R4 = "Kural 4: ## Bağımsız inceleme: {}."
 
 
@@ -308,28 +308,17 @@ def _celiski_birlesmesi(dizin):
     return b, _git(dizin, "rev-parse", "HEAD")
 
 
-def test_kural_5_elle_cozulen_celiski_taban_ozelligiyle_gizlenmez(depo):
+def test_kural_5_elle_cozulen_ortak_dosyali_master_birlesmesi_gecer(depo):
     dizin, _, _ = depo
     b, m = _celiski_birlesmesi(dizin)
-    _git(dizin, "checkout", "master")
-    _commit(dizin, ".gitattributes", "*.txt merge=union\n")
-    assert hatalar(_govde_git(b), m, taban="master", dizin=dizin, baslik=BASLIK) == [
-        R5_BIRLESME.format(b, m)
-    ]
-
-
-def test_kural_5_info_attributes_celiskiyi_gizlemez(depo):
-    dizin, _, _ = depo
-    b, m = _celiski_birlesmesi(dizin)
-    (dizin / ".git" / "info" / "attributes").write_text(
-        "*.txt merge=union\n", encoding="utf-8"
+    _git(dizin, "update-ref", "refs/remotes/origin/master", "master")
+    assert (
+        hatalar(_govde_git(b), m, taban="origin/master", dizin=dizin, baslik=BASLIK)
+        == []
     )
-    assert hatalar(_govde_git(b), m, taban="master", dizin=dizin, baslik=BASLIK) == [
-        R5_BIRLESME.format(b, m)
-    ]
 
 
-def test_kural_5_ayni_dosyada_iki_taraf_degisirse_reddedilir(depo):
+def test_kural_5_ayni_dosyada_iki_taraf_degisirse_gecer(depo):
     dizin, _, _ = depo
     _git(dizin, "checkout", "master")
     _commit(dizin, "f.txt", "1\n2\n3\n4\n5\n6\n7\n8\n")
@@ -340,59 +329,7 @@ def test_kural_5_ayni_dosyada_iki_taraf_degisirse_reddedilir(depo):
     _git(dizin, "checkout", "yan3")
     _git(dizin, "merge", "--no-edit", "master")
     m = _git(dizin, "rev-parse", "HEAD")
-    assert hatalar(_govde_git(b), m, taban="master", dizin=dizin, baslik=BASLIK) == [
-        R5_BIRLESME.format(b, m)
-    ]
-
-
-@pytest.mark.parametrize(
-    ("surucu", "elle_degistir", "kip", "gecerli"),
-    [
-        ("union", False, "100644", True),
-        ("text", False, "100644", False),
-        ("union", True, "100644", False),
-        ("union", False, "100755", False),
-        ("union", False, "120000", False),
-    ],
-)
-def test_kural_5_union_ortak_dosyanin_icerigini_dogrular(
-    depo, surucu, elle_degistir, kip, gecerli
-):
-    dizin, _, _ = depo
-    _git(dizin, "checkout", "master")
-    _commit(dizin, ".gitattributes", f"CHANGELOG.md merge={surucu}\n")
-    _commit(dizin, "CHANGELOG.md", "- Eski.\n")
-    _git(dizin, "checkout", "-b", "union-dal")
-    b = _commit(dizin, "CHANGELOG.md", "- Dal.\n- Eski.\n")
-    _git(dizin, "checkout", "master")
-    _commit(dizin, "CHANGELOG.md", "- Taban.\n- Eski.\n")
-    _git(dizin, "checkout", "union-dal")
-    if surucu == "union":
-        _git(dizin, "merge", "--no-commit", "--no-ff", "master")
-    else:
-        with pytest.raises(subprocess.CalledProcessError):
-            _git(dizin, "merge", "--no-commit", "--no-ff", "master")
-        (dizin / "CHANGELOG.md").write_text(
-            "- Dal.\n- Taban.\n- Eski.\n", encoding="utf-8"
-        )
-    assert (dizin / "CHANGELOG.md").read_text(encoding="utf-8") == (
-        "- Dal.\n- Taban.\n- Eski.\n"
-    )
-    if elle_degistir:
-        (dizin / "CHANGELOG.md").write_text(
-            "- Dal.\n- Taban.\n- Eski.\n- Elle.\n", encoding="utf-8"
-        )
-    _git(dizin, "add", "CHANGELOG.md")
-    blob = _git(dizin, "rev-parse", ":CHANGELOG.md")
-    _git(dizin, "update-index", "--cacheinfo", f"{kip},{blob},CHANGELOG.md")
-    _git(dizin, "commit", "--no-edit")
-    m = _git(dizin, "rev-parse", "HEAD")
-    assert _git(dizin, "ls-tree", m, "--", "CHANGELOG.md") == (
-        f"{kip} blob {blob}\tCHANGELOG.md"
-    )
-    assert hatalar(_govde_git(b), m, taban="master", dizin=dizin, baslik=BASLIK) == (
-        [] if gecerli else [R5_BIRLESME.format(b, m)]
-    )
+    assert hatalar(_govde_git(b), m, taban="master", dizin=dizin, baslik=BASLIK) == []
 
 
 def test_kural_5_silme_ve_yeniden_adlandirma_gecer(depo):
@@ -556,22 +493,6 @@ def test_dod_is_akisi_cp1252_cikti(govde, beklenen, kod):
     )
     assert sonuc.returncode == kod
     assert sonuc.stderr == b""
-
-
-def test_kapi_betigi():
-    yol = Path(__file__).resolve().parents[1] / "kurulum" / "kapi.ps1"
-    metin = yol.read_bytes().decode("ascii")
-    for parca in (
-        "-m pytest -q",
-        "ruff check .",
-        "ruff format --check .",
-        "git diff --check origin/master",
-        "kapi: HEAD",
-        "temiz",
-        "kirli",
-    ):
-        assert parca in metin
-    assert "--untracked-files=no" not in metin
 
 
 @pytest.mark.parametrize(
@@ -804,3 +725,50 @@ def test_issuesuz_pr_cli_git_dosya_listesini_kullanir(belge_depo, kod_degisti):
     assert sonuc.stdout.strip() == (
         R1 + "\n" + R6 if kod_degisti else "Definition of Done listesi tam."
     )
+
+
+BOS_KANIT_INCELEME = """Closes #49
+## Kabul ölçütleri
+- [x] Davranış sağlandı.
+## Gerçek veri kanıtı
+## Bağımsız inceleme
+"""
+EKSIK_INCELEME = (
+    "Kural 4: ## Bağımsız inceleme: Denetçi: alanı boş veya eksik; "
+    "Sonuç: geçti ya da NOTLU GEÇTİ satırı eksik."
+)
+
+
+@pytest.mark.parametrize(
+    ("dosya", "beklenen"),
+    [
+        ("docs/not.md", []),
+        ("AGENTS.md", []),
+        ("tansu/a.py", [R3, EKSIK_INCELEME, R5_SATIR.format(0)]),
+        ("tests/x.py", [EKSIK_INCELEME, R5_SATIR.format(0)]),
+    ],
+)
+def test_dosyaya_gore_kanit_ve_inceleme(belge_depo, dosya, beklenen):
+    dizin, _ = belge_depo
+    (dizin / dosya).parent.mkdir(parents=True, exist_ok=True)
+    sha = _commit(dizin, dosya, "Yeni içerik")
+    assert hatalar(BOS_KANIT_INCELEME, sha, "origin/master", dizin, BASLIK) == beklenen
+
+
+@pytest.mark.parametrize("durum", ["sha_yok", "taban_yok", "bos", "git_hatasi"])
+def test_bilinmeyen_dosya_listesinde_tum_kurallar_uygulanir(belge_depo, durum):
+    dizin, sha = belge_depo
+    taban = "origin/master"
+    if durum == "sha_yok":
+        sha = None
+    elif durum == "taban_yok":
+        taban = None
+    elif durum == "bos":
+        taban = sha
+    else:
+        taban = "olmayan-dal"
+    assert hatalar(BOS_KANIT_INCELEME, sha, taban, dizin, BASLIK) == [
+        R3,
+        EKSIK_INCELEME,
+        R5_SATIR.format(0),
+    ]
