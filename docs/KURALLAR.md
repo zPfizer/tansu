@@ -11,9 +11,10 @@ Okuma kuralları (birinci el, ikinci el, NotebookLM ve YORUM tanımları GLOSSAR
   bölümü görselle çelişirse görsel geçerlidir (§1 madde 3).
 - Notun öbür bölümleri (Sentez, Cevo çıkarımı, Kaynak kartı, Teknik Ek) ikinci eldir ve kural olarak tek başına kullanılmaz;
   "NotebookLM görseli" etiketi yalnız bilgi verir.
-- Bir YORUM'un sınamada denenen her değeri yeni deneme sayılır; istisna: önceden yazılmış sağlamlık ızgarasının
+- Eski resmi sayımda bir YORUM'un sınamada denenen her değeri yeni deneme sayılır; istisna: önceden yazılmış sağlamlık ızgarasının
   hücreleri ve masraf senaryoları deneme sayısına girmez (TASARIM 5.10, 5.11; İ: 09-056). Sadakat kontrolünde denenen
   aday formüller deneme sayısına girmez, p üretmez; seçilen formül kural kaydına girer (TASARIM 5.11, İ: 10-033, 04-090).
+- Yeni motorun revizyon kaydı, resmi sayımdan ayrıdır; sahibi TASARIM §5.15'tir. Aşağıdaki mevcut aile tanımları legacy olarak korunur; panelde izinli tam bileşim kanıtı aynı bölümün BİLEŞİM kapısındadır (Levent 18.10: "Tabii önce Tansu sonra internet."; [DVC kullanıcı kılavuzu](https://doc.dvc.org/user-guide), araştırmada erişim 18.10.2026; S01 YORUM kayıt sınırı).
 
 ## 1. Ana bulgular
 
