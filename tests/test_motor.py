@@ -397,7 +397,12 @@ def test_sinama_evren_disi_sinyal_pozisyon_acmaz_sonraki_gecerli_sinyal_gecikmez
         f["ham_" + s] = f[s]
     anlik = Anlik("t", f, pd.DataFrame(columns=["sembol", "tarih", "kod", "carpan"]))
     monkeypatch.setattr(
-        aileler, "sinyal", lambda m, p: pd.DatetimeIndex([gun[2], gun[5]])
+        aileler,
+        "kurulum",
+        lambda m, p: pd.DataFrame(
+            index=pd.DatetimeIndex([gun[2], gun[5]]),
+            columns=["kutu_alt", "kutu_ust", "hedef"],
+        ),
     )
     uye = pd.DataFrame({"sembol": "XXXX", "tarih": gun[5:]})
     islemler, dusen = motor.sinama(anlik, aileler.Parametre(sma_n=2), atr_n=2, uye=uye)
@@ -438,7 +443,12 @@ def test_sinama_uyelik_tablosunda_tek_gunluk_ve_iki_gunluk_sembol(
         f["ham_" + s] = f[s]
     anlik = Anlik("t", f, pd.DataFrame(columns=["sembol", "tarih", "kod", "carpan"]))
     monkeypatch.setattr(
-        aileler, "sinyal", lambda m, p: pd.DatetimeIndex([gun[2], gun[5]])
+        aileler,
+        "kurulum",
+        lambda m, p: pd.DataFrame(
+            index=pd.DatetimeIndex([gun[2], gun[5]]),
+            columns=["kutu_alt", "kutu_ust", "hedef"],
+        ),
     )
     uye = pd.DataFrame({"sembol": "XXXX", "tarih": gun[uye_gunleri]})
     islemler, dusen = motor.sinama(anlik, aileler.Parametre(sma_n=2), atr_n=2, uye=uye)
@@ -997,7 +1007,16 @@ def test_mumlar_yeni_sutunlar_hacim_rsi_sma50_onceki_dusuk_onceki_rsi():
     assert pd.isna(m["onceki_dusuk"].iloc[0])
 
 
-def test_sinama_modul_1_varyanti_kutu_stopu_ve_hedef_cikisi():
+def test_sinama_modul_1_varyanti_kutu_stopu_ve_hedef_cikisi(monkeypatch):
+    hesaplanan = []
+    hesapla = aileler.kurulum
+
+    def sayilan_kurulum(*args, **kwargs):
+        sonuc = hesapla(*args, **kwargs)
+        hesaplanan.append(sonuc)
+        return sonuc
+
+    monkeypatch.setattr(aileler, "kurulum", sayilan_kurulum)
     # Elle hesap. İlk 14 gün test_aileler `_ucgen_cercevesi` ile aynı: gün 0-12 düz 100 (sıkışma dönemi), kutu alt 96,
     # kutu üst 105,5, üçgen hedefi 114,5 (orada hesaplı). Gün 13 kapanış 108 > 105,5: sinyal. R/R (kutu stopu) =
     # (114,5 - 108) / (108 - 96) = 0,5417 >= 0,5. Giriş gün 14 AOF 109; stop = kutu alt 96 (düşük 108 > 96); risk 13.
@@ -1026,6 +1045,7 @@ def test_sinama_modul_1_varyanti_kutu_stopu_ve_hedef_cikisi():
         rr_min=0.5,
     )
     islemler, dusen = motor.sinama(a, ayar)
+    assert len(hesaplanan) == 1, "Sinyalin kurulumu yeniden hesaplandı"
     assert dusen == 0 and len(islemler) == 1
     t = islemler.iloc[0]
     assert (t.sembol, t.sinyal_tarih, t.giris_tarih, t.cikis_tarih, t.neden) == (

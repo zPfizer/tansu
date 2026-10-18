@@ -5,15 +5,18 @@ bayrakları ham seriden gelir (`veri.Anlik.gun_tablosu`). K2 ve faiz `simulator.
 """
 
 import itertools
+import hashlib
+import json
 from collections import Counter
 from concurrent.futures import ProcessPoolExecutor
-from dataclasses import dataclass, replace
+from dataclasses import asdict, dataclass, replace
+from datetime import datetime, timezone
 
 import numpy as np
 import pandas as pd
 from statsmodels.tsa.stattools import coint
 
-from tansu import cift, evren, simulator, veri
+from tansu import cift, evren, gostergeler, simulator, veri
 
 AILE = "cift_rotasyonu"
 
@@ -27,6 +30,209 @@ class Parametre:
     en_fazla: int = 5
     sektor_basina: int = 2
     sabit: tuple = ("VAKBN", "GARAN")  # Tansu'nun çifti: (Y, X)
+
+
+def strateji_coz(y="VAKBN", x="GARAN", p=Parametre()):
+    """Katalog dışı mevcut çift ayarlarını çözer (TASARIM 5.15)."""
+    if not y or not x or y == x:
+        raise ValueError("Çift iki farklı sembol gerektirir")
+    ayarlar = {**asdict(p), "ddof": 1, "mod": "log_oran"}
+    icerik = json.dumps(ayarlar, sort_keys=True, ensure_ascii=False)
+    parmak_izi = hashlib.sha256(icerik.encode("utf-8")).hexdigest()
+    kaynaklar = [
+        {
+            "tur": "mevcut_kod",
+            "konum": "tansu/ciftbolme.py:Parametre; tansu/cift.py:z_skor",
+            "tarih": "2026-10-18",
+            "alinti": None,
+            "bos_nedenleri": {"alinti": "mevcut_kod_ayari"},
+            "karar_durumu": "mevcut_ayar",
+        },
+        {
+            "tur": "tasarim",
+            "konum": "docs/TASARIM.md:488-498",
+            "tarih": "2026-10-18",
+            "alinti": None,
+            "bos_nedenleri": {"alinti": "mevcut_kural_referansi"},
+            "karar_durumu": "mevcut_kural",
+        },
+    ]
+    birimler = {
+        "z_pencere": "seans",
+        "secim_gun": "seans",
+        "sabit": "sembol",
+        "mod": "birimsiz",
+    }
+    parametreler = [
+        {
+            "ad": ad,
+            "deger": deger,
+            "tur": "liste"
+            if isinstance(deger, tuple)
+            else "metin"
+            if isinstance(deger, str)
+            else "tam"
+            if isinstance(deger, int)
+            else "sayi",
+            "birim": birimler.get(ad, "birimsiz"),
+            "kaynaklar": kaynaklar,
+        }
+        for ad, deger in ayarlar.items()
+    ]
+    return {
+        "kayit_id": f"cift_rotasyonu:{parmak_izi}",
+        "kayit_turu": "tam_cozulmus_strateji",
+        "sema_surumu": "kurulum_s06_v1",
+        "olusturma_zamani": datetime.now(timezone.utc).isoformat(),
+        "aile": AILE,
+        "varyant": "log_oran",
+        "katalog_surumu": "",
+        "katalog_gerekcesi": "s02_v1 yalnız ema_sikisma içerir; çift ailesi katalogda yok",
+        "semboller": [y, x],
+        "parametreler": parametreler,
+        "gosterge_ayarlari": [
+            a for a in parametreler if a["ad"] in ("z_pencere", "ddof", "mod")
+        ],
+        "bilesim_id": "legacy_cift_log_oran",
+        "izin_durumu": "legacy_karsilastirma",
+        "dolum_surumu": "legacy_aof_5_3",
+        "risk_surumu": "legacy_cift_5_6",
+        "masraf_surumu": "legacy_masraf_5_4",
+        "muhasebe_surumu": "legacy_cift_5_6",
+        "donem_surumu": "legacy_donem_5_8",
+        "ayar_parmak_izi": parmak_izi,
+        "politika_surumu": "legacy_cift_5_6",
+        "kaynaklar": kaynaklar,
+    }
+
+
+def ortak_kurulum(veri_paketi, tarih, strateji):
+    """E1 çift hesabı; ısınma geçmişinden yalnız değerlendirme günü çıkar (TASARIM 5.15)."""
+    y, x = strateji["semboller"]
+    ayarlar = {a["ad"]: a["deger"] for a in strateji["parametreler"]}
+    p = Parametre(**{ad: ayarlar[ad] for ad in Parametre.__dataclass_fields__})
+    beklenen = strateji_coz(y, x, p)
+    if any(
+        strateji.get(ad) != deger
+        for ad, deger in beklenen.items()
+        if ad != "olusturma_zamani"
+    ):
+        raise ValueError("Çözülmüş çift stratejisi mevcut ayarlarla uyuşmuyor")
+    tarih = pd.Timestamp(tarih)
+    donem = veri_paketi["referans"]["istenen_donem"]
+    if not pd.Timestamp(donem["baslangic"]) <= tarih <= pd.Timestamp(donem["bitis"]):
+        raise ValueError("Değerlendirme tarihi istenen dönemin dışında")
+    Kc = _piyasa_kapanislari(veri_paketi, tarih, (y, x))
+    g = cift.hesapla(
+        Kc[y], Kc[x], p.z_pencere, ayarlar["ddof"], ayarlar["mod"], p.z_esik
+    )
+    ad = f"{y}-{x}"
+    sonuc = {
+        "gostergeler": [],
+        "sinyaller": [],
+        "isinma": {
+            ad: {
+                "gozlem": int(Kc.notna().all(axis=1).sum()),
+                "gerekli": p.z_pencere + 1,
+                "tamam": bool(len(g) and pd.notna(g["dz"].iloc[-1])),
+            }
+        },
+    }
+    if tarih not in g.index:
+        return sonuc
+    meta = {
+        "sema_surumu": "kurulum_s06_v1",
+        "olusturma_zamani": datetime.now(timezone.utc).isoformat(),
+        "kaynaklar": strateji["kaynaklar"],
+        "baglar": {
+            "deneme_id": None,
+            "kosu_id": None,
+            "ayar_parmak_izi": strateji["ayar_parmak_izi"],
+            "politika_surumu": strateji["politika_surumu"],
+            "veri_ref_id": veri_paketi["referans"]["kayit_id"],
+            "bos_nedenleri": {
+                "deneme_id": "hesap_onizlemesi",
+                "kosu_id": "hesap_onizlemesi",
+            },
+        },
+    }
+    for gosterge in ("z", "dz"):
+        sonuc["gostergeler"].append(
+            {
+                **meta,
+                "kayit_id": f"{ad}:{tarih.date()}:{gosterge}:{strateji['ayar_parmak_izi']}",
+                "kayit_turu": "gosterge",
+                "sembol": ad,
+                "tarih": str(tarih.date()),
+                "ad": gosterge,
+                **gostergeler.deger_kaydi(
+                    g.at[tarih, gosterge],
+                    "birimsiz",
+                    "eksik_veri" if Kc.isna().any().any() else "isinma_veya_tanimsiz",
+                ),
+            }
+        )
+    hedef_bacak = int(g.at[tarih, "hedef"])
+    if hedef_bacak:
+        sonuc["sinyaller"].append(_sinyal_kaydi(strateji, tarih, hedef_bacak, meta))
+    return sonuc
+
+
+def _piyasa_kapanislari(paket, tarih, semboller):
+    gunler = pd.DatetimeIndex(paket["gunler"])
+    if not gunler.is_monotonic_increasing or gunler.has_duplicates:
+        raise ValueError("Piyasa tarihleri sıralı ve tekil olmalı")
+    Kc = pd.DataFrame(index=gunler[gunler <= tarih], columns=semboller, dtype=float)
+    for sembol in semboller:
+        satirlar = [
+            r
+            for r in paket["piyasa"]
+            if r["sembol"] == sembol and pd.Timestamp(r["tarih"]) <= tarih
+        ]
+        indeks = pd.DatetimeIndex([r["tarih"] for r in satirlar])
+        if not indeks.is_monotonic_increasing or indeks.has_duplicates:
+            raise ValueError("Piyasa tarihleri sıralı ve tekil olmalı")
+        Kc[sembol] = pd.Series(
+            [r["duzeltilmis_kapanis"]["deger"] for r in satirlar],
+            index=indeks,
+            dtype=float,
+        )
+    return Kc
+
+
+def _sinyal_kaydi(strateji, tarih, hedef_bacak, meta):
+    y, x = strateji["semboller"]
+    ayarlar = {a["ad"]: a["deger"] for a in strateji["parametreler"]}
+    bos = gostergeler.deger_kaydi
+    return {
+        **meta,
+        "kayit_id": f"{y}-{x}:{tarih.date()}:{strateji['ayar_parmak_izi']}",
+        "kayit_turu": "sinyal",
+        "semboller": [y, x],
+        "tarih": str(tarih.date()),
+        **{
+            ad: strateji[ad]
+            for ad in ("aile", "varyant", "katalog_surumu", "katalog_gerekcesi")
+        },
+        "strateji_id": strateji["kayit_id"],
+        "yon": "al",
+        "aday_durumu": "legacy_sinyal",
+        "kutu_alt": bos(None, "TL/adet", "cift_ailesinde_kutu_yok"),
+        "kutu_ust": bos(None, "TL/adet", "cift_ailesinde_kutu_yok"),
+        "hedef": bos(hedef_bacak, "bacak"),
+        "hedef_sembol": y if hedef_bacak == 1 else x,
+        "kar_hedefi": bos(None, "TL/adet", "cift_ailesinde_kar_hedefi_yok"),
+        "ilk_stop": bos(None, "TL/adet", "cift_ailesinde_stop_yok"),
+        "kurulum_girdileri": {
+            ad: bos(ayarlar[ad], birim)
+            for ad, birim in (
+                ("z_pencere", "seans"),
+                ("z_esik", "birimsiz"),
+                ("ddof", "sayi"),
+            )
+        },
+        "kural_kaniti": strateji["kaynaklar"],
+    }
 
 
 def secim_gunleri(gunler, ilk_konum) -> dict:
@@ -84,11 +290,7 @@ def secim(Kc, uye, sektor, s, p=Parametre()) -> pd.DataFrame:
 
 def hedef(Kc, y, x, p=Parametre()) -> np.ndarray:
     """Her kapanışta hedef bacak: +1 = Y (Z ≤ −eşik ve ΔZ > 0), −1 = X (Z ≥ +eşik ve ΔZ < 0), 0 = sinyal yok."""
-    z = cift.z_skor(Kc[y], Kc[x], p.z_pencere)
-    dz = cift.dz(z)
-    return np.where(
-        (z <= -p.z_esik) & (dz > 0), 1, np.where((z >= p.z_esik) & (dz < 0), -1, 0)
-    )
+    return cift.hesapla(Kc[y], Kc[x], p.z_pencere, esik=p.z_esik)["hedef"].to_numpy()
 
 
 def _rotasyon(M, setler, slot_sayisi, m) -> tuple:
