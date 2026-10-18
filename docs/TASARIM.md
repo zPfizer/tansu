@@ -1150,6 +1150,11 @@ tarihiyle tam kayda taşınır. Kanıtlanmayan tanım eski karşılaştırma ola
 hatayla reddedilir. Dayanak: Levent 18.10.2026, #83 görev girdisi: "Siteden Tansu'nun anlatmadığı bir
 bileşim şu anlık kurulamasın."
 
+Tansu'nun kendi sözleriyle genel kullanım için verdiği stop veya çıkış paketi, Tansu kaynaklı
+bir girişle eşlenebilir. Bütün parçaların aynı notta bulunması şart değildir. Stratejiye özel
+bir paketin başka girişlere aktarılması veya yalnız sahip kararı, Tansu bileşim kanıtı sayılmaz.
+Dayanak: #83 kaynak turu görev girdisi, genel paket ve sahip kararı ayrımı.
+
 Çözümleyici aileyi, varyantı, katalog sürümünü, istenen sayısal ayarları ve işlem politikası
 referanslarını doğrular. Bilinmeyen alan, bilinmeyen sürüm, eksik işlem ayarı ve izinsiz birleşim
 ayrı hata kodları verir. Panel komutu ve katalog komut satırı aynı seçim doğrulayıcısını çağırır.
@@ -1173,15 +1178,39 @@ ayrımı kaybettiği için hatalıdır; alan kaynağına göre düzeltilir. Bu d
 Dayanak: #83 alan kökeni şartı; KURALLAR §3 ve bu bölümün kaynak sınırı.
 
 `s02_v1` kataloğunda mevcut 24 tanım eski karşılaştırma olarak saklanır; seçimleri kapalıdır.
-Kaynak kontrolü, kural belgelerinin gösterdiği on Ham notu ve ilgili görsellerle sınırlıdır;
-bütün havuzda kaynak bulunmadığı iddia edilmez. Örneğin
+Kaynak turunda genel ATR çıkışı ve genel risk boyutlama dayanağı doğrulandı:
+`tweet-atr-iz-suren-stop-tablosu-2045421697814126693.md:21–23` (18.04.2026, Ham ve G1),
+"tüm hisseleri" anlatımı ve genel kullanım talimatlarıyla 2 ATR'de girişe stop, 3 ATR'de
+1 ATR'ye stop ve yarı satış verir. Bu genel paket Tansu girişine eşlenebilir.
+`tweet-statik-dinamik-atr-iz-suren-stop-1989985215452758434.md:23–34` (16.11.2025, Ham)
+ayrı bir genel yöntem verir: 1,5 ATR ilerledikten sonraki önceki dip altı kapanışta yarı satış.
+`tweet-volatiliteye-gore-pozisyon-buyuklugu-1987500065401733478.md:47–48` (09.11.2025, Ham)
+her işlemde önceden belirlenmiş hesap yüzdesini riske etmeyi söyler. Genel paket dayanağı,
+mevcut ortak paketin bütününe kendiliğinden izin vermez.
+
+Özellikle `tweet-under30-over30-1-5r-basabas-cikis-1992547498343161903.md:22–32`
+(23.11.2025, Ham) 1,5 R başabaş çıkışını Under 30 Over 30 girişiyle anlatır.
+`tweet-rsi30-donus-yari-ve-tam-cikis-kurallari-1991721699922870638.md:20–34`
+(21.11.2025, Ham) RSI50/SMA50 çıkışlarını RSI30 dönüşüyle anlatır. Bunların bütün EMA
+girişlerine aktarımı doğrulanmadı. `gorsel-paket-115-position-sizing-yuzde1-2atr-sma250.md:20–22`
+(kayıt 28.08.2026, Ham'da yazar yok, NotebookLM görseli) SMA250 ve 2 ATR'yi örnekler;
+Ham başka ortalamalara da izin verir. Bütün girişlerde zorunlu SMA250 çıkışı ve eski
+portföyün tavan/likidite politikası için bütün bileşim desteği doğrulanmadı. R/R kapısının
+sahip kararı kökeni korunur (KURALLAR §3). Bu eksikler yalnız sayısal YORUM değildir;
+farklı strateji kapsamlarının ve risk politikalarının birlikte uygulanmasıdır.
+
+Giriş parçaları ayrıca kaynaklıdır. Örneğin
 `tweet-ema-sikismasi-talep-bolgesi-kirilim-2002087132089770127.md:33` (19.12.2025, Ham, devamı 50.
-satıra kadar) talep bölgesindeki giriş, stop ve arz hedefini birlikte anlatır. Bu anlatı mevcut
-tanımların ATR yarı satış paketini aynı birleşime bağlamaz.
+satıra kadar) talep bölgesindeki giriş, stop ve arz hedefini birlikte anlatır. Genel ATR
+paketiyle eşleme mümkündür; bu, yukarıdaki özel başabaş ve risk politikası eksiğini kapatmaz.
 `tweet-ema-sikismasi-ucgen-kirilim-hacim-1954300245707497649.md:22` (09.08.2025, Ham, devamı 30.
 satıra kadar) EMA, üçgen ve hacmi birlikte anlatır; mevcut `giris_ucgen` tanımının ek süzgeç ve
 çıkış paketinin bütününe kanıt değildir. Kaynak kökü yukarıdaki T kaynaklarıyla aynıdır.
-Bu, bileşim kanıtı eksiğidir; sayısal ayrıntıların YORUM olması tek başına ret gerekçesi değildir.
+Doğru `context --no-sync` aramaları bu ortamda `read-only runtime is not initialized`
+hatasıyla durdu. Adı verilen adaylar, ek Ham notları ve görseller doğrudan okundu; bütün
+havuzda kaynak bulunmadığı iddia edilmez. Bu, bileşim kanıtı eksiğidir; sayısal ayrıntıların
+YORUM olması tek başına ret gerekçesi değildir. Olumlu seçim kanıtlanmadığı için #83'ün
+kaynaklı bileşim kabul ölçütü açıktır; yalnız sahip kararıyla seçim açılmaz.
 
 `legacy_coz` tam eski kaydı okur. `secim_dogrula` seçim isteğini doğrular; `panel_komutu` ve
 `python -m tansu.katalog coz` bu yüzü kullanır. `python -m tansu.katalog liste` saklanan tanımları
