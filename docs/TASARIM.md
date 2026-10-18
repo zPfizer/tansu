@@ -405,7 +405,7 @@ Risk paketi (`kurallar/E` K1–K3): acil stop ve gün sonu stopu adları Ham met
 - **Hedef:** EMA ailesinin varyantları hedefi dener (Levent 16.10; hedef kuralları `KURALLAR.md` §3). Varsayılan kuralda
   hedef yoktur (YORUM: bizim seçim). Tansu bazı kurallarda hedef verir: gorsel-paket-106 Ham (EMA sıkışması + talep
   bölgesi: supply/arz bölgesi), gorsel-paket-107 Ham (1.618 dalga uzantısı), gorsel-paket-58 Ham (389.30). KRDMD örneğinde
-  hedef yoktur. Çift ailesinde hedef yoktur; çıkış Z'nin 0.5'e dönmesidir (gorsel-paket-54 Ham).
+  hedef yoktur. Çift rotasyonunda kâr hedefi yoktur; geçiş kuralı §5.6'dadır. Standart long/short sürümü ayrıdır (Ham, `beyin/kisisel/300-Projects/Tansu X Veri Havuzu/tweet-istatistiksel-arbitraj-z-skor-pairs-2049196300856414620.md:56–59`, 28.04.2026): "Z-Skoru normale (0.5 seviyelerine) döndüğünde, pozisyonları kapatır" (`docs/kurallar/D-cift-portfoy-nabiz.md:23`, `:32`, `:88`, `:108`; okuma 18.10.2026).
 - **Çift rotasyonu:** ayrı stop yok (YORUM, bizim); karşı uçta diğer hisseye geçilir. Risk paketi bu bölmeye uygulanmaz.
   Grafikte stop görünmemesi, stop bulunmadığını kanıtlamaz (Ham, G125:20; araç, kaynak-vakbn-garan-rotasyon-2096358189696520213/g2; eğitim, G118/g1).
   (Sorgu S3)
@@ -1332,7 +1332,7 @@ Adım 1–9 tamamlandı (MVP biletleri yerel, salt okunur arşivde ve git geçmi
 | B3, B3b | Hayatta kalan yanlılığı giderilemiyor; karşılaştırma tek taraflı | 5.2, 5.7 K2 |
 | B4 | Fazla getiri tanımsız; endeks temettüsüz; nakit faizi yok | 5.6, 5.7 |
 | B5 | Rastgele karşılaştırma adil değil, 5 tekrar az | 5.7 K1 |
-| M1 | Aynı gün stop ve hedef | Hedef kalmadı; 5.3 |
+| M1 | Aynı gün stop ve hedef | EMA varyantlarında hedef vardır (§5.5; Levent 16.10.2026). Dolum §5.3'te, gün sırası `docs/KURALLAR.md:434–436`'dadır: stop hedeften önce gelir (YORUM; `docs/kurallar/E-risk-cikis-surec.md:69`, okuma 18.10.2026). Hedef kaynağı (Ham, `beyin/kisisel/300-Projects/Tansu X Veri Havuzu/tweet-ema-sikismasi-talep-bolgesi-kirilim-2002087132089770127.md:47–50`, 19.12.2025): "İlk hedef, grafiğin sağ üstünde gördüğün Kırmızı Bölge (Supply/Arz) alanıdır." |
 | M2 | Stop yanlış tabandan | 5.3 |
 | M3 | Masraf düşük | 5.4 |
 | M4 | Taban kilidi, limit rejimi | 5.1, 5.3 |

@@ -49,6 +49,17 @@ def test_blok_uzunlugu_en_az_yirmi():
     assert istatistik.blok_uzunlugu(37.4) == 38
 
 
+def test_blok_bootstrap_yuzde_95_aralik_uclari_elle():
+    # TASARIM 5.9: tohum 3, blok 2 başlangıçları (1,0), (0,0), (0,1), (1,1).
+    # Üç günlük örnekler: [0,01; 0,03; 0], [0; 0,01; 0],
+    # [0; 0,01; 0,01], [0,01; 0,03; 0,01]. Yıllık ortalamalar: 3,36; 0,84; 1,68; 4,20.
+    # Sıralı uçlarda %7,5 ara değer: 0,84 + 0,075*0,84 = 0,903;
+    # 4,20 - 0,075*0,84 = 4,137. 5/95 yüzdelikleri bu aralığı daraltır.
+    assert istatistik.blok_aralik(
+        [0.0, 0.01, 0.03], blok=2, tekrar=4, tohum=3
+    ) == pytest.approx((0.903, 4.137))
+
+
 def test_ek_kol_ailenin_p_degerine_girmez(tmp_path):
     # TASARIM 5.7: ek kol yalnız rapordur; aile p'si yalnız a ve b'den gelir.
     from tests.test_k1 import anlik_hazirla, trend
