@@ -13,7 +13,7 @@ Before creating an issue, follow [Issue body](../../../docs/agents/issue-tracker
 3. **Language:** Write instruction and prompt text in English: `asd-ste100`. Then run `py -3 -X utf8 kurulum/ste_fark.py origin/master`. It lints only the lines that the branch added to the instruction files since its merge base. Stage a new file first (`git add <file>`). The exit code must be 0.
 4. **Result:** Write the result to the brain as `tansu-yeni-is` "Close" says.
 5. **Locked file:** A locked file has feature scope (`docs/agents/is-kurallari.md` "Scope").
-6. **Translation:** For a translation of a rule file, the writer lists every dropped word. The auditor compares each rule with the source rule. (Levent 14.10)
+6. **Translation:** For a translation of a rule file, the writer lists every dropped word. If risk requires a reviewer, the auditor compares each rule with the source rule. (Levent 14.10)
 
 | If | Then |
 |---|---|
