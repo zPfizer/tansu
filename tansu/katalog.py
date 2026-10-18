@@ -204,7 +204,7 @@ _HACIM_KAYNAK = Kaynak(
 )
 _RR_KAYNAK = Kaynak(
     "sahip kararı",
-    "docs/KURALLAR.md:279",
+    "docs/KURALLAR.md:319",
     "2026-10-16",
     "en az 1:2 ödül/risk, altındakiler sinyal değildir",
     "Kayıtlı sahip kararı; bütün katalog bileşimine izin vermez.",

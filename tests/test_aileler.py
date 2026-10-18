@@ -245,7 +245,7 @@ def test_katalog_tam_sabitler_koken_degismezlik_ve_liste(capsys):
             "tweet-qullamaggie-tarzi-hacimli-breakout-tarama-1979546907505545421.md:29",
             "2025-10-18",
         ),
-        ("tansu", "rr_min", "sahip kararı", "docs/KURALLAR.md:279", "2026-10-16"),
+        ("tansu", "rr_min", "sahip kararı", "docs/KURALLAR.md:319", "2026-10-16"),
     ],
 )
 def test_katalog_alan_kaynagi_bilesim_izni_degildir(varyant, ad, koken, son, tarih):
