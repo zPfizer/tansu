@@ -25,6 +25,7 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ### Değişti
 
+- Yerel test kapısı kaldırıldı; kanca yalnız önce testin yazıldığını denetliyor; PR denetimi gerçek veri kanıtını yalnız tansu/ kodu değişince, denetçiyi yalnız kod değişince istiyor ve yalnız master birleştirmesi gelen PR’a yeni inceleme turu istemiyor. (#122)
 - Katalog kaynak turunda genel ATR çıkışı ile girişe özel başabaş ve RSI çıkışları ayrıldı; 24 tanımın eksik bileşim dayanakları açık tutuldu. (#83)
 - TASARIM'da standart long/short çıkışı çift rotasyonundan ayrıldı; aynı gün stop ve hedef durumu güncel öncelik kuralına bağlandı. (#60)
 - Açık havuz sayacı okunmadı listelerini kapsamdan ayırıyor; yalnız bu listelerde kalan üç nota okuma veya gerekçeli kural içermez kaydı eklendi. (#59)

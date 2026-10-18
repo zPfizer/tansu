@@ -39,18 +39,11 @@ first. Write the reason. Then write the code.
   `utf-8-sig`).
 - **Line ends (Satır sonları):** `core.autocrlf=true`. The working copy is CRLF, the repository is LF. Do not convert line ends. Change files with `Edit`.
 - **Shell reads (Kabuk okumaları):** Read a file with `Read`. `permissions.deny` in `.claude/settings.json` blocks `cat`, `sed -n`, and `sed -i` in Bash.
-- **Hooks (Kancalar):** `kurulum/kanca.py` checks tool calls and answers. `.claude/settings.json` registers it. Its message names the rule and the fix.
-  - It blocks an edit of an instruction file or a code file before the skill calls that "Every job" and `tansu-yeni-is` "Build" require.
-  - It blocks the common forms of shell file reads, Bash heredocs, `kapi.ps1` from Bash, and Git object paths without `MSYS_NO_PATHCONV=1`.
-  - Known limits:
-    - Bash patterns do not cover all shell syntax or expansion. `$x = Get-Content f` and nested file reads can pass.
-    - `git log --grep HEAD:.claude/settings.json` is search data, but the hook blocks it.
-    - Uncertain heredoc syntax can block literal data. Use a plain quoted literal for text.
-  - It sends back a subagent answer that is over the word limit of its prompt. It sends it back one time only.
-    It finds the limit in these forms: "at most N words", "under N words", "en fazla N sözcük", "en fazla N kelime".
-- **Waiting (Bekleme):** Claude Code blocks `sleep` and `Start-Sleep`. Run a long command alone in one call. Run the gate with the affected test files.
+- **Hooks (Kancalar):** `kurulum/kanca.py` blocks a code file edit when no test under `tests/` changed first.
+  `.claude/settings.json` registers it.
+- **Waiting (Bekleme):** Claude Code blocks `sleep` and `Start-Sleep`. Run a long command alone in one call. Run only the tests of the change with pytest and `ruff check`/`ruff format --check` on the changed files. CI runs the full suite.
   Run it in the foreground with a timeout of at most 600000 ms. Or use `run_in_background` and one Monitor on it.
-  Do not put `git commit` and the gate in one call. Do not poll with a loop of status calls. In Git Bash, `pgrep` does not see PowerShell processes.
+  Do not poll with a loop of status calls. In Git Bash, `pgrep` does not see PowerShell processes.
 - **Temporary files (Geçici dosyalar):** Write them under `$TEMP` or under `.scratch/<job>/tmp/` of the main checkout. Never write one to a tracked path.
   The permission system refuses a recursive delete (`rm -rf`, `Remove-Item -Recurse`). Do not try it. List the leftover paths in a code block of the report. Levent deletes them.
 - **Shell state (Kabuk durumu):** Each shell call starts new. A `cd`, a variable, or an `export` does not carry over. `$CLAUDE_PROJECT_DIR` exists only in hooks. Use full paths.

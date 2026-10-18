@@ -8,13 +8,18 @@ Choose the issue, PR, or direct path from [Issue and PR rule](../../../docs/agen
 For the issue + PR path, if no issue exists, make one first with the issue template. Make the branch for the issue the GitHub way: `gh issue develop <N> --name <N>-<ad> --base master`. The branch name is the issue number and a short name in lower case ASCII letters, digits, and hyphens. Then run these in the main checkout: `git fetch origin`, then `git worktree add .claude/worktrees/<N>-<ad> <N>-<ad>`. If the session already runs in a Claude Code worktree, run `git fetch origin` and `git switch <N>-<ad>` in it. Source: docs.github.com "Creating a branch for an issue" (https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/creating-a-branch-for-an-issue). Clear the context between tickets. A worktree has no `.venv`. In a worktree, use the main venv `C:\Users\levent\Desktop\TANSU\.venv\Scripts\python.exe`. <!-- driftlint-ignore: local-only path of the main repository venv, absent in CI -->
 
 ## Test gate
-Run `kurulum\kapi.ps1 <test files>` with the test files of the changed code and of the code that uses it. It runs only those tests, `ruff check .`, `ruff format --check .`, `git diff --check origin/master`, and driftlint. It uses the driftlint version pinned in CI. It prints `kapi:` summary lines, including `kapi: driftlint -> <code>`. Without test files it stops with exit code 1. Never run the full test suite on the computer: CI on Windows runs it (Levent 17.10: "Bilgisayarda sadece değişikliğin ilgili olduğu test koşacak."). Run the gate before each commit. Everything must be green. When `TANSU_BEKLENEN_ACIK` is unset, the gate counts the open pool notes itself, prints `kapi: acik havuz notu = <n>`, and uses that count. A variable that you set wins.
-The gate always runs the count. If the pool folder is missing, it prints `kapi: acik havuz notu = HATA` and stops with exit code 1, also when `TANSU_BEKLENEN_ACIK` is set.
-`TANSU_PY` (a full path) sets the Python of the gate. The default is the main venv. If that file is missing or the count is not a whole number, the gate prints a `kapi:` error line and stops with exit code 1. A command that cannot start stops the gate with a PowerShell error and exit code 1.
+Run `.venv\Scripts\python.exe -m pytest -q <test files>` for the changed code and the code that uses it.
+Then run `ruff check` and `ruff format --check` on the changed Python files.
+Run these checks before each commit. Everything must be green.
+Never run the full test suite on the computer: CI on Windows runs it (Levent 17.10: "Bilgisayarda sadece değişikliğin ilgili olduğu test koşacak.").
 
-After a fix commit or a merge of `origin/master`, run it again with the test files of the changed code. An untracked file also makes the tree `kirli`. Do not paste the gate output into the PR body: CI on Windows proves the tests, format, and lint. `## Gerçek veri kanıtı` holds only the output of the real-data run.
+After a fix commit or a merge of `origin/master`, run these checks again with the test files of the changed code.
+Do not paste the test and ruff output into the PR body: CI on Windows proves the tests, format, and lint.
+`## Gerçek veri kanıtı` holds only the output of the real-data run.
 
-When only documents changed, `kurulum\kapi.ps1 -Belge` runs the document tests. The full run is only in CI. The pool tests skip in CI because the pool is not in git; that is accepted (Levent 17.10). For a pool batch, set `TANSU_PARTI=<batch ids>`. Do not deselect a red test.
+When only documents changed, run `tests/test_sahipler.py`, `tests/test_atif.py`, and `tests/test_changelog.py` with pytest.
+The pool tests skip in CI because the pool is not in git; that is accepted (Levent 17.10).
+For a pool batch, set `TANSU_PARTI=<batch ids>`. Do not deselect a red test.
 
 ## Review
 Merge `origin/master` into the branch first. Then check the change by its type.
@@ -22,9 +27,9 @@ Merge `origin/master` into the branch first. Then check the change by its type.
 - A change to documents only (no code): run one `mattpocock-skills:code-review` pass by a Sonnet subagent on the diff. Run no Codex audit.
 
 Run the review in this order.
-1. Before Review, write the PR body draft to `.scratch/<job>/pr-govde.md` of the main checkout `C:\Users\levent\Desktop\TANSU`, not of the worktree. An untracked file in the worktree makes `kurulum\kapi.ps1` print `kirli`. <!-- driftlint-ignore: local-only path of the main repository, absent in CI --> Open the PR as a draft (see "Pull request"). Give the latest body path and job brief path to both review axes and the Codex auditor.
+1. Before Review, write the PR body draft to `.scratch/<job>/pr-govde.md` of the main checkout `C:\Users\levent\Desktop\TANSU`, not of the worktree. <!-- driftlint-ignore: local-only path of the main repository, absent in CI --> Open the PR as a draft (see "Pull request"). Give the latest body path and job brief path to both review axes and the Codex auditor.
 2. Check each number and each "all / none / passed" claim against a command output or named file from this session. Apply the general standard "A claim matches its evidence" to the final PR body and each review prompt.
-3. The orchestrator runs `kurulum\kapi.ps1 <test files>` once on the commit under review. Select the affected tests. Give its `kapi:` lines and exit code to both review axes and the Codex auditor. Reviewers do not run the gate.
+3. The orchestrator runs the tests of the change and ruff once on the commit under review. Give the output and exit codes to both review axes and the Codex auditor. Reviewers use this output.
 4. The orchestrator starts the two axes of `mattpocock-skills:code-review` itself, as two parallel Sonnet subagents. No auditor agent sits between them. Each subagent prompt says: "Do not start a subagent". Each axis and Codex prompt gives the latest PR body, job brief, goal, and actual worktree path. Derive the goal from the latest brief and body. Tell each reviewer to inspect that worktree. Do not substitute the main checkout. Give no hint of the expected verdict or finding.
 5. The audit prompt asks for the verdict and the line `Yanlış iddia sayısı: N`. Apply docs/agents/is-kurallari.md "Auditor and rounds" (false claim, doubt, second pass, error class). Write the verdict of the auditor into `Sonuç:`.
 6. Every `mattpocock-skills:code-review` pass prompt states this rule: a finding is KALDI only when it breaks correctness or a written job requirement. Written requirements include the spec, acceptance criteria, DEFINITION_OF_DONE items, and rule sentences that the output violates. A false claim, a broken behavior, and a security or privacy risk stay KALDI. A process-order point with no effect on the output is a note.
