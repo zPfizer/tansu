@@ -60,6 +60,21 @@ def test_holm_p_buyukse_olcut_bir_ve_uc_gecmez_durum_deneme():
     assert (k["durum"], k["genel"]) == ("Deneme", "Geçmedi")
 
 
+@pytest.mark.parametrize(
+    "p, olcut, durum, genel",
+    [
+        (0.049, "Geçti", "Kâğıt", "Ölçülemedi"),
+        (0.05, "Geçmedi", "Deneme", "Geçmedi"),
+        (0.051, "Geçmedi", "Deneme", "Geçmedi"),
+    ],
+)
+def test_holm_p_kabul_siniri(p, olcut, durum, genel):
+    # TASARIM 5.12: eşitlik geçmez; eşik 0,10 olursa son iki durum yanlış kabul edilir.
+    k = istatistik.kabul(girdi(p=p))
+    assert durumlar(k)[:5] == [olcut, "Geçti", olcut, "Geçti", "Geçti"]
+    assert (k["durum"], k["genel"]) == (durum, genel)
+
+
 def test_yarim_yillar_paydadan_cikar_ve_islem_yok_yili_da():
     # Tamamlanmış 2016-2019: 3/4 pozitif -> Geçti. 2016'yı "işlem yok" yaparsak 2017-2019: 2/3 = %66,7 -> yine Geçti;
     # 2019 da çıkarsa 1/2 = %50 -> Geçmedi.
@@ -132,3 +147,15 @@ def test_portfoy_kurali_dususte_kalma_oniki_ayi_asarsa_reddeder():
     k = istatistik.kabul(girdi(ozkaynak=oz))
     assert k["ret"] and k["dusus"][1] == 397
     assert not istatistik.kabul(girdi())["ret"]  # OZ: %10 düşüş, 244 gün
+
+
+def test_esit_zirve_dususte_kalma_suresini_sifirlar():
+    # TASARIM 5.12: ilk düşüş 200 gün, sonraki 100 gün; eşit zirve dışlanırsa 300 gün çıkar.
+    oz = pd.Series(
+        [100.0, 90.0, 100.0, 90.0],
+        index=pd.Timestamp("2016-01-01")
+        + pd.to_timedelta([0, 100, 200, 300], unit="D"),
+    )
+    k = istatistik.kabul(girdi(ozkaynak=oz))
+    assert k["dusus"][1] == 200
+    assert k["dusus"][0] == pytest.approx(0.1)
