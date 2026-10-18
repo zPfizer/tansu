@@ -17,7 +17,7 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ### Değişti
 
-- Paralel dalların değişiklik günlüğünde aynı yere eklediği satırlar, yerel Git birleştirmesinde birlikte korunuyor; Kural 5 yalnız birebir union sonucunu temiz sayıyor. (#102)
+- Paralel dalların değişiklik günlüğünde aynı yere eklediği satırlar, yerel Git birleştirmesinde birlikte korunuyor; Kural 5 yalnız birinci ebeveynle aynı kip ve türdeki normal dosyanın birebir union sonucunu temiz sayıyor. (#102)
 - İş gövdeleri triage biçiminde yazılıyor; sade açıklama, ajan brifi ve bağlı işler şablonda yer alıyor. (#103)
 - Yerel kapıya driftlint eklendi; inceleme girdileri, başarısız çalıştırma ve bir defalık tur sıfırlama kuralları güncel akışa uyarlandı. (#47, issue #53)
 - Sadakat raporunda hesap tarihi kaynak tarihinden ayrıldı; X arşivi atıfları ve çift Z adaylarının yorum sınırları açıklandı. (#61)

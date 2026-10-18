@@ -86,6 +86,14 @@ def _temiz_birlesme(denetlenen, bas_sha, taban, dizin):
         return set(cikti.split("\0")) - {""}
 
     def union_ayni(dosya, birinci, ortak, ikinci, sha):
+        kayitlar = [
+            git("ls-tree", "--format=%(objectmode) %(objecttype)", ref, "--", dosya)
+            for ref in (birinci, sha)
+        ]
+        if kayitlar[0] not in {"100644 blob\n", "100755 blob\n"} or (
+            kayitlar[1] != kayitlar[0]
+        ):
+            return False
         # Ayrı depo, yerel info/attributes ve genel özniteliklerin kararı değiştirmesini önler.
         with TemporaryDirectory(prefix="tansu-dod-attributes-") as gecici:
             git("init", "--bare", "--template=", gecici)

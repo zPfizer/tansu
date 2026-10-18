@@ -344,11 +344,17 @@ def test_kural_5_ayni_dosyada_iki_taraf_degisirse_reddedilir(depo):
 
 
 @pytest.mark.parametrize(
-    ("surucu", "elle_degistir", "gecerli"),
-    [("union", False, True), ("text", False, False), ("union", True, False)],
+    ("surucu", "elle_degistir", "kip", "gecerli"),
+    [
+        ("union", False, "100644", True),
+        ("text", False, "100644", False),
+        ("union", True, "100644", False),
+        ("union", False, "100755", False),
+        ("union", False, "120000", False),
+    ],
 )
 def test_kural_5_union_ortak_dosyanin_icerigini_dogrular(
-    depo, surucu, elle_degistir, gecerli
+    depo, surucu, elle_degistir, kip, gecerli
 ):
     dizin, _, _ = depo
     _git(dizin, "checkout", "master")
@@ -375,8 +381,13 @@ def test_kural_5_union_ortak_dosyanin_icerigini_dogrular(
             "- Dal.\n- Taban.\n- Eski.\n- Elle.\n", encoding="utf-8"
         )
     _git(dizin, "add", "CHANGELOG.md")
+    blob = _git(dizin, "rev-parse", ":CHANGELOG.md")
+    _git(dizin, "update-index", "--cacheinfo", f"{kip},{blob},CHANGELOG.md")
     _git(dizin, "commit", "--no-edit")
     m = _git(dizin, "rev-parse", "HEAD")
+    assert _git(dizin, "ls-tree", m, "--", "CHANGELOG.md") == (
+        f"{kip} blob {blob}\tCHANGELOG.md"
+    )
     assert hatalar(_govde_git(b), m, taban="master", dizin=dizin, baslik=BASLIK) == (
         [] if gecerli else [R5_BIRLESME.format(b, m)]
     )
