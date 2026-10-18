@@ -25,6 +25,115 @@ KAP_A = KAP[:7] + [110.0]
 YUK_A = YUK[:7] + [110.5]
 EMA_IZGARA = {"esik": [0.005], "min_gun": [3], "pencere": [3]}
 CIFT_IZGARA = {"z_pencere": [5], "z_esik": [1.0, 1.5]}
+
+
+def risk_satiri(**degisiklik):
+    return dict(
+        giris_fiyat=100.0,
+        cikis_fiyat=80.0,
+        ilk_stop=90.0,
+        nominal_tutar=100_000.0,
+        risk_surumu="bagimsiz_risk_v1",
+        masraf_surumu="komisyon_bsmv_v1",
+        aile="ema_sikismasi",
+        **degisiklik,
+    )
+
+
+def test_s08_butce_es_zamanli_islemlerden_ve_sonuclarindan_bagimsiz():
+    t = pd.DataFrame(
+        [
+            risk_satiri(sinyal_id=str(i), giris_tarih=pd.Timestamp("2026-10-05"))
+            for i in range(12)
+        ]
+    )
+    s = ts._getirili(t)
+    assert s.get("risk_butcesi", pd.Series(dtype=float)).tolist() == [2000.0] * 12
+    assert s.sinyal_id.tolist() == [str(i) for i in range(12)]
+    assert s.adet.tolist() == [194] * 12
+    assert s.risk_nedeni.tolist() == [None] * 12
+    assert (s.adet * s.giris_fiyat).sum() == 232_800
+    assert s.planlanan_risk.tolist() == pytest.approx([1998.0545] * 12)
+    t.loc[0, "cikis_fiyat"] = 200.0
+    pd.testing.assert_frame_equal(s, ts._getirili(t).assign(cikis_fiyat=80.0))
+    t["dolumlar"] = [
+        [
+            dict(dolum_id="al", yon="alis", adet=194, fiyat=100),
+            dict(dolum_id="sat", yon="satis", adet=194, fiyat=80),
+        ]
+        for _ in range(12)
+    ]
+    zararli = ts._getirili(t)
+    assert zararli.iloc[0].net_sonuc == pytest.approx(-3934.999)
+    t.at[0, "dolumlar"][1]["fiyat"] = 200
+    karli = ts._getirili(t)
+    assert karli.iloc[0].net_sonuc == pytest.approx(19308.335)
+    pd.testing.assert_frame_equal(zararli.iloc[1:], karli.iloc[1:])
+
+
+def test_s08_komisyon_bsmv_ve_stop_otesi_kayip_ayri_alanlar():
+    dolumlar = [
+        dict(dolum_id="al", yon="alis", adet=100, fiyat=100),
+        dict(dolum_id="sat", yon="satis", adet=100, fiyat=80),
+    ]
+    s = ts._getirili(pd.DataFrame([risk_satiri(dolumlar=dolumlar)])).iloc[0]
+    # 10.000 alış: 15 + 0,75; 8.000 satış: 12 + 0,60.
+    assert s.get("gerceklesen_maliyet") == pytest.approx(28.35)
+    assert s.alis_maliyeti == pytest.approx(15.75)
+    assert s.satis_maliyeti == pytest.approx(12.60)
+    assert s.gerceklesen_kayip == 2000.0
+    assert s.net_sonuc == pytest.approx(-2028.35)
+    assert s.planlanan_risk == pytest.approx(1998.0545)
+    assert s.net_r == pytest.approx(-1.0151624993212147)
+    assert s.net_sonuc < -s.risk_butcesi
+    assert s.referans_getirisi == pytest.approx(-0.0202835)
+    assert s.net_fiyat_getirisi == pytest.approx(-0.202516037241345)
+
+
+def test_s08_kismi_satis_gerceklesen_adet_ve_tekrar_dolum():
+    al = dict(dolum_id="al", yon="alis", adet=100, fiyat=100)
+    yari = dict(dolum_id="yari", yon="satis", adet=40, fiyat=110)
+    dolumlar = [al, yari, yari.copy()]
+    ilk = ts._getirili(pd.DataFrame([risk_satiri(dolumlar=dolumlar)])).iloc[0]
+    assert ilk.get("gerceklesen_maliyet") == pytest.approx(22.68)
+    assert ilk.net_sonuc == pytest.approx(386.77)
+    assert ilk.kalan_adet == 60
+    assert ilk.kalan_alis_maliyeti == pytest.approx(9.45)
+    assert pd.isna(ilk.net_fiyat_getirisi)
+    dolumlar.append(dict(dolum_id="son", yon="satis", adet=60, fiyat=90))
+    son = ts._getirili(pd.DataFrame([risk_satiri(dolumlar=dolumlar)])).iloc[0]
+    assert son.gerceklesen_maliyet == pytest.approx(31.185)
+    assert son.net_sonuc == pytest.approx(-231.185)
+    assert son.kalan_adet == 0
+
+
+@pytest.mark.parametrize(
+    ("alan", "deger", "neden"),
+    [
+        ("ilk_stop", 100, "gecersiz_risk_girdisi"),
+        ("ilk_stop", 101, "gecersiz_risk_girdisi"),
+        ("ilk_stop", 0, "gecersiz_risk_girdisi"),
+        ("ilk_stop", None, "gecersiz_risk_girdisi"),
+        ("giris_fiyat", float("inf"), "gecersiz_risk_girdisi"),
+        ("nominal_tutar", float("nan"), "gecersiz_risk_girdisi"),
+        ("nominal_tutar", -1, "gecersiz_risk_girdisi"),
+        ("aile", "cift_rotasyonu", "risk_dayanagi_eksik"),
+    ],
+)
+def test_s08_gecersiz_girdi_ve_cift_gerekceli_bos(alan, deger, neden):
+    r = risk_satiri()
+    r[alan] = deger
+    s = ts._getirili(pd.DataFrame([r])).iloc[0]
+    assert s.get("risk_nedeni") == neden
+    assert pd.isna(s.adet) and pd.isna(s.ilk_risk) and pd.isna(s.net_r)
+
+
+def test_s08_legacy_getiri_ve_adet_korunur():
+    s = ts._getirili(pd.DataFrame([dict(giris_fiyat=100, cikis_fiyat=110, adet=7)]))
+    assert s.adet.tolist() == [7]
+    assert s.getiri.tolist() == pytest.approx([0.0978021978021979])
+
+
 IZGARA = {"ema_sikismasi": EMA_IZGARA, "cift_rotasyonu": CIFT_IZGARA}
 GUNLER = pd.bdate_range("2025-01-01", periods=270)
 

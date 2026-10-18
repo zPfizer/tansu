@@ -280,6 +280,7 @@ def test_her_tansu_dosyasi_kod_listesinde_ya_da_hash_disinda():
         "evren.py",
         "gostergeler.py",
         "istatistik.py",
+        "islem_riski.py",
         "katalog.py",
         "kayit.py",
         "motor.py",

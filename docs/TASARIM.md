@@ -323,6 +323,9 @@ hatasından** ayırmak.
   öncesi kapsanmaz, sonrası da yaklaşıktır (bilet 16).
 
 ### 5.3 İşlem kuralları ve elle hesaplanmış örnekler
+Bu bölümün eski işlem kuralları `legacy_portfoy_v1` içindir. Yeni bağımsız işlemde
+nominal temel başına %2 bütçe kullanılır; ortak nakit, portföy tavanı ve açık işlem sınırı yoktur.
+Yeni risk ve gerçekleşen maliyet hesabının sahibi §5.15 "S08 risk ve maliyet hesabı"dır.
 - **Sinyal ve giriş:**
   - Sinyal günün kapanışındadır.
   - İşlem fiyatı ertesi günün **ağırlıklı ortalama fiyatıdır (AOF)**. VAKBN–GARAN paneli T+1 açılış
@@ -380,6 +383,7 @@ hatasından** ayırmak.
   - karantinada açık pozisyon
 
 ### 5.4 Masraf ve likidite
+Bu bölüm `legacy_portfoy_v1` maliyet ve kapasite politikasını korur. Yeni komisyon §5.15 S08'dedir.
 - **Masraf:** sabit, her yönde %0,3 (komisyon, BSMV, kayma birlikte).
   - Sonuçlar %0,1 / %0,3 / %0,5 ile gösterilir.
   - Kabul için %0,5'te de geçmesi gerekir. (M3)
@@ -423,7 +427,7 @@ Risk paketi (`kurallar/E` K1–K3): acil stop ve gün sonu stopu adları Ham met
   arasında nakdin faizi ve yeniden kullanımı eksik kalır.
 
 ### 5.6 Portföy ve bölmeler
-İlk sürümde her aile **kendi sermayesiyle ayrı** ölçülür. Sınama tek sürekli koşudur; sermaye yıldan
+`legacy_portfoy_v1` sürümünde her aile **kendi sermayesiyle ayrı** ölçülür. Sınama tek sürekli koşudur; sermaye yıldan
 yıla taşınır. (Sorgu S6, İ: 08-083)
 
 **Tek hisse bölmesi** (EMA sıkışması):
@@ -937,8 +941,9 @@ Levent 16.10: "Tansu ne diyorsa onu yap." Komut: `python -m tansu tansu-sinama`.
   kodunda `position.shift(1)`, görsel, tweet-sma-geri-test-sinifi-python-1831402232769847775), acil stop 2 ATR, gün sonu stopu
   SMA250. Çift: geçiş ertesi günün AOF'unda; 5.6'daki engeller (işlem yok, kilit, karantina penceresi) aynıdır. YORUM (bizim):
   tek pozisyon, sermayenin hepsi işlemde, kesirli adet; boştaki nakit faiz kazanmaz (Tansu'nun al-tut kıyaslarında faiz yok).
-- **Masraf:** her yönde %0,10, kayma yok: Tansu'nun tablosunda "Komisyon: %0.10" (görsel,
+- **Masraf (`legacy_tansu_v1`):** her yönde %0,10, kayma yok: Tansu'nun tablosunda "Komisyon: %0.10" (görsel,
   tweet-winrate-80-tarama-backtest-tablosu-2092745592661246196). İşlem getirisi = çıkış·(1−m) / (giriş·(1+m)) − 1.
+  Yeni `komisyon_bsmv_v1` sürümü §5.15 S08 hesabını kullanır; eski sonuçların masrafı değiştirilmez.
 - **Al-tut:** aynı hisse, aynı dönem: dönem başının AOF'unda al, dönemin son gününe dek son geçerli fiyat gününün kapanışında
   sat, aynı masraf. Çiftte 50/50, başta bir kez.
 - **Ölçüler** (Tansu'nun tablosunun sütunları, aynı görsel): kazanma oranı, işlem, kazanan, kaybeden, kâr çarpanı (kazançlar
@@ -1071,6 +1076,64 @@ teknik girdisini kullanır (CLAUDE TEKNİK KARARI / YORUM; 19.10 kontrolü). Tak
 - Sıfır, sonsuz veya eksik fiyat işlem fiyatı olmaz. Bozuk satır, doğrulanmış durdurmayla eş tutulmaz; kalite hatası ve etkilenen iş kaydedilir. Karantinada yeni giriş yoktur; çıkış talebi ile son temiz fiyat değerlemesi ayrı tutulur. Eski §5.1'in son temiz AOF'ta kapanışı yeni yolda gözlenmiş dolum diye yazılmaz. Dayanak: [L3], [T4], [W4], A Q14, B Q53.
 - Eğitim/test sınırında yalnız seçim tarihinde sonucu bilinen eğitim işlemleri seçime girer. Testte açık kalan işlem giriş ayarlarıyla sürer; sonraki pencere ayarı onu değiştirmez. Eğitim ısınması OOS başarı sayılmaz; aynı test sinyali bir kez sayılır. Dayanak: [W1], [W4]; A Q8/Q9, D §2.
 
+#### S08 risk ve maliyet hesabı
+
+E3 hesabının sahibi `tansu/islem_riski.py` olur. `bagimsiz_risk_v1` her işlem için
+`risk_butcesi = nominal_tutar × 0,02` üretir. Nominal tutar varsayımsal girdidir; gerçek emir tutarı değildir.
+Önceki işlem sonucu bu girdiyi değiştirmez. Ortak nakit, slot ve portföy tavanı bu hesapta bulunmaz.
+Dayanak: Levent 18.10, "Yüzde iki uygun" ve "Ortak para falan yok. Her işlem ayrı gibi düşün."
+Bu hesap dosyası §5.8 gereği `kayit.KOD_DOSYALARI` kapsamındadır; saklanmış eski kimlikler yeniden hesaplanmaz.
+
+`boyutla` giriş, ilk stop, nominal tutar, aile ve risk sürümünü alır. Çıktısı risk bütçesi,
+adet, planlanan risk, kullanılmayan bütçe, ilk risk birimi ve gerekçedir. Stop/giriş sonlu ve pozitif değilse veya
+stop girişe eşit/büyükse adet boş, gerekçe `gecersiz_risk_girdisi` olur. Nominal tutar da sonlu ve
+pozitif olmalıdır. Çift rotasyonunda adet, planlanan risk ve R boş, gerekçe `risk_dayanagi_eksik` olur;
+sayısal risk temeli ve boyutlama #128'e taşınmıştır. Çift için hayali stop üretilmez.
+
+Dağıtıcı kararı (19.10, 02:10): planlanan alış ve stop komisyonu ile BSMV %2 bütçenin içindedir.
+Tek hissede `birim_risk = (giriş − ilk_stop) + c × (giriş + ilk_stop)`;
+`adet = taban(risk_butcesi / birim_risk)` tam adettir. `c`, maliyet hesabının aynı adlandırılmış sabitidir.
+Boyutlamanın ondalık girdileri metin karşılıklarından hesaplanır; yukarı yuvarlanmaz.
+Planlanan risk = adet × birim_risk; kullanılmayan bütçe = risk bütçesi − planlanan risk.
+Planlanan giriş ve stop masrafları ayrı alanlarda döner. Bir adet bile bütçeyi aşıyorsa adet 0,
+planlanan risk 0, kullanılmayan bütçe bütçenin tamamı ve gerekçe `butce_yetersiz` olur.
+Bu durumda R boştur. Geçerli ve bütçeye sığan tek hissede gerekçe boştur.
+Sıfır/sonlu olmayan ara risk hesabında boyutlama yapılmaz; gerekçe `gecersiz_risk_girdisi` olur.
+
+Bir R, ilk planlanan toplam risktir (`ilk_risk = planlanan_risk`, TL).
+Gerçekleşen brüt kayıp R = gerçekleşen brüt kayıp / ilk risk; net R = gerçekleşen net sonuç / ilk risk.
+İlk risk, gerçekleşen çıkış fiyatıyla yeniden hesaplanmaz. Gerçekleşmiş miktarlar planlanandan farklıysa
+iki miktar ayrı alanlarda kalır; R paydası ilk planlanan risktir. Kısmi sonuçlar aynı paydayı kullanır.
+Örnek: giriş 100, ilk stop 90, nominal 100.000 TL. Birim risk 10,29925 TL;
+adet 194, planlanan risk 1.998,0545 TL, kullanılmayan bütçe 1,9455 TL olur.
+Planlanan alış masrafı 30,555 TL, stop masrafı 27,4995 TL'dir. 195 adet bütçeyi aşar.
+194 adet 80 TL'den satılırsa brüt kayıp 3.880 TL, gerçek masraf 54,999 TL,
+net sonuç −3.934,999 TL olur; kayıp planlanan riskte kesilmez.
+
+`maliyet_hesapla`, kimlikli gerçekleşen alış/satış dolumlarını alır. `komisyon_bsmv_v1` tek
+adlandırılmış bileşik oran kullanır: yön başına %0,15 komisyon ve komisyonun %5'i BSMV.
+Komisyon değeri patron onayı bekliyor (dağıtıcı teknik girdisi, 19.10). Aynı kimlikli aynı dolum
+bir kez sayılır; farklı içerikli tekrar hata verir. Sonlu ve pozitif fiyat/adet gerekir.
+Satış toplamı alınan adedi aşamaz; satıştan önce alış gerekir. Alışlar aynı işleme aittir.
+Gerçekleşen maliyet bütün alış masrafları ile gerçekleşmiş satış masraflarının toplamıdır.
+Gerçekleşen net sonuç, satılan miktarın ağırlıklı alış tutarını ve ona düşen alış masrafını içerir;
+kalan miktar ve kalan alış masrafı ayrıca döner. Böylece kısmi net sonuç nihai sonuca tekrar eklenmez.
+Gerçekleşen brüt kayıp, net sonuç, net fiyat getirisi ve nominal temele göre getiri ayrı alanlardır.
+Net fiyat getirisi yalnız tamamı satılmış işlemde hesaplanır. Stop ötesindeki kayıp kesilmez.
+Elle örnek: 100 adet 100 TL'den alınır, 80 TL'den satılır. Alış masrafı 15,75 TL,
+satış masrafı 12,60 TL, net sonuç −2.028,35 TL olur. Net fiyat getirisi
+7.987,40 / 10.015,75 − 1 = −0,202516037241345'tir.
+Yeni kayma katsayısı seçilmez; bu yüz gerçekleşmiş fiyatlara ek kayma uygulamaz.
+
+`simulator.risk_tablosu` yeni işlem girdilerini bağımsız değerlendirir; nakit/slot nedeniyle satır atmaz.
+Bu tablo her bağımsız tek hisse sinyaline kendi sayısal miktarını verir; ortak nakit/slot süzgeci yoktur.
+İşlem geçişi veya yeni sınama eğrisi üretmez (#90). Kimlikler ve giriş sütunları korunur.
+`tansusinama._getirili` açık `risk_surumu` taşıyan girdide bu tabloyu kullanır; eski girdide eski sonuç döner.
+Günlük `_kart` açık risk isteğinde aynı E3 sonucunu gerekçeli sözlük olarak verir; eski kart listesi korunur.
+Bu hesap yüzü günlük etkinleştirme değildir (#95). Normal komutlar eski politikalarını korur.
+Hesap tarih veya gelecek fiyat okumaz; yalnız verilen giriş/ilk stop ve gerçekleşmiş dolumları kullanır.
+İlk/son gün ve karantina uygunluğu çağıranın yürütme sözleşmesindedir; bu hesap dolum icat etmez.
+
 #### Dolum, risk ve ölçünün anlamı
 
 - Claude'un kayıtlı **seçenek 2** kararı geçerlidir (18.10; yanıt Q74): ham `yüksek = düşük = tavan` gününde alış dolmaz, giriş sinyali düşer; ham `yüksek = düşük = taban` gününde satış bekler, ilk uygun kilitsiz günde yeniden işlenir. Sonraki fiyat kullanılır; her engel sayılır. B Q49'un açılış eşitliği ekleme önerisi bu kararı değiştirmez. Günlük çubuk gerçek emir kuyruğunu kanıtlamaz. Dayanak: [L5], [T4], [W4], [W5]; `tavan-taban/bulgular.md`, yanıt Q74.
@@ -1079,7 +1142,7 @@ teknik girdisini kullanır (CLAUDE TEKNİK KARARI / YORUM; 19.10 kontrolü). Tak
 - Komisyon = dolum tutarı × 0,0015; BSMV = komisyon × 0,05. Toplam bu yönde 0,001575 × tutardır. Kısmi çıkış dahil her dolum ayrı hesaplanır; alış ve satış tutarı farklı olabilir. Kayma komisyona gömülmez. Dayanak: [L6]; C giriş, D §1, `mc-wf/arastirma.md` muhasebe sınırı.
 - Her işlem aynı varsayımsal referans tutarla normalleştirilir; önceki kâr referansı büyütmez. %2 planlanan risk, gerçekleşen kayba tavan garantisi değildir. İlk risk sonradan yükselen stopla değiştirilmez. Dayanak: [L1], [L2], [T2], [T3], [W6]; D §1.
 - Stop mesafesi sıfır/negatif veya stop/giriş sonlu ve pozitif değilse boyutlama yapılmaz; aday gerekçeli hata olarak korunur. Stopu tanımsız çiftte fiyat getirisi gösterilebilir; risk adedi ve R boş, nedeni `risk_dayanagi_eksik` olur. EMA stopu çifte eklenmez. Dayanak: [T3], [W6]; D §1, RISK kapısı.
-- Kapalı işlem net fiyat getirisi, varsayımsal referansa göre yüzde sonuç ve net R ayrı ölçülerdir. Net fiyat getirisi bütün çıkış nakitleri eksi çıkış masraflarının alış tutarı ve giriş masrafı toplamına oranı eksi birdir. Kısmi çıkışlar bu nihai hesaba dahildir; ayrı tutulan kısmi sonuçlar nihai sonuca tekrar eklenmez. Net R için ilk risk tanımı ve masraf bütçesi RISK kapısı kapanmadan sayısal değer üretilmez. Dayanak: [L1], [T3], [W6]; C Q96, D §1.
+- Kapalı işlem net fiyat getirisi, varsayımsal referansa göre yüzde sonuç ve net R ayrı ölçülerdir. Net fiyat getirisi bütün çıkış nakitleri eksi çıkış masraflarının alış tutarı ve giriş masrafı toplamına oranı eksi birdir. Kısmi çıkışlar bu nihai hesaba dahildir; ayrı tutulan kısmi sonuçlar nihai sonuca tekrar eklenmez. Net R ve ilk riskin sahibi S08 risk ve maliyet hesabıdır; çiftin sayısal dayanağı #128'dedir. Dayanak: [L1], [T3], [W6]; C Q96, D §1; dağıtıcı kararı 19.10, 02:10.
 - Eğri türü `tani_net_r`, `tani_referans` veya eski `legacy_ozkaynak` olarak yazılır. Tanısal toplam hesap bakiyesi değildir; bileşik hesap getirisi, portföy yüzde düşüşü ve iflas olasılığı türetilmez. Kapalı işlem sırası düşüşü günlük değerleme düşüşünden ayrıdır. Dayanak: [L2], [W2], [W6].
 - Sharpe ancak günlük getiri serisi ve paydası tanımlıysa hesaplanır; eş dönemli risksiz getiri düşülür. Geçerli seri/faiz kaynağı yoksa, iki gözlemden azsa veya fark getirisi sapması sıfırsa sonuç gerekçeli boştur. İşlem R listesine günlük yıllıklandırma uygulanmaz. Dayanak: [W7]; C Q96/Q97. Repo Net veri ve tarih hizalaması ayrıca kanıtlanır; bugünkü faiz geçmişe taşınmaz.
 - Kazanma oranı, işlem sayısı, ortalama/medyan, masraf ve al-tut kıyası sonuçtur; günlük izin değildir. İşlemsiz hücre pozitif bölgeyi kanıtlamaz; başarısız/eksik hücre atılmaz. İlk sonuçlardan önce başarı eşiği ve ileri gözlem süresi icat edilmez. Dayanak: [L4], [T1], [W3]; C Q76, D §5.
@@ -1442,7 +1505,7 @@ uygular (KURALLAR §3 ve TASARIM §5.15 eski davranışın korunması).
 | MC — ARAŞTIRMA UYUŞMAZLIĞI / açık | C Q81: 10.000, ardından 20.000/40.000/80.000/100.000 ve yakınsama açıklaması. D §4: varyant başına 1.000. İkisi aynı protokol değildir; biri sessizce üstün sayılmaz. Kesin tekrar ve yakınsama sözleşmesini dağıtıcı tek yöntem sürümünde bağlamalıdır. | **#94 ENGELLİ:** tekrar, örnekleme ve muhasebe dahil tam MC yöntem kaydı olmadan uygulama başlamaz. | [L5], [W2], [W9]; C Q81, D §4. |
 | MC örnekleme — kontrol edilmiş teknik girdi | D §4: net R sırasını yerine koymadan karıştırma; N işlemi N kez yerine koymalı çekme; hisselerde ortak tarih bloklarını yeniden örnekleme; %10 işlem kaçırma stresi; sayısal ayarda ±1 ızgara adımı/aynı değerden eşit olasılıklı tam yeniden sınama. Bunlar ayrı deneylerdir; %10 kalibre edilmiş hata oranı değildir. Sabit 42 tohum önerisi, üreteç/sürüm ve ayrı akış kimliğiyle kaydedilir. Ana girdi dondurulmuş WF OOS, 2021 için keşif etiketi. Her deney örnek birimi, ufuk, gerçekleşen tekrar sayısı, çıktı yüzdelikleri ve bağımlılık varsayımını taşır. | #94; önce WF, ROBUST ve RISK kayıtları gerekir. | [W2], [W9]; D §4, `mc-wf/arastirma.md` yöntem tablosu. |
 | ROBUST — ARAŞTIRMA UYUŞMAZLIĞI / açık | B Q75: çaprazlar dahil tek indeks adımı komşuluk, kenarda eksik komşuluk bayrağı; otomatik kabul/ret yok. C Q77: en küçük komşu skorunu en büyüt; Q95: kanonik demetle eşitlik. D §3: tam iç komşuluk, kenarı merkez seçme; en geniş bileşen, medyan, iç uzaklık, sonra en kötü komşu net R ve sözlüksel sıra. Eski §5.14 eksen komşusu ayrı legacy'dir. Tek seçim ve kenar politikası onaylanmadan hiçbiri yeni varsayılan yapılmaz. Izgara sınırları ve adımlar strateji manifestinde dondurulur. | #92 seçici kısmı, #93, #94. | [T1], [W3]; B Q75, C Q76/Q77/Q95, D §3. |
-| RISK — teknik bağlama açık | D §1'in masraflı bütçesi `B=0,02*C`, `q=B/((e-s)+c*(e+s))` önerir; C net ölçüleri ve eski §5.3 masrafsız R aynı şey değildir. Masrafın %2 bütçeye girip girmediği, kısmi dolum muhasebesi ve çiftin ilk stop/risk dayanağı tek risk sürümünde bağlanmalıdır. Sıfır stopa bölme veya çifte hayali EMA stopu çözüm değildir. | #89 risk boyutlama, #92 net R eğrisi, #93, #94. | [L1], [T2], [T3], [W6]; D §1, C Q96. |
+| RISK — tek hisse bağlı; çift #128'e taşındı | Dağıtıcı 19.10, 02:10: %2 bütçe planlanan alış/stop komisyonu ve BSMV'yi içerir; adet aşağı tam sayıya yuvarlanır, kalan bütçe ayrıca döner. Uygulama ve R tanımının sahibi S08 risk ve maliyet hesabıdır. Çiftin adet ve R'si gerekçeli boştur; sayısal dayanağı #128 belirler. Eski §5.3 masrafsız R legacy kalır. | #89 tek hisse risk boyutlama; #128 çift; #92 net R eğrisi, #93, #94. | [L1], [T2], [T3], [W6]; D §1, C Q96; dağıtıcı 19.10, 02:10. |
 | BİLEŞİM — kanıt kapısı | A Q15'teki kaynak anlatısı, giriş/teyit/stop/hedefi tam bileşim kimliğine bağlanır. Ayrı ayrı izinli alanlar tam birleşimin iznini kanıtlamaz. Eski 24 tanım korunur; yeni panel izni kaynak eşlemesi ve #71 gölge çıktısı koşulundan ayrılmaz. | #83, #88, #96'nın izinli seçim kısmı. | [L5], [T3], [W8]; A Q15, taslak katalog tablosu; mevcut §4 gölge kuralı. |
 | SAHİP-64 — açık | Gerçek emir tutarı seçilmez. Sinyal platformunda yalnız açıkça varsayımsal tutarla kapasite/kayma senaryosu gösterilir; katılım ve etki katsayısı kalibre edilmiş BIST olgusu sayılmaz. | Gerçek tutarla kapasite iddiası; varsayımsal raporu engellemez. | [L1]; B Q64, [W4]. |
 | SAHİP-86 — açık | Rastgele giriş ve maruziyet eşleşmeli karşılaştırmaların yeni motorda zorunlu başarı kapısı olup olmayacağı Levent'te. Eski resmi kapılar silinmez ve yeni yola otomatik taşınmaz. | #95 günlük uygunluk kararı. | [L4]; C Q86, [W2]. |

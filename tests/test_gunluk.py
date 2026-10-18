@@ -14,6 +14,7 @@ import datetime as dt
 import json
 import os
 from dataclasses import replace
+from types import SimpleNamespace
 
 import pandas as pd
 import pytest
@@ -41,6 +42,34 @@ BASLIK = [
     "kanit",
     "kaynak",
 ]
+
+
+@pytest.mark.parametrize(
+    "stop,nominal,adet",
+    [(90.0, 100_000.0, 194), (99.0, 10_000.0, 152), (90.0, 100.0, 0)],
+)
+def test_s08_gunluk_ve_sinama_ayni_sayisal_miktari_kullanir(stop, nominal, adet):
+    from tansu import tansusinama
+    from tests.test_tansusinama import risk_satiri
+
+    gun = pd.Timestamp("2026-10-05")
+    anlik = SimpleNamespace(
+        kimlik="sentetik",
+        fiyat=pd.DataFrame(
+            [dict(tarih=gun, sembol="A", ham_kapanis=100, kapanis=100, hacim=1)]
+        ),
+    )
+    girdi = risk_satiri()
+    girdi.update(ilk_stop=stop, nominal_tutar=nominal)
+    p = replace(motor.bekleyen(5, gun), risk_girdisi=girdi)
+    kart = gunluk._kart(anlik, "A", pd.DataFrame(index=[gun]), p, "kanıt")
+    assert kart["adet"] == adet
+    s = tansusinama._getirili(pd.DataFrame([girdi])).iloc[0]
+    assert kart["risk_butcesi"] == s.risk_butcesi == nominal * 0.02
+    assert kart["adet"] == s.adet
+    assert kart["risk_nedeni"] == s.risk_nedeni
+    assert kart["planlanan_risk"] == s.planlanan_risk
+    assert kart["kullanilmayan_butce"] == s.kullanilmayan_butce
 
 
 def fiyatlar(bozuk=False):

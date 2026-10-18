@@ -38,6 +38,27 @@ KESIM = [
 BAS = "2013-12-02"
 
 
+def test_s08_gelecek_islem_dolumlari_onceki_risk_ve_net_sonucu_degistirmez():
+    from tests.test_tansusinama import risk_satiri
+
+    dolumlar = [
+        dict(dolum_id="al", yon="alis", adet=100, fiyat=100),
+        dict(dolum_id="sat", yon="satis", adet=100, fiyat=80),
+    ]
+    t = pd.DataFrame(
+        [
+            risk_satiri(tarih=pd.Timestamp("2021-01-04"), dolumlar=dolumlar),
+            risk_satiri(tarih=pd.Timestamp("2021-01-05"), dolumlar=dolumlar),
+        ]
+    )
+    ilk = simulator.risk_tablosu(t.iloc[:1])
+    assert ilk.net_sonuc.tolist() == pytest.approx([-2028.35])
+    assert ilk.risk_butcesi.tolist() == [2000.0]
+    t.at[1, "nominal_tutar"] = 1e12
+    t.at[1, "dolumlar"] = [dict(dolum_id="al", yon="alis", adet=1, fiyat=1000)]
+    pd.testing.assert_frame_equal(ilk, simulator.risk_tablosu(t).iloc[:1])
+
+
 def test_kayitli_ayar_yolunda_sonraki_veri_kapanmis_islemi_degistirmez(
     tmp_path, monkeypatch
 ):
