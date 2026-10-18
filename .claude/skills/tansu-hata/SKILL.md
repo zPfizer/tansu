@@ -7,6 +7,7 @@ description: "Use when something is broken in Tansu: a bug, an error, a failing 
 
 Run AGENTS.md "Every job" first. Run the steps in order. Run an "If" row only when its condition is true. Call each skill by the exact name in backticks.
 The shared steps are in [ortak-adimlar.md](../tansu-yeni-is/ortak-adimlar.md). Read that file for the steps that point to `tansu-yeni-is`.
+Before creating an issue, follow [Issue body](../../../docs/agents/issue-tracker.md#issue-body).
 
 1. **Diagnose:** `mattpocock-skills:diagnosing-bugs`.
 2. **Red test:** `mattpocock-skills:tdd`.

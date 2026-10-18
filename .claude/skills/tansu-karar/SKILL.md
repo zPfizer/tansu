@@ -6,6 +6,7 @@ description: "Use when the user asks to plan, compare options, or decide somethi
 # Plan or decision (flow D)
 
 Run AGENTS.md "Every job" first. Run the steps in order. Run an "If" row only when its condition is true. Call each skill by the exact name in backticks.
+Before creating an issue, follow [Issue body](../../../docs/agents/issue-tracker.md#issue-body).
 
 1. **Stress-test:** `mattpocock-skills:grilling` (the `vekil` subagent answers).
 2. **Compare options:** `thinking-kepner-tregoe`.
