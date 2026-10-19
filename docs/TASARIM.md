@@ -159,7 +159,12 @@ Siteye giriş için varyantın [kural kaydına](#58-dönemler) bağlı tarihli s
   - borsapy tabloları (faiz, sektör),
   - `manifest.json` (her dosyanın sha256'sı).
 - Veri sürümü, anlık görüntü kimliğidir.
-- Okuyucu anlık görüntüyü açarken manifesti doğrular; uyuşmazlık hatadır.
+- `veri.indir` isteğe bağlı `kapanan` tablosunu (`kod`, `ad`, `tarih`, `aciklama`) alır.
+  Verilen tablo boş olsa da `kapanan.csv` başlıklarıyla yazılır; `None` dosya üretmez.
+  `evren-indir` bu tabloyu yazıcıya verir. Yazıcı dosyayı geçici klasörde tamamlar, özetini manifeste katar ve sonra görüntüyü yayınlar.
+  Kanıt yazımı başarısızsa görüntü yayınlanmaz; komut yayınlanan görüntüye ek dosya yazmaz.
+- Okuyucu anlık görüntüyü açarken manifesti doğrular; listedeki eksik dosya veya uyuşmayan özet, kimlik ve dosya adıyla `VeriHatasi` verir.
+  Eski görüntüler yalnız kendi manifestleriyle doğrulanır; geçmişte listelenmeyen kanıt sonradan eklenmez.
 - Tarih sütunu saat dilimsiz saf tarihtir.
 - Koşu, canlı borsapy'ye bağlı kalmaz.
 
