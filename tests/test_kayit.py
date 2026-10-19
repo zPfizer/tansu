@@ -125,6 +125,16 @@ def test_temiz_agacta_resmi_kirli_agacta_resmi_degil(tmp_path, monkeypatch):
     kayit.denetim_yaz(
         {"gecti": True}, P, ATR_N
     )  # ilk resmi koşu için geçen boru hattı denetimi şart (TASARIM 5.12)
+    once = (kayit.KAYIT_DIZINI / "deneme.jsonl").read_bytes()
+    with pytest.raises(kayit.KayitHatasi, match="kirli ağaç"):
+        calistir(
+            tmp_path,
+            kimlik,
+            resmi=True,
+            git=KIRLI,
+            tekrar=kayit.tekrar_sayisi(True, P, ATR_N),
+        )
+    assert (kayit.KAYIT_DIZINI / "deneme.jsonl").read_bytes() == once
     calistir(
         tmp_path,
         kimlik,
@@ -1106,3 +1116,72 @@ def test_pilot_baslangic_is_listesi_cagiran_degistirse_de_donuktur(tmp_path):
         except pilot.PilotHatasi:
             bitti = False
         assert bitti, "Başlangıç makbuzundaki tek iş tamamlanabilmelidir."
+
+
+@pytest.mark.parametrize("hata", ["rev-parse", "status", "bos", "calistirilamaz"])
+def test_git_hatasi_kosu_kaydi_yazmaz(tmp_path, monkeypatch, hata):
+    kimlik = anlik_hazirla(tmp_path)
+    kayit.kayitla(P, ATR_N)
+    yol = kayit.KAYIT_DIZINI / "deneme.jsonl"
+    once = yol.read_bytes()
+
+    def git_calistir(komut, **secenek):
+        if hata == "calistirilamaz":
+            raise OSError("git yok")
+        kod = 1 if komut[1] == hata else 0
+        cikti = "" if hata == "bos" or komut[1] == "status" else "abc123"
+        sonuc = subprocess.CompletedProcess(komut, kod, cikti, "git hatası")
+        if secenek.get("check"):
+            sonuc.check_returncode()
+        return sonuc
+
+    monkeypatch.setattr(subprocess, "run", git_calistir)
+    with pytest.raises(kayit.KayitHatasi, match="Git"):
+        kayit.kosu(kimlik, tmp_path, p=P, atr_n=ATR_N)
+    assert yol.read_bytes() == once
+    assert not (tmp_path / "rapor").exists()
+
+
+def test_git_proje_koku_ve_kayit_istisnasi(tmp_path, monkeypatch):
+    depolar = [tmp_path / "proje", tmp_path / "baska"]
+    surumler = []
+    for depo in depolar:
+        depo.mkdir()
+        (depo / "tansu").mkdir()
+        (depo / "tansu" / "kod.py").write_text(depo.name, encoding="utf-8")
+        for komut in (
+            ["init"],
+            ["add", "tansu/kod.py"],
+            [
+                "-c",
+                "user.name=Test",
+                "-c",
+                "user.email=test@example.com",
+                "-c",
+                "commit.gpgsign=false",
+                "commit",
+                "-m",
+                depo.name,
+            ],
+        ):
+            subprocess.run(["git", *komut], cwd=depo, check=True, capture_output=True)
+        surumler.append(
+            subprocess.run(
+                ["git", "rev-parse", "HEAD"],
+                cwd=depo,
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout.strip()
+        )
+    assert surumler[0] != surumler[1]
+    proje, baska = depolar
+    monkeypatch.setattr(kayit, "PAKET", proje / "tansu")
+    for klasor in (proje, proje / "tansu", tmp_path, baska):
+        monkeypatch.chdir(klasor)
+        assert kayit._git() == (surumler[0], False)
+    (proje / "kayit").mkdir()
+    (proje / "kayit" / "deneme.jsonl").write_text("{}\n", encoding="utf-8")
+    assert kayit._git() == (surumler[0], False)
+    (proje / "tansu" / "kod.py").write_text("degisti", encoding="utf-8")
+    assert kayit._git() == (surumler[0], True)

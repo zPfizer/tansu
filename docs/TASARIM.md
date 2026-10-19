@@ -757,6 +757,11 @@ Parametreler ve ızgara önceden yazılır (`KURALLAR.md` §3). Kurallar:
     `deneme_sayisi` ve Holm bunları saymaz.
 - **Git:** `kayit/` izlenir (`deneme.jsonl`, `kartlar.jsonl`). Yalnız ekleme kuralının kanıtı git geçmişidir;
   `veri/` ve `rapor/` izlenmez. Kirli-ağaç denetimi `kayit/`'ı saymaz. (Bilet 09: `kayit/` kararı)
+- **Kod sürümü doğrulaması:** Git sürümü ve kirli-ağaç denetimi, yüklenen `tansu` paketinin üstündeki proje kökünde çalışır.
+  Başlatma klasörü bu seçimi değiştirmez. İki Git komutunun da başarılı olması ve sürümün boş olmaması gerekir.
+  Git çalıştırılamazsa veya bu doğrulama başarısız olursa `KayitHatasi` oluşur; `kosu` hesabı ve koşu kaydı başlamaz.
+  Tansu sınaması sonuç yazımı da aynı doğrulamayı kullanır; hata halinde sonuç dosyası ve destek kaydı yazılmaz.
+  Neden: doğrulanamayan sürüm temiz bir kod sürümü değildir.
 - **Kirli ağaç:** `kosu(resmi=True)` kirli ağaçta tek Türkçe satırla durur, günlüğe satır yazılmaz (neden: resmi
   koşu temiz bir `git_commit`'e bağlanır; kirli ağaçta sessizce resmi olmayan deneme yazmak niyeti gizler).
   Geliştirme koşusu (`resmi=False`) kirli ağaçta yazılır, `kirli` bayrağıyla.

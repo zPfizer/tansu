@@ -331,15 +331,29 @@ def _kabul(b, sonuclar, bilgi, holm, k1, islem_yok, gun_sutun, tohum, sag) -> di
 
 
 def _git() -> tuple:
-    """(commit, kirli). `kayit/` hariç: koşunun kendi yazdığı günlük ağacı kirletmez."""
-    commit = subprocess.run(
-        ["git", "rev-parse", "HEAD"], capture_output=True, text=True
-    ).stdout.strip()
-    durum = subprocess.run(
-        ["git", "status", "--porcelain", "--", ".", ":!kayit"],
-        capture_output=True,
-        text=True,
-    ).stdout.strip()
+    """Proje kökünden (commit, kirli); doğrulama hatasında durur (TASARIM 5.11)."""
+    kok = PAKET.parent.resolve()
+    try:
+        commit = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=kok,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+        durum = subprocess.run(
+            ["git", "status", "--porcelain", "--", ".", ":!kayit"],
+            cwd=kok,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+    except (OSError, subprocess.CalledProcessError) as hata:
+        raise KayitHatasi(
+            "Git bilgisi doğrulanamadı; proje deposunu ve Git kurulumunu kontrol et."
+        ) from hata
+    if not commit:
+        raise KayitHatasi("Git sürümü boş; proje deposunu kontrol et.")
     return commit, bool(durum)
 
 
