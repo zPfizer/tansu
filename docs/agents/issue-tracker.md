@@ -21,7 +21,7 @@ Source: Levent 18.10: "Issue ve PR kuralını onaylıyorum." This section owns t
 - **Comment**: `gh issue comment <number> --body "..."`.
 - **Labels**: `gh issue edit <number> --add-label "..."` / `--remove-label "..."`.
 - **Close**: `gh issue close <number> --comment "..."`.
-- **Spec**: one issue, title `Spec: <name>`. The tickets name it in a `Parent: #N` line.
+- **Spec**: for independent deliveries or dependencies, use one issue titled `Spec: <name>`. The tickets name it in a `Parent: #N` line. For one delivery, keep the brief and acceptance criteria in one issue.
 - **Issue body**: follow "Issue body" below. Each issue also has one triage label and a milestone. Every open issue belongs to one open milestone. Name each open milestone `v0.<n>.0 — <short Turkish benefit>`, in work order. Its description states the benefit, then `Sıra: #a, #b, #c`. Source: Levent 18.10.
 - **Branch**: for the issue + PR path, use `<N>-<ad>`, made by `gh issue develop <N> --name <N>-<ad> --base master` (`tansu-yeni-is` "Branch"). For a PR without an issue, use `belge-<ad>`.
 - **PR**: use the body and title forms in "Issue and PR rule". GitHub shares one number sequence for issues and PRs. A merge with `Closes #N` closes that issue.
@@ -30,8 +30,8 @@ Source: Levent 18.10: "Issue ve PR kuralını onaylıyorum." This section owns t
 
 Source: Levent 19.10: "Açtığımız issue'lar çünkü çok detaylı değil. Yani ben okuyunca bile anlamıyorum." / "Tüm issue'lar triage skill ile yazılsın." / "Bundan sonra da böyle olsun yani. Bu genel bir kural."
 
-Before any flow creates an issue, write its body with `mattpocock-skills:triage`.
-Follow that skill's bundled reference, AGENT-BRIEF.md, for the agent brief.
+Before any flow creates an issue, write its body with the rules below.
+Levent made the package optional on 19.10.2026. The issue format remains required.
 Use `.github/ISSUE_TEMPLATE/is.md` for the layout.
 Write the body in this order:
 
@@ -42,17 +42,17 @@ Write the body in this order:
 5. End with `**Bağlı:**` and the related issues or prerequisites. If none exist, write `yok`.
 
 Describe behavior and interface contracts in the brief. Use types, signatures, or configuration shapes when needed.
-Follow its brief rules: omit file paths, line numbers, and implementation recipes from the brief.
+Omit file paths, line numbers, and implementation recipes from the brief.
 Keep acceptance criteria independently testable. State the affected tests to run.
-`triage-labels.md` owns the state labels. The category in the brief is `bug` or `enhancement`.
+"Triage labels" below owns the state labels. The category in the brief is `bug` or `enhancement`.
 
 ## State of a ticket
 
-An open ticket has exactly one triage-role label (`triage-labels.md` owns the label strings). The state comes from the label, the assignee, the PR link, and the issue state:
+An open ticket has exactly one triage-role label ("Triage labels" owns the label strings). The state comes from the label, the assignee, the PR link, and the issue state:
 
 | Old `Status:` value | GitHub |
 |---|---|
-| a triage role string | the label of that role (`triage-labels.md`) |
+| a triage role string | the label of that role ("Triage labels") |
 | `claimed` | an assignee: `gh issue edit <n> --add-assignee @me` (the first write before any work). The role label stays. |
 | `in-review` | an open PR with `Closes #N` in its body. The issue stays open. |
 | `done (PR #N, hash)` | the issue is closed by the merge of the PR. |
@@ -60,20 +60,6 @@ An open ticket has exactly one triage-role label (`triage-labels.md` owns the la
 | `resolved` | the issue is closed after the answer comment (a wayfinder child). |
 
 A ticket is closed when the issue state is closed. A ticket is claimed when it has an assignee.
-
-## Status field
-
-This section keeps the old `Status:` contract for tickets that exist only in git history. Read a file with `git show 8c5f06c^:.scratch/<path>`. GitHub and CI do not require a local archive. New work does not use this contract. `triage-labels.md` owns only the role strings. The old tickets write it as `**Status:** <value>`. The value is one of:
-
-- A triage role string from `triage-labels.md`: the ticket waits for triage or for work.
-- `claimed`: work started. Set it and save before any work.
-- `in-review`: the work is on its branch and waits for the independent audit or the PR review.
-- `done (PR #N, hash)`: merged. The parentheses name the PR and the merge commit.
-- `done (kısa not)`: delivered, not merged. The parentheses hold one short note: what is delivered and what moved elsewhere; the branch name is optional (example: ticket 06 of `belge-hizasi`). When the merge happens, the value becomes `done (PR #N, hash)`.
-- `resolved`: the closing value of a wayfinder child ticket (see "Wayfinding operations").
-- Legacy: bare `done` marked closed MVP tickets before 14.10. Those tickets exist only in git history: `git show 8c5f06c^:.scratch/arsiv/tansu-mvp/issues/<file>`. Do not use bare `done` in a new ticket.
-
-A ticket is closed when its value starts with `done` or `resolved`. (bilet 05, 14.10)
 
 ## Blocking
 
@@ -89,7 +75,7 @@ Read the issue as in **Read an issue**. The user normally passes the issue numbe
 
 ## Wayfinding operations
 
-Used by `mattpocock-skills:wayfinder`. The **map** is one issue. The **children** are issues.
+For work across sessions, the **map** is one issue. The **children** are issues.
 
 - **Map**: one issue with the label `wayfinder:map` (create the label at first use: `gh label create wayfinder:map`). The body holds the Notes / Decisions-so-far / Fog text.
 - **Child ticket**: an issue with a `Parent: #<map>` line and a `Type:` line (`research`/`prototype`/`grilling`/`task`) at the top of the body. The question is in the body.
@@ -97,3 +83,36 @@ Used by `mattpocock-skills:wayfinder`. The **map** is one issue. The **children*
 - **Frontier**: the open children of the map (`gh issue list --state open --search "Parent: #<map> in:body"`) without an assignee and without an open blocker. The first by number wins.
 - **Claim**: `gh issue edit <n> --add-assignee @me` before any work.
 - **Resolve**: `gh issue comment <n> --body "<answer>"`, then `gh issue close <n>`. Then append a context pointer (gist and link) to the Decisions-so-far in the map issue.
+
+## Triage labels
+
+| Triage role               | Label in our tracker | Meaning                                  |
+| -------------------------- | -------------------- | ---------------------------------------- |
+| `needs-triage`             | `needs-triage`       | Maintainer needs to evaluate this issue  |
+| `needs-info`               | `needs-info`         | Waiting on reporter for more information |
+| `ready-for-agent`          | `ready-for-agent`    | Fully specified, ready for an AFK agent  |
+| `ready-for-human`          | `ready-for-human`    | Requires human implementation            |
+| `wontfix`                  | `wontfix`            | Will not be actioned                     |
+
+When a skill mentions a role (e.g. "apply the AFK-ready triage label"), use the corresponding label string from this table.
+
+The role string is one possible value of the `Status:` line of an old ticket file. The contract is in "Status field" below.
+
+<details>
+<summary>Historical ticket status. Not used for new work.</summary>
+
+## Status field
+
+This section keeps the old `Status:` contract for tickets that exist only in git history. Read a file with `git show 8c5f06c^:.scratch/<path>`. GitHub and CI do not require a local archive. New work does not use this contract. "Triage labels" above owns the role strings. The old tickets write it as `**Status:** <value>`. The value is one of:
+
+- A triage role string from "Triage labels": the ticket waits for triage or for work.
+- `claimed`: work started. Set it and save before any work.
+- `in-review`: the work is on its branch and waits for the independent audit or the PR review.
+- `done (PR #N, hash)`: merged. The parentheses name the PR and the merge commit.
+- `done (kısa not)`: delivered, not merged. The parentheses state what was delivered and what moved elsewhere. The branch name is optional (example: ticket 06 of `belge-hizasi`). When the merge happens, the value becomes `done (PR #N, hash)`.
+- `resolved`: the closing value of a wayfinder child ticket (see "Wayfinding operations").
+- Legacy: bare `done` marked closed MVP tickets before 14.10. Those tickets exist only in git history: `git show 8c5f06c^:.scratch/arsiv/tansu-mvp/issues/<file>`. Do not use bare `done` in a new ticket.
+
+A ticket is closed when its value starts with `done` or `resolved`. (bilet 05, 14.10)
+
+</details>

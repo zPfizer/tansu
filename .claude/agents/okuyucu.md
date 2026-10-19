@@ -1,6 +1,6 @@
 ---
 name: okuyucu
-description: "Returns text only; it cannot write files. Reads Tansu files, transcripts, logs, or code and returns an answer to one question, with evidence. Use it when the main session must read more than 3 files or an output longer than 500 lines. Do not use it for one file at a known place. It has 40 turns: give it one file group or at most 40 check lines per run."
+description: "Optional read-only helper for broad source searches. Reads Tansu files, transcripts, logs, or code and answers one question with evidence. The main session may read the files itself. Give this helper one file group or at most 40 check lines per run."
 tools: Read, Grep, Glob
 effort: low
 omitClaudeMd: true

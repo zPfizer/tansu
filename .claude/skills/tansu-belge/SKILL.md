@@ -5,23 +5,23 @@ description: "Use when the user asks to write, change, or translate a rule, a do
 
 # Rule, document, instruction (flow C)
 
-Run AGENTS.md "Every job" first. Run the steps in order. Run an "If" row only when its condition is true. Call each skill by the exact name in backticks. The shared steps of `tansu-yeni-is` (Test gate, Review, Proof, Pull request, Merge, Close) also apply when the change goes to a pull request.
+Run AGENTS.md "Every job" first. Run the steps in order. Run an "If" row only when its condition is true. Call each skill by the exact name in backticks. The shared steps of `tansu-yeni-is` (Check and evidence, Review, Pull request, Merge, Close) also apply when the change goes to a pull request.
 Before creating an issue, follow [Issue body](../../../docs/agents/issue-tracker.md#issue-body).
 
-1. **Write for agents:** `mattpocock-skills:writing-for-agents`.
-2. **Record:** `mattpocock-skills:domain-modeling`. `tansu-yeni-is` "Document first" says where a term and a decision go.
+1. **Write for agents:** State who acts, what they do, and what result they must check. Keep conditions and exceptions explicit.
+2. **Record:** Apply `tansu-yeni-is` "Document first" for settled terms and decisions.
 3. **Language:** Write instruction and prompt text in English: `asd-ste100`. Then run `py -3 -X utf8 kurulum/ste_fark.py origin/master`. It lints only the lines that the branch added to the instruction files since its merge base. Stage a new file first (`git add <file>`). The exit code must be 0.
 4. **Result:** Write the result to the brain as `tansu-yeni-is` "Close" says.
-5. **Locked file:** A locked file has feature scope (`docs/agents/is-kurallari.md` "Scope").
+5. **Locked file:** Choose the scope from docs/agents/is-kurallari.md "Scope".
 6. **Translation:** For a translation of a rule file, the writer lists every dropped word. If risk requires a reviewer, the auditor compares each rule with the source rule. (Levent 14.10)
 
 | If | Then |
 |---|---|
 | the work is a workflow spec | `loop-me`. |
-| the work is a new skill | `anthropic-skills:skill-creator`, then `tansu-eval` "Skill trigger eval". |
-| the work is a Claude interface mode or hook | `plugin-authoring`. |
-| the document is long | `anthropic-skills:doc-coauthoring`. |
-| the change affects behavior | run `tansu-eval` "Add the case" and `tansu-eval` "Check the judge". |
+| the work is a new skill | Use the available file tools to write SKILL.md with a name, description, trigger conditions, and steps. Check its frontmatter and referenced paths. Then run `tansu-eval` "Skill trigger eval". |
+| the work is a Claude interface mode or hook | Read the official documentation for the active interface. Use its available configuration and shell tools. Check the event, input, output, and failure exit in isolation. |
+| the document is long | Make an outline. Write one section at a time with the available file tools. Check consistency and source references across sections. |
+| the change affects behavior | Run `tansu-eval` "Add the case". Run `tansu-eval` "Check the judge" only if the evaluator uses an LLM judge. |
 | the job reads pool notes into `docs/kurallar` in batches (a brief is given, the job only appends) | do not run the steps Write for agents, Record, and Language. Do not run the row "the document is long". Apply "Pool reading rules" below and the shared steps of `tansu-yeni-is`. |
 
 ## Pool reading rules
@@ -37,5 +37,5 @@ These rules bind the readers and the writers of a pool batch. They also bind a d
 9. Do not use `replace_all` in a document. Read each hit.
 10. A `yok` reason that says there is no threshold needs a search of the Ham text and the images for a number or a period first.
 11. Every reader record has `gorsel_acildi` (true or false) and `belirsiz` (true or false). The review sample contains every record with `belirsiz: true`. A PR sentence about opened images counts only the records with `gorsel_acildi: true`.
-12. Before the PR, `python tests/atif_araclari.py alinti <records>` must print 0 lines. Also run `python tests/atif_araclari.py alinti-belge origin/master`. It checks the quotes on the added document lines. Stage a new document file (`git add <file>`) before the run, because the command reads tracked files only. Both commands must print 0 lines. Or the PR lists each remaining line one by one with its reason (for example "etiket, alıntı değil"). Never pass a group of lines together. Write `ek` and `yok` records with `python tests/atif_araclari.py entegre <tarih> <records>`. Run the real pool test with `TANSU_BEKLENEN_ACIK` and `TANSU_PARTI` (`tansu-yeni-is` "Test gate").
+12. Before the PR, `python tests/atif_araclari.py alinti <records>` must print 0 lines. Also run `python tests/atif_araclari.py alinti-belge origin/master`. It checks the quotes on the added document lines. Stage a new document file (`git add <file>`) before the run, because the command reads tracked files only. Both commands must print 0 lines. Or the PR lists each remaining line one by one with its reason (for example "etiket, alıntı değil"). Never pass a group of lines together. Write `ek` and `yok` records with `python tests/atif_araclari.py entegre <tarih> <records>`. Run the real pool test with `TANSU_BEKLENEN_ACIK` and `TANSU_PARTI` (`tansu-yeni-is` "Check and evidence").
 13. Every open question of a reader or a writer appears in the PR as "taşındı: <place>" or "düştü: <reason>".

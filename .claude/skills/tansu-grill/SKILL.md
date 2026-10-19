@@ -1,9 +1,10 @@
 ---
 name: tansu-grill
-description: An interview that questions an idea or a design in Tansu. It runs the `mattpocock-skills:grilling` and `mattpocock-skills:domain-modeling` skills with the criteria of Tansu. Use it when a discussion in Tansu is about a new rule, parameter, data source, or behavior change.
+description: An interview that questions an idea or a design against Tansu sources and decisions. Use it when a discussion in Tansu is about a new rule, parameter, data source, or behavior change.
 ---
 
-Call the Skill tool two times: `mattpocock-skills:grilling` and `mattpocock-skills:domain-modeling`. During the interview, also apply the three criteria below.
+Question the assumptions, alternatives, risks, and acceptance criteria of the proposal. Check the terms in GLOSSARY and the decisions in TASARIM.
+Apply the three criteria below. Record settled terms and decisions as `tansu-yeni-is` "Document first" says.
 The text of the rules is in their owner files. This skill only tells when to check them.
 
 ## 1. Tansu comes first
@@ -13,7 +14,7 @@ files for his view on that subject, and show the result in the proposal.
 
 ## 2. Risk scan
 
-For each decision, ask these questions against AGENTS.md "Environment", `docs/agents/kod-kurallari.md`, `docs/agents/git.md`, and TASARIM. Write the answer:
+For each decision, ask these questions against AGENTS.md "Environment", `CODING_STANDARDS.md`, `docs/agents/is-kurallari.md` "Git", and TASARIM. Write the answer:
 - Does the decision obey the terms of use of the data source? (TASARIM §4)
 - Does the decision keep the trial log (deneme günlüğü) rule and the `veri/` rule? <!-- driftlint-ignore: veri/ is gitignored local data, absent in CI -->
 - After the rule record (kural kaydı), does a changed rule count as a new trial (deneme)? (TASARIM §5.8)

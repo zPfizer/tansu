@@ -19,5 +19,8 @@ Ne zaman issue açılacağı ve küçük belge düzeltmelerinin hangi PR yolunu 
 
 - [AGENTS.md](AGENTS.md): proje girişi ve çalışma kuralları.
 - [Tasarım](docs/TASARIM.md): davranış, kararlar ve uygulama sırası (§7).
-- [İş kuralları](docs/agents/): görev, kod, git ve issue tracker kuralları.
+- [İş akışı](docs/agents/is-kurallari.md): kapsam, ortak adımlar, inceleme ve teslim.
+- [Kod ve test kuralları](CODING_STANDARDS.md), [bitti ölçütleri](DEFINITION_OF_DONE.md).
+- [İş takibi](docs/agents/issue-tracker.md): issue biçimi, durumlar ve etiketler.
+- [Kural dizini](docs/KURALLAR.md): aile tanımlarına ve Tansu kaynaklarına giriş.
 - [Değişiklik günlüğü](CHANGELOG.md): önemli değişiklikler.

@@ -66,7 +66,7 @@ def main():
     except OSError, subprocess.CalledProcessError:
         return 0
     print(
-        'Write a red test under tests/ first, then edit the code (docs/agents/kod-kurallari.md "Test first").',
+        'Write a red test under tests/ first, then edit the code (CODING_STANDARDS.md "Test first").',
         file=sys.stderr,
     )
     return 2
