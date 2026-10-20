@@ -15,6 +15,8 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ### Eklendi
 
+- Kayıtlı denemeyle beş ayrı yılı ve birleşik dönemi yürütecek bağlantının dönem, kayıt ve hata sözleşmesi yazıldı; uygulama bekliyor. (#91)
+
 - Tek hisse için bağımsız riskli işlem geçişi eklendi; günlük adım ve toplu yürütme aynı dolum, yarı satış, erteleme ve durum kaydını kullanır. Yarı satışta adet aşağı yuvarlanır; kurulum girdileri ve kararın kendi gösterge gereksinimi doğrulanır. Giriş, fiyat ve kapanış adımları okunabilir işlevlere ayrıldı; eski hesaplar ve çift risk kapısı korunur. (#90)
 
 - İlk kaynak ailesinin giriş alternatifleri, açık alanları ve kanıt aktarım sözleşmesi hazırlandı; hesaplama ve seçim izni verilmedi, eski 24 tanımın korumaları korundu. (#117)
