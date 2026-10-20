@@ -1298,3 +1298,25 @@ def test_komut_uctan_uca_rapor_ve_gunluk_satiri(tmp_path, capsys):
     )
     assert isinstance(satir["kirli"], bool) and "git_commit" in satir
     assert satir["makine"]["isci"] == 1 and "cift_rotasyonu" in satir["ozet"]
+
+
+def test_yaz_git_hatasinda_sonuc_ve_kayit_yazmaz(tmp_path, monkeypatch):
+    sonuc = ts.calistir(
+        ema_anlik(tmp_path),
+        {},
+        aileler=("ema_sikismasi",),
+        isci=1,
+        p=P,
+        bas=BAS,
+        ilerleme=lambda m: None,
+        izgara=IZGARA,
+    )
+
+    def git_hatasi():
+        raise kayit.KayitHatasi("Git bilgisi doğrulanamadı.")
+
+    monkeypatch.setattr(kayit, "_git", git_hatasi)
+    with pytest.raises(kayit.KayitHatasi, match="Git"):
+        ts.yaz(sonuc)
+    assert not (tmp_path / "rapor").exists()
+    assert not (kayit.KAYIT_DIZINI / "deneme.jsonl").exists()

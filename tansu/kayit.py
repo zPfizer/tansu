@@ -5,6 +5,7 @@ import datetime as dt
 import hashlib
 import importlib.metadata as meta
 import json
+import os
 import subprocess
 import sys
 import uuid
@@ -331,15 +332,47 @@ def _kabul(b, sonuclar, bilgi, holm, k1, islem_yok, gun_sutun, tohum, sag) -> di
 
 
 def _git() -> tuple:
-    """(commit, kirli). `kayit/` hariç: koşunun kendi yazdığı günlük ağacı kirletmez."""
-    commit = subprocess.run(
-        ["git", "rev-parse", "HEAD"], capture_output=True, text=True
-    ).stdout.strip()
-    durum = subprocess.run(
-        ["git", "status", "--porcelain", "--", ".", ":!kayit"],
-        capture_output=True,
-        text=True,
-    ).stdout.strip()
+    """Proje kökünden (commit, kirli); doğrulama hatasında durur (TASARIM 5.11)."""
+    kok = PAKET.parent.resolve()
+    ortam = {
+        ad: deger
+        for ad, deger in os.environ.items()
+        if not ad.upper().startswith("GIT_")
+    }
+    ortam["GIT_OPTIONAL_LOCKS"] = "0"
+    try:
+        bulunan = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            cwd=kok,
+            env=ortam,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+        if not bulunan or Path(bulunan).resolve() != kok:
+            raise KayitHatasi("Git çalışma ağacı proje köküyle aynı değil.")
+        commit = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=kok,
+            env=ortam,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+        durum = subprocess.run(
+            ["git", "status", "--porcelain", "--", ".", ":!kayit"],
+            cwd=kok,
+            env=ortam,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+    except (OSError, subprocess.CalledProcessError) as hata:
+        raise KayitHatasi(
+            "Git bilgisi doğrulanamadı; proje deposunu ve Git kurulumunu kontrol et."
+        ) from hata
+    if not commit:
+        raise KayitHatasi("Git sürümü boş; proje deposunu kontrol et.")
     return commit, bool(durum)
 
 

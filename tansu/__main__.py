@@ -1,4 +1,4 @@
-"""Komut girişi: `python -m tansu sadakat | kayit | sinama | tansu-sinama | denetim | evren-indir | sektor-indir | gunluk [tarih] [--kok veri] [--kimlik KIMLIK] [--resmi] [--son] [--varyant AD] [--isci N] [--hisse N] [--aile AILE] [--sektor-kok veri]` (TASARIM 3, 5.14; `--varyant` kayit, sinama, tansu-sinama ve gunluk için, varsayılan bugun)."""
+"""Komut girişi: `python -m tansu sadakat | kayit | sinama | tansu-sinama | denetim | evren-indir | sektor-indir | gunluk [tarih] [--kok veri] [--kimlik KIMLIK] [--resmi] [--son] [--varyant AD] [--isci N] [--hisse N] [--aile AILE] [--sektor-kok veri]` (TASARIM 3, 5.11, 5.14; `--varyant` kayit, sinama, tansu-sinama ve gunluk için, varsayılan bugun)."""
 
 import argparse
 import datetime as dt
@@ -208,6 +208,8 @@ def main(argv=None) -> int:
             )
         if a.deneme_id and not a.deneme_dosyasi:
             raise deneme.PilotHatasi(f"{a.deneme_id}: --deneme-dosyasi eksik")
+        if a.komut == "tansu-sinama":
+            kayit._git()
         if a.komut in ("tansu-sinama", "gunluk"):
             ayar_aktarimi = aktarim.AyarAktarimi(
                 deneme.PilotKayit(
