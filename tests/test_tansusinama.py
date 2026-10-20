@@ -2139,3 +2139,135 @@ def test_s10_ilerleme_hatasi_tamamlanan_makbuzu_yok_saymaz(tmp_path, monkeypatch
         "donem:2021",
         "donem:birlesik",
     ]
+
+
+def test_s10_kayipli_nominal_baslangic_ve_hesaptan_once_reddedilir(
+    tmp_path, monkeypatch
+):
+    from decimal import Decimal
+    from tansu import deneme
+
+    depo, ilk, _ = s10_kayitli(tmp_path, monkeypatch)
+    makbuz = s10_revizyon(
+        depo,
+        ilk,
+        risk_ayarlari=dict(
+            risk_surumu="bagimsiz_risk_v1",
+            nominal_tutar=Decimal("1029.92499999999999999999"),
+        ),
+    )
+    hazirla = veri.veri_hazirla
+    hesaplar = []
+
+    def hesap(*args):
+        hesaplar.append(args[0].baslangic)
+        return hazirla(*args)
+
+    monkeypatch.setattr(veri, "veri_hazirla", hesap)
+    hata = None
+    try:
+        s10_calistir(depo, makbuz, tmp_path)
+    except deneme.PilotHatasi as yakalanan:
+        hata = yakalanan
+    assert hesaplar == [], "Kayıplı nominal aktarımında E1 hesabı başlayamaz"
+    assert isinstance(hata, deneme.PilotHatasi)
+    assert "nominal" in str(hata).lower()
+    assert [o["kayit_turu"] for o in depo.oku()] == ["deneme", "deneme"]
+
+
+@pytest.mark.parametrize("kayitli, beklenen", [("1029.925000", 1029.925), ("0.1", 0.1)])
+def test_s10_kayipsiz_ondalik_kayitli_degeriyle_yurutulur(
+    tmp_path, monkeypatch, kayitli, beklenen
+):
+    from decimal import Decimal
+
+    depo, ilk, _ = s10_kayitli(tmp_path, monkeypatch, sinyal=True)
+    makbuz = s10_revizyon(
+        depo,
+        ilk,
+        risk_ayarlari=dict(
+            risk_surumu="bagimsiz_risk_v1", nominal_tutar=Decimal(kayitli)
+        ),
+    )
+    sonuc = s10_calistir(depo, makbuz, tmp_path)
+    assert sonuc["durum"] == "tamamlandi"
+    assert sonuc["ayar_parmak_izi"] == makbuz.ayar_ozeti
+    assert depo.deneme_oku(makbuz.deneme_id)["risk_ayarlari"][
+        "nominal_tutar"
+    ] == Decimal(kayitli)
+    for donem in sonuc["donemler"]:
+        assert donem["durumlar"]["TEST"]["yurutme"]["nominal_tutar"] == beklenen
+        iz = depo.izle(donem["makbuz"].olay_id)
+        assert (
+            iz["baslangic"]["ayar_parmak_izi"]
+            == iz["sonuc"]["ayar_parmak_izi"]
+            == makbuz.ayar_ozeti
+        )
+
+
+def test_s10_baslangic_makbuzu_farkli_ayara_bagliysa_hesap_baslamaz(
+    tmp_path, monkeypatch
+):
+    from decimal import Decimal
+    from tansu import deneme
+
+    depo, ilk, _ = s10_kayitli(tmp_path, monkeypatch)
+    yeni = s10_revizyon(
+        depo,
+        ilk,
+        risk_ayarlari=dict(
+            risk_surumu="bagimsiz_risk_v1", nominal_tutar=Decimal("200000")
+        ),
+    )
+    yeni_ayar = depo.deneme_oku(yeni.deneme_id)["risk_ayarlari"]
+    oku = depo.deneme_oku
+    hazirla = veri.veri_hazirla
+    okumalar, hesaplar = [], []
+
+    def degisen_kayit(deneme_id):
+        kayit = oku(deneme_id)
+        okumalar.append(kayit["ayar_parmak_izi"])
+        if len(okumalar) == 1:
+            olaylar = depo.oku()
+            for olay in olaylar:
+                if (
+                    olay["kayit_turu"] == "deneme"
+                    and olay["deneme_id"] == ilk.deneme_id
+                ):
+                    olay["risk_ayarlari"] = yeni_ayar
+                    olay["ayar_parmak_izi"] = yeni.ayar_ozeti
+            depo.yol.write_bytes(b"".join(deneme.kanonik(o) + b"\n" for o in olaylar))
+        return kayit
+
+    def hesap(*args):
+        hesaplar.append(args[0].baslangic)
+        return hazirla(*args)
+
+    monkeypatch.setattr(depo, "deneme_oku", degisen_kayit)
+    monkeypatch.setattr(veri, "veri_hazirla", hesap)
+    hata = None
+    try:
+        s10_calistir(depo, ilk, tmp_path)
+    except deneme.PilotHatasi as yakalanan:
+        hata = yakalanan
+    assert okumalar == [ilk.ayar_ozeti, yeni.ayar_ozeti]
+    assert hesaplar == [], "Başlangıç makbuzuyla uyuşmayan ayar hesaplanamaz"
+    assert isinstance(hata, deneme.PilotHatasi)
+    olaylar = deneme.PilotKayit(depo.yol).oku()
+    assert [o["kayit_turu"] for o in olaylar] == [
+        "deneme",
+        "deneme",
+        "baslangic",
+        "bitis",
+    ]
+    assert olaylar[-2]["ayar_parmak_izi"] == yeni.ayar_ozeti
+    assert olaylar[-1]["durum"] == "hata"
+    assert olaylar[-1]["tamamlanan"] == []
+    assert olaylar[-1]["basarisiz"] == [
+        "donem:2025",
+        "donem:2024",
+        "donem:2023",
+        "donem:2022",
+        "donem:2021",
+        "donem:birlesik",
+    ]

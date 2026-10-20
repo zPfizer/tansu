@@ -800,8 +800,13 @@ def _kayitli_risk(risk):
         raise deneme_.PilotHatasi("Desteklenmeyen risk sürümü.")
     if type(nominal) is not Decimal or not nominal.is_finite() or nominal <= 0:
         raise deneme_.PilotHatasi("Nominal tutar sonlu ve pozitif ondalık olmalıdır.")
-    if not 0 < float(nominal) < float("inf"):
+    sayisal = float(nominal)
+    if not 0 < sayisal < float("inf"):
         raise deneme_.PilotHatasi("Nominal tutar hesap aralığı dışında.")
+    if Decimal(str(sayisal)) != nominal:
+        raise deneme_.PilotHatasi(
+            "Nominal tutar mevcut sayı yüzüne kayıpsız aktarılamıyor."
+        )
 
 
 def _kayitli_veri_ayarlari(v):
@@ -1319,6 +1324,8 @@ def kayitli_calistir(depo, deneme_id, *, veri_koku, mod, isci=None, ilerleme=pri
         tohum=None,
         is_listesi=isler,
     ) as kosu:
+        if kosu.makbuz.ayar_ozeti != deneme["ayar_parmak_izi"]:
+            raise deneme_.PilotHatasi("Başlangıç makbuzu hesap ayarıyla uyuşmuyor.")
         sonuclar = _kayitli_isleri_yurut(deneme, kosu, veri_koku, isci, ilerleme)
         durum, bitis = _kayitli_bitir(kosu, deneme, sonuclar)
     return dict(

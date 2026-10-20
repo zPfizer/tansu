@@ -1270,7 +1270,7 @@ S03 pilotuna aittir; bu tablo #97'nin kalıcı biçimini onaylamaz.
 | `veri_ayarlari` | Tek görüntülü `veri_referanslari`, `manifest_ozeti`, `uyelik_surumu`, `uyelik_ozeti`, `evren_politikasi`, `kaynak`, `kalite_surumu`, `duzeltme_surumu`, `takvim_ref`, `takvim`. Referanslar gerçek E1 girdisiyle eşleşir. |
 | `takvim` | `baslangic`, `bitis`, sıralı ve tekil `seanslar`, `kaynak_ref`. Kayıtlı 2021–2025 kapsamı ve kaynağı açıktır. XU100 gözlemlerinden alınan tarihler bağımsız resmî tatil kanıtı diye sunulmaz. İlgili dönemin gerekli seansları E1 yanıtında bulunmalıdır. |
 | `yontem_ayarlari` | `yontem=kayitli_donem_v1`, `tekrar=0`, `yurutme_surumu=bagimsiz_islem_v1`, `fiyat_politikasi=aof_v1`, `muhasebe_politikasi=tani_referans_v1`. Bu yol ızgara, WF veya MC başlatmaz. |
-| `risk_ayarlari` | `risk_surumu=bagimsiz_risk_v1`, pozitif ondalık `nominal_tutar`. Hesabın sahibi S08'dir. |
+| `risk_ayarlari` | `risk_surumu=bagimsiz_risk_v1`, pozitif ondalık `nominal_tutar`. S08'in sayısal girdisine dönüşüp S08'in `Decimal(str(...))` okumasına geri dönünce değer aynı kalmalıdır; kayıplı değer hesap başlamadan reddedilir. Hesabın sahibi S08'dir. |
 | `masraf_ayarlari` | `masraf_surumu=komisyon_bsmv_v1`. Oran ve hesap S08'de kalır. |
 | `mod` | Çağrıda açık `gelistirme` veya `resmi`. Git doğrulanmadan kayıt veya hesap başlamaz; kirli ağaç resmî koşu olamaz. Eski resmî sayım ve günlük izin bundan türemez. |
 
@@ -1310,6 +1310,12 @@ E5'e ana süreç yazar. Sonuç sırası işçi tamamlanma sırasından bağıms�
 sonuçlar ve deneme bağları işçi sayısıyla değişmez; koşu/olay kimlikleri ve zamanları
 her girişime aittir. Koşu kod kimliği yürütücünün de içeriğini kapsar; eski kural
 kimlikleri ve legacy hash sınıfları yeniden yazılmaz.
+
+Nominal tutar S08'e aktarılırken sessizce yuvarlanamaz; mevcut sayı sözleşmesinde değeri
+korunamıyorsa açık hata gerekir. Başlangıç makbuzunun tam ayar özeti, hesap için
+okunmuş denemenin özetiyle aynı olmalıdır. İki okuma arasında kayıt değişmişse
+E1–E3 başlamaz; başarılı sonuç veya başka ayara bağlı hesap yazılmaz. Bunlar yeni
+para kuralı değil, kayıtlı girdinin aynen kullanılması şartının sınır korumalarıdır.
 
 Mevcut E5 koşu tutacağına `donem_sonucu_kaydet(*, is_id, donem, durum,
 islem_referanslari, birimler, muhasebe_politikasi, uyarilar, cikti_referanslari,
