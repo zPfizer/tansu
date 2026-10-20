@@ -1,6 +1,6 @@
 """Yerel arşivin Status denetimi (S5): `.scratch/**/issues/*.md` biletleri varsa denetlenir.
-Arşiv git dışında kalır; CI arşiv gerektirmez (Levent 17.10, docs/agents/git.md).
-Değer `docs/agents/issue-tracker.md` "Status field" ile `docs/agents/triage-labels.md` sözleşmesinden çıkar."""
+Arşiv git dışında kalır; CI arşiv gerektirmez (Levent 17.10, docs/agents/is-kurallari.md).
+Değer `docs/agents/issue-tracker.md` içindeki "Status field" ve "Triage labels" sözleşmesinden çıkar."""
 
 import re
 from pathlib import Path
@@ -19,21 +19,17 @@ def _izinli_degerler(kok):
     izleyici = (kok / "docs" / "agents" / "issue-tracker.md").read_text(
         encoding="utf-8"
     )
-    icinde = False
+    bolum = ""
     for satir in izleyici.splitlines():
         if satir.startswith("## "):
-            icinde = satir == "## Status field"
-        if icinde and satir.startswith("- `"):
+            bolum = satir[3:]
+        if bolum == "Status field" and satir.startswith("- `"):
             deger, *oteki = satir.split("`")[1::2]
             if " (" in deger:
                 bas.add(deger.split(" (")[0])
             else:
                 tam[deger] = next((p for p in oteki if p.endswith("/")), None)
-    etiketler = (kok / "docs" / "agents" / "triage-labels.md").read_text(
-        encoding="utf-8"
-    )
-    for satir in etiketler.splitlines():
-        if satir.startswith("| `"):
+        elif bolum == "Triage labels" and satir.startswith("| `"):
             tam.update(dict.fromkeys(re.findall(r"`([^`]+)`", satir.split("|")[2])))
     return tam, bas
 
@@ -69,11 +65,11 @@ def bilet_ihlalleri(kok):
 
 def _sozlesme_kopyala(hedef):
     (hedef / "docs" / "agents").mkdir(parents=True, exist_ok=True)
-    for ad in ("issue-tracker.md", "triage-labels.md"):
-        (hedef / "docs" / "agents" / ad).write_text(
-            (KOK / "docs" / "agents" / ad).read_text(encoding="utf-8"),
-            encoding="utf-8",
-        )
+    ad = "issue-tracker.md"
+    (hedef / "docs" / "agents" / ad).write_text(
+        (KOK / "docs" / "agents" / ad).read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
 
 
 def test_bilet_ihlalleri_sahte_kokte_tam_liste(tmp_path):
@@ -105,7 +101,8 @@ def test_yakin_ramak_degerler_reddedilir_bolum_disi_madde_sayilmaz(tmp_path):
     _sozlesme_kopyala(tmp_path)
     izleyici = tmp_path / "docs" / "agents" / "issue-tracker.md"
     izleyici.write_text(
-        izleyici.read_text(encoding="utf-8") + "\n## Other\n\n- `zzz`: x\n",
+        izleyici.read_text(encoding="utf-8")
+        + "\n## Other\n\n- `zzz`: x\n| `zzz` | `zzz` | Başka tablo |\n",
         encoding="utf-8",
     )
     bilet = tmp_path / ".scratch" / "x" / "issues"

@@ -77,7 +77,11 @@ def izlenen_dosyalar(kok):
         check=True,
     ).stdout
     adlar = cikti.split("\0")
-    return [kok / ad for ad in adlar if ad.endswith((".py", ".md")) and ad not in HARIC]
+    return [
+        kok / ad
+        for ad in adlar
+        if ad.endswith((".py", ".md")) and ad not in HARIC and (kok / ad).is_file()
+    ]
 
 
 def bolum_metinleri(yol):
@@ -452,8 +456,8 @@ KOK_DOSYASI = re.compile(r"[A-Z][A-Z_-]*\.md|pyproject\.toml|requirements\.lock\
 ISTISNA_ADLARI = {
     # reddedilen fikir (docs/sorgu/izleme/karar.md 20-031)
     "TODO.md": ("docs/sorgu/izleme/karar.md", "yerine "),
-    # domain.md bu dosyanın olmadığını söyler
-    "GLOSSARY-MAP.md": ("docs/agents/domain.md", "no "),
+    # AGENTS.md bu dosyanın olmadığını söyler
+    "GLOSSARY-MAP.md": ("AGENTS.md", "no "),
 }
 # Markdown bağlantı hedefi: [metin](hedef "başlık") ve [kimlik]: hedef
 BAGLANTI = re.compile(r"\[[^\]\n]*\]\(\s*<?([^)\s>]+)>?(?:\s+\"[^\"]*\")?\s*\)")

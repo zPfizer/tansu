@@ -10,8 +10,8 @@ Run AGENTS.md "Every job" first. Run the steps in order. Run an "If" row only wh
 1. **Start:** `evals:evals-start`.
 2. **Audit the cases:** Audit the existing cases first: `evals:eval-audit` (is the case reliable, is the judge checked, is a measure empty).
 3. **Find errors:** Find the error types in the session transcripts: `evals:error-discovery`. Astra or an Opus subagent labels the samples in place of Levent (Levent 14.10). When Levent labels, use `evals:build-review-interface`.
-4. **Add the case:** For each error type, if code can measure it: `evals:write-code-eval`. If it needs a judge: `evals:write-judge-prompt`.
-5. **Check the judge:** Check the judge against the labels: `evals:validate-evaluator`.
+4. **Add the case:** Use `evals:write-code-eval` for rules that code can check. Test each code evaluator on known pass and fail cases. Use `evals:write-judge-prompt` only for rules that need judgment.
+5. **Check the judge:** If the evaluator uses an LLM judge, check that judge against the labels with `evals:validate-evaluator`.
 6. **No RAG:** Do not use `evals:evaluate-rag`.
 7. **Measure:** Measure only with cases that passed the audit.
 
@@ -21,7 +21,7 @@ Run AGENTS.md "Every job" first. Run the steps in order. Run an "If" row only wh
 
 ## Skill trigger eval
 
-Use this part when you test whether a skill triggers on the right requests. The base is `anthropic-skills:skill-creator` "Description Optimization". These rules are permanent (Levent 16.10).
+Use this part when you test whether a skill triggers on the right requests. Follow the local procedure below. These rules are permanent (Levent 16.10).
 
 1. **Query set:** Write about 20 queries per skill. 8–10 should trigger the skill. 8–10 should not. The should-not queries are near-misses from the neighbor Tansu flow skills, plus a few queries that need no skill. Each query is as full as a real Tansu request.
    - Use real requests first: Levent's own messages in the session transcripts (`~/.claude/projects/*TANSU*/*.jsonl` and `*YONETIM*`). Do not use tool results, system text, session briefs, or eval sessions.
@@ -30,7 +30,7 @@ Use this part when you test whether a skill triggers on the right requests. The 
    - Columns: expected skill, source (`gercek` real, `yazili` written, `brif` agent brief), also-correct skill (`-` or a skill such as `tansu-grill` whose description also covers the query; a run that loads it is correct), query.
    - Do not put a literal trigger phrase of a description into a query.
    - Remove each query that names a thing that does not exist now. Check AGENTS.md "Current state", TASARIM, and the code.
-2. **Review the set:** Levent picks the tool for the session that audits the set. That session must know him. Check voice, distribution, current facts, and label overlap. Levent does not review sets (brain note `levent-calisma-oruntuleri`, item 2). Start no run before the auditor's approval. skill-creator "Description Optimization" requires this review.
+2. **Review the set:** Levent picks the tool for the session that audits the set. That session must know him. Check voice, distribution, current facts, and label overlap. Levent does not review sets (brain note `levent-calisma-oruntuleri`, item 2). Start no run before the auditor's approval.
 3. **Runs:** Run each query 3 times. A skill counts as triggered when its rate is at least 0.5.
 4. **Model:** Pass `--model` with the model ID of real Tansu sessions.
 5. **Tuning:** When you tune a description, split the set: 60% train and 40% held-out. Judge only on the held-out part.

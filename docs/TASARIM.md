@@ -490,9 +490,9 @@ yıla taşınır. (Sorgu S6, İ: 08-083)
   - β = aynı penceredeki log Y'nin log X'e OLS eğimi; β ≤ 0 elenir.
   - Sıralama: p artan, eşitlikte (Y, X) sembol sırası. Açgözlü seçim: bir hisse en fazla bir çiftte, sektör
     başına en fazla 2 çift, toplam en fazla 5.
-- **Sinyal:** her gün kapanışta Z ve ΔZ (`cift.z_skor`, log oran, 60 gün, ddof 1; KURALLAR §3). Z ≤ −2 ve
-  ΔZ > 0 ise hedef Y; Z ≥ +2 ve ΔZ < 0 ise hedef X (hedef = geçilecek bacak; kâr hedefi değildir, 5.5). Başka günde sinyal yok. Düşünülen çiftler yalnız seçilmiş
-  çiftlerdir; seçim günü kapanışındaki sinyal ertesi gün işlenir.
+- **Sinyal:** her gün kapanışta seçilmiş çiftlerde KURALLAR §3 "Çift rotasyonu" sinyal kuralı uygulanır (`cift.z_skor`).
+  Hesap tanımı, pencere ve eşikler o bölümde yönetilir. Hedef geçilecek bacaktır; kâr hedefi değildir (5.5).
+  Seçim günü kapanışındaki sinyal ertesi gün işlenir.
 - **Geçiş:** hedef, tutulandan farklıysa ertesi günün AOF'unda (5.3'teki yaklaşık dolum modeli) eski bacak satılır, yeni bacak alınır; her
   bacakta %0,3 masraf. Adet = tam lot, aşağı yuvarlanır; alış, sinyal gününü kapsayan 10 günlük medyan TL
   hacmin %2'siyle sınırlanır (5.4); artan nakit çiftin payında kalır.

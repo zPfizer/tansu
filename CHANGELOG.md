@@ -6,6 +6,11 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ## [Yayımlanmamış]
 
+### Değişti
+
+- Çalışma kuralları kullanılan ajan araçlarına uyarlandı; belge sahipliği ve bekleyen sözleşmelerin durumu netleşti. Tekrarlanan inceleme kuralları atfa dönüştü, iş klasörü kapanışına silme onayı ve kanıt kontrolü eklendi. (#130)
+- Altı çalışma belgesi mevcut sahiplerinde birleştirildi; kontrol ve gerçek veri kanıtı inceleme öncesine alındı, küçük işte yazıcı devri ve kapsam kuralları sadeleştirildi. Eski bilet sözleşmesi geçmiş bölümüyle korundu.
+
 ### Eklendi
 
 - Ayar değişikliği, önceki değere dönüş ve tekrar koşuları ayrı bağlarla saklayan geçici kayıt pilotu eklendi; kayıt modülü işlem hesabının dışında sınıflandı, saklanmış eski kimlikler ve resmi deneme sayısı korundu. (#84)
@@ -26,6 +31,9 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ### Değişti
 
+- Beceri akışlarında küçük iş kapsamı ve issue/PR kuralları uyumlandı; karar yöntemleri ile hakem doğrulaması koşula bağlandı, bulunamayan çağrılar mevcut araçlarla uygulanacak adımlara dönüştürüldü.
+- Okuyucu ve vekil ajanları isteğe bağlı yardımcı oldu; dosya ve satır sayısına bağlı okuyucu zorunluluğu kalktı, ana oturum teknik soruları kaynaklardan çözüyor ve Levent'e ait kararları ona soruyor.
+- İş kuralları ve Tansu akışlarında mattpocock-skills zorunluluğu kaldırıldı; gerekli adımlar doğrudan yazıldı, diğer beceri kuralları korundu.
 - Tansu EMA ızgarası hücrenin ayarını ve kurulumunu motora, Tansu sınaması ve günlük komutları seçilen varyantı hesaba iletiyor; hücreler ayrı işlem önbelleği kullanıyor. (#88)
 - Kök belgeler ve iş kuralları sadeleşti: denetçi sayısı riske göre, günlüğü kodu değiştiren yazar, küçük belge düzeltmeleri PR ile giriyor; README özet bölümü kalktı. (#122)
 - Yerel test kapısı kaldırıldı; kanca yalnız önce testin yazıldığını denetliyor; PR denetimi gerçek veri kanıtını yalnız tansu/ kodu değişince, denetçiyi yalnız kod değişince istiyor ve yalnız master birleştirmesi gelen PR’a yeni inceleme turu istemiyor. (#122)
