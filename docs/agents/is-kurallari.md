@@ -99,6 +99,7 @@ When Levent asks for merge, the dağıtıcı merges after his approval with `gh 
 
 Before closure, run `git fetch origin`. Check that the job commit is in `origin/master`.
 Check both worktrees for pending changes and active jobs. Check untracked and ignored outputs for evidence that must remain.
+Preserve required evidence in the job record before deletion. Do not close a worktree with pending changes or active jobs.
 Ask Levent to approve deletion of the named worktree and branch. A merge request does not give this approval.
 If another job uses the main checkout, leave it unchanged and report the pending closure.
 After these checks, close the approved worktree with `py -3 -X utf8 C:\Users\levent\Desktop\TANSU\kurulum\kapanis.py <worktree>`. <!-- driftlint-ignore: local-only path of the main repository, absent in CI -->
@@ -111,7 +112,7 @@ Paste them in the final report.
 Source: docs.github.com "GitHub flow" (https://docs.github.com/en/get-started/using-github/github-flow): "After you merge your pull request, delete your branch."
 
 ## Close
-On the issue + PR path, the merged PR closes the linked issue. Close a spec issue when its last ticket closes. Keep permanent facts in their owners from AGENTS.md. Record the result through the available brain integration. Use the active harness. Report a blocked write and the pending record. A side session follows the receipt sentence below.
+On the issue + PR path, the merged PR closes the linked issue. Close a spec issue when its last ticket closes. Keep permanent facts in their owners from AGENTS.md. A session that Levent started records Threads and a receipt through the available brain integration. Use the active harness. Report a blocked write and the pending record. A side session follows the receipt sentence below.
 
 A side session (another session started it) writes only one receipt: `py -3 -X utf8 C:\Users\levent\Desktop\YONETIM\beyin\beyin.py receipt --harness <active-harness> --event-id <job> --ref "<vault note>" --summary "<text>"`. <!-- driftlint-ignore: local-only path of the brain tool, absent in CI -->
 Use a note path inside the brain vault for `--ref`.
