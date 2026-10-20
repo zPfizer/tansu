@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 
 from tansu import evren as evren_modulu
+from tansu import islem_riski
 
 SERMAYE = 1_000_000.0
 RISK, TAVAN, LIKIDITE, EN_FAZLA = 0.01, 0.10, 0.02, 10  # TASARIM 5.6
@@ -17,6 +18,15 @@ MASRAFLAR = (0.001, 0.003, 0.005)  # TASARIM 5.4
 BASLANGIC = "2015-12-01"  # TASARIM 5.6 simülatör kuralları
 AILE = "ema_sikismasi"
 SINIRLAR = ("risk", "tavan", "likidite", "nakit")  # eşitlikte bu sıra
+
+
+def risk_tablosu(islemler):
+    """TASARIM 5.15 S08: bağımsız miktar, masraflı risk ve gerçekleşmiş dolumlar."""
+    s = islemler.copy()
+    hesaplar = [islem_riski.hesapla(r) for r in s.to_dict("records")]
+    for alan in dict.fromkeys(a for h in hesaplar for a in h):
+        s[alan] = [h.get(alan) for h in hesaplar]
+    return s
 
 
 def evrenler(anlik, bas, son) -> dict:
@@ -146,9 +156,7 @@ def _alinanlar(t, alinan, masraf) -> pd.DataFrame:
     s["gerceklesen_kayip"] = s["adet"] * (s["giris_fiyat"] - s["cikis_fiyat"]).clip(
         lower=0
     )
-    s["getiri"] = (
-        s["cikis_fiyat"] * (1 - masraf) / (s["giris_fiyat"] * (1 + masraf)) - 1
-    )
+    s["getiri"] = islem_riski.fiyat_getirisi(s["giris_fiyat"], s["cikis_fiyat"], masraf)
     s["aile"] = AILE
     return s[
         [

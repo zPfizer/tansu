@@ -15,6 +15,8 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ### Eklendi
 
+- Bağımsız %2 masraflı risk bütçesi, aşağı tam adet yuvarlama, kullanılmayan bütçe ve gerçekleşen net R ortak E3 hesabına alındı; komisyon varsayımı Levent'in 20.10.2026 onayıyla kesinleşti. Eski sonuçlar korundu, çiftin sayısal risk dayanağı #128'e taşındı. (#89)
+
 - Ayar değişikliği, önceki değere dönüş ve tekrar koşuları ayrı bağlarla saklayan geçici kayıt pilotu eklendi; kayıt modülü işlem hesabının dışında sınıflandı, saklanmış eski kimlikler ve resmi deneme sayısı korundu. (#84)
 - Tek hisse ve çift ailelerinde göstergeler ile işlem hazırlığı ortak hesapta üretiliyor; sinyal hazırlığıyla birlikte taşınıyor, eski çağrılar korunuyor. (#87)
 - Mevcut 24 strateji tanımını ayarları ve kaynak kökenleriyle koruyan sürümlü katalog eklendi; bütün birleşim kanıtı eksik seçeneklerin panel ve komut seçimi kapalı tutuldu. (#83)

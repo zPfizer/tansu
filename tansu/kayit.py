@@ -35,6 +35,7 @@ KOD_DOSYALARI = [
     "evren.py",
     "gostergeler.py",
     "istatistik.py",
+    "islem_riski.py",  # E3 risk ve gerçekleşen maliyet hesabı (TASARIM 5.15 S08).
     "katalog.py",  # Parametre ve sabitleri işlem hesaplarına girer (TASARIM 5.8).
     "kayit.py",
     "motor.py",

@@ -23,7 +23,16 @@ import pandas as pd
 import psutil
 
 from tansu import aileler as aileler_
-from tansu import ciftbolme, kayit, motor, rapor, saglamlik, simulator, veri
+from tansu import (
+    ciftbolme,
+    islem_riski,
+    kayit,
+    motor,
+    rapor,
+    saglamlik,
+    simulator,
+    veri,
+)
 
 MASRAF = 0.001  # TASARIM 5.14: her yönde %0,10, kayma yok
 SUPHELI_KAZANMA = 0.90  # TASARIM 5.14: kazanma oranı bu değerden küçük değilse "şüpheli: aşırı uyum" (YORUM)
@@ -40,7 +49,7 @@ IZGARA = {
 
 
 def islem_getirisi(giris, cikis, m=MASRAF) -> float:
-    return float(cikis * (1 - m) / (giris * (1 + m)) - 1)
+    return float(islem_riski.fiyat_getirisi(giris, cikis, m))
 
 
 def makine() -> dict:
@@ -297,6 +306,9 @@ def _ema_egri(t, kap, bas):
 
 
 def _getirili(t) -> pd.DataFrame:
+    # TASARIM 5.15 S08: yeni politika açıkça istenir; eski hücreler yeniden etiketlenmez.
+    if "risk_surumu" in t:
+        return simulator.risk_tablosu(t)
     return t.assign(
         getiri=[
             islem_getirisi(g, c)

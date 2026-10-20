@@ -47,6 +47,7 @@ class Pozisyon:
     )  # tetiklenmiş farklı senaryolar (`dip`, `rsi70`, `rsi50`, `sma50`)
     yari_bekleyen: bool = False  # yarı satış tetiklendi, ertesi AOF'ta dolar
     uyelik_kaniti: dict | None = None  # TASARIM 5.15: yalnız tarihli üyelik yolunda
+    risk_girdisi: dict | None = None  # TASARIM 5.15 S08: açık risk/maliyet isteği
     kar: bool = False  # `rsi70` önşartı (KURALLAR §3 Modül 1, rsi70 "Etkinleşme önşartı"): girişten sonra bir kapanış hem giriş fiyatının hem SMA50'nin üstünde oldu; giriş günü sayılmaz
 
 
