@@ -315,6 +315,53 @@ Sürüm kapsamı: TASARIM §3. AB=CD ilk sürümde yoktur (TASARIM §3, Sorgu 3)
 
 **Risk paketi:** TASARIM §5.5–5.6; kaynaklar E K1–K3. Çift rotasyonu bu pakete tabi değildir; karşı uçta geçişle çıkar (aile 1).
 
+### Kaynak strateji hazırlığı (#117)
+
+**Durum:** İlk ailenin kaynak tanımı hazır; hesaplanabilir ve seçilebilir tanım yoktur.
+Bu hazırlık, yukarıdaki legacy kurallara yeni izin vermez. Arayüz ve kanıt aktarımının
+sahibi TASARIM §5.15, "Kaynak strateji hazırlığı" bölümüdür.
+
+İlk aile EMA sıkışması / talep bölgesidir. Birinci el kaynak,
+`tweet-ema-sikismasi-talep-bolgesi-kirilim-2002087132089770127.md` notunun Ham bölümü ve G1
+görselidir. Gönderi kimliği `2002087132089770127`, yayım tarihi 19.12.2025'tir (Ham:18).
+Notun 78 satırı ve bağlantılı görsel 20.10.2026'da okundu. Görselde fiyat ve zaman eksenleri
+görünmez; sembol ve zaman dilimi okunamıyor. Bunlar tahminle tamamlanmaz.
+
+| Kural parçası | Bu paylaşımın söylediği | Birinci el konum |
+|---|---|---|
+| Ön durum | Güçlü düşüşten sonra durulan ve yataya bağlayan talep bölgesi; birbirine yaklaşan ve düzleşen EMA'lar. | Ham:23,33–35; G1 |
+| EMA periyotları | Tansu 5, 8, 13 kullandığını söyler. 20, 50, 100 aynı cümlede örnektir. | Ham:35 |
+| Koruyucu zarar kesme | Talep bölgesinin hemen altı; bölge altına sarkıp kapanışta analiz iptal olur. Tampon ve dolum fiyatı verilmez. | Ham:45 |
+| İlk hedef | Üstteki kırmızı arz bölgesi. Sınır seçimi ve gerçekleşme fiyatı tanımlanmaz. | Ham:48–50,67; G1 |
+
+Giriş alternatifleri aynı kurala gizlice eklenmez. Davranışı değiştiren her alternatif,
+sonraki hazırlıkta ayrı deneme revizyonudur; bu belgede deneme veya koşu kaydı oluşturulmaz.
+
+| Giriş alternatifi | Kaynak anlatımı | Bu alternatife özgü eksik |
+|---|---|---|
+| Agresif giriş | EMA'lar sıkışıkken talep bölgesinin alt sınırına temasta alım. | Temas toleransı, sinyal anı ve dolum kuralı. Ham:40 |
+| Kırılım kapanışı | İlk güçlü, uzun gövdeli yeşil mumun kapanışında sinyal. | Güçlü/uzun gövde ölçüsü ve kırılım sınırı. Ham:42 |
+| Kırılım sonrası geri çekilme | Aynı kırılım mumundan sonraki küçük geri çekilmede sinyal. | Temas seviyesi, tolerans, bekleme süresi ve teyit. Ham:42 |
+
+Ham:52–65'teki sağ taraf uyarısı ayrı bağlamdır: yeni destek ile kırmızı direnç arasındaki
+karar bölgesinde hacimli kırılım ve üstünde kapanış beklenir. Bu uyarı bütün girişlere hacim
+süzgeci eklemez. Uyarının ayrı kurala dönüşmesi hacim ölçüsü ve bölge tanımı gerektirir.
+
+Ortak açık alanlar ve engeller:
+
+| Alan | Çözülmeyen ayrıntı | Hazırlık sonucu |
+|---|---|---|
+| Talep/arz bölgesi | Bölgelerin üretimi, sınırları, bilinirlik tarihi, geçersizleşmesi ve hedef bölge seçimi. | Genel bölge algoritması yok. |
+| Düşüş ve sıkışma | Güçlü düşüşün, yataylaşmanın, EMA yakınlığının ve düzleşmenin ölçüsü ile süreleri. | Legacy eşik, pencere ve kutu formülleri buraya taşınmaz. |
+| Mum ve veri | Gövde ölçüsü için gereken açılış; kaynağın zaman dilimi. | Açılış yerine AOF/önceki kapanış kullanılmaz. Günlük veri uyumu doğrulanmadı. |
+| Stop ve hedef | Stop tamponu, kapanış iptalinin emre dönüşmesi, arz bölgesinde satış seviyesi. | Sayısal stop, hedef veya dolum uydurulmaz. |
+| Yürütme | Giriş geçerliliği, aynı mumdaki olayların sırası ve açık işlemde ayarların kullanımı. | TASARIM §5.15'in sürümlü işlem sözleşmesiyle açık bağ gerekir. |
+
+Kaynakta bir kural parçasının bulunması, genel hesap tanımının tamamlandığı anlamına gelmez.
+Yeni kaynak veya onaylı teknik yorum açık alanı karşılayabilir; kökeni ayrı kaydedilir.
+Sahip onayı, Tansu'nun birlikte anlatmadığı bir birleşimin kaynak kanıtı yerine geçmez.
+Bu hazırlığın kaynak izni ile risk/masraf politikası ve günlük uygunluk ayrı tutulur.
+
 ## 4. Sadakat kontrolü (sınamadan önce)
 
 Sadakat kontrolünde getiri sonuçlarına bakılmaz. YORUM'ları sonuca bakarak seçmek yasak.
