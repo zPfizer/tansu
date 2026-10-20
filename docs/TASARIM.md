@@ -1271,7 +1271,10 @@ kesiştirerek düşürmek yasaktır. Üyelik açığı veya gerekli veri kapsam�
 tek başına eksik veri sayılmaz; istenen seans kapsamı kayıtlı takvimle denetlenir.
 Sinyal ve giriş günü üyeliği ayrı kontrol edilir. Üyelikten çıkış açık işlemi kapatmaz.
 E1'in yaklaşık kilit bayrağı doğrulanmış limit kanıtı değildir. Limit kanıtı yoksa
-S09 dolum üretmez; aday ve engelin nedeni sonuçta korunur.
+S09 dolum üretmez; aday ve engelin nedeni sonuçta korunur. Gerekli işlem
+kanıtı eksik çocuk tam başarı sayılmaz; limit kanıtı aşaması ve eksikliği hata
+sonucunda korunur. Gerçekten adaysız dönem ile kanıt yokluğu nedeniyle dolumsuz
+kalan dönem aynı başarılı boş sonuç diye birleştirilmez.
 
 E5 başlangıç makbuzu oluşmadan E1–E3 hesabı başlamaz. Başlangıç kaydı altı iş kimliğini,
 kod/veri/ortam bağlarını ve işçi politikasını içerir. İşçiler yalnız hesap yapar;
