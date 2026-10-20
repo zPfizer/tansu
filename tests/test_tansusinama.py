@@ -1477,3 +1477,665 @@ def test_yaz_git_hatasinda_sonuc_ve_kayit_yazmaz(tmp_path, monkeypatch):
         ts.yaz(sonuc)
     assert not (tmp_path / "rapor").exists()
     assert not (kayit.KAYIT_DIZINI / "deneme.jsonl").exists()
+
+
+def s10_kayitli(tmp_path, monkeypatch, *, sinyal=False, limit=True, varyant="bugun"):
+    """E1 sözleşme verisi; E2, E3, E4 ve E5 gerçek hesap/yazma yolundadır."""
+    import datetime as dt
+    from decimal import Decimal
+    from hashlib import sha256
+    from tansu import deneme, katalog
+    from tests.test_kayit import pilot_deneme
+
+    gunler = [
+        f"{y}-{a}"
+        for y in range(2021, 2026)
+        for a in ("01-04", "01-05", "12-30", "12-31")
+    ]
+    donemler = [
+        dict(
+            ad=str(y),
+            baslangic=dt.date(y, 1, 1),
+            bitis=dt.date(y, 12, 31),
+            isinma_baslangici=dt.date(2018, 1, 1),
+            sinir_surumu="bagimsiz_donem_v1",
+        )
+        for y in range(2025, 2020, -1)
+    ]
+    donemler.append(dict(donemler[-1], ad="birlesik", bitis=dt.date(2025, 12, 31)))
+    klasor = tmp_path / "ag" / "s10"
+    klasor.mkdir(parents=True)
+    manifest = klasor / "manifest.json"
+    manifest.write_text('{"kimlik":"s10","dosyalar":{}}', encoding="utf-8")
+    v = dict(
+        veri_referanslari=["s10"],
+        manifest_ozeti=sha256(manifest.read_bytes()).hexdigest(),
+        uyelik_surumu="bist30_2021_2025_v1",
+        uyelik_ozeti="uyelik-fixture",
+        evren_politikasi="donemsel_bist30_v1",
+        kaynak="is_yatirim",
+        kalite_surumu="legacy_tansu_v1",
+        duzeltme_surumu="is_yatirim",
+        takvim_ref="xu100",
+        takvim=dict(
+            baslangic=dt.date(2021, 1, 1),
+            bitis=dt.date(2025, 12, 31),
+            seanslar=tuple(gunler),
+            kaynak_ref="sentetik E1 takvim kanıtı",
+        ),
+    )
+    y = dict(
+        yontem="kayitli_donem_v1",
+        tekrar=0,
+        yurutme_surumu="bagimsiz_islem_v1",
+        fiyat_politikasi="aof_v1",
+        muhasebe_politikasi="tani_referans_v1",
+    )
+    depo = deneme.PilotKayit(tmp_path / "pilot.jsonl")
+    makbuz = pilot_deneme(
+        depo,
+        katalog.legacy_coz(varyant),
+        donemler=donemler,
+        veri_ayarlari=v,
+        yontem_ayarlari=y,
+        risk_ayarlari=dict(
+            risk_surumu="bagimsiz_risk_v1", nominal_tutar=Decimal("100000")
+        ),
+        masraf_ayarlari=dict(masraf_surumu="komisyon_bsmv_v1"),
+    )
+    gun = [
+        *map(lambda t: str(t.date()), pd.bdate_range("2018-01-01", periods=510)),
+        *gunler,
+    ]
+    piyasa = []
+    for t in gun:
+        fiyat = (
+            110.0
+            if sinyal and t == "2021-12-30"
+            else 112.0
+            if sinyal and t >= "2021-12-31"
+            else 100.0
+        )
+        piyasa.append(
+            dict(
+                sembol="TEST",
+                tarih=t,
+                islem=True,
+                kalite_bayraklari=[],
+                **{
+                    f"duzeltilmis_{ad}": dict(deger=fiyat + fark)
+                    for ad, fark in (
+                        ("aof", 0),
+                        ("kapanis", 0),
+                        ("yuksek", 1),
+                        ("dusuk", -1),
+                    )
+                },
+                ham_yuksek=dict(deger=fiyat + 1),
+                ham_dusuk=dict(deger=fiyat - 1),
+                hacim_tl=dict(deger=100.0),
+                **(
+                    dict(
+                        tavan=dict(deger=200.0),
+                        taban=dict(deger=50.0),
+                        limit_kaniti="sentetik açık limit kanıtı",
+                    )
+                    if limit
+                    else {}
+                ),
+            )
+        )
+
+    def uyelik(istek):
+        return dict(
+            gunler={
+                t: dict(
+                    semboller=["TEST"],
+                    kanitlar=[dict(kayit_id="uye-TEST", sembol="TEST")],
+                )
+                for t in istek.tarihler
+            },
+            evren_politikasi=v["evren_politikasi"],
+            uyelik_surumu=v["uyelik_surumu"],
+            tablo_parmak_izi=v["uyelik_ozeti"],
+        )
+
+    def paket(istek, kimlik, kok):
+        assert any(o["kayit_turu"] == "baslangic" for o in depo.oku()), (
+            "E1 başlangıç makbuzundan önce çağrıldı"
+        )
+        secilen = [
+            r for r in piyasa if istek.isinma_donemi[0] <= r["tarih"] <= istek.bitis
+        ]
+        return dict(
+            semboller=["TEST"],
+            piyasa=secilen,
+            gunler=[r["tarih"] for r in secilen],
+            uyelik=uyelik(
+                veri.UyelikIstegi(
+                    tuple(t for t in gunler if istek.baslangic <= t <= istek.bitis),
+                    v["evren_politikasi"],
+                    v["uyelik_surumu"],
+                )
+            ),
+            referans=dict(
+                kayit_id="s10/veri/legacy_tansu_v1",
+                goruntu_id="s10",
+                manifest_parmak_izi=v["manifest_ozeti"],
+                uyelik_tablo_parmak_izi=v["uyelik_ozeti"],
+                istenen_donem=dict(baslangic=istek.baslangic, bitis=istek.bitis),
+            ),
+            kalite=dict(bozuk_satirlar=[], hata_nedenleri=[], uyarilar=[]),
+        )
+
+    monkeypatch.setattr(veri, "uyelik_hazirla", uyelik)
+    monkeypatch.setattr(veri, "veri_hazirla", paket)
+    return depo, makbuz, piyasa
+
+
+def test_s10_alti_bagimsiz_donem_ve_sinyalsiz_makbuz(tmp_path, monkeypatch):
+    depo, makbuz, _ = s10_kayitli(tmp_path, monkeypatch)
+    sonuc = ts.kayitli_calistir(
+        depo,
+        makbuz.deneme_id,
+        veri_koku=tmp_path,
+        mod="gelistirme",
+        isci=1,
+        ilerleme=None,
+    )
+    assert len(sonuc["donemler"]) == 6, "Kayıtlı deneme altı dönem sonucu üretmeli"
+    assert [s["donem"]["ad"] for s in sonuc["donemler"]] == [
+        "2025",
+        "2024",
+        "2023",
+        "2022",
+        "2021",
+        "birlesik",
+    ]
+    assert sonuc["durum"] == "tamamlandi"
+    assert all(
+        s["adaylar"] == [] and s["islem_referanslari"] == [] for s in sonuc["donemler"]
+    )
+    for s in sonuc["donemler"]:
+        iz = depo.izle(s["makbuz"].olay_id)
+        assert iz["sonuc"]["sonuc_turu"] == "donem_v1"
+        assert "sinyal_id" not in iz["sonuc"]
+        assert iz["deneme"]["deneme_id"] == makbuz.deneme_id
+        assert iz["baslangic"]["ayar_parmak_izi"] == makbuz.ayar_ozeti
+        assert iz["durum"] == "tamamlandi"
+    assert all(o["kayit_turu"] != "islem" for o in depo.oku())
+    from hashlib import sha256
+    from pathlib import Path
+
+    baslangic = depo.izle(sonuc["donemler"][0]["makbuz"].olay_id)["baslangic"]
+    assert baslangic["kod_kimligi"].startswith("kayitli_donem_v1:sha256:")
+    assert (
+        baslangic["ortam"]["kod_dosyalari"]["tansusinama.py"]
+        == sha256(Path(ts.__file__).read_bytes()).hexdigest()
+    )
+    assert (
+        baslangic["ortam"]["git_commit"],
+        baslangic["ortam"]["kirli"],
+    ) == kayit._git()
+    assert baslangic["ortam"]["isci_politikasi"] == dict(yontem="spawn", isci=1)
+
+
+def s10_calistir(depo, makbuz, kok, isci=1):
+    return ts.kayitli_calistir(
+        depo,
+        makbuz.deneme_id,
+        veri_koku=kok,
+        mod="gelistirme",
+        isci=isci,
+        ilerleme=None,
+    )
+
+
+def s10_hesap_ozeti(deger):
+    if isinstance(deger, dict):
+        return {
+            k: s10_hesap_ozeti(v)
+            for k, v in deger.items()
+            if k
+            not in {
+                "kosu_id",
+                "islem_id",
+                "dolum_id",
+                "olusturma_zamani",
+                "butunluk",
+                "son_girdi",
+                "isci_pid",
+                "makbuz",
+                "cikti_parmak_izi",
+                "islem_referanslari",
+            }
+        }
+    if isinstance(deger, list):
+        return [s10_hesap_ozeti(v) for v in deger]
+    return deger
+
+
+def s10_revizyon(depo, makbuz, **degisiklik):
+    d = depo.deneme_oku(makbuz.deneme_id)
+    alanlar = {
+        a: d[a]
+        for a in (
+            "donemler",
+            "veri_ayarlari",
+            "yontem_ayarlari",
+            "risk_ayarlari",
+            "masraf_ayarlari",
+            "eski_referans",
+        )
+    }
+    return depo.deneme_kaydet(
+        d["strateji"],
+        aktor="test",
+        gerekce="sınır örneği",
+        ust_deneme=makbuz.deneme_id,
+        **(alanlar | degisiklik),
+    )
+
+
+def test_s10_bir_ve_iki_spawn_isci_sayisal_sonucu_degistirmez(tmp_path, monkeypatch):
+    import os
+
+    depo, makbuz, _ = s10_kayitli(tmp_path, monkeypatch, sinyal=True)
+    ilk = s10_calistir(depo, makbuz, tmp_path, 1)
+    ikinci = s10_calistir(depo, makbuz, tmp_path, 2)
+    assert ilk["durum"] == ikinci["durum"] == "tamamlandi"
+    assert ilk["kosu_id"] != ikinci["kosu_id"]
+    assert ilk["deneme_id"] == ikinci["deneme_id"] == makbuz.deneme_id
+    assert ilk["ayar_parmak_izi"] == ikinci["ayar_parmak_izi"] == makbuz.ayar_ozeti
+    assert s10_hesap_ozeti(ilk["donemler"]) == s10_hesap_ozeti(ikinci["donemler"])
+    assert len({s["isci_pid"] for s in ilk["donemler"]}) == 1
+    assert len({s["isci_pid"] for s in ikinci["donemler"]}) == 2
+    assert os.getpid() not in {
+        s["isci_pid"] for s in ilk["donemler"] + ikinci["donemler"]
+    }
+    yil = ilk["donemler"][4]
+    assert yil["durumlar"]["TEST"]["durum"] == "bekliyor"
+    assert yil["islem_referanslari"] == []
+    assert yil["adaylar"][-1]["yurutme_nedeni"] == "sonraki_seans_ufuk_disinda"
+    birlesik = ilk["donemler"][5]
+    durum = birlesik["durumlar"]["TEST"]
+    assert durum["durum"] == "acik_son"
+    assert [(d["tarih"], d["yon"], d["fiyat"]) for d in durum["dolumlar"]] == [
+        ("2022-01-04", "alis", 112.0)
+    ]
+    assert durum["sonuc"]["net_r"] is None
+    assert durum["sonuc"]["net_fiyat_getirisi"] is None
+    assert durum["degerleme"] == dict(tarih="2025-12-31", fiyat=112.0)
+    assert all(
+        s["durumlar"]["TEST"]["iz"][0]["tarih"].startswith(s["donem"]["ad"])
+        for s in ilk["donemler"][:5]
+    )
+    bag = depo.izle(birlesik["makbuz"].olay_id)["sonuc"]
+    assert bag["cikti_referanslari"] == [
+        s["makbuz"].olay_id for s in ilk["donemler"][:5]
+    ]
+    assert len([o for o in depo.oku() if o["kayit_turu"] == "deneme"]) == 1
+    assert {o["donem"]["ad"] for o in depo.oku() if o["kayit_turu"] == "islem"} == {
+        "birlesik"
+    }
+
+
+def test_s10_limit_bilinmiyor_sifir_dolumu_basari_yapmaz(tmp_path, monkeypatch):
+    depo, makbuz, _ = s10_kayitli(tmp_path, monkeypatch, sinyal=True, limit=False)
+    sonuc = s10_calistir(depo, makbuz, tmp_path)
+    birlesik = sonuc["donemler"][5]
+    assert sonuc["durum"] == "hata"
+    assert birlesik["asama"] == "limit_kaniti"
+    assert birlesik["adaylar"]
+    assert birlesik["durumlar"]["TEST"]["dolumlar"] == []
+    assert "limit_bilinmiyor" in [
+        r["neden"] for r in birlesik["durumlar"]["TEST"]["retler"]
+    ]
+    assert all(o["kayit_turu"] != "islem" for o in depo.oku())
+    assert sonuc["donemler"][4]["durum"] == "tamamlandi"
+    bitis = depo.oku()[-1]
+    assert bitis["durum"] == "hata" and bitis["basarisiz"] == ["donem:birlesik"]
+
+
+@pytest.mark.parametrize("asama", ["veri", "kurulum"])
+def test_s10_cocuk_hatasi_diger_makbuzlari_korur(tmp_path, monkeypatch, asama):
+    from copy import deepcopy
+
+    depo, makbuz, _ = s10_kayitli(tmp_path, monkeypatch)
+    hazirla = veri.veri_hazirla
+
+    def arizali(istek, *a):
+        if istek.baslangic == "2024-01-01":
+            if asama == "veri":
+                raise veri.VeriHatasi("2024 veri arızası")
+            paket = deepcopy(hazirla(istek, *a))
+            paket["piyasa"][0]["hacim_tl"] = None
+            return paket
+        return hazirla(istek, *a)
+
+    monkeypatch.setattr(veri, "veri_hazirla", arizali)
+    sonuc = s10_calistir(depo, makbuz, tmp_path, 2)
+    assert sonuc["durum"] == "hata"
+    assert [
+        (s["donem"]["ad"], s["asama"])
+        for s in sonuc["donemler"]
+        if s["durum"] == "hata"
+    ] == [("2024", asama)]
+    assert len([s for s in sonuc["donemler"] if s["durum"] == "tamamlandi"]) == 5
+    bitis = depo.oku()[-1]
+    assert bitis["basarisiz"] == ["donem:2024"]
+    assert set(bitis["tamamlanan"]) == {
+        "donem:2025",
+        "donem:2023",
+        "donem:2022",
+        "donem:2021",
+        "donem:birlesik",
+    }
+    assert len(bitis["cikti_referanslari"]) == 6
+
+
+@pytest.mark.parametrize("ariza", ["baslangic", "sonuc"])
+def test_s10_yazma_arizasi_hesabi_ve_sahte_basarili_bitisi_engeller(
+    tmp_path, monkeypatch, ariza
+):
+    from tansu import deneme
+
+    depo, makbuz, _ = s10_kayitli(tmp_path, monkeypatch)
+    ekle = depo._ekle
+    hazirla = veri.veri_hazirla
+    hesaplar, sonuclar = [], []
+
+    def hesap(*a):
+        hesaplar.append(True)
+        return hazirla(*a)
+
+    def yaz(olay, *a):
+        if olay["kayit_turu"] == "sonuc":
+            sonuclar.append(olay)
+        if (ariza == "baslangic" and olay["kayit_turu"] == "baslangic") or (
+            ariza == "sonuc" and len(sonuclar) == 2
+        ):
+            raise deneme.PilotYazmaHatasi("disk arızası")
+        return ekle(olay, *a)
+
+    monkeypatch.setattr(depo, "_ekle", yaz)
+    monkeypatch.setattr(veri, "veri_hazirla", hesap)
+    with pytest.raises(deneme.PilotYazmaHatasi, match="disk arızası"):
+        s10_calistir(depo, makbuz, tmp_path)
+    tekrar = deneme.PilotKayit(depo.yol)
+    olaylar = tekrar.oku()
+    assert not any(
+        o["kayit_turu"] == "bitis" and o["durum"] == "tamamlandi" for o in olaylar
+    )
+    if ariza == "baslangic":
+        assert hesaplar == []
+        assert [o["kayit_turu"] for o in olaylar] == ["deneme"]
+    else:
+        kalici = [o for o in olaylar if o["kayit_turu"] == "sonuc"]
+        assert len(kalici) == 1 and kalici[0]["donem"]["ad"] == "2025"
+        assert tekrar.izle(kalici[0]["kayit_id"])["durum"] == "cozumsuz"
+
+
+@pytest.mark.parametrize(
+    "ariza", ["manifest", "mod", "nominal", "politika", "takvim", "donem"]
+)
+def test_s10_gecersiz_istekte_baslangic_ve_hesap_yok(tmp_path, monkeypatch, ariza):
+    from decimal import Decimal
+    from tansu import deneme
+
+    depo, makbuz, _ = s10_kayitli(tmp_path, monkeypatch)
+    d = depo.deneme_oku(makbuz.deneme_id)
+    degisiklik = {}
+    if ariza == "manifest":
+        (tmp_path / "ag" / "s10" / "manifest.json").write_text("{}", encoding="utf-8")
+    elif ariza == "nominal":
+        degisiklik["risk_ayarlari"] = d["risk_ayarlari"] | dict(
+            nominal_tutar=Decimal("0")
+        )
+    elif ariza == "politika":
+        degisiklik["yontem_ayarlari"] = d["yontem_ayarlari"] | dict(
+            fiyat_politikasi="legacy"
+        )
+    elif ariza == "takvim":
+        d["veri_ayarlari"]["takvim"]["seanslar"] = ("2025-12-31", "2021-01-04")
+        degisiklik["veri_ayarlari"] = d["veri_ayarlari"]
+    elif ariza == "donem":
+        degisiklik["donemler"] = d["donemler"][1:]
+    if degisiklik:
+        makbuz = s10_revizyon(depo, makbuz, **degisiklik)
+    hesaplar = []
+    monkeypatch.setattr(veri, "veri_hazirla", lambda *a: hesaplar.append(True))
+    with pytest.raises(deneme.PilotHatasi):
+        ts.kayitli_calistir(
+            depo,
+            makbuz.deneme_id,
+            veri_koku=tmp_path,
+            mod="sessiz" if ariza == "mod" else "gelistirme",
+            isci=1,
+            ilerleme=None,
+        )
+    assert hesaplar == []
+    assert not any(o["kayit_turu"] == "baslangic" for o in depo.oku())
+
+
+@pytest.mark.parametrize("ariza", ["seans", "uye", "isinma"])
+def test_s10_eksik_kapsam_sessizce_kisalmaz(tmp_path, monkeypatch, ariza):
+    from copy import deepcopy
+
+    depo, makbuz, _ = s10_kayitli(tmp_path, monkeypatch)
+    hazirla = veri.veri_hazirla
+
+    def eksik(istek, *a):
+        paket = deepcopy(hazirla(istek, *a))
+        if istek.baslangic == "2023-01-01":
+            if ariza == "seans":
+                paket["gunler"].remove("2023-12-31")
+            elif ariza == "uye":
+                for r in paket["piyasa"]:
+                    r["kalite_bayraklari"] = ["eksik"]
+            else:
+                paket["piyasa"] = [
+                    r for r in paket["piyasa"] if r["tarih"] >= "2023-01-01"
+                ]
+                paket["gunler"] = [r["tarih"] for r in paket["piyasa"]]
+        return paket
+
+    monkeypatch.setattr(veri, "veri_hazirla", eksik)
+    sonuc = s10_calistir(depo, makbuz, tmp_path)
+    s = sonuc["donemler"][2]
+    assert s["durum"] == "hata" and s["asama"] == (
+        "isinma" if ariza == "isinma" else "veri"
+    )
+    assert s["donem"]["bitis"].isoformat() == "2023-12-31"
+    assert len([s for s in sonuc["donemler"] if s["durum"] == "tamamlandi"]) == 5
+
+
+@pytest.mark.parametrize("cikis_gunu", ["2022-01-04", "2022-01-05"])
+def test_s10_uyelik_girisi_engeller_acik_islemi_kapatmaz(
+    tmp_path, monkeypatch, cikis_gunu
+):
+    depo, makbuz, _ = s10_kayitli(tmp_path, monkeypatch, sinyal=True)
+    uyelik = veri.uyelik_hazirla
+
+    def degisen(istek):
+        sonuc = uyelik(istek)
+        if cikis_gunu in sonuc["gunler"]:
+            sonuc["gunler"][cikis_gunu] = dict(semboller=[], kanitlar=[])
+        return sonuc
+
+    monkeypatch.setattr(veri, "uyelik_hazirla", degisen)
+    sonuc = s10_calistir(depo, makbuz, tmp_path)
+    birlesik = sonuc["donemler"][5]
+    assert sonuc["durum"] == "tamamlandi"
+    if cikis_gunu == "2022-01-04":
+        assert birlesik["islem_referanslari"] == []
+        assert birlesik["adaylar"][0]["yurutme_nedeni"] == "giris_gunu_uye_degil"
+    else:
+        assert birlesik["durumlar"]["TEST"]["durum"] == "acik_son"
+        assert len(birlesik["islem_referanslari"]) == 1
+
+
+def test_s10_isinma_sinyali_yila_giris_acmaz(tmp_path, monkeypatch):
+    depo, makbuz, piyasa = s10_kayitli(tmp_path, monkeypatch)
+    for i, r in enumerate(piyasa):
+        if i < 508:
+            continue
+        fiyat = 110.0 if i == 508 else 112.0
+        for ad, fark in (("aof", 0), ("kapanis", 0), ("yuksek", 1), ("dusuk", -1)):
+            r[f"duzeltilmis_{ad}"]["deger"] = fiyat + fark
+        r["ham_yuksek"]["deger"] = fiyat + 1
+        r["ham_dusuk"]["deger"] = fiyat - 1
+    sonuc = s10_calistir(depo, makbuz, tmp_path)
+    assert sonuc["durum"] == "tamamlandi"
+    assert all(
+        s["adaylar"] == [] and s["islem_referanslari"] == [] for s in sonuc["donemler"]
+    )
+    assert all(
+        s["durumlar"]["TEST"]["iz"][0]["net_sonuc"] == 0 for s in sonuc["donemler"]
+    )
+
+
+def test_s10_acik_yil_sonu_kismi_satisi_ve_kalani_ayri_korur(tmp_path, monkeypatch):
+    depo, makbuz, piyasa = s10_kayitli(tmp_path, monkeypatch, varyant="stop_atr2")
+    for i, r in enumerate(piyasa):
+        fiyat = {30: 150.0, 31: 160.0, 32: 140.0, 33: 130.0}.get(i, 100.0)
+        if r["tarih"] >= "2021-01-01":
+            fiyat = (
+                110.0
+                if r["tarih"] == "2021-01-04"
+                else 112.0
+                if r["tarih"] < "2021-12-31"
+                else 122.0
+            )
+        dusuk = {"2021-01-04": 100.0, "2021-01-05": 110.0}.get(r["tarih"], fiyat - 1)
+        for ad, deger in (
+            ("aof", fiyat),
+            ("kapanis", fiyat),
+            ("yuksek", fiyat + 1),
+            ("dusuk", dusuk),
+        ):
+            r[f"duzeltilmis_{ad}"]["deger"] = deger
+        r["ham_yuksek"]["deger"] = fiyat + 1
+        r["ham_dusuk"]["deger"] = dusuk
+        r["hacim_tl"]["deger"] = (
+            500.0 if r["tarih"] in ("2021-01-04", "2021-01-05") else 100.0
+        )
+    sonuc = s10_calistir(depo, makbuz, tmp_path)
+    yil, birlesik = (sonuc["donemler"][i]["durumlar"]["TEST"] for i in (4, 5))
+    assert sonuc["durum"] == "tamamlandi"
+    assert yil["durum"] == birlesik["durum"] == "acik_son"
+    assert [(d["tarih"], d["yon"], d["adet"]) for d in yil["dolumlar"]] == [
+        ("2021-12-30", "alis", 352),
+        ("2021-12-31", "satis", 176),
+    ]
+    assert yil["sonuc"]["kalan_adet"] == birlesik["sonuc"]["kalan_adet"] == 176
+    assert yil["sonuc"]["net_sonuc"] == pytest.approx(1695.1352)
+    assert yil["sonuc"]["net_sonuc"] == birlesik["sonuc"]["net_sonuc"]
+    assert (
+        len(yil["sonuc"]["gerceklesen_kismi_sonuclar"])
+        == len(birlesik["sonuc"]["gerceklesen_kismi_sonuclar"])
+        == 1
+    )
+    assert yil["sonuc"]["net_r"] is None and yil["sonuc"]["net_fiyat_getirisi"] is None
+    assert yil["islemler"] == []
+    assert yil["degerleme"] == dict(tarih="2021-12-31", fiyat=122.0)
+    assert birlesik["degerleme"] == dict(tarih="2025-12-31", fiyat=122.0)
+    kayit = depo.izle(sonuc["donemler"][4]["islem_referanslari"][0])["sonuc"]
+    assert kayit["olaylar"][0]["sonuc"]["kalan_adet"] == 176
+    assert kayit["olaylar"][0]["durum"] == "acik_son"
+
+
+@pytest.mark.parametrize("ariza", ["git", "resmi", "deneme"])
+def test_s10_kimlik_hatasi_hesap_ve_baslangic_yazmaz(tmp_path, monkeypatch, ariza):
+    from tansu import deneme
+
+    depo, makbuz, _ = s10_kayitli(tmp_path, monkeypatch)
+    if ariza == "git":
+
+        def git_hatasi():
+            raise kayit.KayitHatasi("Git kaynağı yok")
+
+        monkeypatch.setattr(kayit, "_git", git_hatasi)
+    elif ariza == "resmi":
+        commit, _ = kayit._git()
+        monkeypatch.setattr(kayit, "_git", lambda: (commit, True))
+    hesap = []
+    monkeypatch.setattr(veri, "veri_hazirla", lambda *a: hesap.append(True))
+    with pytest.raises((kayit.KayitHatasi, deneme.PilotHatasi)):
+        ts.kayitli_calistir(
+            depo,
+            "kayitsiz" if ariza == "deneme" else makbuz.deneme_id,
+            veri_koku=tmp_path,
+            mod="resmi" if ariza == "resmi" else "gelistirme",
+            isci=1,
+            ilerleme=None,
+        )
+    assert hesap == []
+    assert not any(o["kayit_turu"] == "baslangic" for o in depo.oku())
+
+
+def test_s10_tarihli_uyelik_acigi_ilgili_cocugu_durdurur(tmp_path, monkeypatch):
+    depo, makbuz, _ = s10_kayitli(tmp_path, monkeypatch)
+    uyelik = veri.uyelik_hazirla
+
+    def eksik(istek):
+        if "2023-01-04" in istek.tarihler:
+            raise veri.UyelikKapsamHatasi(istek.uyelik_surumu, ["2023-01-04"])
+        return uyelik(istek)
+
+    monkeypatch.setattr(veri, "uyelik_hazirla", eksik)
+    sonuc = s10_calistir(depo, makbuz, tmp_path)
+    assert [
+        (s["donem"]["ad"], s["asama"])
+        for s in sonuc["donemler"]
+        if s["durum"] == "hata"
+    ] == [("2023", "uyelik"), ("birlesik", "uyelik")]
+    assert depo.oku()[-1]["basarisiz"] == ["donem:2023", "donem:birlesik"]
+
+
+def test_s10_eksik_gerekli_hedef_sinyali_basarili_bos_donem_yapmaz(
+    tmp_path, monkeypatch
+):
+    depo, makbuz, piyasa = s10_kayitli(
+        tmp_path, monkeypatch, sinyal=True, varyant="tansu"
+    )
+    for r in piyasa:
+        if r["tarih"] == "2021-12-31":
+            r["duzeltilmis_dusuk"]["deger"] = 110.0
+            r["ham_dusuk"]["deger"] = 110.0
+            r["hacim_tl"]["deger"] = 500.0
+    sonuc = s10_calistir(depo, makbuz, tmp_path)
+    yil = sonuc["donemler"][4]
+    assert yil["adaylar"], "Gerekli hedefi eksik olan gerçek E2 sinyali korunmalı"
+    assert yil["durum"] == "hata", "Eksik kurulum kanıtı tamamlanmış sonuç değildir"
+    assert yil["asama"] == "kurulum"
+    assert yil["islem_referanslari"] == []
+    assert "kurulum_eksik" in [r["neden"] for r in yil["durumlar"]["TEST"]["retler"]]
+
+
+def test_s10_ilerleme_hatasi_tamamlanan_makbuzu_yok_saymaz(tmp_path, monkeypatch):
+    depo, makbuz, _ = s10_kayitli(tmp_path, monkeypatch)
+
+    def durdur(mesaj):
+        raise RuntimeError("ilerleme arızası")
+
+    with pytest.raises(RuntimeError, match="ilerleme arızası"):
+        ts.kayitli_calistir(
+            depo,
+            makbuz.deneme_id,
+            veri_koku=tmp_path,
+            mod="gelistirme",
+            isci=1,
+            ilerleme=durdur,
+        )
+    bitis = depo.oku()[-1]
+    assert bitis["durum"] == "hata"
+    assert bitis["tamamlanan"] == ["donem:2025"], "Yayımlanmış dönem hatada kaybolamaz"
+    assert len(bitis["cikti_referanslari"]) == 1
+    assert bitis["basarisiz"] == [
+        "donem:2024",
+        "donem:2023",
+        "donem:2022",
+        "donem:2021",
+        "donem:birlesik",
+    ]

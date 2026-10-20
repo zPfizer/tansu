@@ -1237,7 +1237,7 @@ değerlemeyi taşır. Bu tanısal toplam ortak hesap özkaynağı veya bileşik 
 
 #### S10 kayıtlı dönem yürütücüsü (#91)
 
-**Durum: onaylı dönem sözleşmesinin uygulaması bekliyor.** Bu bölüm E4'ün teknik
+**Durum: kayıtlı dönem yürütücüsü uygulanmıştır.** Bu bölüm E4'ün teknik
 bağlantısını tanımlar; yeni Tansu kuralı, ölçü formülü veya ürün kararı üretmez.
 Dayanak: [L2], [L3], [W8], #91; dönem sınırının sahibi yukarıdaki
 “Dönem, ısınma ve açık işlem sınırları”dır.
@@ -1255,7 +1255,10 @@ E4 mevcut `tansu/tansusinama.py` içinde kalır. Eski `calistir`, kayıtlar ve
 hesap politikaları korunur. Yeni yol E1'in `veri_hazirla` ve tarihli üyeliğini,
 E2'nin ortak EMA hesaplarını ve E3'ün S09 geçişini kullanır. Katalog stratejisinin
 özgün ayar özeti değiştirilmez; kayıtlı yeni yürütme politikaları denemenin tam
-ayar özetine bağlıdır. Desteklenmeyen aile veya politika hata verir. Çiftin yeni
+ayar özetine bağlıdır. Yürütme ve sonuçtaki `strateji_ayar_parmak_izi` katalog
+özetini, `deneme_ayar_parmak_izi` tam revizyon özetini taşır. S09
+`ayar_parmak_izi` kendi parametre özetidir; bu üç alan eşitmiş gibi kullanılmaz.
+Desteklenmeyen aile veya politika hata verir. Çiftin yeni
 riski #128 kapanmadan eski çift hesabına dönülmez.
 
 Kayıtlı S10 girdisinin teknik şeması aşağıdadır. Kimlik ve ondalık kodlaması
@@ -1295,6 +1298,11 @@ S09 dolum üretmez; aday ve engelin nedeni sonuçta korunur. Gerekli işlem
 kanıtı eksik çocuk tam başarı sayılmaz; limit kanıtı aşaması ve eksikliği hata
 sonucunda korunur. Gerçekten adaysız dönem ile kanıt yokluğu nedeniyle dolumsuz
 kalan dönem aynı başarılı boş sonuç diye birleştirilmez.
+Zorunlu kurulum veya karar göstergesi eksikse aynı eksik sonuç ayrımı uygulanır;
+S09'un bağımsız geçerli çıkışları yine işlenir. Sonlu ve bilinen fiyat/stop ilişkisinin
+geçersizliği, yetersiz bütçe, doğrulanmış kilit ve üyelik reddi ise hesaplanmış
+retlerdir. E4 risk formülünü yeniden hesaplamaz; eksik girdiyi bilinen fakat uygun
+olmayan girdiden ayırır, özgün S09 nedenini korur.
 
 E5 başlangıç makbuzu oluşmadan E1–E3 hesabı başlamaz. Başlangıç kaydı altı iş kimliğini,
 kod/veri/ortam bağlarını ve işçi politikasını içerir. İşçiler yalnız hesap yapar;
@@ -1303,7 +1311,10 @@ sonuçlar ve deneme bağları işçi sayısıyla değişmez; koşu/olay kimlikle
 her girişime aittir. Koşu kod kimliği yürütücünün de içeriğini kapsar; eski kural
 kimlikleri ve legacy hash sınıfları yeniden yazılmaz.
 
-Mevcut E5 koşu tutacağına `donem_sonucu_kaydet` eklenir. Bu kayıt gerçek bir dönem
+Mevcut E5 koşu tutacağına `donem_sonucu_kaydet(*, is_id, donem, durum,
+islem_referanslari, birimler, muhasebe_politikasi, uyarilar, cikti_referanslari,
+icerik)` eklenir. `kayit_turu=sonuc`, `sonuc_turu=donem_v1` eski izleme yüzüyle
+okunur. Bu kayıt gerçek bir dönem
 sonucudur; sinyal olmayan dönemde yapay `sinyal_id` üretilmez. Kayıt çocuk iş kimliğini,
 dönemi, durumu, gerçek işlem referanslarını, birimleri, muhasebe politikasını,
 uyarıları ve sonuç içeriğini taşır. İş başlangıç listesinde, dönem kayıtlı denemede
@@ -1319,9 +1330,9 @@ sessizce yutulmaz; E5'in belirsiz yazma ve kurtarma davranışı korunur.
 
 `tests/test_tansusinama.py` dönem yürütme ve eski çağıranları; `tests/test_kayit.py`
 dönem sonucunun ekleme ve bağ sınırlarını; `tests/test_gelecek.py` yeni yürütücünün
-sonraki satırlarla önceki yıl hesabını değiştirmemesini kapsayacaktır. E2 bağlantısı
-değişirse `tests/test_aileler.py` ortak hesabın eşitliğini korur. Uygulama ve kanıt
-tamamlanmadan bu sözleşme uygulanmış sayılmaz. Günlük etkinleştirme, performans
+sonraki satırlarla önceki yıl hesabını değiştirmemesini kapsar. `tests/test_aileler.py`
+ortak E2 hesabının eşitliğini korur. Yürütücünün uygulanmış olması, eksik gerçek
+veriyi veya limit kanıtını tamamlamaz. Günlük etkinleştirme, performans
 araştırması ve kalıcı kimlik biçimi bu teslimin dışındadır.
 
 #### Dolum, risk ve ölçünün anlamı

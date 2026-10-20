@@ -1686,3 +1686,31 @@ def test_kutu_ust_govde_donem_ilk_gunu_serinin_ilk_gunu_degilse_onceki_kapanis_k
     assert _gunler(f, govde) == [31]
     k = aileler.kurulum(f, govde).iloc[0]
     assert (k["kutu_alt"], k["kutu_ust"]) == (pytest.approx(98.9), 100.0)
+
+
+@pytest.mark.parametrize("sayisal", [{}, {"esik": 0.01, "min_gun": 4, "pencere": 8}])
+def test_s10_toplu_kurulum_gunluk_kurulumla_ayni(sayisal):
+    f = _mumlar(
+        [100.0] * 510 + [110.0, 112.0],
+        [101.0] * 510 + [111.0, 113.0],
+        [99.0] * 510 + [100.0, 110.0],
+        [100.0] * 512,
+    )
+    f["aof"] = f["kapanis"]
+    paket = _ortak_paket(f)
+    strateji = aileler.legacy_coz("bugun", sayisal_ayarlar=sayisal)
+    toplu = aileler.ortak_donem_kurulumu(paket, strateji)
+    assert "TEST" in toplu, "Toplu E2 sonucu sembolün ortak hesabını taşımalı"
+    for tarih in f.index[-3:]:
+        gunluk = aileler.ortak_kurulum(paket, tarih, strateji)
+        sinyaller = [
+            s for s in toplu["TEST"]["sinyaller"] if s["tarih"] == str(tarih.date())
+        ]
+        for grup in (sinyaller, gunluk["sinyaller"]):
+            for s in grup:
+                s.pop("olusturma_zamani")
+        assert sinyaller == gunluk["sinyaller"]
+        for g in gunluk["gostergeler"]:
+            deger = toplu["TEST"]["mumlar"].at[tarih, g["ad"]]
+            assert (None if pd.isna(deger) else deger) == g["deger"]
+        assert toplu["TEST"]["isinma"].at[tarih] == gunluk["isinma"]["TEST"]["gozlem"]

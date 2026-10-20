@@ -31,44 +31,12 @@ STOP_KAT = dict(_KATALOG_STOP_KAT)
 
 def ortak_kurulum(veri_paketi, tarih, strateji):
     """E1 ve çözülmüş stratejiden günün EMA kayıtları (TASARIM 5.15)."""
-    beklenen = legacy_coz(strateji.varyant, strateji.katalog_surumu)
-    if any(
-        getattr(strateji, a) != getattr(beklenen, a)
-        for a in (
-            "aile",
-            "parametreler",
-            "sabitler",
-            "gosterge_ayarlari",
-            "ayar_parmak_izi",
-            "dolum_surumu",
-            "risk_surumu",
-            "masraf_surumu",
-            "muhasebe_surumu",
-            "donem_surumu",
-        )
-    ):
-        raise ValueError("Çözülmüş strateji katalogla uyuşmuyor")
+    p = _ortak_ayar(strateji)
     tarih = pd.Timestamp(tarih)
     donem = veri_paketi["referans"]["istenen_donem"]
     if not pd.Timestamp(donem["baslangic"]) <= tarih <= pd.Timestamp(donem["bitis"]):
         raise ValueError("Değerlendirme tarihi istenen dönemin dışında")
-    p = Parametre(**{a.ad: a.deger for a in strateji.parametreler})
-    meta = {
-        "sema_surumu": "kurulum_s06_v1",
-        "olusturma_zamani": datetime.now(timezone.utc).isoformat(),
-        "kaynaklar": [asdict(k) for k in strateji.kaynaklar],
-        "baglar": {
-            "deneme_id": None,
-            "kosu_id": None,
-            "ayar_parmak_izi": strateji.ayar_parmak_izi,
-            "politika_surumu": strateji.risk_surumu,
-            "veri_ref_id": veri_paketi["referans"]["kayit_id"],
-            "bos_nedenleri": {
-                "deneme_id": "hesap_onizlemesi",
-                "kosu_id": "hesap_onizlemesi",
-            },
-        },
-    }
+    meta = _kurulum_meta(veri_paketi, strateji)
     sonuc = {"gostergeler": [], "sinyaller": [], "isinma": {}}
     for s in veri_paketi["semboller"]:
         f = _piyasa_mumlari(veri_paketi["piyasa"], s, tarih)
@@ -110,6 +78,78 @@ def ortak_kurulum(veri_paketi, tarih, strateji):
                 sonuc["sinyaller"].append(
                     _sinyal_kaydi(s, t, i, satir, g.at[t, "atr"], p, strateji, meta)
                 )
+    return sonuc
+
+
+def _ortak_ayar(strateji):
+    beklenen = legacy_coz(
+        strateji.varyant,
+        strateji.katalog_surumu,
+        sayisal_ayarlar={
+            a.ad: a.deger for a in strateji.parametreler if a.koken == "legacy_izgara"
+        },
+    )
+    if any(
+        getattr(strateji, a) != getattr(beklenen, a)
+        for a in (
+            "aile",
+            "parametreler",
+            "sabitler",
+            "gosterge_ayarlari",
+            "ayar_parmak_izi",
+            "dolum_surumu",
+            "risk_surumu",
+            "masraf_surumu",
+            "muhasebe_surumu",
+            "donem_surumu",
+        )
+    ):
+        raise ValueError("Çözülmüş strateji katalogla uyuşmuyor")
+    return Parametre(**{a.ad: a.deger for a in strateji.parametreler})
+
+
+def _kurulum_meta(veri_paketi, strateji):
+    return {
+        "sema_surumu": "kurulum_s06_v1",
+        "olusturma_zamani": datetime.now(timezone.utc).isoformat(),
+        "kaynaklar": [asdict(k) for k in strateji.kaynaklar],
+        "baglar": {
+            "deneme_id": None,
+            "kosu_id": None,
+            "ayar_parmak_izi": strateji.ayar_parmak_izi,
+            "politika_surumu": strateji.risk_surumu,
+            "veri_ref_id": veri_paketi["referans"]["kayit_id"],
+            "bos_nedenleri": {
+                "deneme_id": "hesap_onizlemesi",
+                "kosu_id": "hesap_onizlemesi",
+            },
+        },
+    }
+
+
+def ortak_donem_kurulumu(veri_paketi, strateji):
+    """TASARIM 5.15 S10: her sembol/dönemde ortak E2 hesabını bir kez kur."""
+    p = _ortak_ayar(strateji)
+    donem = veri_paketi["referans"]["istenen_donem"]
+    bas, son = pd.Timestamp(donem["baslangic"]), pd.Timestamp(donem["bitis"])
+    if pd.isna(bas) or pd.isna(son) or bas > son:
+        raise ValueError("Kurulum dönemi geçersiz")
+    meta = _kurulum_meta(veri_paketi, strateji)
+    sonuc = {}
+    for sembol in veri_paketi["semboller"]:
+        f = _piyasa_mumlari(veri_paketi["piyasa"], sembol, son)
+        g = _ortak_gostergeler(f, p)
+        k = kurulum(f.dropna(subset=["kapanis"]), p)
+        sonuc[sembol] = dict(
+            mumlar=f.join(g),
+            kurulum=k.loc[bas:son],
+            isinma=f.kapanis.notna().cumsum(),
+            sinyaller=[
+                _sinyal_kaydi(sembol, t, i, r, g.at[t, "atr"], p, strateji, meta)
+                for i, (t, r) in enumerate(k.iterrows())
+                if bas <= t <= son
+            ],
+        )
     return sonuc
 
 
