@@ -6,6 +6,8 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ## [Yayımlanmamış]
 
+- #136: Kural kataloğu, aile kuralları ve kaynak dökümü tek sahipli belgelere ayrıldı; kaynak kimlikleri ve gerekli kısıtlar korundu.
+
 ### Değişti
 
 - Çalışma kuralları kullanılan ajan araçlarına uyarlandı; belge sahipliği ve bekleyen sözleşmelerin durumu netleşti. Tekrarlanan inceleme kuralları atfa dönüştü, iş klasörü kapanışına silme onayı ve kanıt kontrolü eklendi. (#130)

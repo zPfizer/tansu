@@ -486,6 +486,7 @@ def _kok(tmp_path, e=E_METNI, kurallar=KURALLAR_METNI, eol="\n"):
     for yol, metin in (
         (tmp_path / "docs" / "kurallar" / "E-risk.md", e),
         (tmp_path / "docs" / "KURALLAR.md", kurallar),
+        (tmp_path / "docs" / "kaynak-dokumu.md", kurallar),
     ):
         yol.write_bytes(metin.replace("\n", eol).encode("utf-8"))
     return tmp_path
@@ -507,7 +508,7 @@ def _oku(kok, ad):
 
 
 E = "docs/kurallar/E-risk.md"
-K = "docs/KURALLAR.md"
+K = "docs/kaynak-dokumu.md"
 
 
 def test_ek_kaydi_var_olan_bloka_eklenir(tmp_path):

@@ -44,7 +44,8 @@ def test_havuzdaki_her_not_atifli_ya_da_kural_icermez_listesinde():
 
 def _depo(kok, kurallar, a):
     (kok / "docs" / "kurallar").mkdir(parents=True)
-    (kok / "docs" / "KURALLAR.md").write_text(kurallar, encoding="utf-8")
+    (kok / "docs" / "KURALLAR.md").write_text("# Katalog\n", encoding="utf-8")
+    (kok / "docs" / "kaynak-dokumu.md").write_text(kurallar, encoding="utf-8")
     (kok / "docs" / "kurallar" / "A-x.md").write_text(a, encoding="utf-8")
 
 
@@ -185,7 +186,7 @@ def test_kesik_kimlik_notu_kapsamaz(tmp_path, not_adi, metin):
 
 def _kurallar_depo(kok, kurallar, dosyalar):
     (kok / "docs" / "kurallar").mkdir(parents=True)
-    (kok / "docs" / "KURALLAR.md").write_text(kurallar, encoding="utf-8")
+    (kok / "docs" / "kaynak-dokumu.md").write_text(kurallar, encoding="utf-8")
     for ad, metin in dosyalar.items():
         (kok / "docs" / "kurallar" / ad).write_text(metin, encoding="utf-8")
 
