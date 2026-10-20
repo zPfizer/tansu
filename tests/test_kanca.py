@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 BETIK = Path(__file__).resolve().parents[1] / "kurulum" / "kanca.py"
-MESAJ = 'Write a red test under tests/ first, then edit the code (docs/agents/kod-kurallari.md "Test first").\n'
+MESAJ = 'Write a red test under tests/ first, then edit the code (CODING_STANDARDS.md "Test first").\n'
 
 
 @pytest.fixture(autouse=True)

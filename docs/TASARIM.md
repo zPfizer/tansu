@@ -70,7 +70,7 @@ normal çıktısıdır.
 
 ## 2. Tansu'nun düşünce yapısı
 
-Kaynak: beyindeki Tansu havuzu (sayı `KURALLAR.md` başlığında). Birinci el kaynak notların Ham metni ve görselleridir
+Kaynak: beyindeki Tansu havuzu (sayı `docs/kaynak-dokumu.md` başındadır). Birinci el kaynak notların Ham metni ve görselleridir
 (GLOSSARY "Kaynak"); notların öbür bölümleri yapay zekâ özetidir ve ikinci eldir.
 Tansu bazı parametreleri ve kod parçalarını paylaşır (gorsel-paket-67 görseli: tolerans %1.2, en az 3 gün;
 gorsel-paket-54 Ham: Z ±2.0, çıkış 0.5; tweet-atr-risk-butcesi-position-sizing-stop-loss Ham: 2 ATR stop kodu;
@@ -97,14 +97,14 @@ yorumumuzdur**; ekranda "Tansu'nun sistemi" diye sunulmaz. (P5)
   (vekil kararı 15.10, bilet 07e; İ: 11-078)
   Tansu'nun şokta yeni alımı durdurma fikri (Ham, tweet-volatilite-piyasa-soku-yeni-alim-freni:21) uygulanamaz: kaynak hesaplanabilir tanım vermiyor.
   Tansu'nun yeni pozisyon için piyasa teyidi bekleme fikri (Ham, XU:35–47) uygulanamaz: kaynak hesaplanabilir tanım vermiyor.
-- **2 aile** (`KURALLAR.md` §3): çift rotasyonu ve EMA sıkışması.
+- **2 aile** (`aile-kurallari.md` §3): çift rotasyonu ve EMA sıkışması.
 - Tansu kaynaklarından esinlenen risk paketi (5.5), işlem motoru, portföy simülasyonu ve istatistik.
 - Tek dosya HTML rapor, CSV kart ve işlem listeleri, `durum.txt`.
 
 **Yok** (ilk aile kabul edilene kadar bekler, gereksiz katman):
 - Streamlit ya da başka panel, Telegram, veritabanı.
 - Süre çıkışı (Ç3). İz süren stop ve kısmi kâr (Ç2) yalnız EMA ailesinde, test varyantı olarak vardır
-  (Levent 16.10; `KURALLAR.md` §3). Çift ailesinde ve varsayılan kuralda yoktur.
+  (Levent 16.10; `aile-kurallari.md` §3). Çift ailesinde ve varsayılan kuralda yoktur.
 - Dolar bazı karşılaştırma, Corwin–Schultz.
 (Kesilecekler 1–6, C-1)
 
@@ -135,20 +135,20 @@ Siteye giriş için varyantın [kural kaydına](#58-dönemler) bağlı tarihli s
 | `kaynak` | sembol, tarih aralığı → ham tablo | Ağa çıkan tek yer: İş Yatırım ve borsapy (yalnız faiz, sektör ve şirket listesi) (bilet 07e, 15.10). Ham alan adları (`HG_*`, `HGDG_*`) tek bir sözlükle proje adlarına çevrilir. İş Yatırım okuma zaman aşımı (5, 120) sn: ağır sorgular 40 ve 90 sn'de zaman aşımına uğradı; C-8'deki (5, 30) bu değerle değişti. (C-8, İ: 18-075, 01-057) |
 | `veri` | indirme → anlık görüntü; olay tablosu; veri kapıları | Ayrıntı aşağıda. (B2, B-2, B-7) |
 | `evren` | tarih → o gün yeni giriş için taranabilecek hisseler | 5.2. |
-| `gostergeler` | fiyat → EMA, SMA, ATR, RSI, momentum squeeze, MACD, PSAR, stokastik, piyasa durumu | Vektörel; sınamada ve canlıda aynı kod. Kütüphane yok. Tanımlar `KURALLAR.md` §3'tedir. |
+| `gostergeler` | fiyat → EMA, SMA, ATR, RSI, momentum squeeze, MACD, PSAR, stokastik, piyasa durumu | Vektörel; sınamada ve canlıda aynı kod. Kütüphane yok. Tanımlar `aile-kurallari.md` §3'tedir. |
 | `katalog` | aile, varyant, katalog sürümü ve ayar isteği → tam çözülmüş strateji veya doğrulama hatası | E2 katalog sahibi; §5.15. Eski tanımların saklanması seçim izni vermez. |
-| `aileler` | hisse fiyatı → sinyal günleri, kurulum bilgisi (kutu, hedef), arz ve talep bölgeleri | Tek hisse aileleri. EMA ailesinin varyantları ve bölgeler `KURALLAR.md` §3'tedir. |
+| `aileler` | hisse fiyatı → sinyal günleri, kurulum bilgisi (kutu, hedef), arz ve talep bölgeleri | Tek hisse aileleri. EMA ailesinin varyantları ve bölgeler `aile-kurallari.md` §3'tedir. |
 | `cift` | çift fiyatları → hangi hissede olunacağı | Kendi döngüsü. |
 | `ciftbolme` | seçim, Z geçişleri, çift bölmesi simülasyonu, VAKBN–GARAN | `cift` ve `simulator`'a dayanır (bilet 11); 5.6. |
 | `motor` | Adım: (pozisyon, bugünkü mum) → pozisyon; Motor: sinyaller → işlemler | Mum, ön hesaplı ATR ve SMA250 sütunları olan bir gün satırıdır. **Sınama ve canlı günlük aynı Adım'ı kullanır.** (A5, İ: 11-010) |
 | `simulator` | işlemler + bölme kuralı → sermaye eğrisi | Boştaki nakit faiz kazanır. (A2, B4) |
 | `istatistik` | fazla getiri → güven aralığı, p değeri, Holm | statsmodels yalnız `coint` ve Holm için. |
-| `saglamlik` | ızgara hücreleri → pozitif hücre oranı | Önceden yazılmış ızgara (KURALLAR §3); her hücre işlem başına ortalama fazla getiri (sepete göre, K1 tekrarı yok). 5.10. (bilet 13, İ: 09-064, bilet 03) |
+| `saglamlik` | ızgara hücreleri → pozitif hücre oranı | Önceden yazılmış ızgara (`aile-kurallari.md` §3); her hücre işlem başına ortalama fazla getiri (sepete göre, K1 tekrarı yok). 5.10. (bilet 13, İ: 09-064, bilet 03) |
 | `kayit` | kural kaydı, deneme günlüğü, kart günlüğü, durum kayıtları | Yalnız ekleme. Getiri gösteren tek yol `kosu()`'dur: kural kaydı yoksa ya da hash uyuşmazsa tek Türkçe satırla durur. (C-6, İ: 15-074) |
 | `rapor` | sonuçlar → HTML + CSV + `durum.txt` | Ayrıntı 6. bölümde. |
 | `denetim` | sentetik boş ve etkili dünya → yanlış kabul, güç | Boru hattı denetimi (5.12). Hash dışı: kuralı değil sınamanın doğruluğunu ölçer; sonucu günlükte kod hash'iyle durur. (bilet 13) |
 | `gunluk` | `gunluk(tarih)`: günlük indirme, kapılar, kartlar, `durum.txt` | Bilet 14; 6. bölüm. `rapor`'dan sonra, `__main__`'dan önce. |
-| `sadakat` | ham seri → Tansu'nun gösterdiği rakamlar yeniden üretilir | `KURALLAR.md` §4; getiriye bakılmaz; sonuç `docs/sadakat.md`. 7. bölüm adım 3. |
+| `sadakat` | ham seri → Tansu'nun gösterdiği rakamlar yeniden üretilir | `aile-kurallari.md` §4; getiriye bakılmaz; sonuç `docs/sadakat.md`. 7. bölüm adım 3. |
 | `tansusinama` | anlık görüntü, sektör → hisse/çift başına ızgara, sağlam bölge, Tansu ölçüleri, ileri yürüme; JSON | Tansu'nun kendi sınama yöntemi; kabul kararına girmez. Hash dışı. 5.14. (Levent kararı 16.10) |
 | `__main__` | `python -m tansu sadakat \| kayit \| sinama \| tansu-sinama \| denetim \| evren-indir \| sektor-indir \| gunluk` | Ayrıntı aşağıda. (İ: 16-001, 16-008, 14-084, 16-062) |
 
@@ -159,7 +159,12 @@ Siteye giriş için varyantın [kural kaydına](#58-dönemler) bağlı tarihli s
   - borsapy tabloları (faiz, sektör),
   - `manifest.json` (her dosyanın sha256'sı).
 - Veri sürümü, anlık görüntü kimliğidir.
-- Okuyucu anlık görüntüyü açarken manifesti doğrular; uyuşmazlık hatadır.
+- `veri.indir` isteğe bağlı `kapanan` tablosunu (`kod`, `ad`, `tarih`, `aciklama`) alır.
+  Verilen tablo boş olsa da `kapanan.csv` başlıklarıyla yazılır; `None` dosya üretmez.
+  `evren-indir` bu tabloyu yazıcıya verir. Yazıcı dosyayı geçici klasörde tamamlar, özetini manifeste katar ve sonra görüntüyü yayınlar.
+  Kanıt yazımı başarısızsa görüntü yayınlanmaz; komut yayınlanan görüntüye ek dosya yazmaz.
+- Okuyucu anlık görüntüyü açarken manifesti doğrular; listedeki eksik dosya veya uyuşmayan özet, kimlik ve dosya adıyla `VeriHatasi` verir.
+  Eski görüntüler yalnız kendi manifestleriyle doğrulanır; geçmişte listelenmeyen kanıt sonradan eklenmez.
 - Tarih sütunu saat dilimsiz saf tarihtir.
 - Koşu, canlı borsapy'ye bağlı kalmaz.
 
@@ -335,10 +340,10 @@ Yeni risk ve gerçekleşen maliyet hesabının sahibi §5.15 "S08 risk ve maliye
     Kaynak kesin giriş karşılaştırmasını açıklamaz (Ham, G115:20; NotebookLM, g1).
   (S2-7, B-12, İ: 07-065)
 - **Stop:** giriş fiyatından ve sinyal günü ATR'sinden hesaplanır. EMA ailesinin kutu stopu varyantında stop kutu
-  altından gelir (`KURALLAR.md` §3). (M2, C10)
+  altından gelir (`aile-kurallari.md` §3). (M2, C10)
 - **Giriş günü:** yalnız stop kontrol edilir.
 - **Stop dolumu:** gün düşüğü ≤ stop ise dolum **min(stop, AOF)**. (B-4)
-- **Hedef ve yarı satış dolumu** (EMA ailesi varyantları; tetikler `KURALLAR.md` §3):
+- **Hedef ve yarı satış dolumu** (EMA ailesi varyantları; tetikler `aile-kurallari.md` §3):
   - Hedef: gün yüksek ≥ hedef ise tam çıkış olur ve dolum hedef fiyatıdır. Gün düşüğü hedefin üstündeyse dolum AOF'tur.
   - Gün içinde tetiklenen yarı satış (`atr3`): gün yüksek ≥ seviye ise pozisyonun yarısı satılır. Dolum seviyedir.
     Gün düşüğü seviyenin üstündeyse dolum AOF'tur.
@@ -349,7 +354,7 @@ Yeni risk ve gerçekleşen maliyet hesabının sahibi §5.15 "S08 risk ve maliye
   - Kapanışı taban fiyatında olan gün çıkış ertesi güne kayar.
   - Duyarlılık sürümü: yalnız düşük = yüksek, hacim > 0 ve limit fiyatında olan gün.
   (M4, B-5, İ: 01-026, karar.md)
-- **Düşen sinyal:** giriş günü yoksa, kilitli tavansa ya da karantinadaysa sinyal düşer, sonraki güne kaymaz (vekil kararı 15.10, bilet 07e). Stop kutu altından geliyorsa ve giriş günü AOF'u ≤ kutu stopu ise de sinyal düşer (`KURALLAR.md` §3, kutu stopu). Sayısı
+- **Düşen sinyal:** giriş günü yoksa, kilitli tavansa ya da karantinadaysa sinyal düşer, sonraki güne kaymaz (vekil kararı 15.10, bilet 07e). Stop kutu altından geliyorsa ve giriş günü AOF'u ≤ kutu stopu ise de sinyal düşer (`aile-kurallari.md` §3, kutu stopu). Sayısı
   raporda "iptal" olarak yazılır. Kayma yalnız çıkış dolumunda olur (kilitli taban, eksik gün; 5.13); giriş
   dolumu kaymaz. (İ: 05-044, 19-055)
 - **Aynı gün sırası:** aynı AOF gününde önce çıkışlar, sonra girişler işlenir. (İ: 08-015)
@@ -408,17 +413,17 @@ Risk paketi (`kurallar/E` K1–K3): acil stop ve gün sonu stopu adları Ham met
 - **ATR:** uzunluk 14, Wilder ortalaması; ilk değer ilk 14 gerçek aralığın ortalaması; kendi kodumuz
   (YORUM). Gerçek aralık = max(yüksek − düşük, |yüksek − önceki kapanış|, |düşük − önceki kapanış|); düzeltilmiş
   seriden. (İ: 19-025, sözlük denetimi 3. tur)
-- **Hedef:** EMA ailesinin varyantları hedefi dener (Levent 16.10; hedef kuralları `KURALLAR.md` §3). Varsayılan kuralda
+- **Hedef:** EMA ailesinin varyantları hedefi dener (Levent 16.10; hedef kuralları `aile-kurallari.md` §3). Varsayılan kuralda
   hedef yoktur (YORUM: bizim seçim). Tansu bazı kurallarda hedef verir: gorsel-paket-106 Ham (EMA sıkışması + talep
   bölgesi: supply/arz bölgesi), gorsel-paket-107 Ham (1.618 dalga uzantısı), gorsel-paket-58 Ham (389.30). KRDMD örneğinde
   hedef yoktur. Çift rotasyonunda kâr hedefi yoktur; geçiş kuralı §5.6'dadır. Standart long/short sürümü ayrıdır (Ham, `beyin/kisisel/300-Projects/Tansu X Veri Havuzu/tweet-istatistiksel-arbitraj-z-skor-pairs-2049196300856414620.md:56–59`, 28.04.2026): "Z-Skoru normale (0.5 seviyelerine) döndüğünde, pozisyonları kapatır" (`docs/kurallar/D-cift-portfoy-nabiz.md:23`, `:32`, `:88`, `:108`; okuma 18.10.2026).
 - **Çift rotasyonu:** ayrı stop yok (YORUM, bizim); karşı uçta diğer hisseye geçilir. Risk paketi bu bölmeye uygulanmaz.
   Grafikte stop görünmemesi, stop bulunmadığını kanıtlamaz (Ham, G125:20; araç, kaynak-vakbn-garan-rotasyon-2096358189696520213/g2; eğitim, G118/g1).
   (Sorgu S3)
-- **Aile kuralları:** giriş kuralları ve YORUM'lar `KURALLAR.md` §3'tedir.
+- **Aile kuralları:** giriş kuralları ve YORUM'lar `aile-kurallari.md` §3'tedir.
 - **İz süren stop ve kısmi kâr:** kaynak Ham'dadır (tweet-statik-dinamik-iz-suren-stop-atr:20; G125:20). EMA ailesinin
   varyantları ATR merdivenini, başabaş çıkışını ve dört yarı satış kuralını dener (Levent 16.10; çıkış paketi
-  `KURALLAR.md` §3). Varsayılan kuralda bu paket yoktur; öbür aileler bu paketle kabul edildikten sonra denenir.
+  `aile-kurallari.md` §3). Varsayılan kuralda bu paket yoktur; öbür aileler bu paketle kabul edildikten sonra denenir.
 - **Yarı satışlı işlem:** işlem tablosunda tek satırdır. Çıkış fiyatı (yarı satış fiyatı + son çıkış fiyatı) / 2'dir; yarılar
   eşit adettir. Getiri ve gerçekleşen kayıp (5.3) bu ortalama fiyattan hesaplanır; masraf oranı sabit olduğu için getiri
   kesindir. İşlem tablosunda ayrıca `yari_tarih` ve `yari_fiyat` vardır (yarı satış yoksa boş). Hisse kapanırsa (5.2) ve
@@ -489,9 +494,9 @@ yıla taşınır. (Sorgu S6, İ: 08-083)
   - β = aynı penceredeki log Y'nin log X'e OLS eğimi; β ≤ 0 elenir.
   - Sıralama: p artan, eşitlikte (Y, X) sembol sırası. Açgözlü seçim: bir hisse en fazla bir çiftte, sektör
     başına en fazla 2 çift, toplam en fazla 5.
-- **Sinyal:** her gün kapanışta Z ve ΔZ (`cift.z_skor`, log oran, 60 gün, ddof 1; KURALLAR §3). Z ≤ −2 ve
-  ΔZ > 0 ise hedef Y; Z ≥ +2 ve ΔZ < 0 ise hedef X (hedef = geçilecek bacak; kâr hedefi değildir, 5.5). Başka günde sinyal yok. Düşünülen çiftler yalnız seçilmiş
-  çiftlerdir; seçim günü kapanışındaki sinyal ertesi gün işlenir.
+- **Sinyal:** her gün kapanışta seçilmiş çiftlerde `aile-kurallari.md` §3 "Çift rotasyonu" sinyal kuralı uygulanır (`cift.z_skor`).
+  Hesap tanımı, pencere ve eşikler o bölümde yönetilir. Hedef geçilecek bacaktır; kâr hedefi değildir (5.5).
+  Seçim günü kapanışındaki sinyal ertesi gün işlenir.
 - **Geçiş:** hedef, tutulandan farklıysa ertesi günün AOF'unda (5.3'teki yaklaşık dolum modeli) eski bacak satılır, yeni bacak alınır; her
   bacakta %0,3 masraf. Adet = tam lot, aşağı yuvarlanır; alış, sinyal gününü kapsayan 10 günlük medyan TL
   hacmin %2'siyle sınırlanır (5.4); artan nakit çiftin payında kalır.
@@ -555,7 +560,7 @@ serisinin kaynağını ve son değişim tarihini yazar; seri boşsa koşu SORUNL
 **K1. Eşleştirilmiş rastgele kural** (B5):
 - **Seçim:**
   - Rastgele sinyaller, kuralın kendi ön şartlarını sağlayan günlerden seçilir.
-  - Ön şart her aile için `KURALLAR.md` §3'te yazılıdır.
+  - Ön şart her aile için `aile-kurallari.md` §3'te yazılıdır.
   - Uygun gün kümesi gereken sayıdan küçükse hata verilir; sessizce kırpılmaz. (İ: 14-039)
 - **Simülasyon:** rastgele işlemler aynı simülatörden geçer: aynı AOF girişi, aynı giriş filtreleri
   (kilitli tavan, SMA250, likidite), aynı boyutlandırma, faiz, masraf, pozisyon sınırı ve çıkış paketi.
@@ -708,7 +713,7 @@ Dolar bazı ilk sürümde yok.
   üstten ⌈0,05·n⌉ işlem atılır). (m2, M10, İ: 19-070)
 
 ### 5.10 Parametre sağlamlığı
-Parametreler ve ızgara önceden yazılır (`KURALLAR.md` §3). Kurallar:
+Parametreler ve ızgara önceden yazılır (`aile-kurallari.md` §3). Kurallar:
 - Izgara hücreleri birlikte oynatılır. En iyi değer seçilmez.
   Tansu sınaması (5.14) en iyi bölgeyi seçer; bu kural yalnız `sinama` içindir (Levent kararı 16.10).
 - **Pozitif hücre:** işlem başına ortalama fazla getiri > 0, %0,3 masrafla; fazla getiri = işlem getirisi − sepet
@@ -737,7 +742,7 @@ Parametreler ve ızgara önceden yazılır (`KURALLAR.md` §3). Kurallar:
   geliştirme koşusu sayılmaz. Aynı çift yeniden koşulursa ilk resmi p kalır. Başka bölümler (5.7, 5.12 boru hattı
   denetimi) m'yi yeniden tanımlamaz, buraya atıf verir. Yarıda kalan resmi koşunun (kural kimliği, aile) çifti Holm listesinde p = 1 ile yer alır; p = 1 sıralamada sona düşer, yani kabule yardım edemez, ve Holm ile B aynı tek m'yi kullanır. (bilet 03; vekil kararı 15.10, bilet 07d)
 - **Varyant:** EMA ailesinin her varyantının kendi parametre parmak izi vardır; bu yüzden kendi kural kimliği vardır. Her
-  varyant koşusu ayrı denemedir ve m'ye sayılır (varyantlar `KURALLAR.md` §3). Başka bir kural değişmez. Yeni
+  varyant koşusu ayrı denemedir ve m'ye sayılır (varyantlar `aile-kurallari.md` §3). Başka bir kural değişmez. Yeni
   parametre alanları `bugun`'un da parmak izini ve kural kimliğini değiştirir (kural aynı); resmi koşudan önce yeni
   kural kaydı yazılır (`python -m tansu kayit`). Koşu varyantı `python -m tansu kayit|sinama --varyant <ad>` seçer
   (varsayılan `bugun`).
@@ -761,6 +766,15 @@ Parametreler ve ızgara önceden yazılır (`KURALLAR.md` §3). Kurallar:
     `deneme_sayisi` ve Holm bunları saymaz.
 - **Git:** `kayit/` izlenir (`deneme.jsonl`, `kartlar.jsonl`). Yalnız ekleme kuralının kanıtı git geçmişidir;
   `veri/` ve `rapor/` izlenmez. Kirli-ağaç denetimi `kayit/`'ı saymaz. (Bilet 09: `kayit/` kararı)
+- **Kod sürümü doğrulaması:** Git sürümü ve kirli-ağaç denetimi, yüklenen `tansu` paketinin üstündeki proje kökünde çalışır.
+  Başlatma klasörü ve kalıtılan `GIT_*` ortam değişkenleri bu seçimi değiştirmez. Doğrulama ana sürecin ortamını değiştirmez.
+  Git'in bulduğu çalışma ağacı kökü proje köküyle aynı olmalıdır; üstteki başka bir depo kabul edilmez.
+  Git komutlarının başarılı olması ve sürümün boş olmaması gerekir.
+  Git çalıştırılamazsa veya bu doğrulama başarısız olursa `KayitHatasi` oluşur; `kosu` hesabı ve koşu kaydı başlamaz.
+  `tansu-sinama` komutu aynı doğrulamayı ayar aktarımı nesnesi kurulmadan önce yapar; ilk doğrulama hatasında hesap,
+  pilot kilit dosyası, çocuk deneme, ayar bağı, sonuç dosyası ve destek kaydı oluşmaz.
+  Doğrudan sonuç yazıcısı da yazmadan önce yeniden doğrular. İlk doğrulamadan sonra oluşan yeni bir hata önceki eklemeleri geri almaz.
+  Neden: doğrulanamayan sürüm temiz bir kod sürümü değildir.
 - **Kirli ağaç:** `kosu(resmi=True)` kirli ağaçta tek Türkçe satırla durur, günlüğe satır yazılmaz (neden: resmi
   koşu temiz bir `git_commit`'e bağlanır; kirli ağaçta sessizce resmi olmayan deneme yazmak niyeti gizler).
   Geliştirme koşusu (`resmi=False`) kirli ağaçta yazılır, `kirli` bayrağıyla.
@@ -904,7 +918,7 @@ Levent 16.10: "Tansu ne diyorsa onu yap." Komut: `python -m tansu tansu-sinama`.
 - **Hisse başına optimizasyon:** her strateji her hissede (çift ailesinde her çiftte) ayrı ızgarayla koşulur. "Lütfen bu
   parametreleri optimize edin." (Ham, tweet-ema-parametre-optimizasyonu-1840438972859732044); "her hisse için farklı
   parametrelerde giriş çıkış yapmak lazım." (Ham, tweet-hisse-bazli-parametre-optimizasyonu-1840170065464803535). Izgara
-  KURALLAR §3'tekidir: EMA 27 hücre; çift Z penceresi × Z eşiği, 6 hücre (seçim p'si yıllık çift seçimine aittir, burada yok).
+  `aile-kurallari.md` §3'tekidir: EMA 27 hücre; çift Z penceresi × Z eşiği, 6 hücre (seçim p'si yıllık çift seçimine aittir, burada yok).
 - **Dönem:** Tansu modu bütün dönemdir: "Biz model eğitmedik kardeşim," (Ham, tweet-atr-yon-degisimi-dip-tepe-1927454690960101506).
   Dönem, dönem başından dönemin son gününe dektir. Dönem başı: 2015-12-01 (5.1) ile ısınmanın bittiği günün (tek hisse 500
   kapanış günü, çift 252 ortak kapanış günü; 5.1) geç olanından başlayarak (o gün dahil) ilk geçerli fiyat günü (çiftte iki
@@ -1009,7 +1023,7 @@ Teknik girdilerin dağıtıcı kontrol tarihi 19.10.2026'dır; bu tarih araştı
 | L3 | Levent, 18.10.2026: "Hani son fiyattan devam etsin. 2022'de sınamaya dahil olsun." Aynı kayıt, son Grup 2 yanıtı; yıllar: 2025, 2024, 2023, 2022, 2021 ve birleşik dönem. |
 | L4 | Levent, 18.10.2026: "Kazanma oranı tek başına bir strateji elemesin." ve "Bir sonucu güvenmek için yani bunları ben sonuçları gördükçe karar verebilirim bence." Aynı kayıt, Grup 3. |
 | L5 | Levent, 18.10.2026: "Tabii önce Tansu sonra internet." ve "Monte Carlo resmi olarak nasıl yapılıyorsa öyle yapılmalı. Walk forward da walk forward da olacak tabi." Aynı kayıt, teknik sorular ve Grup 3 devamı. |
-| L6 | Levent, 18.10.2026: "Komisyonunu alınsın. Ortalama bir şeyler yaz çok önemli değil." Aynı kayıt, Grup 1. Oran ve BSMV aşağıda Claude'un teknik seçimidir; vergi mevzuatı iddiası değildir. |
+| L6 | Levent, 18.10.2026: "Komisyonunu alınsın. Ortalama bir şeyler yaz çok önemli değil." Aynı kayıt, Grup 1. Oran ve BSMV aşağıda Claude'un teknik seçimidir; Levent'in 20.10.2026 onayı S08'dedir. Vergi mevzuatı iddiası değildir. |
 | T1 | Tansu, 07.11.2025: "İyi optimizasyon, \"sağlam\" (robust) bir bölge bulmaktır." Ham: `tweet-sma-optimizasyon-saglam-bolge-asiri-uyum-1986899794032304554.md:51`; komşu tuzağı satır 53. Tam not bu işte okundu. |
 | T2 | Tansu, 09.11.2025: "Amacımız, her işlemde aynı TL riskini korumaktır." Ham: `tweet-volatiliteye-gore-pozisyon-buyuklugu-1987500065401733478.md:25`. Yüzde örneği Levent'in oranını değiştirmez. |
 | T3 | Tansu, 02.09.2026: "Pozisyon büyüklüğünü stop mesafesine göre hesaplayın." Ham: `not-backtest-giris-sadeligi-risk-islem-gunlugu.md:37`; işlem günlüğü satır 39, aday ufukları satır 31. |
@@ -1037,7 +1051,7 @@ verilen araştırma dosyalarından aktarıldı. Dayanak: [L5], [W8].
 | C03 | §5.6'da %1 risk, ortak nakit, pozisyon ve likidite tavanları. | LEVENT KARARI: işlem başına %2 risk; ortak nakit, ortak risk bütçesi ve portföy tavanı yok. İşlemler birbirinin parasını tüketmez. CLAUDE TEKNİK KARARI: tek strateji/sembol yaşam döngüsü açıkken ek aday kaydedilir, adet eklenmez (B Q73). Çiftin risk dayanağı ve masraflı risk formülü RISK kapısındadır. | [L1], [L2], [T2], [T3], [W6]. | #89, #90, #92–#95. |
 | C04 | §5.2 ve §5.6 kapanmada sıfır fiyat/−%100; 60 günlük durdurma kapanma sayılır. | LEVENT KARARI: doğrulanmış durdurma/kapanmada son geçerli fiyat değerlemede taşınır; otomatik −%100 yok. Son fiyatla idari sonlandırma, gözlenmiş satış dolumu değildir. Satış tarihi ve dolum fiyatı gerçek/model dolum yoksa boş kalır. Son fiyatın tarihi ve neden kaybolmaz. | [L3], [T4], [W4]. | #85, #90–#92. |
 | C05 | §5.8 sürekli koşunun yıllık dilimleri; §5.14 bütün dönem. | LEVENT KARARI: beş ayrı yıllık koşu ve birleşik koşu. Dönem ve ısınma sınırları aşağıdadır. Yıllık sonuçlar birleştirilerek birleşik koşu üretilmez. | [L3]; teknik sınır [W1], D §2. | #87, #90–#94. |
-| C06 | §5.4 her yönde %0,3 toplam masraf ve senaryolar; §5.14 %0,10. | CLAUDE TEKNİK KARARI (18.10, 19.10 kontrolü): yeni yolda yön başına %0,15 komisyon, komisyon üstünden %5 BSMV. Her dolumun kendi tutarı kullanılır; kayma ayrı kalır. Eski iki maliyet sürümü korunur. | [L6]; yanıt Grup 1, C giriş ve D §1; [W4]. | #89–#94. |
+| C06 | §5.4 her yönde %0,3 toplam masraf ve senaryolar; §5.14 %0,10. | CLAUDE TEKNİK KARARI (18.10, 19.10 kontrolü; Levent'in 20.10.2026 onayı S08'dedir): yeni yolda yön başına %0,15 komisyon, komisyon üstünden %5 BSMV. Her dolumun kendi tutarı kullanılır; kayma ayrı kalır. Eski iki maliyet sürümü korunur. | [L6]; yanıt Grup 1, C giriş ve D §1; [W4]. | #89–#94. |
 | C07 | §5.11 resmi (kural kimliği, aile) çiftleri Holm m'sidir; destek hücreleri sayılmaz. | LEVENT KARARI / S01 kayıt sözleşmesi: her ayar revizyonu ayrı kayıt; aynı değerlere dönüş de yeni revizyon. Yeni revizyon sayısı Holm m'si değildir. Eski resmi sayım değişmez; yeni hipotez ailesi ayrıca beyan edilir. | [L4], [W8]; taslak kayıt tablosu, C Q87. | #84, #87, #91–#94, #97. |
 | C08 | §5.12 kabul kapıları ve §6 aile durumuyla günlük kart; §5.14 sonuçları kart dışı. | LEVENT KARARI: araştırma sonuçları görülebilir; kâr veya kazanma oranı günlük izin vermez. Günlük uygunluk tam strateji/ayar/kod/veri/politika kanıtıyla ve ayrı seçim kaydıyla bağlanır. SAHİP kapıları 86, 111, d5 açıkken #95 etkinleşmez. | [L4], [W8]; C Q86/Q111, D §5. | #95, #96. |
 | C09 | §5.14 genişleyen, en az iki eğitim yıllı ileri yürüme; özel Monte Carlo sözleşmesi yok. | LEVENT KARARI: MC ve WF gerekir. CLAUDE TEKNİK GİRDİ: aşağıdaki yöntem kayıtları. Çelişen araştırma ayrıntıları yöntem kapılarında açık tutulur; eski yorumun üzerine sessizce yazılmaz. | [L5], [T1], [W1]–[W3], [W9]. | #92, #93, #94. |
@@ -1112,7 +1126,7 @@ net sonuç −3.934,999 TL olur; kayıp planlanan riskte kesilmez.
 
 `maliyet_hesapla`, kimlikli gerçekleşen alış/satış dolumlarını alır. `komisyon_bsmv_v1` tek
 adlandırılmış bileşik oran kullanır: yön başına %0,15 komisyon ve komisyonun %5'i BSMV.
-Komisyon değeri patron onayı bekliyor (dağıtıcı teknik girdisi, 19.10). Aynı kimlikli aynı dolum
+Levent, 20.10.2026: bu komisyon ve BSMV varsayımını “Bu varsayımı onaylıyorum” yanıtıyla onayladı. Aynı kimlikli aynı dolum
 bir kez sayılır; farklı içerikli tekrar hata verir. Sonlu ve pozitif fiyat/adet gerekir.
 Satış toplamı alınan adedi aşamaz; satıştan önce alış gerekir. Alışlar aynı işleme aittir.
 Gerçekleşen maliyet bütün alış masrafları ile gerçekleşmiş satış masraflarının toplamıdır.
@@ -1280,7 +1294,7 @@ boştur. Kutu stopu kutu altını taşır. `hedef=yok` için hedef uygulanmaz; `
 için bulunamayan hedef `hedef_bulunamadi` nedeniyle boştur. Bu, eski §3 Modül 1
 kurulumunun hedef yokluğu davranışını değiştirmez ve varsayılan hedef üretmez.
 Çift ailesi ayrı kuralını korur; EMA katalog kaydıyla çift hesabı yapılmaz.
-Dayanak: #87 sözleşme sınırı ve KURALLAR §3 Modül 1.
+Dayanak: #87 sözleşme sınırı ve `aile-kurallari.md` §3 Modül 1.
 
 Çift uyarlayıcısı `ciftbolme.strateji_coz(y, x, p)` mevcut `cift` ve `ciftbolme` ayarlarını
 tam kayda çözer. `katalog_surumu` boştur; gerekçesi
@@ -1452,7 +1466,7 @@ ve önceki günleri kullanma tanımının tamamını vermez
 (`tweet-qullamaggie-tarzi-hacimli-breakout-tarama-1979546907505545421.md:29`, 18.10.2025, Ham).
 Kaynak kökü T kaynaklarıyla aynıdır. Testin bütün alanları koşulsuz YORUM sayan ilk beklentisi bu
 ayrımı kaybettiği için hatalıdır; alan kaynağına göre düzeltilir. Bu düzeltme birleşim iznini açmaz.
-Dayanak: #83 alan kökeni şartı; KURALLAR §3 ve bu bölümün kaynak sınırı.
+Dayanak: #83 alan kökeni şartı; `aile-kurallari.md` §3 ve bu bölümün kaynak sınırı.
 
 `s02_v1` kataloğunda mevcut 24 tanım eski karşılaştırma olarak saklanır; seçimleri kapalıdır.
 Kaynak turunda genel ATR çıkışı ve genel risk boyutlama dayanağı doğrulandı:
@@ -1473,7 +1487,7 @@ girişlerine aktarımı doğrulanmadı. `gorsel-paket-115-position-sizing-yuzde1
 (kayıt 28.08.2026, Ham'da yazar yok, NotebookLM görseli) SMA250 ve 2 ATR'yi örnekler;
 Ham başka ortalamalara da izin verir. Bütün girişlerde zorunlu SMA250 çıkışı ve eski
 portföyün tavan/likidite politikası için bütün bileşim desteği doğrulanmadı. R/R kapısının
-sahip kararı kökeni korunur (KURALLAR §3). Bu eksikler yalnız sayısal YORUM değildir;
+sahip kararı kökeni korunur (`aile-kurallari.md` §3). Bu eksikler yalnız sayısal YORUM değildir;
 farklı strateji kapsamlarının ve risk politikalarının birlikte uygulanmasıdır.
 
 Giriş parçaları ayrıca kaynaklıdır. Örneğin
@@ -1506,7 +1520,7 @@ Uyum testinin elle hesaplı örneği (`tests/test_aileler.py`): ilk 510 kapanı�
 oran yaklaşık 0,01783'tür. Bu nedenle pencere 0 tabanlı 511. günde açılır. Testin ilk 510. gün
 beklentisi hatalıydı; beklenen gün bu gerekçeyle düzeltilir. Eski ve yeni çözümün eşitliği şartı
 değişmez. Bu örnek yeni kural veya Tansu kaynak kanıtı değildir; sıkışma ve pencere tanımını
-uygular (KURALLAR §3 ve TASARIM §5.15 eski davranışın korunması).
+uygular (`aile-kurallari.md` §3 ve TASARIM §5.15 eski davranışın korunması).
 
 #### Yöntem kayıtları ve açık kapılar
 
@@ -1570,7 +1584,7 @@ izni vermez. Fon/kripto kapsamı ve kalıcı kimlik onayı bu motor sürümünü
    - **Durum:** AKTİF / STOP / GÜN SONU STOPU / KARANTİNA ÇIKIŞI / GİRİŞ İPTAL. (Bilet 14) AKTİF: giriş bekliyor ya da pozisyon açık. STOP: stop değdi
      (çıkış bugün ya da kilitli taban yüzünden bekliyor). GÜN SONU STOPU: kapanış SMA250'nin altına indi (5.5). KARANTİNA ÇIKIŞI: karantina nedeniyle çıkış. GİRİŞ İPTAL: bekleyen giriş iptal edildi. Kapanmış pozisyon kartı yalnız kapandığı günün CSV'sinde görünür.
      Eski kayıtlarda bu üçü tek etiket BOZULDU olarak durur (kayıt yalnız eklenir). Bunlar pozisyon durumlarıdır; Tansu'nun formasyon bozulması değildir. (vekil kararı 15.10, bilet 07c) (araç, G02/g1; Ham, tweet-abcd-geometrik-gecerlilik-kurallari:21; G13:21).
-   - **Varyant:** günlük kart, EMA ailesinin varsayılan varyantı `bugun` ile üretilir; kart durumları (yukarıdaki Durum) değişmez (`KURALLAR.md` §3).
+   - **Varyant:** günlük kart, EMA ailesinin varsayılan varyantı `bugun` ile üretilir; kart durumları (yukarıdaki Durum) değişmez (`aile-kurallari.md` §3).
    - (Bilet 14) **Tarih** sinyal günüdür. **Kaynak** her satırda "Tansu'dan esinlenen yorum · İş Yatırım <anlık görüntü kimliği>": yorum uyarısı ve veri kaynağı aynı
      hücrededir (İ: 17-087, bilet 03). Büyüklük (Pozisyon %,
      Adet, Fiili risk, Likidite sınırı) 1.000.000 TL kâğıt özkaynağıyla ve sinyal gününün tahmini stopuyla hesaplanır
@@ -1618,7 +1632,7 @@ Adım 1–9 tamamlandı (MVP biletleri, 05–06.10, yalnız git geçmişinde: `g
    - Kullanım koşulları ve fiyat adımı: tamamlandı (bilet 01, 05.10).
    - İş Yatırım ham ve düzeltilmiş fiyat, XU100 kapanışı, olay tablosu, olay denetimi: tamamlandı (bilet 02).
    - Veri kapıları, anlık görüntü, borsapy faiz ve sektör tabloları: tamamlandı (bilet 03, 04).
-3. **Sadakat kontrolü** (`KURALLAR.md` §4): ham seriyle; getiriye bakılmaz. Sonuç `docs/sadakat.md`'ye
+3. **Sadakat kontrolü** (`aile-kurallari.md` §4): ham seriyle; getiriye bakılmaz. Sonuç `docs/sadakat.md`'ye
    yazılır. Tamamlandı (bilet 05, 06).
 4. **Evren** (5.2) ve **göstergeler**: tamamlandı (bilet 05, 07).
 5. **Kural kaydı ve hash** (5.8): tamamlandı (bilet 09).
@@ -1669,7 +1683,7 @@ Adım 1–9 tamamlandı (MVP biletleri, 05–06.10, yalnız git geçmişinde: `g
 | B3, B3b | Hayatta kalan yanlılığı giderilemiyor; karşılaştırma tek taraflı | 5.2, 5.7 K2 |
 | B4 | Fazla getiri tanımsız; endeks temettüsüz; nakit faizi yok | 5.6, 5.7 |
 | B5 | Rastgele karşılaştırma adil değil, 5 tekrar az | 5.7 K1 |
-| M1 | Aynı gün stop ve hedef | EMA varyantlarında hedef vardır (§5.5; Levent 16.10.2026). Dolum §5.3'te, gün sırası `docs/KURALLAR.md:434–436`'dadır: stop hedeften önce gelir (YORUM; `docs/kurallar/E-risk-cikis-surec.md:69`, okuma 18.10.2026). Hedef kaynağı (Ham, `beyin/kisisel/300-Projects/Tansu X Veri Havuzu/tweet-ema-sikismasi-talep-bolgesi-kirilim-2002087132089770127.md:47–50`, 19.12.2025): "İlk hedef, grafiğin sağ üstünde gördüğün Kırmızı Bölge (Supply/Arz) alanıdır." |
+| M1 | Aynı gün stop ve hedef | EMA varyantlarında hedef vardır (§5.5; Levent 16.10.2026). Dolum §5.3'te, gün sırası `docs/aile-kurallari.md` §3, "Gün sırası" maddesindedir: stop hedeften önce gelir (YORUM; `docs/kurallar/E-risk-cikis-surec.md:69`, okuma 18.10.2026). Hedef kaynağı (Ham, `beyin/kisisel/300-Projects/Tansu X Veri Havuzu/tweet-ema-sikismasi-talep-bolgesi-kirilim-2002087132089770127.md:47–50`, 19.12.2025): "İlk hedef, grafiğin sağ üstünde gördüğün Kırmızı Bölge (Supply/Arz) alanıdır." |
 | M2 | Stop yanlış tabandan | 5.3 |
 | M3 | Masraf düşük | 5.4 |
 | M4 | Taban kilidi, limit rejimi | 5.1, 5.3 |

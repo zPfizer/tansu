@@ -282,23 +282,23 @@ def _yaz(kok, goreli, metin):
     ("goreli", "metin", "beklenen"),
     [
         # bağlı istisna: doğru dosya, doğru anış
-        ("docs/agents/domain.md", "- `GLOSSARY.md` root (no `GLOSSARY-MAP.md`)", []),
+        ("AGENTS.md", "- `GLOSSARY.md` root (no `GLOSSARY-MAP.md`)", []),
         ("docs/sorgu/izleme/karar.md", "`.scratch/` yerine `TODO.md`", []),
         # başka dosyada aynı cümle istisna değildir
         ("docs/x.md", "no `GLOSSARY-MAP.md`", ["docs/x.md:1: GLOSSARY-MAP.md"]),
         ("docs/x.md", "yerine `TODO.md`", ["docs/x.md:1: TODO.md"]),
         # doğru dosya, başka anış
         (
-            "docs/agents/domain.md",
+            "AGENTS.md",
             "- `GLOSSARY-MAP.md` root (no `GLOSSARY-MAP.md`)",
-            ["docs/agents/domain.md:1: GLOSSARY-MAP.md"],
+            ["AGENTS.md:1: GLOSSARY-MAP.md"],
         ),
         (
-            "docs/agents/domain.md",
+            "AGENTS.md",
             "- `TODO.md` root",
-            ["docs/agents/domain.md:1: TODO.md"],
+            ["AGENTS.md:1: TODO.md"],
         ),
-        ("docs/agents/domain.md", "no `TODO.md`", ["docs/agents/domain.md:1: TODO.md"]),
+        ("AGENTS.md", "no `TODO.md`", ["AGENTS.md:1: TODO.md"]),
         # başka ada geçen istisna cümlesi
         (
             "CODING_STANDARDS.md",

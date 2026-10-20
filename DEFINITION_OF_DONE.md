@@ -5,7 +5,7 @@ Acceptance criteria define the task's required result. A change is done only whe
 ## The Standing Checklist
 
 Apply this to every change before declaring it done.
-Use it as the final gate in `mattpocock-skills:to-spec`, `mattpocock-skills:to-tickets`, `mattpocock-skills:implement`, and `mattpocock-skills:pr` with `verification-before-completion`.
+Use it as the final gate for specs, tickets, implementation, and pull requests. Read the applicable evidence before declaring completion.
 
 ### Correctness
 - [ ] The change meets all acceptance criteria for the task
@@ -21,7 +21,7 @@ Use it as the final gate in `mattpocock-skills:to-spec`, `mattpocock-skills:to-t
 - [ ] Changes stay within the task. No unrelated refactors sneak in
 - [ ] Linting and formatting pass
 
-The depth behind these items lives in `mattpocock-skills:code-review` (standards and spec review) and `ponytail:ponytail-review` with `cyclomatic-complexity` (reducing complexity without changing behavior).
+Check standards and the spec during review. Apply `ponytail:ponytail-review` only for concrete code bloat. Apply `cyclomatic-complexity` only for a complex function. Keep these checks within the task.
 
 ### Integration
 - [ ] Change works with the rest of the system, not just in isolation
@@ -29,21 +29,21 @@ The depth behind these items lives in `mattpocock-skills:code-review` (standards
 
 ### Documentation
 - [ ] The documentation covers public interfaces, APIs, and user-facing behavior
-- [ ] The team records architectural decisions worth preserving (see `mattpocock-skills:domain-modeling`)
-- [ ] Documentation describes the current state in timeless language, not the change history
+- [ ] The team records architectural decisions worth preserving (see `tansu-yeni-is` "Document first")
+- [ ] Documentation distinguishes implemented behavior from approved pending contracts, as `tansu-yeni-is` "Document first" requires
 
 ### Ship-readiness
 - [ ] Security implications reviewed for any untrusted input, auth, or data handling (see `thinking-red-team`)
 - [ ] Observability in place for new critical paths (logs, metrics, traces)
-- [ ] Rollback path exists for anything risky (see `mattpocock-skills:pr` and `verification-before-completion`)
-- [ ] The reviewers that the risk needs approve before merge. Documents need none. See `docs/agents/is-kurallari.md`.
+- [ ] Rollback path exists for anything risky (see `tansu-yeni-is` "Pull request")
+- [ ] Review follows the risk policy in `docs/agents/is-kurallari.md` "Auditor and rounds"
 
 ## How to Apply
 
 - **Per task**: verify the Correctness and Quality sections before you mark the task done.
 - **Per feature**: verify Integration and Documentation before you consider the feature complete.
-- **Before "done"**: No agent or job of this work still runs. The working tree of this repository is clean, except for added `kayit/` lines.
-- **Per release**: the full checklist is the floor. `mattpocock-skills:pr` and `verification-before-completion` add the deploy-specific gates on top.
+- **Before "done"**: No agent or process of this job still runs. Its worktree is clean, except for added `kayit/` lines. Preserve other jobs' pending changes and report them separately.
+- **Per release**: the full checklist is the floor. Apply `tansu-yeni-is` "Pull request" and the release-specific checks.
 
 Use the same checklist regardless of deadline pressure.
 
@@ -56,6 +56,6 @@ This section adds to the general list. The PR template sections "Kabul ölçütl
 - `tests/test_gelecek.py` is green. The new calculation is in its scope.
 - Each TASARIM invariant rule (değişmez kural) that the change touches has code and a test.
 - In the fidelity check (sadakat kontrolü) and in the YORUM selection, nobody looked at the return (getiri). The trial
-  log (deneme günlüğü) only got new lines. A rule parameter change has a record as a new trial (deneme) (`docs/agents/kod-kurallari.md` "Rule parameter").
+  log (deneme günlüğü) only got new lines. A rule parameter change has a record as a new trial (deneme) (`CODING_STANDARDS.md` "Rule parameter").
 - If the behavior changed, the same commit updates TASARIM.
 - Levent approved the install or change of a Task Scheduler task before it was done.

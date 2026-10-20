@@ -153,6 +153,7 @@ def _havuz(kok, adlar, *, alt=()):
 def _kurallar(kok, metin):
     (kok / "docs" / "kurallar").mkdir(parents=True)
     (kok / "docs" / "KURALLAR.md").write_text("## X\n", encoding="utf-8")
+    (kok / "docs" / "kaynak-dokumu.md").write_text("## X\n", encoding="utf-8")
     (kok / "docs" / "kurallar" / "A-x.md").write_text(metin, encoding="utf-8")
 
 

@@ -713,13 +713,13 @@ def calistir(
 def yaz(sonuc, kok=None) -> Path:
     """`rapor/tansu-sinama-<koşu>.json` dosyasını ve deneme günlüğüne `tur=destek`, `olay=tansu_sinama` satırını yazar
     (TASARIM 5.14 "Kayıt ve çıktı"). Holm ve m bunu saymaz (5.11). Manifest sha256'sı `sonuc["manifest_sha256"]`'dadır."""
+    commit, kirli = kayit._git()
     dizin = Path(kok or rapor.RAPOR_DIZINI)
     dizin.mkdir(parents=True, exist_ok=True)
     yol = dizin / f"tansu-sinama-{sonuc['kosu_id']}.json"
     yol.write_text(
         json.dumps(sonuc, ensure_ascii=False, allow_nan=False), encoding="utf-8"
     )
-    commit, kirli = kayit._git()
     kayit._yaz(
         {
             "tur": "destek",

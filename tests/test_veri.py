@@ -415,6 +415,14 @@ def test_anlik_goruntu_kimligi_tarihli_ve_olay_ham_json_saklanir(tmp_path):
         (tmp_path / "ag" / kimlik / "olaylar.json").read_text(encoding="utf-8")
     )
     assert ham["CCOLA"] == CCOLA_OLAY
+    klasor = tmp_path / "ag" / kimlik
+    manifest = json.loads((klasor / "manifest.json").read_text(encoding="utf-8"))
+    assert "kapanan.csv" not in manifest["dosyalar"]
+    assert not (klasor / "kapanan.csv").exists()
+    assert len(veri.oku(kimlik, tmp_path).fiyat) == 6
+    (klasor / "kapanan.csv").write_bytes(b"eski kanit")
+    assert len(veri.oku(kimlik, tmp_path).fiyat) == 6
+    assert (klasor / "kapanan.csv").read_bytes() == b"eski kanit"
     assert not any(p.name.startswith("_") for p in (tmp_path / "ag").iterdir())
 
 
@@ -570,16 +578,27 @@ class _YalnizA(SahteBorsapy):
         return "ESKI"
 
 
-def _sektor_anlik(tmp_path, semboller=("A", "B", "C", "D")):
+def _sektor_anlik(tmp_path, semboller=("A", "B", "C", "D"), kapanan=None):
     k = SahteKaynak(
         {s: CCOLA_FIYAT for s in semboller}, {s: CCOLA_OLAY for s in semboller}
     )
-    return veri.indir(list(semboller), tmp_path, k, simdi=SIMDI, borsapy=_YalnizA())
+    return veri.indir(
+        list(semboller), tmp_path, k, simdi=SIMDI, borsapy=_YalnizA(), kapanan=kapanan
+    )
 
 
-def test_sektor_tamamla_yeni_anlik_goruntu_yazar_eskisi_degismez(tmp_path):
+@pytest.mark.parametrize("kanit", [False, True])
+def test_sektor_tamamla_yeni_anlik_goruntu_yazar_eskisi_degismez(tmp_path, kanit):
     # A zaten var (korunur, sorulmaz). B, C sektör alır; D KAP listesinde yok (None) → sektörsüz, kapsamda yazılır.
-    eski = _sektor_anlik(tmp_path)
+    kapanan = (
+        pd.DataFrame(
+            [["D", "Şirket", "2024-08-13", "birleşmiştir"]],
+            columns=["kod", "ad", "tarih", "aciklama"],
+        )
+        if kanit
+        else None
+    )
+    eski = _sektor_anlik(tmp_path, kapanan=kapanan)
     manifest_eski = (tmp_path / "ag" / eski / "manifest.json").read_bytes()
     kap = SahteKapSektor({"B": "BANKA", "C": "GIDA", "D": None})
     yeni, rapor = veri.sektor_tamamla(
@@ -601,6 +620,14 @@ def test_sektor_tamamla_yeni_anlik_goruntu_yazar_eskisi_degismez(tmp_path):
         "alinamayan": [],
     }
     assert rapor == m["sektor_kapsam"]
+    if kanit:
+        eski_kanit = tmp_path / "ag" / eski / "kapanan.csv"
+        yeni_kanit = tmp_path / "ag" / yeni / "kapanan.csv"
+        assert yeni_kanit.read_bytes() == eski_kanit.read_bytes()
+        assert (
+            m["dosyalar"]["kapanan.csv"]
+            == json.loads(manifest_eski)["dosyalar"]["kapanan.csv"]
+        )
 
 
 def test_sektor_tamamla_art_arda_bes_hatada_durur_tamamlananlar_tekrar_istenmez(
@@ -764,3 +791,17 @@ def test_adim_orani_onceki_tutarli_kapanisa_bakar_bozuk_satir_atlanir(tmp_path):
     )
     assert _karantina(a) == [False, True, False]
     assert a.gun_tablosu["taban"].iloc[2] == pytest.approx(45.0)
+
+
+@pytest.mark.parametrize("ad", ["kapanan.csv", "fiyat.parquet"])
+def test_manifestteki_eksik_dosya_veri_hatasidir(tmp_path, ad):
+    klasor = tmp_path / "ag" / "eksik"
+    klasor.mkdir(parents=True)
+    (klasor / "manifest.json").write_text(
+        json.dumps({"dosyalar": {ad: "0" * 64}}), encoding="utf-8"
+    )
+    with pytest.raises(Exception) as hata:
+        veri.oku("eksik", tmp_path)
+    assert isinstance(hata.value, veri.VeriHatasi)
+    assert f"eksik/{ad}" in str(hata.value)
+    assert isinstance(hata.value.__cause__, FileNotFoundError)

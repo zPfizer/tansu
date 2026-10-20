@@ -7,7 +7,7 @@ from numbers import Real
 RISK_SURUMU = "bagimsiz_risk_v1"
 MASRAF_SURUMU = "komisyon_bsmv_v1"
 RISK_ORANI = 0.02
-KOMISYON_BSMV = 0.001575  # TASARIM 5.15: dağıtıcı girdisi; patron onayı bekliyor.
+KOMISYON_BSMV = 0.001575  # TASARIM 5.15 S08: Levent onayı, 20.10.2026.
 
 
 def _pozitif(x):

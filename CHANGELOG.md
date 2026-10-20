@@ -6,9 +6,16 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ## [Yayımlanmamış]
 
+- #136: Kural kataloğu, aile kuralları ve kaynak dökümü tek sahipli belgelere ayrıldı; kaynak kimlikleri ve gerekli kısıtlar korundu.
+
+### Değişti
+
+- Çalışma kuralları kullanılan ajan araçlarına uyarlandı; belge sahipliği ve bekleyen sözleşmelerin durumu netleşti. Tekrarlanan inceleme kuralları atfa dönüştü, iş klasörü kapanışına silme onayı ve kanıt kontrolü eklendi. (#130)
+- Altı çalışma belgesi mevcut sahiplerinde birleştirildi; kontrol ve gerçek veri kanıtı inceleme öncesine alındı, küçük işte yazıcı devri ve kapsam kuralları sadeleştirildi. Eski bilet sözleşmesi geçmiş bölümüyle korundu.
+
 ### Eklendi
 
-- Bağımsız %2 masraflı risk bütçesi, aşağı tam adet yuvarlama, kullanılmayan bütçe ve gerçekleşen net R ortak E3 hesabına alındı; eski sonuçlar korundu, çiftin sayısal risk dayanağı #128'e taşındı. (#89)
+- Bağımsız %2 masraflı risk bütçesi, aşağı tam adet yuvarlama, kullanılmayan bütçe ve gerçekleşen net R ortak E3 hesabına alındı; komisyon varsayımı Levent'in 20.10.2026 onayıyla kesinleşti. Eski sonuçlar korundu, çiftin sayısal risk dayanağı #128'e taşındı. (#89)
 
 - Ayar değişikliği, önceki değere dönüş ve tekrar koşuları ayrı bağlarla saklayan geçici kayıt pilotu eklendi; kayıt modülü işlem hesabının dışında sınıflandı, saklanmış eski kimlikler ve resmi deneme sayısı korundu. (#84)
 - Tek hisse ve çift ailelerinde göstergeler ile işlem hazırlığı ortak hesapta üretiliyor; sinyal hazırlığıyla birlikte taşınıyor, eski çağrılar korunuyor. (#87)
@@ -28,6 +35,9 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ### Değişti
 
+- Beceri akışlarında küçük iş kapsamı ve issue/PR kuralları uyumlandı; karar yöntemleri ile hakem doğrulaması koşula bağlandı, bulunamayan çağrılar mevcut araçlarla uygulanacak adımlara dönüştürüldü.
+- Okuyucu ve vekil ajanları isteğe bağlı yardımcı oldu; dosya ve satır sayısına bağlı okuyucu zorunluluğu kalktı, ana oturum teknik soruları kaynaklardan çözüyor ve Levent'e ait kararları ona soruyor.
+- İş kuralları ve Tansu akışlarında mattpocock-skills zorunluluğu kaldırıldı; gerekli adımlar doğrudan yazıldı, diğer beceri kuralları korundu.
 - Tansu EMA ızgarası hücrenin ayarını ve kurulumunu motora, Tansu sınaması ve günlük komutları seçilen varyantı hesaba iletiyor; hücreler ayrı işlem önbelleği kullanıyor. (#88)
 - Kök belgeler ve iş kuralları sadeleşti: denetçi sayısı riske göre, günlüğü kodu değiştiren yazar, küçük belge düzeltmeleri PR ile giriyor; README özet bölümü kalktı. (#122)
 - Yerel test kapısı kaldırıldı; kanca yalnız önce testin yazıldığını denetliyor; PR denetimi gerçek veri kanıtını yalnız tansu/ kodu değişince, denetçiyi yalnız kod değişince istiyor ve yalnız master birleştirmesi gelen PR’a yeni inceleme turu istemiyor. (#122)
@@ -48,6 +58,9 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 - GitHub'daki otomatik kontroller yalnız Windows'ta çalışıyor.
 
 ### Düzeltildi
+
+- Evren indirmesinde kapanan şirket kanıtı yayın öncesinde manifeste katılıyor; listelenmiş eksik dosyalar veri hatası veriyor. Eski görüntüler kendi manifestleriyle korunuyor. (#133)
+- Kod sürümü proje kökünden, kalıtılan Git yönlendirmelerinden bağımsız doğrulanıyor; Git hatasında koşu hesabı ve Tansu sınamasının ayar aktarımı başlamıyor, doğrudan sonuç yazımı duruyor. (#132)
 
 - Tamamlanma denetimi, Windows üzerinde Türkçe kural uyarılarını eksiksiz yazıyor; eksik kabul kutusu yine reddediliyor. (#118)
 - Strateji kataloğundaki kural ayarları ve sabitler kod parmak izinin kapsamına alındı. (#83)

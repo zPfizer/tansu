@@ -42,11 +42,24 @@ def test_tarama_kumesi_bilinen_dosyalari_icerir():
         "tansu/kayit.py",
         ".claude/skills/tansu-grill/SKILL.md",
         ".claude/skills/tansu-yeni-is/SKILL.md",
-        ".claude/skills/tansu-yeni-is/ortak-adimlar.md",
+        "docs/agents/is-kurallari.md",
         ".github/pull_request_template.md",
     } <= adlar
     # .scratch/ ve arsiv/ yerel tarihsel metindir; git ve güncel atıf taraması dışında.
     assert not any(ad.startswith((".scratch/", "arsiv/")) for ad in adlar)
+
+
+def test_tasima_sonrasi_silinen_izlenen_dosya_taranmaz(tmp_path):
+    docs = tmp_path / "docs"
+    docs.mkdir()
+    eski = docs / "eski.md"
+    yeni = docs / "yeni.md"
+    for yol in (eski, yeni):
+        yol.write_text("## 1. Kural\n", encoding="utf-8")
+    _git(tmp_path, "init", "-q")
+    _git(tmp_path, "add", "docs/eski.md", "docs/yeni.md")
+    eski.unlink()
+    assert izlenen_dosyalar(tmp_path) == [yeni]
 
 
 def test_karar_etiketleri_sorguda_tanimli():
@@ -473,6 +486,7 @@ def _kok(tmp_path, e=E_METNI, kurallar=KURALLAR_METNI, eol="\n"):
     for yol, metin in (
         (tmp_path / "docs" / "kurallar" / "E-risk.md", e),
         (tmp_path / "docs" / "KURALLAR.md", kurallar),
+        (tmp_path / "docs" / "kaynak-dokumu.md", kurallar),
     ):
         yol.write_bytes(metin.replace("\n", eol).encode("utf-8"))
     return tmp_path
@@ -494,7 +508,7 @@ def _oku(kok, ad):
 
 
 E = "docs/kurallar/E-risk.md"
-K = "docs/KURALLAR.md"
+K = "docs/kaynak-dokumu.md"
 
 
 def test_ek_kaydi_var_olan_bloka_eklenir(tmp_path):
