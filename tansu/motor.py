@@ -5,11 +5,14 @@ Mum: tarih, aof, yuksek, dusuk, kapanis, sma250, atr, islem, karantina, kilit_ta
 Yalnız etkin kuralın okuduğu sütunlar: hacim (kurulum), rsi, onceki_rsi, sma50, onceki_dusuk.
 """
 
-from dataclasses import dataclass, replace
+from dataclasses import asdict, dataclass, replace
+from hashlib import sha256
+import json
+import math
 
 import pandas as pd
 
-from tansu import aileler, gostergeler
+from tansu import aileler, gostergeler, islem_riski
 from tansu.veri import KARANTINA_GUN, UyelikKapsamHatasi, VeriHatasi
 
 STOP_ATR = 2.0  # TASARIM 5.5: acil stop = giriş - 2 ATR
@@ -78,7 +81,7 @@ def _kapat(p, tarih, fiyat, neden):
     return replace(p, durum="kapali", cikis_tarih=tarih, cikis_fiyat=fiyat, neden=neden)
 
 
-def adim(p: Pozisyon, m) -> Pozisyon:
+def adim(p: Pozisyon, m, *, karar=True) -> Pozisyon:
     """(pozisyon, bugünkü mum) → pozisyon. Saf; kurallar TASARIM 5.3 ve 5.5, KURALLAR §3 Modül 1."""
     if p.durum == "kapali":
         return p
@@ -119,10 +122,10 @@ def adim(p: Pozisyon, m) -> Pozisyon:
         return _kapat(p, m["tarih"], min(p.stop, m["aof"]), "stop")
     if p.bekleyen:
         return p if m["kilit_taban"] else _kapat(p, m["tarih"], m["aof"], p.bekleyen)
-    return p if ilk_gun else _gun(p, m)
+    return p if ilk_gun else _gun(p, m, karar=karar)
 
 
-def _gun(p, m):
+def _gun(p, m, *, karar=True):
     """Stopa dokunmayan, tam çıkışı beklemeyen açık gün (giriş günü hariç): KURALLAR §3 gün sırası."""
     t, aof, taban = m["tarih"], m["aof"], m["kilit_taban"]
     if p.yari_bekleyen and not taban:  # kilitli taban: AOF dolumu kayar
@@ -139,6 +142,10 @@ def _gun(p, m):
             p = replace(
                 p, yari_tarih=t, yari_fiyat=seviye if m["dusuk"] <= seviye else aof
             )
+    if (
+        not karar
+    ):  # TASARIM 5.15 S09: eksik gösterge, önceden istenen dolumu engellemez.
+        return _merdiven(p, m) if p.ayar.cikis != "yok" else p
     if m["kapanis"] < m["sma250"]:  # SMA250 tam çıkışı önce gelir
         p = replace(p, bekleyen="sma250")
     else:
@@ -219,12 +226,24 @@ def tara(
     sinyaller,
     ayar: aileler.Parametre = aileler.Parametre(),
     kurulum=None,
-) -> tuple:
+    *,
+    yurutme=None,
+    onceki_durum=None,
+) -> tuple | dict:
     """Tek Adım döngüsü (`islemler` ve günlük kart ortak kullanır).
 
     `kurulum`: `aileler.kurulum` tablosu (indeks sinyal günleri; kutu_alt, hedef); satırı olmayan sinyal günü kutusuz ve hedefsizdir.
     (iptal dışı kapanmış pozisyonlar, düşen sinyal sayısı, veri sonunda kapanmamış pozisyon ya da None,
-    son mumda kapanan pozisyon ya da None; iptal dahil)."""
+    son mumda kapanan pozisyon ya da None; iptal dahil).
+    Açık `yurutme` isteğinde S09 sözlüğü döner; `islem_adimi` ile aynı geçiş kullanılır."""
+    if yurutme is not None:
+        return _islem_tara(mumlar, sinyaller, ayar, kurulum, yurutme, onceki_durum)
+    if onceki_durum is not None:
+        raise ValueError("önceki durum açık yürütme isteği gerektirir")
+    return _legacy_tara(mumlar, sinyaller, ayar, kurulum)
+
+
+def _legacy_tara(mumlar, sinyaller, ayar, kurulum):
     sinyaller, kb = set(sinyaller), _kutu_hedef(kurulum)
     kapali, dusen, p, son_karantina, kapanan = [], 0, None, None, None
     for i, (tarih, satir) in enumerate(mumlar.iterrows()):
@@ -243,6 +262,404 @@ def tara(
         if p is None and tarih in sinyaller and not engelli:
             p = bekleyen(m["atr"], tarih, ayar, *kb.get(tarih, (None, None)))
     return kapali, dusen, p, kapanan
+
+
+def _islem_tara(mumlar, sinyaller, ayar, kurulum, yurutme, durum):
+    if not isinstance(sinyaller, dict):
+        raise ValueError("yeni yürütmede sinyaller tarih-kimlik eşlemesi olmalı")
+    if mumlar.empty:
+        raise ValueError("yeni yürütmede en az bir mum gerekli")
+    if not mumlar.index.is_unique or not mumlar.index.is_monotonic_increasing:
+        raise ValueError("mum tarihleri artan ve tekil olmalı")
+    gun_sinyalleri = {_gun_tarihi(t): kimlik for t, kimlik in sinyaller.items()}
+    if len(gun_sinyalleri) != len(sinyaller):
+        raise ValueError("aynı güne birden çok sinyal kimliği verildi")
+    kb = _kutu_hedef(kurulum)
+    for tarih, satir in mumlar.iterrows():
+        alt, hedef = kb.get(tarih, (None, None))
+        durum = islem_adimi(
+            durum,
+            {**satir.to_dict(), "tarih": tarih},
+            gun_sinyalleri.get(_gun_tarihi(tarih)),
+            yurutme=yurutme,
+            ayar=ayar,
+            kutu_alt=alt,
+            hedef=hedef,
+        )
+    return durum
+
+
+def _duz(deger):
+    """JSON durumu için tarihler ve sayısal skalerler (TASARIM 5.15 S09)."""
+    if isinstance(deger, dict):
+        return {k: _duz(v) for k, v in deger.items()}
+    if isinstance(deger, (set, frozenset)):
+        deger = sorted(deger)
+    if isinstance(deger, (tuple, list)):
+        return [_duz(v) for v in deger]
+    if isinstance(deger, pd.Timestamp):
+        return deger.date().isoformat()
+    if hasattr(deger, "item"):
+        deger = deger.item()
+    if isinstance(deger, float) and not math.isfinite(deger):
+        return None
+    return deger
+
+
+def _gun_tarihi(tarih):
+    t = pd.Timestamp(tarih)
+    if pd.isna(t) or t != t.normalize():
+        raise ValueError("mum tarihi geçerli bir takvim günü olmalı")
+    return t.date().isoformat()
+
+
+def _iz_kodu(deger):
+    return sha256(
+        json.dumps(deger, sort_keys=True, ensure_ascii=False, allow_nan=False).encode()
+    ).hexdigest()
+
+
+def _yurutme_dogrula(y):
+    for alan in (
+        "strateji_id",
+        "strateji_surumu",
+        "deneme_id",
+        "kosu_id",
+        "veri_ref_id",
+        "sembol",
+    ):
+        if not isinstance(y.get(alan), str) or not y[alan].strip():
+            raise ValueError(f"yürütme kimliği eksik: {alan}")
+    for alan, deger in (
+        ("surum", "bagimsiz_islem_v1"),
+        ("fiyat_politikasi", "aof_v1"),
+        ("risk_surumu", islem_riski.RISK_SURUMU),
+        ("masraf_surumu", islem_riski.MASRAF_SURUMU),
+    ):
+        if y.get(alan) != deger:
+            raise ValueError(f"bilinmeyen yürütme politikası: {alan}")
+    if y.get("aile") == "cift_rotasyonu":
+        raise ValueError("risk_dayanagi_eksik")
+    if y.get("aile") != "ema_sikismasi":
+        raise ValueError("bilinmeyen yürütme ailesi")
+    if not _pozitif_sayi(y.get("nominal_tutar")):
+        raise ValueError("nominal_tutar sonlu ve pozitif olmalı")
+
+
+def _pozitif_sayi(x):
+    return (
+        isinstance(x, (int, float))
+        and not isinstance(x, bool)
+        and math.isfinite(x)
+        and x > 0
+    )
+
+
+def _pozisyon_oku(d):
+    if d is None:
+        return None
+    d = dict(d)
+    ayar = dict(d["ayar"])
+    ayar["periyotlar"] = tuple(ayar["periyotlar"])
+    return Pozisyon(
+        **(d | {"ayar": aileler.Parametre(**ayar), "senaryo": frozenset(d["senaryo"])})
+    )
+
+
+def _olay(d, tarih, neden, sinyal=None, *, tur="bilgi"):
+    d["retler"].append(dict(tarih=tarih, neden=neden, sinyal_id=sinyal, tur=tur))
+
+
+def _dolum(d, p, tarih, yon, adet, fiyat, neden):
+    if adet:
+        d["dolumlar"].append(
+            dict(
+                dolum_id=f"{p.risk_girdisi['islem_id']}:{tarih}:{neden}",
+                islem_id=p.risk_girdisi["islem_id"],
+                sinyal_id=p.risk_girdisi["sinyal_id"],
+                tarih=tarih,
+                tur="model_dolumu",
+                yon=yon,
+                adet=adet,
+                fiyat=fiyat,
+                neden=neden,
+            )
+        )
+
+
+def _hesap(d, p):
+    return islem_riski.hesapla(p.risk_girdisi | {"dolumlar": d["dolumlar"]})
+
+
+def _fiyat_engeli(m):
+    if m["karantina"]:
+        return "karantina"
+    if not m["islem"]:
+        return "islem_yok"
+    if not all(_pozitif_sayi(m.get(k)) for k in ("aof", "yuksek", "dusuk", "kapanis")):
+        return "gecersiz_fiyat"
+    if (
+        not m["dusuk"] <= m["aof"] <= m["yuksek"]
+        or not m["dusuk"] <= m["kapanis"] <= m["yuksek"]
+    ):
+        raise ValueError("mum fiyat sırası geçersiz")
+    return None
+
+
+def _limitler(m):
+    bilinen = (
+        isinstance(m.get("limit_kaniti"), str)
+        and bool(m["limit_kaniti"].strip())
+        and all(
+            _pozitif_sayi(m.get(k))
+            for k in ("ham_yuksek", "ham_dusuk", "tavan", "taban")
+        )
+    )
+    if not bilinen:
+        return False, False, False
+    if not m["taban"] <= m["ham_dusuk"] <= m["ham_yuksek"] <= m["tavan"]:
+        raise ValueError("ham fiyat veya limit sırası geçersiz")
+    return (
+        True,
+        m["ham_yuksek"] == m["ham_dusuk"] == m["tavan"],
+        m["ham_yuksek"] == m["ham_dusuk"] == m["taban"],
+    )
+
+
+def _gosterge_var(p, m):
+    gerekli = ["sma250"]
+    if p.ayar.cikis not in ("yok", "atr3"):
+        gerekli += ["onceki_dusuk", "onceki_rsi", "rsi", "sma50"]
+    return all(
+        isinstance(m.get(k), (int, float)) and math.isfinite(m[k]) for k in gerekli
+    )
+
+
+def _yurut_gun(d, p, m):
+    t = m["tarih"]
+    engel = _fiyat_engeli(m)
+    if engel:
+        return _engelli_gun(d, p, t, engel)
+    bilinen, ust, alt = _limitler(m)
+    if p.durum == "bekliyor" and (not bilinen or ust):
+        _olay(
+            d,
+            t,
+            "kilitli_tavan" if ust else "limit_bilinmiyor",
+            p.risk_girdisi["sinyal_id"],
+            tur="dusen_sinyal",
+        )
+        return None
+    # Değerleme, dolum kanıtına bağlı değildir; yalnız temiz işlem fiyatını taşır.
+    d["degerleme"] = dict(tarih=t, fiyat=m["kapanis"])
+    if not bilinen:
+        _olay(d, t, "limit_bilinmiyor")
+    m = m | {"kilit_tavan": bool(ust), "kilit_taban": bool(alt or not bilinen)}
+    karar = _gosterge_var(p, m)
+    if not karar:
+        _olay(d, t, "gosterge_eksik")
+    p = _dolumlu_adim(d, p, m, karar)
+    _satis_engelini_kaydet(d, p, m)
+    return p
+
+
+def _satis_engelini_kaydet(d, p, m):
+    if p is not None and m["kilit_taban"] and (p.bekleyen or p.yari_bekleyen):
+        _olay(d, m["tarih"], "satis_engeli", tur="ertelenen_satis")
+
+
+def _engelli_gun(d, p, t, engel):
+    if p.durum == "bekliyor":
+        _olay(d, t, engel, p.risk_girdisi["sinyal_id"], tur="dusen_sinyal")
+        return None
+    if engel == "karantina":
+        _olay(d, t, "karantina_cikis_bekliyor", tur="ertelenen_satis")
+        return replace(p, bekleyen="karantina")
+    tur = "ertelenen_satis" if p.bekleyen or p.yari_bekleyen else "bilgi"
+    _olay(d, t, engel, tur=tur)
+    return p
+
+
+def _girisi_boyutla(d, p, t):
+    if p.giris_fiyat is None:
+        _olay(d, t, "gecersiz_giris", p.risk_girdisi["sinyal_id"], tur="dusen_sinyal")
+        return None
+    risk = p.risk_girdisi | dict(giris_fiyat=p.giris_fiyat, ilk_stop=p.ilk_stop)
+    plan = islem_riski.hesapla(risk)
+    if plan["risk_nedeni"]:
+        _olay(d, t, plan["risk_nedeni"], risk["sinyal_id"], tur="dusen_sinyal")
+        return None
+    p = replace(p, adet=plan["adet"], risk_girdisi=risk)
+    _dolum(d, p, t, "alis", plan["adet"], p.giris_fiyat, "giris")
+    return p
+
+
+def _yari_dolum(d, p, t):
+    kalan = _hesap(d, p)["kalan_adet"]
+    adet = int(kalan) // 2
+    _dolum(d, p, t, "satis", adet, p.yari_fiyat, "yari")
+    d["yari_islenen"] = True
+    if adet:
+        return p
+    _olay(d, t, "yari_adet_sifir")
+    return replace(p, yari_tarih=None, yari_fiyat=None)
+
+
+def _dolumlu_adim(d, p, m, karar):
+    t = m["tarih"]
+    once = p
+    if d["yari_islenen"] and p.yari_tarih is None:
+        p = replace(p, yari_tarih="islenmis")
+    p = adim(p, m, karar=karar)
+    if p.yari_tarih == "islenmis":
+        p = replace(p, yari_tarih=None)
+    if once.durum == "bekliyor":
+        p = _girisi_boyutla(d, p, t)
+        if p is None:
+            return None
+    if p.yari_tarih == t and once.yari_tarih is None and not d["yari_islenen"]:
+        p = _yari_dolum(d, p, t)
+    if p.durum == "kapali":
+        _dolum(
+            d, p, t, "satis", int(_hesap(d, p)["kalan_adet"]), p.cikis_fiyat, p.neden
+        )
+        d["islemler"].append(
+            dict(pozisyon=_duz(asdict(p)), dolumlar=d["dolumlar"], sonuc=_hesap(d, p))
+        )
+        d["dolumlar"] = []
+        return None
+    return p
+
+
+def _durumu_oku(durum, y):
+    if durum is None:
+        return dict(
+            surum="islem_durumu_v1",
+            yurutme=y,
+            son_tarih=None,
+            son_girdi=None,
+            pozisyon=None,
+            dolumlar=[],
+            islemler=[],
+            retler=[],
+            iz=[],
+            degerleme=None,
+            karantina_kalan=0,
+            yari_islenen=False,
+        )
+    d = json.loads(json.dumps(durum, allow_nan=False))
+    kod = d.pop("butunluk", None)
+    if kod != _iz_kodu(d) or d["surum"] != "islem_durumu_v1" or d["yurutme"] != y:
+        raise ValueError("önceki durum veya yürütme bağı uyuşmuyor")
+    return d
+
+
+def _sinyali_al(d, p, m, sinyal, ayar, kutu_alt, hedef):
+    if sinyal is None:
+        return p
+    if p is not None:
+        _olay(d, m["tarih"], "acik_islem", sinyal, tur="reddedilen_sinyal")
+        return p
+    if d["karantina_kalan"]:
+        _olay(d, m["tarih"], "karantina_penceresi", sinyal, tur="reddedilen_sinyal")
+        return None
+    if not _atr_gecerli(m.get("atr")):
+        _olay(d, m["tarih"], "gecersiz_risk_girdisi", sinyal, tur="dusen_sinyal")
+        return None
+    for deger in (kutu_alt, hedef):
+        if deger is not None and not _pozitif_sayi(deger):
+            raise ValueError("kurulum fiyatı sonlu ve pozitif olmalı")
+    d["yari_islenen"] = False
+    return replace(
+        bekleyen(m["atr"], m["tarih"], ayar, kutu_alt, hedef),
+        risk_girdisi=d["yurutme"]
+        | {
+            "sinyal_id": sinyal,
+            "ayar_parmak_izi": _iz_kodu(_duz(asdict(ayar))),
+            "islem_id": _iz_kodu(
+                [d["yurutme"], sinyal, m["tarih"], _duz(asdict(ayar)), kutu_alt, hedef]
+            ),
+        },
+    )
+
+
+def _atr_gecerli(atr):
+    return (
+        isinstance(atr, (int, float))
+        and not isinstance(atr, bool)
+        and math.isfinite(atr)
+        and atr >= 0
+    )
+
+
+def _durumu_tamamla(d, p, tarih, girdi):
+    d["pozisyon"] = _duz(asdict(p)) if p is not None else None
+    d["sonuc"] = _hesap(d, p) if p is not None else None
+    durumlar = {"acik": "acik_son", "bekliyor": "bekliyor"}
+    d["durum"] = durumlar[p.durum] if p else "bos"
+    net = sum(i["sonuc"]["net_sonuc"] for i in d["islemler"])
+    net += (d["sonuc"] or {}).get("net_sonuc", 0)
+    d["iz"].append(
+        dict(
+            tarih=tarih,
+            egri_turu="tani_referans",
+            nominal_tutar=d["yurutme"]["nominal_tutar"],
+            net_sonuc=net,
+            referans_sonucu=net / d["yurutme"]["nominal_tutar"],
+            kalan_adet=(d["sonuc"] or {}).get("kalan_adet", 0),
+            degerleme=d["degerleme"],
+        )
+    )
+    d["dusen_sinyal_sayisi"] = sum(r["tur"] == "dusen_sinyal" for r in d["retler"])
+    d["ertelenen_satis_gunu_sayisi"] = len(
+        {r["tarih"] for r in d["retler"] if r["tur"] == "ertelenen_satis"}
+    )
+    d["son_tarih"], d["son_girdi"] = tarih, girdi
+    return d | {"butunluk": _iz_kodu(d)}
+
+
+def _mum_dogrula(mum, sinyal):
+    tarih = _gun_tarihi(mum["tarih"])
+    m = _duz(dict(mum)) | {"tarih": tarih}
+    for alan in ("islem", "karantina"):
+        if type(m.get(alan)) is not bool:
+            raise ValueError(f"mum bayrağı eksik: {alan}")
+    if sinyal is not None and (not isinstance(sinyal, str) or not sinyal.strip()):
+        raise ValueError("sinyal kimliği boş olamaz")
+    return m
+
+
+def islem_adimi(
+    durum,
+    mum,
+    sinyal=None,
+    *,
+    yurutme,
+    ayar=aileler.Parametre(),
+    kutu_alt=None,
+    hedef=None,
+):
+    """TASARIM 5.15 S09: saf, JSON ile geri okunabilir tek hisse geçişi."""
+    y = _duz(yurutme)
+    _yurutme_dogrula(y)
+    m = _mum_dogrula(mum, sinyal)
+    tarih = m["tarih"]
+    girdi = _iz_kodu([m, sinyal, _duz(asdict(ayar)), kutu_alt, hedef])
+    d = _durumu_oku(durum, y)
+    if d["son_tarih"] is not None and tarih <= d["son_tarih"]:
+        if tarih == d["son_tarih"] and girdi == d["son_girdi"]:
+            return d | {"butunluk": _iz_kodu(d)}
+        raise ValueError("tekrarlanan veya geriye giden mum çelişkili")
+    p = _pozisyon_oku(d["pozisyon"])
+    if p is not None:
+        if p.ayar != ayar:
+            _olay(d, tarih, "ayar_degisti")
+        p = _yurut_gun(d, p, m)
+    d["karantina_kalan"] = (
+        KARANTINA_GUN if m["karantina"] else max(0, d["karantina_kalan"] - 1)
+    )
+    p = _sinyali_al(d, p, m, sinyal, ayar, kutu_alt, hedef)
+    return _durumu_tamamla(d, p, tarih, girdi)
 
 
 def islemler(
