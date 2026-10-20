@@ -15,6 +15,8 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ### Eklendi
 
+- Tek hisse işlem geçişinin kapsamı ve tam adet yarı satış kararı kaydedildi; yeni uygulama sözleşmesi kanıt bekliyor. (#90)
+
 - İlk kaynak ailesinin giriş alternatifleri, açık alanları ve kanıt aktarım sözleşmesi hazırlandı; hesaplama ve seçim izni verilmedi, eski 24 tanımın korumaları korundu. (#117)
 
 - Bağımsız %2 masraflı risk bütçesi, aşağı tam adet yuvarlama, kullanılmayan bütçe ve gerçekleşen net R ortak E3 hesabına alındı; komisyon varsayımı Levent'in 20.10.2026 onayıyla kesinleşti. Eski sonuçlar korundu, çiftin sayısal risk dayanağı #128'e taşındı. (#89)
