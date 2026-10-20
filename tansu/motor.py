@@ -85,32 +85,12 @@ def adim(p: Pozisyon, m, *, karar=True) -> Pozisyon:
     """(pozisyon, bugünkü mum) → pozisyon. Saf; kurallar TASARIM 5.3 ve 5.5, KURALLAR §3 Modül 1."""
     if p.durum == "kapali":
         return p
-    if p.durum == "bekliyor":
-        kutu = p.ayar.stop == "kutu" and p.kutu_alt is not None
-        if (
-            m["karantina"]
-            or not m["islem"]
-            or m["kilit_tavan"]
-            or (kutu and m["aof"] <= p.kutu_alt)  # kutu altına sarkan giriş iptal
-        ):
-            return _kapat(p, m["tarih"], None, "iptal")
-        stop = (
-            p.kutu_alt
-            if kutu
-            else m["aof"]
-            - aileler.STOP_KAT.get(p.ayar.stop, aileler.STOP_KAT["atr2"]) * p.atr
-        )
-        p = replace(
-            p,
-            durum="acik",
-            giris_tarih=m["tarih"],
-            giris_fiyat=m["aof"],
-            stop=stop,
-            ilk_stop=stop,
-        )
-        ilk_gun = True
+    ilk_gun = p.durum == "bekliyor"
+    if ilk_gun:
+        p = _giris_adimi(p, m)
+        if p.durum == "kapali":
+            return p
     else:
-        ilk_gun = False
         if m["karantina"]:
             return _kapat(p, m["tarih"], p.son_aof, "karantina")
         if not m["islem"]:
@@ -125,8 +105,46 @@ def adim(p: Pozisyon, m, *, karar=True) -> Pozisyon:
     return p if ilk_gun else _gun(p, m, karar=karar)
 
 
+def _giris_adimi(p, m):
+    kutu = p.ayar.stop == "kutu" and p.kutu_alt is not None
+    if (
+        m["karantina"]
+        or not m["islem"]
+        or m["kilit_tavan"]
+        or (kutu and m["aof"] <= p.kutu_alt)
+    ):
+        return _kapat(p, m["tarih"], None, "iptal")
+    stop = (
+        p.kutu_alt
+        if kutu
+        else m["aof"]
+        - aileler.STOP_KAT.get(p.ayar.stop, aileler.STOP_KAT["atr2"]) * p.atr
+    )
+    return replace(
+        p,
+        durum="acik",
+        giris_tarih=m["tarih"],
+        giris_fiyat=m["aof"],
+        stop=stop,
+        ilk_stop=stop,
+    )
+
+
 def _gun(p, m, *, karar=True):
     """Stopa dokunmayan, tam çıkışı beklemeyen açık gün (giriş günü hariç): KURALLAR §3 gün sırası."""
+    p = _gun_ici_cikis(p, m)
+    if p.durum == "kapali" or p.bekleyen == "hedef":
+        return p
+    if karar is False:
+        return _merdiven(p, m) if p.ayar.cikis != "yok" else p
+    if (karar is True or "sma250" in karar) and m["kapanis"] < m["sma250"]:
+        p = replace(p, bekleyen="sma250")
+    else:
+        p = _cikis_kurali(p, m, karar=karar)
+    return _merdiven(p, m) if p.ayar.cikis != "yok" else p
+
+
+def _gun_ici_cikis(p, m):
     t, aof, taban = m["tarih"], m["aof"], m["kilit_taban"]
     if p.yari_bekleyen and not taban:  # kilitli taban: AOF dolumu kayar
         p = replace(p, yari_bekleyen=False, yari_tarih=t, yari_fiyat=aof)
@@ -142,17 +160,7 @@ def _gun(p, m, *, karar=True):
             p = replace(
                 p, yari_tarih=t, yari_fiyat=seviye if m["dusuk"] <= seviye else aof
             )
-    if (
-        karar is False
-    ):  # TASARIM 5.15 S09: eksik gösterge, önceden istenen dolumu engellemez.
-        return _merdiven(p, m) if p.ayar.cikis != "yok" else p
-    if (karar is True or "sma250" in karar) and m["kapanis"] < m[
-        "sma250"
-    ]:  # SMA250 tam çıkışı önce gelir
-        p = replace(p, bekleyen="sma250")
-    else:
-        p = _cikis_kurali(p, m, karar=karar)
-    return _merdiven(p, m) if p.ayar.cikis != "yok" else p
+    return p
 
 
 def _cikis_kurali(p, m, *, karar=True):
@@ -163,50 +171,47 @@ def _cikis_kurali(p, m, *, karar=True):
         return p
     izin = {"dip", "rsi70", "rsi50", "sma50", "kar"} if karar is True else karar
     alti = "dip" in izin and m["kapanis"] < m["onceki_dusuk"]
-    senaryo = {
-        ad
-        for ad, ok in (
-            ("dip", c != "rsi70" and p.aktif and alti),  # etkinlik önceki günlerden
-            (
-                "rsi70",
-                c == "rsi70"
-                and "rsi70" in izin
-                and p.kar
-                and m["onceki_rsi"] >= 70 > m["rsi"],
-            ),
-            (
-                "rsi50",
-                c == "rsi50" and "rsi50" in izin and m["onceki_rsi"] >= 50 > m["rsi"],
-            ),
-            (
-                "sma50",
-                c == "rsi50"
-                and "sma50" in izin
-                and m["yuksek"] >= m["sma50"] > m["kapanis"],
-            ),
-        )
-        if ok
-    }
+    senaryo = _cikis_tetikleri(p, m, izin, alti)
     gorulen = p.senaryo | senaryo
     # rsi50: ikinci farklı senaryo tam çıkış. rsi70: yarı satıştan sonra ilk dip kapanışı (yarı satış günü dahil).
     tam = len(gorulen) > 1 or (c == "rsi70" and p.yari_tarih is not None and alti)
     yari = bool(senaryo) and not p.senaryo  # ilk senaryo yarı satış verir
-    p = replace(
+    p = _cikis_onsartlari(p, m, izin, gorulen)
+    if tam:
+        return replace(p, bekleyen="cikis_kurali")
+    return replace(p, yari_bekleyen=True) if yari else p
+
+
+def _cikis_tetikleri(p, m, izin, alti):
+    c = p.ayar.cikis
+    senaryo = set()
+    if c != "rsi70" and p.aktif and alti:
+        senaryo.add("dip")
+    if c == "rsi70":
+        if "rsi70" in izin and p.kar and m["onceki_rsi"] >= 70 > m["rsi"]:
+            senaryo.add("rsi70")
+    elif c == "rsi50":
+        if "rsi50" in izin and m["onceki_rsi"] >= 50 > m["rsi"]:
+            senaryo.add("rsi50")
+        if "sma50" in izin and m["yuksek"] >= m["sma50"] > m["kapanis"]:
+            senaryo.add("sma50")
+    return senaryo
+
+
+def _cikis_onsartlari(p, m, izin, gorulen):
+    return replace(
         p,
         aktif=p.aktif or _ulasti(m["yuksek"], p.giris_fiyat + ETKIN_ATR * p.atr),
         senaryo=gorulen,
         # önşart bugünün tetiğinden sonra güncellenir: tetik yalnız u <= t-1 günlerine bakar (giriş günü hariç, `_gun` çağrılmaz)
         kar=p.kar
         or (
-            c == "rsi70"
+            p.ayar.cikis == "rsi70"
             and "kar" in izin
             and m["kapanis"] > p.giris_fiyat
             and m["kapanis"] > m["sma50"]
         ),
     )
-    if tam:
-        return replace(p, bekleyen="cikis_kurali")
-    return replace(p, yari_bekleyen=True) if yari else p
 
 
 def _merdiven(p, m):
