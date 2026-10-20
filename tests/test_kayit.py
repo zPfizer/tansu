@@ -1118,7 +1118,9 @@ def test_pilot_baslangic_is_listesi_cagiran_degistirse_de_donuktur(tmp_path):
         assert bitti, "Başlangıç makbuzundaki tek iş tamamlanabilmelidir."
 
 
-@pytest.mark.parametrize("hata", ["rev-parse", "status", "bos", "calistirilamaz"])
+@pytest.mark.parametrize(
+    "hata", ["kok", "kok_bos", "rev-parse", "status", "bos", "calistirilamaz"]
+)
 def test_git_hatasi_kosu_kaydi_yazmaz(tmp_path, monkeypatch, hata):
     kimlik = anlik_hazirla(tmp_path)
     kayit.kayitla(P, ATR_N)
@@ -1128,8 +1130,12 @@ def test_git_hatasi_kosu_kaydi_yazmaz(tmp_path, monkeypatch, hata):
     def git_calistir(komut, **secenek):
         if hata == "calistirilamaz":
             raise OSError("git yok")
-        kod = 1 if komut[1] == hata else 0
-        cikti = "" if hata == "bos" or komut[1] == "status" else "abc123"
+        if komut[1:] == ["rev-parse", "--show-toplevel"]:
+            kod = 1 if hata == "kok" else 0
+            cikti = "" if hata == "kok_bos" else str(kayit.PAKET.parent.resolve())
+        else:
+            kod = 1 if komut[1] == hata else 0
+            cikti = "" if hata == "bos" or komut[1] == "status" else "abc123"
         sonuc = subprocess.CompletedProcess(komut, kod, cikti, "git hatası")
         if secenek.get("check"):
             sonuc.check_returncode()
@@ -1142,7 +1148,11 @@ def test_git_hatasi_kosu_kaydi_yazmaz(tmp_path, monkeypatch, hata):
     assert not (tmp_path / "rapor").exists()
 
 
-def test_git_proje_koku_ve_kayit_istisnasi(tmp_path, monkeypatch):
+@pytest.mark.parametrize(
+    "ortam",
+    ["yok", "depo", "harf", "agac", "indeks", "nesneler", "ortak", "yapilandirma"],
+)
+def test_git_proje_koku_ve_kayit_istisnasi(tmp_path, monkeypatch, ortam):
     depolar = [tmp_path / "proje", tmp_path / "baska"]
     surumler = []
     for depo in depolar:
@@ -1176,6 +1186,23 @@ def test_git_proje_koku_ve_kayit_istisnasi(tmp_path, monkeypatch):
         )
     assert surumler[0] != surumler[1]
     proje, baska = depolar
+    ayarlar = {
+        "yok": {},
+        "depo": {"GIT_DIR": str(baska / ".git"), "GIT_WORK_TREE": str(baska)},
+        "harf": {"gIt_DiR": str(baska / ".git"), "gIt_WoRk_TrEe": str(baska)},
+        "agac": {"GIT_WORK_TREE": str(baska)},
+        "indeks": {"GIT_INDEX_FILE": str(baska / ".git" / "index")},
+        "nesneler": {"GIT_OBJECT_DIRECTORY": str(baska / ".git" / "objects")},
+        "ortak": {"GIT_COMMON_DIR": str(baska / ".git")},
+        "yapilandirma": {
+            "GIT_CONFIG_COUNT": "1",
+            "GIT_CONFIG_KEY_0": "core.worktree",
+            "GIT_CONFIG_VALUE_0": str(baska),
+        },
+    }
+    for ad, deger in ayarlar[ortam].items():
+        monkeypatch.setenv(ad, deger)
+    once = dict(os.environ)
     monkeypatch.setattr(kayit, "PAKET", proje / "tansu")
     for klasor in (proje, proje / "tansu", tmp_path, baska):
         monkeypatch.chdir(klasor)
@@ -1185,3 +1212,9 @@ def test_git_proje_koku_ve_kayit_istisnasi(tmp_path, monkeypatch):
     assert kayit._git() == (surumler[0], False)
     (proje / "tansu" / "kod.py").write_text("degisti", encoding="utf-8")
     assert kayit._git() == (surumler[0], True)
+    assert dict(os.environ) == once
+    alt = proje / "alt"
+    (alt / "tansu").mkdir(parents=True)
+    monkeypatch.setattr(kayit, "PAKET", alt / "tansu")
+    with pytest.raises(kayit.KayitHatasi, match="Git"):
+        kayit._git()
