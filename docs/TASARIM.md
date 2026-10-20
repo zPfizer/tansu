@@ -1522,6 +1522,55 @@ beklentisi hatalıydı; beklenen gün bu gerekçeyle düzeltilir. Eski ve yeni �
 değişmez. Bu örnek yeni kural veya Tansu kaynak kanıtı değildir; sıkışma ve pencere tanımını
 uygular (`aile-kurallari.md` §3 ve TASARIM §5.15 eski davranışın korunması).
 
+#### Kaynak strateji hazırlığı (#117)
+
+**Hazırlık sözleşmesi; ürün kodunda uygulanmadı.** İlk ailenin kuralları, alternatifleri ve
+açık alanları `aile-kurallari.md` §3, "Kaynak strateji hazırlığı" bölümündedir.
+Bu bölüm ortak arayüzü ve kanıt aktarımını tanımlar; hesaplama veya seçim izni vermez.
+Dayanak: #117 brifi; Levent'in 19.10.2026 hazırlama ve çalıştırmama kararı.
+
+Girdi, #117'nin kaynak olarak bağladığı `paylasim-stratejileri/envanter.md` dosyasıdır
+(YONETIM'deki yerel çalışma çıktısı; depoya kopyalanmaz). Envanter 21 tarihli bütün-strateji
+paylaşımını aday olarak ayırır. Bu sayı çalıştırılabilir strateji sayısı değildir.
+İlk aile dışındaki adayların uygulanması ayrı kapsamdadır. Üstteki genel paket sözleşmesi
+korunur; bu hazırlık ayrı paylaşımları birleştirerek tek paylaşım kanıtı üretmez.
+
+| Arayüz sınırı | Girdi ve zorunlu içerik | Çıktı / engel |
+|---|---|---|
+| Kaynak tanımı → E2 | Gönderi kimliği, yayım tarihi, Ham ve görsel başvuruları; aile, tanım revizyonu, giriş alternatifi, yön, zaman dilimi, veri gereksinimi, giriş/stop/çıkış kuralları, formül sürümleri ve açık alanlar. Her kuralın birinci el veya tarihli onaylı teknik yorum kökeni. | Kaynaklarıyla korunmuş hazırlık tanımı. Gerekli alan çözülmemişse tam çözülmüş strateji oluşmaz. |
+| Bütün birleşim doğrulaması | Tanımın tamamı ve bütün birleşimin kanıtı; sayısal ayarlar ile açık işlem politikası referansları. | Eksiksiz, kaynakla doğrulanmış ve desteklenen tanım için §5.15 ortak kayıtlarındaki değişmez tam çözülmüş strateji; aksi halde alanı, nedeni ve kaynak konumu belirtilmiş engeller. |
+| E2 → ortak kurulum | Tam çözülmüş strateji, değerlendirme tarihi, E1 veri referansı ve desteklenen piyasa satırları. | Mevcut ortak kurulum sözleşmesindeki gösterge/ısınma/sinyal kayıtları. Kaynak tanımı eski `Parametre` varsayılanlarına çevrilerek eksik tamamlanmaz. |
+| Sinyal → E3 | Aynı strateji/revizyon ve ayar parmak izi; kaynaklı giriş isteği, ilk stop ve çıkış koşulları; dolum/risk/masraf politikası referansları. | Kurulum, giriş isteği, koruyucu stop ve çıkış olayı birbirinden ayrıdır. Sinyal gerçek dolum sayılmaz; E3 sözleşmesi burada uygulanmaz. |
+| Tanım → deneme → koşu → sonuç | Kaynak kimliği ve konumları, tam birleşim/revizyon kimliği, kural kökenleri, izin dayanağı; ortak kayıtların deneme/koşu/veri/politika bağları. | Sonraki aşama aynı tanım ve kanıt bağlarını korur. Hazırlık sırasında deneme, koşu veya sonuç kaydı üretilmez. |
+
+Kaynak izni, risk/masraf politikasının onayı ve günlük uygunluk ayrı denetimlerdir.
+Genel bir teknik yorum, başka stratejiye ait özel paketin aktarımını kaynaklı yapmaz.
+Yeni kabul edilen tanım yeni katalog sürümünü gerektirir; `s02_v1` ve eski 24 tanımın
+seçim durumu değişmez. Yeni aile bağdaştırıcısı bu sözleşmeden otomatik olarak uygulanmış sayılmaz.
+
+Günlük veri bağdaştırıcısında zorunlu zaman dilimi belirsizse veya gerekli açılış, gün içi
+ya da dış veri yoksa alan adıyla engel döner. Günlük yüksek/düşük tek başına mum içi olay
+sırasını ve dolum fiyatını kanıtlamaz. AOF, eksik açılışın yerine yazılmaz (§4, §5.1).
+Desteklenmeyen veri için günlük hesaba sessiz dönüş yoktur.
+
+Sonraki bağdaştırıcı uygulamasının gözlenebilir kabul örnekleri:
+
+| Kontrol | Örnek / beklenen sonuç |
+|---|---|
+| Birinci el bütün anlatım | İlk ailenin aynı Ham:40,42,45,48–50 anlatımı giriş/stop/hedef kaynaklarını birlikte korur. Bu olumlu kaynak örneği, açık alanları çözmez ve seçim izni vermez. |
+| Olumlu hesap kabulü | Bütün birleşim kanıtı, çözümlenmiş zorunlu alanlar ve desteklenen veri bulunan gerçek kaynak örneği tam kayda kabul edilir. Aynı kimlik/kanıt sonraki sonuçta korunur. İlk aile henüz bu koşulları sağlamaz; eksik tanım veya uydurma eşik olumlu örnek yerine geçmez. |
+| Eksik kural | Bölge üretimi, giriş, stop, çıkış, zaman dilimi veya zorunlu formül eksik bırakıldığında ilgili alan ve nedeni döner; hesap başlamaz. |
+| Ayrı alternatif | Kırılım kapanışı ve geri çekilme girişleri ayrı revizyon olarak kalır; aynı tanımda sessizce yer değiştirmez. |
+| Desteklenmeyen veri | Zorunlu açılış/gün içi/dış veri yokken, günlük kapanış veya AOF ile devam edilmez. |
+| İzinsiz birleşim | Ayrı ayrı kaynaklı giriş ve özel çıkışın bütün birleşim kanıtı yoksa seçim reddedilir. Grafik örneğinin sabit seviyeleri başka hisse veya döneme taşınmaz. |
+| Kanıt aktarımı | Sonraki gerçek yürütmede tanım, sinyal, işlem ve sonuç aynı birleşim/revizyon, ayar ve kaynak bağlarıyla izlenir; eksik ya da uyuşmayan bağ kabul edilmez. |
+| Hazırlık sınırı | Hazırlama işlemi gösterge, sinyal, işlem veya performans sınaması başlatmaz; günlük etkin seçim veya emir oluşturmaz. |
+
+Bu tablo hazırlanmış kabul sözleşmesidir; bağdaştırıcı testlerinin çalıştığı veya olumlu
+hesap/sonuç örneğinin üretildiği iddiası değildir. İlk ailenin açık alanları korunduğu için
+çalıştırılabilir tanım yoktur. Sonraki gerçek yürütme ayrı açık başlatma izni bekler.
+#116'nın küçük grup hazırlığı yıllık planı ve günlük uygunluk kapılarını değiştirmez.
+
 #### Yöntem kayıtları ve açık kapılar
 
 | Kayıt / durum | İçerik, çelişki ve kapanış kanıtı | Engellediği iş | Dayanak |
