@@ -45,9 +45,7 @@ def _evren_indir(kok: Path) -> str:
         kok,
         kaynak.Onbellekli(kaynak.IsYatirim(), onbellek),
         borsapy=kaynak.Borsapy(),
-    )
-    kapanan.to_csv(
-        kok / "ag" / kimlik / "kapanan.csv", index=False, encoding="utf-8-sig"
+        kapanan=kapanan,
     )
     return kimlik
 

@@ -548,10 +548,20 @@ class Anlik:
         return pd.concat(parcalar, ignore_index=True) if parcalar else pd.DataFrame()
 
 
-def indir(semboller, kok, kaynak, simdi=None, bas=BASLANGIC, borsapy=None) -> str:
+def indir(
+    semboller,
+    kok,
+    kaynak,
+    simdi=None,
+    bas=BASLANGIC,
+    borsapy=None,
+    *,
+    kapanan: pd.DataFrame | None = None,
+) -> str:
     """Sembollerin fiyat ve olaylarını indirir, anlık görüntüyü yazar, kimliğini döndürür.
 
-    `borsapy` verilirse faiz ve sektör tabloları da anlık görüntüye girer; boş faiz serisi hatadır."""
+    `borsapy` verilirse faiz ve sektör tabloları da anlık görüntüye girer; boş faiz serisi hatadır.
+    `kapanan` verilirse kanıt yayın öncesinde manifeste girer (TASARIM 4)."""
     simdi = simdi or dt.datetime.now(ISTANBUL)
     kimlik = simdi.strftime("%Y%m%d-%H%M")
     ag = Path(kok) / "ag"
@@ -606,6 +616,8 @@ def indir(semboller, kok, kaynak, simdi=None, bas=BASLANGIC, borsapy=None) -> st
     (gecici / "olaylar.json").write_text(
         json.dumps(ham_olaylar, ensure_ascii=False), encoding="utf-8"
     )
+    if kapanan is not None:
+        kapanan.to_csv(gecici / "kapanan.csv", index=False, encoding="utf-8-sig")
     manifest = {
         "kimlik": kimlik,
         "semboller": [s for s in semboller if s not in inmeyen + bos],
@@ -696,7 +708,11 @@ def oku(kimlik, kok) -> Anlik:
     klasor = Path(kok) / "ag" / kimlik
     manifest = json.loads((klasor / "manifest.json").read_text(encoding="utf-8"))
     for ad, ozet in manifest["dosyalar"].items():
-        if _sha256(klasor / ad) != ozet:
+        try:
+            gercek_ozet = _sha256(klasor / ad)
+        except FileNotFoundError as hata:
+            raise VeriHatasi(f"manifest dosyası eksik: {kimlik}/{ad}") from hata
+        if gercek_ozet != ozet:
             raise VeriHatasi(f"manifest uyuşmuyor: {kimlik}/{ad}")
     ham = json.loads((klasor / "olaylar.json").read_text(encoding="utf-8"))
     olaylar = pd.DataFrame(
