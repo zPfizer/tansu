@@ -243,6 +243,64 @@ def _ayar_ozeti(ayarlar):
     return f"{SURUM}:sha256:{sha256(kanonik(ayarlar)).hexdigest()}"
 
 
+def _kosu_meta_dogrula(kimlikler, ortam, tohum, ureteci_surumu):
+    for deger in kimlikler:
+        _metin(deger)
+    if not isinstance(ortam, dict) or not ortam:
+        raise PilotHatasi("Ortam gerekli.")
+    if tohum is not None and (type(tohum) is not int or not ureteci_surumu):
+        raise PilotHatasi("Tohum tamsayı ve üreteç sürümü gerekli.")
+
+
+def _is_listesi_dogrula(is_listesi):
+    if not isinstance(is_listesi, list) or not is_listesi:
+        raise PilotHatasi("İş listesi boş veya yinelenmiş.")
+    for is_id in is_listesi:
+        _metin(is_id)
+    if len(set(is_listesi)) != len(is_listesi):
+        raise PilotHatasi("İş listesi boş veya yinelenmiş.")
+    return list(is_listesi)
+
+
+def _donem_ciktisi_dogrula(durum, birimler, icerik, islem_ref, uyarilar, cikti_ref):
+    if durum not in ("tamamlandi", "hata"):
+        raise PilotHatasi("Dönem durumu tanımsız.")
+    if not isinstance(birimler, dict) or not birimler or not isinstance(icerik, dict):
+        raise PilotHatasi("Dönem birimleri ve içeriği gerekli.")
+    if any(not isinstance(x, list) for x in (islem_ref, uyarilar, cikti_ref)):
+        raise PilotHatasi("Dönem referansları ve uyarılar liste olmalıdır.")
+    for ref in islem_ref + cikti_ref:
+        _metin(ref)
+    if len(set(islem_ref)) != len(islem_ref):
+        raise PilotHatasi("İşlem referansı yinelenmiş.")
+
+
+def _donem_yayini_dogrula(olaylar, kosu_id, is_id, donem):
+    for o in olaylar:
+        if (o["kayit_turu"], o.get("sonuc_turu"), o.get("kosu_id")) != (
+            "sonuc",
+            "donem_v1",
+            kosu_id,
+        ):
+            continue
+        if o["is_id"] == is_id or kanonik(o["donem"]) == kanonik(donem):
+            raise PilotHatasi("Dönem işi sonucu zaten kayıtlı.")
+
+
+def _donem_islem_baglari(olaylar, kosu_id, donem, referanslar):
+    for ref in referanslar:
+        islem = _bul(olaylar, ref, "islem")
+        if islem["kosu_id"] != kosu_id or kanonik(islem["donem"]) != kanonik(donem):
+            raise PilotHatasi("İşlem başka koşuya veya döneme bağlı.")
+
+
+def _cocuk_sonuc_baglari(olaylar, kosu_id, referanslar):
+    for ref in referanslar:
+        sonuc = _bul(olaylar, ref, "sonuc")
+        if (sonuc["kosu_id"], sonuc.get("sonuc_turu")) != (kosu_id, "donem_v1"):
+            raise PilotHatasi("Çocuk sonucu başka koşuya veya sonuç türüne bağlı.")
+
+
 @dataclass(frozen=True)
 class Makbuz:
     olay_id: str
@@ -403,32 +461,21 @@ class PilotKayit:
         is_listesi,
         ureteci_surumu=None,
     ):
-        for deger in (
-            mod,
-            anlik_goruntu,
-            manifest_ozeti,
-            uyelik_surumu,
-            kod_kimligi,
-            bagimlilik_ozeti,
-        ):
-            _metin(deger)
-        if not isinstance(ortam, dict) or not ortam:
-            raise PilotHatasi("Ortam gerekli.")
-        if (
-            not isinstance(is_listesi, list)
-            or not is_listesi
-            or len(set(is_listesi)) != len(is_listesi)
-        ):
-            raise PilotHatasi("İş listesi boş veya yinelenmiş.")
-        for is_id in is_listesi:
-            _metin(is_id)
-        is_listesi = list(is_listesi)
-        if tohum is not None and (type(tohum) is not int or not ureteci_surumu):
-            raise PilotHatasi("Tohum tamsayı ve üreteç sürümü gerekli.")
-        try:
-            deneme = _bul(self.oku(), deneme_id, "deneme", "deneme_id")
-        except OSError as hata:
-            raise PilotYazmaHatasi(f"Pilot kaydı okunamadı: {hata}") from hata
+        _kosu_meta_dogrula(
+            (
+                mod,
+                anlik_goruntu,
+                manifest_ozeti,
+                uyelik_surumu,
+                kod_kimligi,
+                bagimlilik_ozeti,
+            ),
+            ortam,
+            tohum,
+            ureteci_surumu,
+        )
+        is_listesi = _is_listesi_dogrula(is_listesi)
+        deneme = self.deneme_oku(deneme_id)
         if anlik_goruntu not in deneme["veri_ayarlari"]["veri_referanslari"]:
             raise PilotHatasi("Görüntü kayıtlı veri referansında yok.")
         if deneme["yontem_ayarlari"].get("tekrar", 0) and tohum is None:
@@ -781,6 +828,54 @@ class _Kosu:
                 "olculer": olculer,
                 "veri_ref_id": self._baslangic["anlik_goruntu"],
             },
+            denetle,
+        )
+
+    def donem_sonucu_kaydet(
+        self,
+        *,
+        is_id,
+        donem,
+        durum,
+        islem_referanslari,
+        birimler,
+        muhasebe_politikasi,
+        uyarilar,
+        cikti_referanslari,
+        icerik,
+    ):
+        """TASARIM 5.15 S10: sinyalsiz dönem de kendi makbuzunu alır."""
+        if is_id not in self._baslangic["is_listesi"]:
+            raise PilotHatasi("Dönem işi başlangıç listesinde yok.")
+        _donem(donem)
+        if not any(kanonik(donem) == kanonik(d) for d in self._deneme["donemler"]):
+            raise PilotHatasi("Dönem kayıtlı denemede yok.")
+        _metin(muhasebe_politikasi)
+        _donem_ciktisi_dogrula(
+            durum, birimler, icerik, islem_referanslari, uyarilar, cikti_referanslari
+        )
+
+        def denetle(olaylar):
+            kosu_id = self.makbuz.kosu_id
+            _donem_yayini_dogrula(olaylar, kosu_id, is_id, donem)
+            _donem_islem_baglari(olaylar, kosu_id, donem, islem_referanslari)
+            _cocuk_sonuc_baglari(olaylar, kosu_id, cikti_referanslari)
+
+        return self._yaz(
+            "sonuc",
+            dict(
+                sonuc_turu="donem_v1",
+                is_id=is_id,
+                donem=donem,
+                durum=durum,
+                islem_referanslari=islem_referanslari,
+                birimler=birimler,
+                muhasebe_politikasi=muhasebe_politikasi,
+                uyarilar=uyarilar,
+                cikti_referanslari=cikti_referanslari,
+                icerik=icerik,
+                veri_ref_id=self._baslangic["anlik_goruntu"],
+            ),
             denetle,
         )
 

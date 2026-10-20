@@ -1235,6 +1235,112 @@ aynı satış engeli gününe ait birden çok açıklama günü iki kez saydırm
 `egri_turu=tani_referans`, açık nominal temel, gerçekleşmiş net sonuç, kalan adet ve ayrı
 değerlemeyi taşır. Bu tanısal toplam ortak hesap özkaynağı veya bileşik portföy getirisi değildir.
 
+#### S10 kayıtlı dönem yürütücüsü (#91)
+
+**Durum: kayıtlı dönem yürütücüsü uygulanmıştır.** Bu bölüm E4'ün teknik
+bağlantısını tanımlar; yeni Tansu kuralı, ölçü formülü veya ürün kararı üretmez.
+Dayanak: [L2], [L3], [W8], #91; dönem sınırının sahibi yukarıdaki
+“Dönem, ısınma ve açık işlem sınırları”dır.
+
+`tansusinama.kayitli_calistir(depo, deneme_id, *, veri_koku, mod, isci=None,
+ilerleme=print)` kayıtlı revizyonu kullanır. Deneme, `PilotKayit.deneme_oku` ile
+strateji ve ayar özeti bakımından doğrulanır. Girdi kaydedilmemiş ayar nesnesi olamaz.
+Deneme; altı dönemi, açık ısınma başlangıçlarını, görüntü/manifest/üyelik referanslarını,
+E1 kalite/düzeltme/takvim sürümlerini ve kaynak adını taşır. Yürütücü, muhasebe,
+fiyat, risk ve masraf sürümleri ile nominal tutar ayrıca kayıtlıdır. Eksik veya
+uyuşmayan ayar tamamlanmaz. Aynı denemenin tekrarında yeni revizyon oluşturulmaz;
+her girişim E5'ten ayrı koşu kimliği alır. Panel seçme izni verilmez.
+
+E4 mevcut `tansu/tansusinama.py` içinde kalır. Eski `calistir`, kayıtlar ve
+hesap politikaları korunur. Yeni yol E1'in `veri_hazirla` ve tarihli üyeliğini,
+E2'nin ortak EMA hesaplarını ve E3'ün S09 geçişini kullanır. Katalog stratejisinin
+özgün ayar özeti değiştirilmez; kayıtlı yeni yürütme politikaları denemenin tam
+ayar özetine bağlıdır. Yürütme ve sonuçtaki `strateji_ayar_parmak_izi` katalog
+özetini, `deneme_ayar_parmak_izi` tam revizyon özetini taşır. S09
+`ayar_parmak_izi` kendi parametre özetidir; bu üç alan eşitmiş gibi kullanılmaz.
+Desteklenmeyen aile veya politika hata verir. Çiftin yeni
+riski #128 kapanmadan eski çift hesabına dönülmez.
+
+Kayıtlı S10 girdisinin teknik şeması aşağıdadır. Kimlik ve ondalık kodlaması
+S03 pilotuna aittir; bu tablo #97'nin kalıcı biçimini onaylamaz.
+
+| Alan | Zorunlu içerik |
+|---|---|
+| `donemler` | Sıralı altı kayıt: `ad`, `baslangic`, `bitis`, `isinma_baslangici`, `sinir_surumu=bagimsiz_donem_v1`. Tarihler yukarıdaki dönem tablosuna uyar; ısınma başlangıcı açıktır. |
+| `veri_ayarlari` | Tek görüntülü `veri_referanslari`, `manifest_ozeti`, `uyelik_surumu`, `uyelik_ozeti`, `evren_politikasi`, `kaynak`, `kalite_surumu`, `duzeltme_surumu`, `takvim_ref`, `takvim`. Referanslar gerçek E1 girdisiyle eşleşir. |
+| `takvim` | `baslangic`, `bitis`, sıralı ve tekil `seanslar`, `kaynak_ref`. Kayıtlı 2021–2025 kapsamı ve kaynağı açıktır. XU100 gözlemlerinden alınan tarihler bağımsız resmî tatil kanıtı diye sunulmaz. İlgili dönemin gerekli seansları E1 yanıtında bulunmalıdır. |
+| `yontem_ayarlari` | `yontem=kayitli_donem_v1`, `tekrar=0`, `yurutme_surumu=bagimsiz_islem_v1`, `fiyat_politikasi=aof_v1`, `muhasebe_politikasi=tani_referans_v1`. Bu yol ızgara, WF veya MC başlatmaz. |
+| `risk_ayarlari` | `risk_surumu=bagimsiz_risk_v1`, pozitif ondalık `nominal_tutar`. S08'in sayısal girdisine dönüşüp S08'in `Decimal(str(...))` okumasına geri dönünce değer aynı kalmalıdır; kayıplı değer hesap başlamadan reddedilir. Hesabın sahibi S08'dir. |
+| `masraf_ayarlari` | `masraf_surumu=komisyon_bsmv_v1`. Oran ve hesap S08'de kalır. |
+| `mod` | Çağrıda açık `gelistirme` veya `resmi`. Git doğrulanmadan kayıt veya hesap başlamaz; kirli ağaç resmî koşu olamaz. Eski resmî sayım ve günlük izin bundan türemez. |
+
+`aileler.ortak_donem_kurulumu(veri_paketi, strateji)` ortak E2 hesabının dönem
+uyarlayıcısıdır. Her sembolün sınırlandırılmış ısınma ve sonuç verisini bir kez
+hesaplar; gösterge, kurulum, gerçek sinyal kimlikleri ve ısınma bilgisi döner.
+Günlük `ortak_kurulum` aynı hesap sahibini kullanır. Kayıtlı sayısal ızgara
+ayarları katalogdan aynı değerlerle doğrulanır; gizli varsayılan atanmaz.
+Yeni yürütücü E2'yi her tarihte bütün geçmişi yeniden hesaplatacak biçimde çağırmaz.
+
+Altı çocuk işin sırası 2025, 2024, 2023, 2022, 2021 ve birleşik dönemdir.
+Her çocuk dönem ve iş kimliğini taşır. Yıllık işler boş işlem durumuyla başlar;
+birleşik iş tek kronolojik hesap yapar. Birleşik sonuç yıllık yüzdelerin toplamı
+değildir ve yıllık sonuç referanslarını korur. Isınma yalnız gösterge ve kalite
+geçmişidir; işlem veya puanlanan sonuç üretmez. Son gün adayı sonraki yılın fiyatıyla
+doldurulmaz. Açık işlem, kısmi gerçekleşme ve son geçerli değerleme S09'da ayrı kalır.
+
+Her dönemin evreni tarihli üyelikten bulunur. Gerekli sembolü mevcut fiyatlarla
+kesiştirerek düşürmek yasaktır. Üyelik açığı veya gerekli veri kapsamı eksikliği ilgili
+çocuğu hata yapar; bugünkü liste kullanılmaz. İlk ve son takvim gününün tatil olması
+tek başına eksik veri sayılmaz; istenen seans kapsamı kayıtlı takvimle denetlenir.
+Sinyal ve giriş günü üyeliği ayrı kontrol edilir. Üyelikten çıkış açık işlemi kapatmaz.
+E1'in yaklaşık kilit bayrağı doğrulanmış limit kanıtı değildir. Limit kanıtı yoksa
+S09 dolum üretmez; aday ve engelin nedeni sonuçta korunur. Gerekli işlem
+kanıtı eksik çocuk tam başarı sayılmaz; limit kanıtı aşaması ve eksikliği hata
+sonucunda korunur. Gerçekten adaysız dönem ile kanıt yokluğu nedeniyle dolumsuz
+kalan dönem aynı başarılı boş sonuç diye birleştirilmez.
+Zorunlu kurulum veya karar göstergesi eksikse aynı eksik sonuç ayrımı uygulanır;
+S09'un bağımsız geçerli çıkışları yine işlenir. Sonlu ve bilinen fiyat/stop ilişkisinin
+geçersizliği, yetersiz bütçe, doğrulanmış kilit ve üyelik reddi ise hesaplanmış
+retlerdir. E4 risk formülünü yeniden hesaplamaz; eksik girdiyi bilinen fakat uygun
+olmayan girdiden ayırır, özgün S09 nedenini korur.
+
+E5 başlangıç makbuzu oluşmadan E1–E3 hesabı başlamaz. Başlangıç kaydı altı iş kimliğini,
+kod/veri/ortam bağlarını ve işçi politikasını içerir. İşçiler yalnız hesap yapar;
+E5'e ana süreç yazar. Sonuç sırası işçi tamamlanma sırasından bağımsızdır. Sayısal
+sonuçlar ve deneme bağları işçi sayısıyla değişmez; koşu/olay kimlikleri ve zamanları
+her girişime aittir. Koşu kod kimliği yürütücünün de içeriğini kapsar; eski kural
+kimlikleri ve legacy hash sınıfları yeniden yazılmaz.
+
+Nominal tutar S08'e aktarılırken sessizce yuvarlanamaz; mevcut sayı sözleşmesinde değeri
+korunamıyorsa açık hata gerekir. Başlangıç makbuzunun tam ayar özeti, hesap için
+okunmuş denemenin özetiyle aynı olmalıdır. İki okuma arasında kayıt değişmişse
+E1–E3 başlamaz; başarılı sonuç veya başka ayara bağlı hesap yazılmaz. Bunlar yeni
+para kuralı değil, kayıtlı girdinin aynen kullanılması şartının sınır korumalarıdır.
+
+Mevcut E5 koşu tutacağına `donem_sonucu_kaydet(*, is_id, donem, durum,
+islem_referanslari, birimler, muhasebe_politikasi, uyarilar, cikti_referanslari,
+icerik)` eklenir. `kayit_turu=sonuc`, `sonuc_turu=donem_v1` eski izleme yüzüyle
+okunur. Bu kayıt gerçek bir dönem
+sonucudur; sinyal olmayan dönemde yapay `sinyal_id` üretilmez. Kayıt çocuk iş kimliğini,
+dönemi, durumu, gerçek işlem referanslarını, birimleri, muhasebe politikasını,
+uyarıları ve sonuç içeriğini taşır. İş başlangıç listesinde, dönem kayıtlı denemede
+olmalıdır. İşlem referansları aynı koşu ve döneme aittir; aynı iş sonucu iki kez
+yazılmaz. Mevcut sinyal sonucu yüzü ve eski olaylar korunur.
+
+Her dönem sonucu veri manifestini, üyelik kanıtını, yöntem sürümlerini, adayları,
+S09 durumlarını ve kayıt makbuzlarını taşır. Yeni ölçü icat edilmez; E3'ün birimli
+alanları korunur. Bir çocuk hesabı başarısızsa aşama, neden ve iş kimliği döner;
+öteki çocukların sonuçları kaybolmaz. Bitiş kaydı her işi tamamlanan veya başarısız
+olarak bir kez sayar. Başarısız iş varken tam başarı yazılmaz. Kayıt/yayın hatası
+sessizce yutulmaz; E5'in belirsiz yazma ve kurtarma davranışı korunur.
+
+`tests/test_tansusinama.py` dönem yürütme ve eski çağıranları; `tests/test_kayit.py`
+dönem sonucunun ekleme ve bağ sınırlarını; `tests/test_gelecek.py` yeni yürütücünün
+sonraki satırlarla önceki yıl hesabını değiştirmemesini kapsar. `tests/test_aileler.py`
+ortak E2 hesabının eşitliğini korur. Yürütücünün uygulanmış olması, eksik gerçek
+veriyi veya limit kanıtını tamamlamaz. Günlük etkinleştirme, performans
+araştırması ve kalıcı kimlik biçimi bu teslimin dışındadır.
+
 #### Dolum, risk ve ölçünün anlamı
 
 - Claude'un kayıtlı **seçenek 2** kararı geçerlidir (18.10; yanıt Q74): ham `yüksek = düşük = tavan` gününde alış dolmaz, giriş sinyali düşer; ham `yüksek = düşük = taban` gününde satış bekler, ilk uygun kilitsiz günde yeniden işlenir. Sonraki fiyat kullanılır; her engel sayılır. B Q49'un açılış eşitliği ekleme önerisi bu kararı değiştirmez. Günlük çubuk gerçek emir kuyruğunu kanıtlamaz. Dayanak: [L5], [T4], [W4], [W5]; `tavan-taban/bulgular.md`, yanıt Q74.

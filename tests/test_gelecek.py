@@ -660,3 +660,34 @@ def test_olay_penceresi_onek_degismez_t_den_sonraki_tablo_t_oncesi_karantinayi_d
     for son in tam.index:
         kesik = _karantina_(ham, duz, olay, son)
         assert kesik.tolist() == tam.loc[:son].tolist(), son
+
+
+def test_s10_gelecek_fiyatlar_onceki_yilin_islemini_degistirmez(tmp_path, monkeypatch):
+    from tests.test_tansusinama import s10_kayitli, s10_calistir, s10_hesap_ozeti
+
+    depo, makbuz, piyasa = s10_kayitli(tmp_path, monkeypatch, sinyal=True)
+    for r in piyasa:
+        if r["tarih"] < "2021-01-01":
+            continue
+        fiyat = 110.0 if r["tarih"] == "2021-01-04" else 112.0
+        for ad, fark in (("aof", 0), ("kapanis", 0), ("yuksek", 1), ("dusuk", -1)):
+            r[f"duzeltilmis_{ad}"]["deger"] = fiyat + fark
+        r["ham_yuksek"]["deger"] = fiyat + 1
+        r["ham_dusuk"]["deger"] = fiyat - 1
+    ilk = s10_calistir(depo, makbuz, tmp_path)
+    yil = ilk["donemler"][4]
+    assert yil["durum"] == "tamamlandi"
+    assert [
+        (d["tarih"], d["yon"], d["fiyat"]) for d in yil["durumlar"]["TEST"]["dolumlar"]
+    ] == [("2021-12-30", "alis", 112.0)]
+    assert yil["durumlar"]["TEST"]["durum"] == "acik_son"
+    for r in piyasa:
+        if r["tarih"] >= "2022-01-01":
+            for ad in ("aof", "kapanis", "yuksek", "dusuk"):
+                r[f"duzeltilmis_{ad}"]["deger"] *= 10
+            for ad in ("ham_yuksek", "ham_dusuk", "tavan", "taban"):
+                r[ad]["deger"] *= 10
+    son = s10_calistir(depo, makbuz, tmp_path)
+    assert s10_hesap_ozeti(yil) == s10_hesap_ozeti(son["donemler"][4])
+    assert son["deneme_id"] == ilk["deneme_id"] == makbuz.deneme_id
+    assert son["donemler"][5]["durumlar"]["TEST"]["degerleme"]["fiyat"] == 1120.0

@@ -1219,3 +1219,116 @@ def test_git_proje_koku_ve_kayit_istisnasi(tmp_path, monkeypatch, ortam):
     monkeypatch.setattr(kayit, "PAKET", alt / "tansu")
     with pytest.raises(kayit.KayitHatasi, match="Git"):
         kayit._git()
+
+
+def test_s10_bozuk_deneme_baslangic_makbuzu_uretemez(tmp_path):
+    depo = pilot.PilotKayit(tmp_path / "pilot.jsonl")
+    makbuz = pilot_deneme(depo)
+    kayitlar = depo.oku()
+    kayitlar[0]["risk_ayarlari"]["oran"] = Decimal("0.9")
+    depo.yol.write_bytes(b"".join(pilot.kanonik(o) + b"\n" for o in kayitlar))
+    hesap = []
+    try:
+        with pilot_kosu(depo, makbuz.deneme_id):
+            hesap.append("basladi")
+    except pilot.PilotHatasi:
+        pass
+    assert hesap == [], "Tam ayarı bozulmuş deneme hesap başlatamaz"
+    assert [o["kayit_turu"] for o in depo.oku()] == ["deneme"]
+
+
+def pilot_donem_sonucu(kosu, donem, **degisiklik):
+    alanlar = dict(
+        is_id="XXXX",
+        donem=donem,
+        durum="tamamlandi",
+        islem_referanslari=[],
+        birimler={"net_sonuc": "TL"},
+        muhasebe_politikasi="tani_referans_v1",
+        uyarilar=[],
+        cikti_referanslari=[],
+        icerik={"adaylar": [], "durumlar": {}},
+    )
+    return kosu.donem_sonucu_kaydet(**(alanlar | degisiklik))
+
+
+def test_s10_donem_makbuzu_kayitli_is_donem_ve_tek_yayin_ister(tmp_path):
+    depo = pilot.PilotKayit(tmp_path / "pilot.jsonl")
+    deneme = pilot_deneme(depo)
+    donem = depo.deneme_oku(deneme.deneme_id)["donemler"][0]
+    with pilot_kosu(depo, deneme.deneme_id, is_listesi=["XXXX", "YYYY"]) as kosu:
+        with pytest.raises(pilot.PilotHatasi, match="başlangıç listesinde"):
+            pilot_donem_sonucu(kosu, donem, is_id="yok")
+        with pytest.raises(pilot.PilotHatasi, match="kayıtlı denemede"):
+            pilot_donem_sonucu(kosu, donem | dict(baslangic=dt.date(2024, 1, 1)))
+        sonuc = pilot_donem_sonucu(kosu, donem)
+        for is_id in ("XXXX", "YYYY"):
+            with pytest.raises(pilot.PilotHatasi, match="zaten kayıtlı"):
+                pilot_donem_sonucu(kosu, donem, is_id=is_id)
+        kosu.bitir(
+            durum="hata",
+            tamamlanan=["XXXX"],
+            basarisiz=["YYYY"],
+            yontemler=[],
+            olculer={},
+            cikti_referanslari=[sonuc.olay_id],
+            ozetler={},
+        )
+    iz = pilot.PilotKayit(depo.yol).izle(sonuc.olay_id)
+    assert iz["sonuc"]["sonuc_turu"] == "donem_v1"
+    assert "sinyal_id" not in iz["sonuc"] and iz["sonuc"]["islem_referanslari"] == []
+    assert iz["durum"] == "hata"
+
+
+def test_s10_donem_islem_ve_cocuk_referansi_ayni_kosuya_aittir(tmp_path):
+    depo = pilot.PilotKayit(tmp_path / "pilot.jsonl")
+    ilk = pilot_deneme(depo)
+    d = depo.deneme_oku(ilk.deneme_id)["donemler"][0]
+    d2 = d | dict(baslangic=dt.date(2024, 1, 1), bitis=dt.date(2024, 12, 31))
+    deneme = pilot_deneme(depo, donemler=[d, d2])
+
+    def islem(kosu, donem):
+        return kosu.islem_kaydet(
+            sinyal_id="gercek-sinyal",
+            donem=donem,
+            birimler={"adet": "adet"},
+            muhasebe_politikasi="tani_referans_v1",
+            uyarilar=[],
+            cikti_referanslari=[],
+            olaylar=[dict(dolum_id="gercek-dolum", yon="alis", adet=1, fiyat=100)],
+        )
+
+    with pilot_kosu(depo, deneme.deneme_id) as kosu:
+        eski_islem = islem(kosu, d)
+        eski_sonuc = pilot_donem_sonucu(
+            kosu, d, islem_referanslari=[eski_islem.olay_id]
+        )
+        pilot_bitir(kosu)
+    with pilot_kosu(depo, deneme.deneme_id, is_listesi=["XXXX", "YYYY"]) as kosu:
+        baska_donem = islem(kosu, d2)
+        for ref in (eski_islem.olay_id, baska_donem.olay_id):
+            with pytest.raises(pilot.PilotHatasi, match="başka koşuya veya döneme"):
+                pilot_donem_sonucu(kosu, d, islem_referanslari=[ref])
+        with pytest.raises(pilot.PilotHatasi, match="başka koşuya"):
+            pilot_donem_sonucu(kosu, d, cikti_referanslari=[eski_sonuc.olay_id])
+        yeni_islem = islem(kosu, d)
+        with pytest.raises(pilot.PilotHatasi, match="yinelenmiş"):
+            pilot_donem_sonucu(kosu, d, islem_referanslari=[yeni_islem.olay_id] * 2)
+        yeni = pilot_donem_sonucu(kosu, d, islem_referanslari=[yeni_islem.olay_id])
+        ikinci = pilot_donem_sonucu(
+            kosu,
+            d2,
+            is_id="YYYY",
+            islem_referanslari=[baska_donem.olay_id],
+            cikti_referanslari=[yeni.olay_id],
+        )
+        kosu.bitir(
+            durum="tamamlandi",
+            tamamlanan=["XXXX", "YYYY"],
+            basarisiz=[],
+            yontemler=[],
+            olculer={},
+            cikti_referanslari=[yeni.olay_id, ikinci.olay_id],
+            ozetler={},
+        )
+    assert depo.izle(ikinci.olay_id)["sonuc"]["cikti_referanslari"] == [yeni.olay_id]
