@@ -1258,6 +1258,26 @@ E2'nin ortak EMA hesaplarını ve E3'ün S09 geçişini kullanır. Katalog strat
 ayar özetine bağlıdır. Desteklenmeyen aile veya politika hata verir. Çiftin yeni
 riski #128 kapanmadan eski çift hesabına dönülmez.
 
+Kayıtlı S10 girdisinin teknik şeması aşağıdadır. Kimlik ve ondalık kodlaması
+S03 pilotuna aittir; bu tablo #97'nin kalıcı biçimini onaylamaz.
+
+| Alan | Zorunlu içerik |
+|---|---|
+| `donemler` | Sıralı altı kayıt: `ad`, `baslangic`, `bitis`, `isinma_baslangici`, `sinir_surumu=bagimsiz_donem_v1`. Tarihler yukarıdaki dönem tablosuna uyar; ısınma başlangıcı açıktır. |
+| `veri_ayarlari` | Tek görüntülü `veri_referanslari`, `manifest_ozeti`, `uyelik_surumu`, `uyelik_ozeti`, `evren_politikasi`, `kaynak`, `kalite_surumu`, `duzeltme_surumu`, `takvim_ref`, `takvim`. Referanslar gerçek E1 girdisiyle eşleşir. |
+| `takvim` | `baslangic`, `bitis`, sıralı ve tekil `seanslar`, `kaynak_ref`. Kayıtlı 2021–2025 kapsamı ve kaynağı açıktır. XU100 gözlemlerinden alınan tarihler bağımsız resmî tatil kanıtı diye sunulmaz. İlgili dönemin gerekli seansları E1 yanıtında bulunmalıdır. |
+| `yontem_ayarlari` | `yontem=kayitli_donem_v1`, `tekrar=0`, `yurutme_surumu=bagimsiz_islem_v1`, `fiyat_politikasi=aof_v1`, `muhasebe_politikasi=tani_referans_v1`. Bu yol ızgara, WF veya MC başlatmaz. |
+| `risk_ayarlari` | `risk_surumu=bagimsiz_risk_v1`, pozitif ondalık `nominal_tutar`. Hesabın sahibi S08'dir. |
+| `masraf_ayarlari` | `masraf_surumu=komisyon_bsmv_v1`. Oran ve hesap S08'de kalır. |
+| `mod` | Çağrıda açık `gelistirme` veya `resmi`. Git doğrulanmadan kayıt veya hesap başlamaz; kirli ağaç resmî koşu olamaz. Eski resmî sayım ve günlük izin bundan türemez. |
+
+`aileler.ortak_donem_kurulumu(veri_paketi, strateji)` ortak E2 hesabının dönem
+uyarlayıcısıdır. Her sembolün sınırlandırılmış ısınma ve sonuç verisini bir kez
+hesaplar; gösterge, kurulum, gerçek sinyal kimlikleri ve ısınma bilgisi döner.
+Günlük `ortak_kurulum` aynı hesap sahibini kullanır. Kayıtlı sayısal ızgara
+ayarları katalogdan aynı değerlerle doğrulanır; gizli varsayılan atanmaz.
+Yeni yürütücü E2'yi her tarihte bütün geçmişi yeniden hesaplatacak biçimde çağırmaz.
+
 Altı çocuk işin sırası 2025, 2024, 2023, 2022, 2021 ve birleşik dönemdir.
 Her çocuk dönem ve iş kimliğini taşır. Yıllık işler boş işlem durumuyla başlar;
 birleşik iş tek kronolojik hesap yapar. Birleşik sonuç yıllık yüzdelerin toplamı
