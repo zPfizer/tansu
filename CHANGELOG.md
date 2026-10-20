@@ -8,6 +8,7 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ### Değişti
 
+- Çalışma kuralları kullanılan ajan araçlarına uyarlandı; belge sahipliği ve bekleyen sözleşmelerin durumu netleşti. Tekrarlanan inceleme kuralları atfa dönüştü, iş klasörü kapanışına silme onayı ve kanıt kontrolü eklendi. (#130)
 - Altı çalışma belgesi mevcut sahiplerinde birleştirildi; kontrol ve gerçek veri kanıtı inceleme öncesine alındı, küçük işte yazıcı devri ve kapsam kuralları sadeleştirildi. Eski bilet sözleşmesi geçmiş bölümüyle korundu.
 
 ### Eklendi
@@ -53,6 +54,9 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 - GitHub'daki otomatik kontroller yalnız Windows'ta çalışıyor.
 
 ### Düzeltildi
+
+- Evren indirmesinde kapanan şirket kanıtı yayın öncesinde manifeste katılıyor; listelenmiş eksik dosyalar veri hatası veriyor. Eski görüntüler kendi manifestleriyle korunuyor. (#133)
+- Kod sürümü proje kökünden, kalıtılan Git yönlendirmelerinden bağımsız doğrulanıyor; Git hatasında koşu hesabı ve Tansu sınamasının ayar aktarımı başlamıyor, doğrudan sonuç yazımı duruyor. (#132)
 
 - Tamamlanma denetimi, Windows üzerinde Türkçe kural uyarılarını eksiksiz yazıyor; eksik kabul kutusu yine reddediliyor. (#118)
 - Strateji kataloğundaki kural ayarları ve sabitler kod parmak izinin kapsamına alındı. (#83)

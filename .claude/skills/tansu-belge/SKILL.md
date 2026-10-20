@@ -17,7 +17,7 @@ Before creating an issue, follow [Issue body](../../../docs/agents/issue-tracker
 
 | If | Then |
 |---|---|
-| the work is a workflow spec | `loop-me`. |
+| the work is a workflow spec | Define the actor, inputs, steps, stop conditions, and required evidence. Check each path for missing decisions. |
 | the work is a new skill | Use the available file tools to write SKILL.md with a name, description, trigger conditions, and steps. Check its frontmatter and referenced paths. Then run `tansu-eval` "Skill trigger eval". |
 | the work is a Claude interface mode or hook | Read the official documentation for the active interface. Use its available configuration and shell tools. Check the event, input, output, and failure exit in isolation. |
 | the document is long | Make an outline. Write one section at a time with the available file tools. Check consistency and source references across sections. |
@@ -29,11 +29,11 @@ These rules bind the readers and the writers of a pool batch. They also bind a d
 1. Apply `CODING_STANDARDS.md` "Read the whole note".
 2. A sentence that says what Tansu says, starts with "Kural:", or ends with "sayılır" is followed by a verbatim quote. Without a quote, it starts with "Okuma (YORUM):".
 3. A step that the note does not write starts with YORUM.
-4. When `## Görsel metni` is empty or absent, open the image. Open images with `Read`. The pool reader is a general-purpose subagent, because it writes the record file. For small text, it crops with PIL through a one-line `python -X utf8 -c` and opens the crop. The `okuyucu` subagent cannot crop (`.claude/agents/okuyucu.md`). It writes "okunamıyor" and the image path, and the main agent crops. If the 4x crop is not clear, write "okunamıyor". Never fill a cell from another cell. Never derive a number from a chart axis. Never use the Browser tool.
+4. When `## Görsel metni` is empty or absent, open the image with the available image viewer. A delegated reader must have tools to write its record. For small text, open an enlarged crop with the available local tools. The `okuyucu` subagent cannot crop (`.claude/agents/okuyucu.md`). It writes "okunamıyor" and the image path, and the main agent crops. If the 4x crop is not clear, write "okunamıyor". Never fill a cell from another cell. Never derive a number from a chart axis. Never use the Browser tool.
 5. Do not add your own note into verbatim text.
 6. Copy note names and ids from the record files or the pool. Never type them.
-7. A claim that something is empty or missing carries the grep command and its output line.
-8. A writer brief has no fixed section number. The writer finds the highest number with `grep -n '^## [0-9]' <file>`. When a new section refutes an old "yok" or "verilmemiş" sentence, list all hits with `git grep -n -i <word> docs`. Mark each hit "uyumlandı" or "ilgisiz".
+7. A claim that something is empty or missing carries the search command and its output line.
+8. A writer brief has no fixed section number. Search headings that match `^## [0-9]` and use the highest number. When a new section refutes an old "yok" or "verilmemiş" sentence, list all hits with `git grep -n -i <word> docs`. Mark each hit "uyumlandı" or "ilgisiz".
 9. Do not use `replace_all` in a document. Read each hit.
 10. A `yok` reason that says there is no threshold needs a search of the Ham text and the images for a number or a period first.
 11. Every reader record has `gorsel_acildi` (true or false) and `belirsiz` (true or false). The review sample contains every record with `belirsiz: true`. A PR sentence about opened images counts only the records with `gorsel_acildi: true`.

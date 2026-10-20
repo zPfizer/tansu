@@ -6,6 +6,8 @@ sağlandığını gösterir. Kararı ve parayı Levent yönetir.
 
 ## GitHub'da ilerleme
 
+Issue, yapılacak işin kaydıdır. PR, değişikliklerin ana projeye girmeden önce kontrol edildiği pakettir.
+
 - [Issues](../../issues) ve [milestone'lar](../../milestones): işler ve hedef sürümler.
 - [Açık pull request'ler](../../pulls): süren değişiklikler.
 - [Birleşen pull request'ler](../../pulls?q=is%3Apr+is%3Amerged): master'a giren işler.

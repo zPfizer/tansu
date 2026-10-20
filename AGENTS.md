@@ -7,13 +7,14 @@ If they conflict with code or omit a case, stop. Fix the document first. Write t
 This section holds temporary states only. Each line has a date and an owner. Delete a line when its end condition is true.
 
 ## Documents and owners (Belgeler ve sahipleri)
-Each fact has one owner file. The other files only give a reference to it. Read the files in the order of the table.
+Each fact has one owner file. Other files refer to that owner. Read the files in the order of the table.
+Evidence may repeat a source quote with its reference. The quote does not create another rule owner.
 
 | File | Fact that the file owns |
 |---|---|
 | `GLOSSARY.md` | the meaning of the terms |
-| `docs/TASARIM.md` | numbers, formulas, behavior, and decisions. §7 is the order of implementation |
-| `docs/KURALLAR.md` | the family (aile) rules and the YORUM entries (§3–4) |
+| `docs/TASARIM.md` | shared execution, system formulas, and Levent's product decisions. §7 is the order of implementation |
+| `docs/KURALLAR.md` | family (aile) rules, family parameters, and YORUM entries (§3–4) |
 | brain (beyin): `kisisel/300-Projects/Tansu X Veri Havuzu/` (outside the repository) | the raw posts of Tansu: notes and images. This is a raw source. Do not change it |
 | `docs/kurallar/A-yapi-bolge.md` … `E-risk-cikis-surec.md` | the reading of the pool (havuz): what Tansu said. Rule: each note in the pool must have a reference here or must be in the "kural içermez" list |
 | `docs/sadakat.md` | the fidelity (sadakat) measurement |
@@ -56,11 +57,11 @@ If your output contradicts a decision in `docs/TASARIM.md`, say so explicitly in
 - **Names (Adlar):** Code, file, column, and CSV header names are Turkish ASCII (`aile`, `adim`, `evren`). Report and card
   text uses Turkish characters. Use `pathlib` for paths. Open each file with an explicit `encoding="utf-8"` (for CSV,
   `utf-8-sig`).
-- **Line ends (Satır sonları):** `core.autocrlf=true`. The working copy is CRLF, the repository is LF. Do not convert line ends. Change files with `Edit`.
-- **Shell reads (Kabuk okumaları):** Read a file with `Read`. `permissions.deny` in `.claude/settings.json` blocks `cat`, `sed -n`, and `sed -i` in Bash.
-- **Hooks (Kancalar):** `.claude/settings.json` registers `kurulum/kanca.py`. It checks only that a test under `tests/` changes before code.
+- **Line ends (Satır sonları):** Preserve each file's existing line ends. `.gitattributes` defines the repository policy.
+- **File tools (Dosya araçları):** Use the active agent's file tools or PowerShell commands with explicit UTF-8 encoding. Respect its permissions. Claude-specific denials are in `.claude/settings.json`.
+- **Hooks (Kancalar):** `.claude/settings.json` registers `kurulum/kanca.py` for Claude edit events. It checks for a changed test file. It does not prove a failing test run or protect other agents' edit tools.
 - **Waiting (Bekleme):** Claude Code blocks `sleep` and `Start-Sleep`. Run long commands alone. Run only affected pytest tests and `ruff check`/`ruff format --check` on changed files. CI runs the full suite.
-  Use the foreground with a timeout of at most 600000 ms, or `run_in_background` with one Monitor. Do not poll. Git Bash `pgrep` cannot see PowerShell processes.
+  Use the active tool's foreground or background execution with a timeout of at most 600000 ms. Track each background process with one waiter. Do not start duplicate watchers. Git Bash `pgrep` cannot see PowerShell processes.
 - **Temporary files (Geçici dosyalar):** Write them under `$TEMP` or under `.scratch/<job>/tmp/` of the main checkout. Never write one to a tracked path.
   The permission system refuses a recursive delete (`rm -rf`, `Remove-Item -Recurse`). Do not try it. List the leftover paths in a code block of the report. Levent deletes them.
 - **Shell state (Kabuk durumu):** Each shell call starts new. A `cd`, a variable, or an `export` does not carry over. `$CLAUDE_PROJECT_DIR` exists only in hooks. Use full paths.
@@ -71,16 +72,19 @@ If your output contradicts a decision in `docs/TASARIM.md`, say so explicitly in
 
 ## Every job
 1. Write the intent of Levent and the flow letter in one line at the top of the first reply only. After that line, the result comes first. All text that Levent can see is Turkish, also the wrap_up text.
-2. Unknown error or missing fact: run `py -3 C:\Users\levent\Desktop\YONETIM\beyin\beyin.py context "<q>" --harness claude --project TANSU --no-sync` before you search logs, code, or the web. <!-- driftlint-ignore: local-only path of the brain tool, absent in CI -->
+2. Unknown error or missing fact: run `py -3 -X utf8 C:\Users\levent\Desktop\YONETIM\beyin\beyin.py context "<q>" --harness <active-harness> --project TANSU --no-sync` first. Use `codex` or `claude` for the active agent. Report a failed lookup and continue from original sources. Do not invent the missing fact. <!-- driftlint-ignore: local-only path of the brain tool, absent in CI -->
 3. If the work type is unclear, compare the request with the work flow table. Before you write an instruction or prompt: `asd-ste100`.
 4. The main session resolves technical questions from sources. It may use `vekil` for recorded decisions and recommendations. It may use `okuyucu` for broad source searches. Both helpers are optional. Levent gets money, scope, direction, taste, and product decisions absent from Tansu notes. Also ask him about secrets, any deletion, outgoing work, Task Scheduler changes, and work that cannot be undone.
 5. If a claim has no source: `thinking-circle-of-competence`. If the problem type is unclear: `thinking-cynefin`. If the method is unclear: `thinking-model-router`.
 6. Choose the flow and the scope (`docs/agents/is-kurallari.md` "Scope").
 
 ## Work flow (İş akışı)
-The `mattpocock-skills` package is optional. Follow the written steps without it. Other skill requirements still apply. Source: Levent, 19.10.2026.
+The `mattpocock-skills` package is optional. Follow the written steps without it. Source: Levent, 19.10.2026.
+The project flows and their evidence requirements remain mandatory. Other skills help execute the applicable steps.
+If a helper is unavailable, use the active tools to complete the same step and checks. Report any check you cannot complete.
 
-Choose the flow by the work type. Call each skill by the exact name in backticks. Open the skill of the flow before the first step. Run the steps in order. Run an "If" row only when its condition is true.
+Choose the flow by the work type. Open its file before the first step. Run the steps in order.
+Run an "If" row only when its condition is true. Load a helper only when that step needs it.
 
 | Work type | Flow | Skill |
 |---|---|---|
@@ -90,7 +94,7 @@ Choose the flow by the work type. Call each skill by the exact name in backticks
 | plan or decision | D | `tansu-karar` |
 | eval | J | `tansu-eval` |
 
-Each skill lives in `.claude/skills/<name>/SKILL.md` and owns the steps of its flow. Source (E), question (H), and session (I) are in [Short flows and skill naming](docs/agents/is-kurallari.md#short-flows-and-skill-naming).
+Each project skill lives in `.claude/skills/<name>/SKILL.md` and owns its flow steps. Open that file directly if the active tool does not list it. Keep one copy. Source (E), question (H), and session (I) are in [Short flows and skill naming](docs/agents/is-kurallari.md#short-flows-and-skill-naming).
 
 ## Read before you act (Okuma işaretçileri)
 - Before you choose a scope, write a locked file, or start an audit: `docs/agents/is-kurallari.md`.

@@ -158,6 +158,52 @@ def komutu_kos(argv, capsys):
     return kod, capsys.readouterr().err
 
 
+@pytest.mark.parametrize("kayit_var", [False, True])
+def test_git_hatasi_pilot_ve_sonuc_yazimindan_once_durur(
+    tmp_path, monkeypatch, capsys, kayit_var
+):
+    anlik = anlik_hazirla(tmp_path, {"A": fiyatlar()})
+    monkeypatch.setitem(aileler.VARYANTLAR, "bugun", P)
+    monkeypatch.setattr(tansusinama, "IZGARA", {simulator.AILE: IZGARA})
+    argv = [
+        "tansu-sinama",
+        "--kok",
+        str(tmp_path),
+        "--kimlik",
+        anlik.kimlik,
+        "--aile",
+        simulator.AILE,
+        "--isci",
+        "1",
+    ]
+    if kayit_var:
+        depo, makbuz = kayitli(tmp_path, monkeypatch)
+        yol = tmp_path / "girdi" / "pilot.jsonl"
+        yol.parent.mkdir()
+        yol.write_bytes(depo.yol.read_bytes())
+        argv += ["--deneme-id", makbuz.deneme_id, "--deneme-dosyasi", str(yol)]
+
+    def git_hatasi():
+        raise kayit.KayitHatasi("Git bilgisi doğrulanamadı.")
+
+    once = {
+        y.relative_to(tmp_path): y.read_bytes()
+        for y in tmp_path.rglob("*")
+        if y.is_file()
+    }
+    monkeypatch.setattr(kayit, "_git", git_hatasi)
+    kod = komut.main(argv)
+    cikti = capsys.readouterr()
+    assert kod == 1 and "Git" in cikti.err
+    assert cikti.out == ""
+    sonra = {
+        y.relative_to(tmp_path): y.read_bytes()
+        for y in tmp_path.rglob("*")
+        if y.is_file()
+    }
+    assert sonra == once
+
+
 def test_tam_cozulmus_kayit_tek_giristen_eklenir_ve_eskisi_degismez(tmp_path):
     depo = deneme.PilotKayit(tmp_path / "pilot.jsonl")
     ilk = pilot_deneme(depo)

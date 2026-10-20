@@ -18,10 +18,9 @@ Read `C:\Users\levent\Desktop\YONETIM\beyin\knowledge\concepts\kod-standartlari-
   view on that subject. If Tansu has an idea, do not write a YORUM. If you cannot follow the idea, write
   "uygulanamaz" and the reason (KURALLAR "Okuma kuralları").
 - **Give a reference, do not copy (Atıf ver, kopyalama):** Apply AGENTS.md "Belgeler ve sahipleri".
-- **Do not write a missing thing as if it exists (Olmayanı var gibi yazma):** The documents describe only what exists
-  today. Planned work stays in the spec and the ticket. When the work is in place, it goes into the document.
+- **Do not write a missing thing as if it exists (Olmayanı var gibi yazma):** Apply `tansu-yeni-is` "Document first" for approved contracts, proposals, and implementation status.
 - **Open the source before a new fact (Kaynağı aç):** Open the Ham line or image before writing a new fact sentence in a document. If you cannot find it, write "okunamıyor" or YORUM.
-- **Read the whole note:** A reader reads each note with `Read`, without `offset` or `limit`. It never cuts a note with `head`, `cut`, `sed -n`, or a slice. It reports the line count, and the main agent checks the count with `wc -l`.
+- **Read the whole note:** Read each source note in full with the active file tools. Do not truncate its body. Report the line count. The main agent checks the count with an available file tool or UTF-8 command.
 - **Define the boundary before the code (Sınırı önce tanımla):** Define each new calculation's boundaries in TASARIM. Cover the period's first and last day, quarantined days, and zero, infinite or missing prices. Commit order: document, then red test, then code.
 
 ## Code and test rules
@@ -36,6 +35,6 @@ Read `C:\Users\levent\Desktop\YONETIM\beyin\knowledge\concepts\kod-standartlari-
   - Calculate the expected values by hand. Do not calculate them again the way the code does.
   - Write the constants in a test as literals.
 - **Baseline (Taban):** Never call a failing test "expected" or "not from this job" before you run the same test on `origin/master` in this session. Paste both outputs.
-- **Edit loop (Düzenleme döngüsü):** Run `ruff format` before you Read a file that you will edit, because ruff rewrites the file. Between edits, run only the tests of the changed module. Run the tests of the change and ruff once before each commit.
+- **Edit loop (Düzenleme döngüsü):** Format Python files before the final review because formatting can rewrite them. Between edits, run only the changed module's tests. Final checks and evidence reuse follow `tansu-yeni-is` "Check and evidence".
 - **Do not look at the return (Getiriye bakma):** See `docs/KURALLAR.md` §4.
 - **Rule parameter (Kural parametresi):** A rule parameter changes only with a TASARIM/KURALLAR change and as a new trial (deneme).

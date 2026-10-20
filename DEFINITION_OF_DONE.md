@@ -5,7 +5,7 @@ Acceptance criteria define the task's required result. A change is done only whe
 ## The Standing Checklist
 
 Apply this to every change before declaring it done.
-Use it as the final gate for specs, tickets, implementation, and pull requests with `verification-before-completion`.
+Use it as the final gate for specs, tickets, implementation, and pull requests. Read the applicable evidence before declaring completion.
 
 ### Correctness
 - [ ] The change meets all acceptance criteria for the task
@@ -30,20 +30,20 @@ Check standards and the spec during review. Apply `ponytail:ponytail-review` onl
 ### Documentation
 - [ ] The documentation covers public interfaces, APIs, and user-facing behavior
 - [ ] The team records architectural decisions worth preserving (see `tansu-yeni-is` "Document first")
-- [ ] Documentation describes the current state in timeless language, not the change history
+- [ ] Documentation distinguishes implemented behavior from approved pending contracts, as `tansu-yeni-is` "Document first" requires
 
 ### Ship-readiness
 - [ ] Security implications reviewed for any untrusted input, auth, or data handling (see `thinking-red-team`)
 - [ ] Observability in place for new critical paths (logs, metrics, traces)
-- [ ] Rollback path exists for anything risky (see `tansu-yeni-is` "Pull request" and `verification-before-completion`)
-- [ ] The reviewers that the risk needs approve before merge. Documents need none. See `docs/agents/is-kurallari.md`.
+- [ ] Rollback path exists for anything risky (see `tansu-yeni-is` "Pull request")
+- [ ] Review follows the risk policy in `docs/agents/is-kurallari.md` "Auditor and rounds"
 
 ## How to Apply
 
 - **Per task**: verify the Correctness and Quality sections before you mark the task done.
 - **Per feature**: verify Integration and Documentation before you consider the feature complete.
-- **Before "done"**: No agent or job of this work still runs. The working tree of this repository is clean, except for added `kayit/` lines.
-- **Per release**: the full checklist is the floor. `tansu-yeni-is` "Pull request" and `verification-before-completion` add the deploy-specific gates on top.
+- **Before "done"**: No agent or process of this job still runs. Its worktree is clean, except for added `kayit/` lines. Preserve other jobs' pending changes and report them separately.
+- **Per release**: the full checklist is the floor. Apply `tansu-yeni-is` "Pull request" and the release-specific checks.
 
 Use the same checklist regardless of deadline pressure.
 

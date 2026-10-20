@@ -13,9 +13,9 @@ References through `tansu-yeni-is` and a step title point to these shared steps.
 
 ## Who writes
 - Levent assigns the writer and picks the tool (Claude or Codex) for each job. There is no default reviewer.
-- Give each file one writer. The dağıtıcı is the dispatcher: the session that runs the job.
+- Give each file one writer for the job. Other agents read it without editing. The dağıtıcı is the dispatcher.
 - For a one-line addition to a locked file, the writer also searches for duplicate rules in other files.
-- Use Codex through `tansu-yeni-is` "Review": read-only for reviews, `--write` only for a writer.
+- Use the active tool's agent interface. Reviewers must not edit files. Only the assigned writer may edit its named files.
 
 ## Auditor and rounds
 - Documents only: no reviewer. Normal code: one reviewer. Risky code: two reviewers.
@@ -31,7 +31,7 @@ References through `tansu-yeni-is` and a step title point to these shared steps.
 - A fix that adds or changes claim text needs another pass, also after NOTLU GEÇTİ. Read only the changed lines. When an auditor names an error class, the dağıtıcı searches the whole diff for that pattern before the next pass.
 - Every review prompt states the goal from the job brief and latest PR body, never from an earlier prompt. Give no hint of the expected verdict or finding. For simplification, a deliberate deletion is a finding only if a needed rule was lost without a reason. Review the rest of the diff in full.
 - At most 3 review rounds. Each prompt and verdict names the round. If round 3 returns KALDI, stop. Do not start round 4. Find the root cause and define the job again. Send Levent the root cause in one line.
-- A failed run is not a round and gives no approval. This includes a spawn error, empty output, or output without a verdict. Record the failure. Repeat the same round through the official tool path in `tansu-yeni-is` "Review".
+- A failed run is not a round and gives no approval. This includes a spawn error, empty output, or output without a verdict. Record the failure. Repeat the same round through the available agent interface in "Review".
 - A job defined again after round-3 KALDI restarts the count once. Record the new definition and reason in the PR body. A second new definition does not restart the count.
 - Add the auditor's findings to the source report. When review is required, the report is complete only after a passing review.
 
@@ -42,7 +42,7 @@ For the issue + PR path, if no issue exists, make one first with the issue templ
 
 ## Check and evidence
 Before the final PR checks, merge `origin/master` into the branch.
-Run `.venv\Scripts\python.exe -m pytest -q <test files>` for the changed code and the code that uses it.
+Use the main interpreter from "Branch" with `-X utf8 -m pytest -q <test files>` for affected code and callers.
 Then run `ruff check` and `ruff format --check` on the changed Python files.
 Run these checks before each commit. Everything must be green.
 Keep the commands, exit codes, output, and checked commit or file hashes.
@@ -55,24 +55,19 @@ Do not paste the test and ruff output into the PR body: CI on Windows proves the
 `## Gerçek veri kanıtı` holds only the output of the real-data run.
 
 When only documents changed, run `tests/test_sahipler.py`, `tests/test_atif.py`, and `tests/test_changelog.py` with pytest.
-The pool tests skip in CI because the pool is not in git. This skip is accepted.
+The pool tests skip in CI because the pool is not in git. Levent accepts this CI skip.
 For a pool batch, set `TANSU_PARTI=<batch ids>`. Do not deselect a red test.
 
-Run `verification-before-completion`. Check the applicable items of `DEFINITION_OF_DONE.md`, including `## Tansu`.
+Check the applicable items of `DEFINITION_OF_DONE.md`, including `## Tansu`. Read the actual outputs before reporting completion.
 Complete the real-data run and its PR evidence before review when that checklist requires it.
 A test result does not replace real-data evidence.
 
 ## Review
-Use the completed "Check and evidence" output. The reviewer count follows risk (`docs/agents/is-kurallari.md` "Auditor and rounds"):
-- Documents only: no reviewer.
-- Normal code: one reviewer.
-- Risky code (money, data integrity, `kayit/`, CI, the PR check itself, security): two reviewers.
-
-Levent picks Claude or Codex for each job. Each reviewer uses a different session from the writer. Apply at most 3 rounds and the stop rules in "Auditor and rounds".
+Use the completed "Check and evidence" output. Apply the reviewer count, independence, and round limits from "Auditor and rounds".
 Apply the YONETIM brief's audit rules. Ask each reviewer to check correctness, standards, spec compliance, and regressions with evidence.
-Use the official Codex path: `node <codex plugin>/scripts/codex-companion.mjs task`. A review is read-only. Add `--write` only for a writer.
+Use the active tool's separate agent sessions. The reviewer reads files without editing them. The companion plugin is optional.
 
-1. Before review, write the PR body draft to `.scratch/<job>/pr-govde.md` of the main checkout `C:\Users\levent\Desktop\TANSU`. <!-- driftlint-ignore: local-only path of the main repository, absent in CI --> Do not use the worktree for this draft. Open a draft PR ("Pull request"). Give reviewers the latest body and job brief paths.
+1. Before review, save one current PR body in the system temporary folder or the main checkout's `.scratch/<job>/pr-govde.md`. Reuse the existing PR. Open a draft PR only if none exists. Give reviewers the actual body and brief paths.
 2. Check each number and each "all / none / passed" claim against this session's command output or a named file. Apply "A claim matches its evidence" to the final PR body and every review prompt.
 3. The dağıtıcı checks that the "Check and evidence" output matches the reviewed commit and its inputs. Run missing or invalid checks. Give reviewers the output and exit codes. Reviewers use that output.
 4. The dağıtıcı starts the required reviewers directly. Each prompt says "Do not start a subagent". Give the latest PR body, brief, goal, and actual worktree path. Derive the goal from the latest brief and body. Review that worktree, not the main checkout. Give no hint of the expected verdict or finding.
@@ -87,22 +82,26 @@ Push the branch to `origin`. Write the PR body with `.github/pull_request_templa
 
 Use the body and title forms from `docs/agents/issue-tracker.md` "Issue and PR rule". For a linked issue, the merge into the default branch closes it. CI checks the body and title (`.github/dod_kontrol.py`, Kural 1 and Kural 6). Source: docs.github.com "Linking a pull request to an issue" (https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/linking-a-pull-request-to-an-issue).
 
-For the issue + PR path, open a draft PR with this command chain: `git fetch -q origin && git merge-base --is-ancestor origin/master HEAD && git push -q -u origin <branch> && gh pr create --draft --base master --head <branch> --title "#<N> · <title>" --body-file <pr-govde.md>`. For a PR without an issue, use `belge-<ad>` for `<branch>` and `Belge · <title>` for `--title`. When review is required, fill `## Bağımsız inceleme` after the verdicts. Run `gh pr edit <N> --body-file <file>`, then `gh pr ready <N>`. The `dod` check skips a draft PR and runs at `gh pr ready`.
+For the issue + PR path, open a draft PR with this command chain: `git fetch -q origin && git merge-base --is-ancestor origin/master HEAD && git push -q -u origin <branch> && gh pr create --draft --base master --head <branch> --title "#<N> · <title>" --body-file <pr-govde.md>`. For a PR without an issue, use `belge-<ad>` for `<branch>` and `Belge · <title>` for `--title`. If risk requires review, fill `## Bağımsız inceleme` after the verdicts. Run `gh pr edit <N> --body-file <file>`, then `gh pr ready <N>`. The `dod` check skips a draft PR and runs at `gh pr ready`.
 
-After the PR opens, the dispatcher calls the app PR status tool. If the tool does not report the PR, the dispatcher binds it.
+After a PR update, read its actual state and body through `gh`. Use app binding only when the active interface provides it.
 
 ## Merge
 Apply "Change log and releases" before the change enters master and when its milestone closes.
 
 Merge when these conditions hold:
 - CI is green. `ci` runs on Windows only: the `kayit/` append-only step, `git diff --check`, ruff, pytest, and driftlint. `dod` is the PR body.
-- When review is required, every required reviewer returns GEÇTİ or NOTLU GEÇTİ. Documents-only changes need no verdict.
+- If risk requires review, every required reviewer returns GEÇTİ or NOTLU GEÇTİ.
 
 Wait for CI with one command: `gh pr checks <N> --watch` (timeout 600000 ms). Do not poll the status. Wait until a failed run ends before you read its job log. Then run `gh run view --job <id> --log-failed`. It prints nothing while the job runs.
 
 When Levent asks for merge, the dağıtıcı merges after his approval with `gh pr merge <N> --merge`. On the issue + PR path, the merge closes the linked issue. A PR without an issue closes no issue. GitHub deletes the remote branch (auto-delete is on). Send Levent the completion note.
 
-Then close the worktree with `py -3 -X utf8 C:\Users\levent\Desktop\TANSU\kurulum\kapanis.py <worktree>`. <!-- driftlint-ignore: local-only path of the main repository, absent in CI -->
+Before closure, run `git fetch origin`. Check that the job commit is in `origin/master`.
+Check both worktrees for pending changes and active jobs. Check untracked and ignored outputs for evidence that must remain.
+Ask Levent to approve deletion of the named worktree and branch. A merge request does not give this approval.
+If another job uses the main checkout, leave it unchanged and report the pending closure.
+After these checks, close the approved worktree with `py -3 -X utf8 C:\Users\levent\Desktop\TANSU\kurulum\kapanis.py <worktree>`. <!-- driftlint-ignore: local-only path of the main repository, absent in CI -->
 Run the command in the main checkout `C:\Users\levent\Desktop\TANSU`. <!-- driftlint-ignore: local-only path of the main repository, absent in CI -->
 Do not run it inside the worktree. Windows cannot delete the working directory of a process.
 The script stops with exit 1 before any change in that case.
@@ -112,9 +111,9 @@ Paste them in the final report.
 Source: docs.github.com "GitHub flow" (https://docs.github.com/en/get-started/using-github/github-flow): "After you merge your pull request, delete your branch."
 
 ## Close
-On the issue + PR path, the merged PR closes the linked issue. Close a spec issue when its last ticket closes. Only GLOSSARY and TASARIM stay for good. A session that Levent started writes the result to the brain with the `beyin` skill (Threads and a receipt). A side session follows the receipt sentence below.
+On the issue + PR path, the merged PR closes the linked issue. Close a spec issue when its last ticket closes. Keep permanent facts in their owners from AGENTS.md. Record the result through the available brain integration. Use the active harness. Report a blocked write and the pending record. A side session follows the receipt sentence below.
 
-A side session (another session started it) writes only one receipt: `py -3 C:\Users\levent\Desktop\YONETIM\beyin\beyin.py receipt --harness claude --event-id <job> --ref "<vault note>" --summary "<text>"`. <!-- driftlint-ignore: local-only path of the brain tool, absent in CI -->
+A side session (another session started it) writes only one receipt: `py -3 -X utf8 C:\Users\levent\Desktop\YONETIM\beyin\beyin.py receipt --harness <active-harness> --event-id <job> --ref "<vault note>" --summary "<text>"`. <!-- driftlint-ignore: local-only path of the brain tool, absent in CI -->
 Use a note path inside the brain vault for `--ref`.
 For example, use the module card's source note or `knowledge/concepts/kod-standartlari-genel.md`.
 Write the output paths of the repository in `--summary`. A `--ref` outside the vault fails. The session that started it writes Threads.
@@ -123,7 +122,7 @@ Write the output paths of the repository in `--summary`. A `--ref` outside the v
 
 - **Git (this repository only):** Do not use `rebase`, `--amend`, `--force` (and `--force-with-lease`), `reset --hard`, `clean -f`, `branch -D`,
   `checkout .`, `restore .`, `git add .`, or `git add -A` (for Claude, a permission deny blocks them: `permissions.deny` global and `.claude/settings.json`). Add files
-  by name. Which folders git tracks and the log rules are in TASARIM §5.11. Do not delete `veri/`. In a commit, leave the `kayit/` files only added, not <!-- driftlint-ignore: veri/ is gitignored local data, absent in CI -->
+  by name. Which folders git tracks and the log rules are in TASARIM §5.11. Do not delete `veri/`. In a commit, leave the `kayit/` files only added, not <!-- driftlint-ignore: veri/ holds local data outside Git, absent in CI -->
   modified. This rule covers this repository only.
 - `.scratch/` and `arsiv/` are local-only, gitignored folders. `.scratch/` holds temporary job files. Old `.scratch/` archives exist only in git history. Read a file with `git show 8c5f06c^:.scratch/<path>`. GitHub and CI do not require these folders.
 
@@ -137,19 +136,19 @@ Source: Levent 18.10.
 ## Short flows and skill naming
 
 **E. Source**
-1. **Intake:** Levent shares a link or a document: `link-isleme` (PDF: `anthropic-skills:pdf`). Then the `beyin` skill.
+1. **Intake:** Open the shared link or document with the available reader. Preserve its source identity. Then use the available brain integration.
 2. **Limit:** For outside research, set the limit first: `thinking-bounded-rationality`.
 3. **Research:** Read the original sources. Link each finding to its source. State any gap or conflict.
-4. **Report:** For a report with many sources: `anthropic-skills:deep-research`.
+4. **Report:** For many sources, give each finding its source reference. State unresolved gaps.
 
 **H. Question**
-1. **Status:** Give the status from the brain notes that `tansu-yeni-is` "Close" wrote. Use `i-have-adhd:i-have-adhd`.
+1. **Status:** Give the status from the brain notes that `tansu-yeni-is` "Close" wrote. Use short, plain language.
 2. **Understanding:** Explain the subject in plain words. Use the terms in GLOSSARY and one concrete example.
-3. **Picture:** `diagram-design`.
+3. **Picture:** Use `diagram-design` when a picture helps explain the answer.
 
 **I. Session**
-1. **Long work:** `chief-of-staff`.
-2. **Close of a session:** `verification-before-completion`, then `tansu-yeni-is` "Close". A read-only analysis job runs only `verification-before-completion`.
+1. **Long work:** Track decisions, open work, and evidence in one existing job record. Do not create a second tracker.
+2. **Close of a session:** Check the applicable completion criteria, then apply `tansu-yeni-is` "Close". A read-only analysis checks only its answer and evidence.
 3. **Weekly:** Review the last 10 work sessions. Reader agents are optional for session digests. Record repeated errors and improvements with evidence.
 4. **Handoff:** Give the new session the goal, decisions, changed files, checks, open work, and next step. Include the relevant paths.
 5. **Eval work:** Run flow J (`tansu-eval`).

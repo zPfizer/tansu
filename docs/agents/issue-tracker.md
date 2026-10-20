@@ -109,10 +109,10 @@ This section keeps the old `Status:` contract for tickets that exist only in git
 - `claimed`: work started. Set it and save before any work.
 - `in-review`: the work is on its branch and waits for the independent audit or the PR review.
 - `done (PR #N, hash)`: merged. The parentheses name the PR and the merge commit.
-- `done (kısa not)`: delivered, not merged. The parentheses state what was delivered and what moved elsewhere. The branch name is optional (example: ticket 06 of `belge-hizasi`). When the merge happens, the value becomes `done (PR #N, hash)`.
+- `done (kısa not)`: delivered, not merged. The parentheses identify the delivered result and work moved elsewhere. The branch name is optional (example: ticket 06 of `belge-hizasi`). When the merge happens, the value becomes `done (PR #N, hash)`.
 - `resolved`: the closing value of a wayfinder child ticket (see "Wayfinding operations").
 - Legacy: bare `done` marked closed MVP tickets before 14.10. Those tickets exist only in git history: `git show 8c5f06c^:.scratch/arsiv/tansu-mvp/issues/<file>`. Do not use bare `done` in a new ticket.
 
-A ticket is closed when its value starts with `done` or `resolved`. (bilet 05, 14.10)
+A value that starts with `done` or `resolved` marks a closed ticket. (bilet 05, 14.10)
 
 </details>

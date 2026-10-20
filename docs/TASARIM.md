@@ -159,7 +159,12 @@ Siteye giriş için varyantın [kural kaydına](#58-dönemler) bağlı tarihli s
   - borsapy tabloları (faiz, sektör),
   - `manifest.json` (her dosyanın sha256'sı).
 - Veri sürümü, anlık görüntü kimliğidir.
-- Okuyucu anlık görüntüyü açarken manifesti doğrular; uyuşmazlık hatadır.
+- `veri.indir` isteğe bağlı `kapanan` tablosunu (`kod`, `ad`, `tarih`, `aciklama`) alır.
+  Verilen tablo boş olsa da `kapanan.csv` başlıklarıyla yazılır; `None` dosya üretmez.
+  `evren-indir` bu tabloyu yazıcıya verir. Yazıcı dosyayı geçici klasörde tamamlar, özetini manifeste katar ve sonra görüntüyü yayınlar.
+  Kanıt yazımı başarısızsa görüntü yayınlanmaz; komut yayınlanan görüntüye ek dosya yazmaz.
+- Okuyucu anlık görüntüyü açarken manifesti doğrular; listedeki eksik dosya veya uyuşmayan özet, kimlik ve dosya adıyla `VeriHatasi` verir.
+  Eski görüntüler yalnız kendi manifestleriyle doğrulanır; geçmişte listelenmeyen kanıt sonradan eklenmez.
 - Tarih sütunu saat dilimsiz saf tarihtir.
 - Koşu, canlı borsapy'ye bağlı kalmaz.
 
@@ -485,9 +490,9 @@ yıla taşınır. (Sorgu S6, İ: 08-083)
   - β = aynı penceredeki log Y'nin log X'e OLS eğimi; β ≤ 0 elenir.
   - Sıralama: p artan, eşitlikte (Y, X) sembol sırası. Açgözlü seçim: bir hisse en fazla bir çiftte, sektör
     başına en fazla 2 çift, toplam en fazla 5.
-- **Sinyal:** her gün kapanışta Z ve ΔZ (`cift.z_skor`, log oran, 60 gün, ddof 1; KURALLAR §3). Z ≤ −2 ve
-  ΔZ > 0 ise hedef Y; Z ≥ +2 ve ΔZ < 0 ise hedef X (hedef = geçilecek bacak; kâr hedefi değildir, 5.5). Başka günde sinyal yok. Düşünülen çiftler yalnız seçilmiş
-  çiftlerdir; seçim günü kapanışındaki sinyal ertesi gün işlenir.
+- **Sinyal:** her gün kapanışta seçilmiş çiftlerde KURALLAR §3 "Çift rotasyonu" sinyal kuralı uygulanır (`cift.z_skor`).
+  Hesap tanımı, pencere ve eşikler o bölümde yönetilir. Hedef geçilecek bacaktır; kâr hedefi değildir (5.5).
+  Seçim günü kapanışındaki sinyal ertesi gün işlenir.
 - **Geçiş:** hedef, tutulandan farklıysa ertesi günün AOF'unda (5.3'teki yaklaşık dolum modeli) eski bacak satılır, yeni bacak alınır; her
   bacakta %0,3 masraf. Adet = tam lot, aşağı yuvarlanır; alış, sinyal gününü kapsayan 10 günlük medyan TL
   hacmin %2'siyle sınırlanır (5.4); artan nakit çiftin payında kalır.
@@ -757,6 +762,15 @@ Parametreler ve ızgara önceden yazılır (`KURALLAR.md` §3). Kurallar:
     `deneme_sayisi` ve Holm bunları saymaz.
 - **Git:** `kayit/` izlenir (`deneme.jsonl`, `kartlar.jsonl`). Yalnız ekleme kuralının kanıtı git geçmişidir;
   `veri/` ve `rapor/` izlenmez. Kirli-ağaç denetimi `kayit/`'ı saymaz. (Bilet 09: `kayit/` kararı)
+- **Kod sürümü doğrulaması:** Git sürümü ve kirli-ağaç denetimi, yüklenen `tansu` paketinin üstündeki proje kökünde çalışır.
+  Başlatma klasörü ve kalıtılan `GIT_*` ortam değişkenleri bu seçimi değiştirmez. Doğrulama ana sürecin ortamını değiştirmez.
+  Git'in bulduğu çalışma ağacı kökü proje köküyle aynı olmalıdır; üstteki başka bir depo kabul edilmez.
+  Git komutlarının başarılı olması ve sürümün boş olmaması gerekir.
+  Git çalıştırılamazsa veya bu doğrulama başarısız olursa `KayitHatasi` oluşur; `kosu` hesabı ve koşu kaydı başlamaz.
+  `tansu-sinama` komutu aynı doğrulamayı ayar aktarımı nesnesi kurulmadan önce yapar; ilk doğrulama hatasında hesap,
+  pilot kilit dosyası, çocuk deneme, ayar bağı, sonuç dosyası ve destek kaydı oluşmaz.
+  Doğrudan sonuç yazıcısı da yazmadan önce yeniden doğrular. İlk doğrulamadan sonra oluşan yeni bir hata önceki eklemeleri geri almaz.
+  Neden: doğrulanamayan sürüm temiz bir kod sürümü değildir.
 - **Kirli ağaç:** `kosu(resmi=True)` kirli ağaçta tek Türkçe satırla durur, günlüğe satır yazılmaz (neden: resmi
   koşu temiz bir `git_commit`'e bağlanır; kirli ağaçta sessizce resmi olmayan deneme yazmak niyeti gizler).
   Geliştirme koşusu (`resmi=False`) kirli ağaçta yazılır, `kirli` bayrağıyla.
