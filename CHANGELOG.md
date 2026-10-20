@@ -15,6 +15,8 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ### Eklendi
 
+- Tek hisse için bağımsız riskli işlem geçişi eklendi; günlük adım ve toplu yürütme aynı dolum, yarı satış, erteleme ve durum kaydını kullanır. Yarı satışta adet aşağı yuvarlanır; kurulum girdileri ve kararın kendi gösterge gereksinimi doğrulanır. Giriş, fiyat ve kapanış adımları okunabilir işlevlere ayrıldı; eski hesaplar ve çift risk kapısı korunur. (#90)
+
 - İlk kaynak ailesinin giriş alternatifleri, açık alanları ve kanıt aktarım sözleşmesi hazırlandı; hesaplama ve seçim izni verilmedi, eski 24 tanımın korumaları korundu. (#117)
 
 - Bağımsız %2 masraflı risk bütçesi, aşağı tam adet yuvarlama, kullanılmayan bütçe ve gerçekleşen net R ortak E3 hesabına alındı; komisyon varsayımı Levent'in 20.10.2026 onayıyla kesinleşti. Eski sonuçlar korundu, çiftin sayısal risk dayanağı #128'e taşındı. (#89)

@@ -13,8 +13,9 @@ Geçmiş:
 Terimler `GLOSSARY.md`'dedir.
 
 **Sürüm sınırı (#82, S01):** Aşağıdaki mevcut uygulama anlatımı `legacy_portfoy_v1` ve
-`legacy_tansu_v1` politikalarını korur. Yeni motorun davranış sözleşmesi §5.15'tedir; ürün kodu henüz bu
-sözleşmeye geçirilmedi. Eski sonuç yeni politikayla yeniden etiketlenmez. Dayanak: Levent 18.10,
+`legacy_tansu_v1` politikalarını korur. Yeni motorun davranış sözleşmesi ve parçaların uygulama durumu
+§5.15'tedir. Normal komutlar mevcut politikalarını sürdürür; yeni parçalar açık seçimle kullanılır.
+Eski sonuç yeni politikayla yeniden etiketlenmez. Dayanak: Levent 18.10,
 "Ortak para falan yok. Her işlem ayrı gibi düşün."; §5.15 kaynak ve uyumluluk kaydı.
 
 **05.10 ön denemesi (ilk kod ve `rapor/kanit-20261005.md`) bu belgeden önce yazıldı. Kanıt değildir;
@@ -41,7 +42,7 @@ Bir bölümün kodunu bulmak için: `grep -n "TASARIM 5.7" tansu/*.py`.
 | 5.12 Kabul ölçütü | `denetim`, `istatistik`, `kayit`, `rapor`, `__main__` |
 | 5.13 Veri kapıları | `veri`, `kaynak`, `gunluk`, `rapor`, `simulator` |
 | 5.14 Tansu sınaması | `tansusinama`, `__main__` |
-| 5.15 Motor davranış sözleşmesi | `katalog` |
+| 5.15 Motor davranış sözleşmesi | `aileler`, `aktarim`, `ciftbolme`, `deneme`, `gostergeler`, `gunluk`, `islem_riski`, `katalog`, `kayit`, `motor`, `simulator`, `tansusinama`, `veri` |
 | 6 Günlük işleyiş | `gunluk`, `rapor`, `kayit`, `gostergeler` |
 
 ---
@@ -874,7 +875,7 @@ Genel "Geçti" yalnız hepsi sağlanınca yazılır. (İ: 17-079)
   test, bileşen × dört kesim günü: 2014-09-30, 2015-01-15, 2015-03-02 ve yılın son işlem günü 2014-12-31 (yıllık fazla
   getiri için biten yılın karşılaştırılması; bilet 07d, 15.10). Kapsam: evren (ay başı seçimi), göstergeler (EMA, SMA, Wilder ATR, sıkışma oranı,
   RSI, momentum squeeze, ADX, MACD, PSAR, stokastik, piyasa durumu), EMA sinyali ve ön şart dizileri, EMA kurulumu (kutu,
-  arz ve talep bölgeleri, salınım noktaları, hedef, `arz` ve `ucgen` girişleri, düşüş süzgeci), çift Z ve hedef günleri,
+  arz ve talep bölgeleri, salınım noktaları, hedef, `arz` ve `ucgen` girişleri, düşüş süzgeci), S09 tek hisse işlem geçişi (günlük durum/dolum öneki), çift Z ve hedef günleri,
   yıllık çift seçimi, likidite medyanı, faiz hizalaması (gecelik getiri dizisi), K2 sepeti ve Tansu sınaması (EMA ve çift;
   5.14: hücre işlemleri ve ileri yürüme seçimleri; t'den önce biten test yılları aynı).
 
@@ -1158,6 +1159,81 @@ Günlük `_kart` açık risk isteğinde aynı E3 sonucunu gerekçeli sözlük ol
 Bu hesap yüzü günlük etkinleştirme değildir (#95). Normal komutlar eski politikalarını korur.
 Hesap tarih veya gelecek fiyat okumaz; yalnız verilen giriş/ilk stop ve gerçekleşmiş dolumları kullanır.
 İlk/son gün ve karantina uygunluğu çağıranın yürütme sözleşmesindedir; bu hesap dolum icat etmez.
+
+#### S09 tek hisse işlem geçişi (#90)
+
+**Durum: tek hisse işlem yüzü uygulandı.** Normal komutların ve günlük etkinleştirmenin bağlantısı bu teslim değildir.
+Levent, 20.10.2026: tek hisseyle ilerlenir; çiftin yeni risk/boyut hesabı #128 çözülene kadar
+kapalı kalır. Eski çift ve portföy hesapları korunur. Bu teslim günlük etkinleştirme,
+strateji seçimi, performans sınaması veya emir izni vermez.
+
+Levent, 20.10.2026: yarı satışta adet aşağı tam sayıya yuvarlanır, kalan adet korunur.
+15 adedin 7'si satılır, 8'i kalır. Yalnız 1 adet varsa yarı satış dolumu oluşmaz;
+yarı satış adımı işlenmiş sayılır ve tam çıkış beklenir. Bu, Tansu kaynak alıntısı değil,
+tam adet uygulaması için Levent'in kararıdır. Eski kesirli hesaplar bu kararla değiştirilmez.
+
+Geçişin sahibi mevcut `tansu/motor.py` olur. `islem_adimi(durum, mum, sinyal=None,
+*, yurutme, ayar, kutu_alt=None, hedef=None)` tek gün ilerler. `tara(..., *, yurutme=None,
+onceki_durum=None)` açık yürütme isteğinde aynı geçişi her satır için çağırır ve sürümlü
+sözlük döndürür. Yürütme isteği verilmezse eski dört öğeli sonuç ve eski politika sürer.
+Bu hesap dosya yazmaz, veri indirmez ve eski `Zincir` önbelleğini yeni hesap için kullanmaz.
+Yeni yüz, gün başına çözülmüş tek kurulum ister; kurulum tarihinin tekrarı aynı içerikte olsa da
+hatadır. Eski çok dönemli kurulumu ilk satırdan seçme davranışı eski yolda korunur. `stop=kutu`
+için kutu altı, `hedef=tansu` için hedef gerekli alanlardır; eksikse aday `kurulum_eksik`
+gerekçesiyle doluma geçmez. Yeni yolda eksik kutu yerine ATR stopu veya seçilmiş hedefin
+sessizce atlanması yoktur; uygulanmayan alanın boşluğu bu ret değildir.
+
+Yürütme isteği `bagimsiz_islem_v1`, mevcut `ema_sikismasi` ailesi, strateji kimliği/sürümü,
+deneme/koşu/görüntü/sembol kimlikleri, açık pozitif nominal tutar, S08 risk/masraf sürümleri
+ve `aof_v1` fiyat politikasını taşır. Alan adları `surum`, `aile`, `strateji_id`,
+`strateji_surumu`, `deneme_id`, `kosu_id`, `veri_ref_id`, `sembol`, `nominal_tutar`,
+`risk_surumu`, `masraf_surumu`, `fiyat_politikasi` olur. `tara` sinyalleri tarih → boş olmayan
+`sinyal_id` eşlemesidir; tek adım aynı kimliği veya `None` alır. Varsayılan nominal tutar yoktur. Çift isteği
+`risk_dayanagi_eksik` nedeniyle yeni dolum üretmez. Bu yüz mevcut katalog izinlerini açmaz.
+
+Durum JSON ile saklanıp geri okunabilir: şema ve politika sürümü, kimlik bağları, son işlenen
+gün ve girdi izi, açık/bekleyen işlem, girişte dondurulmuş ayar/ilk risk, kimlikli model
+dolumlar, kapanan işlemler ve gerekçeli olay izi bulunur. Durum sürümü `islem_durumu_v1` olur.
+`islem_id` yürütme, sinyal günü/kimliği ve giriş ayarlarına bağlıdır; `ayar_parmak_izi`
+giriş ayarını tanımlar. Bu bağlar ve dolum kimlikleri işlemde korunur. Sürüm veya kimlik bağı uyuşmazsa
+hata verilir. Aynı gün aynı girdi tekrarında dolum eklenmez; farklı içerikli tekrar ve geriye
+giden tarih hata verir. Açık işlemde yeni ayar giriş ayarını değiştirmez; değişiklik gerekçesi
+kaydedilir. Aynı strateji/sembolde açık yaşam döngüsüne ek sinyal adet eklemez; ret izi bırakır.
+Başka sembolün işlemi ortak nakit, slot veya portföy sınırı nedeniyle bu hesabı engellemez.
+
+Gün girdisi düzeltilmiş işlem fiyatları/göstergeler yanında ham yüksek/düşük,
+üst/alt limit ve limit kanıtını taşır. Eski kapanışa yakınlık bayrağı tam gün kilit kanıtı
+olarak kullanılmaz. Kanıt yoksa limit bilinmiyor kalır; o satırda kesin dolum üretilmez.
+Bilinen limitte tam gün kilit denetimi önceki dolum sözleşmesindeki ham eşitlikle yapılır.
+Kapanış sinyali aynı güne doldurulmaz. Giriş sonraki seansın AOF modelini kullanır;
+giriş gününde tavan kilidi sinyali düşürür. Stopun önceliği ve aynı gün fiyat sırası eski
+motorun açık modeliyle korunur: stop dolumu `min(stop, AOF)` olur. Stopun önceliği
+dışında önceden bekleyen tam çıkış ilk uygun kilitsiz günde AOF olur. Her satış engeli olay izinde sayılır. Günlük çubuk gerçek
+emir kuyruğunu veya gün içi fiyat sırasını kanıtlamaz. Her kapanış kararı yalnız kendi
+girdilerini ister. Eksik RSI, geçerli SMA250 çıkışını veya RSI kullanmayan dip kuralını
+engellemez; gerekli girdi eksikse ilgili yeni karar verilmez. Daha önce bekleyen satış ve
+geçerli fiyatla belirlenen stop/hedef adımı
+bu nedenle engellenmez. `adim` ve `_gun` içindeki `karar=True` varsayılanı eski davranışı
+korur. Yeni geçiş, girdisi bilinen kararların ad kümesini verir; eksik göstergenin etkilediği
+karar kümede bulunmaz ve nedeni kaydedilir. Boş küme fiyatla belirlenen adımları engellemez.
+
+Karantina ve sonlu/pozitif olmayan fiyat dolum üretemez. Açık işlemde karantina çıkış isteği
+oluşturur; son temiz değerleme gerçek satış gibi yazılmaz. Bekleyen çıkış ilk uygun
+kilitsiz satırda işlenir. Son temiz değerleme fiyatı ve tarihi ayrı tutulur. Dönemin ilk
+satırı öncesinde giriş uydurulmaz; son gün sinyali bekleyen kalır. Veri sonunda kalan adet
+`acik_son` olarak korunur; yapay son gün satışı ve açık işlem için nihai getiri/R üretilmez.
+Gerçekleşen kısmi sonuç, kalan miktar ve değerleme ayrı alanlardadır. Risk, adet ve masrafın
+tek sahibi S08 hesabıdır; ilk risk yükselen stop veya sonraki ayarla yeniden boyutlanmaz.
+
+Bu yüzün sınırları: toplu/günlük JSON geri okuma eşitliği, aynı gün tekrarları, ayar bağları,
+örtüşme, tek/çift engeli, yarı satışın tam adedi, kilit/kanıt yokluğu, karantina, dönem sonu
+ve gelecek satır değişmezliği. Mevcut 250 satırlık karantina giriş koruması yeni durumun
+`karantina_kalan` alanında korunur. `tests/test_motor.py` davranışı, `tests/test_gelecek.py`
+yeni geçişin önceki günlere gelecek bilgi taşımamasını sınar. Çıktıdaki
+`dusen_sinyal_sayisi` ve `ertelenen_satis_gunu_sayisi` gerekçeli olaylardan türetilir;
+aynı satış engeli gününe ait birden çok açıklama günü iki kez saydırmaz. Tarihli `iz`,
+`egri_turu=tani_referans`, açık nominal temel, gerçekleşmiş net sonuç, kalan adet ve ayrı
+değerlemeyi taşır. Bu tanısal toplam ortak hesap özkaynağı veya bileşik portföy getirisi değildir.
 
 #### Dolum, risk ve ölçünün anlamı
 

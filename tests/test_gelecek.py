@@ -38,6 +38,32 @@ KESIM = [
 BAS = "2013-12-02"
 
 
+def test_s09_gelecek_mumlar_onceki_dolum_ve_izi_degistirmez():
+    from tests.test_motor import r, s09_istek, s09_mumlar
+
+    m = s09_mumlar(
+        [
+            r(100, 101, 99, 100),
+            r(100, 101, 99, 100),
+            r(80, 82, 79, 81),
+            r(100, 101, 99, 100),
+        ]
+    )
+    sinyaller = {m.index[0]: "sinyal-1"}
+    ilk = motor.tara(m.iloc[:3], sinyaller, yurutme=s09_istek())
+    m.loc[m.index[3], ["aof", "yuksek", "dusuk", "kapanis"]] = [1000, 1100, 900, 1000]
+    m.loc[m.index[3], ["ham_yuksek", "ham_dusuk", "tavan", "taban"]] = [
+        1100,
+        900,
+        1200,
+        800,
+    ]
+    son = motor.tara(m, sinyaller, yurutme=s09_istek())
+    assert son["islemler"] == ilk["islemler"]
+    assert son["iz"][:3] == ilk["iz"]
+    assert son["islemler"][0]["sonuc"]["net_sonuc"] == pytest.approx(-304.2525)
+
+
 def test_s08_gelecek_islem_dolumlari_onceki_risk_ve_net_sonucu_degistirmez():
     from tests.test_tansusinama import risk_satiri
 

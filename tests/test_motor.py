@@ -1,8 +1,8 @@
-"""Adım/Motor yüzü: TASARIM 5.3'teki 14 motor durumu ve veri sonu / eksik gün, sentetik mumlarla.
+"""Adım/Motor yüzü: TASARIM 5.3 eski senaryoları ve 5.15 S09 geçişi, sentetik mumlarla.
 
-Beklenen değerleri kodu görmemiş ayrı bir ajan yalnız kural metninden ve bu senaryo verisinden elle hesapladı
+Eski senaryoların beklenen değerlerini kodu görmemiş ayrı bir ajan yalnız kural metninden ve bu senaryo verisinden elle hesapladı
 (bilet 08). Hesabın özeti her senaryonun yorumundadır. Adet = 1; boyutlandırma bilet 10'dadır.
-Kural özeti: sinyal kapanışta, giriş ertesi gün AOF'ta; stop = giriş - 2 ATR; giriş günü yalnız stop;
+Eski politika özeti: sinyal kapanışta, giriş ertesi gün AOF'ta; stop = giriş - 2 ATR; giriş günü yalnız stop;
 dolum min(stop, AOF); kilitli tavanda giriş yok (sinyal düşer); kilitli tabanda çıkış kayar;
 kapanış < SMA250 -> ertesi gün AOF'ta çıkış; veri bitince son kapanıştan çıkış.
 Satır: (AOF, yüksek, düşük, kapanış, bayraklar). Beklenen: (giriş günü, giriş, çıkış günü, çıkış, neden,
@@ -10,6 +10,7 @@ planlanan risk, gerçekleşen kayıp).
 """
 
 from dataclasses import replace
+import json
 
 import pandas as pd
 import pytest
@@ -18,6 +19,415 @@ from tansu import aileler, denetim, gostergeler, motor, veri
 
 GUNLER = pd.bdate_range("2026-03-02", periods=10)
 STD = (100, 101, 99, 100)
+
+
+def s09_istek(**degisiklik):
+    return (
+        dict(
+            surum="bagimsiz_islem_v1",
+            aile="ema_sikismasi",
+            strateji_id="ema-test",
+            strateji_surumu="v1",
+            deneme_id="deneme-1",
+            kosu_id="kosu-1",
+            veri_ref_id="veri-1",
+            sembol="TEST",
+            nominal_tutar=8000,
+            risk_surumu="bagimsiz_risk_v1",
+            masraf_surumu="komisyon_bsmv_v1",
+            fiyat_politikasi="aof_v1",
+        )
+        | degisiklik
+    )
+
+
+def s09_mumlar(satirlar=None):
+    df = _mumlar(satirlar or [r(*STD), r(*STD)], 5)
+    df = df.astype({k: float for k in ("aof", "yuksek", "dusuk", "kapanis")})
+    df["ham_yuksek"] = df.yuksek
+    df["ham_dusuk"] = df.dusuk
+    df["tavan"] = 200.0
+    df["taban"] = 50.0
+    df["limit_kaniti"] = "sentetik-tarihli-limit"
+    return df
+
+
+def test_s09_sonraki_seansta_bagimsiz_risk_adediyle_girer():
+    m = s09_mumlar()
+    sonuc = motor.tara(m, {m.index[0]: "sinyal-1"}, yurutme=s09_istek())
+    assert [(d["yon"], d["adet"], d["fiyat"]) for d in sonuc["dolumlar"]] == [
+        ("alis", 15, 100)
+    ]
+    assert sonuc["durum"] == "acik_son"
+    assert sonuc["sonuc"]["ilk_risk"] == pytest.approx(154.48875)
+    assert sonuc["sonuc"]["net_r"] is None
+    assert sonuc["pozisyon"]["cikis_fiyat"] is None
+    assert sonuc["iz"][-1]["egri_turu"] == "tani_referans"
+    assert sonuc["iz"][-1]["nominal_tutar"] == 8000
+
+
+def test_s09_toplu_ve_json_gunluk_ayni_ve_tekrar_idempotent():
+    m = s09_mumlar([r(*STD), r(*STD), r(80, 82, 79, 81)])
+    sinyaller = {m.index[0]: "sinyal-1"}
+    toplu = motor.tara(m, sinyaller, yurutme=s09_istek())
+    gunluk = None
+    for t, satir in m.iterrows():
+        once = json.loads(json.dumps(gunluk))
+        mum = dict(satir) | {"tarih": t}
+        gunluk = motor.islem_adimi(once, mum, sinyaller.get(t), yurutme=s09_istek())
+        assert (
+            motor.islem_adimi(gunluk, mum, sinyaller.get(t), yurutme=s09_istek())
+            == gunluk
+        )
+    assert gunluk == toplu
+    assert [d["adet"] for d in toplu["islemler"][0]["dolumlar"]] == [15, 15]
+    assert toplu["islemler"][0]["sonuc"]["net_sonuc"] == pytest.approx(-304.2525)
+    with pytest.raises(ValueError, match="çelişkili"):
+        motor.islem_adimi(gunluk, mum | {"aof": 81}, yurutme=s09_istek())
+    with pytest.raises(ValueError, match="uyuşmuyor"):
+        motor.islem_adimi(gunluk, mum, yurutme=s09_istek(veri_ref_id="farkli"))
+    bozuk = json.loads(json.dumps(gunluk))
+    bozuk["islemler"][0]["dolumlar"][0]["adet"] = 1000
+    with pytest.raises(ValueError, match="uyuşmuyor"):
+        motor.islem_adimi(bozuk, mum, yurutme=s09_istek())
+
+
+@pytest.mark.parametrize(
+    "nominal, miktarlar, fiyatlar, masraf, net",
+    [
+        (8000, [15, 7, 8], [100, 115, 80], 4.638375, -59.638375),
+        (600, [1, 1], [100, 80], 0.2835, -20.2835),
+    ],
+)
+def test_s09_yari_adet_asagi_kalan_korunur(nominal, miktarlar, fiyatlar, masraf, net):
+    m = s09_mumlar(
+        [
+            r(*STD),
+            r(*STD),
+            r(114, 115, 110, 114),
+            r(118, 120, 116, 118),
+            r(80, 82, 79, 81),
+        ]
+    )
+    sonuc = motor.tara(
+        m,
+        {m.index[0]: "sinyal-1"},
+        replace(aileler.Parametre(), cikis="atr3"),
+        yurutme=s09_istek(nominal_tutar=nominal),
+    )
+    islem = sonuc["islemler"][0]
+    assert [d["adet"] for d in islem["dolumlar"]] == miktarlar
+    assert [d["fiyat"] for d in islem["dolumlar"]] == fiyatlar
+    assert islem["sonuc"]["gerceklesen_maliyet"] == pytest.approx(masraf)
+    assert islem["sonuc"]["net_sonuc"] == pytest.approx(net)
+    assert islem["sonuc"]["kalan_adet"] == 0
+    assert islem["pozisyon"]["ilk_stop"] == 90
+    if nominal == 600:
+        assert islem["pozisyon"]["yari_tarih"] is None
+        assert islem["pozisyon"]["yari_fiyat"] is None
+        assert "yari_adet_sifir" in [r["neden"] for r in sonuc["retler"]]
+    else:
+        assert islem["sonuc"]["gerceklesen_kismi_sonuclar"][0][
+            "net_sonuc"
+        ] == pytest.approx(102.629625)
+
+
+@pytest.mark.parametrize(
+    "engel,neden",
+    [
+        ("ust", "kilitli_tavan"),
+        ("bilinmiyor", "limit_bilinmiyor"),
+        ("gecersiz", "gecersiz_fiyat"),
+        ("islem_yok", "islem_yok"),
+    ],
+)
+def test_s09_giris_engeli_dolum_uretmez(engel, neden):
+    m = s09_mumlar()
+    t = m.index[1]
+    if engel == "ust":
+        m.loc[t, ["ham_yuksek", "ham_dusuk", "tavan"]] = 110
+    elif engel == "bilinmiyor":
+        m.loc[t, "limit_kaniti"] = None
+    elif engel == "gecersiz":
+        m.loc[t, "aof"] = float("inf")
+    else:
+        m.loc[t, "islem"] = False
+    sonuc = motor.tara(m, {m.index[0]: "sinyal-1"}, yurutme=s09_istek())
+    assert sonuc["dolumlar"] == []
+    assert sonuc["pozisyon"] is None
+    assert sonuc["retler"][0]["neden"] == neden
+    assert sonuc["dusen_sinyal_sayisi"] == 1
+    assert sonuc["retler"][0]["sinyal_id"] == "sinyal-1"
+
+
+def test_s09_eski_kapanis_bayragi_tam_gun_kilidi_sayilmaz():
+    m = s09_mumlar()
+    m.loc[m.index[1], "kilit_tavan"] = True
+    sonuc = motor.tara(m, {m.index[0]: "sinyal-1"}, yurutme=s09_istek())
+    assert sonuc["sonuc"]["alinan_adet"] == 15
+
+
+def test_s09_ardisik_taban_satisi_bekletir_her_gunu_sayar():
+    m = s09_mumlar(
+        [
+            r(*STD),
+            r(*STD),
+            r(90, 90, 90, 90),
+            r(85, 85, 85, 85),
+            r(80, 82, 79, 81),
+        ]
+    )
+    m.loc[m.index[2:4], "taban"] = [90, 85]
+    sonuc = motor.tara(m, {m.index[0]: "sinyal-1"}, yurutme=s09_istek())
+    islem = sonuc["islemler"][0]
+    assert [d["fiyat"] for d in islem["dolumlar"]] == [100, 80]
+    assert len([r for r in sonuc["retler"] if r["neden"] == "satis_engeli"]) == 2
+    assert sonuc["ertelenen_satis_gunu_sayisi"] == 2
+    assert islem["sonuc"]["ilk_risk"] == pytest.approx(154.48875)
+
+
+def test_s09_karantina_degerleme_satis_degil_ayar_donuk():
+    m = s09_mumlar(
+        [
+            r(*STD),
+            r(*STD),
+            r(1, 2, 1, 1, karantina=True),
+            r(101, 102, 100, 101),
+        ]
+    )
+    ilk = motor.tara(m.iloc[:2], {m.index[0]: "sinyal-1"}, yurutme=s09_istek())
+    ara = motor.tara(
+        m.iloc[2:3],
+        {m.index[2]: "sinyal-2"},
+        replace(aileler.Parametre(), stop="atr15"),
+        yurutme=s09_istek(),
+        onceki_durum=ilk,
+    )
+    assert len(ara["dolumlar"]) == 1
+    assert ara["degerleme"] == {"tarih": "2026-03-03", "fiyat": 100}
+    assert ara["pozisyon"]["ayar"]["stop"] == "atr2"
+    assert (
+        ara["pozisyon"]["risk_girdisi"]["ayar_parmak_izi"]
+        == ilk["pozisyon"]["risk_girdisi"]["ayar_parmak_izi"]
+    )
+    assert ara["pozisyon"]["bekleyen"] == "karantina"
+    assert [r["neden"] for r in ara["retler"]] == [
+        "ayar_degisti",
+        "karantina_cikis_bekliyor",
+        "acik_islem",
+    ]
+    son = motor.tara(m.iloc[3:], {}, yurutme=s09_istek(), onceki_durum=ara)
+    assert son["islemler"][0]["dolumlar"][-1]["fiyat"] == 101
+    assert son["islemler"][0]["pozisyon"]["neden"] == "karantina"
+
+
+def test_s09_son_gun_sinyali_bekler_butce_ve_cift_engeli():
+    m = s09_mumlar()
+    son = motor.tara(m.iloc[:1], {m.index[0]: "sinyal-1"}, yurutme=s09_istek())
+    assert son["durum"] == "bekliyor"
+    assert son["dolumlar"] == []
+    yetersiz = motor.tara(
+        m,
+        {m.index[0]: "sinyal-1"},
+        yurutme=s09_istek(nominal_tutar=1),
+    )
+    assert yetersiz["retler"][0]["neden"] == "butce_yetersiz"
+    assert yetersiz["dolumlar"] == []
+    with pytest.raises(ValueError, match="risk_dayanagi_eksik"):
+        motor.tara(m, {}, yurutme=s09_istek(aile="cift_rotasyonu"))
+    with pytest.raises(ValueError, match="nominal_tutar"):
+        motor.tara(m, {}, yurutme=s09_istek(nominal_tutar=None))
+
+
+def test_s09_bilinmeyen_limit_stop_dolumunu_erteleyip_izi_korur():
+    m = s09_mumlar(
+        [
+            r(*STD),
+            r(*STD),
+            r(80, 82, 79, 81),
+            r(85, 87, 84, 86),
+        ]
+    )
+    m.loc[m.index[2], "limit_kaniti"] = None
+    sonuc = motor.tara(m, {m.index[0]: "sinyal-1"}, yurutme=s09_istek())
+    dolumlar = sonuc["islemler"][0]["dolumlar"]
+    assert [d["fiyat"] for d in dolumlar] == [100, 85]
+    assert dolumlar[-1]["tarih"] == "2026-03-05"
+    assert [r["neden"] for r in sonuc["retler"]] == [
+        "limit_bilinmiyor",
+        "satis_engeli",
+    ]
+
+
+def test_s09_karantina_penceresi_json_durumunda_tasinir():
+    m = s09_mumlar([r(*STD, karantina=True)] + [r(*STD)] * 251)
+    sinyaller = {m.index[249]: "erken", m.index[250]: "izinli"}
+    sonuc = motor.tara(m, sinyaller, yurutme=s09_istek())
+    assert [(r["sinyal_id"], r["neden"]) for r in sonuc["retler"]] == [
+        ("erken", "karantina_penceresi")
+    ]
+    assert sonuc["dolumlar"][0]["sinyal_id"] == "izinli"
+    assert sonuc["dolumlar"][0]["tarih"] == m.index[251].date().isoformat()
+
+
+def test_s09_json_sinyal_tarihi_ve_sembol_dolum_kimligi():
+    m = s09_mumlar()
+    sinyaller = {"2026-03-02": "ortak-sinyal-etiketi"}
+    a = motor.tara(m, sinyaller, yurutme=s09_istek(sembol="A"))
+    b = motor.tara(m, sinyaller, yurutme=s09_istek(sembol="B"))
+    assert a["sonuc"]["alinan_adet"] == b["sonuc"]["alinan_adet"] == 15
+    assert a["dolumlar"][0]["dolum_id"] != b["dolumlar"][0]["dolum_id"]
+    assert a["dolumlar"][0]["islem_id"] != b["dolumlar"][0]["islem_id"]
+    with pytest.raises(ValueError, match="takvim günü"):
+        motor.islem_adimi(
+            None,
+            dict(m.iloc[0]) | {"tarih": pd.Timestamp("2026-03-02 12:00")},
+            yurutme=s09_istek(),
+        )
+
+
+def test_s09_atr_sifir_kutu_stopuyla_gecerli_riski_engellemez():
+    m = s09_mumlar()
+    m["atr"] = 0.0
+    kurulum = pd.DataFrame({"kutu_alt": [90], "hedef": [None]}, index=m.index[:1])
+    sonuc = motor.tara(
+        m,
+        {m.index[0]: "sinyal-1"},
+        replace(aileler.Parametre(), stop="kutu"),
+        kurulum,
+        yurutme=s09_istek(),
+    )
+    assert sonuc["sonuc"]["alinan_adet"] == 15
+    assert sonuc["sonuc"]["ilk_risk"] == pytest.approx(154.48875)
+
+
+def test_s09_bekleyen_yari_dolum_yeni_gosterge_istemeden_islenir():
+    m = s09_mumlar(
+        [
+            r(*STD),
+            r(*STD),
+            r(109, 110, 108, 109),
+            r(105, 106, 104, 105),
+            r(106, 107, 105, 106),
+        ]
+    )
+    m["rsi"] = 60.0
+    m["onceki_rsi"] = 60.0
+    m["sma50"] = 100.0
+    m["onceki_dusuk"] = 106.0
+    m.loc[m.index[-1], "rsi"] = float("nan")
+    sonuc = motor.tara(
+        m,
+        {m.index[0]: "sinyal-1"},
+        replace(aileler.Parametre(), cikis="dip"),
+        yurutme=s09_istek(),
+    )
+    assert [(d["yon"], d["adet"], d["fiyat"]) for d in sonuc["dolumlar"]] == [
+        ("alis", 15, 100),
+        ("satis", 7, 106),
+    ]
+    assert sonuc["sonuc"]["kalan_adet"] == 8
+
+
+@pytest.mark.parametrize("stoplar", [[90, 95], [95, 90], [90, 90]])
+def test_s09_tekrarlanan_kurulum_gunu_reddedilir(stoplar):
+    m = s09_mumlar()
+    k = pd.DataFrame(
+        {"kutu_alt": stoplar, "hedef": [None, None]}, index=[m.index[0]] * 2
+    )
+    hata = None
+    try:
+        motor.tara(
+            m,
+            {m.index[0]: "s"},
+            replace(aileler.Parametre(), stop="kutu"),
+            k,
+            yurutme=s09_istek(),
+        )
+    except ValueError as exc:
+        hata = str(exc)
+    assert hata is not None and "kurulum" in hata
+
+
+@pytest.mark.parametrize(
+    "cikis,eksik,beklenen",
+    [
+        ("dip", ["rsi", "onceki_rsi", "sma50"], [("alis", 15, 100), ("satis", 7, 106)]),
+        ("dip", ["sma250"], [("alis", 15, 100), ("satis", 7, 106)]),
+        ("rsi70", ["rsi"], [("alis", 15, 100), ("satis", 15, 105)]),
+        ("rsi50", ["rsi"], [("alis", 15, 100), ("satis", 7, 105)]),
+    ],
+)
+def test_s09_bagimsiz_karar_eksik_ilgisiz_gostergeyle_engellenmez(
+    cikis, eksik, beklenen
+):
+    m = s09_mumlar(
+        [
+            r(*STD),
+            r(*STD),
+            r(109, 110, 108, 109),
+            r(105, 106, 104, 105),
+            r(106, 107, 105, 106),
+        ]
+    )
+    m["rsi"] = 60.0
+    m["onceki_rsi"] = 60.0
+    m["sma50"] = 100.0
+    m["onceki_dusuk"] = 106.0
+    if cikis == "rsi70":
+        m["sma250"] = 120.0
+        m = m.iloc[:4]
+    if cikis == "rsi50":
+        m["sma50"] = 109.5
+        m = m.iloc[:4]
+    m = m.drop(columns=eksik)
+    d = motor.tara(
+        m,
+        {m.index[0]: "s"},
+        replace(aileler.Parametre(), cikis=cikis),
+        yurutme=s09_istek(),
+    )
+    dolumlar = d["islemler"][0]["dolumlar"] if d["islemler"] else d["dolumlar"]
+    assert [(x["yon"], x["adet"], x["fiyat"]) for x in dolumlar] == beklenen
+
+
+@pytest.mark.parametrize(
+    "ayar",
+    [
+        replace(aileler.Parametre(), stop="kutu"),
+        replace(aileler.Parametre(), hedef="tansu"),
+        replace(aileler.Parametre(), stop="kutu", hedef="tansu"),
+    ],
+)
+def test_s09_gerekli_kurulum_eksikse_dolum_yok(ayar):
+    m = s09_mumlar()
+    d = motor.tara(m, {m.index[0]: "s"}, ayar, yurutme=s09_istek())
+    assert d["dolumlar"] == []
+    assert d["retler"][0]["neden"] == "kurulum_eksik"
+    k = pd.DataFrame({"kutu_alt": [90], "hedef": [120]}, index=["2026-03-02"])
+    gecerli = motor.tara(m, {m.index[0]: "s"}, ayar, k, yurutme=s09_istek())
+    assert gecerli["sonuc"]["alinan_adet"] == 15
+    assert gecerli["pozisyon"]["kutu_alt"] == 90
+    assert gecerli["pozisyon"]["hedef"] == 120
+
+
+@pytest.mark.parametrize("deger", [0, -1, float("inf"), float("nan")])
+def test_s09_bozuk_kurulum_fiyati_giris_uretemez(deger):
+    m = s09_mumlar()
+    k = pd.DataFrame({"kutu_alt": [deger], "hedef": [120]}, index=m.index[:1])
+    try:
+        d = motor.tara(
+            m,
+            {m.index[0]: "s"},
+            replace(aileler.Parametre(), stop="kutu"),
+            k,
+            yurutme=s09_istek(),
+        )
+    except ValueError as exc:
+        assert "kurulum fiyatı" in str(exc)
+        return
+    assert d["dolumlar"] == []
+    assert d["retler"][0]["neden"] == "kurulum_eksik"
 
 
 def r(a, y, d, k, **bayrak):
