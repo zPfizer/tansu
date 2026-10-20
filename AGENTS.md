@@ -14,9 +14,11 @@ Evidence may repeat a source quote with its reference. The quote does not create
 |---|---|
 | `GLOSSARY.md` | the meaning of the terms |
 | `docs/TASARIM.md` | shared execution, system formulas, and Levent's product decisions. §7 is the order of implementation |
-| `docs/KURALLAR.md` | family (aile) rules, family parameters, and YORUM entries (§3–4) |
+| `docs/KURALLAR.md` | the rule directory and links to the owner documents |
+| `docs/aile-kurallari.md` | family (aile) rules, family parameters, and YORUM entries (§3–4) |
+| `docs/kaynak-dokumu.md` | the pool inventory, exclusion reasons, and short source names |
 | brain (beyin): `kisisel/300-Projects/Tansu X Veri Havuzu/` (outside the repository) | the raw posts of Tansu: notes and images. This is a raw source. Do not change it |
-| `docs/kurallar/A-yapi-bolge.md` … `E-risk-cikis-surec.md` | the reading of the pool (havuz): what Tansu said. Rule: each note in the pool must have a reference here or must be in the "kural içermez" list |
+| `docs/kurallar/A-yapi-bolge.md` … `E-risk-cikis-surec.md` | the reading of the pool (havuz): what Tansu said. Rule: each note in the pool must have a reference here or must be in the "kural içermez" list in `docs/kaynak-dokumu.md` |
 | `docs/sadakat.md` | the fidelity (sadakat) measurement |
 | `AGENTS.md` | the entry, the environment, the current state, "Every job", and the work flow table |
 | `docs/agents/` | job rules, shared delivery, git, short flows E, H, I, and skill naming (`is-kurallari.md`). Task Scheduler (`zamanlayici.md`). Issues and triage labels (`issue-tracker.md`). driftlint does not scan this folder. `tests/test_sahipler.py` checks its paths |

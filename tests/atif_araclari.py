@@ -343,10 +343,10 @@ def beyin_kirikleri(kok, dosyalar, havuz):
 
 
 def _havuz_metni(kok):
-    """Havuz atıflarının sayıldığı metin: docs/kurallar/A-…E-*.md'nin okunmayan listeleri dışı ve docs/KURALLAR.md'nin yalnız
+    """Havuz atıflarının sayıldığı metin: docs/kurallar/A-…E-*.md'nin okunmayan listeleri dışı ve docs/kaynak-dokumu.md'nin yalnız
     'Kural içermeyen notlar' bölümü (başlıktan sonraki aynı düzey `## ` başlığa kadar).
 
-    KURALLAR.md'nin öbür bölümleri (Dizin, Seçim, 'Kısa atıfların tam adları', ...) ve başka dosyalar sayılmaz.
+    Kaynak dökümünün öbür bölümleri ve başka dosyalar sayılmaz.
     """
     parcalar = [
         re.sub(
@@ -365,7 +365,7 @@ def _havuz_metni(kok):
     ]
     liste, icinde = [], False
     for satir in (
-        (kok / "docs" / "KURALLAR.md").read_text(encoding="utf-8").splitlines()
+        (kok / "docs" / "kaynak-dokumu.md").read_text(encoding="utf-8").splitlines()
     ):
         if satir.startswith("## "):
             icinde = satir.startswith("## Kural içermeyen notlar")
@@ -832,7 +832,7 @@ def _yok_ekle(satirlar, kayit):
 
 
 def parti_entegre(kayit_dosyalari, kok, tarih):
-    """`ek` ve `yok` kayıtlarını docs/kurallar/<H>-*.md ve docs/KURALLAR.md'ye yazar; `yeni` kaydı atlanır.
+    """`ek` ve `yok` kayıtlarını docs/kurallar/<H>-*.md ve docs/kaynak-dokumu.md'ye yazar; `yeni` kaydı atlanır.
 
     `ek`: kaydın `bolum` başlık satırı birebir bulunur (yoksa ValueError); bölümün sonundaki
     `- Ek kaynaklar (X arşivi, ...):` bloğuna ya da `tarih` ile açılan yeni bloğa bir satır eklenir.
@@ -862,7 +862,7 @@ def parti_entegre(kayit_dosyalari, kok, tarih):
                     raise ValueError(f"docs/kurallar/{harf}-*.md: {len(adaylar)} dosya")
                 yol = adaylar[0]
             elif sonuc == "yok":
-                yol = kok / "docs" / "KURALLAR.md"
+                yol = kok / "docs" / "kaynak-dokumu.md"
             else:
                 raise ValueError(f"bilinmeyen sonuç {sonuc!r}: {kayit['not']}")
             if yol not in belgeler:
