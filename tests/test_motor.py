@@ -329,6 +329,107 @@ def test_s09_bekleyen_yari_dolum_yeni_gosterge_istemeden_islenir():
     assert sonuc["sonuc"]["kalan_adet"] == 8
 
 
+@pytest.mark.parametrize("stoplar", [[90, 95], [95, 90], [90, 90]])
+def test_s09_tekrarlanan_kurulum_gunu_reddedilir(stoplar):
+    m = s09_mumlar()
+    k = pd.DataFrame(
+        {"kutu_alt": stoplar, "hedef": [None, None]}, index=[m.index[0]] * 2
+    )
+    hata = None
+    try:
+        motor.tara(
+            m,
+            {m.index[0]: "s"},
+            replace(aileler.Parametre(), stop="kutu"),
+            k,
+            yurutme=s09_istek(),
+        )
+    except ValueError as exc:
+        hata = str(exc)
+    assert hata is not None and "kurulum" in hata
+
+
+@pytest.mark.parametrize(
+    "cikis,eksik,beklenen",
+    [
+        ("dip", ["rsi", "onceki_rsi", "sma50"], [("alis", 15, 100), ("satis", 7, 106)]),
+        ("dip", ["sma250"], [("alis", 15, 100), ("satis", 7, 106)]),
+        ("rsi70", ["rsi"], [("alis", 15, 100), ("satis", 15, 105)]),
+        ("rsi50", ["rsi"], [("alis", 15, 100), ("satis", 7, 105)]),
+    ],
+)
+def test_s09_bagimsiz_karar_eksik_ilgisiz_gostergeyle_engellenmez(
+    cikis, eksik, beklenen
+):
+    m = s09_mumlar(
+        [
+            r(*STD),
+            r(*STD),
+            r(109, 110, 108, 109),
+            r(105, 106, 104, 105),
+            r(106, 107, 105, 106),
+        ]
+    )
+    m["rsi"] = 60.0
+    m["onceki_rsi"] = 60.0
+    m["sma50"] = 100.0
+    m["onceki_dusuk"] = 106.0
+    if cikis == "rsi70":
+        m["sma250"] = 120.0
+        m = m.iloc[:4]
+    if cikis == "rsi50":
+        m["sma50"] = 109.5
+        m = m.iloc[:4]
+    m = m.drop(columns=eksik)
+    d = motor.tara(
+        m,
+        {m.index[0]: "s"},
+        replace(aileler.Parametre(), cikis=cikis),
+        yurutme=s09_istek(),
+    )
+    dolumlar = d["islemler"][0]["dolumlar"] if d["islemler"] else d["dolumlar"]
+    assert [(x["yon"], x["adet"], x["fiyat"]) for x in dolumlar] == beklenen
+
+
+@pytest.mark.parametrize(
+    "ayar",
+    [
+        replace(aileler.Parametre(), stop="kutu"),
+        replace(aileler.Parametre(), hedef="tansu"),
+        replace(aileler.Parametre(), stop="kutu", hedef="tansu"),
+    ],
+)
+def test_s09_gerekli_kurulum_eksikse_dolum_yok(ayar):
+    m = s09_mumlar()
+    d = motor.tara(m, {m.index[0]: "s"}, ayar, yurutme=s09_istek())
+    assert d["dolumlar"] == []
+    assert d["retler"][0]["neden"] == "kurulum_eksik"
+    k = pd.DataFrame({"kutu_alt": [90], "hedef": [120]}, index=["2026-03-02"])
+    gecerli = motor.tara(m, {m.index[0]: "s"}, ayar, k, yurutme=s09_istek())
+    assert gecerli["sonuc"]["alinan_adet"] == 15
+    assert gecerli["pozisyon"]["kutu_alt"] == 90
+    assert gecerli["pozisyon"]["hedef"] == 120
+
+
+@pytest.mark.parametrize("deger", [0, -1, float("inf"), float("nan")])
+def test_s09_bozuk_kurulum_fiyati_giris_uretemez(deger):
+    m = s09_mumlar()
+    k = pd.DataFrame({"kutu_alt": [deger], "hedef": [120]}, index=m.index[:1])
+    try:
+        d = motor.tara(
+            m,
+            {m.index[0]: "s"},
+            replace(aileler.Parametre(), stop="kutu"),
+            k,
+            yurutme=s09_istek(),
+        )
+    except ValueError as exc:
+        assert "kurulum fiyatı" in str(exc)
+        return
+    assert d["dolumlar"] == []
+    assert d["retler"][0]["neden"] == "kurulum_eksik"
+
+
 def r(a, y, d, k, **bayrak):
     return dict(aof=a, yuksek=y, dusuk=d, kapanis=k, **bayrak)
 

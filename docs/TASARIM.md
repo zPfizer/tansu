@@ -1177,6 +1177,11 @@ Geçişin sahibi mevcut `tansu/motor.py` olur. `islem_adimi(durum, mum, sinyal=N
 onceki_durum=None)` açık yürütme isteğinde aynı geçişi her satır için çağırır ve sürümlü
 sözlük döndürür. Yürütme isteği verilmezse eski dört öğeli sonuç ve eski politika sürer.
 Bu hesap dosya yazmaz, veri indirmez ve eski `Zincir` önbelleğini yeni hesap için kullanmaz.
+Yeni yüz, gün başına çözülmüş tek kurulum ister; kurulum tarihinin tekrarı aynı içerikte olsa da
+hatadır. Eski çok dönemli kurulumu ilk satırdan seçme davranışı eski yolda korunur. `stop=kutu`
+için kutu altı, `hedef=tansu` için hedef gerekli alanlardır; eksikse aday `kurulum_eksik`
+gerekçesiyle doluma geçmez. Yeni yolda eksik kutu yerine ATR stopu veya seçilmiş hedefin
+sessizce atlanması yoktur; uygulanmayan alanın boşluğu bu ret değildir.
 
 Yürütme isteği `bagimsiz_islem_v1`, mevcut `ema_sikismasi` ailesi, strateji kimliği/sürümü,
 deneme/koşu/görüntü/sembol kimlikleri, açık pozitif nominal tutar, S08 risk/masraf sürümleri
@@ -1204,10 +1209,13 @@ Kapanış sinyali aynı güne doldurulmaz. Giriş sonraki seansın AOF modelini 
 giriş gününde tavan kilidi sinyali düşürür. Stopun önceliği ve aynı gün fiyat sırası eski
 motorun açık modeliyle korunur: stop dolumu `min(stop, AOF)` olur. Stopun önceliği
 dışında önceden bekleyen tam çıkış ilk uygun kilitsiz günde AOF olur. Her satış engeli olay izinde sayılır. Günlük çubuk gerçek
-emir kuyruğunu veya gün içi fiyat sırasını kanıtlamaz. Güncel gösterge yoksa yeni kapanış
-kararı verilmez; daha önce bekleyen satış ve geçerli fiyatla belirlenen stop/hedef adımı
-bu nedenle engellenmez. `adim` ve `_gun` içindeki `karar` seçeneğinin varsayılanı eski
-davranışı korur; yeni geçiş eksik göstergede bu seçeneği kapatıp neden kaydeder.
+emir kuyruğunu veya gün içi fiyat sırasını kanıtlamaz. Her kapanış kararı yalnız kendi
+girdilerini ister. Eksik RSI, geçerli SMA250 çıkışını veya RSI kullanmayan dip kuralını
+engellemez; gerekli girdi eksikse ilgili yeni karar verilmez. Daha önce bekleyen satış ve
+geçerli fiyatla belirlenen stop/hedef adımı
+bu nedenle engellenmez. `adim` ve `_gun` içindeki `karar=True` varsayılanı eski davranışı
+korur. Yeni geçiş, girdisi bilinen kararların ad kümesini verir; eksik göstergenin etkilediği
+karar kümede bulunmaz ve nedeni kaydedilir. Boş küme fiyatla belirlenen adımları engellemez.
 
 Karantina ve sonlu/pozitif olmayan fiyat dolum üretemez. Açık işlemde karantina çıkış isteği
 oluşturur; son temiz değerleme gerçek satış gibi yazılmaz. Bekleyen çıkış ilk uygun

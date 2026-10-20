@@ -143,30 +143,47 @@ def _gun(p, m, *, karar=True):
                 p, yari_tarih=t, yari_fiyat=seviye if m["dusuk"] <= seviye else aof
             )
     if (
-        not karar
+        karar is False
     ):  # TASARIM 5.15 S09: eksik gösterge, önceden istenen dolumu engellemez.
         return _merdiven(p, m) if p.ayar.cikis != "yok" else p
-    if m["kapanis"] < m["sma250"]:  # SMA250 tam çıkışı önce gelir
+    if (karar is True or "sma250" in karar) and m["kapanis"] < m[
+        "sma250"
+    ]:  # SMA250 tam çıkışı önce gelir
         p = replace(p, bekleyen="sma250")
     else:
-        p = _cikis_kurali(p, m)
+        p = _cikis_kurali(p, m, karar=karar)
     return _merdiven(p, m) if p.ayar.cikis != "yok" else p
 
 
-def _cikis_kurali(p, m):
+def _cikis_kurali(p, m, *, karar=True):
     """`dip`, `rsi70`, `rsi50`: tetikler kapanışta bakılır, yarı satış ve tam çıkış ertesi AOF'ta dolar.
     `rsi70` yarı satışı için önşart `kar`: girişten sonra önceki bir günün kapanışı giriş fiyatının ve SMA50'nin üstündedir."""
     c = p.ayar.cikis
     if c in ("yok", "atr3"):
         return p
-    alti = m["kapanis"] < m["onceki_dusuk"]  # kapanış önceki gün düşüğünün altında
+    izin = {"dip", "rsi70", "rsi50", "sma50", "kar"} if karar is True else karar
+    alti = "dip" in izin and m["kapanis"] < m["onceki_dusuk"]
     senaryo = {
         ad
         for ad, ok in (
             ("dip", c != "rsi70" and p.aktif and alti),  # etkinlik önceki günlerden
-            ("rsi70", c == "rsi70" and p.kar and m["onceki_rsi"] >= 70 > m["rsi"]),
-            ("rsi50", c == "rsi50" and m["onceki_rsi"] >= 50 > m["rsi"]),
-            ("sma50", c == "rsi50" and m["yuksek"] >= m["sma50"] > m["kapanis"]),
+            (
+                "rsi70",
+                c == "rsi70"
+                and "rsi70" in izin
+                and p.kar
+                and m["onceki_rsi"] >= 70 > m["rsi"],
+            ),
+            (
+                "rsi50",
+                c == "rsi50" and "rsi50" in izin and m["onceki_rsi"] >= 50 > m["rsi"],
+            ),
+            (
+                "sma50",
+                c == "rsi50"
+                and "sma50" in izin
+                and m["yuksek"] >= m["sma50"] > m["kapanis"],
+            ),
         )
         if ok
     }
@@ -181,7 +198,10 @@ def _cikis_kurali(p, m):
         # önşart bugünün tetiğinden sonra güncellenir: tetik yalnız u <= t-1 günlerine bakar (giriş günü hariç, `_gun` çağrılmaz)
         kar=p.kar
         or (
-            c == "rsi70" and m["kapanis"] > p.giris_fiyat and m["kapanis"] > m["sma50"]
+            c == "rsi70"
+            and "kar" in izin
+            and m["kapanis"] > p.giris_fiyat
+            and m["kapanis"] > m["sma50"]
         ),
     )
     if tam:
@@ -274,9 +294,9 @@ def _islem_tara(mumlar, sinyaller, ayar, kurulum, yurutme, durum):
     gun_sinyalleri = {_gun_tarihi(t): kimlik for t, kimlik in sinyaller.items()}
     if len(gun_sinyalleri) != len(sinyaller):
         raise ValueError("aynı güne birden çok sinyal kimliği verildi")
-    kb = _kutu_hedef(kurulum)
+    kb = _islem_kurulumu(kurulum)
     for tarih, satir in mumlar.iterrows():
-        alt, hedef = kb.get(tarih, (None, None))
+        alt, hedef = kb.get(_gun_tarihi(tarih), (None, None))
         durum = islem_adimi(
             durum,
             {**satir.to_dict(), "tarih": tarih},
@@ -287,6 +307,20 @@ def _islem_tara(mumlar, sinyaller, ayar, kurulum, yurutme, durum):
             hedef=hedef,
         )
     return durum
+
+
+def _islem_kurulumu(kurulum):
+    if kurulum is None:
+        return {}
+    gunler = [_gun_tarihi(t) for t in kurulum.index]
+    if len(set(gunler)) != len(gunler):
+        raise ValueError("kurulum günleri tekil olmalı")
+    return {
+        gun: tuple(None if pd.isna(x) else float(x) for x in (alt, hedef))
+        for gun, alt, hedef in zip(
+            gunler, kurulum["kutu_alt"], kurulum["hedef"], strict=True
+        )
+    }
 
 
 def _duz(deger):
@@ -426,13 +460,21 @@ def _limitler(m):
     )
 
 
-def _gosterge_var(p, m):
-    gerekli = ["sma250"]
-    if p.ayar.cikis not in ("yok", "atr3"):
-        gerekli += ["onceki_dusuk", "onceki_rsi", "rsi", "sma50"]
-    return all(
-        isinstance(m.get(k), (int, float)) and math.isfinite(m[k]) for k in gerekli
-    )
+def _karar_gostergeleri(p, m):
+    gerekli = {"sma250": ("sma250",)}
+    if p.ayar.cikis in ("dip", "rsi70", "rsi50"):
+        gerekli["dip"] = ("onceki_dusuk",)
+    if p.ayar.cikis in ("rsi70", "rsi50"):
+        gerekli[p.ayar.cikis] = ("onceki_rsi", "rsi")
+        gerekli["kar" if p.ayar.cikis == "rsi70" else "sma50"] = ("sma50",)
+    izin = {
+        ad
+        for ad, alanlar in gerekli.items()
+        if all(
+            isinstance(m.get(k), (int, float)) and math.isfinite(m[k]) for k in alanlar
+        )
+    }
+    return izin, izin != gerekli.keys()
 
 
 def _yurut_gun(d, p, m):
@@ -455,8 +497,8 @@ def _yurut_gun(d, p, m):
     if not bilinen:
         _olay(d, t, "limit_bilinmiyor")
     m = m | {"kilit_tavan": bool(ust), "kilit_taban": bool(alt or not bilinen)}
-    karar = _gosterge_var(p, m)
-    if not karar:
+    karar, eksik = _karar_gostergeleri(p, m)
+    if eksik:
         _olay(d, t, "gosterge_eksik")
     p = _dolumlu_adim(d, p, m, karar)
     _satis_engelini_kaydet(d, p, m)
@@ -566,9 +608,9 @@ def _sinyali_al(d, p, m, sinyal, ayar, kutu_alt, hedef):
     if not _atr_gecerli(m.get("atr")):
         _olay(d, m["tarih"], "gecersiz_risk_girdisi", sinyal, tur="dusen_sinyal")
         return None
-    for deger in (kutu_alt, hedef):
-        if deger is not None and not _pozitif_sayi(deger):
-            raise ValueError("kurulum fiyatı sonlu ve pozitif olmalı")
+    if _kurulum_eksik(ayar, kutu_alt, hedef):
+        _olay(d, m["tarih"], "kurulum_eksik", sinyal, tur="dusen_sinyal")
+        return None
     d["yari_islenen"] = False
     return replace(
         bekleyen(m["atr"], m["tarih"], ayar, kutu_alt, hedef),
@@ -580,6 +622,15 @@ def _sinyali_al(d, p, m, sinyal, ayar, kutu_alt, hedef):
                 [d["yurutme"], sinyal, m["tarih"], _duz(asdict(ayar)), kutu_alt, hedef]
             ),
         },
+    )
+
+
+def _kurulum_eksik(ayar, kutu_alt, hedef):
+    for deger in (kutu_alt, hedef):
+        if deger is not None and not _pozitif_sayi(deger):
+            raise ValueError("kurulum fiyatı sonlu ve pozitif olmalı")
+    return (ayar.stop == "kutu" and kutu_alt is None) or (
+        ayar.hedef != "yok" and hedef is None
     )
 
 
@@ -644,7 +695,7 @@ def islem_adimi(
     _yurutme_dogrula(y)
     m = _mum_dogrula(mum, sinyal)
     tarih = m["tarih"]
-    girdi = _iz_kodu([m, sinyal, _duz(asdict(ayar)), kutu_alt, hedef])
+    girdi = _iz_kodu([m, sinyal, _duz(asdict(ayar)), _duz(kutu_alt), _duz(hedef)])
     d = _durumu_oku(durum, y)
     if d["son_tarih"] is not None and tarih <= d["son_tarih"]:
         if tarih == d["son_tarih"] and girdi == d["son_girdi"]:
