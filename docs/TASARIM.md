@@ -1985,6 +1985,81 @@ hesap/sonuç örneğinin üretildiği iddiası değildir. İlk ailenin açık al
 çalıştırılabilir tanım yoktur. Sonraki gerçek yürütme ayrı açık başlatma izni bekler.
 #116'nın küçük grup hazırlığı yıllık planı ve günlük uygunluk kapılarını değiştirmez.
 
+#### Küçük grup hazırlığı (#116)
+
+**Durum: statik hazırlık uygulanmıştır. İlk kaynak ailesi engellidir.** Kaynak, #116 brifindeki
+Levent'in 19.10.2026 hazırlama ve çalıştırmama kararıdır. İlk grup tek soruyu,
+en fazla üç strateji revizyonunu ve 60 tamamlanmış borsa seansını sabitler.
+Kaynak strateji hazırlığındaki açık alanlar korunur. Eksik tanım, eski katalog
+varsayılanlarıyla tamamlanmaz. İlk kaynak ailesi hesaplanabilir olmadığından ilk
+hazırlık engelli kalır. Hazır durumu hesaplama veya günlük etkinleştirme izni vermez.
+
+E4 yüzü `tansusinama.grup_hazirla(depo, tanim, *, veri_koku)` olur. `tanim`,
+UTF-8 JSON ile taşınan aşağıdaki nesnedir. Kimlikler çağıranın açık metnidir.
+Bu sözleşme #97 için kalıcı kimlik veya bayt biçimi onayı değildir.
+
+| Alan | İçerik |
+|---|---|
+| `grup_id`, `revizyon`, `soru` | Grup, değişmez tanım revizyonu ve tek tanı sorusu. |
+| `strateji_revizyonlari` | En fazla üç nesne. Her biri `revizyon_ref`, `kaynak` dosya başvurusu, `yayim_tarihi`, eksikliği engelde açıklanan `deneme_id` ve adlandırılmış `eksik_alanlar` taşır. Kaynak yayım tarihi seans tarihinden ayrıdır. |
+| `seanslar` | Artan ve tekil ISO günleri. En fazla 60 gün. Boş veya kesin takvimle doğrulanamayan seçim engeldir. Bu statik yol bugünün tamamlanmasını kanıtlamaz; bugün ve sonraki günler hazır kabul edilmez. |
+| `isinma_baslangici` | İlk sonuç seansından önceki açık ISO gün. Gereksinim strateji revizyonuna bağlıdır; eksikse varsayılmaz. |
+| `hisse_kurali` | Açık `semboller`, `evren_politikasi=donemsel_bist30_v1`, `uyelik_surumu=bist30_2021_2025_v1`. Dönemsel üyelikten çıkan aday tarih ve nedenle dışlanır. Başka hisseyle değiştirilmez. |
+| `referanslar` | `anlik_goruntu`, `manifest_ozeti`, `uyelik_ozeti`, `kod_ozeti`; ayrıca `takvim`, `yontem`, `risk`, `masraf` dosya başvuruları. Her dosya başvurusu açık `yol` ve `sha256` taşır. Eksik başvuru boş bırakılır ve engel olur. |
+| `gozlem_durumu`, `durdurma_kurali` | `kesif` veya `gorulmedi`; sabit teknik durdurma kuralı. Sonucu görülen dönem `kesif` olur. |
+
+Takvim dosyası `baslangic`, `bitis`, artan ve tekil `seanslar`, `kaynak_ref`
+taşır. Günler açık sınırlar içindedir. Seçimin ilk ve son günü arasındaki takvim
+seansları eksiksiz seçilmelidir. Anlık görüntüde bulunan günler kendiliğinden onaylı
+takvim veya dönem seçimi sayılmaz. Veri eksikliği dönemi kısaltmaz.
+`grup_kod_ozeti()` mevcut paket dosyalarının içerik özetini verir.
+
+E4 yalnız `veri.oku`, dosya özeti, takvim, ham satır kapsamı ve tarihli üyelik
+kontrolü yapar. E1'in `veri_hazirla` hesabını çağırmaz. Her stratejinin kaynak
+başvurusu ve kayıtlı denemesi bağımsız denetlenir. Kaynak izni `izinsiz` olan
+legacy kayıt, boş `eksik_alanlar` verilse de hazırlığı hazır yapamaz. Gerekli alan,
+veri, takvim, üyelik veya izin eksikse alanı ve nedeni hazırlık engelinde görünür.
+Sinyal ve dolum günleri sonraki yürütmede ayrı üyelik kontrolü ister.
+Hazır durumunun statik kontrollerini E4 yapar. E5 zorunlu kayıt biçimini ve
+revizyon bağlarını denetler; piyasa veya strateji hesabı yapmaz.
+
+E5 yüzleri `PilotKayit.grup_hazirligi_kaydet(*, tanim, engeller, dislamalar)` ve
+`grup_hazirligi_oku(kayit_id, *, tanim=None)` olur. İlki mevcut pilotun kalıcı
+yazma sınırını kullanır. Olay türü `grup_hazirligi`, hazırlık türü
+`kucuk_grup_v1` olur. Olay tam tanımı, `tanim_ozeti`, `engeller`, `dislamalar`,
+`hazirlik_durumu=engelli|hazir` ve `yurutme_izni=False` taşır. Gösterge, sinyal,
+emir, dolum, işlem ve performans alanı kabul edilmez. Hazırlık deneme, koşu,
+başlangıç, bitiş veya sonuç olayı üretmez. Kaynak tanımı bulunmadığında E5'e
+sahte tam çözülmüş strateji kaydı yazılmaz.
+
+Aynı grup revizyonunun içeriği değiştirilemez. Düzeltme yeni revizyon ister.
+Eski olay `tanim` verilmeden tarihçe olarak okunabilir. Güncel kullanımda `tanim`
+verilir; tam özet uyuşmazsa veya grup için daha yeni hazırlık varsa eski hazırlık
+reddedilir. Strateji, veri, üyelik, kod veya yöntem başvurusunun değişmesi de
+bu kurala girer. Dosyalar değiştiğinde E4 yeni hazırlıkta gerçek özetleri tekrar
+karşılaştırır. Hazırlık, başvurulan dosyaları değiştirmez.
+
+Komut `python -m tansu grup-hazirla --grup-tanimi TANIM.json --deneme-dosyasi HAZIRLIK.jsonl --kok VERI` olur. İki dosya yolu açıktır.
+Göreli başvuru yolları komutun çalışma klasörüne göre çözülür.
+Komut kalıcı hazırlık olayını JSON olarak basar. Engelli hazırlık çıkış 1,
+hazır hazırlık çıkış 0 verir. Komutun başlatma seçeneği yoktur. İndirme,
+zamanlayıcı, gösterge veya sınama yolu çağrılmaz.
+
+**Sonraki yürütme sözleşmesi; bu işte uygulanmaz:** Ayrı açık başlatma kararı,
+güncel hazırlık başvurusu, aynı değişmez revizyon ve doğrulanmış bütün başvurular
+gerekir. Her gerçek yürütme yeni koşu kimliği alır. Kaynak kimliği, veri değişimi,
+üyelik açığı, geçersiz fiyat veya ayar uyuşmazlığı teknik durdurmadır. Kesinti
+başarı sayılmaz. Bütün denemeler, sıfır işlem, dışlamalar ve hatalar saklanır.
+Grup açık işlem olmadan başlar. Isınma sonuç dönemine girmez. Bitişteki açık
+ve kısmi işlemler kapalı işlemlerden ayrı kalır. Sabit bitiş, hisse kuralı ve soru
+sonuçlara göre değişmez. Otomatik kazanan veya başarı kararı verilmez.
+
+#76 ve #91'in 2025, 2024, 2023, 2022, 2021 ve birleşik dönem planı ertelenmiş
+olarak korunur. Grup hazırlığı veya tanı sonucu yıllık planı ve başarı kapılarını
+değiştiremez. Kaynaksız birleşime seçim veya günlük etkinleştirme izni vermez.
+`tests/test_tansusinama.py` komut ve statik hazırlık sınırını;
+`tests/test_kayit.py` ayrı olay, değişmez revizyon ve tarihçe sınırını kapsar.
+
 #### Yöntem kayıtları ve açık kapılar
 
 | Kayıt / durum | İçerik, çelişki ve kapanış kanıtı | Engellediği iş | Dayanak |

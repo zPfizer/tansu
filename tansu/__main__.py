@@ -1,4 +1,4 @@
-"""Komut girişi: `python -m tansu sadakat | kayit | sinama | tansu-sinama | denetim | evren-indir | sektor-indir | gunluk [tarih] [--kok veri] [--kimlik KIMLIK] [--resmi] [--son] [--varyant AD] [--isci N] [--hisse N] [--aile AILE] [--sektor-kok veri]` (TASARIM 3, 5.11, 5.14; `--varyant` kayit, sinama, tansu-sinama ve gunluk için, varsayılan bugun)."""
+"""Komut girişi: `python -m tansu sadakat | kayit | sinama | tansu-sinama | grup-hazirla | denetim | evren-indir | sektor-indir | gunluk [tarih] [--kok veri] [--kimlik KIMLIK] [--resmi] [--son] [--varyant AD] [--isci N] [--hisse N] [--aile AILE] [--sektor-kok veri]` (TASARIM 3, 5.11, 5.14; `--varyant` kayit, sinama, tansu-sinama ve gunluk için, varsayılan bugun)."""
 
 import argparse
 import datetime as dt
@@ -147,6 +147,7 @@ def main(argv=None) -> int:
             "kayit",
             "sinama",
             "tansu-sinama",
+            "grup-hazirla",
             "denetim",
             "evren-indir",
             "sektor-indir",
@@ -186,7 +187,10 @@ def main(argv=None) -> int:
         "--isci", type=int, help="tansu-sinama: işçi sayısı (varsayılan: makineye göre)"
     )
     ap.add_argument("--deneme-id", help="tansu-sinama ve gunluk: kayıtlı deneme")
-    ap.add_argument("--deneme-dosyasi", help="denemenin açık pilot dosya yolu")
+    ap.add_argument(
+        "--deneme-dosyasi", help="denemenin veya hazırlığın açık pilot dosya yolu"
+    )
+    ap.add_argument("--grup-tanimi", help="grup-hazirla: açık UTF-8 JSON tanım yolu")
     ap.add_argument("--hisse", type=int, help="tansu-sinama: adına göre ilk N hisse")
     ap.add_argument(
         "--aile",
@@ -201,6 +205,24 @@ def main(argv=None) -> int:
     a = ap.parse_args(argv)
     kok, p = Path(a.kok), aileler.VARYANTLAR[a.varyant]
     try:
+        if a.komut == "grup-hazirla":
+            if not a.grup_tanimi or not a.deneme_dosyasi:
+                raise deneme.PilotHatasi("--grup-tanimi ve --deneme-dosyasi gerekli")
+            if a.deneme_id or a.resmi or a.kimlik or a.hisse or a.isci or a.aile:
+                raise deneme.PilotHatasi(
+                    "Hazırlık yürütme veya örtük seçim argümanı almaz."
+                )
+            try:
+                tanim = json.loads(Path(a.grup_tanimi).read_text(encoding="utf-8"))
+            except (OSError, ValueError) as hata:
+                raise deneme.PilotHatasi(f"Grup tanımı okunamadı: {hata}") from hata
+            sonuc = tansusinama.grup_hazirla(
+                deneme.PilotKayit(a.deneme_dosyasi),
+                tanim,
+                veri_koku=kok,
+            )
+            print(json.dumps(sonuc, ensure_ascii=False, default=str))
+            return 0 if sonuc["hazirlik_durumu"] == "hazir" else 1
         ayar_aktarimi = None
         if a.deneme_id and a.komut not in ("tansu-sinama", "gunluk"):
             raise deneme.PilotHatasi(

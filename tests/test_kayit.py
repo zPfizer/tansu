@@ -2480,3 +2480,153 @@ def test_s11_bilesen_uygun_merkezi_kendi_uyesinde_bildirir(
         reddedildi = True
     assert reddedildi, "Her bileşen yalnız kendi üyesini uygun merkez diye gösterebilir"
     assert depo.yol.read_bytes() == once
+
+
+def grup_kayit_tanimi():
+    # Yalnız E5 şema örneği; gerçek veya hesaplanabilir kaynak strateji değildir.
+    ref = dict(yol="statik-kaynak", sha256="a" * 64)
+    return dict(
+        grup_id="grup",
+        revizyon="1",
+        soru="Açık alanlar tamam mı?",
+        strateji_revizyonlari=[
+            dict(
+                revizyon_ref="kaynak-1",
+                kaynak=ref,
+                yayim_tarihi="2025-12-19",
+                deneme_id="dogrulanmis-basvuru",
+                eksik_alanlar=[],
+            )
+        ],
+        seanslar=["2025-01-02"],
+        isinma_baslangici="2024-12-31",
+        hisse_kurali=dict(
+            semboller=["AKBNK"],
+            evren_politikasi="donemsel_bist30_v1",
+            uyelik_surumu="bist30_2021_2025_v1",
+        ),
+        referanslar=dict(
+            anlik_goruntu="ag",
+            manifest_ozeti="m",
+            uyelik_ozeti="u",
+            kod_ozeti="k",
+            takvim=ref,
+            yontem=ref,
+            risk=ref,
+            masraf=ref,
+        ),
+        gozlem_durumu="kesif",
+        durdurma_kurali="Teknik hata durdurur.",
+    )
+
+
+def test_grup_hazirligi_ayri_olaydir_hazir_da_olsa_yurutmez(tmp_path):
+    depo = pilot.PilotKayit(tmp_path / "hazirlik.jsonl")
+    tanim = grup_kayit_tanimi()
+    engel = dict(alan="seanslar", neden="Kesin seçim eksik.")
+    kayitlar = []
+    with pytest.raises(pilot.PilotHatasi, match="zorunlu alan"):
+        depo.grup_hazirligi_kaydet(
+            tanim=dict(grup_id="grup", revizyon="taslak"), engeller=[], dislamalar=[]
+        )
+    for engeller, durum in (([engel], "engelli"), ([], "hazir")):
+        m = depo.grup_hazirligi_kaydet(tanim=tanim, engeller=engeller, dislamalar=[])
+        kayitlar.append(m.olay_id)
+        olay = pilot.PilotKayit(depo.yol).grup_hazirligi_oku(m.olay_id, tanim=tanim)
+        assert olay["hazirlik_durumu"] == durum
+        assert olay["yurutme_izni"] is False
+        assert olay["tanim"] == tanim
+        assert m.deneme_id is None and m.kosu_id is None
+        assert set(olay) == {
+            "kayit_id",
+            "sema_surumu",
+            "olusturma_zamani",
+            "kayit_turu",
+            "hazirlik_turu",
+            "tanim",
+            "tanim_ozeti",
+            "engeller",
+            "dislamalar",
+            "hazirlik_durumu",
+            "yurutme_izni",
+        }
+    assert [o["kayit_turu"] for o in depo.oku()] == ["grup_hazirligi"] * 2
+    with pytest.raises(pilot.PilotHatasi, match="geçersiz"):
+        depo.grup_hazirligi_oku(kayitlar[0], tanim=tanim)
+    assert depo.grup_hazirligi_oku(kayitlar[0])["hazirlik_durumu"] == "engelli"
+
+
+@pytest.mark.parametrize(
+    "alan", ["strateji", "anlik_goruntu", "uyelik_ozeti", "kod_ozeti", "yontem"]
+)
+def test_grup_degisen_basvuru_yeni_revizyon_ister_tarihce_korunur(tmp_path, alan):
+    depo = pilot.PilotKayit(tmp_path / "hazirlik.jsonl")
+    tanim = grup_kayit_tanimi()
+    m = depo.grup_hazirligi_kaydet(
+        tanim=tanim, engeller=[dict(alan="kaynak", neden="Test engeli.")], dislamalar=[]
+    )
+    eski = depo.yol.read_bytes()
+    yeni = deepcopy(tanim)
+    if alan == "strateji":
+        yeni["strateji_revizyonlari"] = [dict(revizyon_ref="yeni-kaynak")]
+    else:
+        yeni["referanslar"] = {
+            alan: {"yol": "yeni", "sha256": "a" * 64} if alan == "yontem" else "yeni"
+        }
+    with pytest.raises(pilot.PilotHatasi, match="geçersiz"):
+        depo.grup_hazirligi_oku(m.olay_id, tanim=yeni)
+    with pytest.raises(pilot.PilotHatasi, match="yeni revizyon"):
+        depo.grup_hazirligi_kaydet(
+            tanim=yeni,
+            engeller=[dict(alan="kaynak", neden="Test engeli.")],
+            dislamalar=[],
+        )
+    assert depo.yol.read_bytes() == eski
+    yeni["revizyon"] = "2"
+    n = depo.grup_hazirligi_kaydet(
+        tanim=yeni, engeller=[dict(alan="kaynak", neden="Test engeli.")], dislamalar=[]
+    )
+    assert depo.yol.read_bytes().startswith(eski)
+    assert depo.grup_hazirligi_oku(m.olay_id)["tanim"] == tanim
+    with pytest.raises(pilot.PilotHatasi, match="geçersiz"):
+        depo.grup_hazirligi_oku(m.olay_id, tanim=tanim)
+    assert depo.grup_hazirligi_oku(n.olay_id, tanim=yeni)["tanim"] == yeni
+
+
+@pytest.mark.parametrize("alan,adet", [("strateji_revizyonlari", 4), ("seanslar", 61)])
+def test_grup_revizyon_ve_seans_sinirini_asamaz(tmp_path, alan, adet):
+    depo = pilot.PilotKayit(tmp_path / "hazirlik.jsonl")
+    tanim = dict(
+        grup_id="grup",
+        revizyon="1",
+        strateji_revizyonlari=[dict(revizyon_ref=str(i)) for i in range(3)],
+        seanslar=pd.bdate_range("2025-01-02", periods=60).strftime("%Y-%m-%d").tolist(),
+    )
+    m = depo.grup_hazirligi_kaydet(
+        tanim=tanim, engeller=[dict(alan="kaynak", neden="Test engeli.")], dislamalar=[]
+    )
+    assert len(depo.grup_hazirligi_oku(m.olay_id)["tanim"][alan]) == adet - 1
+    tanim["revizyon"] = "2"
+    if alan == "seanslar":
+        tanim[alan].append("2025-12-31")
+    else:
+        tanim[alan].append(dict(revizyon_ref="fazla"))
+    with pytest.raises(pilot.PilotHatasi, match="en fazla"):
+        depo.grup_hazirligi_kaydet(
+            tanim=tanim,
+            engeller=[dict(alan="kaynak", neden="Test engeli.")],
+            dislamalar=[],
+        )
+    assert len(depo.oku()) == 1
+
+
+def test_grup_hazirligi_hesap_sonucu_ve_gecersiz_tarih_almaz(tmp_path):
+    depo = pilot.PilotKayit(tmp_path / "hazirlik.jsonl")
+    for degisiklik in (dict(performans=1), dict(seanslar=["2025-02-30"])):
+        with pytest.raises(pilot.PilotHatasi):
+            depo.grup_hazirligi_kaydet(
+                tanim=dict(grup_id="grup", revizyon="1") | degisiklik,
+                engeller=[dict(alan="kaynak", neden="Test engeli.")],
+                dislamalar=[],
+            )
+    assert not depo.yol.exists()
