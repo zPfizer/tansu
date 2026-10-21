@@ -768,6 +768,49 @@ def test_s11_gelecek_fiyat_ve_diger_hucreler_onceki_olcuyu_degistirmez(
     assert depo.yol.read_bytes().startswith(onceki_kayit)
 
 
+def test_pay_kimligi_gelecek_fiyat_onceki_kod_ve_kaliteyi_degistirmez(
+    tmp_path, monkeypatch
+):
+    from tests.test_veri import pay_kimlikli_goruntu
+
+    a, secim = pay_kimlikli_goruntu(tmp_path, monkeypatch)
+    politika = veri.pay_kimligi_hazirla(
+        secim,
+        kaynak=secim["kaynak"],
+        goruntu_id=a.kimlik,
+        manifest_ozeti=secim["manifest_ozeti"],
+    )
+    t = pd.Timestamp("2025-11-24")
+    once = veri.pay_kimligi_uygula(
+        replace(a, fiyat=a.fiyat[a.fiyat.tarih <= t]), politika
+    )
+    fiyat = a.fiyat.copy()
+    fiyat.loc[
+        (fiyat.sembol == "TRALT") & (fiyat.tarih > t),
+        [
+            "kapanis",
+            "aof",
+            "yuksek",
+            "dusuk",
+            "ham_kapanis",
+            "ham_aof",
+            "ham_yuksek",
+            "ham_dusuk",
+        ],
+    ] = 1000.0
+    sonra = veri.pay_kimligi_uygula(replace(a, fiyat=fiyat), politika)
+    pd.testing.assert_frame_equal(once.fiyat, sonra.fiyat[sonra.fiyat.tarih <= t])
+
+    def kalite(anlik):
+        g = anlik.gun_tablosu
+        return g[g.tarih <= t].sort_values(["sembol", "tarih"]).reset_index(drop=True)
+
+    pd.testing.assert_frame_equal(kalite(once), kalite(sonra))
+    assert set(
+        once.fiyat.loc[once.fiyat.sembol == "pay_kimligi_v1/p002", "borsa_kodu"]
+    ) == {"KOZAL", "TRALT"}
+
+
 def test_s12_gelecek_fiyat_egitim_secimini_ve_acik_dislamayi_degistirmez(
     tmp_path, monkeypatch
 ):

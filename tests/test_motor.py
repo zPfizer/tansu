@@ -1821,3 +1821,15 @@ def test_duz_seride_agresif_sinyal_atr_sifir_motor_merdiven_basamagi_yok():
         x.planlanan_risk,
         x.gerceklesen_kayip,
     ) == _ak((15, 100, 17, 100, "stop", 0, 0))
+
+
+def test_eski_motor_pay_kimligi_paketini_acikca_reddeder():
+    from tansu import veri
+
+    with pytest.raises(veri.VeriHatasi, match="eski motor pay kimliği"):
+        motor.sinama(
+            None,
+            veri_paketi=dict(
+                uyelik={}, referans=dict(pay_kimligi=dict(surum="pay_kimligi_v1"))
+            ),
+        )

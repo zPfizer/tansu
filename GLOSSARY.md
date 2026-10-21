@@ -18,6 +18,9 @@ Sayı, formül ve işleyiş atıf verilen bölümdedir: TASARIM = `docs/TASARIM.
 
 | Terim | Anlam |
 |---|---|
+| Kaynak sembolü | Sağlayıcının fiyat ve şirket olayı serisini etiketlediği kod; geçmişteki borsa koduyla aynı olmak zorunda değildir (TASARIM §5.15, #167). |
+| Borsa kodu | Bir payın belirtilen tarihte borsada geçerli işlem kodu (TASARIM §5.15, #167). |
+| Pay kimliği | Sürümlü politikada ad değişimi boyunca aynı payı bağlayan yerel anahtar; ISIN veya kalıcı genel kimlik değildir (TASARIM §5.15, #167). |
 | Fiyat | Bir hissenin günlük yüksek, düşük, kapanış, ağırlıklı ortalama ve hacim serisi. |
 | Hacim | Bir günde işlem gören TL tutarıdır, hisse adedi değildir (TASARIM §5.4). |
 | İşlem günü | Borsanın açık olduğu gün. Bir hissenin işlem günü, o hissenin hacimle işlem gördüğü gündür (TASARIM §4, §5.1). |

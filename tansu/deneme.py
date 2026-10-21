@@ -1277,6 +1277,8 @@ def _ileri_sinyali_dogrula(olaylar, ust, m, baslangic, secim_ref, sinyal):
         or sinyal["kaynak_sinyal"]["baglar"]["ayar_parmak_izi"]
         != test["strateji"]["ayar_parmak_izi"]
         or sinyal["veri_ref"]["manifest_parmak_izi"] != baslangic["manifest_ozeti"]
+        or sinyal["veri_ref"].get("pay_kimligi")
+        != ust["veri_ayarlari"].get("pay_kimligi")
     ):
         raise PilotHatasi("WF sinyalinin tarih, parametre veya veri bağı uyuşmuyor.")
     _ileri_tekil(
@@ -1411,7 +1413,11 @@ def _ileri_bolum_kontrolleri(olaylar, ust, m, b):
     kontroller = _ileri_kayitlari(olaylar, m, "ileri_kontrol")
     onceki = {o["sembol"]: o for o in kontroller if o["bolum_id"] < b["ad"]}
     guncel = {o["sembol"]: o for o in kontroller if o["bolum_id"] == b["ad"]}
-    _, _, uyeler, _, _ = _donem_uyeligi(ust, dict(donem=b))
+    sakli = {}
+    if ust["veri_ayarlari"].get("pay_kimligi") is not None:
+        baslangic = _bul(olaylar, m.kosu_id, "baslangic", "kosu_id")
+        sakli["uyelik_kaniti"] = baslangic["uyelik_kaniti"]
+    _, _, uyeler, _, _ = _donem_uyeligi(ust, dict(donem=b), **sakli)
     gereken = set(uyeler) | _ileri_tasinanlar(
         {s: o["durum"] for s, o in onceki.items()}
     )
@@ -1820,6 +1826,13 @@ def _ileri_olayi_dogrula(olaylar, o):
                 "kaynaklar",
                 "bos_nedenleri",
             }
+            if ust["veri_ayarlari"].get("pay_kimligi") is not None:
+                from tansu.tansusinama import _ileri_uyelik_kaniti_dogrula
+
+                alanlar.add("uyelik_kaniti")
+                _ileri_uyelik_kaniti_dogrula(
+                    ust["veri_ayarlari"], o.get("uyelik_kaniti")
+                )
             if set(o) != alanlar or o["is_listesi"] != [
                 b["ad"] for b in ust["donemler"]
             ] + ["birlesik"]:
@@ -2068,6 +2081,7 @@ def _grup_tanimi_dogrula(tanim):
         "yontem",
         "risk",
         "masraf",
+        "pay_kimligi",
     }:
         raise PilotHatasi("Grup başvuruları geçersiz.")
     for ad in ("anlik_goruntu", "manifest_ozeti", "uyelik_ozeti", "kod_ozeti"):
@@ -2075,6 +2089,18 @@ def _grup_tanimi_dogrula(tanim):
             _metin(ref[ad])
     for ad in ("takvim", "yontem", "risk", "masraf"):
         _grup_dosya_basvurusu(ref.get(ad))
+    if "pay_kimligi" in ref:
+        # TASARIM 5.15 #167: geçmiş kayıt yalnız seçimin yapısına bağlıdır.
+        from tansu.veri import VeriHatasi, pay_kimligi_secimi_dogrula
+
+        try:
+            pay_kimligi_secimi_dogrula(ref["pay_kimligi"])
+        except VeriHatasi as hata:
+            raise PilotHatasi(str(hata)) from hata
+        if ref["pay_kimligi"]["goruntu_id"] != ref.get("anlik_goruntu") or ref[
+            "pay_kimligi"
+        ]["manifest_ozeti"] != ref.get("manifest_ozeti"):
+            raise PilotHatasi("Pay kimliği grup veri bağıyla uyuşmuyor.")
 
 
 def _grup_tarihi(gun):
@@ -2408,6 +2434,7 @@ class PilotKayit:
         tohum,
         is_listesi,
         ureteci_surumu=None,
+        uyelik_kaniti=None,
     ):
         _kosu_meta_dogrula(
             (
@@ -2451,6 +2478,8 @@ class PilotKayit:
             if tohum is None
             else {},
         }
+        if uyelik_kaniti is not None:
+            baslangic["uyelik_kaniti"] = uyelik_kaniti
         makbuz = self._ekle(baslangic)
         kosu = _Kosu(self, makbuz, deneme, baslangic)
         try:

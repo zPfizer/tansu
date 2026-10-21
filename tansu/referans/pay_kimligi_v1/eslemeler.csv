@@ -1,0 +1,5 @@
+pay_id,kaynak,kaynak_sembolu,borsa_kodu,baslangic,bitis,goruntu_id,manifest_ozeti,kaynak_id
+pay_kimligi_v1/p001,is_yatirim,TRMET,KOZAA,,2025-11-24,20261005-1949,a6c449c660c75f1850bca5d9e4bdb1ea71576ae443848abed103f9a661485d8f,B41008
+pay_kimligi_v1/p001,is_yatirim,TRMET,TRMET,2025-11-24,,20261005-1949,a6c449c660c75f1850bca5d9e4bdb1ea71576ae443848abed103f9a661485d8f,B41008
+pay_kimligi_v1/p002,is_yatirim,TRALT,KOZAL,,2025-11-24,20261005-1949,a6c449c660c75f1850bca5d9e4bdb1ea71576ae443848abed103f9a661485d8f,B41008
+pay_kimligi_v1/p002,is_yatirim,TRALT,TRALT,2025-11-24,,20261005-1949,a6c449c660c75f1850bca5d9e4bdb1ea71576ae443848abed103f9a661485d8f,B41008

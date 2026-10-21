@@ -1790,6 +1790,93 @@ korur; bu yol #90'ın yeni risk/dolum motoru değildir. Parametre verilmezse esk
 `motor.sinama` ve yaklaşık `evren.evren` seçimleri değişmez. Dayanak: [L2], [W8];
 #86 kapsamı ve giriş denetimi kabul ölçütü.
 
+**Kaynağa bağlı pay kimliği (#167):** Bu isteğe bağlı E1 politikası, sağlayıcının
+kaynak sembolünü, tarihte geçerli borsa kodunu ve politika içindeki pay kimliğini
+ayırır. Teknik yorum Levent'in 21.10.2026 tarihli kapsam kararına dayanır; işlem
+kuralı veya kalıcı deneme/koşu kimliği kararı değildir. Birincil ad değişimi ve
+kayıtlı sağlayıcı zincirinin sınırları
+`tansu/referans/pay_kimligi_v1/kaynaklar.md` dosyasındadır.
+
+`VeriIstegi.pay_kimligi`, kayıtlı denemenin `veri_ayarlari.pay_kimligi` alanı ve
+küçük grubun `referanslar.pay_kimligi` alanı aynı seçimi taşır. Seçim yoksa eski
+istek, sembol, kayıt ve referans anlamları değişmez. Seçim varsa tam olarak şu
+alanlar gereklidir: `surum`, `tablo_ozeti`, `kaynak`, `goruntu_id`, `manifest_ozeti`.
+Sürüm `pay_kimligi_v1` olur; özetler küçük harfli SHA-256 metnidir. Boş, eksik,
+fazla alanlı veya bilinmeyen sürümlü seçim reddedilir. E5 seçim yapısını doğrular;
+geçmiş kaydı okumak için güncel fiyatı veya tabloyu yüklemez. E1 gerçek sağlayıcı,
+görüntü, doğrulanmış manifest ve sürümlü `eslemeler.csv` özetini karşılaştırır.
+Tablodaki sağlayıcı/görüntü/manifest bağı da aynı olmalıdır. Başka görüntüye veya
+sağlayıcıya örtük aktarım yoktur; yeni kaynak kanıtı yeni sürüm gerektirir.
+
+CSV'nin alanları `pay_id`, `kaynak`, `kaynak_sembolu`, `borsa_kodu`, `baslangic`,
+`bitis`, `goruntu_id`, `manifest_ozeti`, `kaynak_id` olur. Başlangıç dahil, bitiş
+hariçtir. Boş sınır, yalnız eldeki kaynak satırlarının tarihine uygulanan açık
+sınırdır; geçmiş veri üretmez. İlk sürüm yalnız KOZAA/TRMET ve KOZAL/TRALT
+bağlarını içerir. 24.11.2025'ten önce eski kod, o günden itibaren yeni kod
+kullanılır. TRHOL bu bağın parçası değildir. `pay_id` değerleri bu sürüme ait yerel
+anahtarlardır; ISIN veya kalıcı genel menkul kimliği sayılmaz.
+
+`veri.pay_kimligi_hazirla` seçimi ve tablo bağını doğrular.
+`veri.pay_sembolleri` açık etiketleri tek pay anahtarına çözer;
+`veri.pay_uyeligi` tarihli üyeliği bu anahtarlara yansıtır.
+`veri.pay_kimligi_uygula` değişmez görüntünün bellekteki kopyasında fiyat ve olay
+anahtarlarını birlikte çözer. Kaynak satırı, sayısal fiyat, hacim ve olay çarpanı
+değişmez; dosyaya yazılmaz. Aynı payın iki kaynak etiketi, çakışan kod aralığı,
+tekrarlı istek payı, tek günde iki üyelik veya eksik kod aralığı hatadır. Tabloda
+olmayan payların etiketi aynen kalır. Kalite, olay denetimi ve kaynak günü hesabı,
+dönem/sembol süzmesinden önce çözümlenmiş bütün görüntüde bir payı bir kez sayar;
+kalite eşikleri ve eksik fiyat kuralları değişmez.
+
+Seçimli E1 çıktısının `sembol` alanı çözülmüş pay anahtarıdır. Piyasa ve şirket
+olayı satırları ayrıca `kaynak_sembolu` ve tarihteki `borsa_kodu` alanlarını taşır.
+Üyelik kanıtının özgün `sembol`, kaynak ve aralığı korunur; `pay_id` eklenir.
+Üyelik gününün `semboller` listesi pay anahtarlarını taşır ve 30 ayrı pay gerekir.
+Veri referansı tam seçimi taşır; kayıt kimliğine seçimin özeti eklenir. Böylece
+seçim, E5 tam ayar özetini ve E4 hazırlık önbelleği anahtarını değiştirir.
+
+E4 üyelik birleşimini paya çözdükten sonra E1 isteğini ve pay başına gösterge,
+sinyal, dolum, bekleyen çıkış ve açık işlem geçmişini hazırlar. Kod değişimi bu
+geçmişi bölmez. Sinyal ve sonraki giriş gününün üyeliği aynı payla denetlenir.
+S12 eğitim seçimi, test üyeliği, sinyal makbuzu ve çeyrekler arasında taşınan
+durum aynı çözülmüş pay anahtarını kullanır. Üst üyelik birleşimi de E1
+isteğinden önce aynı kayıtlı seçimle çözülür; tarihli kaynak kanıtı korunur.
+Sinyal makbuzunun veri referansı üst denemenin tam pay kimliği seçimini taşır;
+başka seçim veya eksik seçim aynı manifest özetiyle kabul edilmez.
+Pay kimliği seçilmiş S12 üst koşusunun başlangıcı, hesap öncesinde
+`uyelik_kaniti` taşır. Tam alanları `surum=ileri_uyelik_kaniti_v1`,
+`uyelik_tablo_metni` ve `pay_kimligi_tablo_metni` olur. İki metin, kaynak
+CSV dosyalarının tam UTF-8 baytlarını korur. E4 bu baytları bir kez okur;
+özetlerini kayıtlı `uyelik_ozeti` ve `pay_kimligi.tablo_ozeti` ile karşılaştırır.
+Çağıranın metni ve özetini birlikte değiştirmesi kaynak yetkisini kanıtlamaz.
+Bu nedenle saklı üyelik ve eşleme metinleri, kodun sahip olduğu yayımlanmış
+sürüm → onaylı tam UTF-8 bayt özeti kaydıyla doğrulanır. Bu kayıt çağırandan
+ve canlı dosyadan türetilmez. Yeni kaynak baytları yeni sürüm gerektirir.
+E5 yayında ve geçmiş okumada aynı saf üyelik/eşleme sahipleriyle bu kaynak
+onayını, metin özetlerini ve sağlayıcı/görüntü/manifest bağını doğrular.
+E5 sınır testi, metinle kayıtlı özeti birlikte değiştiren yanlış pay bağı,
+üyelik, sağlayıcı, tarih ve kaynak bağı girişlerini hem eklemede hem yeni
+okuyucuda reddeder; ret sırasında günlük değişmez. Gereken tarihli paylar
+yalnız bu saklı kaynaklar ve kayıtlı takvimden gelir; önceki açık/bekleyen veya
+karantinalı durumla birleşir. Çağıranın güncel kontrol başvuruları beklenen
+üyeliği tanımlamaz. Canlı dosya, fiyat veya gösterge yüklenmez. Kötü veya eksik
+kanıt reddedilir. Bu alan seçimsiz eski koşulara, S10'a ve eğitim/test çocuk
+başlangıçlarına eklenmez; kayıtlı ayar özetini değiştirmez. Yalnız revizyon
+kaydı bulunan eski girdiler okunabilir. Bu kanıttan önce üretilmiş gelişim
+amaçlı seçimli WF başlangıçları sözleşme öncesi kayıttır; güncel okuyucu bunlara
+kanıt uydurmaz veya defteri değiştirmez ve eksik kanıtı açık hata ile reddeder.
+
+Küçük grup aynı çözümü yalnız statik üyelik ve veri kapsamına uygular; hesap
+başlatmaz. Eski `motor.sinama` bu yeni paket seçimini açık hata ile reddeder;
+yeni anlam eski çağırana sessizce verilmez.
+
+Takvim seçimi değişmez: kaydedilmiş görüntünün `Anlik.gunler` dizisi kullanılır.
+Görüntüdeki 2021–2025 dizisi 1.250 gözlemdir; iptal edilen 08.02.2023 bu dizide
+yoktur. Ayrı XU100 dosyası bu dizinin yerine geçirilmez. TRALT'ın ilk gözlemi
+12.02.2010'dur; önceki 29 gerekli gün üretilmez ve istenen ısınma başlangıcı
+ötelenmez. Kod bağı kapsamı kanıtlayabilir; eksik ısınma, kalite veya limit kanıtı
+başarılı işlem ya da tam dönem getirisi sayılmaz. Sağlayıcının bütün düzeltme
+geçmişi ve fiyat sınıfı kökeni bu sınırlı kod zinciriyle kanıtlanmış olmaz.
+
 Motorlar sorumluluk sınırıdır; ayrı servis zorunluluğu değildir. E1–E3 düz veri kayıtlarıyla çalışır;
 panel, CLI, HTML veya kullanıcı arayüzü durumu hesaplama girdisinin yerine geçmez. Bu görev ayrımı
 taslağın E1–E6/J01–J20 tablolarının S01 sözleşmesidir (YORUM). Dayanak: [L1], [W8].

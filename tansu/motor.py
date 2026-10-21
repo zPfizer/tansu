@@ -929,6 +929,9 @@ def _mumlar_kur(anlik, sembol, p, atr_n) -> pd.DataFrame:
 def _uyelik_kosusu(anlik, paket):
     """E1 kanıtı koşunun her değerlendirme gününü kapsar (TASARIM 5.15)."""
     u, ref = paket["uyelik"], paket["referans"]
+    if ref.get("pay_kimligi") is not None:
+        # TASARIM 5.15 #167: eski motorun sembol anlamı örtük değişmez.
+        raise VeriHatasi("eski motor pay kimliği paketini desteklemiyor")
     if (
         ref["goruntu_id"] != anlik.kimlik
         or ref["uyelik_surumu"] != u["uyelik_surumu"]

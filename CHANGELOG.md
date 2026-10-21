@@ -13,6 +13,11 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ### Değişti
 
+- Saklı ileri yürüme kaynakları, çağıranın özetinden bağımsız yayımlanmış sürüm özetleriyle doğrulanır; tutarlı özetli sahte üyelik ve pay bağları eklemede ve geçmiş okumada reddedilir. (#167)
+- Tam denetimlerin tamamlanması için CI iş süresi 30 dakikadan 60 dakikaya çıkarıldı; testler ve başarı ölçütleri korundu. (#167)
+
+- Pay kimliği seçilmiş ileri yürümenin üyelik ve eşleme kaynakları başlangıç kaydında özetleriyle saklanır; geçmiş okuma canlı tablolara bağlı kalmaz. Eksik eski gelişim kanıtı açıkça reddedilir. (#167)
+
 - Ortak dönem kurulumu sinyal tarihlerini iki sınır günü dahil seçer; dönem sırası, aynı gün tekrarları, değerler ve sinyal kimlikleri korunur. Sınır günleri kurulumda bulunmasa da geçerli seçim hata vermez. (#168)
 
 - Site işlerinin esas şablonu Levent'in tarihli kararı ve içerik özetiyle sabitlendi; modül başına kaynak, canlı kanıt ve ayrı yayım onayı korundu. (#69)
@@ -23,6 +28,12 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 - Altı çalışma belgesi mevcut sahiplerinde birleştirildi; kontrol ve gerçek veri kanıtı inceleme öncesine alındı, küçük işte yazıcı devri ve kapsam kuralları sadeleştirildi. Eski bilet sözleşmesi geçmiş bölümüyle korundu.
 
 ### Eklendi
+
+- Kayıtlı sağlayıcı ve görüntüye bağlı, açık seçimli pay kimliği eklendi. Tarihli KOZAA/TRMET ve KOZAL/TRALT kodları fiyat ve olay değerleri değiştirilmeden aynı pay geçmişine bağlanır. Eski etiket davranışı korunur; kaynak, özet ve çakışma hataları reddedilir. Eksik ısınma ve düzeltme kökeninin kanıt sınırı korunur. (#167)
+
+- Pay kimliği başvuruları LF biçiminde sabitlendi; taşınabilir tablo özeti ve gerçek depo eşlemeleri otomatik denetleniyor. (#167)
+
+- Pay kimliği ileri yürümenin eğitim seçimi, sinyal kaydı ve taşınan işlemine bağlandı; aynı görüntü özetine sahip başka kimlik seçimi reddedilir. (#167)
 
 - Kayıtlı ileri yürüme, her çeyrekten önce eğitim seçimini kaydeder; tek kronolojik akışta açık ve bekleyen işlemlerin özgün ayarını korur. Eğitim dışlamaları, giriş kohortları ve açık ufuk ayrı kayıtlarla izlenir. (#93)
 - Küçük grup hazırlığı ayrı komut ve kayıt olayıyla eklendi. En fazla üç strateji revizyonu ve 60 kesin seans dondurulur; eksik kaynak tanımı, veri, takvim ve üyelik adlandırılmış engel olur. Hazırlık hesap başlatmaz; değişen tanım yeni revizyon ister, eski kayıt tarihçede kalır. İlk kaynak ailesi engelli kalır. (#116)

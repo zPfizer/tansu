@@ -2631,6 +2631,7 @@ def test_s12_kayit_bagi_nihai_sonucu_ve_acik_ufku_korur(tmp_path, monkeypatch):
         "bilinmeyen_tur",
         "kontrol_float",
         "sinyal_legacy",
+        "sinyal_pay_kimligi",
         "kontrol_legacy",
         "islem_legacy",
         "bolum_legacy",
@@ -2655,6 +2656,7 @@ def test_s12_kayit_bagi_nihai_sonucu_ve_acik_ufku_korur(tmp_path, monkeypatch):
         )
         aranan = {
             "sinyal_legacy": "ileri_sinyal",
+            "sinyal_pay_kimligi": "ileri_sinyal",
             "kontrol_legacy": "ileri_kontrol",
             "islem_legacy": "islem",
             "bolum_legacy": "bolum",
@@ -2686,6 +2688,14 @@ def test_s12_kayit_bagi_nihai_sonucu_ve_acik_ufku_korur(tmp_path, monkeypatch):
             hedef["kayit"]["deneme_ayar_parmak_izi"] = "uydurma"
         elif tur == "ileri_sinyal":
             hedef["deneme_ayar_parmak_izi"] = "uydurma"
+        elif tur == "sinyal_pay_kimligi":
+            hedef["sinyal"]["veri_ref"]["pay_kimligi"] = dict(
+                surum="pay_kimligi_v1",
+                tablo_ozeti="a" * 64,
+                kaynak="is_yatirim",
+                goruntu_id="s10",
+                manifest_ozeti=hedef["sinyal"]["veri_ref"]["manifest_parmak_izi"],
+            )
         elif tur == "ileri_kontrol":
             hedef["onceki_ref"] = "baska-kontrol"
         elif tur == "islem":
@@ -2992,6 +3002,73 @@ def test_grup_okuyucusu_kanonik_ama_gecersiz_olayi_reddeder(tmp_path, degisiklik
     )
 
 
+@pytest.mark.parametrize(
+    "boz", ["surum", "bos", "eksik", "fazla", "ozet", "goruntu", "manifest", "null"]
+)
+def test_grup_pay_kimligi_yanlis_ve_bagsiz_secimi_reddeder(tmp_path, boz):
+    tanim = grup_kayit_tanimi()
+    ref = tanim["referanslar"]
+    ref["manifest_ozeti"] = "a" * 64
+    secim = dict(
+        surum="pay_kimligi_v1",
+        tablo_ozeti="b" * 64,
+        kaynak="is_yatirim",
+        goruntu_id="ag",
+        manifest_ozeti="a" * 64,
+    )
+    if boz == "surum":
+        secim["surum"] = "bilinmeyen"
+    elif boz == "bos":
+        secim["kaynak"] = ""
+    elif boz == "eksik":
+        del secim["tablo_ozeti"]
+    elif boz == "fazla":
+        secim["otomatik"] = True
+    elif boz == "ozet":
+        secim["tablo_ozeti"] = "b" * 63
+    elif boz == "goruntu":
+        secim["goruntu_id"] = "diger"
+    elif boz == "manifest":
+        secim["manifest_ozeti"] = "c" * 64
+    else:
+        secim = None
+    ref["pay_kimligi"] = secim
+    depo = pilot.PilotKayit(tmp_path / "hazirlik.jsonl")
+    with pytest.raises(pilot.PilotHatasi, match="[Pp]ay kimliği"):
+        depo.grup_hazirligi_kaydet(tanim=tanim, engeller=[], dislamalar=[])
+    assert not depo.yol.exists()
+
+
+def test_grup_pay_kimligi_gecmisi_guncel_tabloyu_okumaz(tmp_path, monkeypatch):
+    from hashlib import sha256
+    from tansu import veri
+
+    tanim = grup_kayit_tanimi()
+    tanim["referanslar"]["manifest_ozeti"] = "a" * 64
+    tanim["referanslar"]["pay_kimligi"] = dict(
+        surum="pay_kimligi_v1",
+        tablo_ozeti="b" * 64,
+        kaynak="is_yatirim",
+        goruntu_id="ag",
+        manifest_ozeti="a" * 64,
+    )
+    depo = pilot.PilotKayit(tmp_path / "hazirlik.jsonl")
+    m = depo.grup_hazirligi_kaydet(tanim=tanim, engeller=[], dislamalar=[])
+
+    def yasak(*a, **k):
+        pytest.fail("E5 geçmiş okuması piyasa veya güncel eşleme yükleyemez")
+
+    monkeypatch.setattr(veri, "pay_kimligi_hazirla", yasak)
+    monkeypatch.setattr(veri, "oku", yasak)
+    assert pilot.PilotKayit(depo.yol).grup_hazirligi_oku(m.olay_id)["tanim"] == tanim
+    olay = depo.oku()[0]
+    olay["tanim"]["referanslar"]["pay_kimligi"]["surum"] = "bilinmeyen"
+    olay["tanim_ozeti"] = sha256(pilot.kanonik(olay["tanim"])).hexdigest()
+    depo.yol.write_bytes(pilot.kanonik(olay) + b"\n")
+    with pytest.raises(pilot.PilotHatasi, match="Bozuk tam satır"):
+        pilot.PilotKayit(depo.yol).oku()
+
+
 def test_s12_okuyucu_ust_revizyonu_tek_basina_dogrular(tmp_path, monkeypatch):
     from tests.test_tansusinama import s12_kayitli
 
@@ -3283,3 +3360,275 @@ def test_s12_erken_hata_bitisinde_gercek_sayim_ve_neden_korunur(tmp_path, monkey
     assert bitis["tamamlanan"] == bitis["cikti_referanslari"] == []
     assert len(bitis["basarisiz"]) == 17
     assert depo.kurtar()["uyarilar"] == []
+
+
+def test_s12_pay_kimligi_sakli_uyelik_kaniti_canli_tablolardan_bagimsizdir(
+    tmp_path, monkeypatch
+):
+    import builtins
+    from tansu import tansusinama as ts
+    from tests.test_tansusinama import s12_kayitli, s12_calistir
+    from tests.test_veri import pay_kimlikli_goruntu
+
+    asil_uyelik = veri.uyelik_hazirla
+    depo, eski, _ = s12_kayitli(tmp_path, monkeypatch)
+    d = depo.deneme_oku(eski.deneme_id)
+    a, secim = pay_kimlikli_goruntu(tmp_path, monkeypatch)
+    v = d["veri_ayarlari"]
+    uyelik = asil_uyelik(
+        veri.UyelikIstegi(
+            tuple(v["takvim"]["seanslar"]), v["evren_politikasi"], v["uyelik_surumu"]
+        )
+    )
+    v.update(
+        veri_referanslari=[a.kimlik],
+        manifest_ozeti=secim["manifest_ozeti"],
+        uyelik_ozeti=uyelik["tablo_parmak_izi"],
+        pay_kimligi=secim,
+    )
+    m = pilot_deneme(
+        depo,
+        d["strateji"],
+        **{
+            k: d[k]
+            for k in (
+                "donemler",
+                "yontem_ayarlari",
+                "veri_ayarlari",
+                "risk_ayarlari",
+                "masraf_ayarlari",
+            )
+        },
+    )
+    monkeypatch.setattr(veri, "uyelik_hazirla", asil_uyelik)
+
+    def hesap_yok(*args, **kwargs):
+        raise ValueError("sentetik hesap öncesi sınır")
+
+    monkeypatch.setattr(ts, "_ileri_secimler", hesap_yok)
+    sonuc = s12_calistir(depo, m, tmp_path)
+    asil = depo.oku()
+    baslangic = next(
+        o for o in asil if o["kayit_id"] == sonuc["baslangic_makbuzu"].olay_id
+    )
+    ilk = next(
+        o
+        for o in asil
+        if o.get("sonuc_turu") == "ileri_v1" and o["kayit"]["tur"] == "bolum"
+    )
+    assert (
+        ilk["kayit"]["durum"] == "hata"
+        and "sentetik hesap öncesi sınır" in ilk["kayit"]["neden"]
+    )
+    ayar_ozeti = depo.deneme_oku(m.deneme_id)["ayar_parmak_izi"]
+    assert ayar_ozeti == m.ayar_ozeti
+
+    asil_open, asil_path_open = builtins.open, Path.open
+
+    def kapali(yol):
+        return isinstance(yol, (str, Path)) and Path(yol).name in (
+            "uyelik.csv",
+            "eslemeler.csv",
+        )
+
+    def dosya_ac(yol, *args, **kwargs):
+        if kapali(yol):
+            raise OSError("canlı üyelik ve eşleme tabloları kapalı")
+        return asil_open(yol, *args, **kwargs)
+
+    def yol_ac(yol, *args, **kwargs):
+        if kapali(yol):
+            raise OSError("canlı üyelik ve eşleme tabloları kapalı")
+        return asil_path_open(yol, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "open", dosya_ac)
+    monkeypatch.setattr(Path, "open", yol_ac)
+    hata = None
+    try:
+        okunan = pilot.PilotKayit(depo.yol).oku()
+    except (OSError, pilot.PilotHatasi) as yakalanan:
+        hata = yakalanan
+    assert hata is None, f"Geçmiş WF okuması saklı kaynakları kullanmalıdır: {hata}"
+    assert okunan == asil
+    kanit = baslangic["uyelik_kaniti"]
+    assert kanit["surum"] == "ileri_uyelik_kaniti_v1"
+    assert (
+        hashlib.sha256(kanit["uyelik_tablo_metni"].encode("utf-8")).hexdigest()
+        == v["uyelik_ozeti"]
+    )
+    assert (
+        hashlib.sha256(kanit["pay_kimligi_tablo_metni"].encode("utf-8")).hexdigest()
+        == secim["tablo_ozeti"]
+    )
+
+    onceki = asil[: asil.index(baslangic)]
+    onceki_bayt = b"".join(pilot.kanonik(o) + b"\n" for o in onceki)
+    for boz in ("eksik", "surum", "alan", "uyelik_ozeti", "pay_ozeti", "metin_turu"):
+        yanlis = deepcopy(baslangic)
+        if boz == "eksik":
+            del yanlis["uyelik_kaniti"]
+        elif boz == "surum":
+            yanlis["uyelik_kaniti"]["surum"] = "bilinmeyen"
+        elif boz == "alan":
+            yanlis["uyelik_kaniti"]["fazla"] = True
+        elif boz == "uyelik_ozeti":
+            yanlis["uyelik_kaniti"]["uyelik_tablo_metni"] += "\n"
+        elif boz == "pay_ozeti":
+            yanlis["uyelik_kaniti"]["pay_kimligi_tablo_metni"] += "\n"
+        else:
+            yanlis["uyelik_kaniti"]["pay_kimligi_tablo_metni"] = 0
+        yol = tmp_path / (boz + "-sakli-kaynak.jsonl")
+        yol.write_bytes(onceki_bayt + pilot.kanonik(yanlis) + b"\n")
+        with pytest.raises(pilot.PilotHatasi, match="Bozuk tam satır"):
+            pilot.PilotKayit(yol).oku()
+        yol.write_bytes(onceki_bayt)
+        kwargs = {
+            a: yanlis[a]
+            for a in (
+                "mod",
+                "anlik_goruntu",
+                "manifest_ozeti",
+                "uyelik_surumu",
+                "kod_kimligi",
+                "ortam",
+                "bagimlilik_ozeti",
+                "tohum",
+                "is_listesi",
+                "ureteci_surumu",
+            )
+        }
+        if "uyelik_kaniti" in yanlis:
+            kwargs["uyelik_kaniti"] = yanlis["uyelik_kaniti"]
+        with pytest.raises(pilot.PilotHatasi, match="[Üü]yelik kanıtı"):
+            with pilot.PilotKayit(yol).kosu(m.deneme_id, **kwargs):
+                pytest.fail("Bozuk kaynak kanıtı başlangıç makbuzu alamaz")
+        assert yol.read_bytes() == onceki_bayt
+
+
+@pytest.mark.parametrize(
+    "boz",
+    ["yanlis_pay", "uyelik", "saglayici", "tarih", "goruntu", "manifest", "kaynak"],
+)
+def test_s12_pay_kimligi_sakli_kaynak_ozeti_tek_basina_yetki_vermez(
+    tmp_path, monkeypatch, boz
+):
+    from io import StringIO
+    from tests.test_tansusinama import s12_kayitli
+
+    asil_uyelik = veri.uyelik_hazirla
+    depo, eski, _ = s12_kayitli(tmp_path, monkeypatch)
+    monkeypatch.setattr(veri, "uyelik_hazirla", asil_uyelik)
+    d = depo.deneme_oku(eski.deneme_id)
+    kok = Path(veri.__file__).parent / "referans"
+    uyelik = (kok / "bist30_2021_2025_v1" / "uyelik.csv").read_bytes().decode("utf-8")
+    esleme = (kok / "pay_kimligi_v1" / "eslemeler.csv").read_bytes().decode("utf-8")
+    satir = pd.read_csv(StringIO(esleme), dtype=str, keep_default_na=False).iloc[0]
+    v = d["veri_ayarlari"]
+    v.update(
+        kaynak=satir["kaynak"],
+        veri_referanslari=[satir["goruntu_id"]],
+        manifest_ozeti=satir["manifest_ozeti"],
+        uyelik_ozeti=hashlib.sha256(uyelik.encode("utf-8")).hexdigest(),
+        pay_kimligi=dict(
+            surum="pay_kimligi_v1",
+            tablo_ozeti=hashlib.sha256(esleme.encode("utf-8")).hexdigest(),
+            **{a: satir[a] for a in ("kaynak", "goruntu_id", "manifest_ozeti")},
+        ),
+    )
+
+    def kaydet():
+        return pilot_deneme(
+            depo,
+            d["strateji"],
+            **{
+                a: d[a]
+                for a in (
+                    "donemler",
+                    "yontem_ayarlari",
+                    "veri_ayarlari",
+                    "risk_ayarlari",
+                    "masraf_ayarlari",
+                )
+            },
+        )
+
+    kanit = dict(
+        surum="ileri_uyelik_kaniti_v1",
+        uyelik_tablo_metni=uyelik,
+        pay_kimligi_tablo_metni=esleme,
+    )
+    kwargs = dict(
+        mod="gelistirme",
+        anlik_goruntu=v["veri_referanslari"][0],
+        manifest_ozeti=v["manifest_ozeti"],
+        uyelik_surumu=v["uyelik_surumu"],
+        is_listesi=[b["ad"] for b in d["donemler"]] + ["birlesik"],
+        uyelik_kaniti=kanit,
+    )
+    gecerli = kaydet()
+    with pytest.raises(RuntimeError, match="hesap yok"):
+        with pilot_kosu(depo, gecerli.deneme_id, **kwargs):
+            raise RuntimeError("hesap yok")
+    asil = next(o for o in depo.oku() if o["kayit_turu"] == "baslangic")
+    assert pilot.PilotKayit(depo.yol).oku() == depo.oku()
+
+    if boz == "uyelik":
+        uyelik = uyelik.replace("AKBNK", "AUDITFAKE")
+    elif boz == "yanlis_pay":
+        esleme = esleme.replace("TRMET", "TRHOL")
+    elif boz == "tarih":
+        esleme = esleme.replace("2025-11-24", "2025-11-25")
+    else:
+        alan = {
+            "saglayici": "kaynak",
+            "goruntu": "goruntu_id",
+            "manifest": "manifest_ozeti",
+            "kaynak": "kaynak_id",
+        }[boz]
+        yeni = "f" * 64 if alan == "manifest_ozeti" else "audit_kanitsiz"
+        esleme = esleme.replace(satir[alan], yeni)
+        if alan in ("kaynak", "goruntu_id", "manifest_ozeti"):
+            v["pay_kimligi"][alan] = yeni
+            if alan == "goruntu_id":
+                v["veri_referanslari"] = [yeni]
+                kwargs["anlik_goruntu"] = yeni
+            else:
+                v[alan] = yeni
+                if alan == "manifest_ozeti":
+                    kwargs[alan] = yeni
+    kanit.update(uyelik_tablo_metni=uyelik, pay_kimligi_tablo_metni=esleme)
+    v["uyelik_ozeti"] = hashlib.sha256(uyelik.encode("utf-8")).hexdigest()
+    v["pay_kimligi"]["tablo_ozeti"] = hashlib.sha256(esleme.encode("utf-8")).hexdigest()
+    sahte = kaydet()
+    once = depo.yol.read_bytes()
+    kabul_edilen = []
+    try:
+        with pilot_kosu(depo, sahte.deneme_id, **kwargs):
+            kabul_edilen.append("ekleme")
+            raise RuntimeError("hesap yok")
+    except pilot.PilotHatasi as hata:
+        assert "onaylı kaynak özeti" in str(hata)
+        assert depo.yol.read_bytes() == once
+    except RuntimeError as hata:
+        assert str(hata) == "hesap yok"
+
+    # Yerel olay biçimi korunur; kayıtlı seçim ve iki metnin özeti birlikte değiştirilir.
+    yanlis = deepcopy(asil)
+    yanlis.update(
+        kayit_id=asil["kayit_id"] + ":sahte",
+        kosu_id=asil["kosu_id"] + ":sahte",
+        deneme_id=sahte.deneme_id,
+        ayar_parmak_izi=sahte.ayar_ozeti,
+        anlik_goruntu=kwargs["anlik_goruntu"],
+        manifest_ozeti=kwargs["manifest_ozeti"],
+        uyelik_kaniti=kanit,
+    )
+    yol = tmp_path / "sahte-sakli-kaynak.jsonl"
+    yol.write_bytes(once + pilot.kanonik(yanlis) + b"\n")
+    try:
+        pilot.PilotKayit(yol).oku()
+        kabul_edilen.append("yeni okuyucu")
+    except pilot.PilotHatasi as hata:
+        assert "Bozuk tam satır" in str(hata)
+        assert "onaylı kaynak özeti" in str(hata.__cause__)
+    assert kabul_edilen == [], "Çağıranın tutarlı özeti kaynağa yetki veremez"
