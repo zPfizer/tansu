@@ -3900,3 +3900,132 @@ def test_s12_pay_kimligi_sakli_uyelik_kaniti_canli_tablolardan_bagimsizdir(
             with pilot.PilotKayit(yol).kosu(m.deneme_id, **kwargs):
                 pytest.fail("Bozuk kaynak kanıtı başlangıç makbuzu alamaz")
         assert yol.read_bytes() == onceki_bayt
+
+
+@pytest.mark.parametrize(
+    "boz",
+    ["yanlis_pay", "uyelik", "saglayici", "tarih", "goruntu", "manifest", "kaynak"],
+)
+def test_s12_pay_kimligi_sakli_kaynak_ozeti_tek_basina_yetki_vermez(
+    tmp_path, monkeypatch, boz
+):
+    from io import StringIO
+    from tests.test_tansusinama import s12_kayitli
+
+    asil_uyelik = veri.uyelik_hazirla
+    depo, eski, _ = s12_kayitli(tmp_path, monkeypatch)
+    monkeypatch.setattr(veri, "uyelik_hazirla", asil_uyelik)
+    d = depo.deneme_oku(eski.deneme_id)
+    kok = Path(veri.__file__).parent / "referans"
+    uyelik = (kok / "bist30_2021_2025_v1" / "uyelik.csv").read_bytes().decode("utf-8")
+    esleme = (kok / "pay_kimligi_v1" / "eslemeler.csv").read_bytes().decode("utf-8")
+    satir = pd.read_csv(StringIO(esleme), dtype=str, keep_default_na=False).iloc[0]
+    v = d["veri_ayarlari"]
+    v.update(
+        kaynak=satir["kaynak"],
+        veri_referanslari=[satir["goruntu_id"]],
+        manifest_ozeti=satir["manifest_ozeti"],
+        uyelik_ozeti=hashlib.sha256(uyelik.encode("utf-8")).hexdigest(),
+        pay_kimligi=dict(
+            surum="pay_kimligi_v1",
+            tablo_ozeti=hashlib.sha256(esleme.encode("utf-8")).hexdigest(),
+            **{a: satir[a] for a in ("kaynak", "goruntu_id", "manifest_ozeti")},
+        ),
+    )
+
+    def kaydet():
+        return pilot_deneme(
+            depo,
+            d["strateji"],
+            **{
+                a: d[a]
+                for a in (
+                    "donemler",
+                    "yontem_ayarlari",
+                    "veri_ayarlari",
+                    "risk_ayarlari",
+                    "masraf_ayarlari",
+                )
+            },
+        )
+
+    kanit = dict(
+        surum="ileri_uyelik_kaniti_v1",
+        uyelik_tablo_metni=uyelik,
+        pay_kimligi_tablo_metni=esleme,
+    )
+    kwargs = dict(
+        mod="gelistirme",
+        anlik_goruntu=v["veri_referanslari"][0],
+        manifest_ozeti=v["manifest_ozeti"],
+        uyelik_surumu=v["uyelik_surumu"],
+        is_listesi=[b["ad"] for b in d["donemler"]] + ["birlesik"],
+        uyelik_kaniti=kanit,
+    )
+    gecerli = kaydet()
+    with pytest.raises(RuntimeError, match="hesap yok"):
+        with pilot_kosu(depo, gecerli.deneme_id, **kwargs):
+            raise RuntimeError("hesap yok")
+    asil = next(o for o in depo.oku() if o["kayit_turu"] == "baslangic")
+    assert pilot.PilotKayit(depo.yol).oku() == depo.oku()
+
+    if boz == "uyelik":
+        uyelik = uyelik.replace("AKBNK", "AUDITFAKE")
+    elif boz == "yanlis_pay":
+        esleme = esleme.replace("TRMET", "TRHOL")
+    elif boz == "tarih":
+        esleme = esleme.replace("2025-11-24", "2025-11-25")
+    else:
+        alan = {
+            "saglayici": "kaynak",
+            "goruntu": "goruntu_id",
+            "manifest": "manifest_ozeti",
+            "kaynak": "kaynak_id",
+        }[boz]
+        yeni = "f" * 64 if alan == "manifest_ozeti" else "audit_kanitsiz"
+        esleme = esleme.replace(satir[alan], yeni)
+        if alan in ("kaynak", "goruntu_id", "manifest_ozeti"):
+            v["pay_kimligi"][alan] = yeni
+            if alan == "goruntu_id":
+                v["veri_referanslari"] = [yeni]
+                kwargs["anlik_goruntu"] = yeni
+            else:
+                v[alan] = yeni
+                if alan == "manifest_ozeti":
+                    kwargs[alan] = yeni
+    kanit.update(uyelik_tablo_metni=uyelik, pay_kimligi_tablo_metni=esleme)
+    v["uyelik_ozeti"] = hashlib.sha256(uyelik.encode("utf-8")).hexdigest()
+    v["pay_kimligi"]["tablo_ozeti"] = hashlib.sha256(esleme.encode("utf-8")).hexdigest()
+    sahte = kaydet()
+    once = depo.yol.read_bytes()
+    kabul_edilen = []
+    try:
+        with pilot_kosu(depo, sahte.deneme_id, **kwargs):
+            kabul_edilen.append("ekleme")
+            raise RuntimeError("hesap yok")
+    except pilot.PilotHatasi as hata:
+        assert "onaylı kaynak özeti" in str(hata)
+        assert depo.yol.read_bytes() == once
+    except RuntimeError as hata:
+        assert str(hata) == "hesap yok"
+
+    # Yerel olay biçimi korunur; kayıtlı seçim ve iki metnin özeti birlikte değiştirilir.
+    yanlis = deepcopy(asil)
+    yanlis.update(
+        kayit_id=asil["kayit_id"] + ":sahte",
+        kosu_id=asil["kosu_id"] + ":sahte",
+        deneme_id=sahte.deneme_id,
+        ayar_parmak_izi=sahte.ayar_ozeti,
+        anlik_goruntu=kwargs["anlik_goruntu"],
+        manifest_ozeti=kwargs["manifest_ozeti"],
+        uyelik_kaniti=kanit,
+    )
+    yol = tmp_path / "sahte-sakli-kaynak.jsonl"
+    yol.write_bytes(once + pilot.kanonik(yanlis) + b"\n")
+    try:
+        pilot.PilotKayit(yol).oku()
+        kabul_edilen.append("yeni okuyucu")
+    except pilot.PilotHatasi as hata:
+        assert "Bozuk tam satır" in str(hata)
+        assert "onaylı kaynak özeti" in str(hata.__cause__)
+    assert kabul_edilen == [], "Çağıranın tutarlı özeti kaynağa yetki veremez"

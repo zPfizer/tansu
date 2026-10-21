@@ -860,6 +860,10 @@ def pay_kimlikli_goruntu(
         goruntu_id=kimlik,
         manifest_ozeti=manifest,
     )
+    # Sentetik görüntünün onaylı eşlemesi; üretim sürümüne yeni kaynak yetkisi vermez.
+    monkeypatch.setitem(
+        veri._YAYIMLANMIS_KAYNAK_OZETLERI, "pay_kimligi_v1", secim["tablo_ozeti"]
+    )
     return veri.oku(kimlik, tmp_path), secim
 
 

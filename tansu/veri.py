@@ -41,6 +41,11 @@ FIYAT_SUTUNLARI = [
 ]
 KARANTINA_ESIK, DENETIM_ESIK, INMEYEN_ESIK = 0.01, 0.02, 5  # TASARIM 5.13
 KAYNAK_GUNU_EN_AZ = 20  # TASARIM 5.13: kaynak günü hatası için en az satır
+# TASARIM 5.15 #167: saklı metne yetkiyi çağıranın özeti değil yayımlanmış kaynak verir.
+_YAYIMLANMIS_KAYNAK_OZETLERI = {
+    "bist30_2021_2025_v1": "6e9ff3cd4a9ce4f2fe9a9ef9f77c36694f563bebe1ca2ba4f924643ce904ad07",
+    "pay_kimligi_v1": "128cb4fdd2f310b3703d1e90dd6d83718b3a14185cd22c9a4bee6fd1190ea45d",
+}
 
 
 class VeriHatasi(Exception):
@@ -100,6 +105,10 @@ def uyelik_hazirla(istek: UyelikIstegi, *, tablo_metni=None) -> dict:
     ):
         raise VeriHatasi("bilinmeyen evren politikası/üyelik sürümü")
     yol = Path(__file__).parent / "referans" / istek.uyelik_surumu / "uyelik.csv"
+    if tablo_metni is not None and hashlib.sha256(
+        tablo_metni.encode("utf-8")
+    ).hexdigest() != _YAYIMLANMIS_KAYNAK_OZETLERI.get(istek.uyelik_surumu):
+        raise VeriHatasi("üyelik sürümünün onaylı kaynak özeti uyuşmuyor")
     # TASARIM 5.15 #167: kayıtlı kaynak aynı parserdan dosyasız geçer.
     tablo = _uyelik_tablosu(
         yol if tablo_metni is None else BytesIO(tablo_metni.encode("utf-8"))
@@ -189,6 +198,10 @@ def pay_kimligi_hazirla(secim, *, kaynak, goruntu_id, manifest_ozeti, tablo_metn
     yol = PAY_KIMLIGI_KOKU / secim["surum"] / "eslemeler.csv"
     # TASARIM 5.15 #167: tarihsel kayıt aynı kaynak baytlarını saklar.
     bayt = yol.read_bytes() if tablo_metni is None else tablo_metni.encode("utf-8")
+    if tablo_metni is not None and hashlib.sha256(
+        bayt
+    ).hexdigest() != _YAYIMLANMIS_KAYNAK_OZETLERI.get(secim["surum"]):
+        raise VeriHatasi("pay kimliği sürümünün onaylı kaynak özeti uyuşmuyor")
     if hashlib.sha256(bayt).hexdigest() != secim["tablo_ozeti"]:
         raise VeriHatasi("pay kimliği tablo özeti uyuşmuyor")
     tablo = pd.read_csv(
