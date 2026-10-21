@@ -1,6 +1,6 @@
 """Kapanış betiği (`kurulum/kapanis.py`): birleşen PR'ın iş klasörünü kapatır.
 
-Testler gerçek git depoları kurar: uzak (bare, adı `origin`), ana depo (master) ve `1-x` dalındaki iş klasörü.
+Testler gerçek git depoları kurar: uzak (bare, adı `origin`), ana depo (main) ve `1-x` dalındaki iş klasörü.
 """
 
 import subprocess
@@ -50,19 +50,17 @@ def _kapanis(is_klasoru, cwd=None):
 
 @pytest.fixture
 def depo(tmp_path):
-    """PR uzakta master'a birleşti (ff); uzak dal henüz silinmedi. Döner: (ana, is, birleşen sha)."""
+    """PR uzakta main dalına birleşti (ff); uzak dal henüz silinmedi. Döner: (ana, is, birleşen sha)."""
     uzak, ana, is_ = tmp_path / "uzak.git", tmp_path / "ana", tmp_path / "is"
-    subprocess.run(
-        ["git", "init", "-q", "--bare", "-b", "master", str(uzak)], check=True
-    )
-    subprocess.run(["git", "init", "-q", "-b", "master", str(ana)], check=True)
+    subprocess.run(["git", "init", "-q", "--bare", "-b", "main", str(uzak)], check=True)
+    subprocess.run(["git", "init", "-q", "-b", "main", str(ana)], check=True)
     _kayit(ana, "bir")
     _git(ana, "remote", "add", "origin", str(uzak))
-    _git(ana, "push", "-q", "origin", "master")
+    _git(ana, "push", "-q", "origin", "main")
     _git(ana, "worktree", "add", "-q", "-b", "1-x", str(is_))
     _kayit(is_, "iki")
     _git(is_, "push", "-q", "origin", "1-x")
-    _git(is_, "push", "-q", "origin", "1-x:master")
+    _git(is_, "push", "-q", "origin", "1-x:main")
     return ana, is_, _git(is_, "rev-parse", "HEAD")
 
 
@@ -71,7 +69,7 @@ def test_kapanis_uc_kanit_satiri(depo):
     _git(ana, "push", "-q", "origin", "--delete", "1-x")
     sonuc = _kapanis(is_)
     assert sonuc.stdout.splitlines() == [
-        f"kapanis: ana HEAD {sha} = origin/master",
+        f"kapanis: ana HEAD {sha} = origin/main",
         "kapanis: is klasoru yok",
         "kapanis: uzak dal yok",
     ]
@@ -85,19 +83,19 @@ def test_kapanis_uzak_dal_duruyorsa_durur(depo):
     ana, is_, sha = depo
     sonuc = _kapanis(is_)
     assert sonuc.stdout.splitlines() == [
-        f"kapanis: ana HEAD {sha} = origin/master",
+        f"kapanis: ana HEAD {sha} = origin/main",
         "kapanis: is klasoru yok",
     ]
     assert "kapanis: uzak dal var: 1-x" in sonuc.stderr
     assert sonuc.returncode == 1
 
 
-def test_kapanis_ana_klasor_master_degilse_hic_degistirmeden_durur(depo):
+def test_kapanis_ana_klasor_main_degilse_hic_degistirmeden_durur(depo):
     ana, is_, _ = depo
     _git(ana, "switch", "-q", "-c", "baska")
     sonuc = _kapanis(is_)
     assert sonuc.stdout == ""
-    assert "kapanis: ana klasor master uzerinde degil" in sonuc.stderr
+    assert "kapanis: ana klasor main uzerinde degil" in sonuc.stderr
     assert sonuc.returncode == 1
     assert is_.exists()
 
@@ -124,7 +122,7 @@ def test_kapanis_is_klasoru_icinden_calisirsa_hic_degistirmeden_durur(depo, alt)
     assert sonuc.returncode == 1
     assert is_.exists()
     assert _git(ana, "branch", "--list", "1-x") != ""
-    assert _git(ana, "rev-parse", "master") != sha
+    assert _git(ana, "rev-parse", "main") != sha
 
 
 def test_kapanis_dalsiz_is_klasorunde_durur(depo):

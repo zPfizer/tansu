@@ -3,7 +3,7 @@
 Usage: `python kurulum/kapanis.py <work folder>`. Run it after `gh pr merge <N> --merge`,
 from the main checkout (not inside the work folder: Windows cannot remove it).
 1. Remove the work folder (no `--force`).
-2. Fast-forward `master` of the main checkout from `origin`.
+2. Fast-forward `main` of the main checkout from `origin`.
 3. Delete the local branch (`git branch -d`).
 4. Print three proof lines. Exit 1 if one proof fails.
 Every failed git call prints its stderr and stops with exit 1.
@@ -43,17 +43,17 @@ def main(is_klasoru):
         git(is_, "rev-parse", "--path-format=absolute", "--git-common-dir")
     ).parent
     # Check before any change: pull --ff-only would move the wrong branch.
-    if git(ana, "branch", "--show-current") != "master":
-        dur("kapanis: ana klasor master uzerinde degil")
+    if git(ana, "branch", "--show-current") != "main":
+        dur("kapanis: ana klasor main uzerinde degil")
 
     git(ana, "worktree", "remove", str(is_))
-    git(ana, "pull", "--ff-only", "origin", "master")
+    git(ana, "pull", "--ff-only", "origin", "main")
     git(ana, "branch", "-d", dal)
 
     bas = git(ana, "rev-parse", "HEAD")
-    if bas != git(ana, "rev-parse", "origin/master"):
-        dur(f"kapanis: ana HEAD {bas} origin/master degil")
-    print(f"kapanis: ana HEAD {bas} = origin/master")
+    if bas != git(ana, "rev-parse", "origin/main"):
+        dur(f"kapanis: ana HEAD {bas} origin/main degil")
+    print(f"kapanis: ana HEAD {bas} = origin/main")
     agaclar = git(ana, "worktree", "list", "--porcelain").splitlines()
     if is_.exists() or any(
         Path(satir.removeprefix("worktree ")).resolve() == is_

@@ -221,7 +221,7 @@ def _commit(dizin, dosya, metin):
 @pytest.fixture
 def depo(tmp_path):
     for arg in (
-        ("init", "-b", "master"),
+        ("init", "-b", "main"),
         ("config", "user.name", "Deneme"),
         ("config", "user.email", "deneme@example.com"),
         ("config", "commit.gpgsign", "false"),
@@ -231,10 +231,10 @@ def depo(tmp_path):
     _commit(tmp_path, "a.txt", "A")
     _git(tmp_path, "checkout", "-b", "pr")
     b = _commit(tmp_path, "b.txt", "B")
-    _git(tmp_path, "checkout", "master")
+    _git(tmp_path, "checkout", "main")
     _commit(tmp_path, "c.txt", "C")
     _git(tmp_path, "checkout", "pr")
-    _git(tmp_path, "merge", "--no-edit", "master")
+    _git(tmp_path, "merge", "--no-edit", "main")
     return tmp_path, b, _git(tmp_path, "rev-parse", "HEAD")
 
 
@@ -244,18 +244,18 @@ def _govde_git(denetlenen):
 
 def test_kural_5_temiz_taban_birlestirmesi_gecer(depo):
     dizin, b, m = depo
-    assert hatalar(_govde_git(b), m, taban="master", dizin=dizin, baslik=BASLIK) == []
+    assert hatalar(_govde_git(b), m, taban="main", dizin=dizin, baslik=BASLIK) == []
 
 
 def test_kural_5_denetlenen_pr_basi_ise_git_gerekmez(depo):
     dizin, _, m = depo
-    assert hatalar(_govde_git(m), m, taban="master", dizin=dizin, baslik=BASLIK) == []
+    assert hatalar(_govde_git(m), m, taban="main", dizin=dizin, baslik=BASLIK) == []
 
 
 def test_kural_5_duz_commit_reddedilir(depo):
     dizin, b, _ = depo
     d = _commit(dizin, "d.txt", "D")
-    assert hatalar(_govde_git(b), d, taban="master", dizin=dizin, baslik=BASLIK) == [
+    assert hatalar(_govde_git(b), d, taban="main", dizin=dizin, baslik=BASLIK) == [
         R5_BIRLESME.format(b, d)
     ]
 
@@ -263,91 +263,90 @@ def test_kural_5_duz_commit_reddedilir(depo):
 def test_kural_5_elle_degisen_birlestirme_reddedilir(depo):
     dizin, b, _ = depo
     _git(dizin, "checkout", "-b", "kotu", b)
-    _git(dizin, "merge", "--no-commit", "--no-ff", "master")
+    _git(dizin, "merge", "--no-commit", "--no-ff", "main")
     (dizin / "b.txt").write_text("elle", encoding="utf-8")
     _git(dizin, "add", "b.txt")
     _git(dizin, "commit", "--no-edit")
     kotu = _git(dizin, "rev-parse", "HEAD")
-    assert hatalar(_govde_git(b), kotu, taban="master", dizin=dizin, baslik=BASLIK) == [
+    assert hatalar(_govde_git(b), kotu, taban="main", dizin=dizin, baslik=BASLIK) == [
         R5_BIRLESME.format(b, kotu)
     ]
 
 
 def test_kural_5_taban_disi_ikinci_ebeveyn_reddedilir(depo):
     dizin, b, _ = depo
-    _git(dizin, "checkout", "-b", "yan", "master")
+    _git(dizin, "checkout", "-b", "yan", "main")
     _commit(dizin, "y.txt", "Y")
     _git(dizin, "checkout", "-b", "baska", b)
     _git(dizin, "merge", "--no-edit", "yan")
     baska = _git(dizin, "rev-parse", "HEAD")
-    assert hatalar(
-        _govde_git(b), baska, taban="master", dizin=dizin, baslik=BASLIK
-    ) == [R5_BIRLESME.format(b, baska)]
+    assert hatalar(_govde_git(b), baska, taban="main", dizin=dizin, baslik=BASLIK) == [
+        R5_BIRLESME.format(b, baska)
+    ]
 
 
 def test_kural_5_bilinmeyen_sha_reddedilir(depo):
     dizin, _, m = depo
     assert hatalar(
-        _govde_git(SHA_BASKA), m, taban="master", dizin=dizin, baslik=BASLIK
+        _govde_git(SHA_BASKA), m, taban="main", dizin=dizin, baslik=BASLIK
     ) == [R5_BIRLESME.format(SHA_BASKA, m)]
 
 
 def _celiski_birlesmesi(dizin):
-    _git(dizin, "checkout", "master")
+    _git(dizin, "checkout", "main")
     _commit(dizin, "s.txt", "a\n")
     _git(dizin, "checkout", "-b", "yan2")
     b = _commit(dizin, "s.txt", "b\n")
-    _git(dizin, "checkout", "master")
+    _git(dizin, "checkout", "main")
     _commit(dizin, "s.txt", "c\n")
     _git(dizin, "checkout", "yan2")
     with pytest.raises(subprocess.CalledProcessError):
-        _git(dizin, "merge", "--no-edit", "master")
+        _git(dizin, "merge", "--no-edit", "main")
     (dizin / "s.txt").write_text("b\nc\n", encoding="utf-8")
     _git(dizin, "add", "s.txt")
     _git(dizin, "commit", "--no-edit")
     return b, _git(dizin, "rev-parse", "HEAD")
 
 
-def test_kural_5_elle_cozulen_ortak_dosyali_master_birlesmesi_gecer(depo):
+def test_kural_5_elle_cozulen_ortak_dosyali_main_birlesmesi_gecer(depo):
     dizin, _, _ = depo
     b, m = _celiski_birlesmesi(dizin)
-    _git(dizin, "update-ref", "refs/remotes/origin/master", "master")
+    _git(dizin, "update-ref", "refs/remotes/origin/main", "main")
     assert (
-        hatalar(_govde_git(b), m, taban="origin/master", dizin=dizin, baslik=BASLIK)
-        == []
+        hatalar(_govde_git(b), m, taban="origin/main", dizin=dizin, baslik=BASLIK) == []
     )
 
 
 def test_kural_5_ayni_dosyada_iki_taraf_degisirse_gecer(depo):
     dizin, _, _ = depo
-    _git(dizin, "checkout", "master")
+    _git(dizin, "checkout", "main")
     _commit(dizin, "f.txt", "1\n2\n3\n4\n5\n6\n7\n8\n")
     _git(dizin, "checkout", "-b", "yan3")
     b = _commit(dizin, "f.txt", "0\n1\n2\n3\n4\n5\n6\n7\n8\n")
-    _git(dizin, "checkout", "master")
+    _git(dizin, "checkout", "main")
     _commit(dizin, "f.txt", "1\n2\n3\n4\n5\n6\n7\n8\n9\n")
     _git(dizin, "checkout", "yan3")
-    _git(dizin, "merge", "--no-edit", "master")
+    _git(dizin, "merge", "--no-edit", "main")
     m = _git(dizin, "rev-parse", "HEAD")
-    assert hatalar(_govde_git(b), m, taban="master", dizin=dizin, baslik=BASLIK) == []
+    assert hatalar(_govde_git(b), m, taban="main", dizin=dizin, baslik=BASLIK) == []
 
 
 def test_kural_5_silme_ve_yeniden_adlandirma_gecer(depo):
     dizin, b, _ = depo
-    _git(dizin, "checkout", "master")
+    _git(dizin, "checkout", "main")
     _git(dizin, "rm", "a.txt")
     _git(dizin, "commit", "-m", "sil")
     _git(dizin, "mv", "c.txt", "d.txt")
     _git(dizin, "commit", "-m", "ad")
     _git(dizin, "checkout", "-b", "yan4", b)
-    _git(dizin, "merge", "--no-edit", "master")
+    _git(dizin, "merge", "--no-edit", "main")
     m = _git(dizin, "rev-parse", "HEAD")
-    assert hatalar(_govde_git(b), m, taban="master", dizin=dizin, baslik=BASLIK) == []
+    assert hatalar(_govde_git(b), m, taban="main", dizin=dizin, baslik=BASLIK) == []
 
 
 def _kotu_birlesme(dizin, b, degistir):
     _git(dizin, "checkout", "-b", "kotu", b)
-    _git(dizin, "merge", "--no-commit", "--no-ff", "master")
+    _git(dizin, "merge", "--no-commit", "--no-ff", "main")
     degistir(dizin)
     _git(dizin, "add", "-A")
     _git(dizin, "commit", "--no-edit")
@@ -365,16 +364,16 @@ def test_kural_5_fazla_dosya_ya_da_dusen_dosya_reddedilir(depo, dosya):
             (dizin / dosya).write_text("x", encoding="utf-8")
 
     kotu = _kotu_birlesme(dizin, b, degistir)
-    assert hatalar(_govde_git(b), kotu, taban="master", dizin=dizin, baslik=BASLIK) == [
+    assert hatalar(_govde_git(b), kotu, taban="main", dizin=dizin, baslik=BASLIK) == [
         R5_BIRLESME.format(b, kotu)
     ]
 
 
 def test_kural_5_capraz_birlesme_reddedilir(depo):
     dizin, _, _ = depo
-    _git(dizin, "checkout", "-b", "ca", "master")
+    _git(dizin, "checkout", "-b", "ca", "main")
     a1 = _commit(dizin, "a1.txt", "1")
-    _git(dizin, "checkout", "-b", "cb", "master")
+    _git(dizin, "checkout", "-b", "cb", "main")
     _commit(dizin, "b1.txt", "2")
     _git(dizin, "checkout", "ca")
     _git(dizin, "merge", "--no-edit", "cb")
@@ -388,7 +387,7 @@ def test_kural_5_capraz_birlesme_reddedilir(depo):
     ]
 
 
-@pytest.mark.parametrize("taban", ["yok-dal", "master^{tree}"])
+@pytest.mark.parametrize("taban", ["yok-dal", "main^{tree}"])
 def test_kural_5_taban_gecersizse_reddedilir(depo, taban):
     dizin, b, m = depo
     assert hatalar(_govde_git(b), m, taban=taban, dizin=dizin, baslik=BASLIK) == [
@@ -399,13 +398,13 @@ def test_kural_5_taban_gecersizse_reddedilir(depo, taban):
 def test_kural_5_denetlenen_agac_ya_da_etiket(depo):
     dizin, b, m = depo
     agac = _git(dizin, "rev-parse", f"{b}^{{tree}}")
-    assert hatalar(_govde_git(agac), m, taban="master", dizin=dizin, baslik=BASLIK) == [
+    assert hatalar(_govde_git(agac), m, taban="main", dizin=dizin, baslik=BASLIK) == [
         R5_BIRLESME.format(agac, m)
     ]
     _git(dizin, "tag", "-a", "-m", "e", "etiket", b)
     etiket = _git(dizin, "rev-parse", "etiket")
     assert (
-        hatalar(_govde_git(etiket), m, taban="master", dizin=dizin, baslik=BASLIK) == []
+        hatalar(_govde_git(etiket), m, taban="main", dizin=dizin, baslik=BASLIK) == []
     )
 
 
@@ -423,7 +422,7 @@ def test_kural_5_git_donus_kodu_hatasi_reddedilir(depo, monkeypatch, alt):
         return sonuc
 
     monkeypatch.setattr(_modul.subprocess, "run", sahte)
-    assert hatalar(_govde_git(b), m, taban="master", dizin=dizin, baslik=BASLIK) == [
+    assert hatalar(_govde_git(b), m, taban="main", dizin=dizin, baslik=BASLIK) == [
         R5_BIRLESME.format(b, m)
     ]
 
@@ -552,7 +551,7 @@ R6_BELGE = "Kural 6: Issue'suz belge PR başlığı Belge · <başlık> biçimin
 @pytest.fixture
 def belge_depo(tmp_path):
     for arg in (
-        ("init", "-b", "master"),
+        ("init", "-b", "main"),
         ("config", "user.name", "Deneme"),
         ("config", "user.email", "deneme@example.com"),
         ("config", "commit.gpgsign", "false"),
@@ -560,7 +559,7 @@ def belge_depo(tmp_path):
     ):
         _git(tmp_path, *arg)
     _commit(tmp_path, "README.md", "İlk açıklama")
-    _git(tmp_path, "branch", "origin/master")
+    _git(tmp_path, "branch", "origin/main")
     _git(tmp_path, "checkout", "-b", "belge")
     sha = _commit(tmp_path, "README.md", "Düzeltilmiş açıklama")
     return tmp_path, sha
@@ -572,7 +571,7 @@ def test_issuesuz_belge_pr_gecer(belge_depo):
         hatalar(
             _govde_git(sha).replace("Closes #49", "Issue yok: Belge düzeltmesi."),
             sha,
-            taban="origin/master",
+            taban="origin/main",
             dizin=dizin,
             baslik=BELGE_BASLIK,
         )
@@ -597,7 +596,7 @@ def test_issuesuz_belge_gerekcesi(belge_depo, satir):
     govde = _govde_git(sha).replace("Closes #49", satir)
     beklenen = [] if satir.startswith("Issue yok: gerekçe\n") else [R1, R6]
     assert (
-        hatalar(govde, sha, taban="origin/master", dizin=dizin, baslik=BELGE_BASLIK)
+        hatalar(govde, sha, taban="origin/main", dizin=dizin, baslik=BELGE_BASLIK)
         == beklenen
     )
 
@@ -617,7 +616,7 @@ def test_issuesuz_belge_gerekcesi(belge_depo, satir):
 def test_issuesuz_belge_basligi(belge_depo, baslik):
     dizin, sha = belge_depo
     govde = BELGE_GOVDE.replace(SHA, sha)
-    assert hatalar(govde, sha, taban="origin/master", dizin=dizin, baslik=baslik) == [
+    assert hatalar(govde, sha, taban="origin/main", dizin=dizin, baslik=baslik) == [
         R6_BELGE
     ]
 
@@ -653,7 +652,7 @@ def test_issuesuz_pr_tum_dosyalari_denetler(belge_depo, dosya, beklenen):
     sha = _commit(dizin, dosya, "Yeni içerik")
     govde = BELGE_GOVDE.replace(SHA, sha)
     assert (
-        hatalar(govde, sha, taban="origin/master", dizin=dizin, baslik=BELGE_BASLIK)
+        hatalar(govde, sha, taban="origin/main", dizin=dizin, baslik=BELGE_BASLIK)
         == beklenen
     )
     # Issue bağlantısı varsa aynı dosya listesi eski denetimi değiştirmez.
@@ -677,7 +676,7 @@ def test_issuesuz_pr_git_baslatilamazsa_reddedilir(belge_depo):
     assert hatalar(
         BELGE_GOVDE.replace(SHA, sha),
         sha,
-        taban="origin/master",
+        taban="origin/main",
         dizin=dizin / "olmayan",
         baslik=BELGE_BASLIK,
     ) == [R1, R6]
@@ -685,9 +684,9 @@ def test_issuesuz_pr_git_baslatilamazsa_reddedilir(belge_depo):
 
 def test_issuesuz_pr_koddan_belgeye_yeniden_adlandirma_reddedilir(belge_depo):
     dizin, _ = belge_depo
-    _git(dizin, "checkout", "master")
+    _git(dizin, "checkout", "main")
     _commit(dizin, "kod.py", "print('x')\n")
-    _git(dizin, "branch", "-f", "origin/master")
+    _git(dizin, "branch", "-f", "origin/main")
     _git(dizin, "checkout", "-b", "ad-degisimi")
     _git(dizin, "mv", "kod.py", "kod.md")
     _git(dizin, "commit", "-m", "Ad değişimi")
@@ -695,7 +694,7 @@ def test_issuesuz_pr_koddan_belgeye_yeniden_adlandirma_reddedilir(belge_depo):
     assert hatalar(
         BELGE_GOVDE.replace(SHA, sha),
         sha,
-        taban="origin/master",
+        taban="origin/main",
         dizin=dizin,
         baslik=BELGE_BASLIK,
     ) == [R1, R6]
@@ -711,7 +710,7 @@ def test_issuesuz_pr_cli_git_dosya_listesini_kullanir(belge_depo, kod_degisti):
         "PR_GOVDE": BELGE_GOVDE.replace(SHA, sha),
         "PR_BASLIK": BELGE_BASLIK,
         "PR_BAS_SHA": sha,
-        "GITHUB_BASE_REF": "master",
+        "GITHUB_BASE_REF": "main",
     }
     sonuc = subprocess.run(
         [sys.executable, "-X", "utf8", str(_yol)],
@@ -752,13 +751,13 @@ def test_dosyaya_gore_kanit_ve_inceleme(belge_depo, dosya, beklenen):
     dizin, _ = belge_depo
     (dizin / dosya).parent.mkdir(parents=True, exist_ok=True)
     sha = _commit(dizin, dosya, "Yeni içerik")
-    assert hatalar(BOS_KANIT_INCELEME, sha, "origin/master", dizin, BASLIK) == beklenen
+    assert hatalar(BOS_KANIT_INCELEME, sha, "origin/main", dizin, BASLIK) == beklenen
 
 
 @pytest.mark.parametrize("durum", ["sha_yok", "taban_yok", "bos", "git_hatasi"])
 def test_bilinmeyen_dosya_listesinde_tum_kurallar_uygulanir(belge_depo, durum):
     dizin, sha = belge_depo
-    taban = "origin/master"
+    taban = "origin/main"
     if durum == "sha_yok":
         sha = None
     elif durum == "taban_yok":
