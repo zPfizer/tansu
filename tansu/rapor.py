@@ -1,6 +1,7 @@
 """Rapor: tek dosya HTML ve işlem CSV'si (TASARIM 6.8). Sayı biçimi tek yardımcıdan gelir."""
 
 import html
+import json
 from pathlib import Path
 
 from tansu.simulator import SERMAYE
@@ -342,3 +343,89 @@ def yaz(sim, bilgi, cift=None, dizin=None, kabul=None) -> tuple:
             cift_csv, index=False, encoding="utf-8"
         )
     return yol, csv
+
+
+def _varyant_bolumu(v):
+    satirlar, olculer = [], []
+    for d in v["donemler"]:
+        satirlar.append(
+            [
+                d["donem"]["ad"],
+                d["durum"],
+                "Ölçülemedi"
+                if d["kapali_islem_sayisi"] is None
+                else d["kapali_islem_sayisi"],
+                "; ".join(
+                    f"{i['sembol']}: {i['durum']}; kalan {i['sonuc']['kalan_adet']} adet; "
+                    f"gerçekleşen {i['sonuc']['net_sonuc']} TL"
+                    for i in d["acik_islemler"]
+                ),
+                d["neden"] or "",
+                d["sonuc_ref"] or "Yazılmadı",
+            ]
+        )
+        for sembol in d["semboller"]:
+            for ad, o in sembol["olcu"]["olculer"].items():
+                olculer.append(
+                    [
+                        d["donem"]["ad"],
+                        sembol["sembol"],
+                        ad,
+                        "Ölçülemedi" if o["deger"] is None else o["deger"],
+                        o["birim"],
+                        o["bos_nedeni"] or "",
+                    ]
+                )
+    return (
+        f"<section><h2>{_kac(v['varyant'])}</h2>"
+        f"<p>Kaynak izni: {_kac(v['izin_durumu'])}. Eski karşılaştırma.</p>"
+        f"<p>Deneme: {_kac(v['deneme_id'])}<br>Koşu: {_kac(v['kosu_id'] or 'Başlamadı')}</p>"
+        + _tablo(
+            [
+                "Dönem",
+                "Durum",
+                "Kapanmış işlem",
+                "Açık/kısmi işlem",
+                "Neden",
+                "Sonuç başvurusu",
+            ],
+            satirlar,
+        )
+        + "<details><summary>Hisse ölçüleri ve ölçülememe nedenleri</summary>"
+        + _tablo(
+            ["Dönem", "Hisse", "Ölçü", "Değer", "Birim", "Ölçülememe nedeni"], olculer
+        )
+        + "</details></section>"
+    )
+
+
+def varyant_yaz(sonuc, dizin):
+    """TASARIM 5.15 #57: kayıtlı destek özetini hesap yapmadan göster."""
+    dizin = Path(dizin)
+    dizin.mkdir(parents=True, exist_ok=True)
+    veri_yolu, html_yolu = dizin / "varyantlar.json", dizin / "varyantlar.html"
+    for yol in (veri_yolu, html_yolu):
+        if yol.exists():
+            raise FileExistsError(f"Rapor var, üstüne yazılmaz: {yol}")
+    veri_metni = json.dumps(
+        sonuc, ensure_ascii=False, default=str, allow_nan=False, separators=(",", ":")
+    )
+    html_metni = (
+        '<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>Varyant sınaması</title>'
+        "<style>body{font:16px sans-serif;margin:2rem;max-width:1200px;color:#18232f}"
+        "table{border-collapse:collapse;width:100%;table-layout:fixed}"
+        "th,td{border:1px solid #ccc;padding:.5rem;text-align:left;overflow-wrap:anywhere}"
+        "th{background:#eee}section{margin:2rem 0}p{overflow-wrap:anywhere}"
+        "summary{cursor:pointer;padding:1rem 0}</style></head><body>"
+        "<h1>Varyant sınaması — destek raporu</h1>"
+        "<p>Eski karşılaştırma. Resmî kabul veya günlük kullanım izni değildir.</p>"
+        f"<p>Kayıt dosyası: {_kac(sonuc['deneme_dosyasi'])}</p>"
+        '<p>Birimli ölçüler, açık işlemler ve kayıt başvuruları: <a href="varyantlar.json">JSON raporu</a>.</p>'
+        + "".join(_varyant_bolumu(v) for v in sonuc["varyantlar"])
+        + "</body></html>"
+    )
+    with veri_yolu.open("x", encoding="utf-8") as f:
+        f.write(veri_metni)
+    with html_yolu.open("x", encoding="utf-8") as f:
+        f.write(html_metni)
+    return veri_yolu, html_yolu

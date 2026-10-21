@@ -19,6 +19,8 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ### Eklendi
 
+- Mevcut 24 varyantın kayıtlı altı dönem sınaması için açık eşleme alan komut ve destek raporu eklendi; eksik sonuçlar ve gerçek kayıt başvuruları korunur. (#57)
+
 - Küçük grup hazırlığı ayrı komut ve kayıt olayıyla eklendi. En fazla üç strateji revizyonu ve 60 kesin seans dondurulur; eksik kaynak tanımı, veri, takvim ve üyelik adlandırılmış engel olur. Hazırlık hesap başlatmaz; değişen tanım yeni revizyon ister, eski kayıt tarihçede kalır. İlk kaynak ailesi engelli kalır. (#116)
 
 - Kayıtlı taramanın ölçü hissesi gerçek dönem ve işlem kayıtlarına bağlandı. Seçilen ayarın uygun merkez ve bileşen açıklamasıyla çelişmesi reddedilir; işlemsiz hisse kayıtları korunur. (#92)

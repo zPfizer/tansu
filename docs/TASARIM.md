@@ -1360,6 +1360,51 @@ ortak E2 hesabının eşitliğini korur. Yürütücünün uygulanmış olması, 
 veriyi veya limit kanıtını tamamlamaz. Günlük etkinleştirme, performans
 araştırması ve kalıcı kimlik biçimi bu teslimin dışındadır.
 
+#### Kayıtlı varyant karşılaştırması (#57)
+
+**Durum: bağlantı kodda uygulanmıştır; kontrollü sınama kanıtı vardır.**
+Değiştirilmemiş görüntüyle son birleşik koşu ve bağımsız inceleme bekleniyor.
+Dayanak: #57'nin
+21.10.2026 tarihli uygulama sözleşmesi ve yukarıdaki S10. Bu bağlantı #76'nın
+kanıtına katkı verir; üst işin kapanmasını beklemez. #93/#94 yöntemlerini çağırmaz.
+Gerekçe: tek kayıtlı denemeyi çalıştıran S10, bütün adlandırılmış varyantları
+ve sonuçlarını birlikte sunan komut değildir.
+
+`tansusinama.varyantlari_calistir(depo, deneme_idleri, *, veri_koku, isci=None,
+ilerleme=print)` mevcut `aileler.VARYANTLAR` listesinin tam ad→deneme kimliği
+eşlemesini alır. Kimlikler tekildir ve önceden kaydedilmiştir. İlk hesap öncesinde
+her kaydın katalog tanımı, tam ayarı ve ortak dönem/veri/yöntem/risk/masraf girdileri
+doğrulanır. Sayısal ızgara değişikliği bu adlandırılmış karşılaştırmaya alınmaz.
+Eksik kayıt oluşturulmaz; değişen girdi yeni deneme gerektirir. Aynı denemenin
+tekrarı yeni koşu kimliği alır. Varyantlar sıralı, S10 dönem işleri kendi işçi
+sınırında çalışır. Bu yol yalnız geliştirme/destek içindir.
+
+`python -m tansu varyant-sinama --varyant-denemeleri MAP.json
+--deneme-dosyasi PILOT.jsonl --kok DATA --rapor OUTPUT` açık dosyaları okur.
+OUTPUT dizininde `varyantlar.json` ve `varyantlar.html` oluşur; mevcut raporun
+üstüne yazılmaz. Çıktı görüntü ağacına veya girdi dosyasına yazılamaz. Geçersiz eşleme
+hesap öncesi reddedilir. Kabul edilmiş eşlemenin eksik veya hatalı yürütmesi,
+raporu koruyarak sıfır dışı çıkış verir. Rapor resmi kabul, Holm sayımı, günlük
+kart veya yayın izni üretmez. Eski tanımların `izinsiz` ve `eski_karsilastirma`
+alanları katalogdan aynen gelir.
+
+Her varyantın altı dönem yeri hesap öncesinde ayrılır. Başarılı sıfır işlem,
+eksik veri/kanıt, hesap hatası ve başlamamış dönem farklı durum taşır.
+Kalıcı yazma hatası sonraki varyantları durdurur; önceki gerçek makbuzlar ve
+varsa yazılmış işlem başvuruları korunur. Yazılmamış sonuç için makbuz üretilmez.
+Başlangıç öncesi hata koşu kimliği uydurmaz. Bitiş yazma hatası önceki dönem
+makbuzlarını kaybettirmez.
+
+Sıkı rapor; katalog/tam ayar özetlerini, kayıt dosyasını, koşu/dönem/işlem
+başvurularını, veri/manifest/üyelik bağlarını, aşama ve hata nedenlerini taşır.
+Kapanmış işlem sayısı ve birimli ölçüler S11'in mevcut ölçü sahibinden gelir.
+Eksik dönem sayısı bilinmeyendir; hesaplanmış sıfırla aynı yazılmaz. Açık işlem
+kalan adedi, değerlemesi ve gerçekleşmiş kısmi sonucu ile ayrı görünür.
+Aday ve ret durumları sayılarıyla özetlenir; tam günlük üyelik, kalite ve işlem
+kanıtları E5'te kalır. HTML yalnız bu alanları gösterir, metinleri kaçırır;
+ölçü hesaplamaz veya kazanan seçmez. Paket önbelleği kullanılmaz; her S10
+çağrısının tam kapsam denetimi korunur.
+
 #### S11 ölçü ve sağlam bölge (#92)
 
 **Durum: seçim yöntemi Levent tarafından 21.10.2026 tarihinde onaylandı ve
