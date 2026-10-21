@@ -15,6 +15,8 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ### Eklendi
 
+- Ölçü ve sağlam bölge işi için geniş kârlı alanın içinden ayar seçimi Levent onayıyla kayda alındı; uygulama ve kanıt bekliyor. Eski yöntemler ve açık korumalar korunur. (#92)
+
 - Kayıtlı denemeyle beş ayrı yıl ve birleşik dönem yürütülür; ortak EMA ve tek hisse işlem hesabı mevcut kayıt pilotuna bağlandı. Isınma, açık işlem, kısmi satış ve hata kayıtları korunur. Kayıplı para aktarımı ve başlangıçla uyuşmayan ayar hesap başlatmaz. Eksik fiyat, kurulum veya limit kanıtı tam başarı sayılmaz; eski sınama yolu ve çift risk kapısı korunur. (#91)
 
 - Tek hisse için bağımsız riskli işlem geçişi eklendi; günlük adım ve toplu yürütme aynı dolum, yarı satış, erteleme ve durum kaydını kullanır. Yarı satışta adet aşağı yuvarlanır; kurulum girdileri ve kararın kendi gösterge gereksinimi doğrulanır. Giriş, fiyat ve kapanış adımları okunabilir işlevlere ayrıldı; eski hesaplar ve çift risk kapısı korunur. (#90)
