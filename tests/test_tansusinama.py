@@ -2593,3 +2593,214 @@ def test_s11_bir_cocugun_bozdugu_paket_diger_cocuga_gecmez(tmp_path, monkeypatch
         b["hucreler"][0]["kapali_islem_sayisi"] is None for b in sonuc["bolgeler"]
     )
     assert all(b["secilen"] is None for b in sonuc["bolgeler"])
+
+
+def test_s11_tum_cocuk_kayitlari_ilk_baslangic_ve_e1_oncesindedir(
+    tmp_path, monkeypatch
+):
+    from contextlib import contextmanager
+    from tansu import deneme
+
+    depo, makbuz, _ = s11_kayitli(tmp_path, monkeypatch)
+    kosu, hazirla = depo.kosu, veri.veri_hazirla
+    baslangic_kayitlari, e1_kayitlari = [], []
+
+    def cocuk_sayisi():
+        okuyucu = deneme.PilotKayit(depo.yol)
+        cocuklar = [
+            o
+            for o in okuyucu.oku()
+            if o["kayit_turu"] == "deneme" and o["ust_deneme_id"] == makbuz.deneme_id
+        ]
+        assert all(
+            o["baglar"]["izgara_ust_deneme"] == makbuz.deneme_id for o in cocuklar
+        )
+        assert len({o["deneme_id"] for o in cocuklar}) == len(cocuklar)
+        return len(cocuklar)
+
+    @contextmanager
+    def baslat(deneme_id, **secenekler):
+        if deneme_id != makbuz.deneme_id:
+            baslangic_kayitlari.append(cocuk_sayisi())
+        with kosu(deneme_id, **secenekler) as tutacak:
+            yield tutacak
+
+    def hesap(*args):
+        e1_kayitlari.append(cocuk_sayisi())
+        return hazirla(*args)
+
+    monkeypatch.setattr(depo, "kosu", baslat)
+    monkeypatch.setattr(veri, "veri_hazirla", hesap)
+    sonuc = s11_calistir(depo, makbuz, tmp_path)
+    assert baslangic_kayitlari == [3, 3, 3], (
+        "Bütün çocuklar ilk çocuk koşusundan önce kaydedilmeli"
+    )
+    assert e1_kayitlari == [3] * 6, (
+        "Bütün çocuk kayıtları ilk E1 çağrısından önce kalıcı olmalı"
+    )
+    assert [h["durum"] for h in sonuc["hucreler"]] == ["islemsiz"] * 3
+
+
+@pytest.mark.parametrize("ariza", ["yazma", "kayit", "dogrulama", "ozet"])
+def test_s11_ikinci_kayit_hatasi_tum_yurutmeyi_engeller(tmp_path, monkeypatch, ariza):
+    from contextlib import contextmanager
+    from copy import deepcopy
+    from decimal import Decimal
+    from tansu import deneme
+
+    depo, makbuz, _ = s11_kayitli(tmp_path, monkeypatch)
+    kaydet, oku, kosu, hazirla = (
+        depo.deneme_kaydet,
+        depo.deneme_oku,
+        depo.kosu,
+        veri.veri_hazirla,
+    )
+    kayitlar, baslangiclar, hesaplar = [], [], []
+
+    def kayit(*args, **secenekler):
+        if secenekler.get("ust_deneme") == makbuz.deneme_id:
+            kayitlar.append(args[0])
+            if len(kayitlar) == 2 and ariza not in ("dogrulama", "ozet"):
+                tur = (
+                    deneme.PilotYazmaHatasi if ariza == "yazma" else deneme.PilotHatasi
+                )
+                raise tur("ikinci çocuk kaydı başarısız")
+        return kaydet(*args, **secenekler)
+
+    def degisen_okuma(deneme_id):
+        d = oku(deneme_id)
+        if d["ust_deneme_id"] == makbuz.deneme_id and ariza in ("dogrulama", "ozet"):
+            min_gun = next(
+                a["deger"]
+                for a in d["strateji"]["parametreler"]
+                if a["ad"] == "min_gun"
+            )
+            if min_gun == 3:
+                d = deepcopy(d)
+                if ariza == "dogrulama":
+                    d["risk_ayarlari"]["nominal_tutar"] = Decimal("200000")
+                else:
+                    d["ayar_parmak_izi"] = "farkli-tam-ozet"
+        return d
+
+    @contextmanager
+    def baslat(deneme_id, **secenekler):
+        if deneme_id != makbuz.deneme_id:
+            baslangiclar.append(deneme_id)
+        with kosu(deneme_id, **secenekler) as tutacak:
+            yield tutacak
+
+    def hesap(*args):
+        hesaplar.append(args[0])
+        return hazirla(*args)
+
+    monkeypatch.setattr(depo, "deneme_kaydet", kayit)
+    monkeypatch.setattr(depo, "deneme_oku", degisen_okuma)
+    monkeypatch.setattr(depo, "kosu", baslat)
+    monkeypatch.setattr(veri, "veri_hazirla", hesap)
+    sonuc, hata = None, None
+    try:
+        sonuc = s11_calistir(depo, makbuz, tmp_path)
+    except (deneme.PilotYazmaHatasi, deneme.PilotHatasi) as yakalanan:
+        hata = yakalanan
+        sonuc = getattr(hata, "sonuc", None)
+    assert baslangiclar == [], "Kayıt geçişi bitmeden hiçbir çocuk koşusu başlamamalı"
+    assert hesaplar == [], "İkinci kayıt başarısızsa ilk çocuk da hesaplanmamalı"
+    assert sonuc is not None, (
+        "Kayıt geçişi hatası doğrulanmış makbuzları ve yuvaları korumalı"
+    )
+    assert len(sonuc["hucreler"]) == 3
+    assert sum(len(h["donemler"]) for h in sonuc["hucreler"]) == 18
+    assert all(h["kosu_id"] is None for h in sonuc["hucreler"])
+    assert all(
+        d["durum"] == "baslamadi" and d["neden"]
+        for h in sonuc["hucreler"]
+        for d in h["donemler"]
+    )
+    ilk = sonuc["hucreler"][0]
+    assert ilk["kayit_makbuzu"]["deneme_id"] == ilk["deneme_id"]
+    okuyucu = deneme.PilotKayit(depo.yol)
+    gercek = okuyucu.deneme_oku(ilk["deneme_id"])
+    assert gercek["ayar_parmak_izi"] == ilk["kayit_makbuzu"]["ayar_ozeti"]
+    assert gercek["ust_deneme_id"] == makbuz.deneme_id
+    assert not any(
+        o["kayit_turu"] == "baslangic" and o["deneme_id"] != makbuz.deneme_id
+        for o in okuyucu.oku()
+    )
+    if ariza == "yazma":
+        assert isinstance(hata, ts.AramaYazmaHatasi)
+        assert sonuc["sonuc_makbuzu"] is None and sonuc["bitis_makbuzu"] is None
+    elif ariza == "dogrulama":
+        assert "tam ayarı" in sonuc["hucreler"][1]["neden"]
+    if ariza in ("dogrulama", "ozet"):
+        assert sonuc["hucreler"][1]["kayit_makbuzu"]
+
+
+@pytest.mark.parametrize("ariza", ["kapsam", "e1_hatasi", "manifest", "uyelik"])
+def test_s11_eksik_kapsam_paketi_paylasilir_diger_hatalar_paylasilmaz(
+    tmp_path, monkeypatch, ariza
+):
+    from collections import Counter
+    from concurrent.futures import ThreadPoolExecutor
+    from copy import deepcopy
+    from tansu import deneme, saglamlik
+
+    depo, makbuz, _ = s11_kayitli(tmp_path, monkeypatch)
+    hazirla = veri.veri_hazirla
+    kurulum, yurut = aileler.ortak_donem_kurulumu, saglamlik.ema_hucre_calistir
+    istekler, hesaplar = [], []
+
+    def eksik(istek, *args):
+        istekler.append((istek.baslangic, istek.bitis))
+        if ariza == "e1_hatasi":
+            raise veri.VeriHatasi("E1 hazırlığı başarısız")
+        paket = deepcopy(hazirla(istek, *args))
+        if ariza == "manifest":
+            paket["referans"]["manifest_parmak_izi"] = "farkli-manifest"
+        elif ariza == "uyelik":
+            paket["uyelik"]["tablo_parmak_izi"] = "farkli-uyelik"
+        else:
+            satir = next(
+                r
+                for r in paket["piyasa"]
+                if istek.baslangic <= r["tarih"] <= istek.bitis
+            )
+            satir["kalite_bayraklari"] = ["eksik"]
+            paket["kalite"]["hata_nedenleri"].append("gerekli fiyat satırı eksik")
+        return paket
+
+    def e2(*args, **secenekler):
+        hesaplar.append("E2")
+        return kurulum(*args, **secenekler)
+
+    def e3(*args, **secenekler):
+        hesaplar.append("E3")
+        return yurut(*args, **secenekler)
+
+    monkeypatch.setattr(
+        ts.concurrent.futures,
+        "ProcessPoolExecutor",
+        lambda *, max_workers, mp_context: ThreadPoolExecutor(max_workers=max_workers),
+    )
+    monkeypatch.setattr(veri, "veri_hazirla", eksik)
+    monkeypatch.setattr(aileler, "ortak_donem_kurulumu", e2)
+    monkeypatch.setattr(saglamlik, "ema_hucre_calistir", e3)
+    sonuc = s11_calistir(depo, makbuz, tmp_path)
+    tekrarlar = Counter(istekler)
+    assert len(istekler) == (6 if ariza == "kapsam" else 18), (
+        "Yalnız kimliği doğrulanmış E1 paketi tekrar kullanılmalı"
+    )
+    assert len(tekrarlar) == 6
+    assert set(tekrarlar.values()) == ({1} if ariza == "kapsam" else {3})
+    assert hesaplar == [], "Kapsam veya kimlik geçersizken E2/E3 başlamamalı"
+    assert len(sonuc["hucreler"]) == 3
+    assert sum(len(h["donemler"]) for h in sonuc["hucreler"]) == 18
+    okuyucu = deneme.PilotKayit(depo.yol)
+    for h in sonuc["hucreler"]:
+        assert h["durum"] == "eksik"
+        for d in h["donemler"]:
+            assert d["durum"] == "eksik" and d["asama"] == "veri"
+            assert d["neden"] and not d["islem_referanslari"]
+            assert okuyucu.izle(d["sonuc_ref"])["sonuc"]["deneme_id"] == h["deneme_id"]
+    assert sonuc["durum"] == "hata"
+    assert all(b["secilen"] is None for b in sonuc["bolgeler"])

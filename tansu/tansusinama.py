@@ -945,9 +945,9 @@ def _donem_paketi(deneme, sonuc, veri_koku, hazirlik, kapsam):
         or paket["uyelik"]["tablo_parmak_izi"] != v["uyelik_ozeti"]
     ):
         raise ValueError("E1 veri/üyelik referansı kayıtlı denemeyle uyuşmuyor.")
-    _donem_kapsami(paket, gunler, uyelik, semboller, bas, son)
     if hazirlik is not None and anahtar not in hazirlik:
         hazirlik[anahtar] = deepcopy(paket)
+    _donem_kapsami(paket, gunler, uyelik, semboller, bas, son)
     return paket
 
 
@@ -1580,17 +1580,32 @@ def _arama_hucre_durumu(h):
     h.update(durum=durum, neden=None)
 
 
-def _arama_hucresi_yurut(depo, aktarim, h, veri_koku, mod, isci, ilerleme, hazirlik):
-    cocuk = aktarim.cocuk(h["ayarlar"])
-    h.update(
-        deneme_id=cocuk.deneme_id,
-        ayar_parmak_izi=cocuk.ozet,
-        kayit_makbuzu=asdict(cocuk.kayit_makbuzu),
-    )
-    _cocuk_ayari_dogrula(h, cocuk.kayit)
+def _arama_hucrelerini_kaydet(aktarim, hucreler):
+    for h in hucreler:
+        if h["durum"] == "alan_disi":
+            continue
+        try:
+            cocuk = aktarim.cocuk(h["ayarlar"])
+            h.update(
+                deneme_id=cocuk.deneme_id,
+                ayar_parmak_izi=cocuk.kayit_makbuzu.ayar_ozeti,
+                kayit_makbuzu=asdict(cocuk.kayit_makbuzu),
+            )
+            _cocuk_ayari_dogrula(h, cocuk.kayit)
+        except deneme_.PilotYazmaHatasi as hata:
+            _arama_hucresi_hatasi(h, hata, "kayit_hatasi")
+            raise
+        except Exception as hata:
+            logging.exception("Arama hücresi kaydedilemedi: %s", h["is_id"])
+            _arama_hucresi_hatasi(h, hata, "kayit_hatasi")
+            return False
+    return True
+
+
+def _arama_hucresi_yurut(depo, h, veri_koku, mod, isci, ilerleme, hazirlik):
     r = _kayitli_yurut(
         depo,
-        cocuk.deneme_id,
+        h["deneme_id"],
         veri_koku,
         mod,
         isci,
@@ -1613,22 +1628,20 @@ def _arama_hucrelerini_yurut(depo, d, sonuc, veri_koku, mod, isci, ilerleme):
     aktarim = AyarAktarimi(depo, d["deneme_id"])
     if aktarim.ozet != d["ayar_parmak_izi"]:
         raise deneme_.PilotHatasi("Üst arama tam ayarı değişti.")
+    if not _arama_hucrelerini_kaydet(aktarim, sonuc["hucreler"]):
+        return
     hazirlik = {}
     for h in sonuc["hucreler"]:
         if h["durum"] == "alan_disi":
             continue
         try:
-            _arama_hucresi_yurut(
-                depo, aktarim, h, veri_koku, mod, isci, ilerleme, hazirlik
-            )
+            _arama_hucresi_yurut(depo, h, veri_koku, mod, isci, ilerleme, hazirlik)
         except deneme_.PilotYazmaHatasi as hata:
             _arama_hucresi_hatasi(h, hata, "kayit_hatasi")
             raise
         except Exception as hata:
             logging.exception("Arama hücresi tamamlanamadı: %s", h["is_id"])
-            _arama_hucresi_hatasi(
-                h, hata, "kayit_hatasi" if h["deneme_id"] is None else "hesap_hatasi"
-            )
+            _arama_hucresi_hatasi(h, hata, "hesap_hatasi")
 
 
 def _arama_hucresi_hatasi(h, hata, durum):

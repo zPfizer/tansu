@@ -809,3 +809,32 @@ def test_kayitli_ema_deneme_cift_hesabini_baslatmadan_reddedilir(tmp_path, ailel
     assert makbuz.deneme_id in hata
     assert "cift_rotasyonu" in hata
     assert depo.yol.read_bytes() == once
+
+
+def test_s11_cocuk_ozeti_uyusmazsa_kayit_makbuzu_korunur(tmp_path, monkeypatch):
+    from copy import deepcopy
+    from tansu import deneme
+    from tansu.aktarim import AyarAktarimi
+    from tests.test_tansusinama import s11_kayitli
+
+    depo, ust, _ = s11_kayitli(tmp_path, monkeypatch)
+    aktarim = AyarAktarimi(depo, ust.deneme_id)
+    oku = depo.deneme_oku
+
+    def degisen_okuma(deneme_id):
+        kayit = oku(deneme_id)
+        if kayit["ust_deneme_id"] == ust.deneme_id:
+            kayit = deepcopy(kayit)
+            kayit["ayar_parmak_izi"] = "farkli-tam-ozet"
+        return kayit
+
+    monkeypatch.setattr(depo, "deneme_oku", degisen_okuma)
+    with pytest.raises(deneme.PilotHatasi, match="makbuzu tam ayarla") as hata:
+        aktarim.cocuk({"min_gun": 3})
+    makbuz = getattr(hata.value, "kayit_makbuzu", None)
+    assert makbuz is not None, (
+        "Doğrulama hatası daha önce alınan kayıt makbuzunu kaybetmemeli"
+    )
+    kayit = deneme.PilotKayit(depo.yol).deneme_oku(makbuz.deneme_id)
+    assert kayit["ayar_parmak_izi"] == makbuz.ayar_ozeti
+    assert kayit["ust_deneme_id"] == ust.deneme_id

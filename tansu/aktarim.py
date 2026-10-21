@@ -114,12 +114,12 @@ class AyarAktarimi:
                 kosu_id=self.kosu_id,
                 veri_ref=self.veri_ref,
             )
+            if cocuk.ozet != makbuz.ayar_ozeti:
+                raise deneme.PilotHatasi("Çocuk kayıt makbuzu tam ayarla uyuşmuyor.")
         except Exception as hata:
             hata.kayit_makbuzu = makbuz
             raise
         cocuk.kayit_makbuzu = makbuz
-        if cocuk.ozet != makbuz.ayar_ozeti:
-            raise deneme.PilotHatasi("Çocuk kayıt makbuzu tam ayarla uyuşmuyor.")
         return cocuk
 
     def _cocuk_yontemi(self, hucre):

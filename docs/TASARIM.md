@@ -1513,7 +1513,11 @@ Gözlenebilir kontroller: `tests/test_istatistik.py` başlangıç, birim, net so
 kısmi sonuç ve tarihli Sharpe sınırlarını; `tests/test_saglamlik.py` tam çevre,
 kenar, bileşen ve eşitlikleri; `tests/test_tansusinama.py` bütün hücreleri, kayıt
 sırasını, iki çağıranın aynı para sonucunu ve çocuklar arası veri yalıtımını sınar.
-`tests/test_ayar_aktarimi.py` tam çocuk yöntemini, `tests/test_kayit.py` gerçek
+İlk çocuk başlangıcı ve E1 öncesinde bütün kayıtların kalıcı olması; ikinci kaydın
+veya tam ayar doğrulamasının hatasında sıfır çocuk başlangıcı ve korunmuş yuvalar;
+eksik kapsamda altı E1 hazırlığıyla 18 görünür sonuç, E1/kimlik hatasının ise
+paylaşılmaması aynı sınamadadır.
+`tests/test_ayar_aktarimi.py` tam çocuk yöntemini ve özet uyuşmazlığında kalıcı makbuzu, `tests/test_kayit.py` gerçek
 çocuk/koşu/dönem bağlarını ve hatalı tam başarıyı; `tests/test_gelecek.py` gelecek
 fiyatın önceki dönem ve hücreyi değiştirmemesini denetler. Eski doğrudan düşüş
 çağıranı `tests/test_kabul.py` kapsamda kalır.
