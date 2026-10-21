@@ -330,3 +330,35 @@ def test_s11_buyuk_bolge_medyanin_onundedir():
     sonuc = saglamlik.sec(izgara, hucreler, politika="genis_bolge_net_r_v1")
     assert [b["buyukluk"] for b in sonuc["bolgeler"]] == [5, 3]
     assert sonuc["secilen"] == [2]
+
+
+@pytest.mark.parametrize(
+    "durum,sayi,net,merkez,merkez_mesafesi,bes_mesafesi",
+    [
+        ("eksik", None, None, 5, 5, 5),
+        ("hesap_hatasi", None, None, 5, 5, 5),
+        ("kayit_hatasi", None, None, 5, 5, 5),
+        ("baslamadi", None, None, 5, 5, 5),
+        ("islemsiz", 0, None, 5, 5, 5),
+        ("tamamlandi", 1, None, 5, 5, 5),
+        ("tamamlandi", 1, 0.0, 6, 4, 3),
+        ("tamamlandi", 1, -1.0, 6, 4, 3),
+    ],
+)
+def test_s11_mesafe_hedefi_yalniz_olculmus_sifir_ve_kayiptir(
+    durum, sayi, net, merkez, merkez_mesafesi, bes_mesafesi
+):
+    izgara, hucreler = s11_alan((11,))
+    hucreler[2].update(durum=durum, kapali_islem_sayisi=sayi, toplam_net_r=net)
+    sonuc = saglamlik.sec(izgara, hucreler, politika="genis_bolge_net_r_v1")
+    assert sonuc["secilen"] == [merkez]
+    assert sonuc["hucreler"][merkez]["uzaklik"] == merkez_mesafesi
+    assert sonuc["hucreler"][5]["uzaklik"] == bes_mesafesi
+    assert len(sonuc["hucreler"]) == 11
+    assert sonuc["hucreler"][2]["durum"] == durum
+    assert sonuc["hucreler"][2]["kapali_islem_sayisi"] == sayi
+    assert sonuc["hucreler"][2]["toplam_net_r"] == net
+    assert sonuc["hucreler"][2]["karli"] is False
+    assert sonuc["hucreler"][3]["komsular"] == [[2], [4]]
+    assert sonuc["hucreler"][3]["uygun_merkez"] is False
+    assert sonuc["hucreler"][4]["uygun_merkez"] is True

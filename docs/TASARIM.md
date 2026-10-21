@@ -1534,8 +1534,8 @@ veya tam ayar doğrulamasının hatasında sıfır çocuk başlangıcı ve korun
 eksik kapsamda altı E1 hazırlığıyla 18 görünür sonuç, E1/kimlik hatasının ise
 paylaşılmaması aynı sınamadadır.
 `tests/test_ayar_aktarimi.py` tam çocuk yöntemini ve özet uyuşmazlığında kalıcı makbuzu, `tests/test_kayit.py` gerçek
-çocuk/koşu/dönem bağlarını, başarısız dönem/hisse seçiminin reddini ve hatalı tam
-başarıyı; `tests/test_gelecek.py` gelecek
+çocuk/koşu/dönem bağlarını, bölgenin zorunlu açıklamalarını, başarısız dönem/hisse
+seçiminin ve çelişkili en iyi hücre seçildi etiketinin reddini, hatalı tam başarıyı; `tests/test_gelecek.py` gelecek
 fiyatın önceki dönem ve hücreyi değiştirmemesini denetler. Eski doğrudan düşüş
 çağıranı `tests/test_kabul.py` kapsamda kalır.
 

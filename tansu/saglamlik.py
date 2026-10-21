@@ -149,10 +149,10 @@ def _komsu_bilgisi(i, alan, izinli, olculen):
     )
 
 
-def _merkez_bilgisi(i, komsular, sekil, izinli, karli, olculen):
+def _merkez_bilgisi(i, komsular, sekil, karli, olculen):
     sinir_uzakligi = _tarama_sinir_uzakligi(i, sekil)
     uygun = i in karli and sinir_uzakligi > 0 and all(j in karli for j in komsular)
-    uzakliklar = [_eksen_uzakligi(i, j) for j in izinli - karli]
+    uzakliklar = [_eksen_uzakligi(i, j) for j in olculen.keys() - karli]
     return dict(
         karli=i in karli,
         sinir=sinir_uzakligi == 0,
@@ -220,7 +220,7 @@ def _genis_bolge(izgara, hucreler):
     for i, h in alan.items():
         h.update(_komsu_bilgisi(i, alan, izinli, olculen))
         komsular = list(map(tuple, h["komsular"]))
-        h.update(_merkez_bilgisi(i, komsular, sekil, izinli, karli, olculen))
+        h.update(_merkez_bilgisi(i, komsular, sekil, karli, olculen))
     bolgeler = _karli_bolgeler(alan, karli, olculen)
     secilen = _bolge_merkezi(bolgeler, alan)
     return dict(

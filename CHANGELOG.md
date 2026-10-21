@@ -15,7 +15,7 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ### Eklendi
 
-- #92 incelemesi için seçim mesafesinin yalnız ölçülmüş sıfır/negatif sonuçlara dayandığı ve seçilen dönemin başarılı olması gerektiği teknik sözleşmede netleştirildi; düzeltme ve sınama bekleniyor.
+- Kayıtlı taramada bilinmeyen sonuç kayıp mesafesi sayılmaz. Başarısız dönem/hisse seçimi ve çelişkili seçildi etiketi kayıt sınırında reddedilir; bölge açıklamaları korunur. Eski düşüş süresinin açıklaması korunan ilk kapanış davranışına uyarlandı. (#92)
 
 - Kayıtlı ayar taraması, birimleri açık ölçüler ve Levent onaylı geniş kârlı bölge seçimi eklendi. Bütün izinli ayarlar ilk hesap öncesinde kaydedilip doğrulanır; eksik ve başarısız sonuçlar gerekçeleriyle görünür kalır. Kimliği doğrulanmış veri, kapsam denetimi her ayarda korunarak paylaşılır. Eski yöntemler ortak hesap sahiplerini kullanır; farklı başlangıç ve süre anlamları açıkça ayrılır. Günlük izin ve açık korumalar korunur. (#92)
 

@@ -652,12 +652,105 @@ def _arama_hucreleri(olaylar, ust, baslangic, hucreler, eksenler):
 
 
 def _arama_bolge_baglari(ust, hucreler, bolgeler, politika):
+    """TASARIM 5.15 S11: açıklama ve dönem/hisse bağları seçim hesabı değildir."""
+    gerekli = {
+        "politika",
+        "strateji_id",
+        "donem",
+        "sembol",
+        "secilen",
+        "secilen_deneme_id",
+        "neden",
+        "en_iyi",
+        "hucreler",
+        "bolgeler",
+    }
     for b in bolgeler:
+        if not gerekli <= b.keys():
+            raise PilotHatasi("Bölgenin kimliği veya seçim açıklaması eksik.")
         if b["politika"] != politika or b["strateji_id"] != ust["strateji"]["kayit_id"]:
             raise PilotHatasi("Bölgenin politika veya strateji bağı uyuşmuyor.")
         if not any(kanonik(b["donem"]) == kanonik(d) for d in ust["donemler"]):
             raise PilotHatasi("Bölge kayıtlı döneme bağlı değil.")
+        if b["sembol"] is not None:
+            _metin(b["sembol"])
+        _arama_bolge_aciklamasi(b, [h["indeks"] for h in hucreler])
+        for h, ozet in zip(hucreler, b["hucreler"], strict=True):
+            _arama_bolge_hucresi(h, b, ozet)
         _arama_secilen_cocuk(hucreler, b)
+
+
+def _arama_bolge_aciklamasi(b, indeksler):
+    if any(not isinstance(b[a], list) for a in ("hucreler", "bolgeler")):
+        raise PilotHatasi("Bölgenin hücre ve bileşen açıklamaları liste olmalıdır.")
+    if kanonik([h["indeks"] for h in b["hucreler"]]) != kanonik(indeksler):
+        raise PilotHatasi("Bölgenin açıklanan hücre kimlikleri uyuşmuyor.")
+    for h in b["hucreler"]:
+        _arama_bolge_hucre_aciklamasi(h, indeksler)
+    for c in b["bolgeler"]:
+        _arama_bolge_bileseni(c, indeksler)
+    _arama_en_iyi_bagi(b["en_iyi"], b["secilen"], indeksler)
+
+
+def _arama_bolge_hucre_aciklamasi(h, indeksler):
+    gerekli = {
+        "deneme_id",
+        "durum",
+        "kapali_islem_sayisi",
+        "toplam_net_r",
+        "komsular",
+        "alan_disi_komsular",
+        "eksik_komsular",
+        "karli",
+        "sinir",
+        "uygun_merkez",
+        "uzaklik",
+        "en_kotu_komsu",
+    }
+    if not gerekli <= h.keys():
+        raise PilotHatasi("Bölgenin hücre veya komşuluk açıklaması eksik.")
+    for ad in ("komsular", "alan_disi_komsular", "eksik_komsular"):
+        if not isinstance(h[ad], list) or any(i not in indeksler for i in h[ad]):
+            raise PilotHatasi("Bölgenin komşu kimlikleri uyuşmuyor.")
+
+
+def _arama_en_iyi_bagi(en_iyi, secilen, indeksler):
+    if en_iyi is None:
+        return
+    if (
+        not {"indeks", "secildi"} <= en_iyi.keys()
+        or en_iyi["indeks"] not in indeksler
+        or type(en_iyi["secildi"]) is not bool
+        or en_iyi["secildi"] != (en_iyi["indeks"] == secilen)
+    ):
+        raise PilotHatasi("En iyi hücrenin açıklaması veya kimliği uyuşmuyor.")
+
+
+def _arama_bolge_bileseni(c, indeksler):
+    gerekli = {
+        "indeksler",
+        "buyukluk",
+        "medyan_net_r",
+        "uygun_merkezler",
+        "kanonik_indeks",
+    }
+    if not gerekli <= c.keys():
+        raise PilotHatasi("Bölgenin bileşen veya eşitlik açıklaması eksik.")
+    for ad in ("indeksler", "uygun_merkezler"):
+        if not isinstance(c[ad], list) or any(i not in indeksler for i in c[ad]):
+            raise PilotHatasi("Bölgenin bileşen kimlikleri uyuşmuyor.")
+    if c["kanonik_indeks"] not in c["indeksler"]:
+        raise PilotHatasi("Bileşenin kanonik kimliği uyuşmuyor.")
+
+
+def _arama_bolge_hucresi(h, bolge, ozet):
+    d = next(d for d in h["donemler"] if kanonik(d["donem"]) == kanonik(bolge["donem"]))
+    s = next((s for s in d["semboller"] if s["sembol"] == bolge["sembol"]), None)
+    durum = s["durum"] if d["durum"] == "tamamlandi" and s else d["durum"]
+    if h["durum"] == "alan_disi":
+        durum = "alan_disi"
+    if (ozet["deneme_id"], ozet["durum"]) != (h["deneme_id"], durum):
+        raise PilotHatasi("Bölgenin çocuk veya dönem/hisse durumu uyuşmuyor.")
 
 
 def _arama_secilen_cocuk(hucreler, bolge):
@@ -673,6 +766,20 @@ def _arama_secilen_cocuk(hucreler, bolge):
         or h["deneme_id"] != bolge["secilen_deneme_id"]
     ):
         raise PilotHatasi("Seçilen çocuk bölgenin hücresine bağlı değil.")
+    _arama_secilen_donemi(h, bolge)
+
+
+def _arama_secilen_donemi(h, bolge):
+    d = next(d for d in h["donemler"] if kanonik(d["donem"]) == kanonik(bolge["donem"]))
+    semboller = [s for s in d["semboller"] if s["sembol"] == bolge["sembol"]]
+    if (
+        d["durum"] != "tamamlandi"
+        or len(semboller) != 1
+        or semboller[0]["durum"] != "tamamlandi"
+    ):
+        raise PilotHatasi(
+            "Seçilen çocuğun aynı dönem ve hissesi tamamlanmış olmalıdır."
+        )
 
 
 def _arama_kosu_sonucu(olaylar, kosu_id):

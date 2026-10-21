@@ -269,7 +269,10 @@ GECTI, GECMEDI, OLCULEMEDI = "Geçti", "Geçmedi", "Ölçülemedi"
 
 
 def dusus(ozkaynak) -> tuple:
-    """(en büyük düşüş oranı, düşüşte kalma süresi takvim günü): önceki zirvenin altında kalınan en uzun süre, kapanış bazlı."""
+    """İlk kapanış politikasıyla (en büyük düşüş oranı, takvim günü süresi).
+
+    TASARIM 5.12: eski süre, düşüş olmasa da ardışık zirveler arasını kapsar.
+    """
     sonuc = egri_dususu(
         dict(
             tur="legacy_ozkaynak",
