@@ -1013,7 +1013,9 @@ def _ileri_egitim_bagi(olaylar, ust, b, sembol, h):
             in ("veri", "uyelik", "isinma", "limit_kaniti", "kurulum", "gosterge")
             else "hesap_hatasi"
         )
-    if (h["durum"], h["kapali_islem_sayisi"], h["toplam_net_r"]) != (beklenen, n, net):
+    if kanonik([h["durum"], h["kapali_islem_sayisi"], h["toplam_net_r"]]) != kanonik(
+        [beklenen, n, net]
+    ):
         raise PilotHatasi("WF eğitim özeti gerçek kapanmış sonuçla uyuşmuyor.")
     p = durum.get("pozisyon")
     dislanan = (
@@ -1029,10 +1031,31 @@ def _ileri_egitim_bagi(olaylar, ust, b, sembol, h):
     )
     if h["dislanan"] != dislanan:
         raise PilotHatasi("WF açık eğitim sonucu dışlanmamış.")
+    if h["uyarilar"] != (["egitim_120_alti"] if n < 120 else []):
+        raise PilotHatasi("WF eğitim uyarısı gerçek örneklemle uyuşmuyor.")
     return d
 
 
 def _ileri_secimi_dogrula(olaylar, ust, m, k):
+    from tansu import saglamlik
+
+    if set(k) != {
+        "bolum_id",
+        "sembol",
+        "egitim_donemi",
+        "test_donemi",
+        "egitim_kesimi",
+        "secim_zamani_simule",
+        "egitim_cocuklari",
+        "bolge",
+        "durum",
+        "neden",
+        "test_deneme_id",
+        "test_kayit_ref",
+        "strateji_ayar_parmak_izi",
+        "deneme_ayar_parmak_izi",
+    }:
+        raise PilotHatasi("WF seçim içeriğinin alanları geçersiz.")
     b = _ileri_bolum(ust, k["bolum_id"])
     _metin(k["sembol"])
     _ileri_tekil(
@@ -1055,6 +1078,23 @@ def _ileri_secimi_dogrula(olaylar, ust, m, k):
         raise PilotHatasi("WF seçim kesimi veya dönemi uyuşmuyor.")
     cocuklar = {}
     for h in k["egitim_cocuklari"]:
+        if set(h) != {
+            "deneme_id",
+            "kosu_id",
+            "ayar_parmak_izi",
+            "strateji_ayar_parmak_izi",
+            "kayit_ref",
+            "baslangic_ref",
+            "sonuc_ref",
+            "bitis_ref",
+            "indeks",
+            "durum",
+            "kapali_islem_sayisi",
+            "toplam_net_r",
+            "dislanan",
+            "uyarilar",
+        }:
+            raise PilotHatasi("WF eğitim kanıtının alanları geçersiz.")
         indeks = tuple(h["indeks"])
         if indeks in cocuklar:
             raise PilotHatasi("WF eğitim koordinatı yinelenmiş.")
@@ -1068,19 +1108,54 @@ def _ileri_secimi_dogrula(olaylar, ust, m, k):
     alan = {tuple(h["indeks"]): h for h in bolge["hucreler"]}
     if set(alan) != beklenen or len(alan) != len(bolge["hucreler"]):
         raise PilotHatasi("WF seçim alanı eksik veya yinelenmiş.")
-    for indeks, h in alan.items():
-        if h["durum"] == "alan_disi":
+    ozetler = []
+    for indeks in sorted(beklenen):
+        ayarlar = {
+            e["ad"]: e["degerler"][i]
+            for e, i in zip(ust["yontem_ayarlari"]["eksenler"], indeks, strict=True)
+        }
+        tam = _arama_tam_ayari(ust, ayarlar)
+        if tam is None:
             if indeks in cocuklar:
                 raise PilotHatasi("WF alan dışı hücresi çalıştırılmış.")
+            ozetler.append(
+                dict(
+                    indeks=list(indeks),
+                    deneme_id=None,
+                    durum="alan_disi",
+                    kapali_islem_sayisi=None,
+                    toplam_net_r=None,
+                )
+            )
             continue
         if indeks not in cocuklar:
             raise PilotHatasi("WF izinli eğitim hücresi eksik.")
+        if kanonik(_ayarlar(cocuklar[indeks])["strateji"]) != kanonik(tam["strateji"]):
+            raise PilotHatasi("WF eğitim stratejisi kayıtlı koordinatla uyuşmuyor.")
         kaynak = next(x for x in k["egitim_cocuklari"] if tuple(x["indeks"]) == indeks)
-        if any(
-            h[a] != kaynak[a]
-            for a in ("deneme_id", "durum", "kapali_islem_sayisi", "toplam_net_r")
-        ):
-            raise PilotHatasi("WF seçim hücresi eğitim kanıtıyla uyuşmuyor.")
+        ozetler.append(
+            dict(
+                indeks=list(indeks),
+                **{
+                    a: kaynak[a]
+                    for a in (
+                        "deneme_id",
+                        "durum",
+                        "kapali_islem_sayisi",
+                        "toplam_net_r",
+                    )
+                },
+            )
+        )
+    gercek_bolge = saglamlik.sec(
+        dict(eksenler=ust["yontem_ayarlari"]["eksenler"]),
+        ozetler,
+        politika=ust["yontem_ayarlari"]["secim_politikasi"],
+    )
+    if kanonik(bolge) != kanonik(gercek_bolge):
+        raise PilotHatasi(
+            "WF seçim bölgesi gerçek eğitim ve kayıtlı seçiciyle uyuşmuyor."
+        )
     secilen = None if bolge["secilen"] is None else tuple(bolge["secilen"])
     if secilen is None:
         eksik = any(
@@ -1089,7 +1164,7 @@ def _ileri_secimi_dogrula(olaylar, ust, m, k):
         )
         if (
             k["durum"] != ("eksik" if eksik else "secim_yok")
-            or not k["neden"]
+            or k["neden"] != ("egitim_eksik" if eksik else bolge["neden"])
             or any(
                 k[a] is not None
                 for a in (
@@ -1306,6 +1381,166 @@ def _ileri_islemi_dogrula(olaylar, ust, m, islem, ufuk):
         raise PilotHatasi("WF işlem sonucu gerçek E3 kontrolüyle uyuşmuyor.")
 
 
+def _ileri_kayitlari(olaylar, m, tur):
+    return [
+        o for o in olaylar if o["kayit_turu"] == tur and o.get("kosu_id") == m.kosu_id
+    ]
+
+
+def _ileri_islem_refi(o):
+    return {a: o[a] for a in ("rol", "islem_id", "sembol")} | dict(
+        kayit_ref=o["kayit_id"]
+    )
+
+
+def _ileri_kontrol_refi(o):
+    return dict(rol="acik_kontrol", kayit_ref=o["kayit_id"], sembol=o["sembol"])
+
+
+def _ileri_bolum_kayitlari(olaylar, m):
+    return [
+        o
+        for o in _ileri_kayitlari(olaylar, m, "sonuc")
+        if o.get("sonuc_turu") == "ileri_v1" and o["kayit"]["tur"] == "bolum"
+    ]
+
+
+def _ileri_bolum_kontrolleri(olaylar, ust, m, b):
+    from tansu.tansusinama import _donem_uyeligi, _ileri_tasinanlar
+
+    kontroller = _ileri_kayitlari(olaylar, m, "ileri_kontrol")
+    onceki = {o["sembol"]: o for o in kontroller if o["bolum_id"] < b["ad"]}
+    guncel = {o["sembol"]: o for o in kontroller if o["bolum_id"] == b["ad"]}
+    _, _, uyeler, _, _ = _donem_uyeligi(ust, dict(donem=b))
+    gereken = set(uyeler) | _ileri_tasinanlar(
+        {s: o["durum"] for s, o in onceki.items()}
+    )
+    if set(guncel) - gereken or any(o["bolum_id"] > b["ad"] for o in kontroller):
+        raise PilotHatasi("WF güncel kontrol kümesi tarihli yürütme kapsamı dışında.")
+    return guncel, onceki | guncel, gereken
+
+
+def _ileri_bolum_kaniti(olaylar, ust, m, b):
+    """TASARIM 5.15 S12: çeyrek gözlemi yalnız önceki gerçek makbuzlardan gelir."""
+    from tansu import istatistik
+    from tansu.tansusinama import DONEM_BIRIMLERI, _ileri_olaylar
+
+    onceki = _ileri_bolum_kayitlari(olaylar, m)
+    if (
+        len(onceki) >= len(ust["donemler"])
+        or ust["donemler"][len(onceki)]["ad"] != b["ad"]
+    ):
+        raise PilotHatasi("WF bölüm sonucu kayıtlı sırada değil.")
+    secimler = [
+        o["kayit"] | dict(secim_ref=o["kayit_id"])
+        for o in _ileri_kayitlari(olaylar, m, "ileri_secim")
+        if o["bolum_id"] == b["ad"]
+    ]
+    _, kontroller, _ = _ileri_bolum_kontrolleri(olaylar, ust, m, b)
+    eski = {r["kayit_ref"] for o in onceki for r in o["kayit"]["islem_refleri"]}
+    islemler = [
+        o
+        for o in _ileri_kayitlari(olaylar, m, "islem")
+        if o.get("islem_turu") == "ileri_islem_v1" and o["kayit_id"] not in eski
+    ]
+    son = {
+        o["sembol"]: o["durum"] for o in _ileri_kayitlari(olaylar, m, "ileri_kontrol")
+    }
+    sayimlar = {
+        s: istatistik.ileri_kontrol_sayimi(o["durum"], b)
+        for s, o in sorted(kontroller.items())
+    }
+    return dict(
+        tur="bolum",
+        bolum_id=b["ad"],
+        donem=b,
+        birimler=DONEM_BIRIMLERI,
+        muhasebe_politikasi="tani_referans_v1",
+        secimler=secimler,
+        kontrol_refleri=[_ileri_kontrol_refi(o) for _, o in sorted(kontroller.items())],
+        islem_refleri=[_ileri_islem_refi(o) for o in islemler],
+        sayimlar=sayimlar,
+        uyarilar=[
+            dict(sembol=s, neden="test_30_alti")
+            for s, n in sayimlar.items()
+            if n["kapali_islem"] < 30
+        ],
+        olaylar=_ileri_olaylar(son),
+    )
+
+
+def _ileri_birlesik_kaniti(olaylar, ust, m):
+    """TASARIM 5.15 S12: değişmez nihai işlemlerin eksiksiz kaynak izdüşümü."""
+    from tansu import istatistik
+    from tansu.tansusinama import DONEM_BIRIMLERI, _ileri_olaylar, _ileri_ufuk
+
+    bolumler = _ileri_bolum_kayitlari(olaylar, m)
+    son = {o["sembol"]: o for o in _ileri_kayitlari(olaylar, m, "ileri_kontrol")}
+    islemler = [
+        o
+        for o in _ileri_kayitlari(olaylar, m, "islem")
+        if o.get("islem_turu") == "ileri_islem_v1"
+    ]
+    kohortlar = {}
+    for o in islemler:
+        kohortlar.setdefault(o["giris_kohortu"], []).append(_ileri_islem_refi(o))
+    ufuk = _ileri_ufuk(ust)
+    return dict(
+        tur="birlesik",
+        bolum_id="birlesik",
+        donem=ufuk,
+        durum="tamamlandi"
+        if len(bolumler) == 16
+        and all(o["kayit"]["durum"] == "tamamlandi" for o in bolumler)
+        else "hata",
+        bolum_refleri=[o["kayit_id"] for o in bolumler],
+        islem_refleri=[_ileri_islem_refi(o) for o in islemler],
+        kontrol_refleri=[_ileri_kontrol_refi(o) for _, o in sorted(son.items())],
+        olaylar=_ileri_olaylar({s: o["durum"] for s, o in son.items()}),
+        veri_gorulme_durumu="incelenmis_gecmis",
+        birimler=DONEM_BIRIMLERI,
+        muhasebe_politikasi="tani_referans_v1",
+        giris_kohortlari=dict(sorted(kohortlar.items())),
+        **istatistik.ileri_ozeti(
+            [o["olaylar"][0] | dict(islem_ref=o["kayit_id"]) for o in islemler],
+            semboller=son,
+            donem=ufuk,
+            bolumler=ust["donemler"],
+        ),
+    )
+
+
+def _ileri_bitis_kaniti(olaylar, ust, m):
+    """TASARIM 5.15 S12: iş muhasebesi doğrulanmış gerçek çeyreklerden gelir."""
+    bolumler = _ileri_bolum_kayitlari(olaylar, m)
+    birlesik = [
+        o
+        for o in _ileri_kayitlari(olaylar, m, "sonuc")
+        if o.get("sonuc_turu") == "ileri_v1" and o["kayit"]["tur"] == "birlesik"
+    ]
+    tamamlanan = [
+        o["bolum_id"] for o in bolumler if o["kayit"]["durum"] == "tamamlandi"
+    ]
+    durum = birlesik[-1]["kayit"]["durum"] if birlesik else "hata"
+    if durum == "tamamlandi":
+        tamamlanan.append("birlesik")
+    return dict(
+        durum=durum,
+        tamamlanan=tamamlanan,
+        basarisiz=[b["ad"] for b in ust["donemler"] if b["ad"] not in tamamlanan]
+        + ([] if durum == "tamamlandi" else ["birlesik"]),
+        yontemler=["kayitli_ileri_v1"],
+        olculer={},
+        cikti_referanslari=[birlesik[-1]["kayit_id"]] if birlesik else [],
+        ozetler=dict(
+            tamamlanan=len(tamamlanan),
+            denenen=len(bolumler),
+            basarisiz=sum(o["kayit"]["durum"] == "hata" for o in bolumler),
+            baslamayan=16 - len(bolumler),
+        ),
+    )
+
+
 def _ileri_sonucu_dogrula(olaylar, ust, m, kayit):
     _ileri_tekil(
         olaylar,
@@ -1324,6 +1559,42 @@ def _ileri_sonucu_dogrula(olaylar, ust, m, kayit):
             _ileri_ayni_kosu(secim, m)
             if secim["bolum_id"] != b["ad"]:
                 raise PilotHatasi("WF sonuç seçimi başka bölümde.")
+        gercek = _ileri_bolum_kaniti(olaylar, ust, m, b)
+        if kanonik({a: kayit[a] for a in gercek}) != kanonik(gercek):
+            raise PilotHatasi(
+                "WF çeyrek içeriği gerçek seçim, kontrol ve sayımlarla uyuşmuyor."
+            )
+        ek = {"veri_referansi", "uyelik", "kalite", "isinma", "adaylar"}
+        if set(kayit) - (set(gercek) | ek | {"durum", "neden", "hatalar"}):
+            raise PilotHatasi("WF çeyrek içeriğinde bilinmeyen alan var.")
+        if not isinstance(kayit["hatalar"], list) or any(
+            not isinstance(h, dict)
+            or not isinstance(h.get("neden"), str)
+            or not h["neden"]
+            for h in kayit["hatalar"]
+        ):
+            raise PilotHatasi("WF çeyrek hatasının türü geçersiz.")
+        for a in ek & kayit.keys():
+            if kayit[a] is not None and not isinstance(
+                kayit[a], list if a == "adaylar" else dict
+            ):
+                raise PilotHatasi("WF çeyrek veri kanıtının türü geçersiz.")
+        guncel, _, gereken = _ileri_bolum_kontrolleri(olaylar, ust, m, b)
+        tam = (
+            bool(gercek["secimler"])
+            and not kayit["hatalar"]
+            and all(s["durum"] != "eksik" for s in gercek["secimler"])
+            and gereken <= {s["sembol"] for s in gercek["secimler"]}
+            and gereken == set(guncel)
+        )
+        if kayit["durum"] != ("tamamlandi" if tam else "hata") or (
+            tam and kayit["neden"] is not None
+        ):
+            raise PilotHatasi(
+                "WF çeyrek başarı durumu gerçek eğitim ve test kanıtıyla uyuşmuyor."
+            )
+        if not tam:
+            _metin(kayit["neden"])
     elif kayit["tur"] == "birlesik":
         refs = kayit["bolum_refleri"]
         if len(refs) != len(set(refs)):
@@ -1372,6 +1643,10 @@ def _ileri_sonucu_dogrula(olaylar, ust, m, kayit):
                     raise PilotHatasi(
                         "WF giriş kohortu gerçek nihai işlemle uyuşmuyor."
                     )
+        if kanonik(kayit) != kanonik(_ileri_birlesik_kaniti(olaylar, ust, m)):
+            raise PilotHatasi(
+                "WF birleşik içerik, ölçü, kohort sayımı veya ufuk gerçek kayıtlarla uyuşmuyor."
+            )
     else:
         raise PilotHatasi("WF sonuç türü tanımsız.")
 
@@ -1445,41 +1720,19 @@ def _ileri_kaydi_mi(olaylar, o):
 
 
 def _ileri_bitisini_dogrula(olaylar, ust, m, baslangic, o):
-    durum, tamamlanan, basarisiz = o["durum"], o["tamamlanan"], o["basarisiz"]
-    bildirilen = tamamlanan + basarisiz
+    beklenen = _ileri_bitis_kaniti(olaylar, ust, m)
+    if not beklenen["cikti_referanslari"] and "hata" in o["ozetler"]:
+        _metin(o["ozetler"]["hata"])
+        beklenen["ozetler"]["hata"] = o["ozetler"]["hata"]
     if (
-        durum not in ("tamamlandi", "hata", "iptal")
-        or len(set(bildirilen)) != len(bildirilen)
-        or set(bildirilen) != set(baslangic["is_listesi"])
-        or (durum == "tamamlandi" and basarisiz)
-        or o["yontemler"] != ["kayitli_ileri_v1"]
-        or type(o["bitis_zamani"]) is not datetime
+        type(o["bitis_zamani"]) is not datetime
+        or set(beklenen["tamamlanan"] + beklenen["basarisiz"])
+        != set(baslangic["is_listesi"])
+        or kanonik({a: o[a] for a in beklenen}) != kanonik(beklenen)
     ):
-        raise PilotHatasi("WF bitiş durumu veya iş muhasebesi geçersiz.")
-    refs = o["cikti_referanslari"]
-    if len(refs) > 1 or (durum == "tamamlandi" and len(refs) != 1):
-        raise PilotHatasi("WF bitişi tek birleşik sonuç gerektirir.")
-    if not refs:
-        if tamamlanan:
-            raise PilotHatasi("WF sonuçsuz bitişte tamamlanan iş olamaz.")
-        return
-    sonuc = _bul(olaylar, refs[0], "sonuc")
-    _ileri_ayni_kosu(sonuc, m)
-    if (
-        sonuc.get("sonuc_turu") != "ileri_v1"
-        or sonuc["kayit"]["tur"] != "birlesik"
-        or sonuc["kayit"]["durum"] != durum
-    ):
-        raise PilotHatasi("WF bitişi aynı durumdaki birleşik sonuca bağlı değil.")
-    beklenen = {
-        _bul(olaylar, ref, "sonuc")["kayit"]["bolum_id"]
-        for ref in sonuc["kayit"]["bolum_refleri"]
-        if _bul(olaylar, ref, "sonuc")["kayit"]["durum"] == "tamamlandi"
-    }
-    if durum == "tamamlandi":
-        beklenen.add("birlesik")
-    if set(tamamlanan) != beklenen:
-        raise PilotHatasi("WF bitişi gerçek bölüm sonuçlarıyla uyuşmuyor.")
+        raise PilotHatasi(
+            "WF bitişi gerçek bölüm sonuçları ve iş muhasebesiyle uyuşmuyor."
+        )
 
 
 def _ileri_olayi_dogrula(olaylar, o):
@@ -2206,15 +2459,21 @@ class PilotKayit:
                 raise PilotYazmaHatasi("Koşu kayıt hatasıyla durdu.")
         except Exception as hata:
             if not kosu._bitti and not kosu._yazma_hatasi:
-                kosu.bitir(
-                    durum="hata",
-                    tamamlanan=[],
-                    basarisiz=is_listesi,
-                    yontemler=[],
-                    olculer={},
-                    cikti_referanslari=[],
-                    ozetler={"hata": str(hata)},
-                )
+                if deneme["yontem_ayarlari"].get("yontem") == "kayitli_ileri_v1":
+                    bitis = _ileri_bitis_kaniti(self.oku(), deneme, makbuz)
+                    if not bitis["cikti_referanslari"]:
+                        bitis["ozetler"]["hata"] = str(hata)
+                    kosu.bitir(**bitis)
+                else:
+                    kosu.bitir(
+                        durum="hata",
+                        tamamlanan=[],
+                        basarisiz=is_listesi,
+                        yontemler=[],
+                        olculer={},
+                        cikti_referanslari=[],
+                        ozetler={"hata": str(hata)},
+                    )
             raise
         finally:
             kosu._etkin = False

@@ -7,6 +7,7 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 ## [Yayımlanmamış]
 
 - İşlem kontrolü, düzeltilmiş AOF ve kapanışta veri kapısının mevcut yuvarlama payını kullanır; fiyatlar ve ham limit denetimi korunur. (#169)
+- Kayıtlı ileri yürümede seçim alanı, sonuç içeriği ve nihai giriş kohortu sayımları aynı kaynak doğrulamasına bağlandı. Tam kontrollerin bitmesi için CI iş süresi 15 dakikadan 30 dakikaya çıkarıldı; testler ve başarı ölçütleri korundu. (#93)
 
 - #136: Kural kataloğu, aile kuralları ve kaynak dökümü tek sahipli belgelere ayrıldı; kaynak kimlikleri ve gerekli kısıtlar korundu.
 
