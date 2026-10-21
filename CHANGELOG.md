@@ -15,6 +15,8 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ### Eklendi
 
+- Kayıtlı ileri yürüme, her çeyrekten önce eğitim seçimini kaydeder; tek kronolojik akışta açık ve bekleyen işlemlerin özgün ayarını korur. Eğitim dışlamaları, giriş kohortları ve açık ufuk ayrı kayıtlarla izlenir. (#93)
+
 - Kayıtlı taramanın ölçü hissesi gerçek dönem ve işlem kayıtlarına bağlandı. Seçilen ayarın uygun merkez ve bileşen açıklamasıyla çelişmesi reddedilir; işlemsiz hisse kayıtları korunur. (#92)
 
 - Kayıtlı taramada bilinmeyen sonuç kayıp mesafesi sayılmaz. Başarısız dönem/hisse seçimi ve çelişkili seçildi etiketi kayıt sınırında reddedilir; bölge açıklamaları korunur. Eski düşüş süresinin açıklaması korunan ilk kapanış davranışına uyarlandı. (#92)

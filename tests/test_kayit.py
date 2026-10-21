@@ -2480,3 +2480,103 @@ def test_s11_bilesen_uygun_merkezi_kendi_uyesinde_bildirir(
         reddedildi = True
     assert reddedildi, "Her bileşen yalnız kendi üyesini uygun merkez diye gösterebilir"
     assert depo.yol.read_bytes() == once
+
+
+def test_s12_kayit_bagi_nihai_sonucu_ve_acik_ufku_korur(tmp_path, monkeypatch):
+    from copy import deepcopy
+    from tests.test_tansusinama import s12_sinyalli, s12_calistir
+
+    depo, m, _ = s12_sinyalli(tmp_path, monkeypatch, son_sinyal="2025-10-04")
+    asil_islem = pilot._Kosu.ileri_islem_kaydet
+    asil_sonuc = pilot._Kosu.ileri_sonucu_kaydet
+    denetlenen = []
+
+    def islem(kosu, *, islem, ufuk):
+        yanlis = deepcopy(islem)
+        yanlis["pozisyon"]["ayar"]["min_gun"] = 5
+        with pytest.raises(pilot.PilotHatasi, match="özgün sinyal"):
+            asil_islem(kosu, islem=yanlis, ufuk=ufuk)
+        yanlis = deepcopy(islem)
+        yanlis["sonuc"]["net_sonuc"] += 1.0
+        with pytest.raises(pilot.PilotHatasi, match="gerçek E3"):
+            asil_islem(kosu, islem=yanlis, ufuk=ufuk)
+        r = asil_islem(kosu, islem=islem, ufuk=ufuk)
+        with pytest.raises(pilot.PilotHatasi, match="zaten yayımlandı"):
+            asil_islem(kosu, islem=islem, ufuk=ufuk)
+        denetlenen.append(r.olay_id)
+        return r
+
+    def sonuc(kosu, *, kayit):
+        if kayit["tur"] == "bolum" and kayit["bolum_id"] == "2022Q1":
+            yanlis = deepcopy(kayit)
+            yanlis["islem_refleri"] = [
+                dict(
+                    yanlis["kontrol_refleri"][0],
+                    rol="tamamlanmis_islem",
+                    islem_id="yanlis",
+                )
+            ]
+            with pytest.raises(pilot.PilotHatasi, match="Kayıt bağı"):
+                asil_sonuc(kosu, kayit=yanlis)
+        if kayit["tur"] == "birlesik":
+            yanlis = deepcopy(kayit)
+            yanlis["giris_kohortlari"] = {"2022Q1": yanlis["islem_refleri"]}
+            with pytest.raises(pilot.PilotHatasi, match="kohort"):
+                asil_sonuc(kosu, kayit=yanlis)
+        return asil_sonuc(kosu, kayit=kayit)
+
+    monkeypatch.setattr(pilot._Kosu, "ileri_islem_kaydet", islem)
+    monkeypatch.setattr(pilot._Kosu, "ileri_sonucu_kaydet", sonuc)
+    r = s12_calistir(depo, m, tmp_path)
+    assert r["durum"] == "tamamlandi", [
+        (b["bolum_id"], b["neden"]) for b in r["bolumler"]
+    ]
+    assert len(denetlenen) == 2
+    islemler = [o for o in depo.oku() if o.get("islem_turu") == "ileri_islem_v1"]
+    assert [o["rol"] for o in islemler] == ["tamamlanmis_islem", "acik_ufuk"]
+    acik = islemler[-1]["olaylar"][0]
+    assert acik["pozisyon"]["cikis_tarih"] is None
+    assert acik["sonuc"]["net_r"] is None
+    assert acik["sonuc"]["kalan_adet"] > 0
+    assert acik["degerleme"]["tarih"] == "2025-10-05"
+
+
+def test_s12_birlesik_olay_kaynagi_uydurulamaz(tmp_path, monkeypatch):
+    from copy import deepcopy
+    from tests.test_tansusinama import s12_kayitli, s12_calistir
+
+    depo, m, piyasa = s12_kayitli(tmp_path, monkeypatch)
+    piyasa[:] = [r for r in piyasa if r["tarih"] != "2022-01-04"]
+    asil = pilot._Kosu.ileri_sonucu_kaydet
+    denetlenen = []
+
+    def sonuc(kosu, *, kayit):
+        if kayit["tur"] == "birlesik":
+            yanlis = deepcopy(kayit)
+            yanlis["olaylar"] = [
+                dict(
+                    olay_id="uydurma",
+                    tarih="2022-01-04",
+                    sembol="TEST",
+                    tur="dolum",
+                    icerik={},
+                )
+            ]
+            with pytest.raises(pilot.PilotHatasi, match="gerçek E3"):
+                asil(kosu, kayit=yanlis)
+            denetlenen.append(True)
+        return asil(kosu, kayit=kayit)
+
+    monkeypatch.setattr(pilot._Kosu, "ileri_sonucu_kaydet", sonuc)
+    r = s12_calistir(depo, m, tmp_path)
+    assert r["durum"] == "hata"
+    assert denetlenen == [True]
+    bolumler = [
+        o["kayit"]
+        for o in depo.oku()
+        if o.get("sonuc_turu") == "ileri_v1" and o["kayit"]["tur"] == "bolum"
+    ]
+    assert len(bolumler) == 1, "Başlayan bölümün ret gerekçesi kalıcı olmalıdır"
+    assert bolumler[0]["durum"] == "hata"
+    assert bolumler[0]["neden"] == r["bolumler"][0]["neden"]
+    assert "seans kapsamı" in bolumler[0]["hatalar"][0]["neden"]
