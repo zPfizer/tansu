@@ -1417,11 +1417,13 @@ boş olmayan, artan ve tekil alt kümesidir; kanonik eksen sırası ad sırasıd
 Katalog çözümü E2'de kalır. Yeni aralık, kategorik varyant, çift riski veya panel
 seçim izni bu arama ile verilmez. Alan dışı istek ve ret nedeni korunur.
 
-E4 önce tüm koordinatları sınıflandırır ve hücre yuvalarını ayırır. E5 her izinli
-hücreyi `ust_deneme` ve `baglar.izgara_ust_deneme` ile kaydeder. Çocukta tam çözülmüş
-strateji, özgün strateji özeti, tam deneme özeti ve kayıt makbuzu bulunur. Tam
-çocuk ayarı tekrar okunur; beklenen üst bağ, yöntem ve iki özet doğrulanmadan
-hesap başlamaz. Aynı değere tekrar dönüş eski revizyonu silmez. Eski Holm sayımı değişmez.
+E4 önce tüm koordinatları sınıflandırır ve hücre yuvalarını ayırır. E5 bütün izinli
+hücreleri `ust_deneme` ve `baglar.izgara_ust_deneme` ile kaydeder. Çocukta tam çözülmüş
+strateji, özgün strateji özeti, tam deneme özeti ve kayıt makbuzu bulunur. Bütün
+çocukların tam ayarları tekrar okunur; beklenen üst bağ, yöntem ve iki özet doğrulanır.
+Bu kayıt ve doğrulama geçişi bitmeden hiçbir çocuk koşusu veya E1–E3 hesabı başlamaz.
+Kayıt geçişi başarısızsa doğrulanmış önceki makbuzlar ve bütün dönem yuvaları korunur;
+hiçbir çocuk çalıştırılmaz. Aynı değere tekrar dönüş eski revizyonu silmez. Eski Holm sayımı değişmez.
 
 Üst aramanın E5 başlangıcı ve çocuğun kayıt/başlangıç makbuzları hesap öncesindedir.
 Çocuk kaydı başarısızsa o çocuğun E1–E3 hesabı başlamaz. Kayıt/yayın hatası E5'in
@@ -1435,8 +1437,11 @@ S10'un tam yöntem eşitliği değiştirilmez. İki kayıtlı giriş aynı özel
 gövdesini kullanır; ikinci S09 döngüsü yazılmaz. Hücreler sırayla yürür, aynı anda
 yalnız bir çocuğun mevcut en çok altı dönem işi çalışır. Arama ömründe E1 dönem
 paketleri paylaşılır; anahtar tam veri isteğini, ısınmayı, takvimi, görüntü/manifesti,
-üyeliği ve veri politikalarını kapsar. Çocukla uyuşmayan paket kullanılmaz. Ortak
-paket çocuğun değiştirilebilir işlem durumunu taşımaz; aramalar arasında önbellek yoktur.
+üyeliği ve veri politikalarını kapsar. Manifest ve üyelik kimliği doğrulanmış paket,
+E4 kapsam denetiminden önce saklanır; kapsam denetimi her çocukta yeniden yapılır.
+Bu nedenle eksik kapsam, aynı E1 hazırlığını tekrarlatmaz. E1 hazırlık hatası veya
+kimlik uyuşmazlığı saklanmaz. Çocukla uyuşmayan paket kullanılmaz. Ortak paket çocuğun
+değiştirilebilir işlem durumunu taşımaz; aramalar arasında önbellek yoktur.
 E2'nin değişmeyen gösterge hazırlığı yalnız aynı gösterge ve ısınma ayarıyla
 paylaşılabilir; sahibi E2'dir. Her çocuğun kurulumu, sinyali ve kimliği yeniden üretilir.
 Bir hız veya bellek kazancı iddiası bu sözleşmeden çıkarılmaz.
