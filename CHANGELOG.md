@@ -6,9 +6,13 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ## [Yayımlanmamış]
 
+- İşlem kontrolü, düzeltilmiş AOF ve kapanışta veri kapısının mevcut yuvarlama payını kullanır; fiyatlar ve ham limit denetimi korunur. (#169)
+
 - #136: Kural kataloğu, aile kuralları ve kaynak dökümü tek sahipli belgelere ayrıldı; kaynak kimlikleri ve gerekli kısıtlar korundu.
 
 ### Değişti
+
+- Ortak dönem kurulumu sinyal tarihlerini iki sınır günü dahil seçer; dönem sırası, aynı gün tekrarları, değerler ve sinyal kimlikleri korunur. Sınır günleri kurulumda bulunmasa da geçerli seçim hata vermez. (#168)
 
 - Site işlerinin esas şablonu Levent'in tarihli kararı ve içerik özetiyle sabitlendi; modül başına kaynak, canlı kanıt ve ayrı yayım onayı korundu. (#69)
 

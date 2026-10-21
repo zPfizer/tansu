@@ -1714,3 +1714,85 @@ def test_s10_toplu_kurulum_gunluk_kurulumla_ayni(sayisal):
             deger = toplu["TEST"]["mumlar"].at[tarih, g["ad"]]
             assert (None if pd.isna(deger) else deger) == g["deger"]
         assert toplu["TEST"]["isinma"].at[tarih] == gunluk["isinma"]["TEST"]["gozlem"]
+
+
+@pytest.mark.parametrize(
+    "gunler,bas,son,secilen",
+    [
+        ([499, 503, 501, 501, 505, 502], 500, 507, [1, 2, 3, 4, 5]),
+        ([499, 503, 501, 501, 505, 502], 501, 505, [1, 2, 3, 4, 5]),
+        ([499, 503, 501, 501, 505, 502], 506, 507, []),
+        ([], 500, 507, []),
+        ([499, 501, 502, 503], 501, 503, [1, 2, 3]),
+    ],
+    ids=["eksik-sinirlar", "dahil-sinirlar", "donemde-yok", "bos", "eski-sirali"],
+)
+def test_ortak_donem_kurulumu_tarih_uyeligi_sira_ve_tekrari_korur(
+    monkeypatch, gunler, bas, son, secilen
+):
+    f = _mumlar([100.0] * 512)
+    f["aof"] = f["kapanis"]
+    paket = _ortak_paket(f)
+    paket["referans"]["istenen_donem"] = {
+        "baslangic": str(f.index[bas].date()),
+        "bitis": str(f.index[son].date()),
+    }
+    # Kurulum sahibinin dönem sırası sözleşmesi; tarih seçimi bu sınırda sınanır.
+    k = pd.DataFrame(
+        {
+            "kutu_alt": [90.0 + i for i in range(len(gunler))],
+            "kutu_ust": [110.0 + i for i in range(len(gunler))],
+            "hedef": [np.nan] * len(gunler),
+        },
+        index=f.index[gunler],
+    )
+    korunacak = k.copy(deep=True)
+    monkeypatch.setattr(aileler, "kurulum", lambda *a: k)
+    strateji = aileler.legacy_coz("bugun")
+    hata = None
+    try:
+        sonuc = aileler.ortak_donem_kurulumu(paket, strateji)["TEST"]
+    except KeyError as exc:
+        hata = exc
+    assert hata is None, f"Geçerli kurulumda tarih üyeliği seçilemedi: {hata}"
+    pd.testing.assert_frame_equal(sonuc["kurulum"], korunacak.iloc[secilen])
+    pd.testing.assert_frame_equal(k, korunacak)
+    assert [s["tarih"] for s in sonuc["sinyaller"]] == [
+        str(f.index[gunler[i]].date()) for i in secilen
+    ]
+    assert [s["kayit_id"] for s in sonuc["sinyaller"]] == [
+        f"TEST:{f.index[gunler[i]].date()}:{i}:{strateji.ayar_parmak_izi}"
+        for i in secilen
+    ]
+    assert [s["kutu_alt"]["deger"] for s in sonuc["sinyaller"]] == [
+        90.0 + i for i in secilen
+    ]
+
+
+@pytest.mark.parametrize(
+    "bas,son",
+    [("NaT", "2028-03-01"), ("2028-03-01", "NaT"), ("2028-03-02", "2028-03-01")],
+)
+def test_ortak_donem_kurulumu_gecersiz_donemi_reddeder(bas, son):
+    f = _mumlar([100.0] * 512)
+    f["aof"] = f["kapanis"]
+    paket = _ortak_paket(f)
+    paket["referans"]["istenen_donem"] = {"baslangic": bas, "bitis": son}
+    with pytest.raises(ValueError, match="Kurulum dönemi geçersiz"):
+        aileler.ortak_donem_kurulumu(paket, aileler.legacy_coz("bugun"))
+
+
+@pytest.mark.parametrize("tekrar", [False, True], ids=["sirasiz", "tekrar"])
+def test_ortak_donem_kurulumu_gecersiz_piyasa_tarihlerini_reddeder(tekrar):
+    f = _mumlar([100.0] * 512)
+    f["aof"] = f["kapanis"]
+    paket = _ortak_paket(f)
+    if tekrar:
+        paket["piyasa"].insert(1, paket["piyasa"][0].copy())
+    else:
+        paket["piyasa"][0], paket["piyasa"][1] = (
+            paket["piyasa"][1],
+            paket["piyasa"][0],
+        )
+    with pytest.raises(ValueError, match="Piyasa tarihleri sıralı ve tekil olmalı"):
+        aileler.ortak_donem_kurulumu(paket, aileler.legacy_coz("bugun"))
