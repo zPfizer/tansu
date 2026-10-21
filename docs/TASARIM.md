@@ -1666,6 +1666,10 @@ Yöntem tam olarak `yontem=kayitli_ileri_v1`, `tekrar=0`, `egitim_ay=12`,
 `hucre_yontemi` olarak tam S10 yürütme sözlüğü ve
 `veri_gorulme_durumu=incelenmis_gecmis` taşır. Kayıtlı izinli koordinatların
 tamamı her eğitimde çalışır. Sonuçtan sonra yöntem değişirse yeni revizyon gerekir.
+E5 izinli alanı çağıranın `alan_disi` beyanından çıkarmaz; kayıtlı eksenlerin her
+koordinatını mevcut katalog çözümleyicisiyle doğrular. İzinli koordinatın tek
+eğitim çocuğu zorunludur. Seçimin bütün bölge açıklaması, doğrulanmış eğitim
+sonuçlarından değişmeyen S11 seçicisiyle yeniden doğrulanır.
 Bu etiket tarihsel verinin görülmüşlüğünü korur; kronolojik OOS, insanın veriyi
 hiç incelemediği ayrılmış dönem diye sunulmaz. 2021 ilk eğitimdir; beş yıllık
 betimleyici sınama bununla birleştirilmez.
@@ -1732,13 +1736,47 @@ Sonuç hem sinyalin karar çeyreğini hem fiili giriş çeyreğini taşır. Kapa
 tek kez fiili giriş kohortuna atanır; kohort anahtarı ve tam başvuru gerçek nihai
 kayda bağlanır. Nakit olayları gerçek tarihleriyle sıralı ve tekil kalır;
 tam olay içeriği aynı üst koşunun son gerçek E3 kontrol noktalarından doğrulanır.
+Çeyrek sonucu önceki aynı çeyrek seçimlerinin tam içeriğini ve yeni nihai
+işlemlerini eksiksiz taşır. Güncel yürütme kümesi, kayıtlı takvimin o çeyrekteki
+tarihli OOS üyeleri ile çeyrekten önce doğrulanmış açık/bekleyen pozisyon veya
+karantina taşıyan sembollerin birleşimidir. E1 bu kümenin tam fiyat ve ısınma
+kapsamını doğrular. Eğitim penceresindeki eski üyelik tek başına güncel fiyat
+isteği doğurmaz. Bilinen eksik eğitim veya eksik güncel yürütme kontrolü başarılı
+çeyrek olamaz. Beklenen küme çağıranın güncel kontrollerinden türetilmez.
+Çeyreğin kontrol başvuruları, güncel yürütme kontrolleri ile önceki doğrulanmış
+son kontrollerin birleşimidir. Üyelikten çıkmış boş durumun önceki türlenmiş
+başvurusu aynen korunur; yeni olay, tarih, fiyat/500 gözlem isteği veya giriş
+izni üretilmez. Güncel çalışma gereken sembol eski başvuruyla tamamlanmış
+sayılamaz. Başvuruların kümesi ve tam içeriği yayında ve yeni okumada aynı
+kaynak izdüşümüyle doğrulanır.
+Birleşik sonuç yayımlanmış bütün çeyrekleri sırasıyla, bütün nihai işlemleri ve
+her sembolün son kontrolünü taşır;
+ufku kayıtlı yöntemden gelir. Ölçülerin tam içeriği, birimi, boşluk nedeni, eğrisi
+ve işlem başvurusu değişmez nihai işlemlerden mevcut saf ölçü sahibiyle doğrulanır.
+Yayın ve yeni okuyucu aynı kaynak izdüşümünü kullanır; çağıranın özeti kanıt olmaz.
 Birleşik eğri bağımsız yılları toplamaz. Eğitim sonucu test
 kapsamındaki açığı doldurmaz. Tamamlanan, başarısız ve başlamayan çeyrekler ayrıdır.
 Kayıt hatası bağımlı hesabı durdurur; doğrulanmış önceki makbuzlar korunur;
 belirsiz yayın S03 kurtarma yolunu kullanır.
 
-Her sembol/çeyrek kapalı işlem, ayrı giriş günü, açık işlem, bekleyen giriş ve
-dışlanmış eğitim sonucu sayılarını taşır. Eğitimde 120, testte 30 kapalı işlem
+Çeyreğin `sayimlar` alanı o kontrol noktasındaki gözlemdir; sonradan değiştirilmez.
+`kapali_islem`, fiili girişi o çeyrekte olan ve o çeyrek sonunda kapanmış işlem
+sayısıdır. `ayri_giris_gunu`, bu işlemlerin ve o anda girilmiş açık pozisyonun
+ayrı giriş günlerini sayar. `acik_islem` ve `bekleyen_giris` sınırdaki pozisyonu
+sayar. Eğitimde dışlanan sonuçlar seçim kaydında korunur. Sonraki çeyrekte kapanan
+işlem önceki gözlemi düzeltmez. Birleşik `giris_kohort_sayimlari`, kayıtlı 16 fiili
+giriş çeyreğinin her biri ve son kontrolü bulunan her sembol için `kapali_islem`,
+`ayri_giris_gunu`, `acik_islem` sayılarını değişmez nihai işlemlerden üretir;
+boş hücre sıfırdır. Girişi olmayan bekleyen aday bu sayımda işlem değildir.
+Q2'de girip Q3'te kapanan işlem nihai Q2 kapalı sayımında bir kez yer alır;
+kapanış çeyreğine taşınmaz. Açık ufuk işlemi kapalı sayılmaz.
+Birleşik ölçüler ve bu nihai sayımlar aynı saf hesap sahibini kullanır. Bitişin
+ölçü alanı boştur; tamamlanan, denenen, başarısız ve başlamayan sayıları gerçek
+çeyrek makbuzlarından türetilir. Birleşik sonuç yazılmadan duran hata bitişi de
+yalnız doğrulanmış önceki çeyrekleri muhasebeleştirir.
+Birleşik makbuzu olmayan olağandışı hata bitişi, `ozetler.hata` alanında yakalanan
+hatanın metnini gözlem olarak saklayabilir; bu metin sayım veya başarı kanıtı değildir.
+Eğitimde 120, testte 30 kapalı işlem
 altı yalnız örneklem uyarısıdır; ret veya günlük uygunluk eşiği değildir.
 `tests/test_tansusinama.py` genel girişte takvim, makbuz sırası, sürekli durum,
 seçimsiz dönem ve açık ufku; `tests/test_kayit.py` değişmez bağları ve tek yayını;
@@ -1809,7 +1847,7 @@ küçük grubun `referanslar.pay_kimligi` alanı aynı seçimi taşır. Seçim y
 istek, sembol, kayıt ve referans anlamları değişmez. Seçim varsa tam olarak şu
 alanlar gereklidir: `surum`, `tablo_ozeti`, `kaynak`, `goruntu_id`, `manifest_ozeti`.
 Sürüm `pay_kimligi_v1` olur; özetler küçük harfli SHA-256 metnidir. Boş, eksik,
-fazla alanlı veya bilinmeyen sürümlü seçim reddedilir. E5 yalnız bu yapıyı doğrular;
+fazla alanlı veya bilinmeyen sürümlü seçim reddedilir. E5 seçim yapısını doğrular;
 geçmiş kaydı okumak için güncel fiyatı veya tabloyu yüklemez. E1 gerçek sağlayıcı,
 görüntü, doğrulanmış manifest ve sürümlü `eslemeler.csv` özetini karşılaştırır.
 Tablodaki sağlayıcı/görüntü/manifest bağı da aynı olmalıdır. Başka görüntüye veya
@@ -1849,6 +1887,22 @@ durum aynı çözülmüş pay anahtarını kullanır. Üst üyelik birleşimi de
 isteğinden önce aynı kayıtlı seçimle çözülür; tarihli kaynak kanıtı korunur.
 Sinyal makbuzunun veri referansı üst denemenin tam pay kimliği seçimini taşır;
 başka seçim veya eksik seçim aynı manifest özetiyle kabul edilmez.
+Pay kimliği seçilmiş S12 üst koşusunun başlangıcı, hesap öncesinde
+`uyelik_kaniti` taşır. Tam alanları `surum=ileri_uyelik_kaniti_v1`,
+`uyelik_tablo_metni` ve `pay_kimligi_tablo_metni` olur. İki metin, kaynak
+CSV dosyalarının tam UTF-8 baytlarını korur. E4 bu baytları bir kez okur;
+özetlerini kayıtlı `uyelik_ozeti` ve `pay_kimligi.tablo_ozeti` ile karşılaştırır.
+E5 yayında ve geçmiş okumada aynı saf üyelik/eşleme sahipleriyle metinleri,
+özetlerini ve sağlayıcı/görüntü/manifest bağını doğrular. Gereken tarihli paylar
+yalnız bu saklı kaynaklar ve kayıtlı takvimden gelir; önceki açık/bekleyen veya
+karantinalı durumla birleşir. Çağıranın güncel kontrol başvuruları beklenen
+üyeliği tanımlamaz. Canlı dosya, fiyat veya gösterge yüklenmez. Kötü veya eksik
+kanıt reddedilir. Bu alan seçimsiz eski koşulara, S10'a ve eğitim/test çocuk
+başlangıçlarına eklenmez; kayıtlı ayar özetini değiştirmez. Yalnız revizyon
+kaydı bulunan eski girdiler okunabilir. Bu kanıttan önce üretilmiş gelişim
+amaçlı seçimli WF başlangıçları sözleşme öncesi kayıttır; güncel okuyucu bunlara
+kanıt uydurmaz veya defteri değiştirmez ve eksik kanıtı açık hata ile reddeder.
+
 Küçük grup aynı çözümü yalnız statik üyelik ve veri kapsamına uygular; hesap
 başlatmaz. Eski `motor.sinama` bu yeni paket seçimini açık hata ile reddeder;
 yeni anlam eski çağırana sessizce verilmez.
