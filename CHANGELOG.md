@@ -21,6 +21,8 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 - Kayıtlı sağlayıcı ve görüntüye bağlı, açık seçimli pay kimliği eklendi. Tarihli KOZAA/TRMET ve KOZAL/TRALT kodları fiyat ve olay değerleri değiştirilmeden aynı pay geçmişine bağlanır. Eski etiket davranışı korunur; kaynak, özet ve çakışma hataları reddedilir. Eksik ısınma ve düzeltme kökeninin kanıt sınırı korunur. (#167)
 
+- Pay kimliği başvuruları LF biçiminde sabitlendi; taşınabilir tablo özeti ve gerçek depo eşlemeleri otomatik denetleniyor. (#167)
+
 - Küçük grup hazırlığı ayrı komut ve kayıt olayıyla eklendi. En fazla üç strateji revizyonu ve 60 kesin seans dondurulur; eksik kaynak tanımı, veri, takvim ve üyelik adlandırılmış engel olur. Hazırlık hesap başlatmaz; değişen tanım yeni revizyon ister, eski kayıt tarihçede kalır. İlk kaynak ailesi engelli kalır. (#116)
 
 - Kayıtlı taramanın ölçü hissesi gerçek dönem ve işlem kayıtlarına bağlandı. Seçilen ayarın uygun merkez ve bileşen açıklamasıyla çelişmesi reddedilir; işlemsiz hisse kayıtları korunur. (#92)

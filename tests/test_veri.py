@@ -1068,3 +1068,39 @@ def test_e1_pay_kimligi_ilk_gozlemden_once_fiyat_uretmez_ve_isinmayi_otelemez(
     assert ilk["son_gecerli_fiyat_tarihi"] is None
     assert ilk["kaynak_sembolu"] == "TRALT" and ilk["borsa_kodu"] == "KOZAL"
     assert paket["referans"]["isinma_donemi"]["baslangic"] == "2010-01-04"
+
+
+@pytest.mark.parametrize("ad", ["eslemeler.csv", "kaynaklar.md"])
+def test_pay_kimligi_depo_basvurusu_kanonik_lf_olmalidir(ad):
+    from pathlib import Path
+
+    yol = Path(veri.__file__).parent / "referans" / "pay_kimligi_v1" / ad
+    raw = yol.read_bytes()
+    assert b"\r" not in raw and raw.endswith(b"\n"), (
+        "Pay kimliği özeti her checkout üzerinde aynı LF baytlarını gerektirir"
+    )
+
+
+def test_pay_kimligi_gercek_depo_tablosu_sabit_bagi_cozer():
+    secim = dict(
+        surum="pay_kimligi_v1",
+        tablo_ozeti="128cb4fdd2f310b3703d1e90dd6d83718b3a14185cd22c9a4bee6fd1190ea45d",
+        kaynak="is_yatirim",
+        goruntu_id="20261005-1949",
+        manifest_ozeti="a6c449c660c75f1850bca5d9e4bdb1ea71576ae443848abed103f9a661485d8f",
+    )
+    politika = veri.pay_kimligi_hazirla(
+        secim,
+        kaynak=secim["kaynak"],
+        goruntu_id=secim["goruntu_id"],
+        manifest_ozeti=secim["manifest_ozeti"],
+    )
+    assert veri.pay_sembolleri(["KOZAA", "KOZAL", "TRHOL"], politika) == [
+        "pay_kimligi_v1/p001",
+        "pay_kimligi_v1/p002",
+        "TRHOL",
+    ]
+    assert veri.pay_sembolleri(["TRMET", "TRALT"], politika) == [
+        "pay_kimligi_v1/p001",
+        "pay_kimligi_v1/p002",
+    ]
