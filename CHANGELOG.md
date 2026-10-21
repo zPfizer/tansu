@@ -19,6 +19,8 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ### Eklendi
 
+- Küçük grup hazırlığı ayrı komut ve kayıt olayıyla eklendi. En fazla üç strateji revizyonu ve 60 kesin seans dondurulur; eksik kaynak tanımı, veri, takvim ve üyelik adlandırılmış engel olur. Hazırlık hesap başlatmaz; değişen tanım yeni revizyon ister, eski kayıt tarihçede kalır. İlk kaynak ailesi engelli kalır. (#116)
+
 - Kayıtlı taramanın ölçü hissesi gerçek dönem ve işlem kayıtlarına bağlandı. Seçilen ayarın uygun merkez ve bileşen açıklamasıyla çelişmesi reddedilir; işlemsiz hisse kayıtları korunur. (#92)
 
 - Kayıtlı taramada bilinmeyen sonuç kayıp mesafesi sayılmaz. Başarısız dönem/hisse seçimi ve çelişkili seçildi etiketi kayıt sınırında reddedilir; bölge açıklamaları korunur. Eski düşüş süresinin açıklaması korunan ilk kapanış davranışına uyarlandı. (#92)
