@@ -1223,6 +1223,8 @@ Başka sembolün işlemi ortak nakit, slot veya portföy sınırı nedeniyle bu 
 Gün girdisi düzeltilmiş işlem fiyatları/göstergeler yanında ham yüksek/düşük,
 üst/alt limit ve limit kanıtını taşır. Eski kapanışa yakınlık bayrağı tam gün kilit kanıtı
 olarak kullanılmaz. Kanıt yoksa limit bilinmiyor kalır; o satırda kesin dolum üretilmez.
+Düzeltilmiş AOF ve kapanışın düşük/yüksek sınırında §5.13'ün mevcut yuvarlama payı uygulanır;
+girdi fiyatları değiştirilmez. Pay içi/dışı sınırlar ve girdi değişmezliği `tests/test_motor.py` ile denetlenir.
 Bilinen limitte tam gün kilit denetimi önceki dolum sözleşmesindeki ham eşitlikle yapılır.
 Kapanış sinyali aynı güne doldurulmaz. Giriş sonraki seansın AOF modelini kullanır;
 giriş gününde tavan kilidi sinyali düşürür. Stopun önceliği ve aynı gün fiyat sırası eski
@@ -1296,6 +1298,11 @@ S03 pilotuna aittir; bu tablo #97'nin kalıcı biçimini onaylamaz.
 `aileler.ortak_donem_kurulumu(veri_paketi, strateji)` ortak E2 hesabının dönem
 uyarlayıcısıdır. Her sembolün sınırlandırılmış ısınma ve sonuç verisini bir kez
 hesaplar; gösterge, kurulum, gerçek sinyal kimlikleri ve ısınma bilgisi döner.
+Kurulum satırları dönem sırasındadır (agresifte koşu sırası); sinyal tarihleri
+artan sırada olmak zorunda değildir. İstenen dönemin başlangıç ve bitiş günleri dahil
+tarih üyeliğiyle seçilir; sınır günlerinin kurulumda bulunması gerekmez.
+Seçim satır sırasını, aynı gündeki tekrarları, değerleri ve sinyal kimliklerini
+korur. Dönemde kurulum yoksa boş sonuç geçerlidir.
 Günlük `ortak_kurulum` aynı hesap sahibini kullanır. Kayıtlı sayısal ızgara
 ayarları katalogdan aynı değerlerle doğrulanır; gizli varsayılan atanmaz.
 Yeni yürütücü E2'yi her tarihte bütün geçmişi yeniden hesaplatacak biçimde çağırmaz.
