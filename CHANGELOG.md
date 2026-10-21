@@ -13,6 +13,9 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ### Değişti
 
+- Saklı ileri yürüme kaynakları, çağıranın özetinden bağımsız yayımlanmış sürüm özetleriyle doğrulanır; tutarlı özetli sahte üyelik ve pay bağları eklemede ve geçmiş okumada reddedilir. (#167)
+- Tam denetimlerin tamamlanması için CI iş süresi 30 dakikadan 60 dakikaya çıkarıldı; testler ve başarı ölçütleri korundu. (#167)
+
 - Pay kimliği seçilmiş ileri yürümenin üyelik ve eşleme kaynakları başlangıç kaydında özetleriyle saklanır; geçmiş okuma canlı tablolara bağlı kalmaz. Eksik eski gelişim kanıtı açıkça reddedilir. (#167)
 
 - Ortak dönem kurulumu sinyal tarihlerini iki sınır günü dahil seçer; dönem sırası, aynı gün tekrarları, değerler ve sinyal kimlikleri korunur. Sınır günleri kurulumda bulunmasa da geçerli seçim hata vermez. (#168)

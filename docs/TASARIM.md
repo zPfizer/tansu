@@ -1847,8 +1847,15 @@ Pay kimliği seçilmiş S12 üst koşusunun başlangıcı, hesap öncesinde
 `uyelik_tablo_metni` ve `pay_kimligi_tablo_metni` olur. İki metin, kaynak
 CSV dosyalarının tam UTF-8 baytlarını korur. E4 bu baytları bir kez okur;
 özetlerini kayıtlı `uyelik_ozeti` ve `pay_kimligi.tablo_ozeti` ile karşılaştırır.
-E5 yayında ve geçmiş okumada aynı saf üyelik/eşleme sahipleriyle metinleri,
-özetlerini ve sağlayıcı/görüntü/manifest bağını doğrular. Gereken tarihli paylar
+Çağıranın metni ve özetini birlikte değiştirmesi kaynak yetkisini kanıtlamaz.
+Bu nedenle saklı üyelik ve eşleme metinleri, kodun sahip olduğu yayımlanmış
+sürüm → onaylı tam UTF-8 bayt özeti kaydıyla doğrulanır. Bu kayıt çağırandan
+ve canlı dosyadan türetilmez. Yeni kaynak baytları yeni sürüm gerektirir.
+E5 yayında ve geçmiş okumada aynı saf üyelik/eşleme sahipleriyle bu kaynak
+onayını, metin özetlerini ve sağlayıcı/görüntü/manifest bağını doğrular.
+E5 sınır testi, metinle kayıtlı özeti birlikte değiştiren yanlış pay bağı,
+üyelik, sağlayıcı, tarih ve kaynak bağı girişlerini hem eklemede hem yeni
+okuyucuda reddeder; ret sırasında günlük değişmez. Gereken tarihli paylar
 yalnız bu saklı kaynaklar ve kayıtlı takvimden gelir; önceki açık/bekleyen veya
 karantinalı durumla birleşir. Çağıranın güncel kontrol başvuruları beklenen
 üyeliği tanımlamaz. Canlı dosya, fiyat veya gösterge yüklenmez. Kötü veya eksik
