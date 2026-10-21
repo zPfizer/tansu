@@ -1596,7 +1596,8 @@ kanıtlayabilir; başarılı dolum, kârlılık veya tam dönem getiri kanıtı 
 #### S12 kayıtlı ileri yürüme (#93)
 
 **Durum: dağıtıcı 21.10.2026 tarihinde `kayitli_ileri_v1` teknik yöntemini
-benimsedi; uygulandı. Bağımsız denetim ve tam veriyle sonuç kanıtı bekleniyor.** Dayanak [L3]–[L5], [W1], S11 ve
+benimsedi; uygulandı ve bağımsız denetimden geçerek PR #171 ile birleşti.
+Tam veriyle sonuç kanıtı bekleniyor.** Dayanak [L3]–[L5], [W1], S11 ve
 #93'tür. Kesin pencere ve kayıt biçimi proje yorumudur; strateji kabulü veya
 günlük etkinleştirme kararı değildir. Eski §5.14 genişleyen yıllık yöntem korunur.
 
@@ -2649,7 +2650,7 @@ değiştiremez. Kaynaksız birleşime seçim veya günlük etkinleştirme izni v
 
 | Kayıt / durum | İçerik, çelişki ve kapanış kanıtı | Engellediği iş | Dayanak |
 |---|---|---|---|
-| WF — TEKNİK YÖNTEM UYGULANDI / denetim ve tam veri kanıtı bekliyor | Dağıtıcı 21.10.2026 `kayitli_ileri_v1` yöntemini benimsedi. Tam pencere, seçim, taşıma, ufuk ve kayıt sözleşmesinin sahibi S12 bölümüdür. Eski §5.14 yöntemi legacy kalır. | #93 bağımsız denetim ve tam veriyle sonuç kanıtı bekliyor; MC ve günlük uygunluk kapıları sürer. | [L3]–[L5], [W1]; D §2; dağıtıcı 21.10.2026. |
+| WF — TEKNİK YÖNTEM UYGULANDI / bağımsız denetim tamamlandı; tam veri kanıtı bekliyor | Dağıtıcı 21.10.2026 `kayitli_ileri_v1` yöntemini benimsedi. Tam pencere, seçim, taşıma, ufuk ve kayıt sözleşmesinin sahibi S12 bölümüdür. Eski §5.14 yöntemi legacy kalır. | #93, bağımsız denetim sonrası PR #171 ile birleşti. Tam veriyle sonuç kanıtı, MC ve günlük uygunluk kapıları sürer. | [L3]–[L5], [W1]; D §2; dağıtıcı 21.10.2026. |
 | MC — teknik yöntem uygulandı / bağımsız denetim ve sonuç kanıtı bekliyor | C Q81 ile D §4'ün tekrar uyuşmazlığı, 21.10.2026 dağıtıcı kararıyla S13'te bağlandı. Ön gösterim nihai tanı sayılmaz. Örnekleme, muhasebe, kayıt, tekrar ve sayısal durma sözleşmesinin tek sahibi S13'tür. | Bağımsız denetim, tamamlanmış gerçek WF kaynağıyla sonuç, `pay_kimligi` seçili tamamlanmış WF kaynağıyla olumlu MC ve nihai bütçenin uygulanabilirlik kanıtı bekleniyor. Kesilmiş genel giriş tam ön gösterim sayılmaz. Sahip kabul ve günlük izin kapıları açık kalır. | [L5], [W2], [W9]; C Q81, D §4; S13 teknik yöntem kararı. |
 | MC örnekleme — S13'e bağlı | D §4'ün beş ayrı deney girdisi, bağımlılık varsayımları ve kaynak sınırlaması S13'te sürümlendi. Eski araştırma önerisi yeni varsayılan veya başarı kararı oluşturmaz. | #94; kaynak WF, ROBUST ve RISK bağları S13 sınırında doğrulanır. | [W2], [W9]; D §4, `mc-wf/arastirma.md` yöntem tablosu; S13. |
 | ROBUST — LEVENT ONAYI / uygulandı | B Q75: çaprazlar dahil tek indeks adımı komşuluk, kenarda eksik komşuluk bayrağı; otomatik kabul/ret yok. C Q77: en küçük komşu skorunu en büyüt; Q95: kanonik demetle eşitlik. D §3: tam iç komşuluk, kenarı merkez seçme; en geniş bileşen, medyan, iç uzaklık, sonra en kötü komşu net R ve sözlüksel sıra. Eski §5.14 eksen komşusu ayrı legacy'dir. Tek seçim ve kenar politikası onaylanmadan hiçbiri yeni varsayılan yapılmaz. Izgara sınırları ve adımlar strateji manifestinde dondurulur. Levent 21.10.2026 bu işte S11 bölümündeki geniş bölge ve iç merkez yöntemini onayladı; araştırmaların eski uyuşmazlığı bu kayıtla çözülür. Uygulanan açıklayıcı taramanın sözleşmesi S11 bölümündedir. | #92 seçici kısmı; #93/#94 diğer yöntem kayıtlarını bekler. | [T1], [W3]; B Q75, C Q76/Q77/Q95, D §3. |
