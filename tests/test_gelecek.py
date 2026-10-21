@@ -779,3 +779,35 @@ def test_pay_kimligi_gelecek_fiyat_onceki_kod_ve_kaliteyi_degistirmez(
     assert set(
         once.fiyat.loc[once.fiyat.sembol == "pay_kimligi_v1/p002", "borsa_kodu"]
     ) == {"KOZAL", "TRALT"}
+
+
+def test_s12_gelecek_fiyat_egitim_secimini_ve_acik_dislamayi_degistirmez(
+    tmp_path, monkeypatch
+):
+    from tests.test_tansusinama import s12_sinyalli, s12_calistir
+
+    depo, m, piyasa = s12_sinyalli(tmp_path, monkeypatch)
+    # Eksik ilk test satırı yalnız sonraki hesapları durdurur; eğitim ve seçim gerçektir.
+    piyasa[:] = [r for r in piyasa if r["tarih"] != "2022-01-04"]
+    ilk = s12_calistir(depo, m, tmp_path)
+    once = ilk["bolumler"][0]["secimler"][0]
+    assert "İstenen seans kapsamı uyuşmuyor" in ilk["bolumler"][0]["neden"]
+    assert once["durum"] == "secildi"
+    assert all(h["kapali_islem_sayisi"] == 1 for h in once["egitim_cocuklari"])
+    assert all(
+        h["dislanan"][0]["durum"] == "bekliyor" for h in once["egitim_cocuklari"]
+    )
+    for r in piyasa:
+        if r["tarih"] >= "2022-01-01":
+            for alan in ("aof", "kapanis", "yuksek", "dusuk"):
+                r[f"duzeltilmis_{alan}"]["deger"] *= 2
+    sonra = s12_calistir(depo, m, tmp_path)["bolumler"][0]["secimler"][0]
+    assert sonra["bolge"]["secilen"] == once["bolge"]["secilen"] == [1]
+    assert [
+        (h["kapali_islem_sayisi"], h["toplam_net_r"], h["dislanan"])
+        for h in sonra["egitim_cocuklari"]
+    ] == [
+        (h["kapali_islem_sayisi"], h["toplam_net_r"], h["dislanan"])
+        for h in once["egitim_cocuklari"]
+    ]
+    assert ilk["durum"] == "hata"

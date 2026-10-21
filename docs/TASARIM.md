@@ -1586,6 +1586,113 @@ kayıtlı arama ve eski çağıranlar `tests/test_tansusinama.py`, üst/çocuk k
 Gerçek anlık görüntüdeki eksik veriyle başarısız koşu kimlik, ret ve tam hücre görünürlüğünü
 kanıtlayabilir; başarılı dolum, kârlılık veya tam dönem getiri kanıtı diye sunulmaz.
 
+#### S12 kayıtlı ileri yürüme (#93)
+
+**Durum: dağıtıcı 21.10.2026 tarihinde `kayitli_ileri_v1` teknik yöntemini
+benimsedi; uygulandı. Bağımsız denetim ve tam veriyle sonuç kanıtı bekleniyor.** Dayanak [L3]–[L5], [W1], S11 ve
+#93'tür. Kesin pencere ve kayıt biçimi proje yorumudur; strateji kabulü veya
+günlük etkinleştirme kararı değildir. Eski §5.14 genişleyen yıllık yöntem korunur.
+
+`kayitli_ileri_calistir(depo, ileri_deneme_id, *, veri_koku, mod,
+ilerleme=print)` E4'ün ayrı genel Python girişidir. Kaydedilmiş revizyon dışında
+ayar almaz. S10'un altı dönem ve tam yöntem denetimi, S11'in tam çocuk yöntem
+sözleşmesi değişmez. Yeni yol seri çalışır; işçi veya genel eklenti yüzü eklemez.
+
+Üst denemenin `donemler` listesi kronolojik 16 test kaydıdır. Her kayıt `ad`
+(`2022Q1` … `2025Q4`), kapsayıcı `baslangic`, `bitis`, açık
+`isinma_baslangici`, `sinir_surumu=surekli_ileri_v1` ve aynı dönem alanlarını
+taşıyan `egitim` nesnesi içerir. Eğitim adı `<test adı>:egitim` olur. Testler
+2022-01-01–2022-03-31'den 2025-10-01–2025-12-31'e çeyreklik ilerler.
+Eğitim her testten hemen önceki 12 takvim ayıdır; ilk eğitim 2021, son eğitim
+2024-10-01–2025-09-30'dur. Isınma puanlanan başlangıçtan önce başlar.
+Takvim ve veri politikaları S10'a uyar; her pencerede kayıtlı seans gerekir.
+Önceden izinli geçmiş yalnız ısınmadır; yeni indirme izni verilmez.
+
+Yöntem tam olarak `yontem=kayitli_ileri_v1`, `tekrar=0`, `egitim_ay=12`,
+`test_ay=3`, `adim_ay=3`, `secim_politikasi=genis_bolge_net_r_v1`,
+`olcu_politikasi=bagimsiz_olcu_v1`, S11'in `eksenler` kayıtları,
+`hucre_yontemi` olarak tam S10 yürütme sözlüğü ve
+`veri_gorulme_durumu=incelenmis_gecmis` taşır. Kayıtlı izinli koordinatların
+tamamı her eğitimde çalışır. Sonuçtan sonra yöntem değişirse yeni revizyon gerekir.
+Bu etiket tarihsel verinin görülmüşlüğünü korur; kronolojik OOS, insanın veriyi
+hiç incelemediği ayrılmış dönem diye sunulmaz. 2021 ilk eğitimdir; beş yıllık
+betimleyici sınama bununla birleştirilmez.
+
+Eğitim boş işlem durumundan başlar. E1 fiyat ve olay isteği eğitim bitişinde
+kesilir; E2 ve E3 sonraki satırı almaz. Puan yalnız eğitim içinde girip kesime
+kadar kapanmış işlemlerden gelir. Açık/bekleyen eğitim durumu ve dışlanma nedeni
+korunur. S11'in değişmeyen ölçü ve geniş bölge sahipleri seçim yapar. Her eğitim
+hücresi ayrı çocuk revizyon, koşu ve gerçek dönem sonucuna bağlıdır.
+
+E5 üst başlangıcını ve bütün eğitim çocuk revizyonlarını ilk eğitim hesabından
+önce kaydeder ve yeniden okur. Her çocuk başlangıcı kendi hesabından önce yazılır.
+Seçilmiş test revizyonu ve seçim makbuzu ilgili testin
+E1–E3 hesabından önce yazılıp yeniden okunur. Seçim eğitim kesimini ve simüle seçim
+tarihini taşır; gerçek UTC makbuz zamanı ayrı kalır, geçmişe tarihlenmez.
+Seçim yoksa `secim_yok` ve gerekçesi yazılır. Eksik eğitim, ısınma, üyelik,
+fiyat, gösterge veya limit kanıtı başarılı boş seçim diye sunulmaz.
+
+OOS her sembol için tek sabit üst koşuda ve boş durumla başlar. Sonraki çeyrek
+E3'ün mühürlü durumunu aynen devralır; E4 durumu yeniden mühürlemez. Açık/bekleyen
+pozisyon kendi ayarını, ilk riskini ve yürütme dayanağını tutar. Karantina ve
+aynı sembolde tek pozisyon kuralı sürer. Çeyrek sınırı iptal veya satış olayı
+değildir. Sonraki seans üyeliği bütün OOS takviminden bulunur; eski üyeler açık
+veya bekleyen durumları ile ilerler. Üyelik yeni girişi sınırlar; mevcut çıkışı
+kapatmaz. Seçim yokken yeni sinyal yoktur; eski çıkış ve bekleyen giriş kuralları
+çalışır. Son küresel ufukta açık/bekleyen durum saklanır; 2026 mumu veya zorunlu
+satış kullanılmaz. Sonraki takip ayrı sınırlı koşu olmalıdır.
+
+Üst koşunun sabit E3 yürütme kimliği işlem sahibidir. Seçilen çocuğun özeti
+üst koşunun özeti yerine yazılmaz. Her izinli yeni sinyal E3'ten önce değişmez
+E5 `ileri_sinyal_v1` kaydı alır. Makbuzun `kayit_id` değeri E3 `sinyal_id`
+olur. Taşınan pozisyonun asıl seçimi yalnız saklı bu kimlikten çözülür;
+değiştirilebilir bir etkin seçim alanından çıkarılmaz. Sinyal kaydı karar
+çeyreğini, seçilen çocuk revizyonunu, iki ayar özetini, tam parametreleri,
+özgün E2 sinyalini, veri/kurulum referansını ve tarihini taşır.
+
+E5 koşu tutacağının yeni yüzleri `ileri_secim_kaydet(*, kayit)`,
+`ileri_sinyal_kaydet(*, secim_ref, sinyal)`,
+`ileri_kontrol_kaydet(*, bolum_id, sembol, durum, onceki_ref)`,
+`ileri_islem_kaydet(*, islem, ufuk)` ve `ileri_sonucu_kaydet(*, kayit)` olur.
+Bunlar ayrı sürümlü kayıt ve doğrulayıcılardır. Seçim eğitim çocuklarının gerçek
+revizyon, başlangıç ve dönem sonucu türünü, üst bağını, tarihini ve iki özetini
+denetler. Seçilmiş test çocuğu aynı strateji, veri, risk ve masrafı taşır;
+yöntem rolü ve dönemi açıkça bağlıdır. Sinyal aynı koşunun önceki seçimine bağlanır.
+Kontrol noktası E3 durum bütünlüğünü, sabit üst yürütmeyi ve pozisyonun özgün
+sinyal/parametre bağını denetler. Aynı anlamsal doğrulayıcılar yayında ve yeniden
+okumada çalışır. Okuyucu yalnız doğrulanmış önceki kayıtları kullanır; sonraki
+bir kayıt eksik veya yetim bağı tamamlayamaz. WF üst revizyonu tek başına tam yöntem,
+strateji ve ayar özetiyle doğrulanır. Üst revizyon, başlangıç, seçim, sinyal, kontrol, nihai
+işlem, bölüm/birleşik sonuç ve bitiş bağları aynı sınırdan geçer. Bilinmeyen WF
+sürümü/rolü, başka sahip veya bitmiş koşuya ek olay reddedilir. WF türü yalnız olayın
+beyan ettiği üst kimliğinden çıkarılmaz. Doğrulanmış koşu başlangıcı, tam ayar özeti,
+WF kod kimliği, olayın WF yöntem kaydı ve kayıtlı çeyrek iş listesi de türü belirler. Başlangıç veya bitiş başka bir eski denemeye
+yönlendirilerek bu sınır atlanamaz. Aynı kod kimliğini kullanan kayıtlı eğitim
+çocuğunun özgün çocuk yöntemi ve tek dönem işi korunur. Kanonik kodlama
+tek başına geçerli bağ kanıtı değildir. İlgisiz eski kayıt davranışı değişmez.
+Eski sonuçların aynı koşu/dönem kuralı gevşetilmez.
+
+Nihai kapalı işlem `islem_id` ile bir kez yayımlanır. Açık durum çeyrekte
+`acik_kontrol` rolüyle başvurulur; nihai sonuç değildir. Son ufukta açık işlem
+bir kez açık sonuç olarak kaydedilir. `tamamlanmis_islem` ve `acik_kontrol`
+başvuruları farklı türlerdir; başka koşu, sembol, özet veya çelişen rol reddedilir.
+Sonuç hem sinyalin karar çeyreğini hem fiili giriş çeyreğini taşır. Kapalı net R
+tek kez fiili giriş kohortuna atanır; kohort anahtarı ve tam başvuru gerçek nihai
+kayda bağlanır. Nakit olayları gerçek tarihleriyle sıralı ve tekil kalır;
+tam olay içeriği aynı üst koşunun son gerçek E3 kontrol noktalarından doğrulanır.
+Birleşik eğri bağımsız yılları toplamaz. Eğitim sonucu test
+kapsamındaki açığı doldurmaz. Tamamlanan, başarısız ve başlamayan çeyrekler ayrıdır.
+Kayıt hatası bağımlı hesabı durdurur; doğrulanmış önceki makbuzlar korunur;
+belirsiz yayın S03 kurtarma yolunu kullanır.
+
+Her sembol/çeyrek kapalı işlem, ayrı giriş günü, açık işlem, bekleyen giriş ve
+dışlanmış eğitim sonucu sayılarını taşır. Eğitimde 120, testte 30 kapalı işlem
+altı yalnız örneklem uyarısıdır; ret veya günlük uygunluk eşiği değildir.
+`tests/test_tansusinama.py` genel girişte takvim, makbuz sırası, sürekli durum,
+seçimsiz dönem ve açık ufku; `tests/test_kayit.py` değişmez bağları ve tek yayını;
+`tests/test_saglamlik.py` durum aktarımını; `tests/test_gelecek.py` eğitim
+kesiminden sonraki fiyat ve sonuçların eski seçimi değiştirmemesini sınar.
+
 #### Dolum, risk ve ölçünün anlamı
 
 - Claude'un kayıtlı **seçenek 2** kararı geçerlidir (18.10; yanıt Q74): ham `yüksek = düşük = tavan` gününde alış dolmaz, giriş sinyali düşer; ham `yüksek = düşük = taban` gününde satış bekler, ilk uygun kilitsiz günde yeniden işlenir. Sonraki fiyat kullanılır; her engel sayılır. B Q49'un açılış eşitliği ekleme önerisi bu kararı değiştirmez. Günlük çubuk gerçek emir kuyruğunu kanıtlamaz. Dayanak: [L5], [T4], [W4], [W5]; `tavan-taban/bulgular.md`, yanıt Q74.
@@ -1685,6 +1792,11 @@ seçim, E5 tam ayar özetini ve E4 hazırlık önbelleği anahtarını değişti
 E4 üyelik birleşimini paya çözdükten sonra E1 isteğini ve pay başına gösterge,
 sinyal, dolum, bekleyen çıkış ve açık işlem geçmişini hazırlar. Kod değişimi bu
 geçmişi bölmez. Sinyal ve sonraki giriş gününün üyeliği aynı payla denetlenir.
+S12 eğitim seçimi, test üyeliği, sinyal makbuzu ve çeyrekler arasında taşınan
+durum aynı çözülmüş pay anahtarını kullanır. Üst üyelik birleşimi de E1
+isteğinden önce aynı kayıtlı seçimle çözülür; tarihli kaynak kanıtı korunur.
+Sinyal makbuzunun veri referansı üst denemenin tam pay kimliği seçimini taşır;
+başka seçim veya eksik seçim aynı manifest özetiyle kabul edilmez.
 Küçük grup aynı çözümü yalnız statik üyelik ve veri kapsamına uygular; hesap
 başlatmaz. Eski `motor.sinama` bu yeni paket seçimini açık hata ile reddeder;
 yeni anlam eski çağırana sessizce verilmez.
@@ -2136,7 +2248,7 @@ değiştiremez. Kaynaksız birleşime seçim veya günlük etkinleştirme izni v
 
 | Kayıt / durum | İçerik, çelişki ve kapanış kanıtı | Engellediği iş | Dayanak |
 |---|---|---|---|
-| WF — CLAUDE TEKNİK GİRDİ / yöntem kaydı eksik | D §2: kayan 12 ay eğitim, 3 ay test, çeyreklik ilerleme; ilk eğitim 2021, ilk OOS 2022-01-01–2022-03-31, son OOS 2025-10-01–2025-12-31. 2021 yalnız eğitim/keşif, beş yılın yıllık açıklayıcı sonucu yine gösterilir. Eski §5.14 genişleyen iki yıl yöntemi legacy kalır. Eğitimde seçilen ayar testte donar. 30 OOS/120 IS işlem sayıları araştırma uyarısıdır; ret eşiği değildir. Nihai kayıt pencere listesi, ısınma, seçim manifesti, açık işlem, ufuk ve veri/ayar kimliklerini birlikte taşımalıdır; ROBUST/RISK bağları eksikken tamamlanmaz. | **#93 ENGELLİ:** tam ve tutarlı WF yöntem kaydı olmadan uygulama başlamaz. | [L3]–[L5], [W1]; D §2. |
+| WF — TEKNİK YÖNTEM UYGULANDI / denetim ve tam veri kanıtı bekliyor | Dağıtıcı 21.10.2026 `kayitli_ileri_v1` yöntemini benimsedi. Tam pencere, seçim, taşıma, ufuk ve kayıt sözleşmesinin sahibi S12 bölümüdür. Eski §5.14 yöntemi legacy kalır. | #93 bağımsız denetim ve tam veriyle sonuç kanıtı bekliyor; MC ve günlük uygunluk kapıları sürer. | [L3]–[L5], [W1]; D §2; dağıtıcı 21.10.2026. |
 | MC — ARAŞTIRMA UYUŞMAZLIĞI / açık | C Q81: 10.000, ardından 20.000/40.000/80.000/100.000 ve yakınsama açıklaması. D §4: varyant başına 1.000. İkisi aynı protokol değildir; biri sessizce üstün sayılmaz. Kesin tekrar ve yakınsama sözleşmesini dağıtıcı tek yöntem sürümünde bağlamalıdır. | **#94 ENGELLİ:** tekrar, örnekleme ve muhasebe dahil tam MC yöntem kaydı olmadan uygulama başlamaz. | [L5], [W2], [W9]; C Q81, D §4. |
 | MC örnekleme — kontrol edilmiş teknik girdi | D §4: net R sırasını yerine koymadan karıştırma; N işlemi N kez yerine koymalı çekme; hisselerde ortak tarih bloklarını yeniden örnekleme; %10 işlem kaçırma stresi; sayısal ayarda ±1 ızgara adımı/aynı değerden eşit olasılıklı tam yeniden sınama. Bunlar ayrı deneylerdir; %10 kalibre edilmiş hata oranı değildir. Sabit 42 tohum önerisi, üreteç/sürüm ve ayrı akış kimliğiyle kaydedilir. Ana girdi dondurulmuş WF OOS, 2021 için keşif etiketi. Her deney örnek birimi, ufuk, gerçekleşen tekrar sayısı, çıktı yüzdelikleri ve bağımlılık varsayımını taşır. | #94; önce WF, ROBUST ve RISK kayıtları gerekir. | [W2], [W9]; D §4, `mc-wf/arastirma.md` yöntem tablosu. |
 | ROBUST — LEVENT ONAYI / uygulandı | B Q75: çaprazlar dahil tek indeks adımı komşuluk, kenarda eksik komşuluk bayrağı; otomatik kabul/ret yok. C Q77: en küçük komşu skorunu en büyüt; Q95: kanonik demetle eşitlik. D §3: tam iç komşuluk, kenarı merkez seçme; en geniş bileşen, medyan, iç uzaklık, sonra en kötü komşu net R ve sözlüksel sıra. Eski §5.14 eksen komşusu ayrı legacy'dir. Tek seçim ve kenar politikası onaylanmadan hiçbiri yeni varsayılan yapılmaz. Izgara sınırları ve adımlar strateji manifestinde dondurulur. Levent 21.10.2026 bu işte S11 bölümündeki geniş bölge ve iç merkez yöntemini onayladı; araştırmaların eski uyuşmazlığı bu kayıtla çözülür. Uygulanan açıklayıcı taramanın sözleşmesi S11 bölümündedir. | #92 seçici kısmı; #93/#94 diğer yöntem kayıtlarını bekler. | [T1], [W3]; B Q75, C Q76/Q77/Q95, D §3. |
