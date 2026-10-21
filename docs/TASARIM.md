@@ -125,6 +125,19 @@ yorumumuzdur**; ekranda "Tansu'nun sistemi" diye sunulmaz. (P5)
 
 Her modülün dışarıya küçük bir yüzü var. İçi değişse de dışı değişmez. Paket düzdür (`tansu/`). (C-3)
 
+### Esas arayüz şablonu (#69)
+
+Levent, 21.10.2026: mevcut yerel dosyayı bugünden itibaren esas şablon olarak
+onayladı. Dosya `C:/Users/levent/Desktop/YONETIM/.scratch/arayuz/tansu-arayuz.sablon.html` olur. <!-- driftlint-ignore: local-only approved UI template, absent in CI -->
+Onaylanan içeriğin SHA-256 özeti
+`09e42f53eb8c7f4df41538291db594f4aa3ad910714459dc87f5dd7e427a5de9` olur.
+Bu karar dosyanın geçmişteki “5. sürüm” olduğunu doğrulamaz. #69 ve alt site
+işleri şablon kimliğini bu tarihli karara ve içerik özetine bağlar.
+Şablon onayı modülün uygulanması, canlı kurulumu veya siteye alınması değildir.
+Her öğenin kaynak sözleşmesi, tarayıcı ve canlı çıktı kanıtı ile gösterilen
+revizyon için ayrı tarihli “koyabiliriz” kararı gerekir. #69 yalnız tam alt iş
+eşlemesini teslim eder; modül teslimleri kendi issue'larında izlenir.
+
 **Yeni modül varyantının gölge koşusu (#71):** Yeni modül varyantı siteye girmeden önce
 Levent'in bilgisayarında mevcut koşularla paralel bir gölge koşuda sinyal üretir. Resmi değil, [§5.11'deki
 geliştirme koşusu](#511-çoklu-deneme-düzeltmesi-ve-deneme-günlüğü) demektir; varyant sitede seçenek olarak sunulmaz.
