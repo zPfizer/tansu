@@ -1223,6 +1223,8 @@ Başka sembolün işlemi ortak nakit, slot veya portföy sınırı nedeniyle bu 
 Gün girdisi düzeltilmiş işlem fiyatları/göstergeler yanında ham yüksek/düşük,
 üst/alt limit ve limit kanıtını taşır. Eski kapanışa yakınlık bayrağı tam gün kilit kanıtı
 olarak kullanılmaz. Kanıt yoksa limit bilinmiyor kalır; o satırda kesin dolum üretilmez.
+Düzeltilmiş AOF ve kapanışın düşük/yüksek sınırında §5.13'ün mevcut yuvarlama payı uygulanır;
+girdi fiyatları değiştirilmez. Pay içi/dışı sınırlar ve girdi değişmezliği `tests/test_motor.py` ile denetlenir.
 Bilinen limitte tam gün kilit denetimi önceki dolum sözleşmesindeki ham eşitlikle yapılır.
 Kapanış sinyali aynı güne doldurulmaz. Giriş sonraki seansın AOF modelini kullanır;
 giriş gününde tavan kilidi sinyali düşürür. Stopun önceliği ve aynı gün fiyat sırası eski
