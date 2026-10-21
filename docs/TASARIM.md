@@ -1296,6 +1296,11 @@ S03 pilotuna aittir; bu tablo #97'nin kalıcı biçimini onaylamaz.
 `aileler.ortak_donem_kurulumu(veri_paketi, strateji)` ortak E2 hesabının dönem
 uyarlayıcısıdır. Her sembolün sınırlandırılmış ısınma ve sonuç verisini bir kez
 hesaplar; gösterge, kurulum, gerçek sinyal kimlikleri ve ısınma bilgisi döner.
+Kurulum satırları dönem sırasındadır (agresifte koşu sırası); sinyal tarihleri
+artan sırada olmak zorunda değildir. İstenen dönemin başlangıç ve bitiş günleri dahil
+tarih üyeliğiyle seçilir; sınır günlerinin kurulumda bulunması gerekmez.
+Seçim satır sırasını, aynı gündeki tekrarları, değerleri ve sinyal kimliklerini
+korur. Dönemde kurulum yoksa boş sonuç geçerlidir.
 Günlük `ortak_kurulum` aynı hesap sahibini kullanır. Kayıtlı sayısal ızgara
 ayarları katalogdan aynı değerlerle doğrulanır; gizli varsayılan atanmaz.
 Yeni yürütücü E2'yi her tarihte bütün geçmişi yeniden hesaplatacak biçimde çağırmaz.
