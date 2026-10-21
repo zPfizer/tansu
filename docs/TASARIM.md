@@ -1498,6 +1498,9 @@ eski sonucu yeni hesapmış gibi etiketlemez. Kategorik aileler aynı komşulukt
 
 **Üst arama sonucu ve kanıt**
 
+Gerçek hisse kümesi ve seçilen merkez açıklamasının aşağıdaki ek denetimleri
+onaylı teknik sözleşmedir; uygulama ve kanıtı bekleniyor (#92, 21.10.2026).
+
 Mevcut E5 koşu tutacağına `arama_sonucu_kaydet(*, is_id, hucreler, bolgeler,
 politika_surumu, birimler, uyarilar, cikti_referanslari)` eklenir; çıktı makbuzdur.
 `sonuc_turu=arama_v1` üst koşuya aittir. Hücre kaydı kanonik indeksi, üst/çocuk kimliğini,
@@ -1508,14 +1511,26 @@ boş seçimi taşır. Kârlılık ve ölçülmüş mesafe hedefleri yukarıdaki 
 bağlıdır. Geçersiz alan atılırken indeksler sıkıştırılmaz.
 
 E5 üst bağı, çocuğun koşu ve dönemini, iki ayar özetini ve başvurulan gerçek sonuç
-kaydını doğrular. Verilen bölgenin seçimi, seçilen çocuğun aynı dönemde tamamlanmış
-sonucuna ve aynı hissedeki tamamlanmış ölçüsüne bağlı olmalıdır. Başarısız, eksik,
+kaydını doğrular. Ölçüsü verilen hisse adları tekildir ve gerçek dönem içeriğinin
+`durumlar` anahtarlarıyla aynı kümeyi oluşturur; işlemsiz hisse de kaybolmaz. Her ölçü
+başvurusunun işlem kimliği gerçek kayıtla uyuşur. Gerçek işlemdeki risk girdisinin
+hissesi, ölçünün hissesiyle aynıdır. Sembol, sinyal veya işlem kimliğinin metninden
+türetilmez. Verilen bölgenin seçimi, seçilen çocuğun aynı dönemde tamamlanmış sonucuna ve aynı hissedeki
+tamamlanmış ölçüsüne bağlı olmalıdır. Başarısız, eksik,
 işlemsiz veya başlamamış dönem/hisse seçilmiş olarak yayımlanmaz. Başka dönemin
 başarısızlığı, tamamlanmış dönemin ayrı seçimini değiştirmez. İşlem başvurusu aynı
 çocuk koşusu ve döneme aittir. Mevcut
 `donem_sonucu_kaydet` aynı koşu kısıtı gevşetilmez; yapay sinyal kimliği üretilmez.
 Üst başlangıcındaki hücre ve arama işleri bitişte kimlikle bir kez sayılır. Başarısız
 hücre veya eksik iş varken tam başarı yazılmaz. Tekrarlar önceki geçmişi silmez.
+
+Seçilen koordinatın hücre açıklamasında `karli=True`, `uygun_merkez=True`,
+`sinir=False` ve boş `eksik_komsular` bulunur. Koordinat yalnız bir bileşenin üyesidir
+ve o bileşenin `uygun_merkezler` listesinde yer alır; başka bileşenin uygun merkezi
+olamaz. Her bileşenin açıkladığı uygun merkez kendi üyeleri içindedir. E5 bu
+başvuruları ve açıklamadaki çelişkileri doğrular. Kârlılık, komşuluk geometrisi,
+uzaklık ve sıralama hesabının sahibi değişmez; E5 hesabı tekrar yürütmez. Seçimsiz
+gerekçeli kayıt, başlamamış hissesiz bölge ve boş dış bölge listesi korunur.
 
 Eski pozitif hücre döngüsünün mevcut `Zincir` paylaşımı korunur. Ortak hücre
 çağrısının `yurutme` girdisi, bu eski yolda aynı mum nesnesine ve aynı çıkış ayarlarına
@@ -1534,8 +1549,11 @@ veya tam ayar doğrulamasının hatasında sıfır çocuk başlangıcı ve korun
 eksik kapsamda altı E1 hazırlığıyla 18 görünür sonuç, E1/kimlik hatasının ise
 paylaşılmaması aynı sınamadadır.
 `tests/test_ayar_aktarimi.py` tam çocuk yöntemini ve özet uyuşmazlığında kalıcı makbuzu, `tests/test_kayit.py` gerçek
-çocuk/koşu/dönem bağlarını, bölgenin zorunlu açıklamalarını, başarısız dönem/hisse
-seçiminin ve çelişkili en iyi hücre seçildi etiketinin reddini, hatalı tam başarıyı; `tests/test_gelecek.py` gelecek
+çocuk/koşu/dönem bağlarını, gerçek dönem ve işlem hissesini, iki yerde birlikte
+değiştirilen hisse adının, iki hisse arasında taşınan işlem başvurusunun, yinelenen
+veya kaybolan hisse açıklamasının reddini; işlemsiz hissenin korunmasını, bölgenin
+zorunlu açıklamalarını, seçilen merkezin hücre ve bileşenle tutarlılığını, başarısız
+dönem/hisse seçiminin ve çelişkili en iyi hücre seçildi etiketinin reddini, hatalı tam başarıyı; `tests/test_gelecek.py` gelecek
 fiyatın önceki dönem ve hücreyi değiştirmemesini denetler. Eski doğrudan düşüş
 çağıranı `tests/test_kabul.py` kapsamda kalır.
 
