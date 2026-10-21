@@ -92,6 +92,67 @@ def test_s09_toplu_ve_json_gunluk_ayni_ve_tekrar_idempotent():
         motor.islem_adimi(bozuk, mum, yurutme=s09_istek())
 
 
+@pytest.mark.parametrize("ilk_satir", [1, 2], ids=["bekleyen", "acik"])
+def test_s09_kayitli_bimas_yuvarlama_payi_fiyat_ve_kimligi_degistirmez(ilk_satir):
+    m = s09_mumlar([r(32, 33, 31, 32)] * ilk_satir)
+    m["sma250"] = 20.0
+    m["taban"] = 10.0
+    yurutme = s09_istek(sembol="BIMAS")
+    ilk = motor.tara(m, {m.index[0]: "sinyal-1"}, yurutme=yurutme)
+    assert ilk["pozisyon"]["durum"] == ("bekliyor" if ilk_satir == 1 else "acik")
+    once = json.loads(json.dumps(ilk))
+    mum = dict(m.iloc[-1]) | dict(
+        tarih=GUNLER[ilk_satir],
+        aof=32.209248,
+        yuksek=32.538864,
+        dusuk=31.968382,
+        kapanis=32.5389,
+        ham_yuksek=77.0,
+        ham_dusuk=75.65,
+    )
+    girdi = dict(mum)
+    hata = None
+    try:
+        son = motor.islem_adimi(ilk, mum, yurutme=yurutme)
+    except ValueError as exc:
+        hata = str(exc)
+    assert hata is None, f"Kayıtlı yuvarlama payı reddedildi: {hata}"
+    assert mum == girdi
+    assert ilk == once
+    assert son["degerleme"]["fiyat"] == 32.5389
+    assert son["yurutme"] == ilk["yurutme"]
+    for alan, deger in ilk["pozisyon"]["risk_girdisi"].items():
+        assert son["pozisyon"]["risk_girdisi"][alan] == deger
+    assert [d["fiyat"] for d in son["dolumlar"]] == [
+        32.209248 if ilk_satir == 1 else 32.0
+    ]
+    assert motor.islem_adimi(json.loads(json.dumps(son)), mum, yurutme=yurutme) == son
+
+
+@pytest.mark.parametrize("alan", ["aof", "kapanis"])
+@pytest.mark.parametrize(
+    "fiyat,gecerli",
+    [(99.99, True), (100.01, True), (99.9899, False), (100.0101, False)],
+)
+def test_s09_duzeltilmis_fiyat_yuvarlama_siniri(alan, fiyat, gecerli):
+    m = s09_mumlar([r(100, 100, 100, 100)] * 2)
+    m.at[m.index[1], alan] = fiyat
+    if not gecerli:
+        with pytest.raises(ValueError, match="mum fiyat sırası geçersiz"):
+            motor.tara(m, {m.index[0]: "sinyal-1"}, yurutme=s09_istek())
+        return
+    son = motor.tara(m, {m.index[0]: "sinyal-1"}, yurutme=s09_istek())
+    assert [d["fiyat"] for d in son["dolumlar"]] == [fiyat if alan == "aof" else 100.0]
+    assert son["degerleme"]["fiyat"] == (fiyat if alan == "kapanis" else 100.0)
+
+
+def test_s09_ham_limit_sirasina_yuvarlama_payi_uygulanmaz():
+    m = s09_mumlar()
+    m.at[m.index[1], "tavan"] = 100.9999
+    with pytest.raises(ValueError, match="ham fiyat veya limit sırası geçersiz"):
+        motor.tara(m, {m.index[0]: "sinyal-1"}, yurutme=s09_istek())
+
+
 @pytest.mark.parametrize(
     "nominal, miktarlar, fiyatlar, masraf, net",
     [
@@ -138,6 +199,11 @@ def test_s09_yari_adet_asagi_kalan_korunur(nominal, miktarlar, fiyatlar, masraf,
         ("ust", "kilitli_tavan"),
         ("bilinmiyor", "limit_bilinmiyor"),
         ("gecersiz", "gecersiz_fiyat"),
+        ("eksik", "gecersiz_fiyat"),
+        ("nan", "gecersiz_fiyat"),
+        ("sifir", "gecersiz_fiyat"),
+        ("negatif", "gecersiz_fiyat"),
+        ("karantina", "karantina"),
         ("islem_yok", "islem_yok"),
     ],
 )
@@ -150,6 +216,12 @@ def test_s09_giris_engeli_dolum_uretmez(engel, neden):
         m.loc[t, "limit_kaniti"] = None
     elif engel == "gecersiz":
         m.loc[t, "aof"] = float("inf")
+    elif engel == "eksik":
+        m = m.drop(columns=["aof"])
+    elif engel in ("nan", "sifir", "negatif"):
+        m.loc[t, "aof"] = {"nan": float("nan"), "sifir": 0, "negatif": -1}[engel]
+    elif engel == "karantina":
+        m.loc[t, "karantina"] = True
     else:
         m.loc[t, "islem"] = False
     sonuc = motor.tara(m, {m.index[0]: "sinyal-1"}, yurutme=s09_istek())
@@ -1749,3 +1821,15 @@ def test_duz_seride_agresif_sinyal_atr_sifir_motor_merdiven_basamagi_yok():
         x.planlanan_risk,
         x.gerceklesen_kayip,
     ) == _ak((15, 100, 17, 100, "stop", 0, 0))
+
+
+def test_eski_motor_pay_kimligi_paketini_acikca_reddeder():
+    from tansu import veri
+
+    with pytest.raises(veri.VeriHatasi, match="eski motor pay kimliği"):
+        motor.sinama(
+            None,
+            veri_paketi=dict(
+                uyelik={}, referans=dict(pay_kimligi=dict(surum="pay_kimligi_v1"))
+            ),
+        )

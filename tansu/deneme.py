@@ -1019,6 +1019,10 @@ def _mc_sinyal_dogrula(olaylar, d, b, k):
         or sinyal["kaynak_sinyal"]["baglar"]["ayar_parmak_izi"]
         != cocuk["strateji"]["ayar_parmak_izi"]
         or sinyal["veri_ref"]["manifest_parmak_izi"] != b["manifest_ozeti"]
+        or sinyal["veri_ref"].get("pay_kimligi")
+        != d["veri_ayarlari"].get("pay_kimligi")
+        or sinyal["kaynak_sinyal"]["baglar"]["veri_ref_id"]
+        != sinyal["veri_ref"]["kayit_id"]
     ):
         raise PilotHatasi("MC sinyali dönem/veri/E2 kaynağıyla uyuşmuyor.")
     if any(
@@ -2430,6 +2434,8 @@ def _ileri_sinyali_dogrula(olaylar, ust, m, baslangic, secim_ref, sinyal):
         or sinyal["kaynak_sinyal"]["baglar"]["ayar_parmak_izi"]
         != test["strateji"]["ayar_parmak_izi"]
         or sinyal["veri_ref"]["manifest_parmak_izi"] != baslangic["manifest_ozeti"]
+        or sinyal["veri_ref"].get("pay_kimligi")
+        != ust["veri_ayarlari"].get("pay_kimligi")
     ):
         raise PilotHatasi("WF sinyalinin tarih, parametre veya veri bağı uyuşmuyor.")
     _ileri_tekil(
@@ -3043,6 +3049,7 @@ def _grup_tanimi_dogrula(tanim):
         "yontem",
         "risk",
         "masraf",
+        "pay_kimligi",
     }:
         raise PilotHatasi("Grup başvuruları geçersiz.")
     for ad in ("anlik_goruntu", "manifest_ozeti", "uyelik_ozeti", "kod_ozeti"):
@@ -3050,6 +3057,18 @@ def _grup_tanimi_dogrula(tanim):
             _metin(ref[ad])
     for ad in ("takvim", "yontem", "risk", "masraf"):
         _grup_dosya_basvurusu(ref.get(ad))
+    if "pay_kimligi" in ref:
+        # TASARIM 5.15 #167: geçmiş kayıt yalnız seçimin yapısına bağlıdır.
+        from tansu.veri import VeriHatasi, pay_kimligi_secimi_dogrula
+
+        try:
+            pay_kimligi_secimi_dogrula(ref["pay_kimligi"])
+        except VeriHatasi as hata:
+            raise PilotHatasi(str(hata)) from hata
+        if ref["pay_kimligi"]["goruntu_id"] != ref.get("anlik_goruntu") or ref[
+            "pay_kimligi"
+        ]["manifest_ozeti"] != ref.get("manifest_ozeti"):
+            raise PilotHatasi("Pay kimliği grup veri bağıyla uyuşmuyor.")
 
 
 def _grup_tarihi(gun):

@@ -2956,6 +2956,7 @@ def test_s12_kayit_bagi_nihai_sonucu_ve_acik_ufku_korur(tmp_path, monkeypatch):
         "bilinmeyen_tur",
         "kontrol_float",
         "sinyal_legacy",
+        "sinyal_pay_kimligi",
         "kontrol_legacy",
         "islem_legacy",
         "bolum_legacy",
@@ -2980,6 +2981,7 @@ def test_s12_kayit_bagi_nihai_sonucu_ve_acik_ufku_korur(tmp_path, monkeypatch):
         )
         aranan = {
             "sinyal_legacy": "ileri_sinyal",
+            "sinyal_pay_kimligi": "ileri_sinyal",
             "kontrol_legacy": "ileri_kontrol",
             "islem_legacy": "islem",
             "bolum_legacy": "bolum",
@@ -3011,6 +3013,14 @@ def test_s12_kayit_bagi_nihai_sonucu_ve_acik_ufku_korur(tmp_path, monkeypatch):
             hedef["kayit"]["deneme_ayar_parmak_izi"] = "uydurma"
         elif tur == "ileri_sinyal":
             hedef["deneme_ayar_parmak_izi"] = "uydurma"
+        elif tur == "sinyal_pay_kimligi":
+            hedef["sinyal"]["veri_ref"]["pay_kimligi"] = dict(
+                surum="pay_kimligi_v1",
+                tablo_ozeti="a" * 64,
+                kaynak="is_yatirim",
+                goruntu_id="s10",
+                manifest_ozeti=hedef["sinyal"]["veri_ref"]["manifest_parmak_izi"],
+            )
         elif tur == "ileri_kontrol":
             hedef["onceki_ref"] = "baska-kontrol"
         elif tur == "islem":
@@ -3315,6 +3325,73 @@ def test_grup_okuyucusu_kanonik_ama_gecersiz_olayi_reddeder(tmp_path, degisiklik
     assert reddedildi, (
         "Kanonik kodlama geçersiz hazırlık olayını kabul edilebilir yapmaz."
     )
+
+
+@pytest.mark.parametrize(
+    "boz", ["surum", "bos", "eksik", "fazla", "ozet", "goruntu", "manifest", "null"]
+)
+def test_grup_pay_kimligi_yanlis_ve_bagsiz_secimi_reddeder(tmp_path, boz):
+    tanim = grup_kayit_tanimi()
+    ref = tanim["referanslar"]
+    ref["manifest_ozeti"] = "a" * 64
+    secim = dict(
+        surum="pay_kimligi_v1",
+        tablo_ozeti="b" * 64,
+        kaynak="is_yatirim",
+        goruntu_id="ag",
+        manifest_ozeti="a" * 64,
+    )
+    if boz == "surum":
+        secim["surum"] = "bilinmeyen"
+    elif boz == "bos":
+        secim["kaynak"] = ""
+    elif boz == "eksik":
+        del secim["tablo_ozeti"]
+    elif boz == "fazla":
+        secim["otomatik"] = True
+    elif boz == "ozet":
+        secim["tablo_ozeti"] = "b" * 63
+    elif boz == "goruntu":
+        secim["goruntu_id"] = "diger"
+    elif boz == "manifest":
+        secim["manifest_ozeti"] = "c" * 64
+    else:
+        secim = None
+    ref["pay_kimligi"] = secim
+    depo = pilot.PilotKayit(tmp_path / "hazirlik.jsonl")
+    with pytest.raises(pilot.PilotHatasi, match="[Pp]ay kimliği"):
+        depo.grup_hazirligi_kaydet(tanim=tanim, engeller=[], dislamalar=[])
+    assert not depo.yol.exists()
+
+
+def test_grup_pay_kimligi_gecmisi_guncel_tabloyu_okumaz(tmp_path, monkeypatch):
+    from hashlib import sha256
+    from tansu import veri
+
+    tanim = grup_kayit_tanimi()
+    tanim["referanslar"]["manifest_ozeti"] = "a" * 64
+    tanim["referanslar"]["pay_kimligi"] = dict(
+        surum="pay_kimligi_v1",
+        tablo_ozeti="b" * 64,
+        kaynak="is_yatirim",
+        goruntu_id="ag",
+        manifest_ozeti="a" * 64,
+    )
+    depo = pilot.PilotKayit(tmp_path / "hazirlik.jsonl")
+    m = depo.grup_hazirligi_kaydet(tanim=tanim, engeller=[], dislamalar=[])
+
+    def yasak(*a, **k):
+        pytest.fail("E5 geçmiş okuması piyasa veya güncel eşleme yükleyemez")
+
+    monkeypatch.setattr(veri, "pay_kimligi_hazirla", yasak)
+    monkeypatch.setattr(veri, "oku", yasak)
+    assert pilot.PilotKayit(depo.yol).grup_hazirligi_oku(m.olay_id)["tanim"] == tanim
+    olay = depo.oku()[0]
+    olay["tanim"]["referanslar"]["pay_kimligi"]["surum"] = "bilinmeyen"
+    olay["tanim_ozeti"] = sha256(pilot.kanonik(olay["tanim"])).hexdigest()
+    depo.yol.write_bytes(pilot.kanonik(olay) + b"\n")
+    with pytest.raises(pilot.PilotHatasi, match="Bozuk tam satır"):
+        pilot.PilotKayit(depo.yol).oku()
 
 
 def test_s12_okuyucu_ust_revizyonu_tek_basina_dogrular(tmp_path, monkeypatch):
