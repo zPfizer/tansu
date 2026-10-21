@@ -362,3 +362,46 @@ def test_s11_mesafe_hedefi_yalniz_olculmus_sifir_ve_kayiptir(
     assert sonuc["hucreler"][3]["komsular"] == [[2], [4]]
     assert sonuc["hucreler"][3]["uygun_merkez"] is False
     assert sonuc["hucreler"][4]["uygun_merkez"] is True
+
+
+def test_s12_hucre_onceki_bekleyen_ayari_ve_karantinayi_korur():
+    from tansu import aileler
+    from tests.test_motor import STD, r, s09_istek, s09_mumlar
+
+    m = s09_mumlar([r(*STD), r(*STD), r(*STD)])
+    ilk = saglamlik.ema_hucre_calistir(
+        m.iloc[:1],
+        aileler.Parametre(),
+        kurulum=None,
+        sinyal_konumlari={m.index[0]: "ilk-sinyal"},
+        yurutme=s09_istek(),
+    )
+    yeni = dataclasses.replace(aileler.Parametre(), min_gun=5)
+    son = saglamlik.ema_hucre_calistir(
+        m.iloc[1:],
+        yeni,
+        kurulum=None,
+        sinyal_konumlari={},
+        yurutme=s09_istek(),
+        onceki_durum=ilk,
+    )
+    assert son["pozisyon"] is not None, "Taşınan bekleyen pozisyon kayboldu"
+    assert son["pozisyon"]["ayar"]["min_gun"] == 3
+    assert son["pozisyon"]["risk_girdisi"]["sinyal_id"] == "ilk-sinyal"
+    assert son["pozisyon"]["giris_tarih"] == str(m.index[1].date())
+    assert len(son["dolumlar"]) == 1
+    m.loc[m.index[0], "karantina"] = True
+    kar = saglamlik.ema_hucre_calistir(
+        m.iloc[:1], yeni, kurulum=None, sinyal_konumlari={}, yurutme=s09_istek()
+    )
+    kar = saglamlik.ema_hucre_calistir(
+        m.iloc[1:],
+        yeni,
+        kurulum=None,
+        sinyal_konumlari={m.index[2]: "engelli"},
+        yurutme=s09_istek(),
+        onceki_durum=kar,
+    )
+    assert kar["karantina_kalan"] == 248
+    assert kar["pozisyon"] is None
+    assert kar["retler"][-1]["neden"] == "karantina_penceresi"

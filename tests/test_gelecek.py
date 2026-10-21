@@ -38,7 +38,8 @@ KESIM = [
 BAS = "2013-12-02"
 
 
-def test_s09_gelecek_mumlar_onceki_dolum_ve_izi_degistirmez():
+@pytest.mark.parametrize("kapanis", [100.0, 101.00001])
+def test_s09_gelecek_mumlar_onceki_dolum_ve_izi_degistirmez(kapanis):
     from tests.test_motor import r, s09_istek, s09_mumlar
 
     m = s09_mumlar(
@@ -49,6 +50,7 @@ def test_s09_gelecek_mumlar_onceki_dolum_ve_izi_degistirmez():
             r(100, 101, 99, 100),
         ]
     )
+    m.at[m.index[1], "kapanis"] = kapanis
     sinyaller = {m.index[0]: "sinyal-1"}
     ilk = motor.tara(m.iloc[:3], sinyaller, yurutme=s09_istek())
     m.loc[m.index[3], ["aof", "yuksek", "dusuk", "kapanis"]] = [1000, 1100, 900, 1000]
@@ -168,6 +170,34 @@ def test_ortak_ema_kurulumu_gelecek_fiyat_degisiminden_etkilenmez(monkeypatch):
             for kayit in sonuc[grup]:
                 kayit.pop("olusturma_zamani")
     assert once == sonra
+
+
+def test_ortak_donem_kurulumu_gelecek_fiyat_degisiminden_etkilenmez():
+    from tests.test_aileler import _mumlar, _ortak_paket
+
+    f = _mumlar([100.0] * 510 + [110.0, 112.0] + [114.0] * 8)
+    f["aof"] = f["kapanis"]
+    paket = _ortak_paket(f)
+    tarih = f.index[511]
+    paket["referans"]["istenen_donem"]["bitis"] = str(tarih.date())
+    strateji = aileler.legacy_coz("bugun")
+    once = aileler.ortak_donem_kurulumu(paket, strateji)["TEST"]
+    assert len(once["sinyaller"]) == 1
+    assert once["mumlar"].index[-1] == tarih
+    assert once["kurulum"].index.tolist() == [tarih]
+    degisen = deepcopy(paket)
+    for r in degisen["piyasa"]:
+        if pd.Timestamp(r["tarih"]) > tarih:
+            for ad in ("kapanis", "aof", "yuksek", "dusuk"):
+                r[f"duzeltilmis_{ad}"]["deger"] *= 50
+    sonra = aileler.ortak_donem_kurulumu(degisen, strateji)["TEST"]
+    for alan in ("mumlar", "kurulum"):
+        pd.testing.assert_frame_equal(once[alan], sonra[alan])
+    pd.testing.assert_series_equal(once["isinma"], sonra["isinma"])
+    for sonuc in (once, sonra):
+        for sinyal in sonuc["sinyaller"]:
+            sinyal.pop("olusturma_zamani")
+    assert once["sinyaller"] == sonra["sinyaller"]
 
 
 def test_ortak_cift_kurulumu_gelecek_fiyat_degisiminden_etkilenmez():
@@ -736,3 +766,78 @@ def test_s11_gelecek_fiyat_ve_diger_hucreler_onceki_olcuyu_degistirmez(
     assert sonra["egri_olculeri"] == olculer[0]["egri_olculeri"]
     assert sonra["egri_tanimi"]["satirlar"] == olculer[0]["egri_tanimi"]["satirlar"]
     assert depo.yol.read_bytes().startswith(onceki_kayit)
+
+
+def test_pay_kimligi_gelecek_fiyat_onceki_kod_ve_kaliteyi_degistirmez(
+    tmp_path, monkeypatch
+):
+    from tests.test_veri import pay_kimlikli_goruntu
+
+    a, secim = pay_kimlikli_goruntu(tmp_path, monkeypatch)
+    politika = veri.pay_kimligi_hazirla(
+        secim,
+        kaynak=secim["kaynak"],
+        goruntu_id=a.kimlik,
+        manifest_ozeti=secim["manifest_ozeti"],
+    )
+    t = pd.Timestamp("2025-11-24")
+    once = veri.pay_kimligi_uygula(
+        replace(a, fiyat=a.fiyat[a.fiyat.tarih <= t]), politika
+    )
+    fiyat = a.fiyat.copy()
+    fiyat.loc[
+        (fiyat.sembol == "TRALT") & (fiyat.tarih > t),
+        [
+            "kapanis",
+            "aof",
+            "yuksek",
+            "dusuk",
+            "ham_kapanis",
+            "ham_aof",
+            "ham_yuksek",
+            "ham_dusuk",
+        ],
+    ] = 1000.0
+    sonra = veri.pay_kimligi_uygula(replace(a, fiyat=fiyat), politika)
+    pd.testing.assert_frame_equal(once.fiyat, sonra.fiyat[sonra.fiyat.tarih <= t])
+
+    def kalite(anlik):
+        g = anlik.gun_tablosu
+        return g[g.tarih <= t].sort_values(["sembol", "tarih"]).reset_index(drop=True)
+
+    pd.testing.assert_frame_equal(kalite(once), kalite(sonra))
+    assert set(
+        once.fiyat.loc[once.fiyat.sembol == "pay_kimligi_v1/p002", "borsa_kodu"]
+    ) == {"KOZAL", "TRALT"}
+
+
+def test_s12_gelecek_fiyat_egitim_secimini_ve_acik_dislamayi_degistirmez(
+    tmp_path, monkeypatch
+):
+    from tests.test_tansusinama import s12_sinyalli, s12_calistir
+
+    depo, m, piyasa = s12_sinyalli(tmp_path, monkeypatch)
+    # Eksik ilk test satırı yalnız sonraki hesapları durdurur; eğitim ve seçim gerçektir.
+    piyasa[:] = [r for r in piyasa if r["tarih"] != "2022-01-04"]
+    ilk = s12_calistir(depo, m, tmp_path)
+    once = ilk["bolumler"][0]["secimler"][0]
+    assert "İstenen seans kapsamı uyuşmuyor" in ilk["bolumler"][0]["neden"]
+    assert once["durum"] == "secildi"
+    assert all(h["kapali_islem_sayisi"] == 1 for h in once["egitim_cocuklari"])
+    assert all(
+        h["dislanan"][0]["durum"] == "bekliyor" for h in once["egitim_cocuklari"]
+    )
+    for r in piyasa:
+        if r["tarih"] >= "2022-01-01":
+            for alan in ("aof", "kapanis", "yuksek", "dusuk"):
+                r[f"duzeltilmis_{alan}"]["deger"] *= 2
+    sonra = s12_calistir(depo, m, tmp_path)["bolumler"][0]["secimler"][0]
+    assert sonra["bolge"]["secilen"] == once["bolge"]["secilen"] == [1]
+    assert [
+        (h["kapali_islem_sayisi"], h["toplam_net_r"], h["dislanan"])
+        for h in sonra["egitim_cocuklari"]
+    ] == [
+        (h["kapali_islem_sayisi"], h["toplam_net_r"], h["dislanan"])
+        for h in once["egitim_cocuklari"]
+    ]
+    assert ilk["durum"] == "hata"

@@ -13,7 +13,7 @@ import math
 import pandas as pd
 
 from tansu import aileler, gostergeler, islem_riski
-from tansu.veri import KARANTINA_GUN, UyelikKapsamHatasi, VeriHatasi
+from tansu.veri import KARANTINA_GUN, YUVARLAMA, UyelikKapsamHatasi, VeriHatasi
 
 STOP_ATR = 2.0  # TASARIM 5.5: acil stop = giriş - 2 ATR
 ETKIN_ATR = 1.5  # `dip` kuralı giriş + 1,5 ATR görülünce etkin olur
@@ -437,9 +437,11 @@ def _fiyat_engeli(m):
         return "islem_yok"
     if not all(_pozitif_sayi(m.get(k)) for k in ("aof", "yuksek", "dusuk", "kapanis")):
         return "gecersiz_fiyat"
-    if (
-        not m["dusuk"] <= m["aof"] <= m["yuksek"]
-        or not m["dusuk"] <= m["kapanis"] <= m["yuksek"]
+    if not (  # TASARIM 5.13: düzeltilmiş serinin mevcut yuvarlama payı
+        m["dusuk"] * (1 - YUVARLAMA) <= m["aof"]
+        and m["aof"] <= m["yuksek"] * (1 + YUVARLAMA)
+        and m["dusuk"] * (1 - YUVARLAMA) <= m["kapanis"]
+        and m["kapanis"] <= m["yuksek"] * (1 + YUVARLAMA)
     ):
         raise ValueError("mum fiyat sırası geçersiz")
     return None
@@ -927,6 +929,9 @@ def _mumlar_kur(anlik, sembol, p, atr_n) -> pd.DataFrame:
 def _uyelik_kosusu(anlik, paket):
     """E1 kanıtı koşunun her değerlendirme gününü kapsar (TASARIM 5.15)."""
     u, ref = paket["uyelik"], paket["referans"]
+    if ref.get("pay_kimligi") is not None:
+        # TASARIM 5.15 #167: eski motorun sembol anlamı örtük değişmez.
+        raise VeriHatasi("eski motor pay kimliği paketini desteklemiyor")
     if (
         ref["goruntu_id"] != anlik.kimlik
         or ref["uyelik_surumu"] != u["uyelik_surumu"]
