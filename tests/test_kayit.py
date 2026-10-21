@@ -2489,7 +2489,51 @@ def test_s12_kayit_bagi_nihai_sonucu_ve_acik_ufku_korur(tmp_path, monkeypatch):
     depo, m, _ = s12_sinyalli(tmp_path, monkeypatch, son_sinyal="2025-10-04")
     asil_islem = pilot._Kosu.ileri_islem_kaydet
     asil_sonuc = pilot._Kosu.ileri_sonucu_kaydet
+    asil_secim = pilot._Kosu.ileri_secim_kaydet
     denetlenen = []
+
+    def bozmalar(kayit):
+        if kayit["tur"] == "bolum":
+            if kayit["bolum_id"] != "2022Q1":
+                return []
+            alanlar = [
+                (("secimler", 0, "test_deneme_id"), "kayitsiz-cocuk"),
+                (("sayimlar", "TEST", "kapali_islem"), "yanlis-tur"),
+                (("kontrol_refleri",), []),
+                (("kontrol_refleri",), kayit["kontrol_refleri"] * 2),
+                (("uyarilar",), []),
+            ]
+        else:
+            alanlar = [
+                (("olculer", "TEST", "olculer", "net_r", "deger"), 999999.0),
+                (("olculer", "TEST", "olculer", "net_r", "birim"), "TL"),
+                (("olculer", "TEST", "olculer", "sharpe", "bos_nedeni"), "uydurma"),
+                (("olculer", "TEST", "egri_tanimi", "referanslar"), []),
+                (("olculer", "TEST", "islemler", 0, "islem_ref"), "kayitsiz-islem"),
+                (("olculer",), {}),
+                (("kontrol_refleri",), []),
+                (("giris_kohort_sayimlari", "2022Q2", "TEST", "kapali_islem"), 2),
+                (("giris_kohort_sayimlari", "2025Q4", "TEST", "acik_islem"), 1.0),
+            ]
+        sonuc = []
+        for yol, deger in alanlar:
+            yanlis = deepcopy(kayit)
+            hedef = yanlis
+            for a in yol[:-1]:
+                hedef = hedef[a]
+            hedef[yol[-1]] = deger
+            sonuc.append(yanlis)
+        return sonuc
+
+    def secim(kosu, *, kayit):
+        if kayit["durum"] == "secildi":
+            yanlis = deepcopy(kayit)
+            yanlis["bolge"]["hucreler"][1]["uzaklik"] = 999
+            once = depo.yol.read_bytes()
+            with pytest.raises(pilot.PilotHatasi, match="seçim bölgesi"):
+                asil_secim(kosu, kayit=yanlis)
+            assert depo.yol.read_bytes() == once
+        return asil_secim(kosu, kayit=kayit)
 
     def islem(kosu, *, islem, ufuk):
         yanlis = deepcopy(islem)
@@ -2507,6 +2551,11 @@ def test_s12_kayit_bagi_nihai_sonucu_ve_acik_ufku_korur(tmp_path, monkeypatch):
         return r
 
     def sonuc(kosu, *, kayit):
+        for yanlis in bozmalar(kayit):
+            once = depo.yol.read_bytes()
+            with pytest.raises(pilot.PilotHatasi):
+                asil_sonuc(kosu, kayit=yanlis)
+            assert depo.yol.read_bytes() == once
         if kayit["tur"] == "bolum" and kayit["bolum_id"] == "2022Q1":
             yanlis = deepcopy(kayit)
             yanlis["islem_refleri"] = [
@@ -2527,6 +2576,7 @@ def test_s12_kayit_bagi_nihai_sonucu_ve_acik_ufku_korur(tmp_path, monkeypatch):
 
     monkeypatch.setattr(pilot._Kosu, "ileri_islem_kaydet", islem)
     monkeypatch.setattr(pilot._Kosu, "ileri_sonucu_kaydet", sonuc)
+    monkeypatch.setattr(pilot._Kosu, "ileri_secim_kaydet", secim)
     r = s12_calistir(depo, m, tmp_path)
     assert r["durum"] == "tamamlandi", [
         (b["bolum_id"], b["neden"]) for b in r["bolumler"]
@@ -2540,6 +2590,28 @@ def test_s12_kayit_bagi_nihai_sonucu_ve_acik_ufku_korur(tmp_path, monkeypatch):
     assert acik["sonuc"]["kalan_adet"] > 0
     assert acik["degerleme"]["tarih"] == "2025-10-05"
 
+    asil_olaylar = depo.oku()
+    birlesik = next(
+        o["kayit"]
+        for o in asil_olaylar
+        if o.get("sonuc_turu") == "ileri_v1" and o["kayit"]["tur"] == "birlesik"
+    )
+    assert birlesik["giris_kohort_sayimlari"]["2025Q4"]["TEST"] == dict(
+        kapali_islem=0, ayri_giris_gunu=1, acik_islem=1
+    )
+    for hedef in asil_olaylar:
+        if hedef.get("sonuc_turu") != "ileri_v1":
+            continue
+        for no, yanlis in enumerate(bozmalar(hedef["kayit"])):
+            onceki = asil_olaylar[: asil_olaylar.index(hedef)]
+            yol = tmp_path / f"{hedef['bolum_id']}-{no}-icerik.jsonl"
+            yol.write_bytes(
+                b"".join(pilot.kanonik(o) + b"\n" for o in onceki)
+                + pilot.kanonik(hedef | dict(kayit=yanlis))
+                + b"\n"
+            )
+            with pytest.raises(pilot.PilotHatasi):
+                pilot.PilotKayit(yol).oku()
     kabul_edilen = []
     for tur in (
         "ileri_secim",
@@ -2564,7 +2636,7 @@ def test_s12_kayit_bagi_nihai_sonucu_ve_acik_ufku_korur(tmp_path, monkeypatch):
         "islem_legacy",
         "bolum_legacy",
     ):
-        olaylar = deepcopy(depo.oku())
+        olaylar = deepcopy(asil_olaylar)
         aranan = (
             "ileri_sinyal"
             if tur
@@ -3109,3 +3181,325 @@ def test_s12_okuyucu_kosu_sahibini_legacy_ustle_gizleyemez(tmp_path, monkeypatch
     assert kabul_edilen == [], (
         "WF koşusu legacy üst kimliğiyle anlamsal denetimden kaçamamalıdır"
     )
+
+
+def test_s12_turetilmis_secim_ve_ozet_yayinda_ve_okumada_dogrulanir(
+    tmp_path, monkeypatch
+):
+    from tests.test_tansusinama import s12_kayitli, s12_calistir
+    from tansu import saglamlik
+
+    depo, makbuz, piyasa = s12_kayitli(tmp_path, monkeypatch)
+    piyasa[:] = [x for x in piyasa if x["tarih"] not in ("2021-01-04", "2022-01-04")]
+    sonuc = s12_calistir(depo, makbuz, tmp_path)
+    asil = depo.oku()
+    ust = depo.deneme_oku(makbuz.deneme_id)
+    baslangic = next(
+        x for x in asil if x["kayit_id"] == sonuc["baslangic_makbuzu"].olay_id
+    )
+    kabul_edilen = []
+    for tur in (
+        "izinli_alan",
+        "secici_aciklamasi",
+        "olculer",
+        "sayimlar",
+        "secimler_eksik",
+        "secimler_tekrar",
+        "secim_icerigi",
+        "basari",
+        "bolumler_eksik",
+        "ufuk",
+        "bitis_olculeri",
+        "bitis_sayimlari",
+    ):
+        hedef = next(
+            x
+            for x in asil
+            if (
+                tur in ("izinli_alan", "secici_aciklamasi")
+                and x["kayit_turu"] == "ileri_secim"
+            )
+            or (
+                tur
+                in (
+                    "sayimlar",
+                    "secimler_eksik",
+                    "secimler_tekrar",
+                    "secim_icerigi",
+                    "basari",
+                )
+                and x.get("sonuc_turu") == "ileri_v1"
+                and x["kayit"]["tur"] == "bolum"
+            )
+            or (
+                tur in ("olculer", "bolumler_eksik", "ufuk")
+                and x.get("sonuc_turu") == "ileri_v1"
+                and x["kayit"]["tur"] == "birlesik"
+            )
+            or (
+                tur.startswith("bitis_")
+                and x["kayit_turu"] == "bitis"
+                and x["kosu_id"] == sonuc["kosu_id"]
+            )
+        )
+        onceki = asil[: asil.index(hedef)]
+        yanlis = deepcopy(hedef)
+        k = yanlis.get("kayit", {})
+        if tur == "izinli_alan":
+            hucreler = [
+                dict(
+                    indeks=h["indeks"],
+                    deneme_id=None,
+                    durum="alan_disi",
+                    kapali_islem_sayisi=None,
+                    toplam_net_r=None,
+                )
+                for h in k["bolge"]["hucreler"]
+            ]
+            k.update(
+                egitim_cocuklari=[],
+                durum="secim_yok",
+                neden="uygun_merkez_yok",
+                bolge=saglamlik.sec(
+                    dict(eksenler=ust["yontem_ayarlari"]["eksenler"]),
+                    hucreler,
+                    politika="genis_bolge_net_r_v1",
+                ),
+            )
+        elif tur == "secici_aciklamasi":
+            k["bolge"]["neden"] = "uydurma"
+        elif tur == "olculer":
+            k["olculer"] = {"UYDURMA": dict(net_r=999999.0)}
+        elif tur == "sayimlar":
+            k["sayimlar"] = {"TEST": dict(kapali_islem="yanlis_tur")}
+        elif tur == "secimler_eksik":
+            k["secimler"] = []
+        elif tur == "secimler_tekrar":
+            k["secimler"].append(deepcopy(k["secimler"][0]))
+        elif tur == "secim_icerigi":
+            k["secimler"][0]["test_deneme_id"] = "kayitsiz-cocuk"
+        elif tur == "basari":
+            k.update(durum="tamamlandi", neden=None, hatalar=[])
+        elif tur == "bolumler_eksik":
+            k["bolum_refleri"] = []
+        elif tur == "ufuk":
+            k["donem"] = dict(uydurma=True)
+        elif tur == "bitis_olculeri":
+            yanlis["olculer"] = dict(net_r=999999.0)
+        else:
+            yanlis["ozetler"] = dict(
+                tamamlanan=999, denenen=999, basarisiz=0, baslamayan=0
+            )
+        yol = tmp_path / (tur + "-yayin.jsonl")
+        onceki_bayt = b"".join(pilot.kanonik(o) + b"\n" for o in onceki)
+        yol.write_bytes(onceki_bayt)
+        kosu = pilot._Kosu(
+            pilot.PilotKayit(yol), sonuc["baslangic_makbuzu"], ust, baslangic
+        )
+        try:
+            if hedef["kayit_turu"] == "ileri_secim":
+                kosu.ileri_secim_kaydet(kayit=k)
+            elif hedef["kayit_turu"] == "sonuc":
+                kosu.ileri_sonucu_kaydet(kayit=k)
+            else:
+                kosu.bitir(
+                    **{
+                        a: yanlis[a]
+                        for a in (
+                            "durum",
+                            "tamamlanan",
+                            "basarisiz",
+                            "yontemler",
+                            "olculer",
+                            "cikti_referanslari",
+                            "ozetler",
+                        )
+                    }
+                )
+        except pilot.PilotHatasi:
+            assert yol.read_bytes() == onceki_bayt
+        else:
+            kabul_edilen.append((tur, "yayin"))
+        yol = tmp_path / (tur + "-okuma.jsonl")
+        yol.write_bytes(onceki_bayt + pilot.kanonik(yanlis) + b"\n")
+        try:
+            pilot.PilotKayit(yol).oku()
+        except pilot.PilotHatasi:
+            pass
+        else:
+            kabul_edilen.append((tur, "okuma"))
+    assert kabul_edilen == [], (
+        "Türetilmiş WF içeriği gerçek kayıtlarına bağlı olmalıdır"
+    )
+
+
+def test_s12_erken_hata_bitisinde_gercek_sayim_ve_neden_korunur(tmp_path, monkeypatch):
+    from tests.test_tansusinama import s12_kayitli, s12_calistir
+    from tansu import veri
+
+    depo, m, _ = s12_kayitli(tmp_path, monkeypatch)
+
+    def dur(*args, **kwargs):
+        raise ValueError("uyelik-denetimi")
+
+    monkeypatch.setattr(veri, "uyelik_hazirla", dur)
+    with pytest.raises(ValueError, match="uyelik-denetimi"):
+        s12_calistir(depo, m, tmp_path)
+    bitis = next(
+        x
+        for x in depo.oku()
+        if x["kayit_turu"] == "bitis" and x["deneme_id"] == m.deneme_id
+    )
+    assert "hata" in bitis["ozetler"], (
+        "Erken hata bitişi gerçek hata gözlemini korumalıdır"
+    )
+    assert bitis["ozetler"] == dict(
+        tamamlanan=0, denenen=0, basarisiz=0, baslamayan=16, hata="uyelik-denetimi"
+    )
+    assert bitis["durum"] == "hata"
+    assert bitis["tamamlanan"] == bitis["cikti_referanslari"] == []
+    assert len(bitis["basarisiz"]) == 17
+    assert depo.kurtar()["uyarilar"] == []
+
+
+def test_s12_pay_kimligi_sakli_uyelik_kaniti_canli_tablolardan_bagimsizdir(
+    tmp_path, monkeypatch
+):
+    import builtins
+    from tansu import tansusinama as ts
+    from tests.test_tansusinama import s12_kayitli, s12_calistir
+    from tests.test_veri import pay_kimlikli_goruntu
+
+    asil_uyelik = veri.uyelik_hazirla
+    depo, eski, _ = s12_kayitli(tmp_path, monkeypatch)
+    d = depo.deneme_oku(eski.deneme_id)
+    a, secim = pay_kimlikli_goruntu(tmp_path, monkeypatch)
+    v = d["veri_ayarlari"]
+    uyelik = asil_uyelik(
+        veri.UyelikIstegi(
+            tuple(v["takvim"]["seanslar"]), v["evren_politikasi"], v["uyelik_surumu"]
+        )
+    )
+    v.update(
+        veri_referanslari=[a.kimlik],
+        manifest_ozeti=secim["manifest_ozeti"],
+        uyelik_ozeti=uyelik["tablo_parmak_izi"],
+        pay_kimligi=secim,
+    )
+    m = pilot_deneme(
+        depo,
+        d["strateji"],
+        **{
+            k: d[k]
+            for k in (
+                "donemler",
+                "yontem_ayarlari",
+                "veri_ayarlari",
+                "risk_ayarlari",
+                "masraf_ayarlari",
+            )
+        },
+    )
+    monkeypatch.setattr(veri, "uyelik_hazirla", asil_uyelik)
+
+    def hesap_yok(*args, **kwargs):
+        raise ValueError("sentetik hesap öncesi sınır")
+
+    monkeypatch.setattr(ts, "_ileri_secimler", hesap_yok)
+    sonuc = s12_calistir(depo, m, tmp_path)
+    asil = depo.oku()
+    baslangic = next(
+        o for o in asil if o["kayit_id"] == sonuc["baslangic_makbuzu"].olay_id
+    )
+    ilk = next(
+        o
+        for o in asil
+        if o.get("sonuc_turu") == "ileri_v1" and o["kayit"]["tur"] == "bolum"
+    )
+    assert (
+        ilk["kayit"]["durum"] == "hata"
+        and "sentetik hesap öncesi sınır" in ilk["kayit"]["neden"]
+    )
+    ayar_ozeti = depo.deneme_oku(m.deneme_id)["ayar_parmak_izi"]
+    assert ayar_ozeti == m.ayar_ozeti
+
+    asil_open, asil_path_open = builtins.open, Path.open
+
+    def kapali(yol):
+        return isinstance(yol, (str, Path)) and Path(yol).name in (
+            "uyelik.csv",
+            "eslemeler.csv",
+        )
+
+    def dosya_ac(yol, *args, **kwargs):
+        if kapali(yol):
+            raise OSError("canlı üyelik ve eşleme tabloları kapalı")
+        return asil_open(yol, *args, **kwargs)
+
+    def yol_ac(yol, *args, **kwargs):
+        if kapali(yol):
+            raise OSError("canlı üyelik ve eşleme tabloları kapalı")
+        return asil_path_open(yol, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "open", dosya_ac)
+    monkeypatch.setattr(Path, "open", yol_ac)
+    hata = None
+    try:
+        okunan = pilot.PilotKayit(depo.yol).oku()
+    except (OSError, pilot.PilotHatasi) as yakalanan:
+        hata = yakalanan
+    assert hata is None, f"Geçmiş WF okuması saklı kaynakları kullanmalıdır: {hata}"
+    assert okunan == asil
+    kanit = baslangic["uyelik_kaniti"]
+    assert kanit["surum"] == "ileri_uyelik_kaniti_v1"
+    assert (
+        hashlib.sha256(kanit["uyelik_tablo_metni"].encode("utf-8")).hexdigest()
+        == v["uyelik_ozeti"]
+    )
+    assert (
+        hashlib.sha256(kanit["pay_kimligi_tablo_metni"].encode("utf-8")).hexdigest()
+        == secim["tablo_ozeti"]
+    )
+
+    onceki = asil[: asil.index(baslangic)]
+    onceki_bayt = b"".join(pilot.kanonik(o) + b"\n" for o in onceki)
+    for boz in ("eksik", "surum", "alan", "uyelik_ozeti", "pay_ozeti", "metin_turu"):
+        yanlis = deepcopy(baslangic)
+        if boz == "eksik":
+            del yanlis["uyelik_kaniti"]
+        elif boz == "surum":
+            yanlis["uyelik_kaniti"]["surum"] = "bilinmeyen"
+        elif boz == "alan":
+            yanlis["uyelik_kaniti"]["fazla"] = True
+        elif boz == "uyelik_ozeti":
+            yanlis["uyelik_kaniti"]["uyelik_tablo_metni"] += "\n"
+        elif boz == "pay_ozeti":
+            yanlis["uyelik_kaniti"]["pay_kimligi_tablo_metni"] += "\n"
+        else:
+            yanlis["uyelik_kaniti"]["pay_kimligi_tablo_metni"] = 0
+        yol = tmp_path / (boz + "-sakli-kaynak.jsonl")
+        yol.write_bytes(onceki_bayt + pilot.kanonik(yanlis) + b"\n")
+        with pytest.raises(pilot.PilotHatasi, match="Bozuk tam satır"):
+            pilot.PilotKayit(yol).oku()
+        yol.write_bytes(onceki_bayt)
+        kwargs = {
+            a: yanlis[a]
+            for a in (
+                "mod",
+                "anlik_goruntu",
+                "manifest_ozeti",
+                "uyelik_surumu",
+                "kod_kimligi",
+                "ortam",
+                "bagimlilik_ozeti",
+                "tohum",
+                "is_listesi",
+                "ureteci_surumu",
+            )
+        }
+        if "uyelik_kaniti" in yanlis:
+            kwargs["uyelik_kaniti"] = yanlis["uyelik_kaniti"]
+        with pytest.raises(pilot.PilotHatasi, match="[Üü]yelik kanıtı"):
+            with pilot.PilotKayit(yol).kosu(m.deneme_id, **kwargs):
+                pytest.fail("Bozuk kaynak kanıtı başlangıç makbuzu alamaz")
+        assert yol.read_bytes() == onceki_bayt

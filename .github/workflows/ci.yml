@@ -9,7 +9,7 @@ jobs:
   # Yalnız Windows: Tansu Levent'in Windows bilgisayarında çalışır (Levent 17.10). Adımlar Git Bash ile koşar.
   ci:
     runs-on: windows-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     defaults:
       run:
         shell: bash
