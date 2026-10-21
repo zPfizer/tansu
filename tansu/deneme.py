@@ -997,6 +997,98 @@ def _grup_dosya_basvurusu(ref):
         raise PilotHatasi("Dosya sha256 özeti geçersiz.")
 
 
+def _grup_olayi_dogrula(olay):
+    """TASARIM 5.15: hazırlık olayı yazılırken ve okunurken aynı sınır geçer."""
+    alanlar = {
+        "kayit_turu",
+        "hazirlik_turu",
+        "tanim",
+        "tanim_ozeti",
+        "engeller",
+        "dislamalar",
+        "hazirlik_durumu",
+        "yurutme_izni",
+    }
+    meta = {"kayit_id", "sema_surumu", "olusturma_zamani"}
+    if not isinstance(olay, dict):
+        raise PilotHatasi("Hazırlık olayı nesne olmalıdır.")
+    if olay.keys() & meta:
+        alanlar |= meta
+    if set(olay) != alanlar:
+        raise PilotHatasi("Hazırlık olayının alanları geçersiz.")
+    if meta <= olay.keys():
+        _metin(olay["kayit_id"])
+        if type(olay["olusturma_zamani"]) is not datetime:
+            raise PilotHatasi("Hazırlık olayının zamanı geçersiz.")
+        _kodla(olay["olusturma_zamani"])
+    if (
+        olay["kayit_turu"] != "grup_hazirligi"
+        or olay["hazirlik_turu"] != "kucuk_grup_v1"
+        or olay["yurutme_izni"] is not False
+    ):
+        raise PilotHatasi("Hazırlık türü veya yürütme izni geçersiz.")
+    tanim, engeller, dislamalar = olay["tanim"], olay["engeller"], olay["dislamalar"]
+    _grup_tanimi_dogrula(tanim)
+    if not isinstance(engeller, list) or not isinstance(dislamalar, list):
+        raise PilotHatasi("Hazırlık engelleri ve dışlamaları liste olmalıdır.")
+    for engel in engeller:
+        if not isinstance(engel, dict) or set(engel) != {"alan", "neden"}:
+            raise PilotHatasi("Engel alan ve neden içermelidir.")
+        _metin(engel["alan"])
+        _metin(engel["neden"])
+    for dislama in dislamalar:
+        if not isinstance(dislama, dict) or set(dislama) != {
+            "sembol",
+            "tarih",
+            "neden",
+        }:
+            raise PilotHatasi("Dışlama sembol, tarih ve neden içermelidir.")
+        _metin(dislama["sembol"])
+        _grup_tarihi(dislama["tarih"])
+        _metin(dislama["neden"])
+    if not engeller and (
+        any(
+            not tanim.get(a)
+            for a in (
+                "soru",
+                "strateji_revizyonlari",
+                "seanslar",
+                "isinma_baslangici",
+                "hisse_kurali",
+                "referanslar",
+                "gozlem_durumu",
+                "durdurma_kurali",
+            )
+        )
+        or any(
+            not tanim.get("referanslar", {}).get(a)
+            for a in (
+                "anlik_goruntu",
+                "manifest_ozeti",
+                "uyelik_ozeti",
+                "kod_ozeti",
+                "takvim",
+                "yontem",
+                "risk",
+                "masraf",
+            )
+        )
+        or not tanim.get("hisse_kurali", {}).get("semboller")
+        or any(
+            not s.get("deneme_id")
+            or not s.get("kaynak")
+            or not s.get("yayim_tarihi")
+            or s.get("eksik_alanlar")
+            for s in tanim.get("strateji_revizyonlari", [])
+        )
+    ):
+        raise PilotHatasi("Hazır hazırlık kaydında zorunlu alan eksik.")
+    if olay["hazirlik_durumu"] != ("engelli" if engeller else "hazir"):
+        raise PilotHatasi("Hazırlık durumu engellerle uyuşmuyor.")
+    if sha256(kanonik(tanim)).hexdigest() != olay["tanim_ozeti"]:
+        raise PilotHatasi("Hazırlık tanımı özeti uyuşmuyor.")
+
+
 @dataclass(frozen=True)
 class Makbuz:
     olay_id: str
@@ -1048,6 +1140,8 @@ class PilotKayit:
                 olay = _coz(json.loads(satir))
                 if olay["sema_surumu"] != SURUM or kanonik(olay) + b"\n" != satir:
                     raise ValueError("Şema veya kodlama uyuşmuyor.")
+                if olay.get("kayit_turu") == "grup_hazirligi":
+                    _grup_olayi_dogrula(olay)
             except (ValueError, KeyError, TypeError, IndexError) as hata:
                 raise PilotHatasi(f"Bozuk tam satır: {no}") from hata
             olaylar.append(olay)
@@ -1075,60 +1169,6 @@ class PilotKayit:
     def grup_hazirligi_kaydet(self, *, tanim, engeller, dislamalar):
         """TASARIM 5.15 Küçük grup hazırlığı: ayrı olay, yürütme izni yok."""
         _grup_tanimi_dogrula(tanim)
-        if not isinstance(engeller, list) or not isinstance(dislamalar, list):
-            raise PilotHatasi("Hazırlık engelleri ve dışlamaları liste olmalıdır.")
-        for engel in engeller:
-            if not isinstance(engel, dict) or set(engel) != {"alan", "neden"}:
-                raise PilotHatasi("Engel alan ve neden içermelidir.")
-            _metin(engel["alan"])
-            _metin(engel["neden"])
-        for dislama in dislamalar:
-            if not isinstance(dislama, dict) or set(dislama) != {
-                "sembol",
-                "tarih",
-                "neden",
-            }:
-                raise PilotHatasi("Dışlama sembol, tarih ve neden içermelidir.")
-            _metin(dislama["sembol"])
-            _grup_tarihi(dislama["tarih"])
-            _metin(dislama["neden"])
-        if not engeller and (
-            any(
-                not tanim.get(a)
-                for a in (
-                    "soru",
-                    "strateji_revizyonlari",
-                    "seanslar",
-                    "isinma_baslangici",
-                    "hisse_kurali",
-                    "referanslar",
-                    "gozlem_durumu",
-                    "durdurma_kurali",
-                )
-            )
-            or any(
-                not tanim.get("referanslar", {}).get(a)
-                for a in (
-                    "anlik_goruntu",
-                    "manifest_ozeti",
-                    "uyelik_ozeti",
-                    "kod_ozeti",
-                    "takvim",
-                    "yontem",
-                    "risk",
-                    "masraf",
-                )
-            )
-            or not tanim.get("hisse_kurali", {}).get("semboller")
-            or any(
-                not s.get("deneme_id")
-                or not s.get("kaynak")
-                or not s.get("yayim_tarihi")
-                or s.get("eksik_alanlar")
-                for s in tanim.get("strateji_revizyonlari", [])
-            )
-        ):
-            raise PilotHatasi("Hazır hazırlık kaydında zorunlu alan eksik.")
         ozet = sha256(kanonik(tanim)).hexdigest()
 
         def denetle(olaylar):
@@ -1141,28 +1181,24 @@ class PilotKayit:
                 ):
                     raise PilotHatasi("Değişen grup tanımı yeni revizyon gerektirir.")
 
-        return self._ekle(
-            dict(
-                kayit_turu="grup_hazirligi",
-                hazirlik_turu="kucuk_grup_v1",
-                tanim=tanim,
-                tanim_ozeti=ozet,
-                engeller=engeller,
-                dislamalar=dislamalar,
-                hazirlik_durumu="engelli" if engeller else "hazir",
-                yurutme_izni=False,
-            ),
-            denetle,
+        olay = dict(
+            kayit_turu="grup_hazirligi",
+            hazirlik_turu="kucuk_grup_v1",
+            tanim=tanim,
+            tanim_ozeti=ozet,
+            engeller=engeller,
+            dislamalar=dislamalar,
+            hazirlik_durumu="engelli" if engeller else "hazir",
+            yurutme_izni=False,
         )
+        _grup_olayi_dogrula(olay)
+        return self._ekle(olay, denetle)
 
     def grup_hazirligi_oku(self, kayit_id, *, tanim=None):
         """TASARIM 5.15: tarihçe okunur; değişen başvuru güncel kullanılamaz."""
         try:
             olaylar = self.oku()
             olay = _bul(olaylar, kayit_id, "grup_hazirligi")
-            _grup_tanimi_dogrula(olay["tanim"])
-            if sha256(kanonik(olay["tanim"])).hexdigest() != olay["tanim_ozeti"]:
-                raise PilotHatasi("Hazırlık tanımı özeti uyuşmuyor.")
             if tanim is not None:
                 _grup_tanimi_dogrula(tanim)
                 if sha256(kanonik(tanim)).hexdigest() != olay["tanim_ozeti"]:

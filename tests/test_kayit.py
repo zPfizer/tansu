@@ -2630,3 +2630,54 @@ def test_grup_hazirligi_hesap_sonucu_ve_gecersiz_tarih_almaz(tmp_path):
                 dislamalar=[],
             )
     assert not depo.yol.exists()
+
+
+@pytest.mark.parametrize(
+    "degisiklik",
+    [
+        {"yurutme_izni": True},
+        {"yurutme_izni": 0},
+        {"hazirlik_durumu": "hazir"},
+        {"performans": {"net_getiri": 1}},
+        {"hazirlik_turu": "bilinmeyen_v1"},
+        {"engeller": [{"alan": "seanslar", "neden": 0}]},
+        {"engeller": [{"alan": "seanslar", "neden": "Eksik.", "fazla": 1}]},
+        {
+            "dislamalar": [
+                {"sembol": "AKBNK", "tarih": "gecersiz", "neden": "uye_degil"}
+            ]
+        },
+        {"engeller": [], "hazirlik_durumu": "hazir"},
+        {"olusturma_zamani": 0},
+    ],
+    ids=[
+        "yurutme-izni",
+        "sifir-false-degildir",
+        "engelli-hazir-olamaz",
+        "hesap-sonucu",
+        "hazirlik-turu",
+        "engel-nedeni",
+        "engel-fazla-alani",
+        "dislama-tarihi",
+        "eksik-hazir-tanimi",
+        "olay-zamani",
+    ],
+)
+def test_grup_okuyucusu_kanonik_ama_gecersiz_olayi_reddeder(tmp_path, degisiklik):
+    depo = pilot.PilotKayit(tmp_path / "hazirlik.jsonl")
+    m = depo.grup_hazirligi_kaydet(
+        tanim=dict(grup_id="grup", revizyon="1"),
+        engeller=[dict(alan="seanslar", neden="Kesin seçim eksik.")],
+        dislamalar=[],
+    )
+    olay = depo.grup_hazirligi_oku(m.olay_id)
+    olay.update(degisiklik)
+    depo.yol.write_bytes(pilot.kanonik(olay) + b"\n")
+    reddedildi = False
+    try:
+        pilot.PilotKayit(depo.yol).grup_hazirligi_oku(m.olay_id)
+    except pilot.PilotHatasi:
+        reddedildi = True
+    assert reddedildi, (
+        "Kanonik kodlama geçersiz hazırlık olayını kabul edilebilir yapmaz."
+    )
