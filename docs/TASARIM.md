@@ -1390,7 +1390,11 @@ sınırında çalışır. Bu yol yalnız geliştirme/destek içindir.
 --deneme-dosyasi PILOT.jsonl --kok DATA --rapor OUTPUT` açık dosyaları okur.
 OUTPUT dizininde `varyantlar.json` ve `varyantlar.html` oluşur; mevcut raporun
 üstüne yazılmaz. Çıktı görüntü ağacına veya girdi dosyasına yazılamaz. Geçersiz eşleme
-hesap öncesi reddedilir. Kabul edilmiş eşlemenin eksik veya hatalı yürütmesi,
+hesap öncesi reddedilir. Dosya olan OUTPUT veya en yakın mevcut üst yol da
+hesap öncesi reddedilir; JSON girdi ve korunan yol denetimlerinden sonra
+çıktı dizini gerçekten oluşturulur veya mevcut dizin doğrulanır. Sonradan
+değişen dosya sistemi yine açık hata verir; yazma başarısı önceden varsayılmaz.
+Kabul edilmiş eşlemenin eksik veya hatalı yürütmesi,
 raporu koruyarak sıfır dışı çıkış verir. Rapor resmi kabul, Holm sayımı, günlük
 kart veya yayın izni üretmez. Eski tanımların `izinsiz` ve `eski_karsilastirma`
 alanları katalogdan aynen gelir.
@@ -1400,7 +1404,11 @@ eksik veri/kanıt, hesap hatası ve başlamamış dönem farklı durum taşır.
 Kalıcı yazma hatası sonraki varyantları durdurur; önceki gerçek makbuzlar ve
 varsa yazılmış işlem başvuruları korunur. Yazılmamış sonuç için makbuz üretilmez.
 Başlangıç öncesi hata koşu kimliği uydurmaz. Bitiş yazma hatası önceki dönem
-makbuzlarını kaybettirmez.
+makbuzlarını kaybettirmez. Koordinatör hatasında başarıyla yazılmış hata
+bitişinin gerçek makbuzu da ortak S10 hata taşıyıcısıyla varyant ve S11
+raporuna aktarılır; hesap hatası başarılı koşuya çevrilmez. Önceki eksik
+durum, bu doğrulanmış bitişin atılmasıydı. Yazılamayan veya yayını belirsiz
+bitiş için doğrulanmış makbuz uydurulmaz; ikinci bitiş yazılmaz.
 
 Sıkı rapor; katalog/tam ayar özetlerini, kayıt dosyasını, koşu/dönem/işlem
 başvurularını, veri/manifest/üyelik bağlarını, aşama ve hata nedenlerini taşır.

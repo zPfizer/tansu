@@ -1559,7 +1559,7 @@ def _kayitli_isleri_yurut(deneme, kosu, veri_koku, isci, ilerleme, hazirlik=None
         raise
     except Exception as hata:
         try:
-            _kayitli_bitir(kosu, deneme, sonuclar, hata)
+            _, hata.bitis_makbuzu = _kayitli_bitir(kosu, deneme, sonuclar, hata)
         except Exception as bitis_hatasi:
             bitis_hatasi.donem_sonuclari = sonuclar
             raise
@@ -1951,6 +1951,9 @@ def _arama_hucresi_hatasi(h, hata, durum):
             else "reddedilen_baslangic_makbuzu"
         )
         h[alan] = asdict(makbuz)
+    bitis = getattr(hata, "bitis_makbuzu", None)
+    if bitis is not None:
+        h["bitis_makbuzu"] = asdict(bitis)
     sonuclar = getattr(hata, "donem_sonuclari", [])
     if sonuclar:
         _arama_donemlerini_aktar(h, sonuclar)
@@ -2289,6 +2292,9 @@ def varyantlari_calistir(depo, deneme_idleri, *, veri_koku, isci=None, ilerleme=
             bas = getattr(hata, "baslangic_makbuzu", None)
             if bas is not None:
                 v.update(kosu_id=bas.kosu_id, baslangic_makbuzu=asdict(bas))
+            bitis = getattr(hata, "bitis_makbuzu", None)
+            if bitis is not None:
+                v["bitis_makbuzu"] = asdict(bitis)
             _varyant_donemlerini_aktar(v, getattr(hata, "donem_sonuclari", []))
             yazilamayan = getattr(hata, "yazilamayan_donem", None)
             for r in v["donemler"]:

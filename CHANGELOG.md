@@ -13,6 +13,8 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ### Değişti
 
+- Koordinatör hatasında yazılmış gerçek hata bitişi varyant ve S11 raporlarında korunur; dosya olan rapor yolu veya üst yolu hesap başlamadan reddedilir. (#57)
+
 - Saklı ileri yürüme kaynakları, çağıranın özetinden bağımsız yayımlanmış sürüm özetleriyle doğrulanır; tutarlı özetli sahte üyelik ve pay bağları eklemede ve geçmiş okumada reddedilir. (#167)
 - Tam denetimlerin tamamlanması için CI iş süresi 30 dakikadan 60 dakikaya çıkarıldı; testler ve başarı ölçütleri korundu. (#167)
 

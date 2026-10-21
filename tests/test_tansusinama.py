@@ -3722,7 +3722,18 @@ def test_varyant_acik_kismi_islem_ve_tekrar_kimligi(tmp_path, monkeypatch):
 
 
 @pytest.mark.parametrize(
-    "engel", ["resmi", "varyant", "kok", "kopya", "goruntu", "girdi", "var"]
+    "engel",
+    [
+        "resmi",
+        "varyant",
+        "kok",
+        "kopya",
+        "goruntu",
+        "girdi",
+        "var",
+        "dosya",
+        "ust_dosya",
+    ],
 )
 def test_varyant_cli_acik_girdi_ve_cikti_sinirini_hesaptan_once_korur(
     tmp_path, monkeypatch, engel
@@ -3761,6 +3772,11 @@ def test_varyant_cli_acik_girdi_ve_cikti_sinirini_hesaptan_once_korur(
     elif engel == "girdi":
         args[args.index("--rapor") + 1] = str(tmp_path)
         args[args.index("--deneme-dosyasi") + 1] = str(tmp_path / "varyantlar.json")
+    elif engel in ("dosya", "ust_dosya"):
+        engel_yolu = rapor if engel == "dosya" else tmp_path / "dosya-engeli"
+        engel_yolu.write_bytes(b"Onceki dosya kaniti")
+        if engel == "ust_dosya":
+            args[args.index("--rapor") + 1] = str(engel_yolu / "alt" / "cikti")
     else:
         rapor.mkdir()
         (rapor / "varyantlar.html").write_text("Önceki kanıt", encoding="utf-8")
@@ -3773,6 +3789,8 @@ def test_varyant_cli_acik_girdi_ve_cikti_sinirini_hesaptan_once_korur(
     monkeypatch.setattr(ts, "varyantlari_calistir", hesap)
     assert __main__.main(args) == 1
     assert cagrilar == []
+    if engel in ("dosya", "ust_dosya"):
+        assert engel_yolu.read_bytes() == b"Onceki dosya kaniti"
     if engel == "var":
         assert (rapor / "varyantlar.html").read_text(encoding="utf-8") == "Önceki kanıt"
 
@@ -4307,3 +4325,73 @@ def test_s12_pay_kimligi_secim_sinyal_ve_tasinan_durumda_ayni_paydir(
     with pytest.raises(deneme.PilotHatasi, match="Bozuk tam satır") as hata:
         deneme.PilotKayit(yol).oku()
     assert "başarı durumu" in str(hata.value.__cause__)
+
+
+@pytest.mark.parametrize("yuz", ["varyant", "arama"])
+@pytest.mark.parametrize("asama", ["hazirlik", "ilerleme"])
+def test_kayitli_koordinator_hatasinda_dogrulanmis_bitis_raporda_kalir(
+    tmp_path, monkeypatch, yuz, asama
+):
+    from concurrent.futures import ThreadPoolExecutor
+    from tansu import deneme
+
+    if yuz == "varyant":
+        depo, esleme, _ = varyant_kayitlari(tmp_path, monkeypatch)
+    else:
+        depo, makbuz, _ = s11_kayitli(
+            tmp_path,
+            monkeypatch,
+            eksenler=[dict(ad="min_gun", birim="gun", degerler=[2])],
+        )
+        monkeypatch.setattr(
+            ts.concurrent.futures,
+            "ProcessPoolExecutor",
+            lambda *, max_workers, mp_context: ThreadPoolExecutor(
+                max_workers=max_workers
+            ),
+        )
+    asil_veri = ts._donem_verisi
+    hazirlanan = []
+
+    def hazirla(*args, **kwargs):
+        if asama == "hazirlik" or hazirlanan:
+            raise RuntimeError("Kontrollü koordinatör hatası")
+        hazirlanan.append(True)
+        return asil_veri(*args, **kwargs)
+
+    def ilerleme(mesaj):
+        raise RuntimeError("Kontrollü koordinatör hatası")
+
+    monkeypatch.setattr(ts, "_donem_verisi", hazirla)
+    if yuz == "varyant":
+        sonuc = ts.varyantlari_calistir(
+            depo, esleme, veri_koku=tmp_path, isci=1, ilerleme=ilerleme
+        )
+        ilk = sonuc["varyantlar"][0]
+    else:
+        sonuc = ts.kayitli_izgara_calistir(
+            depo,
+            makbuz.deneme_id,
+            veri_koku=tmp_path,
+            mod="gelistirme",
+            isci=1,
+            ilerleme=ilerleme,
+        )
+        ilk = sonuc["hucreler"][0]
+    olaylar = deneme.PilotKayit(depo.yol).oku()
+    bitisler = [
+        o
+        for o in olaylar
+        if o["kayit_turu"] == "bitis" and o["kosu_id"] == ilk["kosu_id"]
+    ]
+    assert len(bitisler) == 1
+    bitis = bitisler[0]
+    assert bitis["durum"] == "hata"
+    assert ilk["durum"] == "hesap_hatasi" and sonuc["durum"] != "tamamlandi"
+    assert ilk["neden"] == "Kontrollü koordinatör hatası"
+    assert ilk["bitis_makbuzu"] is not None, "Gerçek hata bitişi rapordan düşemez"
+    assert ilk["bitis_makbuzu"]["olay_id"] == bitis["kayit_id"]
+    refs = [d["sonuc_ref"] for d in ilk["donemler"] if d["sonuc_ref"] is not None]
+    assert refs == bitis["cikti_referanslari"]
+    assert len(refs) == (0 if asama == "hazirlik" else 1)
+    assert all(any(o["kayit_id"] == ref for o in olaylar) for ref in refs)

@@ -175,6 +175,7 @@ def _varyant_sinama(a, argv):
             Path(a.varyant_denemeleri).read_text(encoding="utf-8"),
             object_pairs_hook=_tekil_varyant_eslemesi,
         )
+        dizin.mkdir(parents=True, exist_ok=True)
         sonuc = tansusinama.varyantlari_calistir(
             deneme.PilotKayit(a.deneme_dosyasi),
             esleme,
