@@ -10,7 +10,7 @@ Issue, yapılacak işin kaydıdır. PR, değişikliklerin ana projeye girmeden �
 
 - [Issues](../../issues) ve [milestone'lar](../../milestones): işler ve hedef sürümler.
 - [Açık pull request'ler](../../pulls): süren değişiklikler.
-- [Birleşen pull request'ler](../../pulls?q=is%3Apr+is%3Amerged): master'a giren işler.
+- [Birleşen pull request'ler](../../pulls?q=is%3Apr+is%3Amerged): main dalına giren işler.
 - [Releases — v0.1](../../releases/tag/v0.1): yayımlanan sürüm.
 - Actions: [ci](../../actions/workflows/ci.yml) testleri, biçimi ve lint'i;
   [dod](../../actions/workflows/dod.yml) PR gövdesini denetler.

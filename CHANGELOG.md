@@ -10,6 +10,8 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ### Değişti
 
+- Ana dal adı `main` oldu; CI, edit kancası, kapanış komutu ve güncel iş yönergeleri yeni ada uyarlandı. (#142)
+
 - Çalışma kuralları kullanılan ajan araçlarına uyarlandı; belge sahipliği ve bekleyen sözleşmelerin durumu netleşti. Tekrarlanan inceleme kuralları atfa dönüştü, iş klasörü kapanışına silme onayı ve kanıt kontrolü eklendi. (#130)
 - Altı çalışma belgesi mevcut sahiplerinde birleştirildi; kontrol ve gerçek veri kanıtı inceleme öncesine alındı, küçük işte yazıcı devri ve kapsam kuralları sadeleştirildi. Eski bilet sözleşmesi geçmiş bölümüyle korundu.
 
