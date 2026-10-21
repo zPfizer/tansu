@@ -15,7 +15,7 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ### Eklendi
 
-- Kayıtlı ayar taraması, birimleri açık ölçüler ve Levent onaylı geniş kârlı bölge seçimi eklendi. Bütün izinli ayarlar ilk hesap öncesinde kaydedilip doğrulanır; eksik ve başarısız sonuçlar gerekçeleriyle görünür kalır. Kimliği doğrulanmış veri, kapsam denetimi her ayarda korunarak paylaşılır. Eski yöntemler ortak hesap sahiplerini kullanır; günlük izin ve açık korumalar korunur. (#92)
+- Kayıtlı ayar taraması, birimleri açık ölçüler ve Levent onaylı geniş kârlı bölge seçimi eklendi. Bütün izinli ayarlar ilk hesap öncesinde kaydedilip doğrulanır; eksik ve başarısız sonuçlar gerekçeleriyle görünür kalır. Kimliği doğrulanmış veri, kapsam denetimi her ayarda korunarak paylaşılır. Eski yöntemler ortak hesap sahiplerini kullanır; farklı başlangıç ve süre anlamları açıkça ayrılır. Günlük izin ve açık korumalar korunur. (#92)
 
 - Kayıtlı denemeyle beş ayrı yıl ve birleşik dönem yürütülür; ortak EMA ve tek hisse işlem hesabı mevcut kayıt pilotuna bağlandı. Isınma, açık işlem, kısmi satış ve hata kayıtları korunur. Kayıplı para aktarımı ve başlangıçla uyuşmayan ayar hesap başlatmaz. Eksik fiyat, kurulum veya limit kanıtı tam başarı sayılmaz; eski sınama yolu ve çift risk kapısı korunur. (#91)
 

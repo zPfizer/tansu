@@ -842,6 +842,12 @@ Genel "Geçti" yalnız hepsi sağlanınca yazılır. (İ: 17-079)
 - Düşüşte kalma = eğrinin önceki zirvenin altında kaldığı en uzun ardışık takvim süresi, kapanış
   bazlı.
 
+**Eski hesap uyumluluğu (#92):** `istatistik.dusus`, ilk kapanış politikasında
+ardışık zirveler arasında geçen günleri de süreye katar; arada düşüş olmasa da bu
+aralık eski çıktıda görünür. Bu davranış eski sonuçlarla uyumluluk için korunur;
+yukarıdaki Tansu tanımını değiştirmez. S11'in açık başlangıç politikası süreyi
+bir düşüş başladıktan sonra izler. Aynı zirve taraması bu iki politikayı açıkça ayırır.
+
 **Boru hattı denetimi:** ilk resmi koşudan önce bir kez yapılır (B-18):
 - Sentetik boş veriyle yanlış kabul oranı ≤ %5.
 - Enjekte edilmiş etkiyle güç ölçümü.
@@ -1465,12 +1471,14 @@ tarihteki kapalı sonuçlar birlikte toplanır; ilk nokta dönem başlangıcınd
 0 referans oranı, derinliği mutlak referans oranı farkıdır. İkisi de hesap bakiyesi,
 bileşik portföy getirisi, portföy yüzde düşüşü veya Calmar üretmez.
 
-Düşüş süresi zirvenin tarihinden yeniden aynı zirveye erişilen tarihe, erişilmediyse
+Yeni açık başlangıç politikasında düşüş süresi zirvenin tarihinden yeniden aynı
+zirveye erişilen tarihe, erişilmediyse
 son gözleme kadardır; eşit zirve saati yeniden başlatır. Tarihli seride birim takvim
 günü, tarihsiz eski dizide gözlem adımıdır. Örnek: 1 Ocak 0 R, 3 Ocak 2 R, 5 Ocak
 1 R, 7 Ocak 3 R için derinlik 1 R, süre 4 takvim günüdür. Eski `dusus` ilk verilen
 kapanışı başlangıç sayar ve pozitif oran/gün döner. Eski `olculer` başlangıca 1 ekler
-ve negatif oranı korur. Bu yüzden [0,9; 1,0] kapanışları ilkinde 0, ikincide −0,1
+ve negatif oranı korur. İlk kapanış politikasının eski süre davranışı §5.12’deki
+uyumluluk notunda tanımlıdır. Bu yüzden [0,9; 1,0] kapanışları ilkinde 0, ikincide −0,1
 derinlik verir. Ortak hesap bu politika ayrımını silmez.
 
 Yeni Sharpe yalnız tarihleri hizalı günlük getiri ve geçmiş risksiz getiri,
