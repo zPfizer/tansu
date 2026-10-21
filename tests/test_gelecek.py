@@ -172,6 +172,34 @@ def test_ortak_ema_kurulumu_gelecek_fiyat_degisiminden_etkilenmez(monkeypatch):
     assert once == sonra
 
 
+def test_ortak_donem_kurulumu_gelecek_fiyat_degisiminden_etkilenmez():
+    from tests.test_aileler import _mumlar, _ortak_paket
+
+    f = _mumlar([100.0] * 510 + [110.0, 112.0] + [114.0] * 8)
+    f["aof"] = f["kapanis"]
+    paket = _ortak_paket(f)
+    tarih = f.index[511]
+    paket["referans"]["istenen_donem"]["bitis"] = str(tarih.date())
+    strateji = aileler.legacy_coz("bugun")
+    once = aileler.ortak_donem_kurulumu(paket, strateji)["TEST"]
+    assert len(once["sinyaller"]) == 1
+    assert once["mumlar"].index[-1] == tarih
+    assert once["kurulum"].index.tolist() == [tarih]
+    degisen = deepcopy(paket)
+    for r in degisen["piyasa"]:
+        if pd.Timestamp(r["tarih"]) > tarih:
+            for ad in ("kapanis", "aof", "yuksek", "dusuk"):
+                r[f"duzeltilmis_{ad}"]["deger"] *= 50
+    sonra = aileler.ortak_donem_kurulumu(degisen, strateji)["TEST"]
+    for alan in ("mumlar", "kurulum"):
+        pd.testing.assert_frame_equal(once[alan], sonra[alan])
+    pd.testing.assert_series_equal(once["isinma"], sonra["isinma"])
+    for sonuc in (once, sonra):
+        for sinyal in sonuc["sinyaller"]:
+            sinyal.pop("olusturma_zamani")
+    assert once["sinyaller"] == sonra["sinyaller"]
+
+
 def test_ortak_cift_kurulumu_gelecek_fiyat_degisiminden_etkilenmez():
     from tests.test_cift import cift_paketi
 

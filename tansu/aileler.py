@@ -142,7 +142,7 @@ def ortak_donem_kurulumu(veri_paketi, strateji):
         k = kurulum(f.dropna(subset=["kapanis"]), p)
         sonuc[sembol] = dict(
             mumlar=f.join(g),
-            kurulum=k.loc[bas:son],
+            kurulum=k.loc[(k.index >= bas) & (k.index <= son)],
             isinma=f.kapanis.notna().cumsum(),
             sinyaller=[
                 _sinyal_kaydi(sembol, t, i, r, g.at[t, "atr"], p, strateji, meta)

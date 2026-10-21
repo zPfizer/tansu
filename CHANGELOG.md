@@ -12,6 +12,8 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ### Değişti
 
+- Ortak dönem kurulumu sinyal tarihlerini iki sınır günü dahil seçer; dönem sırası, aynı gün tekrarları, değerler ve sinyal kimlikleri korunur. Sınır günleri kurulumda bulunmasa da geçerli seçim hata vermez. (#168)
+
 - Site işlerinin esas şablonu Levent'in tarihli kararı ve içerik özetiyle sabitlendi; modül başına kaynak, canlı kanıt ve ayrı yayım onayı korundu. (#69)
 
 - Ana dal adı `main` oldu; CI, edit kancası, kapanış komutu ve güncel iş yönergeleri yeni ada uyarlandı. (#142)
