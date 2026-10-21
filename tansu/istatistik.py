@@ -1,6 +1,9 @@
 """İstatistik: p değeri, Holm, blok bootstrap, saptanabilir en küçük etki, K1 ve kabul tablosu (TASARIM 5.7, 5.9, 5.12)."""
 
 from collections import Counter, defaultdict
+from datetime import date
+import math
+from numbers import Real
 
 import numpy as np
 import pandas as pd
@@ -12,6 +15,7 @@ GUN = 252  # yıllıklandırma
 Z_ALFA, Z_GUC = 1.645, 0.842  # tek yönlü %5, güç %80 (TASARIM 5.9)
 K1_MASRAF = 0.005  # Holm'a giren p %0,5 masrafla (TASARIM 5.7)
 K1_PENCERE = 20  # tür (b): ±20 gün (TASARIM 5.7)
+SUPHELI_KAZANMA, AZ_ISLEM = 0.90, 5  # TASARIM 5.14: yalnız eski rapor etiketleri.
 
 
 class K1Hatasi(Exception):
@@ -265,17 +269,403 @@ GECTI, GECMEDI, OLCULEMEDI = "Geçti", "Geçmedi", "Ölçülemedi"
 
 
 def dusus(ozkaynak) -> tuple:
-    """(en büyük düşüş oranı, düşüşte kalma süresi takvim günü): önceki zirvenin altında kalınan en uzun süre, kapanış bazlı."""
-    zirve, zirve_gun, en_buyuk, sure = -np.inf, None, 0.0, 0
-    for gun, v in ozkaynak.items():
-        if v >= zirve:
-            sure = max(sure, (gun - zirve_gun).days if zirve_gun is not None else 0)
-            zirve, zirve_gun = v, gun
+    """İlk kapanış politikasıyla (en büyük düşüş oranı, takvim günü süresi).
+
+    TASARIM 5.12: eski süre, düşüş olmasa da ardışık zirveler arasını kapsar.
+    """
+    sonuc = egri_dususu(
+        dict(
+            tur="legacy_ozkaynak",
+            satirlar=[dict(an=t, deger=v) for t, v in ozkaynak.iloc[1:].items()],
+            baslangic_degeri=ozkaynak.iloc[0],
+            baslangic_ani=ozkaynak.index[0],
+            baslangic_politikasi="ilk_kapanis",
+            tarih_temeli="takvim_gunu",
+            normalizasyon="ilk_kapanis",
+            birim="oran",
+            muhasebe_politikasi="legacy_portfoy_v1",
+            referanslar=[],
+        )
+    )
+    return float(sonuc["derinlik"]["deger"]), int(sonuc["sure"]["deger"])
+
+
+def _sonlu_sayi(deger):
+    return (
+        isinstance(deger, Real) and not isinstance(deger, bool) and math.isfinite(deger)
+    )
+
+
+def _olcu(deger, birim, neden="veri_eksik"):
+    if not _sonlu_sayi(deger):
+        return dict(deger=None, birim=birim, bos_nedeni=neden)
+    return dict(deger=deger, birim=birim, bos_nedeni=None)
+
+
+def _egri_sozlesmesi(egri):
+    gerekli = {
+        "tur",
+        "satirlar",
+        "baslangic_degeri",
+        "baslangic_ani",
+        "baslangic_politikasi",
+        "tarih_temeli",
+        "normalizasyon",
+        "birim",
+        "muhasebe_politikasi",
+        "referanslar",
+    }
+    if not isinstance(egri, dict) or not gerekli <= egri.keys():
+        raise ValueError("Eğrinin başlangıç, birim ve tarih sözleşmesi eksik.")
+    if (egri["tur"], egri["birim"]) not in {
+        ("legacy_ozkaynak", "oran"),
+        ("tani_net_r", "R"),
+        ("tani_referans", "oran"),
+    } or egri["tarih_temeli"] not in ("takvim_gunu", "gozlem_adimi"):
+        raise ValueError("Desteklenmeyen eğri birimi veya tarih temeli.")
+    if egri["baslangic_politikasi"] not in ("acik", "ilk_kapanis"):
+        raise ValueError("Desteklenmeyen başlangıç politikası.")
+
+
+def _egri_noktalari(egri):
+    satirlar = [
+        dict(an=egri["baslangic_ani"], deger=egri["baslangic_degeri"]),
+        *egri["satirlar"],
+    ]
+    degerler = [s["deger"] for s in satirlar]
+    if egri["tarih_temeli"] == "takvim_gunu":
+        anlar = [pd.Timestamp(s["an"]) for s in satirlar]
+    else:
+        anlar = [s["an"] for s in satirlar]
+    if any(pd.isna(t) for t in anlar) or any(
+        a > b for a, b in zip(anlar, anlar[1:], strict=False)
+    ):
+        raise ValueError("Eğri gözlem anları sıralı ve tanımlı olmalıdır.")
+    return anlar, degerler
+
+
+def _egri_bos_nedeni(egri, degerler):
+    if not all(_sonlu_sayi(v) for v in degerler):
+        return "egri_degeri_eksik"
+    if egri["tur"] == "legacy_ozkaynak" and degerler[0] <= 0:
+        return "egri_paydasi_gecersiz"
+    if egri["tur"] != "legacy_ozkaynak" and degerler[0] != 0:
+        raise ValueError("Tanısal eğri sıfırdan başlamalıdır.")
+    return None
+
+
+def _derinlik_farki(egri, zirve, deger):
+    if egri["tur"] != "legacy_ozkaynak":
+        return zirve - deger
+    if egri["baslangic_politikasi"] == "ilk_kapanis":
+        return (zirve - deger) / zirve
+    return -(deger / zirve - 1)
+
+
+def _zirve_taramasi(egri, anlar, degerler):
+    zirve, zirve_ani, derinlik, sure = degerler[0], anlar[0], 0.0, 0
+    dususte = False
+    for an, deger in zip(anlar[1:], degerler[1:], strict=True):
+        aralik = an - zirve_ani
+        if egri["tarih_temeli"] == "takvim_gunu":
+            aralik = aralik.days
+        if deger >= zirve:
+            # TASARIM 5.12: eski süre hesabı ardışık zirvelerin aralığını da korur.
+            if dususte or egri["baslangic_politikasi"] == "ilk_kapanis":
+                sure = max(sure, aralik)
+            zirve, zirve_ani, dususte = deger, an, False
         else:
-            en_buyuk = max(en_buyuk, (zirve - v) / zirve)
-    if ozkaynak.iloc[-1] < zirve:
-        sure = max(sure, (ozkaynak.index[-1] - zirve_gun).days)
-    return float(en_buyuk), int(sure)
+            dususte = True
+            derinlik = max(derinlik, _derinlik_farki(egri, zirve, deger))
+            sure = max(sure, aralik)
+    return float(derinlik), int(sure)
+
+
+def egri_dususu(egri):
+    """TASARIM 5.15 S11: açık başlangıç ve tarih politikasıyla tek zirve taraması."""
+    _egri_sozlesmesi(egri)
+    anlar, degerler = _egri_noktalari(egri)
+    neden = _egri_bos_nedeni(egri, degerler)
+    if neden:
+        return dict(
+            derinlik=_olcu(None, egri["birim"], neden),
+            sure=_olcu(None, egri["tarih_temeli"], neden),
+        )
+    derinlik, sure = _zirve_taramasi(egri, anlar, degerler)
+    return dict(
+        derinlik=_olcu(derinlik, egri["birim"]), sure=_olcu(sure, egri["tarih_temeli"])
+    )
+
+
+def _legacy_kar_olculeri(kazanc, kayip):
+    return {
+        "kazanan": len(kazanc),
+        "kaybeden": len(kayip),
+        "kar_carpani": float(kazanc.sum() / abs(kayip.sum()))
+        if kayip.sum() != 0
+        else None,
+        "kazanc_kayip": float(kazanc.mean() / abs(kayip.mean()))
+        if len(kazanc) and len(kayip) and kayip.mean() != 0
+        else None,
+    }
+
+
+def _legacy_islem_olculeri(r, tutma):
+    n = len(r)
+    kazanc, kayip = r[r > 0], r[r <= 0]
+    return {
+        "islem": n,
+        "kazanma": len(kazanc) / n if n else None,
+        "ort_islem": float(r.mean()) if n else None,
+        "medyan_islem": float(np.median(r)) if n else None,
+        "net": float(np.prod(1 + r) - 1),
+        "ort_tutma": float(np.mean(tutma)) if n else None,
+        **_legacy_kar_olculeri(kazanc, kayip),
+    }
+
+
+def _legacy_egri_olculeri(egri, pozisyonda):
+    deger = np.concatenate(([1.0], np.asarray(egri, dtype=float)))
+    gunluk = deger[1:] / deger[:-1] - 1
+    sapma = gunluk.std(ddof=1) if len(gunluk) > 1 else 0.0
+    dusus = egri_dususu(
+        dict(
+            tur="legacy_ozkaynak",
+            satirlar=[dict(an=i, deger=v) for i, v in enumerate(deger[1:], 1)],
+            baslangic_degeri=1.0,
+            baslangic_ani=0,
+            baslangic_politikasi="acik",
+            tarih_temeli="gozlem_adimi",
+            normalizasyon="baslangic_bir",
+            birim="oran",
+            muhasebe_politikasi="legacy_tansu_v1",
+            referanslar=[],
+        )
+    )
+    max_dd = -dusus["derinlik"]["deger"] if dusus["derinlik"]["deger"] else 0.0
+    return {
+        "max_dd": max_dd,
+        "sharpe": float(gunluk.mean() / sapma * np.sqrt(252)) if sapma > 0 else None,
+        "calmar": float((deger[-1] ** (252 / len(gunluk)) - 1) / abs(max_dd))
+        if max_dd < 0
+        else None,
+        "maruziyet": pozisyonda / len(gunluk),
+    }
+
+
+def _legacy_bayraklar(kazanma, n):
+    bayraklar = []
+    if kazanma is not None and kazanma >= SUPHELI_KAZANMA:
+        bayraklar.append("şüpheli: aşırı uyum")
+    if n < AZ_ISLEM:
+        bayraklar.append("az işlem")
+    return bayraklar
+
+
+def _legacy_olculer(girdi):
+    """TASARIM 5.14: eski formüller ve uyarılar tek ölçü sahibinde kalır."""
+    r = np.asarray(girdi["getiriler"], dtype=float)
+    sonuc = _legacy_islem_olculeri(r, girdi["tutma"])
+    sonuc.update(_legacy_egri_olculeri(girdi["egri"], girdi["pozisyonda"]))
+    sonuc["bayraklar"] = _legacy_bayraklar(sonuc["kazanma"], len(r))
+    return sonuc
+
+
+def _gunluk_anlar(satirlar):
+    if any(not isinstance(s.get("an"), (str, date)) for s in satirlar):
+        return None
+    try:
+        anlar = [pd.Timestamp(s["an"]) for s in satirlar]
+    except ValueError, TypeError:
+        return None
+    if any(pd.isna(an) or an != an.normalize() for an in anlar):
+        return None
+    return anlar
+
+
+def _gunluk_seri_nedeni(g, r):
+    gunler, risksiz_gunler = _gunluk_anlar(g), _gunluk_anlar(r)
+    if gunler is None or risksiz_gunler is None:
+        return "gunluk_tarih_gecersiz"
+    try:
+        sirali = sorted(set(gunler))
+    except TypeError:
+        return "gunler_hizasiz"
+    if gunler != risksiz_gunler or gunler != sirali:
+        return "gunler_hizasiz"
+    if len(g) < 2:
+        return "iki_gozlem_gerekli"
+    if not all(_sonlu_sayi(x.get("deger")) for x in g + r):
+        return "gunluk_deger_eksik"
+    return None
+
+
+def _gunluk_sharpe(karsilastirma):
+    if karsilastirma is None:
+        return _olcu(None, "oran", "gunluk_karsilastirma_yok")
+    k = karsilastirma
+    if k.get("politika") != "gunluk_fark_252_v1":
+        raise ValueError("Desteklenmeyen Sharpe politikası.")
+    if not k.get("payda") or not k.get("kaynak_ref") or not k.get("referanslar"):
+        return _olcu(None, "oran", "payda_veya_kaynak_eksik")
+    g, r = k.get("getiriler", []), k.get("risksiz", [])
+    neden = _gunluk_seri_nedeni(g, r)
+    if neden:
+        return _olcu(None, "oran", neden)
+    fark = np.array([a["deger"] - b["deger"] for a, b in zip(g, r, strict=True)])
+    sapma = fark.std(ddof=1)
+    if sapma == 0:
+        return _olcu(None, "oran", "sapma_sifir")
+    return _olcu(
+        float(fark.mean() / sapma * np.sqrt(252)), "oran", "gunluk_deger_gecersiz"
+    )
+
+
+def _tek_islemler(islemler):
+    gorulen = {}
+    for i in islemler:
+        kimlik = i.get("islem_id") or i.get("pozisyon", {}).get("risk_girdisi", {}).get(
+            "islem_id"
+        )
+        if not isinstance(kimlik, str) or not kimlik:
+            raise ValueError("Ölçü için gerçek işlem kimliği gerekli.")
+        if kimlik in gorulen:
+            if gorulen[kimlik] != i:
+                raise ValueError(f"Çelişkili işlem sonucu: {kimlik}")
+            continue
+        gorulen[kimlik] = i
+        yield kimlik, i
+
+
+def _islem_olcu_kaydi(kimlik, i):
+    s = i["sonuc"]
+    nedenler = s.get("bos_nedenleri", {})
+    o = {
+        ad: _olcu(
+            s.get(alan),
+            birim,
+            nedenler.get(alan) or s.get("risk_nedeni") or "sonuc_eksik",
+        )
+        for ad, alan, birim in (
+            ("net_sonuc", "net_sonuc", "TL"),
+            ("masraf", "gerceklesen_maliyet", "TL"),
+            ("net_fiyat_getirisi", "net_fiyat_getirisi", "oran"),
+            ("referans_getirisi", "referans_getirisi", "oran"),
+            ("net_r", "net_r", "R"),
+            ("adet", "alinan_adet", "adet"),
+            ("kalan_adet", "kalan_adet", "adet"),
+        )
+    }
+    return dict(
+        islem_id=kimlik,
+        islem_ref=i.get("islem_ref"),
+        cikis_tarih=i.get("pozisyon", {}).get("cikis_tarih"),
+        olculer=o,
+        paydalar={a: s.get(a) for a in ("ilk_risk", "nominal_tutar")},
+        muhasebe_politikasi="bagimsiz_olcu_v1",
+        masraf_surumu=s.get("masraf_surumu"),
+        kismi_sonuclar=s.get("gerceklesen_kismi_sonuclar", []),
+    )
+
+
+def _kapali_sonuc(s):
+    adet = s.get("alinan_adet")
+    return _sonlu_sayi(adet) and adet > 0 and s.get("kalan_adet") == 0
+
+
+def _islem_olculeri(islemler):
+    kapali, acik = [], []
+    for kimlik, i in _tek_islemler(islemler):
+        kayit = _islem_olcu_kaydi(kimlik, i)
+        if _kapali_sonuc(i["sonuc"]):
+            kapali.append(kayit)
+        else:
+            acik.append(kayit)
+    return kapali, acik
+
+
+def _toplam_olcu(kapali, ad, birim):
+    degerler = [i["olculer"][ad]["deger"] for i in kapali]
+    neden = "kapali_islem_yok" if not kapali else f"{ad}_eksik"
+    deger = sum(degerler) if degerler and None not in degerler else None
+    return _olcu(deger, birim, neden)
+
+
+def _getiri_ozeti(kapali):
+    r = [i["olculer"]["net_fiyat_getirisi"]["deger"] for i in kapali]
+    if not r or None in r:
+        return {
+            ad: _olcu(None, "oran", "kapali_getiri_eksik")
+            for ad in ("kazanma", "ort_islem", "medyan_islem")
+        }
+    return dict(
+        kazanma=_olcu(sum(v > 0 for v in r) / len(r), "oran"),
+        ort_islem=_olcu(float(np.mean(r)), "oran"),
+        medyan_islem=_olcu(float(np.median(r)), "oran"),
+    )
+
+
+def _bagimsiz_olcu(islemler, egri, karsilastirma):
+    kapali, acik = _islem_olculeri(islemler)
+    o = dict(islem=_olcu(len(kapali), "adet"))
+    for ad, birim in (
+        ("net_sonuc", "TL"),
+        ("masraf", "TL"),
+        ("net_r", "R"),
+        ("referans_getirisi", "oran"),
+    ):
+        o[ad] = _toplam_olcu(kapali, ad, birim)
+    o.update(_getiri_ozeti(kapali))
+    o["sharpe"] = _gunluk_sharpe(karsilastirma)
+    o["calmar"] = _olcu(None, "oran", "tanisal_toplam_ozkaynak_degil")
+    egri_olculeri = {
+        "derinlik": _olcu(None, "R", "egri_yok"),
+        "sure": _olcu(None, "takvim_gunu", "egri_yok"),
+    }
+    if egri is not None:
+        egri_olculeri = egri_dususu(egri)
+    return dict(
+        politika="bagimsiz_olcu_v1",
+        olculer=o,
+        islemler=kapali,
+        acik_kismi=acik,
+        egri_tanimi=egri,
+        egri_olculeri=egri_olculeri,
+        karsilastirma=karsilastirma,
+    )
+
+
+def _legacy_birim(ad):
+    if ad in ("islem", "kazanan", "kaybeden"):
+        return "adet"
+    return "gun" if ad == "ort_tutma" else "oran"
+
+
+def olc(islemler, *, politika, egri=None, karsilastirma=None):
+    """TASARIM 5.15 S11: sürümlü, birimli işlem ve eğri ölçüleri."""
+    if politika == "pozitif_fazla_legacy_v1":
+        fazla = ortalama_fazla(islemler)
+        return dict(
+            politika=politika,
+            olculer=dict(
+                islem=_olcu(len(islemler), "adet"),
+                fazla=_olcu(fazla, "oran", "islem_yok"),
+            ),
+        )
+    if politika == "eksen_maksimin_legacy_v1":
+        eski = _legacy_olculer(islemler)
+        return dict(
+            politika=politika,
+            legacy=eski,
+            olculer={
+                k: _olcu(v, _legacy_birim(k), "eski_payda_tanimsiz")
+                for k, v in eski.items()
+                if k != "bayraklar"
+            },
+        )
+    if politika != "bagimsiz_olcu_v1":
+        raise ValueError(f"Bilinmeyen ölçü politikası: {politika}")
+    return _bagimsiz_olcu(islemler, egri, karsilastirma)
 
 
 def _tamamlanan_yillar(yillik, bas, bitis, islem_yok) -> list:

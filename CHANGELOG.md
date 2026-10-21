@@ -15,6 +15,12 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ### Eklendi
 
+- Kayıtlı taramanın ölçü hissesi gerçek dönem ve işlem kayıtlarına bağlandı. Seçilen ayarın uygun merkez ve bileşen açıklamasıyla çelişmesi reddedilir; işlemsiz hisse kayıtları korunur. (#92)
+
+- Kayıtlı taramada bilinmeyen sonuç kayıp mesafesi sayılmaz. Başarısız dönem/hisse seçimi ve çelişkili seçildi etiketi kayıt sınırında reddedilir; bölge açıklamaları korunur. Eski düşüş süresinin açıklaması korunan ilk kapanış davranışına uyarlandı. (#92)
+
+- Kayıtlı ayar taraması, birimleri açık ölçüler ve Levent onaylı geniş kârlı bölge seçimi eklendi. Bütün izinli ayarlar ilk hesap öncesinde kaydedilip doğrulanır; eksik ve başarısız sonuçlar gerekçeleriyle görünür kalır. Kimliği doğrulanmış veri, kapsam denetimi her ayarda korunarak paylaşılır. Eski yöntemler ortak hesap sahiplerini kullanır; farklı başlangıç ve süre anlamları açıkça ayrılır. Günlük izin ve açık korumalar korunur. (#92)
+
 - Kayıtlı denemeyle beş ayrı yıl ve birleşik dönem yürütülür; ortak EMA ve tek hisse işlem hesabı mevcut kayıt pilotuna bağlandı. Isınma, açık işlem, kısmi satış ve hata kayıtları korunur. Kayıplı para aktarımı ve başlangıçla uyuşmayan ayar hesap başlatmaz. Eksik fiyat, kurulum veya limit kanıtı tam başarı sayılmaz; eski sınama yolu ve çift risk kapısı korunur. (#91)
 
 - Tek hisse için bağımsız riskli işlem geçişi eklendi; günlük adım ve toplu yürütme aynı dolum, yarı satış, erteleme ve durum kaydını kullanır. Yarı satışta adet aşağı yuvarlanır; kurulum girdileri ve kararın kendi gösterge gereksinimi doğrulanır. Giriş, fiyat ve kapanış adımları okunabilir işlevlere ayrıldı; eski hesaplar ve çift risk kapısı korunur. (#90)

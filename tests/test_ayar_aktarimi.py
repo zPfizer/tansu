@@ -35,6 +35,47 @@ from tests.test_simulator import P, mum
 IZGARA = {"esik": [0.005], "min_gun": [3], "pencere": [3]}
 
 
+def test_s11_cocuk_yalniz_dogrulanmis_ustten_tam_s10_yontemini_alir(
+    tmp_path, monkeypatch
+):
+    from tansu.aktarim import AyarAktarimi
+    from tests.test_tansusinama import s11_kayitli, s10_revizyon
+
+    depo, ust, _ = s11_kayitli(tmp_path, monkeypatch)
+    aktarim = AyarAktarimi(depo, ust.deneme_id)
+    cocuk = aktarim.cocuk({"min_gun": 2})
+    d = depo.deneme_oku(cocuk.deneme_id)
+    assert d["yontem_ayarlari"] == {
+        "yontem": "kayitli_donem_v1",
+        "tekrar": 0,
+        "yurutme_surumu": "bagimsiz_islem_v1",
+        "fiyat_politikasi": "aof_v1",
+        "muhasebe_politikasi": "tani_referans_v1",
+    }
+    assert d["ust_deneme_id"] == d["baglar"]["izgara_ust_deneme"] == ust.deneme_id
+    assert d["ayar_parmak_izi"] == cocuk.kayit_makbuzu.ayar_ozeti
+    assert (
+        d["strateji"]["ayar_parmak_izi"] != aktarim.kayit["strateji"]["ayar_parmak_izi"]
+    )
+    for alan in ("donemler", "veri_ayarlari", "risk_ayarlari", "masraf_ayarlari"):
+        assert d[alan] == aktarim.kayit[alan]
+    once = depo.yol.read_bytes()
+    with pytest.raises(deneme.PilotHatasi, match="dondurulmuş"):
+        aktarim.cocuk({"min_gun": 9})
+    assert depo.yol.read_bytes() == once
+    yontem = aktarim.kayit["yontem_ayarlari"]
+    yeni = s10_revizyon(
+        depo,
+        ust,
+        yontem_ayarlari=yontem
+        | dict(hucre_yontemi=yontem["hucre_yontemi"] | dict(keyfi=1)),
+    )
+    once = depo.yol.read_bytes()
+    with pytest.raises(deneme.PilotHatasi, match="yürütme"):
+        AyarAktarimi(depo, yeni.deneme_id).cocuk({"min_gun": 2})
+    assert depo.yol.read_bytes() == once
+
+
 def fiyatlar():
     kap = [100.0] * 40 + [103.0, 104.0, 105.0, 106.0]
     gunler = pd.bdate_range("2026-01-05", periods=len(kap))
@@ -768,3 +809,32 @@ def test_kayitli_ema_deneme_cift_hesabini_baslatmadan_reddedilir(tmp_path, ailel
     assert makbuz.deneme_id in hata
     assert "cift_rotasyonu" in hata
     assert depo.yol.read_bytes() == once
+
+
+def test_s11_cocuk_ozeti_uyusmazsa_kayit_makbuzu_korunur(tmp_path, monkeypatch):
+    from copy import deepcopy
+    from tansu import deneme
+    from tansu.aktarim import AyarAktarimi
+    from tests.test_tansusinama import s11_kayitli
+
+    depo, ust, _ = s11_kayitli(tmp_path, monkeypatch)
+    aktarim = AyarAktarimi(depo, ust.deneme_id)
+    oku = depo.deneme_oku
+
+    def degisen_okuma(deneme_id):
+        kayit = oku(deneme_id)
+        if kayit["ust_deneme_id"] == ust.deneme_id:
+            kayit = deepcopy(kayit)
+            kayit["ayar_parmak_izi"] = "farkli-tam-ozet"
+        return kayit
+
+    monkeypatch.setattr(depo, "deneme_oku", degisen_okuma)
+    with pytest.raises(deneme.PilotHatasi, match="makbuzu tam ayarla") as hata:
+        aktarim.cocuk({"min_gun": 3})
+    makbuz = getattr(hata.value, "kayit_makbuzu", None)
+    assert makbuz is not None, (
+        "Doğrulama hatası daha önce alınan kayıt makbuzunu kaybetmemeli"
+    )
+    kayit = deneme.PilotKayit(depo.yol).deneme_oku(makbuz.deneme_id)
+    assert kayit["ayar_parmak_izi"] == makbuz.ayar_ozeti
+    assert kayit["ust_deneme_id"] == ust.deneme_id

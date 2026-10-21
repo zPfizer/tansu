@@ -842,6 +842,12 @@ Genel "Geçti" yalnız hepsi sağlanınca yazılır. (İ: 17-079)
 - Düşüşte kalma = eğrinin önceki zirvenin altında kaldığı en uzun ardışık takvim süresi, kapanış
   bazlı.
 
+**Eski hesap uyumluluğu (#92):** `istatistik.dusus`, ilk kapanış politikasında
+ardışık zirveler arasında geçen günleri de süreye katar; arada düşüş olmasa da bu
+aralık eski çıktıda görünür. Bu davranış eski sonuçlarla uyumluluk için korunur;
+yukarıdaki Tansu tanımını değiştirmez. S11'in açık başlangıç politikası süreyi
+bir düşüş başladıktan sonra izler. Aynı zirve taraması bu iki politikayı açıkça ayırır.
+
 **Boru hattı denetimi:** ilk resmi koşudan önce bir kez yapılır (B-18):
 - Sentetik boş veriyle yanlış kabul oranı ≤ %5.
 - Enjekte edilmiş etkiyle güç ölçümü.
@@ -1341,6 +1347,232 @@ ortak E2 hesabının eşitliğini korur. Yürütücünün uygulanmış olması, 
 veriyi veya limit kanıtını tamamlamaz. Günlük etkinleştirme, performans
 araştırması ve kalıcı kimlik biçimi bu teslimin dışındadır.
 
+#### S11 ölçü ve sağlam bölge (#92)
+
+**Durum: seçim yöntemi Levent tarafından 21.10.2026 tarihinde onaylandı ve
+kayıtlı açıklayıcı taramada uygulandı.** Bu kesin algoritma proje yorumudur. Tansu'nun
+[T1] geniş kârlı alan ilkesi, kesin komşuluk veya merkez formülü vermez.
+Levent bu işte çapraz komşuluğu, tam çevreyi, geniş bölgeyi ve iç merkez
+seçimini açıkça onayladı. Eski §5.10 ve §5.14 yöntemleri kendi anlamlarıyla korunur.
+
+- Her strateji ve hisse ayrı değerlendirilir. Sayısal eksenlerin izinli değerleri
+  ve adımları hesap başlamadan dondurulur. Kategorik varyantlar komşu sayılmaz.
+  İzin verilmeyen birleşimler önce alan dışı olarak belirtilir; çalıştırılmaz.
+- Kârlı hücre, en az bir kapalı işlemi olan ve kapalı işlemlerinin toplam net R'si
+  sonlu ve sıfırdan büyük hücredir. İlk riskin sahibi S08'dir; açık işlemin kısmi
+  sonucu kapalı sonuca tekrar eklenmez. İşlemsiz, başarısız ve eksik hücreler
+  görünür kalır; kârlı sayılmaz. Bu tanım yeni strateji kabul eşiği değildir.
+- Komşu, her sayısal koordinatta en fazla bir indeks adımı uzaktaki izinli
+  hücredir; çaprazlar dahildir, hücrenin kendisi hariçtir. Merkez ve tam
+  komşuluğu kârlı olmalıdır. Tarama kenarındaki hücre merkez olamaz.
+  İzinli alanın içindeki başarısız veya eksik hesap, çevre tamamlanmış sayılmaz.
+- Kârlı hücreler tek eksende bir adımla bağlanarak bölgeleri oluşturur.
+  En az bir uygun merkezi bulunan en çok hücreli bölge seçilir. Eşitlikte
+  toplam net R'lerin medyanı daha büyük bölge, sonra kanonik indeks sırası kullanılır.
+- Bölgenin merkezi, kaybeden hücreye veya tarama sınırına en uzak uygun hücredir.
+  Uzaklık en kısa tek eksenli adım sayısıdır. Eşitlikte kendisi dahil çevresindeki
+  en düşük toplam net R'si daha büyük hücre, sonra kanonik indeks sırası seçilir.
+  Teknik mesafe, özgün ızgarada koordinat farklarının mutlak değerleri toplamıdır;
+  sınır uzaklığı en yakın dış kenar indeksine kadardır. Geçersiz alan mesafe hedefi
+  değildir; geometrik adım sayımı alan dışı koordinattan geçebilir. İndeksler
+  sıkıştırılmaz. Mesafe hedefi yalnız tamamlanmış, en az bir kapalı işlemi olan ve
+  sonlu toplam net R'si sıfır veya altında ölçülmüş hücredir. İşlemsiz, eksik,
+  başarısız veya başlamamış hücre mesafe hedefi değildir; sayısal zarar atanmaz.
+  Bu hücreler yine yerel kârlı çevreyi kanıtlayamaz ve görünür kalır. Bu ölçüm, izinli
+  koordinatlar üzerinde yol bulunmasını veya erişilemeyen hedef için sonsuz puanı gerektirmez.
+- Uygun merkez yoksa seçilmiş ayar yoktur. En iyi tek hücre gösterilebilir;
+  seçilmiş diye etiketlenmez. Sınır ve eksik komşuluk bilgileri saklanır.
+  Sonuç göstermek günlük uygunluk vermez; SAHİP-86/111/d5 kapıları sürer.
+
+El hesabı: tek eksende 0–8 indeksleri ve yalnız 4 indeksinde kayıp varsa,
+eşit kârlı bileşenler 0–3 ve 5–8 olur. Sol bileşenin uygun merkezleri 1 ve 2'dir.
+İndeks 1'in kenara uzaklığı 1, indeks 2'nin hem kenara hem kayba uzaklığı 2'dir;
+sol bileşen seçildiğinde merkez 2 olur.
+
+Bu onay #93/#94'ün diğer yöntem eksiklerini, çiftin #128 risk dayanağını veya
+panelin bileşim kanıtını kapatmaz. Aşağıdaki yüzler uygulanan teknik sözleşmedir.
+Kaynak okuması ve sadakat için YORUM seçimi
+getiriye göre yapılmaz. Bu araştırmada yöntem ve tarama alanı sonuç görülmeden
+kaydedilir; çıkan sonuca bakılarak seçim algoritması değiştirilmez.
+
+**Ortak yüzler ve sahipleri**
+
+| Yüz | Sahip ve sözleşme |
+|---|---|
+| `kayitli_izgara_calistir(depo, arama_deneme_id, *, veri_koku, mod, isci=None, ilerleme=print)` | E4, `tansu/tansusinama.py`. Kayıtlı üst denemeden tam hücre sonuçları, birimli ölçüler, bölge/seçim gerekçeleri ve E5 makbuzları döner. Kaydedilmemiş ayar alınmaz. |
+| `olc(islemler, *, politika, egri=None, karsilastirma=None)` | `tansu/istatistik.py`. Aynı açık politika ve aynı işlemler iki çağıranda aynı ölçüleri verir. Yeni girdi E3'ün işlem sonuçlarını taşır; eski çağıranlar kendi eski girdilerini politika uyarlayıcısıyla iletir. |
+| `egri_dususu(egri)` | `tansu/istatistik.py`. Başlangıç, tarih temeli, normalizasyon ve derinlik birimi girdide açıktır. Aynı zirve taraması eski ve yeni ölçülerde kullanılır. |
+| `sec(izgara, hucreler, *, politika)` | `tansu/saglamlik.py`. Sabit sayısal koordinatlar ve durumları üstünden saf seçim; bütün komşular, sınırlar, bölgeler, eşitlik bileşenleri ve seçilmedi nedeni döner. |
+| `ema_hucre_calistir(mumlar, p, *, kurulum, sinyal_konumlari, yurutme=None)` | `tansu/saglamlik.py`. Gerçek hücre çağrısının tek sahibi. Eski EMA döngüleri ve kayıtlı yol, kendi açık yürütme sürümleriyle bu hesabı kullanır. Genel geri çağırım veya yeni eklenti sistemi kurulmaz. |
+| `AyarAktarimi.cocuk(hucre)` | `tansu/aktarim.py`. Eski yolda yöntem kopyalama korunur. Doğrulanmış S11 üst denemesinde yalnız dondurulmuş tam S10 çocuk yöntemi türetilir; serbest yöntem geçersiz kılma alınmaz. |
+
+**Üst ve çocuk yöntemleri**
+
+Üst denemenin `yontem_ayarlari` alanı tam olarak şu anahtarları taşır.
+
+| Anahtar | Değer |
+|---|---|
+| `yontem`, `tekrar` | `kayitli_izgara_v1`, `0` |
+| `secim_politikasi`, `olcu_politikasi` | `genis_bolge_net_r_v1`, `bagimsiz_olcu_v1` |
+| `eksenler` | Sıralı `ad`, `birim`, `degerler` kayıtları. Yalnız seçili sayısal eksenler bulunur. |
+| `hucre_yontemi` | Tam S10 sözlüğü: `yontem=kayitli_donem_v1`, `tekrar=0`, `yurutme_surumu=bagimsiz_islem_v1`, `fiyat_politikasi=aof_v1`, `muhasebe_politikasi=tani_referans_v1`. |
+
+Sabit ayarlar ve katalog sürümü üst denemenin mevcut `strateji` alanındadır;
+ikinci bir sabit ayar kopyası tutulmaz. Dönem, veri, risk ve masraf alanları da
+üst denemeye aittir. Tam revizyon özeti eksenleri ve bütün yöntem sürümlerini kapsar.
+İzinli tarama mevcut belgeli EMA ızgarasıdır: `esik` için 0,010/0,012/0,015 oran,
+`min_gun` için 2/3/5 gün, `pencere` için 5/10/20 gün. Eksen değerleri bu değerlerin
+boş olmayan, artan ve tekil alt kümesidir; kanonik eksen sırası ad sırasıdır.
+Katalog çözümü E2'de kalır. Yeni aralık, kategorik varyant, çift riski veya panel
+seçim izni bu arama ile verilmez. Alan dışı istek ve ret nedeni korunur.
+
+E4 önce tüm koordinatları sınıflandırır ve hücre yuvalarını ayırır. E5 bütün izinli
+hücreleri `ust_deneme` ve `baglar.izgara_ust_deneme` ile kaydeder. Çocukta tam çözülmüş
+strateji, özgün strateji özeti, tam deneme özeti ve kayıt makbuzu bulunur. Bütün
+çocukların tam ayarları tekrar okunur; beklenen üst bağ, yöntem ve iki özet doğrulanır.
+Bu kayıt ve doğrulama geçişi bitmeden hiçbir çocuk koşusu veya E1–E3 hesabı başlamaz.
+Kayıt geçişi başarısızsa doğrulanmış önceki makbuzlar ve bütün dönem yuvaları korunur;
+hiçbir çocuk çalıştırılmaz. Aynı değere tekrar dönüş eski revizyonu silmez. Eski Holm sayımı değişmez.
+
+Üst aramanın E5 başlangıcı ve çocuğun kayıt/başlangıç makbuzları hesap öncesindedir.
+Çocuk kaydı başarısızsa o çocuğun E1–E3 hesabı başlamaz. Kayıt/yayın hatası E5'in
+belirsiz yazma kuralıyla dışarı çıkar; yazılamayan sonuç kalıcıymış gibi sunulmaz.
+Hata, doğrulanmış makbuzlarla eldeki hücre durumlarını korur. Her izinli hücrede
+altı dönem sonucu için yuva vardır; çalışmamış dönem gerekçeli `baslamadi` kalır.
+Hücre durumları tamamlandı, işlemsiz, eksik, hesap hatası, kayıt hatası veya alan
+dışı ayrımını korur. Hiçbiri kârlı alanı büyütmek için çıktıdan atılmaz.
+
+S10'un tam yöntem eşitliği değiştirilmez. İki kayıtlı giriş aynı özel yürütme
+gövdesini kullanır; ikinci S09 döngüsü yazılmaz. Hücreler sırayla yürür, aynı anda
+yalnız bir çocuğun mevcut en çok altı dönem işi çalışır. Arama ömründe E1 dönem
+paketleri paylaşılır; anahtar tam veri isteğini, ısınmayı, takvimi, görüntü/manifesti,
+üyeliği ve veri politikalarını kapsar. Manifest ve üyelik kimliği doğrulanmış paket,
+E4 kapsam denetiminden önce saklanır; kapsam denetimi her çocukta yeniden yapılır.
+Bu nedenle eksik kapsam, aynı E1 hazırlığını tekrarlatmaz. E1 hazırlık hatası veya
+kimlik uyuşmazlığı saklanmaz. Çocukla uyuşmayan paket kullanılmaz. Ortak paket çocuğun
+değiştirilebilir işlem durumunu taşımaz; aramalar arasında önbellek yoktur.
+E2'nin değişmeyen gösterge hazırlığı yalnız aynı gösterge ve ısınma ayarıyla
+paylaşılabilir; sahibi E2'dir. Her çocuğun kurulumu, sinyali ve kimliği yeniden üretilir.
+Bir hız veya bellek kazancı iddiası bu sözleşmeden çıkarılmaz.
+
+**Ölçü ve eğri girdisi**
+
+Ölçü çıktısı yöntem kimliğini ve adla anahtarlanmış ölçüleri taşır. Her ölçüde
+`deger`, `birim` ve `bos_nedeni` vardır. Hesaplanabilen değer sonludur; boş değerin
+nedeni doludur. İşlem/seri referansı, payda ve muhasebe politikası sonuçta saklanır.
+Net fiyat getirisi ve referans sonucu `oran`, net sonuç/masraf `TL`, miktar `adet`,
+net R `R` birimindedir. Oran 0,10 değeri yüzde 10 demektir; ekranda yüzdeye çevrilir.
+Her nihai kapalı sonuç bir kez sayılır. Açık işlemin kısmi gerçekleşmeleri ve kalan
+adedi ayrı gösterilir; nihai kapalı sonucun üstüne eski kısmi kâr eklenmez.
+
+Eğri kaydı `tur`, `satirlar`, `baslangic_degeri`, `baslangic_ani`,
+`baslangic_politikasi`, `tarih_temeli`, `normalizasyon`, `birim`,
+`muhasebe_politikasi` ve işlem/seri referanslarını taşır. Satırda gözlem anı ve değer
+açıktır; eksik değer sıfırla tamamlanmaz. Yeni tanısal kapalı işlem eğrisinde aynı
+tarihteki kapalı sonuçlar birlikte toplanır; ilk nokta dönem başlangıcında 0'dır.
+`tani_net_r` başlangıcı 0 R, derinliği mutlak R farkıdır. `tani_referans` başlangıcı
+0 referans oranı, derinliği mutlak referans oranı farkıdır. İkisi de hesap bakiyesi,
+bileşik portföy getirisi, portföy yüzde düşüşü veya Calmar üretmez.
+
+Yeni açık başlangıç politikasında düşüş süresi zirvenin tarihinden yeniden aynı
+zirveye erişilen tarihe, erişilmediyse
+son gözleme kadardır; eşit zirve saati yeniden başlatır. Tarihli seride birim takvim
+günü, tarihsiz eski dizide gözlem adımıdır. Örnek: 1 Ocak 0 R, 3 Ocak 2 R, 5 Ocak
+1 R, 7 Ocak 3 R için derinlik 1 R, süre 4 takvim günüdür. Eski `dusus` ilk verilen
+kapanışı başlangıç sayar ve pozitif oran/gün döner. Eski `olculer` başlangıca 1 ekler
+ve negatif oranı korur. İlk kapanış politikasının eski süre davranışı §5.12’deki
+uyumluluk notunda tanımlıdır. Bu yüzden [0,9; 1,0] kapanışları ilkinde 0, ikincide −0,1
+derinlik verir. Ortak hesap bu politika ayrımını silmez.
+
+Yeni Sharpe yalnız tarihleri hizalı günlük getiri ve geçmiş risksiz getiri,
+açık günlük payda, kaynak ve yıllıklandırma politikasıyla hesaplanır. Teknik
+`gunluk_fark_252_v1` politikasında günlük farkın ortalaması, örnek standart sapmasına
+(`ddof=1`) bölünür ve √252 ile çarpılır. Veri/payda/kaynak/hizalama eksikse, iki
+gözlem yoksa veya sapma sıfırsa sonuç gerekçeli boştur. Tanısal R listesi bu günlük
+seri değildir. Eski §5.14 sıfır faizli Sharpe ve Calmar yalnız kendi eski politikasında kalır.
+
+Eski politika kimlikleri `pozitif_fazla_legacy_v1` ve `eksen_maksimin_legacy_v1`,
+yeni seçici `genis_bolge_net_r_v1` olarak açıkça ayrılır. Eski JSON alanları ve
+saklanmış kimlikler yeniden adlandırılmaz. E4 ölçü girdisindeki politika seçimi
+eski sonucu yeni hesapmış gibi etiketlemez. Kategorik aileler aynı komşulukta birleştirilmez.
+
+**Üst arama sonucu ve kanıt**
+
+Gerçek hisse kümesi ve seçilen merkez açıklamasının aşağıdaki ek denetimleri
+mevcut kayıt yüzünde uygulanmıştır (#92, 21.10.2026).
+
+Mevcut E5 koşu tutacağına `arama_sonucu_kaydet(*, is_id, hucreler, bolgeler,
+politika_surumu, birimler, uyarilar, cikti_referanslari)` eklenir; çıktı makbuzdur.
+`sonuc_turu=arama_v1` üst koşuya aittir. Hücre kaydı kanonik indeksi, üst/çocuk kimliğini,
+tam ayarları ve iki özeti, altı dönem durumunu, birimli ölçüleri ve gerçek sonuç/işlem
+referanslarını taşır. Bölge kaydı strateji/hisse/dönemi, hücre ve komşularını,
+alan dışı/eksik komşuluğu, sınır ve eşitlik bileşenlerini, seçilen çocuğu veya nedenli
+boş seçimi taşır. Kârlılık ve ölçülmüş mesafe hedefleri yukarıdaki seçim sözleşmesine
+bağlıdır. Geçersiz alan atılırken indeksler sıkıştırılmaz.
+
+E5 üst bağı, çocuğun koşu ve dönemini, iki ayar özetini ve başvurulan gerçek sonuç
+kaydını doğrular. Ölçüsü verilen hisse adları tekildir ve gerçek dönem içeriğinin
+`durumlar` anahtarlarıyla aynı kümeyi oluşturur; işlemsiz hisse de kaybolmaz. Her ölçü
+başvurusunun işlem kimliği gerçek kayıtla uyuşur. Gerçek işlemdeki risk girdisinin
+hissesi, ölçünün hissesiyle aynıdır. Sembol, sinyal veya işlem kimliğinin metninden
+türetilmez. Verilen bölgenin seçimi, seçilen çocuğun aynı dönemde tamamlanmış sonucuna ve aynı hissedeki
+tamamlanmış ölçüsüne bağlı olmalıdır. Başarısız, eksik,
+işlemsiz veya başlamamış dönem/hisse seçilmiş olarak yayımlanmaz. Başka dönemin
+başarısızlığı, tamamlanmış dönemin ayrı seçimini değiştirmez. İşlem başvurusu aynı
+çocuk koşusu ve döneme aittir. Mevcut
+`donem_sonucu_kaydet` aynı koşu kısıtı gevşetilmez; yapay sinyal kimliği üretilmez.
+Üst başlangıcındaki hücre ve arama işleri bitişte kimlikle bir kez sayılır. Başarısız
+hücre veya eksik iş varken tam başarı yazılmaz. Tekrarlar önceki geçmişi silmez.
+
+Seçilen koordinatın hücre açıklamasında `karli=True`, `uygun_merkez=True`,
+`sinir=False` ve boş `eksik_komsular` bulunur. Koordinat yalnız bir bileşenin üyesidir
+ve o bileşenin `uygun_merkezler` listesinde yer alır; başka bileşenin uygun merkezi
+olamaz. Her bileşenin açıkladığı uygun merkez kendi üyeleri içindedir. E5 bu
+başvuruları ve açıklamadaki çelişkileri doğrular. Kârlılık, komşuluk geometrisi,
+uzaklık ve sıralama hesabının sahibi değişmez; E5 hesabı tekrar yürütmez. Seçimsiz
+gerekçeli kayıt, başlamamış hissesiz bölge ve boş dış bölge listesi korunur.
+
+Eski pozitif hücre döngüsünün mevcut `Zincir` paylaşımı korunur. Ortak hücre
+çağrısının `yurutme` girdisi, bu eski yolda aynı mum nesnesine ve aynı çıkış ayarlarına
+bağlı mevcut `motor.Zincir` nesnesi olabilir. Yalnız üç belgeli giriş ekseni farklı
+olabilir; her çağrıda hücrenin kendi kurulum değerleri aktarılır. Kurulum değerli
+önbellek anahtarı değişmez. Uyumsuz mum veya çıkış ayarıyla önbellek kullanılmaz.
+Kayıtlı S09 durumları bu eski nesneyle paylaşılmaz; genel önbellek arayüzü eklenmez.
+
+Gözlenebilir kontroller: `tests/test_istatistik.py` başlangıç, birim, net sonuç, açık
+kısmi sonuç ve tarihli Sharpe sınırlarını; `tests/test_saglamlik.py` tam çevre,
+kenar, bileşen ve eşitlikleri, bilinmeyen sonucun mesafe hedefi olmamasını ve
+ölçülmüş sıfır/negatif sonucu; `tests/test_tansusinama.py` bütün hücreleri, kayıt
+sırasını, iki çağıranın aynı para sonucunu ve çocuklar arası veri yalıtımını sınar.
+İlk çocuk başlangıcı ve E1 öncesinde bütün kayıtların kalıcı olması; ikinci kaydın
+veya tam ayar doğrulamasının hatasında sıfır çocuk başlangıcı ve korunmuş yuvalar;
+eksik kapsamda altı E1 hazırlığıyla 18 görünür sonuç, E1/kimlik hatasının ise
+paylaşılmaması aynı sınamadadır.
+`tests/test_ayar_aktarimi.py` tam çocuk yöntemini ve özet uyuşmazlığında kalıcı makbuzu, `tests/test_kayit.py` gerçek
+çocuk/koşu/dönem bağlarını, gerçek dönem ve işlem hissesini, iki yerde birlikte
+değiştirilen hisse adının, iki hissenin ölçü başvurularının yer değiştirmesinin,
+yinelenen veya kaybolan hisse açıklamasının reddini; işlemsiz hissenin korunmasını,
+bölgenin zorunlu açıklamalarını, seçilen merkezin `karli`/`uygun_merkez`/`sinir`
+alanlarını, eksik komşuluğu ve tek uygun bileşen bağını, başarısız
+dönem/hisse seçiminin ve çelişkili en iyi hücre seçildi etiketinin reddini, hatalı tam başarıyı; `tests/test_gelecek.py` gelecek
+fiyatın önceki dönem ve hücreyi değiştirmemesini denetler. Eski doğrudan düşüş
+çağıranı `tests/test_kabul.py` kapsamda kalır.
+
+Tam dönem getiri kanıtı için tarihli bütün üyelerin fiyatları ve gerekli limit
+kanıtı bulunmalıdır. Bunlar eksikken sonuçlar başarısız/eksik olarak görünür;
+sıfır işlemden başarılı hesap veya günlük izin türetilmez.
+
+D5 için eski `saglamlik.ema`, `tansusinama.ema_tablolari` ve kayıtlı akış gerçek EMA
+hücre çağrısını ortak sahibine verir; giriş günü, K1, kurulum/karantina, masraf ve
+çıktı uyarlamaları kendi eski anlamlarını korur. D7 için eski iki düşüş yüzü ortak
+zirve hesabını kullanır. Değişen hesaplar `tests/test_gelecek.py` kapsamına girer.
+El hesaplı ölçüler `tests/test_istatistik.py`, seçici `tests/test_saglamlik.py`,
+kayıtlı arama ve eski çağıranlar `tests/test_tansusinama.py`, üst/çocuk kayıt sınırı
+`tests/test_kayit.py` ve `tests/test_ayar_aktarimi.py` ile kanıtlanır. `dusus` çağıranı
+`tests/test_kabul.py` de etkilenir; E2 hazırlığı değişirse `tests/test_aileler.py` eklenir.
+Gerçek anlık görüntüdeki eksik veriyle başarısız koşu kimlik, ret ve tam hücre görünürlüğünü
+kanıtlayabilir; başarılı dolum, kârlılık veya tam dönem getiri kanıtı diye sunulmaz.
+
 #### Dolum, risk ve ölçünün anlamı
 
 - Claude'un kayıtlı **seçenek 2** kararı geçerlidir (18.10; yanıt Q74): ham `yüksek = düşük = tavan` gününde alış dolmaz, giriş sinyali düşer; ham `yüksek = düşük = taban` gününde satış bekler, ilk uygun kilitsiz günde yeniden işlenir. Sonraki fiyat kullanılır; her engel sayılır. B Q49'un açılış eşitliği ekleme önerisi bu kararı değiştirmez. Günlük çubuk gerçek emir kuyruğunu kanıtlamaz. Dayanak: [L5], [T4], [W4], [W5]; `tavan-taban/bulgular.md`, yanıt Q74.
@@ -1760,7 +1992,7 @@ hesap/sonuç örneğinin üretildiği iddiası değildir. İlk ailenin açık al
 | WF — CLAUDE TEKNİK GİRDİ / yöntem kaydı eksik | D §2: kayan 12 ay eğitim, 3 ay test, çeyreklik ilerleme; ilk eğitim 2021, ilk OOS 2022-01-01–2022-03-31, son OOS 2025-10-01–2025-12-31. 2021 yalnız eğitim/keşif, beş yılın yıllık açıklayıcı sonucu yine gösterilir. Eski §5.14 genişleyen iki yıl yöntemi legacy kalır. Eğitimde seçilen ayar testte donar. 30 OOS/120 IS işlem sayıları araştırma uyarısıdır; ret eşiği değildir. Nihai kayıt pencere listesi, ısınma, seçim manifesti, açık işlem, ufuk ve veri/ayar kimliklerini birlikte taşımalıdır; ROBUST/RISK bağları eksikken tamamlanmaz. | **#93 ENGELLİ:** tam ve tutarlı WF yöntem kaydı olmadan uygulama başlamaz. | [L3]–[L5], [W1]; D §2. |
 | MC — ARAŞTIRMA UYUŞMAZLIĞI / açık | C Q81: 10.000, ardından 20.000/40.000/80.000/100.000 ve yakınsama açıklaması. D §4: varyant başına 1.000. İkisi aynı protokol değildir; biri sessizce üstün sayılmaz. Kesin tekrar ve yakınsama sözleşmesini dağıtıcı tek yöntem sürümünde bağlamalıdır. | **#94 ENGELLİ:** tekrar, örnekleme ve muhasebe dahil tam MC yöntem kaydı olmadan uygulama başlamaz. | [L5], [W2], [W9]; C Q81, D §4. |
 | MC örnekleme — kontrol edilmiş teknik girdi | D §4: net R sırasını yerine koymadan karıştırma; N işlemi N kez yerine koymalı çekme; hisselerde ortak tarih bloklarını yeniden örnekleme; %10 işlem kaçırma stresi; sayısal ayarda ±1 ızgara adımı/aynı değerden eşit olasılıklı tam yeniden sınama. Bunlar ayrı deneylerdir; %10 kalibre edilmiş hata oranı değildir. Sabit 42 tohum önerisi, üreteç/sürüm ve ayrı akış kimliğiyle kaydedilir. Ana girdi dondurulmuş WF OOS, 2021 için keşif etiketi. Her deney örnek birimi, ufuk, gerçekleşen tekrar sayısı, çıktı yüzdelikleri ve bağımlılık varsayımını taşır. | #94; önce WF, ROBUST ve RISK kayıtları gerekir. | [W2], [W9]; D §4, `mc-wf/arastirma.md` yöntem tablosu. |
-| ROBUST — ARAŞTIRMA UYUŞMAZLIĞI / açık | B Q75: çaprazlar dahil tek indeks adımı komşuluk, kenarda eksik komşuluk bayrağı; otomatik kabul/ret yok. C Q77: en küçük komşu skorunu en büyüt; Q95: kanonik demetle eşitlik. D §3: tam iç komşuluk, kenarı merkez seçme; en geniş bileşen, medyan, iç uzaklık, sonra en kötü komşu net R ve sözlüksel sıra. Eski §5.14 eksen komşusu ayrı legacy'dir. Tek seçim ve kenar politikası onaylanmadan hiçbiri yeni varsayılan yapılmaz. Izgara sınırları ve adımlar strateji manifestinde dondurulur. | #92 seçici kısmı, #93, #94. | [T1], [W3]; B Q75, C Q76/Q77/Q95, D §3. |
+| ROBUST — LEVENT ONAYI / uygulandı | B Q75: çaprazlar dahil tek indeks adımı komşuluk, kenarda eksik komşuluk bayrağı; otomatik kabul/ret yok. C Q77: en küçük komşu skorunu en büyüt; Q95: kanonik demetle eşitlik. D §3: tam iç komşuluk, kenarı merkez seçme; en geniş bileşen, medyan, iç uzaklık, sonra en kötü komşu net R ve sözlüksel sıra. Eski §5.14 eksen komşusu ayrı legacy'dir. Tek seçim ve kenar politikası onaylanmadan hiçbiri yeni varsayılan yapılmaz. Izgara sınırları ve adımlar strateji manifestinde dondurulur. Levent 21.10.2026 bu işte S11 bölümündeki geniş bölge ve iç merkez yöntemini onayladı; araştırmaların eski uyuşmazlığı bu kayıtla çözülür. Uygulanan açıklayıcı taramanın sözleşmesi S11 bölümündedir. | #92 seçici kısmı; #93/#94 diğer yöntem kayıtlarını bekler. | [T1], [W3]; B Q75, C Q76/Q77/Q95, D §3. |
 | RISK — tek hisse bağlı; çift #128'e taşındı | Dağıtıcı 19.10, 02:10: %2 bütçe planlanan alış/stop komisyonu ve BSMV'yi içerir; adet aşağı tam sayıya yuvarlanır, kalan bütçe ayrıca döner. Uygulama ve R tanımının sahibi S08 risk ve maliyet hesabıdır. Çiftin adet ve R'si gerekçeli boştur; sayısal dayanağı #128 belirler. Eski §5.3 masrafsız R legacy kalır. | #89 tek hisse risk boyutlama; #128 çift; #92 net R eğrisi, #93, #94. | [L1], [T2], [T3], [W6]; D §1, C Q96; dağıtıcı 19.10, 02:10. |
 | BİLEŞİM — kanıt kapısı | A Q15'teki kaynak anlatısı, giriş/teyit/stop/hedefi tam bileşim kimliğine bağlanır. Ayrı ayrı izinli alanlar tam birleşimin iznini kanıtlamaz. Eski 24 tanım korunur; yeni panel izni kaynak eşlemesi ve #71 gölge çıktısı koşulundan ayrılmaz. | #83, #88, #96'nın izinli seçim kısmı. | [L5], [T3], [W8]; A Q15, taslak katalog tablosu; mevcut §4 gölge kuralı. |
 | SAHİP-64 — açık | Gerçek emir tutarı seçilmez. Sinyal platformunda yalnız açıkça varsayımsal tutarla kapasite/kayma senaryosu gösterilir; katılım ve etki katsayısı kalibre edilmiş BIST olgusu sayılmaz. | Gerçek tutarla kapasite iddiası; varsayımsal raporu engellemez. | [L1]; B Q64, [W4]. |

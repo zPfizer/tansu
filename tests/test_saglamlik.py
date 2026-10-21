@@ -153,3 +153,212 @@ def test_ema_izgarasi_tek_gunluk_ve_iki_gunluk_uyelik_sinyal_gunu_alinir(
     )
     assert (h[0]["islem"], h[0]["pozitif"]) == (1, True)
     assert h[0]["fazla"] == pytest.approx(0.0465108, abs=1e-6)
+
+
+def s11_alan(sekil, degerler=None):
+    hucreler = [
+        dict(
+            indeks=list(i), durum="tamamlandi", kapali_islem_sayisi=1, toplam_net_r=1.0
+        )
+        for i in np.ndindex(*sekil)
+    ]
+    for i, deger in (degerler or {}).items():
+        hucreler[np.ravel_multi_index(i, sekil)]["toplam_net_r"] = deger
+    return dict(
+        eksenler=[
+            dict(ad=f"eksen{i}", degerler=list(range(n))) for i, n in enumerate(sekil)
+        ]
+    ), hucreler
+
+
+def test_s11_caprazlar_tam_cevre_ve_kenar_merkez_yasagi():
+    izgara, h = s11_alan((3, 3))
+    s = saglamlik.sec(izgara, h, politika="genis_bolge_net_r_v1")
+    assert s.get("secilen") == [1, 1]
+    assert len(s["hucreler"][4]["komsular"]) == 8
+    assert s["hucreler"][0]["sinir"] is True
+    h[0]["toplam_net_r"] = -1.0
+    s = saglamlik.sec(izgara, h, politika="genis_bolge_net_r_v1")
+    assert s["secilen"] is None
+    assert s["en_iyi"]["secildi"] is False
+    assert s["neden"] == "uygun_merkez_yok"
+
+
+@pytest.mark.parametrize("durum", ["islemsiz", "hesap_hatasi", "eksik"])
+def test_s11_eksik_hucre_karli_alandan_silinmez(durum):
+    izgara, h = s11_alan((3, 3))
+    h[0].update(durum=durum, kapali_islem_sayisi=0, toplam_net_r=None)
+    s = saglamlik.sec(izgara, h, politika="genis_bolge_net_r_v1")
+    assert s["secilen"] is None
+    assert len(s["hucreler"]) == 9
+    assert s["hucreler"][4]["eksik_komsular"] == [[0, 0]]
+
+
+def test_s11_alan_disi_hucre_indeksleri_sikistirmaz():
+    izgara, h = s11_alan((3, 3))
+    h[0].update(durum="alan_disi", neden="izin_verilmeyen_bilesim")
+    s = saglamlik.sec(izgara, h, politika="genis_bolge_net_r_v1")
+    assert s["secilen"] == [1, 1]
+    assert s["hucreler"][4]["alan_disi_komsular"] == [[0, 0]]
+    assert len(s["hucreler"][4]["komsular"]) == 7
+
+
+def test_s11_buyuk_bolge_medyan_mesafe_ve_kanonik_esitlik():
+    izgara, h = s11_alan((9,), {(4,): -1.0})
+    s = saglamlik.sec(izgara, h, politika="genis_bolge_net_r_v1")
+    assert s["secilen"] == [2]
+    assert [b["buyukluk"] for b in s["bolgeler"]] == [4, 4]
+    h[6]["toplam_net_r"] = 3.0
+    h[7]["toplam_net_r"] = 3.0
+    assert saglamlik.sec(izgara, h, politika="genis_bolge_net_r_v1")["secilen"] == [6]
+    izgara, h = s11_alan((7,))
+    h[1]["toplam_net_r"] = 1000.0
+    assert saglamlik.sec(izgara, h, politika="genis_bolge_net_r_v1")["secilen"] == [3]
+
+
+def test_s11_tek_hucre_ve_eski_politikalar_secim_izni_vermez():
+    izgara, h = s11_alan((1,))
+    s = saglamlik.sec(izgara, h, politika="genis_bolge_net_r_v1")
+    assert s["secilen"] is None
+    eski = saglamlik.sec(
+        None, [{"fazla": 1.0}, {"fazla": -1.0}], politika="pozitif_fazla_legacy_v1"
+    )
+    assert eski["politika"] == "pozitif_fazla_legacy_v1"
+    assert eski["secilen"] is None and eski["oran"] == 0.5
+
+
+def test_s11_merkez_mesafesi_alan_disi_bosluktan_gecer_ve_esitligi_cozer():
+    izgara, h = s11_alan((7,))
+    h[0].update(durum="alan_disi", neden="katalog")
+    h[1].update(durum="alan_disi", neden="katalog")
+    h[2].update(durum="alan_disi", neden="katalog")
+    s = saglamlik.sec(izgara, h, politika="genis_bolge_net_r_v1")
+    assert s["secilen"] == [3]
+    assert s["hucreler"][3]["uzaklik"] == 3
+    izgara, h = s11_alan((6,), {(2,): 2.0, (3,): 2.0, (4,): 2.0})
+    s = saglamlik.sec(izgara, h, politika="genis_bolge_net_r_v1")
+    assert s["secilen"] == [3]
+    assert s["hucreler"][3]["en_kotu_komsu"] == 2.0
+    assert s["hucreler"][2]["uzaklik"] == s["hucreler"][3]["uzaklik"] == 2
+
+
+def test_s11_capraz_karlar_tek_eksen_bolgesi_olusturmaz():
+    izgara, h = s11_alan((3, 3))
+    for i in (1, 2, 3, 5, 6, 7, 8):
+        h[i]["toplam_net_r"] = -1.0
+    s = saglamlik.sec(izgara, h, politika="genis_bolge_net_r_v1")
+    assert [b["indeksler"] for b in s["bolgeler"]] == [[[0, 0]], [[1, 1]]]
+    assert s["secilen"] is None
+
+
+def test_s11_ortak_eski_hucre_onbellegi_ayar_ve_mum_sinirini_korur(tmp_path):
+    anlik, _, _, _ = kur(tmp_path)
+    m = motor.mumlar(anlik, "A", P, ATR_N)
+    p = dataclasses.replace(P, min_gun=3)
+    k = motor.kurulum_bilgisi(m.dropna(subset=["kapanis"]), p)
+    konumlar = m.index.get_indexer(aileler_sinyali(m, p))
+    zincir = motor.Zincir(m, P)
+    beklenen = motor.Zincir(m, p, k).calistir(konumlar)
+    sonuc = None
+    try:
+        sonuc = saglamlik.ema_hucre_calistir(
+            m, p, kurulum=k, sinyal_konumlari=konumlar, yurutme=zincir
+        )
+    except TypeError, ValueError, AttributeError:
+        pass
+    assert sonuc is not None, "Uyumlu eski hücre mevcut Zincir ile yürümeli"
+    pd.testing.assert_frame_equal(sonuc[0], beklenen[0])
+    assert sonuc[1] == beklenen[1]
+    for mumlar, ayar in ((m.copy(), p), (m, dataclasses.replace(p, stop="atr15"))):
+        with pytest.raises(ValueError, match="uyuşmuyor"):
+            saglamlik.ema_hucre_calistir(
+                mumlar, ayar, kurulum=k, sinyal_konumlari=konumlar, yurutme=zincir
+            )
+
+
+def aileler_sinyali(m, p):
+    from tansu import aileler
+
+    return aileler.sinyal(m.dropna(subset=["kapanis"]), p)
+
+
+@pytest.mark.parametrize(
+    "alan,deger",
+    [
+        ("toplam_net_r", True),
+        ("toplam_net_r", "1"),
+        ("toplam_net_r", float("inf")),
+        ("kapali_islem_sayisi", True),
+    ],
+)
+def test_s11_sayisal_ozette_metin_ve_bayrak_kabul_edilmez(alan, deger):
+    izgara, hucreler = s11_alan((3,))
+    hucreler[1][alan] = deger
+    hata = None
+    try:
+        saglamlik.sec(izgara, hucreler, politika="genis_bolge_net_r_v1")
+    except ValueError as yakalanan:
+        hata = yakalanan
+    except TypeError:
+        pass
+    assert hata is not None, "Seçici bozuk sayısal özeti açık alan hatasıyla reddetmeli"
+
+
+@pytest.mark.parametrize("durum", ["eksik", "hesap_hatasi", "kayit_hatasi"])
+def test_s11_bilinmeyen_islem_sayisi_sifira_cevrilmez(durum):
+    izgara, hucreler = s11_alan((3, 3))
+    if durum == "eksik":
+        hucreler.pop(0)
+    else:
+        hucreler[0].update(durum=durum, kapali_islem_sayisi=None, toplam_net_r=None)
+    sonuc = None
+    try:
+        sonuc = saglamlik.sec(izgara, hucreler, politika="genis_bolge_net_r_v1")
+    except ValueError:
+        pass
+    assert sonuc is not None, "Başarısız veya eksik hücrenin boş sayısı korunmalı"
+    assert sonuc["hucreler"][0]["kapali_islem_sayisi"] is None
+    assert sonuc["hucreler"][0]["toplam_net_r"] is None
+    assert sonuc["secilen"] is None
+
+
+def test_s11_buyuk_bolge_medyanin_onundedir():
+    # Sol bölge beş, sağ bölge üç hücredir; sağın yüksek medyanı büyüklüğü geçemez.
+    izgara, hucreler = s11_alan(
+        (9,), {(5,): -1.0, (6,): 100.0, (7,): 100.0, (8,): 100.0}
+    )
+    sonuc = saglamlik.sec(izgara, hucreler, politika="genis_bolge_net_r_v1")
+    assert [b["buyukluk"] for b in sonuc["bolgeler"]] == [5, 3]
+    assert sonuc["secilen"] == [2]
+
+
+@pytest.mark.parametrize(
+    "durum,sayi,net,merkez,merkez_mesafesi,bes_mesafesi",
+    [
+        ("eksik", None, None, 5, 5, 5),
+        ("hesap_hatasi", None, None, 5, 5, 5),
+        ("kayit_hatasi", None, None, 5, 5, 5),
+        ("baslamadi", None, None, 5, 5, 5),
+        ("islemsiz", 0, None, 5, 5, 5),
+        ("tamamlandi", 1, None, 5, 5, 5),
+        ("tamamlandi", 1, 0.0, 6, 4, 3),
+        ("tamamlandi", 1, -1.0, 6, 4, 3),
+    ],
+)
+def test_s11_mesafe_hedefi_yalniz_olculmus_sifir_ve_kayiptir(
+    durum, sayi, net, merkez, merkez_mesafesi, bes_mesafesi
+):
+    izgara, hucreler = s11_alan((11,))
+    hucreler[2].update(durum=durum, kapali_islem_sayisi=sayi, toplam_net_r=net)
+    sonuc = saglamlik.sec(izgara, hucreler, politika="genis_bolge_net_r_v1")
+    assert sonuc["secilen"] == [merkez]
+    assert sonuc["hucreler"][merkez]["uzaklik"] == merkez_mesafesi
+    assert sonuc["hucreler"][5]["uzaklik"] == bes_mesafesi
+    assert len(sonuc["hucreler"]) == 11
+    assert sonuc["hucreler"][2]["durum"] == durum
+    assert sonuc["hucreler"][2]["kapali_islem_sayisi"] == sayi
+    assert sonuc["hucreler"][2]["toplam_net_r"] == net
+    assert sonuc["hucreler"][2]["karli"] is False
+    assert sonuc["hucreler"][3]["komsular"] == [[2], [4]]
+    assert sonuc["hucreler"][3]["uygun_merkez"] is False
+    assert sonuc["hucreler"][4]["uygun_merkez"] is True

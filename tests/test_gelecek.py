@@ -691,3 +691,48 @@ def test_s10_gelecek_fiyatlar_onceki_yilin_islemini_degistirmez(tmp_path, monkey
     assert s10_hesap_ozeti(yil) == s10_hesap_ozeti(son["donemler"][4])
     assert son["deneme_id"] == ilk["deneme_id"] == makbuz.deneme_id
     assert son["donemler"][5]["durumlar"]["TEST"]["degerleme"]["fiyat"] == 1120.0
+
+
+def test_s11_gelecek_fiyat_ve_diger_hucreler_onceki_olcuyu_degistirmez(
+    tmp_path, monkeypatch
+):
+    from tests.test_tansusinama import s11_kayitli, s11_calistir, s10_revizyon
+
+    depo, makbuz, piyasa = s11_kayitli(tmp_path, monkeypatch, sinyal=True)
+    for r in piyasa:
+        if r["tarih"] < "2021-01-01":
+            continue
+        fiyat = (
+            110.0
+            if r["tarih"] == "2021-01-04"
+            else 80.0
+            if r["tarih"] == "2021-12-31"
+            else 112.0
+        )
+        for ad, fark in (("aof", 0), ("kapanis", 0), ("yuksek", 1), ("dusuk", -1)):
+            r[f"duzeltilmis_{ad}"]["deger"] = fiyat + fark
+        r["ham_yuksek"]["deger"], r["ham_dusuk"]["deger"] = fiyat + 1, fiyat - 1
+    ilk = s11_calistir(depo, makbuz, tmp_path)
+    onceki_kayit = depo.yol.read_bytes()
+    olculer = [h["donemler"][4]["semboller"][0]["olcu"] for h in ilk["hucreler"]]
+    assert all(o["olculer"]["islem"]["deger"] == 1 for o in olculer)
+    for r in piyasa:
+        if r["tarih"] >= "2022-01-01":
+            for ad in ("aof", "kapanis", "yuksek", "dusuk"):
+                r[f"duzeltilmis_{ad}"]["deger"] *= 10
+            for ad in ("ham_yuksek", "ham_dusuk", "tavan", "taban"):
+                r[ad]["deger"] *= 10
+    yontem = depo.deneme_oku(makbuz.deneme_id)["yontem_ayarlari"]
+    tek = s10_revizyon(
+        depo,
+        makbuz,
+        yontem_ayarlari=yontem
+        | dict(eksenler=[dict(ad="min_gun", birim="gun", degerler=[2])]),
+    )
+    sonra = s11_calistir(depo, tek, tmp_path)["hucreler"][0]["donemler"][4][
+        "semboller"
+    ][0]["olcu"]
+    assert sonra["olculer"] == olculer[0]["olculer"]
+    assert sonra["egri_olculeri"] == olculer[0]["egri_olculeri"]
+    assert sonra["egri_tanimi"]["satirlar"] == olculer[0]["egri_tanimi"]["satirlar"]
+    assert depo.yol.read_bytes().startswith(onceki_kayit)
