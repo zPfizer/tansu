@@ -707,6 +707,211 @@ def sektor_oku(kok) -> tuple:
     )
 
 
+def grup_kod_ozeti():
+    """TASARIM 5.15 Küçük grup hazırlığı: geçici tam paket içerik bağı."""
+    dosyalar = {
+        yol.name: sha256(yol.read_bytes()).hexdigest()
+        for yol in sorted(kayit.PAKET.glob("*.py"))
+    }
+    return sha256(deneme_.kanonik(dosyalar)).hexdigest()
+
+
+def _grup_dosyasini_dogrula(ref, alan, engeller):
+    if ref is None:
+        engeller.append(dict(alan=alan, neden="Dosya başvurusu eksik."))
+        return None
+    yol = Path(ref["yol"])
+    try:
+        if sha256(yol.read_bytes()).hexdigest() != ref["sha256"]:
+            raise ValueError("Dosya özeti değişmiş.")
+        return yol
+    except (OSError, ValueError) as hata:
+        engeller.append(dict(alan=alan, neden=str(hata)))
+        return None
+
+
+def _grup_stratejilerini_dogrula(depo, stratejiler, engeller):
+    if not stratejiler:
+        engeller.append(
+            dict(alan="strateji_revizyonlari", neden="Strateji seçimi eksik.")
+        )
+    for s in stratejiler:
+        alan = f"strateji_revizyonlari.{s['revizyon_ref']}"
+        _grup_dosyasini_dogrula(s.get("kaynak"), f"{alan}.kaynak", engeller)
+        if s.get("yayim_tarihi") is None:
+            engeller.append(
+                dict(alan=f"{alan}.yayim_tarihi", neden="Kaynak tarihi eksik.")
+            )
+        for eksik in s.get("eksik_alanlar", []):
+            engeller.append(
+                dict(alan=f"{alan}.{eksik}", neden="Kaynak tanımı çözülmemiş.")
+            )
+        if not s.get("deneme_id"):
+            engeller.append(
+                dict(
+                    alan=f"{alan}.deneme_id",
+                    neden="Tam çözülmüş kaynak strateji revizyonu yok.",
+                )
+            )
+            continue
+        try:
+            d = depo.deneme_oku(s["deneme_id"])
+            if d["strateji"]["izin_durumu"] == "izinsiz":
+                raise ValueError("Kayıtlı legacy tanım kaynak seçim izni taşımaz.")
+        except (deneme_.PilotHatasi, ValueError) as hata:
+            engeller.append(dict(alan=f"{alan}.deneme_id", neden=str(hata)))
+
+
+def _grup_takvimini_dogrula(tanim, engeller):
+    ref = tanim.get("referanslar", {})
+    yol = _grup_dosyasini_dogrula(ref.get("takvim"), "referanslar.takvim", engeller)
+    if yol is None:
+        return []
+    try:
+        takvim = json.loads(yol.read_text(encoding="utf-8"))
+        for ad in ("baslangic", "bitis"):
+            deneme_._grup_tarihi(takvim[ad])
+            takvim[ad] = dt.date.fromisoformat(takvim[ad])
+        deneme_._metin(takvim.get("kaynak_ref"))
+        gunler = list(_takvim_seanslari(takvim))
+        secim = tanim.get("seanslar", [])
+        if secim and [t for t in gunler if secim[0] <= t <= secim[-1]] != secim:
+            raise ValueError(
+                "Kesin seans seçimi takvimle uyuşmuyor; dönem daraltılmaz."
+            )
+        isinma = tanim.get("isinma_baslangici")
+        if isinma and secim and takvim["baslangic"] > dt.date.fromisoformat(isinma):
+            raise ValueError("Takvim ısınma kapsamını taşımıyor.")
+        return gunler
+    except (OSError, ValueError, KeyError, TypeError) as hata:
+        engeller.append(dict(alan="referanslar.takvim", neden=str(hata)))
+        return []
+
+
+def _grup_anlik_goruntusu(ref, veri_koku, engeller):
+    kimlik = ref.get("anlik_goruntu")
+    if not kimlik:
+        engeller.append(
+            dict(alan="referanslar.anlik_goruntu", neden="Anlık görüntü eksik.")
+        )
+        return None
+    if Path(kimlik).name != kimlik or kimlik in (".", ".."):
+        raise deneme_.PilotHatasi("Tek yerel görüntü kimliği gerekli.")
+    try:
+        anlik = veri.oku(kimlik, veri_koku)
+        manifest = Path(veri_koku) / "ag" / kimlik / "manifest.json"
+        if sha256(manifest.read_bytes()).hexdigest() != ref.get("manifest_ozeti"):
+            raise ValueError("Manifest özeti eksik veya değişmiş.")
+        return anlik
+    except (OSError, veri.VeriHatasi, ValueError, KeyError) as hata:
+        engeller.append(dict(alan="referanslar.anlik_goruntu", neden=str(hata)))
+        return None
+
+
+def _grup_uyeligi(tanim, engeller):
+    kural = tanim.get("hisse_kurali", {})
+    semboller = kural.get("semboller", [])
+    if not semboller:
+        engeller.append(
+            dict(alan="hisse_kurali.semboller", neden="Açık hisse seçimi eksik.")
+        )
+    try:
+        uyelik = veri.uyelik_hazirla(
+            veri.UyelikIstegi(
+                tuple(tanim.get("seanslar", [])),
+                kural.get("evren_politikasi"),
+                kural.get("uyelik_surumu"),
+            )
+        )
+        if uyelik["tablo_parmak_izi"] != tanim.get("referanslar", {}).get(
+            "uyelik_ozeti"
+        ):
+            raise ValueError("Üyelik özeti eksik veya değişmiş.")
+        return [
+            dict(sembol=s, tarih=t, neden="bist30_uyesi_degil")
+            for t, gun in uyelik["gunler"].items()
+            for s in semboller
+            if s not in gun["semboller"]
+        ]
+    except (OSError, veri.VeriHatasi, ValueError) as hata:
+        engeller.append(dict(alan="hisse_kurali.uyelik", neden=str(hata)))
+        return []
+
+
+def _grup_veri_kapsami(tanim, anlik, takvim, engeller):
+    seanslar = tanim.get("seanslar", [])
+    isinma = tanim.get("isinma_baslangici")
+    if anlik is None or not seanslar or not isinma or not takvim:
+        engeller.append(
+            dict(
+                alan="veri_kapsami", neden="Kesin veri ve ısınma kapsamı doğrulanamadı."
+            )
+        )
+        return
+    gerekli = {t for t in takvim if isinma <= t <= seanslar[-1]}
+    for sembol in tanim.get("hisse_kurali", {}).get("semboller", []):
+        mevcut = {
+            t.date().isoformat()
+            for t in anlik.fiyat.loc[anlik.fiyat["sembol"] == sembol, "tarih"]
+        }
+        eksik = sorted(gerekli - mevcut)
+        if eksik:
+            engeller.append(
+                dict(
+                    alan=f"veri_kapsami.{sembol}",
+                    neden=f"Gerekli seans verisi eksik: {', '.join(eksik)}",
+                )
+            )
+
+
+def grup_hazirla(depo, tanim, *, veri_koku):
+    """TASARIM 5.15 Küçük grup hazırlığı: statik kontrol ve E5 olayı."""
+    tanim = deepcopy(tanim)
+    deneme_._grup_tanimi_dogrula(tanim)
+    engeller = []
+    for ad in ("soru", "isinma_baslangici", "durdurma_kurali"):
+        if not tanim.get(ad):
+            engeller.append(dict(alan=ad, neden="Zorunlu hazırlık alanı eksik."))
+    if tanim.get("gozlem_durumu") not in ("kesif", "gorulmedi"):
+        engeller.append(
+            dict(alan="gozlem_durumu", neden="Keşif veya görülmedi seçimi gerekli.")
+        )
+    seanslar = tanim.get("seanslar", [])
+    if not seanslar:
+        engeller.append(dict(alan="seanslar", neden="Kesin seans seçimi eksik."))
+    elif seanslar[-1] >= dt.datetime.now(veri.ISTANBUL).date().isoformat():
+        engeller.append(
+            dict(alan="seanslar", neden="Tamamlanmamış seans kabul edilmez.")
+        )
+    if (
+        seanslar
+        and tanim.get("isinma_baslangici")
+        and tanim["isinma_baslangici"] >= seanslar[0]
+    ):
+        engeller.append(
+            dict(
+                alan="isinma_baslangici",
+                neden="Isınma ilk seansın öncesinde olmalıdır.",
+            )
+        )
+    _grup_stratejilerini_dogrula(depo, tanim.get("strateji_revizyonlari", []), engeller)
+    ref = tanim.get("referanslar", {})
+    for ad in ("yontem", "risk", "masraf"):
+        _grup_dosyasini_dogrula(ref.get(ad), f"referanslar.{ad}", engeller)
+    if ref.get("kod_ozeti") != grup_kod_ozeti():
+        engeller.append(
+            dict(alan="referanslar.kod_ozeti", neden="Kod özeti eksik veya değişmiş.")
+        )
+    takvim = _grup_takvimini_dogrula(tanim, engeller)
+    anlik = _grup_anlik_goruntusu(ref, veri_koku, engeller)
+    dislamalar = _grup_uyeligi(tanim, engeller)
+    _grup_veri_kapsami(tanim, anlik, takvim, engeller)
+    makbuz = depo.grup_hazirligi_kaydet(
+        tanim=tanim, engeller=engeller, dislamalar=dislamalar
+    )
+    return depo.grup_hazirligi_oku(makbuz.olay_id, tanim=tanim)
+
+
 # TASARIM 5.15 S10: bu kimlik eski HASH_DISI sınıflamasını değiştirmez.
 KAYITLI_SURUM = "kayitli_donem_v1"
 ARAMA_SURUM = "kayitli_izgara_v1"

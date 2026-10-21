@@ -229,7 +229,7 @@ def test_driftlint_yapilandirmasi_yalniz_yerel_arsivleri_ve_worktrees_i_dislar()
 # Sözcük parçalı yazılır: bu dosya kendini bulmasın.
 ESKI = "kay" + "nak"
 ESKI_AD_DESENI = re.compile(
-    rf"(?<![\w-]){ESKI}/master"
+    rf"(?<![\w-]){ESKI}/(?:main|master)"
     rf"|\b(?:fetch|push|pull)(?: -\S+)* {ESKI}\b"
     rf"|-u {ESKI}\b"
     rf"|remotes/{ESKI}\b"
@@ -243,6 +243,7 @@ ESKI_AD_DESENI = re.compile(
         ("git fetch " + ESKI, True),
         ("git fetch -q " + ESKI, True),
         (ESKI + "/master", True),
+        (ESKI + "/main", True),
         ("git push -q -u " + ESKI + " <dal>", True),
         ("git pull --ff-only " + ESKI + " master", True),
         ("refs/remotes/" + ESKI + "/x", True),
@@ -254,6 +255,7 @@ ESKI_AD_DESENI = re.compile(
         ("`" + ESKI + "` modülü", False),
         ("veri " + ESKI + "ları", False),
         ("origin/master", False),
+        ("origin/main", False),
     ],
 )
 def test_eski_ad_deseni_yakin_kacirmalari_eslemez(satir, eslesir):

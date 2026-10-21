@@ -3,7 +3,7 @@ name: ci
 on:
   pull_request:
   push:
-    branches: [master]
+    branches: [main]
 
 jobs:
   # Yalnız Windows: Tansu Levent'in Windows bilgisayarında çalışır (Levent 17.10). Adımlar Git Bash ile koşar.

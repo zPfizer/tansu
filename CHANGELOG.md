@@ -10,12 +10,17 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ### Değişti
 
+- Site işlerinin esas şablonu Levent'in tarihli kararı ve içerik özetiyle sabitlendi; modül başına kaynak, canlı kanıt ve ayrı yayım onayı korundu. (#69)
+
+- Ana dal adı `main` oldu; CI, edit kancası, kapanış komutu ve güncel iş yönergeleri yeni ada uyarlandı. (#142)
+
 - Çalışma kuralları kullanılan ajan araçlarına uyarlandı; belge sahipliği ve bekleyen sözleşmelerin durumu netleşti. Tekrarlanan inceleme kuralları atfa dönüştü, iş klasörü kapanışına silme onayı ve kanıt kontrolü eklendi. (#130)
 - Altı çalışma belgesi mevcut sahiplerinde birleştirildi; kontrol ve gerçek veri kanıtı inceleme öncesine alındı, küçük işte yazıcı devri ve kapsam kuralları sadeleştirildi. Eski bilet sözleşmesi geçmiş bölümüyle korundu.
 
 ### Eklendi
 
 - Kayıtlı ileri yürüme, her çeyrekten önce eğitim seçimini kaydeder; tek kronolojik akışta açık ve bekleyen işlemlerin özgün ayarını korur. Eğitim dışlamaları, giriş kohortları ve açık ufuk ayrı kayıtlarla izlenir. (#93)
+- Küçük grup hazırlığı ayrı komut ve kayıt olayıyla eklendi. En fazla üç strateji revizyonu ve 60 kesin seans dondurulur; eksik kaynak tanımı, veri, takvim ve üyelik adlandırılmış engel olur. Hazırlık hesap başlatmaz; değişen tanım yeni revizyon ister, eski kayıt tarihçede kalır. İlk kaynak ailesi engelli kalır. (#116)
 
 - Kayıtlı taramanın ölçü hissesi gerçek dönem ve işlem kayıtlarına bağlandı. Seçilen ayarın uygun merkez ve bileşen açıklamasıyla çelişmesi reddedilir; işlemsiz hisse kayıtları korunur. (#92)
 

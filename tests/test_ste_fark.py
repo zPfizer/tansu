@@ -45,7 +45,7 @@ def depo(tmp_path):
     """Eski AGENTS.md satırında noktalı virgül var; hepsi kayıtlı."""
     kok = tmp_path / "depo"
     kok.mkdir()
-    _git(kok, "init", "-q", "-b", "master")
+    _git(kok, "init", "-q", "-b", "main")
     (kok / "AGENTS.md").write_text("eski; satir\n", encoding="utf-8")
     (kok / "docs").mkdir()
     (kok / "docs" / "TASARIM.md").write_text("tasarim\n", encoding="utf-8")
@@ -116,11 +116,11 @@ def test_ste_fark_taban_dal_noktasindan_sonra_ilerlediyse_dal_eklemez(depo, lint
     (depo / "AGENTS.md").write_text("eski temiz satir\n", encoding="utf-8")
     _git(depo, "commit", "-q", "-am", "temiz satir")
     _git(depo, "switch", "-q", "-c", "dal")
-    _git(depo, "switch", "-q", "master")
-    (depo / "AGENTS.md").write_text("master yeni satir\n", encoding="utf-8")
-    _git(depo, "commit", "-q", "-am", "master ilerler")
+    _git(depo, "switch", "-q", "main")
+    (depo / "AGENTS.md").write_text("main yeni satir\n", encoding="utf-8")
+    _git(depo, "commit", "-q", "-am", "main ilerler")
     _git(depo, "switch", "-q", "dal")
-    s = _kos("master", str(linter), cwd=depo)
+    s = _kos("main", str(linter), cwd=depo)
     assert (s.returncode, s.stdout) == (0, "ste-fark: eklenen satir = 0\n")
 
 

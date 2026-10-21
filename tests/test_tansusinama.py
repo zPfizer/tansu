@@ -3049,22 +3049,22 @@ def test_s12_eksik_yontem_baslangic_ve_hesaptan_once_reddedilir(
         )
     from tests.test_kayit import pilot_deneme
 
-    m = pilot_deneme(
-        depo,
-        d["strateji"],
-        **{
-            k: d[k]
-            for k in (
-                "donemler",
-                "yontem_ayarlari",
-                "veri_ayarlari",
-                "risk_ayarlari",
-                "masraf_ayarlari",
-            )
-        },
-    )
     once = depo.yol.read_bytes()
     with pytest.raises(deneme.PilotHatasi):
+        m = pilot_deneme(
+            depo,
+            d["strateji"],
+            **{
+                k: d[k]
+                for k in (
+                    "donemler",
+                    "yontem_ayarlari",
+                    "veri_ayarlari",
+                    "risk_ayarlari",
+                    "masraf_ayarlari",
+                )
+            },
+        )
         s12_calistir(depo, m, tmp_path)
     assert depo.yol.read_bytes() == once
 
@@ -3160,3 +3160,202 @@ def test_s12_eksik_egitim_basarili_secimsiz_donem_degildir(
         sonuc = next(o for o in olaylar if o["kayit_id"] == h["sonuc_ref"])
         assert any(e["asama"] == eksik for e in sonuc["icerik"]["hatalar"])
     assert r["durum"] == "hata"
+
+
+def test_grup_hazirla_komutu_eksikleri_kaydeder_sinama_baslatmaz(tmp_path, capsys):
+    tanim = tmp_path / "grup.json"
+    tanim.write_text(
+        json.dumps({"grup_id": "ilk-grup", "revizyon": "taslak-1"}),
+        encoding="utf-8",
+    )
+    yol = tmp_path / "grup-hazirlik.jsonl"
+    try:
+        kod = komut.main(
+            [
+                "grup-hazirla",
+                "--grup-tanimi",
+                str(tanim),
+                "--deneme-dosyasi",
+                str(yol),
+                "--kok",
+                str(tmp_path),
+            ]
+        )
+    except SystemExit as hata:
+        kod = hata.code
+    assert kod == 1, "Engelli hazırlık kalıcı kayıtla çıkış 1 vermelidir."
+    from tansu import deneme
+
+    olaylar = deneme.PilotKayit(yol).oku()
+    assert [o["kayit_turu"] for o in olaylar] == ["grup_hazirligi"]
+    assert olaylar[0]["hazirlik_durumu"] == "engelli"
+    assert olaylar[0]["yurutme_izni"] is False
+    assert {e["alan"] for e in olaylar[0]["engeller"]} >= {
+        "soru",
+        "strateji_revizyonlari",
+        "seanslar",
+        "referanslar.anlik_goruntu",
+    }
+    assert json.loads(capsys.readouterr().out)["kayit_id"] == olaylar[0]["kayit_id"]
+
+
+def grup_hazirlik_girdisi(tmp_path):
+    from hashlib import sha256
+
+    gunler = pd.bdate_range("2021-03-29", periods=4)
+    seri = [mum(g, 100, 101, 99, 1e9) for g in gunler]
+    a = anlik_hazirla(tmp_path, {s: seri for s in ("AKBNK", "MGROS", "SASA")})
+    kaynak = tmp_path / "kaynak.md"
+    kaynak.write_text("Kaynak tanımı eksiktir.", encoding="utf-8")
+    takvim = tmp_path / "takvim.json"
+    takvim.write_text(
+        json.dumps(
+            dict(
+                baslangic="2021-03-29",
+                bitis="2021-04-01",
+                seanslar=["2021-03-29", "2021-03-30", "2021-03-31", "2021-04-01"],
+                kaynak_ref="sentetik kesin takvim kanıtı",
+            )
+        ),
+        encoding="utf-8",
+    )
+
+    def ref(yol):
+        return dict(yol=str(yol), sha256=sha256(yol.read_bytes()).hexdigest())
+
+    uyelik = veri.uyelik_hazirla(
+        veri.UyelikIstegi(
+            ("2021-03-30", "2021-03-31", "2021-04-01"),
+            "donemsel_bist30_v1",
+            "bist30_2021_2025_v1",
+        )
+    )
+    return dict(
+        grup_id="ilk-grup",
+        revizyon="1",
+        soru="İlk kaynağın açık alanları neler?",
+        strateji_revizyonlari=[
+            dict(
+                revizyon_ref="kaynak-a",
+                kaynak=ref(kaynak),
+                yayim_tarihi="2025-12-19",
+                deneme_id=None,
+                eksik_alanlar=[],
+            )
+        ],
+        seanslar=["2021-03-30", "2021-03-31", "2021-04-01"],
+        isinma_baslangici="2021-03-29",
+        hisse_kurali=dict(
+            semboller=["AKBNK", "MGROS", "SASA"],
+            evren_politikasi="donemsel_bist30_v1",
+            uyelik_surumu="bist30_2021_2025_v1",
+        ),
+        referanslar=dict(
+            anlik_goruntu=a.kimlik,
+            manifest_ozeti=ref(tmp_path / "ag" / a.kimlik / "manifest.json")["sha256"],
+            uyelik_ozeti=uyelik["tablo_parmak_izi"],
+            kod_ozeti=ts.grup_kod_ozeti(),
+            takvim=ref(takvim),
+            yontem=ref(kaynak),
+            risk=ref(kaynak),
+            masraf=ref(kaynak),
+        ),
+        gozlem_durumu="kesif",
+        durdurma_kurali="Teknik hata durdurur.",
+    )
+
+
+def test_grup_statik_kontrol_hesap_cagirmaz_ve_uyelik_dislamasini_korur(
+    tmp_path, monkeypatch
+):
+    from tansu import deneme
+
+    tanim = grup_hazirlik_girdisi(tmp_path)
+
+    def yasak(*a, **k):
+        pytest.fail("Hazırlık hesaplama, indirme veya süreç başlatamaz.")
+
+    for nesne, ad in (
+        (veri, "veri_hazirla"),
+        (veri, "indir"),
+        (ts, "calistir"),
+        (ts, "kayitli_calistir"),
+        (ts, "kayitli_izgara_calistir"),
+        (aileler, "ortak_donem_kurulumu"),
+        (motor, "tara"),
+        (ts.subprocess, "run"),
+        (deneme.PilotKayit, "kosu"),
+        (deneme.PilotKayit, "deneme_kaydet"),
+    ):
+        monkeypatch.setattr(nesne, ad, yasak)
+    depo = deneme.PilotKayit(tmp_path / "hazirlik.jsonl")
+    sonuc = ts.grup_hazirla(depo, tanim, veri_koku=tmp_path)
+    assert sonuc["hazirlik_durumu"] == "engelli"
+    assert sonuc["engeller"] == [
+        dict(
+            alan="strateji_revizyonlari.kaynak-a.deneme_id",
+            neden="Tam çözülmüş kaynak strateji revizyonu yok.",
+        )
+    ]
+    assert sonuc["dislamalar"] == [
+        dict(sembol="SASA", tarih="2021-03-30", neden="bist30_uyesi_degil"),
+        dict(sembol="SASA", tarih="2021-03-31", neden="bist30_uyesi_degil"),
+        dict(sembol="MGROS", tarih="2021-04-01", neden="bist30_uyesi_degil"),
+    ]
+    assert sonuc["tanim"] == tanim
+    assert [o["kayit_turu"] for o in depo.oku()] == ["grup_hazirligi"]
+
+
+@pytest.mark.parametrize(
+    "ariza",
+    [
+        "takvim",
+        "manifest",
+        "uyelik",
+        "kaynak",
+        "kod",
+        "eksik_veri",
+        "tamamlanmamis",
+        "legacy",
+    ],
+)
+def test_grup_eksik_kaniti_adlandirir_donemi_daraltmaz(tmp_path, ariza):
+    from tansu import deneme
+    from tests.test_kayit import pilot_deneme
+
+    tanim = grup_hazirlik_girdisi(tmp_path)
+    depo = deneme.PilotKayit(tmp_path / "hazirlik.jsonl")
+    alan = None
+    if ariza == "takvim":
+        tanim["seanslar"].remove("2021-03-31")
+        alan = "referanslar.takvim"
+    elif ariza == "manifest":
+        tanim["referanslar"]["manifest_ozeti"] = "farkli"
+        alan = "referanslar.anlik_goruntu"
+    elif ariza == "uyelik":
+        tanim["referanslar"]["uyelik_ozeti"] = "farkli"
+        alan = "hisse_kurali.uyelik"
+    elif ariza == "kaynak":
+        tanim["strateji_revizyonlari"][0]["kaynak"]["sha256"] = "0" * 64
+        alan = "strateji_revizyonlari.kaynak-a.kaynak"
+    elif ariza == "kod":
+        tanim["referanslar"]["kod_ozeti"] = "farkli"
+        alan = "referanslar.kod_ozeti"
+    elif ariza == "eksik_veri":
+        tanim["hisse_kurali"]["semboller"].append("EREGL")
+        alan = "veri_kapsami.EREGL"
+    elif ariza == "tamamlanmamis":
+        tanim["seanslar"] = ["2099-01-02"]
+        alan = "seanslar"
+    else:
+        tanim["strateji_revizyonlari"][0]["deneme_id"] = pilot_deneme(depo).deneme_id
+        alan = "strateji_revizyonlari.kaynak-a.deneme_id"
+    sonuc = ts.grup_hazirla(depo, tanim, veri_koku=tmp_path)
+    assert sonuc["hazirlik_durumu"] == "engelli"
+    assert alan in {e["alan"] for e in sonuc["engeller"]}
+    if ariza == "legacy":
+        assert "kaynak seçim izni taşımaz" in sonuc["engeller"][0]["neden"]
+    assert sonuc["tanim"]["seanslar"] == tanim["seanslar"]
+    assert not any(
+        o["kayit_turu"] in ("baslangic", "sonuc", "bitis") for o in depo.oku()
+    )
