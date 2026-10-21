@@ -808,7 +808,7 @@ def _grup_anlik_goruntusu(ref, veri_koku, engeller):
         return None
 
 
-def _grup_uyeligi(tanim, engeller):
+def _grup_uyeligi(tanim, engeller, politika=None):
     kural = tanim.get("hisse_kurali", {})
     semboller = kural.get("semboller", [])
     if not semboller:
@@ -827,6 +827,9 @@ def _grup_uyeligi(tanim, engeller):
             "uyelik_ozeti"
         ):
             raise ValueError("Üyelik özeti eksik veya değişmiş.")
+        if politika is not None:
+            uyelik = veri.pay_uyeligi(uyelik, politika)
+            semboller = veri.pay_sembolleri(semboller, politika)
         return [
             dict(sembol=s, tarih=t, neden="bist30_uyesi_degil")
             for t, gun in uyelik["gunler"].items()
@@ -838,7 +841,7 @@ def _grup_uyeligi(tanim, engeller):
         return []
 
 
-def _grup_veri_kapsami(tanim, anlik, takvim, engeller):
+def _grup_veri_kapsami(tanim, anlik, takvim, engeller, politika=None):
     seanslar = tanim.get("seanslar", [])
     isinma = tanim.get("isinma_baslangici")
     if anlik is None or not seanslar or not isinma or not takvim:
@@ -849,7 +852,10 @@ def _grup_veri_kapsami(tanim, anlik, takvim, engeller):
         )
         return
     gerekli = {t for t in takvim if isinma <= t <= seanslar[-1]}
-    for sembol in tanim.get("hisse_kurali", {}).get("semboller", []):
+    semboller = tanim.get("hisse_kurali", {}).get("semboller", [])
+    if politika is not None:
+        semboller = veri.pay_sembolleri(semboller, politika)
+    for sembol in semboller:
         mevcut = {
             t.date().isoformat()
             for t in anlik.fiyat.loc[anlik.fiyat["sembol"] == sembol, "tarih"]
@@ -862,6 +868,26 @@ def _grup_veri_kapsami(tanim, anlik, takvim, engeller):
                     neden=f"Gerekli seans verisi eksik: {', '.join(eksik)}",
                 )
             )
+
+
+def _grup_pay_kimligi(ref, anlik, engeller):
+    """TASARIM 5.15 #167: statik eşleme kalite veya gösterge hesabı çağırmaz."""
+    secim = ref.get("pay_kimligi")
+    if secim is None:
+        return anlik, None
+    try:
+        politika = veri.pay_kimligi_hazirla(
+            secim,
+            kaynak=secim["kaynak"],
+            goruntu_id=ref["anlik_goruntu"],
+            manifest_ozeti=ref["manifest_ozeti"],
+        )
+        if anlik is not None:
+            anlik = veri.pay_kimligi_uygula(anlik, politika)
+        return anlik, politika
+    except (OSError, veri.VeriHatasi, ValueError) as hata:
+        engeller.append(dict(alan="referanslar.pay_kimligi", neden=str(hata)))
+        return None, None
 
 
 def grup_hazirla(depo, tanim, *, veri_koku):
@@ -904,8 +930,9 @@ def grup_hazirla(depo, tanim, *, veri_koku):
         )
     takvim = _grup_takvimini_dogrula(tanim, engeller)
     anlik = _grup_anlik_goruntusu(ref, veri_koku, engeller)
-    dislamalar = _grup_uyeligi(tanim, engeller)
-    _grup_veri_kapsami(tanim, anlik, takvim, engeller)
+    anlik, politika = _grup_pay_kimligi(ref, anlik, engeller)
+    dislamalar = _grup_uyeligi(tanim, engeller, politika)
+    _grup_veri_kapsami(tanim, anlik, takvim, engeller, politika)
     makbuz = depo.grup_hazirligi_kaydet(
         tanim=tanim, engeller=engeller, dislamalar=dislamalar
     )
@@ -980,6 +1007,17 @@ def _kayitli_veri_ayarlari(v):
     for alan in ("kaynak", "manifest_ozeti", "uyelik_ozeti"):
         if not isinstance(v.get(alan), str) or not v[alan].strip():
             raise deneme_.PilotHatasi(f"Eksik veri ayarı: {alan}")
+    if v.get("pay_kimligi") is not None:
+        veri.pay_kimligi_secimi_dogrula(v["pay_kimligi"])
+        if any(
+            v["pay_kimligi"][a] != deger
+            for a, deger in dict(
+                kaynak=v["kaynak"],
+                goruntu_id=v["veri_referanslari"][0],
+                manifest_ozeti=v["manifest_ozeti"],
+            ).items()
+        ):
+            raise deneme_.PilotHatasi("Pay kimliği kayıtlı veri bağıyla uyuşmuyor.")
     ref = v["veri_referanslari"]
     if len(ref) != 1 or Path(ref[0]).name != ref[0] or ref[0] in (".", ".."):
         raise deneme_.PilotHatasi("Tek yerel görüntü kimliği gerekli.")
@@ -1099,6 +1137,14 @@ def _donem_uyeligi(deneme, sonuc):
     )
     if uyelik["tablo_parmak_izi"] != v["uyelik_ozeti"]:
         raise ValueError("Üyelik parmak izi kayıtlı denemeyle uyuşmuyor.")
+    if v.get("pay_kimligi") is not None:
+        politika = veri.pay_kimligi_hazirla(
+            v["pay_kimligi"],
+            kaynak=v["kaynak"],
+            goruntu_id=v["veri_referanslari"][0],
+            manifest_ozeti=v["manifest_ozeti"],
+        )
+        uyelik = veri.pay_uyeligi(uyelik, politika)
     sonuc["uyelik"] = uyelik
     semboller = sorted({s for t in gunler for s in uyelik["gunler"][t]["semboller"]})
     return gunler, uyelik, semboller, bas, son
@@ -1119,6 +1165,7 @@ def _donem_veri_istegi(v, d, semboller, bas, son):
             (d["baslangic"] - dt.timedelta(days=1)).isoformat(),
         ),
         v["evren_politikasi"],
+        v.get("pay_kimligi"),
     )
 
 
@@ -1148,6 +1195,8 @@ def _donem_paketi(deneme, sonuc, veri_koku, hazirlik, kapsam):
     if (
         paket["referans"]["manifest_parmak_izi"] != v["manifest_ozeti"]
         or paket["uyelik"]["tablo_parmak_izi"] != v["uyelik_ozeti"]
+        or paket["referans"].get("pay_kimligi") != v.get("pay_kimligi")
+        or paket["uyelik"].get("pay_kimligi") != v.get("pay_kimligi")
     ):
         raise ValueError("E1 veri/üyelik referansı kayıtlı denemeyle uyuşmuyor.")
     if hazirlik is not None and anahtar not in hazirlik:

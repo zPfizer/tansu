@@ -5,7 +5,8 @@ import hashlib
 import json
 import os
 import shutil
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
+from copy import deepcopy
 from functools import cached_property
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -154,6 +155,161 @@ def uyelik_hazirla(istek: UyelikIstegi) -> dict:
     }
 
 
+PAY_KIMLIGI_KOKU = Path(__file__).parent / "referans"
+
+
+def pay_kimligi_secimi_dogrula(secim):
+    """TASARIM 5.15 #167: yalnız yapı denetimi; dosya veya piyasa okunmaz."""
+    alanlar = {"surum", "tablo_ozeti", "kaynak", "goruntu_id", "manifest_ozeti"}
+    if not isinstance(secim, dict) or set(secim) != alanlar:
+        raise VeriHatasi("pay kimliği seçiminin alanları geçersiz")
+    if secim["surum"] != "pay_kimligi_v1":
+        raise VeriHatasi("bilinmeyen pay kimliği sürümü")
+    if any(not isinstance(secim[a], str) or not secim[a].strip() for a in alanlar):
+        raise VeriHatasi("pay kimliği seçiminin bağı boş")
+    if any(
+        len(secim[a]) != 64 or set(secim[a]) - set("0123456789abcdef")
+        for a in ("tablo_ozeti", "manifest_ozeti")
+    ):
+        raise VeriHatasi("pay kimliği özeti geçersiz")
+
+
+def pay_kimligi_hazirla(secim, *, kaynak, goruntu_id, manifest_ozeti):
+    """TASARIM 5.15 #167: yalnız kanıtlı sağlayıcı/görüntü için eşleme."""
+    pay_kimligi_secimi_dogrula(secim)
+    bag = dict(kaynak=kaynak, goruntu_id=goruntu_id, manifest_ozeti=manifest_ozeti)
+    if any(secim[a] != deger for a, deger in bag.items()):
+        raise VeriHatasi("pay kimliği kaynak/görüntü/manifest bağı uyuşmuyor")
+    yol = PAY_KIMLIGI_KOKU / secim["surum"] / "eslemeler.csv"
+    if _sha256(yol) != secim["tablo_ozeti"]:
+        raise VeriHatasi("pay kimliği tablo özeti uyuşmuyor")
+    tablo = pd.read_csv(yol, encoding="utf-8-sig", dtype=str, keep_default_na=False)
+    if (
+        set(tablo.columns)
+        != {
+            "pay_id",
+            "kaynak",
+            "kaynak_sembolu",
+            "borsa_kodu",
+            "baslangic",
+            "bitis",
+            "goruntu_id",
+            "manifest_ozeti",
+            "kaynak_id",
+        }
+        or tablo.empty
+    ):
+        raise VeriHatasi("pay kimliği tablosunun alanları geçersiz")
+    if any(not tablo[a].eq(v).all() for a, v in bag.items()):
+        raise VeriHatasi(
+            "pay kimliği tablosunun kaynak/görüntü/manifest bağı uyuşmuyor"
+        )
+    zorunlu = ["pay_id", "kaynak_sembolu", "borsa_kodu", "kaynak_id"]
+    if tablo[zorunlu].apply(lambda x: x.str.strip()).eq("").any().any():
+        raise VeriHatasi("pay kimliği tablosunda zorunlu alan boş")
+    kayitlar, etiketler = [], {}
+    for r in tablo.to_dict("records"):
+        try:
+            for ad in ("baslangic", "bitis"):
+                r[ad] = dt.date.fromisoformat(r[ad]) if r[ad] else None
+        except ValueError as hata:
+            raise VeriHatasi("pay kimliği aralığında tarih geçersiz") from hata
+        if r["baslangic"] and r["bitis"] and r["baslangic"] >= r["bitis"]:
+            raise VeriHatasi("pay kimliği aralığı ters")
+        for etiket in (r["kaynak_sembolu"], r["borsa_kodu"], r["pay_id"]):
+            if etiket in etiketler and etiketler[etiket] != r["pay_id"]:
+                raise VeriHatasi("pay kimliği etiketi iki paya bağlı")
+            etiketler[etiket] = r["pay_id"]
+        kayitlar.append(r)
+    for pay in tablo["pay_id"].unique():
+        araliklar = sorted(
+            (r for r in kayitlar if r["pay_id"] == pay),
+            key=lambda r: r["baslangic"] or dt.date.min,
+        )
+        if len({r["kaynak_sembolu"] for r in araliklar}) != 1:
+            raise VeriHatasi("bir payın birden fazla kaynak sembolü var")
+        if (
+            araliklar[0]["baslangic"] is not None
+            or araliklar[-1]["bitis"] is not None
+            or any(
+                a["bitis"] is None or a["bitis"] != b["baslangic"]
+                for a, b in zip(araliklar, araliklar[1:], strict=False)
+            )
+        ):
+            raise VeriHatasi("pay kimliği aralıkları eksik veya çakışıyor")
+    return dict(secim=deepcopy(secim), kayitlar=kayitlar, etiketler=etiketler)
+
+
+def pay_sembolleri(semboller, politika):
+    """TASARIM 5.15 #167: açık seçimde bir pay iki kez istenemez."""
+    sonuc = [politika["etiketler"].get(s, s) for s in semboller]
+    if len(set(sonuc)) != len(sonuc):
+        raise VeriHatasi("pay kimliği isteğinde tekrarlı pay")
+    return sonuc
+
+
+def _borsa_kodu(pay, tarih, politika):
+    tarih = pd.Timestamp(tarih).date()
+    for r in politika["kayitlar"]:
+        if (
+            r["pay_id"] == pay
+            and (r["baslangic"] is None or r["baslangic"] <= tarih)
+            and (r["bitis"] is None or tarih < r["bitis"])
+        ):
+            return r["borsa_kodu"]
+    return pay
+
+
+def pay_uyeligi(uyelik, politika):
+    """TASARIM 5.15 #167: özgün üyelik kanıtı korunur; yalnız pay anahtarı eklenir."""
+    sonuc = deepcopy(uyelik)
+    for tarih, gun in sonuc["gunler"].items():
+        if (
+            len(gun["semboller"]) != 30
+            or len(gun["kanitlar"]) != 30
+            or set(gun["semboller"]) != {k["sembol"] for k in gun["kanitlar"]}
+        ):
+            raise VeriHatasi("üyelikte 30 ayrı pay ve eşleşen kanıt gerekli")
+        gun["semboller"] = sorted(pay_sembolleri(gun["semboller"], politika))
+        for kanit in gun["kanitlar"]:
+            pay = politika["etiketler"].get(kanit["sembol"], kanit["sembol"])
+            if _borsa_kodu(pay, tarih, politika) != kanit["sembol"]:
+                raise VeriHatasi("üyelik borsa kodu pay kimliği tarihiyle uyuşmuyor")
+            kanit["pay_id"] = pay
+    sonuc["pay_kimligi"] = deepcopy(politika["secim"])
+    return sonuc
+
+
+def pay_kimligi_uygula(anlik, politika):
+    """TASARIM 5.15 #167: bütün görüntü fiyat/olay anahtarları kalite öncesi çözülür."""
+    kaynaklar = pd.concat([anlik.fiyat["sembol"], anlik.olaylar["sembol"]]).unique()
+    pay_sembolleri(kaynaklar, politika)
+    beklenen = {r["pay_id"]: r["kaynak_sembolu"] for r in politika["kayitlar"]}
+    for s in kaynaklar:
+        pay = politika["etiketler"].get(s, s)
+        if pay in beklenen and s != beklenen[pay]:
+            raise VeriHatasi("pay kimliğinin kaynak sembolü uyuşmuyor")
+
+    def yansit(tablo):
+        t = tablo.copy()
+        t["kaynak_sembolu"] = t["sembol"]
+        t["sembol"] = t["sembol"].map(lambda s: politika["etiketler"].get(s, s))
+        t["borsa_kodu"] = t["sembol"]
+        for r in politika["kayitlar"]:
+            maske = t["sembol"].eq(r["pay_id"])
+            if r["baslangic"] is not None:
+                maske &= t["tarih"] >= pd.Timestamp(r["baslangic"])
+            if r["bitis"] is not None:
+                maske &= t["tarih"] < pd.Timestamp(r["bitis"])
+            t.loc[maske, "borsa_kodu"] = r["borsa_kodu"]
+        return t
+
+    fiyat, olaylar = yansit(anlik.fiyat), yansit(anlik.olaylar)
+    if fiyat.duplicated(["sembol", "tarih"]).any():
+        raise VeriHatasi("pay kimliğinde tekrarlı fiyat günü")
+    return replace(anlik, fiyat=fiyat, olaylar=olaylar)
+
+
 @dataclass(frozen=True)
 class VeriIstegi:
     """Kayıtlı yerel veri isteği; sürümler çağırana aittir (TASARIM 5.15)."""
@@ -168,12 +324,25 @@ class VeriIstegi:
     takvim_ref: str
     isinma_donemi: tuple[str, str] | None = None
     evren_politikasi: str | None = None
+    pay_kimligi: dict | None = None
 
 
 def veri_hazirla(istek: VeriIstegi, kimlik, kok) -> dict:
     """Doğrulanmış yerel görüntüyü E1 kayıtlarına uyarlar (TASARIM 5.15)."""
     bas, son, kapsam_bas = _istek_donemi(istek)
     a = oku(kimlik, kok)
+    politika = None
+    if istek.pay_kimligi is not None:
+        politika = pay_kimligi_hazirla(
+            istek.pay_kimligi,
+            kaynak=istek.kaynak,
+            goruntu_id=kimlik,
+            manifest_ozeti=_sha256(Path(kok) / "ag" / kimlik / "manifest.json"),
+        )
+        a = pay_kimligi_uygula(a, politika)
+        istek = replace(
+            istek, semboller=tuple(pay_sembolleri(istek.semboller, politika))
+        )
     gunler = a.gunler[a.gunler <= son]
     uyelik = None
     if istek.evren_politikasi is not None:
@@ -188,6 +357,8 @@ def veri_hazirla(istek: VeriIstegi, kimlik, kok) -> dict:
                 istek.uyelik_surumu,
             )
         )
+    if uyelik is not None and politika is not None:
+        uyelik = pay_uyeligi(uyelik, politika)
     semboller = list(istek.semboller)
     f = a.fiyat[a.fiyat["sembol"].isin(semboller)]
     C, A = (
@@ -225,11 +396,16 @@ def veri_hazirla(istek: VeriIstegi, kimlik, kok) -> dict:
             "kod": r.kod,
             "carpan": float(r.carpan),
             "olay_ref": f"{kimlik}/olay/{i}",
+            **(
+                dict(kaynak_sembolu=r.kaynak_sembolu, borsa_kodu=r.borsa_kodu)
+                if politika is not None
+                else {}
+            ),
         }
         for i, r in enumerate(a.olaylar.itertuples())
         if r.sembol in semboller and kapsam_bas <= r.tarih <= son
     ]
-    piyasa = _piyasa_satirlari(istek, kimlik, f, g, d, secilen, olaylar, meta)
+    piyasa = _piyasa_satirlari(istek, kimlik, f, g, d, secilen, olaylar, meta, politika)
     hatalar = [
         {
             "sembol": r["sembol"],
@@ -246,6 +422,14 @@ def veri_hazirla(istek: VeriIstegi, kimlik, kok) -> dict:
             evren_politikasi=istek.evren_politikasi,
             uyelik_tablo_parmak_izi=uyelik["tablo_parmak_izi"],
         )
+    if politika is not None:
+        referans["pay_kimligi"] = deepcopy(istek.pay_kimligi)
+        ozet = hashlib.sha256(
+            json.dumps(istek.pay_kimligi, sort_keys=True, separators=(",", ":")).encode(
+                "utf-8"
+            )
+        ).hexdigest()
+        referans["kayit_id"] += f"/{ozet}"
     return {
         **({"uyelik": uyelik} if uyelik is not None else {}),
         "piyasa": piyasa,
@@ -309,7 +493,7 @@ def _veri_referansi(istek, kimlik, kok, meta, fiili):
     }
 
 
-def _piyasa_satirlari(istek, kimlik, f, g, d, secilen, olaylar, meta):
+def _piyasa_satirlari(istek, kimlik, f, g, d, secilen, olaylar, meta, politika=None):
     fiyat = f.set_index(["tarih", "sembol"])
     kalite = g.set_index(["tarih", "sembol"])
     olay_ref = {}
@@ -327,12 +511,14 @@ def _piyasa_satirlari(istek, kimlik, f, g, d, secilen, olaylar, meta):
                 else pd.Series(dtype=bool)
             )
             piyasa.append(
-                _piyasa_satiri(istek, kimlik, s, t, r, k, d, q, j, olay_ref, meta)
+                _piyasa_satiri(
+                    istek, kimlik, s, t, r, k, d, q, j, olay_ref, meta, politika
+                )
             )
     return piyasa
 
 
-def _piyasa_satiri(istek, kimlik, s, t, r, k, d, q, j, olay_ref, meta):
+def _piyasa_satiri(istek, kimlik, s, t, r, k, d, q, j, olay_ref, meta, politika=None):
     bayraklar = [
         ad
         for ad in ("eksik", "karantina", "kilit_tavan", "kilit_taban")
@@ -344,11 +530,20 @@ def _piyasa_satiri(istek, kimlik, s, t, r, k, d, q, j, olay_ref, meta):
         bayraklar.append("karantina")
     if d["E"][q, j]:
         bayraklar.append("giris_engelli")
+    pay_alanlari = {}
+    if politika is not None:
+        kaynak = next(
+            (r["kaynak_sembolu"] for r in politika["kayitlar"] if r["pay_id"] == s), s
+        )
+        pay_alanlari = dict(
+            kaynak_sembolu=kaynak, borsa_kodu=_borsa_kodu(s, t, politika)
+        )
     satir = {
         **meta,
         "kayit_id": f"{kimlik}/{s}/{t.date()}/{istek.kalite_surumu}",
         "kayit_turu": "piyasa_satiri",
         "sembol": s,
+        **pay_alanlari,
         "tarih": _tarih(t),
         "kalite_bayraklari": bayraklar,
         "islem": bool(d["I"][q, j]),

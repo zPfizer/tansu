@@ -965,6 +965,7 @@ def _grup_tanimi_dogrula(tanim):
         "yontem",
         "risk",
         "masraf",
+        "pay_kimligi",
     }:
         raise PilotHatasi("Grup başvuruları geçersiz.")
     for ad in ("anlik_goruntu", "manifest_ozeti", "uyelik_ozeti", "kod_ozeti"):
@@ -972,6 +973,18 @@ def _grup_tanimi_dogrula(tanim):
             _metin(ref[ad])
     for ad in ("takvim", "yontem", "risk", "masraf"):
         _grup_dosya_basvurusu(ref.get(ad))
+    if "pay_kimligi" in ref:
+        # TASARIM 5.15 #167: geçmiş kayıt yalnız seçimin yapısına bağlıdır.
+        from tansu.veri import VeriHatasi, pay_kimligi_secimi_dogrula
+
+        try:
+            pay_kimligi_secimi_dogrula(ref["pay_kimligi"])
+        except VeriHatasi as hata:
+            raise PilotHatasi(str(hata)) from hata
+        if ref["pay_kimligi"]["goruntu_id"] != ref.get("anlik_goruntu") or ref[
+            "pay_kimligi"
+        ]["manifest_ozeti"] != ref.get("manifest_ozeti"):
+            raise PilotHatasi("Pay kimliği grup veri bağıyla uyuşmuyor.")
 
 
 def _grup_tarihi(gun):

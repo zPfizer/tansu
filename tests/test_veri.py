@@ -805,3 +805,266 @@ def test_manifestteki_eksik_dosya_veri_hatasidir(tmp_path, ad):
     assert isinstance(hata.value, veri.VeriHatasi)
     assert f"eksik/{ad}" in str(hata.value)
     assert isinstance(hata.value.__cause__, FileNotFoundError)
+
+
+def pay_kimlikli_goruntu(
+    tmp_path,
+    monkeypatch,
+    *,
+    ek_fiyat=None,
+    tarihler=None,
+    semboller=("TRMET", "TRALT", "AKBNK"),
+):
+    """E1 dış girdisi: mühürlü sentetik fiyatlar ve o görüntüye bağlı tablo."""
+    from hashlib import sha256
+    from pathlib import Path
+
+    tarihler = tarihler or [
+        "2021-01-04",
+        "2025-11-20",
+        "2025-11-21",
+        "2025-11-24",
+        "2025-11-25",
+    ]
+    fiyat = {s: [satir(t, 100.0, 100.0) for t in tarihler] for s in semboller}
+    if ek_fiyat:
+        fiyat.update(ek_fiyat)
+    olaylar = {s: [] for s in fiyat}
+    olaylar["TRALT"] = [
+        dict(
+            SHT_KODU="04",
+            SHHE_TARIH=epoch(dt.date(2025, 11, 21)),
+            SHHE_FIYAT_AYAR_OR=1.0,
+        )
+    ]
+    kimlik = veri.indir(list(fiyat), tmp_path, SahteKaynak(fiyat, olaylar), simdi=SIMDI)
+    manifest = sha256(
+        (tmp_path / "ag" / kimlik / "manifest.json").read_bytes()
+    ).hexdigest()
+    kaynak = (
+        Path(veri.__file__).parent / "referans" / "pay_kimligi_v1" / "eslemeler.csv"
+    )
+    tablo = pd.read_csv(kaynak, encoding="utf-8", dtype=str, keep_default_na=False)
+    tablo["goruntu_id"], tablo["manifest_ozeti"] = kimlik, manifest
+    kok = tmp_path / "referans"
+    hedef = kok / "pay_kimligi_v1"
+    hedef.mkdir(parents=True)
+    tablo.to_csv(
+        hedef / "eslemeler.csv", index=False, encoding="utf-8", lineterminator="\n"
+    )
+    monkeypatch.setattr(veri, "PAY_KIMLIGI_KOKU", kok, raising=False)
+    secim = dict(
+        surum="pay_kimligi_v1",
+        tablo_ozeti=sha256((hedef / "eslemeler.csv").read_bytes()).hexdigest(),
+        kaynak="is_yatirim",
+        goruntu_id=kimlik,
+        manifest_ozeti=manifest,
+    )
+    return veri.oku(kimlik, tmp_path), secim
+
+
+def pay_istegi(semboller, secim, *, bas="2025-11-21", son="2025-11-25"):
+    from dataclasses import replace
+
+    istek = veri.VeriIstegi(
+        tuple(semboller),
+        bas,
+        son,
+        "is_yatirim",
+        "legacy_tansu_v1",
+        "bist30_2021_2025_v1",
+        "is_yatirim",
+        "xu100",
+        ("2021-01-04", "2025-11-20"),
+        "donemsel_bist30_v1",
+    )
+    return replace(istek, pay_kimligi=secim)
+
+
+def test_e1_pay_kimligi_eski_kodun_tum_gecmisini_tek_payda_korur(tmp_path, monkeypatch):
+    from hashlib import sha256
+
+    a, secim = pay_kimlikli_goruntu(tmp_path, monkeypatch)
+    klasor = tmp_path / "ag" / a.kimlik
+    once = {p.name: sha256(p.read_bytes()).hexdigest() for p in klasor.iterdir()}
+    paket = veri.veri_hazirla(pay_istegi(["KOZAL"], secim), a.kimlik, tmp_path)
+    fiyat = [r["duzeltilmis_kapanis"]["deger"] for r in paket["piyasa"]]
+    assert fiyat == [100.0] * 5, "KOZAL isteği TRALT kaynak geçmişini kaybetti"
+    assert paket["semboller"] == ["pay_kimligi_v1/p002"]
+    assert [r["borsa_kodu"] for r in paket["piyasa"]] == ["KOZAL"] * 3 + ["TRALT"] * 2
+    assert {r["kaynak_sembolu"] for r in paket["piyasa"]} == {"TRALT"}
+    assert paket["olaylar"][0]["sembol"] == "pay_kimligi_v1/p002"
+    assert paket["olaylar"][0]["borsa_kodu"] == "KOZAL"
+    assert paket["olaylar"][0]["carpan"] == 1.0
+    assert paket["referans"]["pay_kimligi"] == secim
+    onceki = paket["uyelik"]["gunler"]["2025-11-21"]
+    sonraki = paket["uyelik"]["gunler"]["2025-11-24"]
+    assert (
+        "pay_kimligi_v1/p002" in onceki["semboller"]
+        and "pay_kimligi_v1/p002" in sonraki["semboller"]
+    )
+    assert (
+        next(k for k in onceki["kanitlar"] if k["pay_id"] == "pay_kimligi_v1/p002")[
+            "sembol"
+        ]
+        == "KOZAL"
+    )
+    assert (
+        next(k for k in sonraki["kanitlar"] if k["pay_id"] == "pay_kimligi_v1/p002")[
+            "sembol"
+        ]
+        == "TRALT"
+    )
+    assert {
+        p.name: sha256(p.read_bytes()).hexdigest() for p in klasor.iterdir()
+    } == once
+
+
+@pytest.mark.parametrize(
+    "alan,deger",
+    [
+        ("surum", "pay_kimligi_v999"),
+        ("tablo_ozeti", "f" * 64),
+        ("kaynak", "baska_saglayici"),
+        ("goruntu_id", "baska-goruntu"),
+        ("manifest_ozeti", "e" * 64),
+        ("tablo_ozeti", "SHA256"),
+        ("kaynak", ""),
+        ("fazla", "alan"),
+    ],
+)
+def test_e1_pay_kimligi_yanlis_bagi_reddeder(tmp_path, monkeypatch, alan, deger):
+    a, secim = pay_kimlikli_goruntu(tmp_path, monkeypatch)
+    secim[alan] = deger
+    with pytest.raises(veri.VeriHatasi, match="pay kimliği"):
+        veri.veri_hazirla(pay_istegi(["KOZAL"], secim), a.kimlik, tmp_path)
+
+
+def test_e1_pay_kimligi_iki_etiketi_iki_pay_saymaz(tmp_path, monkeypatch):
+    a, secim = pay_kimlikli_goruntu(tmp_path, monkeypatch)
+    with pytest.raises(veri.VeriHatasi, match="tekrarlı pay"):
+        veri.veri_hazirla(pay_istegi(["KOZAL", "TRALT"], secim), a.kimlik, tmp_path)
+    a, secim = pay_kimlikli_goruntu(
+        tmp_path / "ikinci",
+        monkeypatch,
+        ek_fiyat={"KOZAL": [satir("2025-11-21", 100.0, 100.0)]},
+    )
+    with pytest.raises(veri.VeriHatasi, match="tekrarlı pay"):
+        veri.veri_hazirla(pay_istegi(["KOZAL"], secim), a.kimlik, tmp_path / "ikinci")
+
+
+@pytest.mark.parametrize("boz", ["cakisma", "bosluk", "iki_pay", "yanlis_kaynak"])
+def test_e1_pay_kimligi_gecersiz_tabloyu_reddeder(tmp_path, monkeypatch, boz):
+    from hashlib import sha256
+
+    a, secim = pay_kimlikli_goruntu(tmp_path, monkeypatch)
+    yol = veri.PAY_KIMLIGI_KOKU / secim["surum"] / "eslemeler.csv"
+    tablo = pd.read_csv(yol, encoding="utf-8", dtype=str, keep_default_na=False)
+    if boz in ("cakisma", "bosluk"):
+        tablo.loc[1, "baslangic"] = "2025-11-21" if boz == "cakisma" else "2025-11-25"
+    elif boz == "iki_pay":
+        tablo.loc[2:, "kaynak_sembolu"] = "TRMET"
+    else:
+        tablo["kaynak"] = "baska"
+    tablo.to_csv(yol, index=False, encoding="utf-8", lineterminator="\n")
+    secim["tablo_ozeti"] = sha256(yol.read_bytes()).hexdigest()
+    with pytest.raises(veri.VeriHatasi, match="pay kimliği"):
+        veri.veri_hazirla(pay_istegi(["KOZAL"], secim), a.kimlik, tmp_path)
+
+
+def test_e1_pay_kimligi_olayin_yanlis_kaynak_etiketini_reddeder(tmp_path, monkeypatch):
+    from dataclasses import replace
+
+    a, secim = pay_kimlikli_goruntu(tmp_path, monkeypatch)
+    politika = veri.pay_kimligi_hazirla(
+        secim,
+        kaynak=secim["kaynak"],
+        goruntu_id=a.kimlik,
+        manifest_ozeti=secim["manifest_ozeti"],
+    )
+    olaylar = a.olaylar.copy()
+    olaylar["sembol"] = "KOZAL"
+    with pytest.raises(veri.VeriHatasi, match="kaynak sembolü|tekrarlı pay"):
+        veri.pay_kimligi_uygula(replace(a, olaylar=olaylar), politika)
+
+
+def test_e1_pay_kimligi_secimsiz_etiket_anlamini_korur(tmp_path, monkeypatch):
+    from dataclasses import replace
+
+    a, secim = pay_kimlikli_goruntu(tmp_path, monkeypatch)
+    istek = pay_istegi(["KOZAL"], secim)
+    eski = veri.veri_hazirla(replace(istek, pay_kimligi=None), a.kimlik, tmp_path)
+    yeni = veri.veri_hazirla(istek, a.kimlik, tmp_path)
+    assert eski["semboller"] == ["KOZAL"]
+    assert all(r["duzeltilmis_kapanis"]["deger"] is None for r in eski["piyasa"])
+    assert "pay_kimligi" not in eski["referans"]
+    assert eski["referans"]["kayit_id"] != yeni["referans"]["kayit_id"]
+    ham = veri.veri_hazirla(
+        replace(istek, semboller=("TRALT",), pay_kimligi=None), a.kimlik, tmp_path
+    )
+    assert ham["semboller"] == ["TRALT"]
+    assert [r["duzeltilmis_kapanis"] for r in ham["piyasa"]] == [
+        r["duzeltilmis_kapanis"] for r in yeni["piyasa"]
+    ]
+    assert [r["kalite_bayraklari"] for r in ham["piyasa"]] == [
+        r["kalite_bayraklari"] for r in yeni["piyasa"]
+    ]
+    assert all("borsa_kodu" not in r for r in ham["piyasa"])
+
+
+@pytest.mark.parametrize("boz", ["ayni_pay", "kanit", "uye_sayisi"])
+def test_pay_uyeligi_otuz_ayri_pay_ve_ozgun_kanit_ister(tmp_path, monkeypatch, boz):
+    a, secim = pay_kimlikli_goruntu(tmp_path, monkeypatch)
+    politika = veri.pay_kimligi_hazirla(
+        secim,
+        kaynak=secim["kaynak"],
+        goruntu_id=a.kimlik,
+        manifest_ozeti=secim["manifest_ozeti"],
+    )
+    uyelik = veri.uyelik_hazirla(
+        veri.UyelikIstegi(("2025-11-21",), "donemsel_bist30_v1", "bist30_2021_2025_v1")
+    )
+    gun = uyelik["gunler"]["2025-11-21"]
+    if boz == "ayni_pay":
+        gun["semboller"][0] = "TRALT"
+    elif boz == "kanit":
+        gun["kanitlar"].pop()
+    else:
+        gun["semboller"].pop()
+        gun["kanitlar"] = [
+            k for k in gun["kanitlar"] if k["sembol"] in gun["semboller"]
+        ]
+    with pytest.raises(veri.VeriHatasi, match="üyelik|tekrarlı pay"):
+        veri.pay_uyeligi(uyelik, politika)
+
+
+def test_e1_pay_kimligi_ilk_gozlemden_once_fiyat_uretmez_ve_isinmayi_otelemez(
+    tmp_path, monkeypatch
+):
+    from dataclasses import replace
+
+    tarihler = [
+        "2010-01-04",
+        "2010-02-12",
+        "2021-01-04",
+        "2025-11-21",
+        "2025-11-24",
+        "2025-11-25",
+    ]
+    a, secim = pay_kimlikli_goruntu(
+        tmp_path,
+        monkeypatch,
+        tarihler=tarihler,
+        ek_fiyat={"TRALT": [satir(t, 100.0, 100.0) for t in tarihler[1:]]},
+    )
+    istek = replace(
+        pay_istegi(["KOZAL"], secim, bas="2021-01-04"),
+        isinma_donemi=("2010-01-04", "2020-12-31"),
+    )
+    paket = veri.veri_hazirla(istek, a.kimlik, tmp_path)
+    ilk = paket["piyasa"][0]
+    assert ilk["tarih"] == "2010-01-04"
+    assert ilk["duzeltilmis_kapanis"]["deger"] is None and ilk["islem"] is False
+    assert ilk["son_gecerli_fiyat_tarihi"] is None
+    assert ilk["kaynak_sembolu"] == "TRALT" and ilk["borsa_kodu"] == "KOZAL"
+    assert paket["referans"]["isinma_donemi"]["baslangic"] == "2010-01-04"

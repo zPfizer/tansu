@@ -3003,3 +3003,293 @@ def test_grup_eksik_kaniti_adlandirir_donemi_daraltmaz(tmp_path, ariza):
     assert not any(
         o["kayit_turu"] in ("baslangic", "sonuc", "bitis") for o in depo.oku()
     )
+
+
+def test_pay_kimligi_kayitli_e4_bir_payda_isinir_ve_gecmis_uyeligi_korur(
+    tmp_path, monkeypatch
+):
+    import datetime as dt
+    from decimal import Decimal
+    from tansu import deneme, katalog
+    from tests.test_kayit import pilot_deneme
+    from tests.test_veri import pay_kimlikli_goruntu
+
+    seanslar = sorted(
+        [
+            f"{y}-{a}"
+            for y in range(2021, 2026)
+            for a in ("01-04", "01-05", "12-30", "12-31")
+        ]
+        + ["2025-11-20", "2025-11-21", "2025-11-24", "2025-11-25"]
+    )
+    uyelik = veri.uyelik_hazirla(
+        veri.UyelikIstegi(tuple(seanslar), "donemsel_bist30_v1", "bist30_2021_2025_v1")
+    )
+    kaynak_sembolleri = sorted(
+        {
+            {"KOZAA": "TRMET", "KOZAL": "TRALT"}.get(s, s)
+            for g in uyelik["gunler"].values()
+            for s in g["semboller"]
+        }
+    )
+    tarihler = [
+        t.date().isoformat() for t in pd.bdate_range("2018-01-01", periods=510)
+    ] + seanslar
+    a, secim = pay_kimlikli_goruntu(
+        tmp_path, monkeypatch, tarihler=tarihler, semboller=kaynak_sembolleri
+    )
+    veri_ayarlari = dict(
+        veri_referanslari=[a.kimlik],
+        manifest_ozeti=secim["manifest_ozeti"],
+        uyelik_surumu="bist30_2021_2025_v1",
+        uyelik_ozeti=uyelik["tablo_parmak_izi"],
+        evren_politikasi="donemsel_bist30_v1",
+        kaynak="is_yatirim",
+        kalite_surumu="legacy_tansu_v1",
+        duzeltme_surumu="is_yatirim",
+        takvim_ref="xu100",
+        pay_kimligi=secim,
+        takvim=dict(
+            baslangic=dt.date(2021, 1, 1),
+            bitis=dt.date(2025, 12, 31),
+            seanslar=seanslar,
+            kaynak_ref="sentetik mühürlü E1 takvimi",
+        ),
+    )
+    donemler = [
+        dict(
+            ad=str(y),
+            baslangic=dt.date(y, 1, 1),
+            bitis=dt.date(y, 12, 31),
+            isinma_baslangici=dt.date(2018, 1, 1),
+            sinir_surumu="bagimsiz_donem_v1",
+        )
+        for y in range(2025, 2020, -1)
+    ]
+    donemler.append(dict(donemler[-1], ad="birlesik", bitis=dt.date(2025, 12, 31)))
+    depo = deneme.PilotKayit(tmp_path / "pay-kosusu.jsonl")
+    makbuz = pilot_deneme(
+        depo,
+        katalog.legacy_coz("bugun"),
+        donemler=donemler,
+        veri_ayarlari=veri_ayarlari,
+        yontem_ayarlari=ts.KAYITLI_YONTEM,
+        risk_ayarlari=dict(
+            risk_surumu="bagimsiz_risk_v1", nominal_tutar=Decimal("100000")
+        ),
+        masraf_ayarlari=dict(masraf_surumu="komisyon_bsmv_v1"),
+    )
+    sonuc = ts.kayitli_calistir(
+        depo,
+        makbuz.deneme_id,
+        veri_koku=tmp_path,
+        mod="gelistirme",
+        isci=1,
+        ilerleme=None,
+    )
+    assert sonuc["durum"] == "tamamlandi", sonuc["donemler"]
+    ilk = sonuc["donemler"][0]
+    assert "pay_kimligi_v1/p002" in ilk["durumlar"]
+    assert not {"KOZAL", "TRALT"}.intersection(ilk["durumlar"])
+    assert ilk["isinma"]["pay_kimligi_v1/p002"]["tamam"] is True
+    assert ilk["veri_referansi"]["pay_kimligi"] == secim
+    assert len(ilk["uyelik"]["gunler"]["2025-11-21"]["semboller"]) == 30
+    assert len(ilk["uyelik"]["gunler"]["2025-11-24"]["semboller"]) == 30
+    eski = next(
+        k
+        for k in ilk["uyelik"]["gunler"]["2025-11-21"]["kanitlar"]
+        if k["pay_id"] == "pay_kimligi_v1/p002"
+    )
+    yeni = next(
+        k
+        for k in ilk["uyelik"]["gunler"]["2025-11-24"]["kanitlar"]
+        if k["pay_id"] == "pay_kimligi_v1/p002"
+    )
+    assert (eski["sembol"], yeni["sembol"]) == ("KOZAL", "TRALT")
+    assert depo.deneme_oku(makbuz.deneme_id)["veri_ayarlari"]["pay_kimligi"] == secim
+
+
+def test_grup_pay_kimligi_statik_kapsami_cozer_hesap_cagirmaz(tmp_path, monkeypatch):
+    from hashlib import sha256
+    from tansu import deneme
+    from tests.test_veri import pay_kimlikli_goruntu
+
+    tanim = grup_hazirlik_girdisi(tmp_path)
+    a, secim = pay_kimlikli_goruntu(tmp_path / "pay", monkeypatch)
+    takvim = tmp_path / "pay-takvim.json"
+    takvim.write_text(
+        json.dumps(
+            dict(
+                baslangic="2025-11-20",
+                bitis="2025-11-25",
+                seanslar=["2025-11-20", "2025-11-21", "2025-11-24", "2025-11-25"],
+                kaynak_ref="sentetik kesin takvim",
+            )
+        ),
+        encoding="utf-8",
+    )
+    tanim["seanslar"] = ["2025-11-21", "2025-11-24", "2025-11-25"]
+    tanim["isinma_baslangici"] = "2025-11-20"
+    tanim["hisse_kurali"]["semboller"] = ["KOZAL"]
+    tanim["referanslar"].update(
+        anlik_goruntu=a.kimlik,
+        manifest_ozeti=secim["manifest_ozeti"],
+        pay_kimligi=secim,
+        takvim=dict(yol=str(takvim), sha256=sha256(takvim.read_bytes()).hexdigest()),
+    )
+
+    def yasak(*a, **k):
+        pytest.fail("Statik hazırlık E1 kalite veya gösterge hesabı çağıramaz")
+
+    monkeypatch.setattr(veri, "veri_hazirla", yasak)
+    monkeypatch.setattr(aileler, "ortak_donem_kurulumu", yasak)
+    depo = deneme.PilotKayit(tmp_path / "grup-pay.jsonl")
+    sonuc = ts.grup_hazirla(depo, tanim, veri_koku=tmp_path / "pay")
+    assert sonuc["dislamalar"] == []
+    assert {e["alan"] for e in sonuc["engeller"]} == {
+        "strateji_revizyonlari.kaynak-a.deneme_id"
+    }
+    assert sonuc["yurutme_izni"] is False
+    assert all(o["kayit_turu"] == "grup_hazirligi" for o in depo.oku())
+
+
+def test_pay_kimligi_kod_sinirinda_giris_acik_ve_bekleyen_cikis_kopmaz(
+    tmp_path, monkeypatch
+):
+    from tests.test_veri import pay_kimlikli_goruntu, satir
+    from tests.test_motor import r, s09_istek, s09_mumlar
+
+    tarihler = ["2025-11-19", "2025-11-20", "2025-11-21", "2025-11-24", "2025-11-25"]
+    degerler = [
+        (100, 101, 99, 100),
+        (100, 101, 99, 100),
+        (90, 90, 90, 90),
+        (85, 85, 85, 85),
+        (80, 82, 79, 81),
+    ]
+    fiyatlar = [
+        dict(
+            satir(t, k, k),
+            aof=a,
+            ham_aof=a,
+            yuksek=y,
+            ham_yuksek=y,
+            dusuk=d,
+            ham_dusuk=d,
+        )
+        for t, (a, y, d, k) in zip(tarihler, degerler, strict=True)
+    ]
+    a, secim = pay_kimlikli_goruntu(
+        tmp_path, monkeypatch, tarihler=tarihler, ek_fiyat={"TRALT": fiyatlar}
+    )
+    istek = veri.VeriIstegi(
+        ("KOZAL",),
+        tarihler[0],
+        tarihler[-1],
+        "is_yatirim",
+        "legacy_tansu_v1",
+        "bist30_2021_2025_v1",
+        "is_yatirim",
+        "xu100",
+        evren_politikasi="donemsel_bist30_v1",
+        pay_kimligi=secim,
+    )
+    paket = veri.veri_hazirla(istek, a.kimlik, tmp_path)
+    pay = paket["semboller"][0]
+    m = s09_mumlar([r(*d) for d in degerler])
+    m.index = pd.DatetimeIndex(tarihler)
+    for alan in ("aof", "yuksek", "dusuk", "kapanis"):
+        m[alan] = [x["duzeltilmis_" + alan]["deger"] for x in paket["piyasa"]]
+    m.loc[m.index[2:4], "taban"] = [90, 85]
+    yurutme = s09_istek(sembol=pay, veri_ref_id=paket["referans"]["kayit_id"])
+    ara = motor.tara(m.iloc[:3], {m.index[0]: "sinyal-eski-kod"}, yurutme=yurutme)
+    assert ara["pozisyon"]["bekleyen"] is not None
+    son = motor.tara(m.iloc[3:], {}, yurutme=yurutme, onceki_durum=ara)
+    assert len(son["islemler"]) == 1
+    assert [d["tarih"] for d in son["islemler"][0]["dolumlar"]] == [
+        "2025-11-20",
+        "2025-11-25",
+    ]
+    assert son["ertelenen_satis_gunu_sayisi"] == 2
+    assert son["islemler"][0]["pozisyon"]["risk_girdisi"]["sembol"] == pay
+    giris = motor.tara(m.iloc[2:4], {m.index[2]: "sinyal-cuma"}, yurutme=yurutme)
+    assert giris["dolumlar"][0]["tarih"] == "2025-11-24"
+    assert [x["borsa_kodu"] for x in paket["piyasa"]] == ["KOZAL"] * 3 + ["TRALT"] * 2
+
+
+@pytest.mark.parametrize("boz", ["surum", "fazla", "manifest", "tablo"])
+def test_pay_kimligi_kayitli_hata_hesaba_ve_onbellege_girmez(
+    tmp_path, monkeypatch, boz
+):
+    from pathlib import Path
+    from hashlib import sha256
+    from tansu import katalog
+    from tests.test_kayit import pilot_deneme
+
+    depo, eski, _ = s10_kayitli(tmp_path, monkeypatch)
+    onceki = depo.deneme_oku(eski.deneme_id)
+    v = onceki["veri_ayarlari"]
+    tablo = Path(veri.__file__).parent / "referans" / "pay_kimligi_v1" / "eslemeler.csv"
+    secim = dict(
+        surum="pay_kimligi_v1",
+        tablo_ozeti=sha256(tablo.read_bytes()).hexdigest(),
+        kaynak=v["kaynak"],
+        goruntu_id="s10",
+        manifest_ozeti=v["manifest_ozeti"],
+    )
+    if boz == "surum":
+        secim["surum"] = "bilinmeyen"
+    elif boz == "fazla":
+        secim["otomatik"] = True
+    elif boz == "manifest":
+        secim["manifest_ozeti"] = "e" * 64
+    else:
+        secim["tablo_ozeti"] = "f" * 64
+    v["pay_kimligi"] = secim
+    yeni = pilot_deneme(
+        depo,
+        katalog.legacy_coz("bugun"),
+        **{
+            a: onceki[a]
+            for a in (
+                "donemler",
+                "veri_ayarlari",
+                "yontem_ayarlari",
+                "risk_ayarlari",
+                "masraf_ayarlari",
+            )
+        },
+    )
+    assert yeni.ayar_ozeti != eski.ayar_ozeti
+
+    def yasak(*a, **k):
+        pytest.fail(
+            "Hatalı kimlik E1/E2/E3 hesabına veya yeniden kullanılan pakete ulaşamaz"
+        )
+
+    monkeypatch.setattr(veri, "veri_hazirla", yasak)
+    monkeypatch.setattr(aileler, "ortak_donem_kurulumu", yasak)
+    monkeypatch.setattr(motor, "tara", yasak)
+    if boz == "tablo":
+        sonuc = ts.kayitli_calistir(
+            depo,
+            yeni.deneme_id,
+            veri_koku=tmp_path,
+            mod="gelistirme",
+            isci=1,
+            ilerleme=None,
+        )
+        assert sonuc["durum"] == "hata"
+        assert all("tablo özeti" in s["neden"] for s in sonuc["donemler"])
+        assert all(s["veri_referansi"] is None for s in sonuc["donemler"])
+    else:
+        with pytest.raises((ValueError, veri.VeriHatasi), match="[Pp]ay kimliği"):
+            ts.kayitli_calistir(
+                depo,
+                yeni.deneme_id,
+                veri_koku=tmp_path,
+                mod="gelistirme",
+                isci=1,
+                ilerleme=None,
+            )
+        assert len(depo.oku()) == 2
