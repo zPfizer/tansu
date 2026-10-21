@@ -10,6 +10,8 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ### Değişti
 
+- Site işlerinin esas şablonu Levent'in tarihli kararı ve içerik özetiyle sabitlendi; modül başına kaynak, canlı kanıt ve ayrı yayım onayı korundu. (#69)
+
 - Ana dal adı `main` oldu; CI, edit kancası, kapanış komutu ve güncel iş yönergeleri yeni ada uyarlandı. (#142)
 
 - Çalışma kuralları kullanılan ajan araçlarına uyarlandı; belge sahipliği ve bekleyen sözleşmelerin durumu netleşti. Tekrarlanan inceleme kuralları atfa dönüştü, iş klasörü kapanışına silme onayı ve kanıt kontrolü eklendi. (#130)
