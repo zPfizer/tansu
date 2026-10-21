@@ -1366,9 +1366,19 @@ seçimini açıkça onayladı. Eski §5.10 ve §5.14 yöntemleri kendi anlamlar�
 - Bölgenin merkezi, kaybeden hücreye veya tarama sınırına en uzak uygun hücredir.
   Uzaklık en kısa tek eksenli adım sayısıdır. Eşitlikte kendisi dahil çevresindeki
   en düşük toplam net R'si daha büyük hücre, sonra kanonik indeks sırası seçilir.
+  Teknik mesafe, özgün ızgarada koordinat farklarının mutlak değerleri toplamıdır;
+  sınır uzaklığı en yakın dış kenar indeksine kadardır. Geçersiz alan mesafe hedefi
+  değildir; geometrik adım sayımı alan dışı koordinattan geçebilir. İndeksler
+  sıkıştırılmaz; eksik hücreye sayısal zarar atanmaz. Bu ölçüm, izinli koordinatlar
+  üzerinde yol bulunmasını veya erişilemeyen hedef için sonsuz puanı gerektirmez.
 - Uygun merkez yoksa seçilmiş ayar yoktur. En iyi tek hücre gösterilebilir;
   seçilmiş diye etiketlenmez. Sınır ve eksik komşuluk bilgileri saklanır.
   Sonuç göstermek günlük uygunluk vermez; SAHİP-86/111/d5 kapıları sürer.
+
+El hesabı: tek eksende 0–8 indeksleri ve yalnız 4 indeksinde kayıp varsa,
+eşit kârlı bileşenler 0–3 ve 5–8 olur. Sol bileşenin uygun merkezleri 1 ve 2'dir.
+İndeks 1'in kenara uzaklığı 1, indeks 2'nin hem kenara hem kayba uzaklığı 2'dir;
+sol bileşen seçildiğinde merkez 2 olur.
 
 Bu onay #93/#94'ün diğer yöntem eksiklerini, çiftin #128 risk dayanağını veya
 panelin bileşim kanıtını kapatmaz. Aşağıdaki yüzler dağıtıcının teknik sözleşmesidir;
@@ -1486,6 +1496,13 @@ kaydını doğrular. İşlem başvurusu aynı çocuk koşusu ve döneme aittir. 
 `donem_sonucu_kaydet` aynı koşu kısıtı gevşetilmez; yapay sinyal kimliği üretilmez.
 Üst başlangıcındaki hücre ve arama işleri bitişte kimlikle bir kez sayılır. Başarısız
 hücre veya eksik iş varken tam başarı yazılmaz. Tekrarlar önceki geçmişi silmez.
+
+Eski pozitif hücre döngüsünün mevcut `Zincir` paylaşımı korunur. Ortak hücre
+çağrısının `yurutme` girdisi, bu eski yolda aynı mum nesnesine ve aynı çıkış ayarlarına
+bağlı mevcut `motor.Zincir` nesnesi olabilir. Yalnız üç belgeli giriş ekseni farklı
+olabilir; her çağrıda hücrenin kendi kurulum değerleri aktarılır. Kurulum değerli
+önbellek anahtarı değişmez. Uyumsuz mum veya çıkış ayarıyla önbellek kullanılmaz.
+Kayıtlı S09 durumları bu eski nesneyle paylaşılmaz; genel önbellek arayüzü eklenmez.
 
 D5 için eski `saglamlik.ema`, `tansusinama.ema_tablolari` ve kayıtlı akış gerçek EMA
 hücre çağrısını ortak sahibine verir; giriş günü, K1, kurulum/karantina, masraf ve
