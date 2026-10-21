@@ -5,6 +5,7 @@ from decimal import Decimal
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass, field
 from hashlib import sha256
+from itertools import product
 import json
 import math
 import os
@@ -299,6 +300,449 @@ def _cocuk_sonuc_baglari(olaylar, kosu_id, referanslar):
         sonuc = _bul(olaylar, ref, "sonuc")
         if (sonuc["kosu_id"], sonuc.get("sonuc_turu")) != (kosu_id, "donem_v1"):
             raise PilotHatasi("Çocuk sonucu başka koşuya veya sonuç türüne bağlı.")
+
+
+def _arama_yontemi(ust, politika):
+    """TASARIM 5.15 S11: kayıt sınırında yalnız dondurulmuş yöntem geçerlidir."""
+    y = ust["yontem_ayarlari"]
+    beklenen = dict(
+        yontem="kayitli_izgara_v1",
+        tekrar=0,
+        secim_politikasi="genis_bolge_net_r_v1",
+        olcu_politikasi="bagimsiz_olcu_v1",
+        eksenler=y.get("eksenler"),
+        hucre_yontemi=dict(
+            yontem="kayitli_donem_v1",
+            tekrar=0,
+            yurutme_surumu="bagimsiz_islem_v1",
+            fiyat_politikasi="aof_v1",
+            muhasebe_politikasi="tani_referans_v1",
+        ),
+    )
+    if kanonik(y) != kanonik(beklenen) or politika != y["secim_politikasi"]:
+        raise PilotHatasi("Arama yöntemi veya seçim politikası uyuşmuyor.")
+    eksenler = y["eksenler"]
+    if not isinstance(eksenler, list) or not eksenler:
+        raise PilotHatasi("Arama eksenleri gerekli.")
+    for eksen in eksenler:
+        _arama_ekseni(eksen)
+    adlar = [e["ad"] for e in eksenler]
+    if adlar != sorted(set(adlar)):
+        raise PilotHatasi("Arama eksen sırası veya tekilliği geçersiz.")
+    return eksenler
+
+
+def _arama_ekseni(eksen):
+    izinli = {
+        "esik": [0.010, 0.012, 0.015],
+        "min_gun": [2, 3, 5],
+        "pencere": [5, 10, 20],
+    }
+    if not isinstance(eksen, dict) or set(eksen) != {"ad", "birim", "degerler"}:
+        raise PilotHatasi("Arama ekseni ad, birim ve değerler içermelidir.")
+    ad, degerler = eksen["ad"], eksen["degerler"]
+    if ad not in izinli or eksen["birim"] != ("oran" if ad == "esik" else "gun"):
+        raise PilotHatasi("Arama ekseni veya birimi izinli değil.")
+    if not isinstance(degerler, list) or not degerler:
+        raise PilotHatasi("Arama eksen değerleri gerekli.")
+    if degerler != sorted(set(degerler)) or not set(degerler) <= set(izinli[ad]):
+        raise PilotHatasi("Arama eksen değerleri izinli, artan ve tekil olmalıdır.")
+
+
+def _arama_tam_ayari(ust, ayarlar):
+    s = ust["strateji"]
+    sabit = {
+        a["ad"]: a["deger"] for a in s["parametreler"] if a["koken"] == "legacy_izgara"
+    }
+    try:
+        strateji = katalog.legacy_coz(
+            s["varyant"],
+            s["katalog_surumu"],
+            sayisal_ayarlar=sabit | ayarlar,
+        )
+    except katalog.KatalogHatasi, OverflowError:
+        return None
+    return _ayarlar(
+        ust
+        | dict(
+            strateji=asdict(strateji),
+            yontem_ayarlari=ust["yontem_ayarlari"]["hucre_yontemi"],
+        )
+    )
+
+
+def _arama_makbuzu(olaylar, makbuz, tur, deneme_id, kosu_id, ozet):
+    olay = _bul(olaylar, makbuz["olay_id"], tur)
+    beklenen = (deneme_id, kosu_id, ozet)
+    if (makbuz["deneme_id"], makbuz["kosu_id"], makbuz["ayar_ozeti"]) != beklenen:
+        raise PilotHatasi("Arama makbuzu çocuk kimliği veya ayar özetiyle uyuşmuyor.")
+    if (
+        olay.get("deneme_id"),
+        olay.get("kosu_id"),
+        olay.get("ayar_parmak_izi"),
+    ) != beklenen:
+        raise PilotHatasi("Arama makbuzunun gerçek kaydı uyuşmuyor.")
+    return olay
+
+
+def _arama_bos_hucresi(h):
+    _metin(h["neden"])
+    if h["durum"] not in (
+        "alan_disi",
+        "kayit_hatasi",
+        "hesap_hatasi",
+        "eksik",
+        "baslamadi",
+    ):
+        raise PilotHatasi("Kayıtsız çocuk başarılı olamaz.")
+    alanlar = (
+        "kosu_id",
+        "ayar_parmak_izi",
+        "kayit_makbuzu",
+        "baslangic_makbuzu",
+        "bitis_makbuzu",
+    )
+    if any(h[a] is not None for a in alanlar):
+        raise PilotHatasi("Kayıtsız çocuğun koşusu veya makbuzu olamaz.")
+
+
+def _arama_cocuk_kaydi(olaylar, ust, baslangic, h):
+    cocuk = _bul(olaylar, h["deneme_id"], "deneme", "deneme_id")
+    if (cocuk["ust_deneme_id"], cocuk["baglar"].get("izgara_ust_deneme")) != (
+        ust["deneme_id"],
+    ) * 2:
+        raise PilotHatasi("Çocuk üst aramaya bağlı değil.")
+    _strateji_kaydi(cocuk["strateji"])
+    ayarlar = _ayarlar(cocuk)
+    if (
+        kanonik(ayarlar) != kanonik(h["tam_ayarlar"])
+        or _ayar_ozeti(ayarlar) != h["ayar_parmak_izi"]
+    ):
+        raise PilotHatasi("Çocuk tam ayarı veya ayar özeti uyuşmuyor.")
+    _arama_makbuzu(
+        olaylar,
+        h["kayit_makbuzu"],
+        "deneme",
+        h["deneme_id"],
+        None,
+        h["ayar_parmak_izi"],
+    )
+    if olaylar.index(cocuk) <= olaylar.index(baslangic):
+        raise PilotHatasi("Çocuk bu üst arama başlamadan kayıtlı.")
+    return cocuk
+
+
+def _arama_cocuk_kosusu(olaylar, baslangic, h):
+    if h["kosu_id"] is None:
+        _metin(h["neden"])
+        if h["baslangic_makbuzu"] is not None or h["bitis_makbuzu"] is not None:
+            raise PilotHatasi("Başlamayan çocuğun koşu makbuzu olamaz.")
+        return
+    b = _arama_cocuk_baslangici(olaylar, h)
+    if olaylar.index(b) <= olaylar.index(baslangic):
+        raise PilotHatasi("Çocuk koşusu üst aramadan önce başlamış.")
+    isler = [f"donem:{d['ad']}" for d in h["tam_ayarlar"]["donemler"]]
+    if b["is_listesi"] != isler:
+        raise PilotHatasi("Çocuk dönem işleri uyuşmuyor.")
+    for alan in ("anlik_goruntu", "manifest_ozeti", "uyelik_surumu"):
+        if b[alan] != baslangic[alan]:
+            raise PilotHatasi("Çocuk koşusunun veri kimliği üst aramayla uyuşmuyor.")
+    _arama_cocuk_bitisi(olaylar, h)
+
+
+def _arama_cocuk_baslangici(olaylar, h):
+    if h["baslangic_makbuzu"] is not None:
+        return _arama_makbuzu(
+            olaylar,
+            h["baslangic_makbuzu"],
+            "baslangic",
+            h["deneme_id"],
+            h["kosu_id"],
+            h["ayar_parmak_izi"],
+        )
+    if h["durum"] in ("tamamlandi", "islemsiz") or any(
+        d["sonuc_ref"] is not None for d in h["donemler"]
+    ):
+        raise PilotHatasi("Başlangıç makbuzu doğrulanmadan çocuk sonucu olamaz.")
+    b = _bul(olaylar, h["kosu_id"], "baslangic", "kosu_id")
+    if (b["deneme_id"], b["ayar_parmak_izi"]) != (h["deneme_id"], h["ayar_parmak_izi"]):
+        raise PilotHatasi("Başarısız çocuğun gerçek başlangıç bağı uyuşmuyor.")
+    return b
+
+
+def _arama_cocuk_bitisi(olaylar, h):
+    bitis = None
+    if h["bitis_makbuzu"] is not None:
+        bitis = _arama_makbuzu(
+            olaylar,
+            h["bitis_makbuzu"],
+            "bitis",
+            h["deneme_id"],
+            h["kosu_id"],
+            h["ayar_parmak_izi"],
+        )
+    if h["durum"] in ("tamamlandi", "islemsiz"):
+        if bitis is None or bitis["durum"] != "tamamlandi" or bitis["basarisiz"]:
+            raise PilotHatasi("Başarılı çocuk için başarılı bitiş makbuzu gerekli.")
+        isler = [f"donem:{d['ad']}" for d in h["tam_ayarlar"]["donemler"]]
+        if bitis["tamamlanan"] != isler:
+            raise PilotHatasi("Başarılı çocuk bütün dönem işlerini tamamlamalıdır.")
+
+
+def _arama_hucresi(olaylar, ust, baslangic, h, ayarlar):
+    if h["ust_deneme_id"] != ust["deneme_id"] or kanonik(h["ayarlar"]) != kanonik(
+        ayarlar
+    ):
+        raise PilotHatasi("Hücre üst bağı veya eksen değeri uyuşmuyor.")
+    tam = _arama_tam_ayari(ust, ayarlar)
+    if kanonik(h["tam_ayarlar"]) != kanonik(tam):
+        raise PilotHatasi("Hücrenin tam ayarı dondurulmuş aramayla uyuşmuyor.")
+    if tam is None:
+        if h["durum"] != "alan_disi" or h["deneme_id"] is not None:
+            raise PilotHatasi("İzin verilmeyen hücre alan dışı kalmalıdır.")
+    elif (
+        h["durum"] == "alan_disi"
+        or h["strateji_ayar_parmak_izi"] != tam["strateji"]["ayar_parmak_izi"]
+    ):
+        raise PilotHatasi("Hücre strateji özeti veya izinli alanı uyuşmuyor.")
+    if h["deneme_id"] is None:
+        _arama_bos_hucresi(h)
+    else:
+        _arama_cocuk_kaydi(olaylar, ust, baslangic, h)
+        _arama_cocuk_kosusu(olaylar, baslangic, h)
+    _arama_donemleri(olaylar, ust, h)
+
+
+def _arama_donemleri(olaylar, ust, h):
+    if h["durum"] not in (
+        "tamamlandi",
+        "islemsiz",
+        "eksik",
+        "hesap_hatasi",
+        "kayit_hatasi",
+        "alan_disi",
+        "baslamadi",
+    ):
+        raise PilotHatasi("Arama hücre durumu tanımsız.")
+    donemler = h["donemler"]
+    if kanonik([d["donem"] for d in donemler]) != kanonik(ust["donemler"]):
+        raise PilotHatasi("Hücrenin dönem yuvaları kayıtlı dönemlerle uyuşmuyor.")
+    for d in donemler:
+        _arama_donemi(olaylar, h, d)
+    if h["durum"] in ("tamamlandi", "islemsiz"):
+        if h["kosu_id"] is None or any(
+            d["durum"] not in ("tamamlandi", "islemsiz") for d in donemler
+        ):
+            raise PilotHatasi(
+                "Eksik veya başarısız dönem varken hücre başarılı olamaz."
+            )
+    else:
+        _metin(h["neden"])
+
+
+def _arama_donemi(olaylar, h, d):
+    if d["is_id"] != f"donem:{d['donem']['ad']}":
+        raise PilotHatasi("Dönem iş kimliği uyuşmuyor.")
+    if d["durum"] not in (
+        "tamamlandi",
+        "islemsiz",
+        "eksik",
+        "hesap_hatasi",
+        "kayit_hatasi",
+        "baslamadi",
+    ):
+        raise PilotHatasi("Arama dönem durumu tanımsız.")
+    refs = d["islem_referanslari"]
+    if len(set(refs)) != len(refs):
+        raise PilotHatasi("Arama işlem referansı yinelenmiş.")
+    _arama_islem_baglari(olaylar, h, d)
+    if d["sonuc_ref"] is None:
+        _metin(d["neden"])
+        if d["durum"] in ("tamamlandi", "islemsiz") or d["semboller"]:
+            raise PilotHatasi("Yayımlanmamış dönem başarılı veya ölçülmüş olamaz.")
+        return
+    sonuc = _bul(olaylar, d["sonuc_ref"], "sonuc")
+    _arama_donem_sonucu(h, d, sonuc)
+    _cocuk_sonuc_baglari(olaylar, h["kosu_id"], sonuc["cikti_referanslari"])
+    _arama_olcu_baglari(olaylar, d)
+
+
+def _arama_donem_sonucu(h, d, sonuc):
+    beklenen = (
+        "donem_v1",
+        h["deneme_id"],
+        h["kosu_id"],
+        h["ayar_parmak_izi"],
+        d["is_id"],
+    )
+    alanlar = ("sonuc_turu", "deneme_id", "kosu_id", "ayar_parmak_izi", "is_id")
+    if tuple(sonuc.get(a) for a in alanlar) != beklenen:
+        raise PilotHatasi("Dönem sonucu başka çocuk, koşu veya ayara bağlı.")
+    if (
+        kanonik(sonuc["donem"]) != kanonik(d["donem"])
+        or sonuc["islem_referanslari"] != d["islem_referanslari"]
+    ):
+        raise PilotHatasi("Dönem sonucu dönem veya işlem referansıyla uyuşmuyor.")
+    for alan in ("deneme_id", "kosu_id", "ayar_parmak_izi", "strateji_ayar_parmak_izi"):
+        if sonuc["icerik"][alan] != h[alan]:
+            raise PilotHatasi("Dönem içeriğinin çocuk veya ayar özeti uyuşmuyor.")
+    basarili = d["durum"] in ("tamamlandi", "islemsiz")
+    if (sonuc["durum"] == "tamamlandi") != basarili:
+        raise PilotHatasi("Dönem sonucu başarı durumu uyuşmuyor.")
+    if not basarili:
+        _metin(d["neden"])
+
+
+def _arama_islem_baglari(olaylar, h, d):
+    _donem_islem_baglari(olaylar, h["kosu_id"], d["donem"], d["islem_referanslari"])
+    for ref in d["islem_referanslari"]:
+        islem = _bul(olaylar, ref, "islem")
+        if (islem["deneme_id"], islem["ayar_parmak_izi"]) != (
+            h["deneme_id"],
+            h["ayar_parmak_izi"],
+        ):
+            raise PilotHatasi("İşlem başka çocuğa veya ayara bağlı.")
+
+
+def _arama_olcu_baglari(olaylar, d):
+    olculen = []
+    for s in d["semboller"]:
+        o = s["olcu"]
+        refs = _arama_olculen_islemler(olaylar, o)
+        olculen.extend(refs)
+        egri = o.get("egri_tanimi")
+        if egri is not None and not set(egri["referanslar"]) <= set(refs):
+            raise PilotHatasi("Eğri başka işlem referansına bağlı.")
+    if len(set(olculen)) != len(olculen) or set(olculen) != set(
+        d["islem_referanslari"]
+    ):
+        raise PilotHatasi("Ölçülerin işlem referansları dönemle uyuşmuyor.")
+
+
+def _arama_olculen_islemler(olaylar, olcu):
+    if olcu["politika"] != "bagimsiz_olcu_v1":
+        raise PilotHatasi("Arama ölçü politikası uyuşmuyor.")
+    refs = []
+    for i in olcu["islemler"] + olcu["acik_kismi"]:
+        islem = _bul(olaylar, i["islem_ref"], "islem")
+        if islem["olaylar"][0]["pozisyon"]["risk_girdisi"]["islem_id"] != i["islem_id"]:
+            raise PilotHatasi("Ölçünün gerçek işlem kimliği uyuşmuyor.")
+        refs.append(i["islem_ref"])
+    return refs
+
+
+def _arama_hucreleri(olaylar, ust, baslangic, hucreler, eksenler):
+    indeksler = list(product(*(range(len(e["degerler"])) for e in eksenler)))
+    if kanonik([h["indeks"] for h in hucreler]) != kanonik(
+        [list(i) for i in indeksler]
+    ):
+        raise PilotHatasi("Arama koordinatları eksik, yinelenmiş veya sırasız.")
+    isler = ["arama"]
+    for h, indeks in zip(hucreler, indeksler, strict=True):
+        if h["is_id"] != "hucre:" + ":".join(map(str, indeks)):
+            raise PilotHatasi("Hücre iş kimliği koordinatla uyuşmuyor.")
+        ayarlar = {
+            e["ad"]: e["degerler"][i] for e, i in zip(eksenler, indeks, strict=True)
+        }
+        _arama_hucresi(olaylar, ust, baslangic, h, ayarlar)
+        if h["durum"] != "alan_disi":
+            isler.append(h["is_id"])
+    if baslangic["is_listesi"] != isler:
+        raise PilotHatasi("Üst aramanın başlangıç işleri izinli hücrelerle uyuşmuyor.")
+
+
+def _arama_bolge_baglari(ust, hucreler, bolgeler, politika):
+    for b in bolgeler:
+        if b["politika"] != politika or b["strateji_id"] != ust["strateji"]["kayit_id"]:
+            raise PilotHatasi("Bölgenin politika veya strateji bağı uyuşmuyor.")
+        if not any(kanonik(b["donem"]) == kanonik(d) for d in ust["donemler"]):
+            raise PilotHatasi("Bölge kayıtlı döneme bağlı değil.")
+        _arama_secilen_cocuk(hucreler, b)
+
+
+def _arama_secilen_cocuk(hucreler, bolge):
+    if bolge["secilen"] is None:
+        _metin(bolge["neden"])
+        if bolge["secilen_deneme_id"] is not None:
+            raise PilotHatasi("Seçilmemiş bölgede çocuk kimliği olamaz.")
+        return
+    h = next((h for h in hucreler if h["indeks"] == bolge["secilen"]), None)
+    if (
+        h is None
+        or h["deneme_id"] is None
+        or h["deneme_id"] != bolge["secilen_deneme_id"]
+    ):
+        raise PilotHatasi("Seçilen çocuk bölgenin hücresine bağlı değil.")
+
+
+def _arama_kosu_sonucu(olaylar, kosu_id):
+    return next(
+        (
+            o
+            for o in olaylar
+            if o.get("sonuc_turu") == "arama_v1" and o.get("kosu_id") == kosu_id
+        ),
+        None,
+    )
+
+
+def _arama_yayini(olaylar, makbuz, girdi):
+    ust = _bul(olaylar, makbuz.deneme_id, "deneme", "deneme_id")
+    if (
+        _ayar_ozeti(_ayarlar(ust)) != makbuz.ayar_ozeti
+        or ust["ayar_parmak_izi"] != makbuz.ayar_ozeti
+    ):
+        raise PilotHatasi("Üst arama ayarı veya özeti değişmiş.")
+    baslangic = _arama_makbuzu(
+        olaylar,
+        asdict(makbuz),
+        "baslangic",
+        makbuz.deneme_id,
+        makbuz.kosu_id,
+        makbuz.ayar_ozeti,
+    )
+    if girdi["is_id"] != "arama" or girdi["is_id"] not in baslangic["is_listesi"]:
+        raise PilotHatasi("Arama işi başlangıç listesinde yok.")
+    if _arama_kosu_sonucu(olaylar, makbuz.kosu_id) is not None:
+        raise PilotHatasi("Arama sonucu zaten kayıtlı.")
+    eksenler = _arama_yontemi(ust, girdi["politika_surumu"])
+    _arama_hucreleri(olaylar, ust, baslangic, girdi["hucreler"], eksenler)
+    _arama_sonuc_referanslari(girdi)
+    _arama_bolge_baglari(
+        ust, girdi["hucreler"], girdi["bolgeler"], girdi["politika_surumu"]
+    )
+
+
+def _arama_sonuc_referanslari(girdi):
+    refs = [
+        d["sonuc_ref"]
+        for h in girdi["hucreler"]
+        for d in h["donemler"]
+        if d["sonuc_ref"] is not None
+    ]
+    if girdi["cikti_referanslari"] != refs or len(set(refs)) != len(refs):
+        raise PilotHatasi("Arama çıktı referansları dönem sonuçlarıyla uyuşmuyor.")
+
+
+def _arama_bitisini_dogrula(olaylar, kosu_id, durum, tamamlanan, referanslar):
+    if durum in ("hata", "iptal") and not tamamlanan and not referanslar:
+        return
+    sonuc = _arama_kosu_sonucu(olaylar, kosu_id)
+    if sonuc is None:
+        if durum == "tamamlandi" or tamamlanan:
+            raise PilotHatasi("Arama yayımlanmadan işi tamamlandı sayılamaz.")
+        return
+    _arama_bitis_isleri(sonuc, tamamlanan, referanslar)
+
+
+def _arama_bitis_isleri(sonuc, tamamlanan, referanslar):
+    beklenen = {"arama"} | {
+        h["is_id"]
+        for h in sonuc["hucreler"]
+        if h["durum"] in ("tamamlandi", "islemsiz")
+    }
+    if set(tamamlanan) != beklenen or referanslar != [sonuc["kayit_id"]]:
+        raise PilotHatasi("Arama bitişi kayıtlı hücre sonuçlarıyla uyuşmuyor.")
 
 
 @dataclass(frozen=True)
@@ -879,6 +1323,47 @@ class _Kosu:
             denetle,
         )
 
+    def arama_sonucu_kaydet(
+        self,
+        *,
+        is_id,
+        hucreler,
+        bolgeler,
+        politika_surumu,
+        birimler,
+        uyarilar,
+        cikti_referanslari,
+    ):
+        """TASARIM 5.15 S11: gerçek çocuk sonuçlarını üst koşuya bağla."""
+        if not isinstance(birimler, dict) or not birimler:
+            raise PilotHatasi("Arama birimleri gerekli.")
+        if any(
+            not isinstance(v, list)
+            for v in (hucreler, bolgeler, uyarilar, cikti_referanslari)
+        ):
+            raise PilotHatasi(
+                "Arama hücreleri, bölgeleri ve referansları liste olmalıdır."
+            )
+        alanlar = dict(
+            sonuc_turu="arama_v1",
+            is_id=is_id,
+            hucreler=hucreler,
+            bolgeler=bolgeler,
+            politika_surumu=politika_surumu,
+            birimler=birimler,
+            uyarilar=uyarilar,
+            cikti_referanslari=cikti_referanslari,
+            veri_ref_id=self._baslangic["anlik_goruntu"],
+        )
+
+        def denetle(olaylar):
+            try:
+                _arama_yayini(olaylar, self.makbuz, alanlar)
+            except (KeyError, TypeError, AttributeError, IndexError) as hata:
+                raise PilotHatasi(f"Arama bağı eksik veya geçersiz: {hata}") from hata
+
+        return self._yaz("sonuc", alanlar, denetle)
+
     def islem_kaydet(
         self,
         *,
@@ -950,6 +1435,13 @@ class _Kosu:
             raise PilotHatasi("Her iş bir kez muhasebeleştirilmelidir.")
         if durum == "tamamlandi" and basarisiz:
             raise PilotHatasi("Başarısız iş varken tamamlandı denemez.")
+
+        def denetle(olaylar):
+            if self._deneme["yontem_ayarlari"].get("yontem") == "kayitli_izgara_v1":
+                _arama_bitisini_dogrula(
+                    olaylar, self.makbuz.kosu_id, durum, tamamlanan, cikti_referanslari
+                )
+
         makbuz = self._yaz(
             "bitis",
             {
@@ -962,6 +1454,7 @@ class _Kosu:
                 "ozetler": ozetler,
                 "bitis_zamani": datetime.now(timezone.utc),
             },
+            denetle,
         )
         self._bitti = True
         return makbuz

@@ -124,3 +124,184 @@ def test_ema_k1_tek_gunluk_uyelik_typeerror_degil_k1_hatasi_verir(tmp_path):
 def test_rastgele_tekrarda_nan_gercege_esit_ya_da_iyi_sayilir():
     # TASARIM 5.7: NaN tekrar p'yi düşürmez. Gerçek 0,3; tekrarlar [NaN, 0,5, 0,1]: k = 1 (NaN) + 1 (0,5) = 2; p = (1+2)/(1+3) = 3/4.
     assert istatistik.p_deger(0.3, [float("nan"), 0.5, 0.1]) == pytest.approx(0.75)
+
+
+def s11_egri(satirlar=None, **degisiklik):
+    return (
+        dict(
+            tur="tani_net_r",
+            satirlar=satirlar
+            if satirlar is not None
+            else [
+                {"an": "2025-01-03", "deger": 2.0},
+                {"an": "2025-01-05", "deger": 1.0},
+                {"an": "2025-01-07", "deger": 3.0},
+            ],
+            baslangic_degeri=0.0,
+            baslangic_ani="2025-01-01",
+            baslangic_politikasi="acik",
+            tarih_temeli="takvim_gunu",
+            normalizasyon="ilk_planlanan_risk",
+            birim="R",
+            muhasebe_politikasi="tani_net_r_v1",
+            referanslar=["elle-egri"],
+        )
+        | degisiklik
+    )
+
+
+def test_s11_baslangic_dahil_mutlak_r_dususu_ve_takvim_suresi():
+    sonuc = istatistik.egri_dususu(s11_egri())
+    assert sonuc.get("derinlik") == {"deger": 1.0, "birim": "R", "bos_nedeni": None}
+    assert sonuc["sure"] == {"deger": 4, "birim": "takvim_gunu", "bos_nedeni": None}
+
+
+def test_s11_ilk_kapanis_ve_eklenen_bir_farkli_politikadir():
+    import pandas as pd
+    from tansu import tansusinama
+
+    kapanis = pd.Series([0.9, 1.0], index=pd.to_datetime(["2025-01-01", "2025-01-02"]))
+    assert istatistik.dusus(kapanis) == (0.0, 1)
+    assert tansusinama.olculer([], [], kapanis, 0)["max_dd"] == pytest.approx(-0.1)
+    sonuc = istatistik.egri_dususu(
+        s11_egri(
+            [{"an": "2025-01-03", "deger": -2.0}],
+        )
+    )
+    assert sonuc["derinlik"]["deger"] == 2.0
+    assert sonuc["sure"]["deger"] == 2
+
+
+def s11_islem(*, acik=False):
+    from tansu import islem_riski
+
+    dolumlar = [
+        dict(dolum_id="alis", yon="alis", fiyat=100.0, adet=100),
+        dict(dolum_id="yari", yon="satis", fiyat=110.0, adet=50),
+    ]
+    if not acik:
+        dolumlar.append(dict(dolum_id="son", yon="satis", fiyat=90.0, adet=50))
+    sonuc = islem_riski.hesapla(
+        dict(
+            giris_fiyat=100.0,
+            ilk_stop=90.0,
+            nominal_tutar=100000.0,
+            aile="ema_sikismasi",
+            risk_surumu="bagimsiz_risk_v1",
+            masraf_surumu="komisyon_bsmv_v1",
+            dolumlar=dolumlar,
+        )
+    )
+    return dict(islem_id="acik" if acik else "kapali", sonuc=sonuc)
+
+
+def test_s11_nihai_sonuca_kismi_kar_ikinci_kez_eklenmez():
+    sonuc = istatistik.olc(
+        [s11_islem(), s11_islem(acik=True)], politika="bagimsiz_olcu_v1"
+    )
+    assert sonuc.get("olculer", {}).get("net_sonuc") == {
+        "deger": pytest.approx(-31.5),
+        "birim": "TL",
+        "bos_nedeni": None,
+    }
+    assert sonuc["olculer"]["masraf"]["deger"] == pytest.approx(31.5)
+    assert sonuc["olculer"]["islem"]["deger"] == 1
+    assert sonuc["acik_kismi"][0]["olculer"]["net_sonuc"]["deger"] == pytest.approx(
+        483.4625
+    )
+    assert sonuc["acik_kismi"][0]["olculer"]["kalan_adet"]["deger"] == 50
+    assert sonuc["islemler"][0]["paydalar"]["ilk_risk"] == 1998.0545
+    assert sonuc["olculer"]["sharpe"]["deger"] is None
+    assert sonuc["olculer"]["sharpe"]["bos_nedeni"]
+
+
+@pytest.mark.parametrize("ariza", [None, "payda", "kaynak", "tarih", "tek", "sabit"])
+def test_s11_sharpe_yalniz_hizali_kaynakli_gunluk_fark(ariza):
+    karsilastirma = dict(
+        politika="gunluk_fark_252_v1",
+        kaynak_ref="tarihli-faiz",
+        payda="onceki_gun_ozkaynak",
+        referanslar=["gunluk-degerleme"],
+        getiriler=[
+            {"an": "2025-01-02", "deger": 0.02},
+            {"an": "2025-01-03", "deger": 0.04},
+        ],
+        risksiz=[
+            {"an": "2025-01-02", "deger": 0.01},
+            {"an": "2025-01-03", "deger": 0.01},
+        ],
+    )
+    if ariza in ("payda", "kaynak"):
+        karsilastirma["payda" if ariza == "payda" else "kaynak_ref"] = None
+    elif ariza == "tarih":
+        karsilastirma["risksiz"][1]["an"] = "2025-01-04"
+    elif ariza == "tek":
+        karsilastirma["getiriler"] = karsilastirma["getiriler"][:1]
+        karsilastirma["risksiz"] = karsilastirma["risksiz"][:1]
+    elif ariza == "sabit":
+        karsilastirma["getiriler"][1]["deger"] = 0.02
+    sonuc = istatistik.olc([], politika="bagimsiz_olcu_v1", karsilastirma=karsilastirma)
+    s = sonuc["olculer"]["sharpe"]
+    if ariza is None:
+        # Farklar 0,01 ve 0,03: ortalama 0,02; örnek varyansı 0,0002.
+        assert s == dict(
+            deger=pytest.approx(22.44994432064365), birim="oran", bos_nedeni=None
+        )
+    else:
+        assert s["deger"] is None and s["bos_nedeni"]
+
+
+@pytest.mark.parametrize("deger", [True, "1", float("inf"), None])
+def test_s11_gecersiz_gozlem_gerekceli_bos_kalir(deger):
+    i = s11_islem()
+    i["sonuc"]["net_r"] = deger
+    sonuc, hata = None, None
+    try:
+        sonuc = istatistik.olc([i], politika="bagimsiz_olcu_v1")
+    except (ValueError, TypeError) as yakalanan:
+        hata = yakalanan
+    assert hata is None, "Geçersiz ölçü gözlemi nedenli boş olarak korunmalı"
+    assert sonuc["olculer"]["net_r"]["deger"] is None
+    assert sonuc["olculer"]["net_r"]["bos_nedeni"]
+    egri = istatistik.egri_dususu(s11_egri([dict(an="2025-01-02", deger=deger)]))
+    assert egri["derinlik"]["deger"] is None and egri["derinlik"]["bos_nedeni"]
+
+
+def test_s11_bilinmeyen_r_ve_tekrar_islem_riski_degistirmez():
+    i = s11_islem()
+    i["sonuc"].update(ilk_risk=None, net_r=None, risk_nedeni="risk_dayanagi_eksik")
+    i["sonuc"]["bos_nedenleri"]["net_r"] = "risk_dayanagi_eksik"
+    sonuc = istatistik.olc([i, i.copy()], politika="bagimsiz_olcu_v1")
+    assert sonuc["olculer"]["islem"]["deger"] == 1
+    assert sonuc["islemler"][0]["olculer"]["net_r"] == dict(
+        deger=None, birim="R", bos_nedeni="risk_dayanagi_eksik"
+    )
+    assert sonuc["olculer"]["net_sonuc"]["deger"] == pytest.approx(-31.5)
+    from copy import deepcopy
+
+    farkli = deepcopy(i)
+    farkli["sonuc"]["net_sonuc"] = 123.0
+    with pytest.raises(ValueError, match="Çelişkili"):
+        istatistik.olc([i, farkli], politika="bagimsiz_olcu_v1")
+
+
+@pytest.mark.parametrize("gun", ["2025-02-30", "bilinmiyor", 1, None])
+def test_s11_sharpe_gecersiz_tarih_icin_yilliklastirma_yapmaz(gun):
+    karsilastirma = dict(
+        politika="gunluk_fark_252_v1",
+        kaynak_ref="tarihli-faiz",
+        payda="onceki_gun_ozkaynak",
+        referanslar=["gunluk-degerleme"],
+        getiriler=[dict(an="2025-01-02", deger=0.02), dict(an=gun, deger=0.04)],
+        risksiz=[dict(an="2025-01-02", deger=0.01), dict(an=gun, deger=0.01)],
+    )
+    sonuc = None
+    try:
+        sonuc = istatistik.olc(
+            [], politika="bagimsiz_olcu_v1", karsilastirma=karsilastirma
+        )
+    except ValueError, TypeError:
+        pass
+    assert sonuc is not None, "Geçersiz günlük tarih gerekçeli boş sonuç vermeli"
+    assert sonuc["olculer"]["sharpe"]["deger"] is None
+    assert sonuc["olculer"]["sharpe"]["bos_nedeni"]

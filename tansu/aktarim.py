@@ -9,7 +9,7 @@ from uuid import uuid4
 
 import pandas as pd
 
-from tansu import aileler, deneme, katalog, motor, simulator
+from tansu import aileler, deneme, katalog, saglamlik, simulator
 
 
 class AyarAktarimi:
@@ -73,6 +73,8 @@ class AyarAktarimi:
                 kosu_id=self.kosu_id,
                 veri_ref=self.veri_ref,
             )
+        self.ayar_dogrula(self.p)
+        yontem, arama = self._cocuk_yontemi(hucre)
         s = self.kayit["strateji"]
         sayisal = {
             a["ad"]: a["deger"]
@@ -89,25 +91,49 @@ class AyarAktarimi:
             ) from hata
         makbuz = self.depo.deneme_kaydet(
             strateji,
-            aktor="S07",
-            gerekce="Eski ızgara hücresi",
+            aktor="S11" if arama else "S07",
+            gerekce="Kayıtlı arama hücresi" if arama else "Eski ızgara hücresi",
             ust_deneme=self.deneme_id,
             baglar={"izgara_ust_deneme": self.deneme_id},
+            yontem_ayarlari=yontem,
             **{
                 a: self.kayit[a]
                 for a in (
                     "donemler",
                     "veri_ayarlari",
-                    "yontem_ayarlari",
                     "risk_ayarlari",
                     "masraf_ayarlari",
                     "eski_referans",
                 )
             },
         )
-        return AyarAktarimi(
-            self.depo, makbuz.deneme_id, kosu_id=self.kosu_id, veri_ref=self.veri_ref
-        )
+        try:
+            cocuk = AyarAktarimi(
+                self.depo,
+                makbuz.deneme_id,
+                kosu_id=self.kosu_id,
+                veri_ref=self.veri_ref,
+            )
+        except Exception as hata:
+            hata.kayit_makbuzu = makbuz
+            raise
+        cocuk.kayit_makbuzu = makbuz
+        if cocuk.ozet != makbuz.ayar_ozeti:
+            raise deneme.PilotHatasi("Çocuk kayıt makbuzu tam ayarla uyuşmuyor.")
+        return cocuk
+
+    def _cocuk_yontemi(self, hucre):
+        yontem = self.kayit["yontem_ayarlari"]
+        if yontem.get("yontem") != "kayitli_izgara_v1":
+            return yontem, False
+        from tansu.tansusinama import _arama_istegi
+
+        eksenler = _arama_istegi(self.kayit)
+        if set(hucre) != {e["ad"] for e in eksenler} or any(
+            hucre[e["ad"]] not in e["degerler"] for e in eksenler
+        ):
+            raise deneme.PilotHatasi("Hücre dondurulmuş arama alanında yok.")
+        return yontem["hucre_yontemi"], True
 
     def _yaz(self, asama, icerik, referanslar):
         self.ayar_dogrula(self.p)
@@ -167,9 +193,13 @@ class AyarAktarimi:
         sinyaller = self.sinyaller(m, kurulum, sembol)
         for kimlik in sinyaller.values():
             self._oku(kimlik)  # E2 → E3, hesap başlamadan.
-        zincir = motor.Zincir(m, self.p, kurulum)
-        tablo, dusen = zincir.calistir(m.index.get_indexer(kurulum.index))
-        self.ayar_dogrula(zincir.ayar)
+        tablo, dusen = saglamlik.ema_hucre_calistir(
+            m,
+            self.p,
+            kurulum=kurulum,
+            sinyal_konumlari=m.index.get_indexer(kurulum.index),
+        )
+        self.ayar_dogrula(self.p)
         return tablo, dusen, self.islemler(tablo, sinyaller)
 
     def islemler(self, tablo, sinyaller):

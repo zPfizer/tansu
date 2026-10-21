@@ -35,6 +35,47 @@ from tests.test_simulator import P, mum
 IZGARA = {"esik": [0.005], "min_gun": [3], "pencere": [3]}
 
 
+def test_s11_cocuk_yalniz_dogrulanmis_ustten_tam_s10_yontemini_alir(
+    tmp_path, monkeypatch
+):
+    from tansu.aktarim import AyarAktarimi
+    from tests.test_tansusinama import s11_kayitli, s10_revizyon
+
+    depo, ust, _ = s11_kayitli(tmp_path, monkeypatch)
+    aktarim = AyarAktarimi(depo, ust.deneme_id)
+    cocuk = aktarim.cocuk({"min_gun": 2})
+    d = depo.deneme_oku(cocuk.deneme_id)
+    assert d["yontem_ayarlari"] == {
+        "yontem": "kayitli_donem_v1",
+        "tekrar": 0,
+        "yurutme_surumu": "bagimsiz_islem_v1",
+        "fiyat_politikasi": "aof_v1",
+        "muhasebe_politikasi": "tani_referans_v1",
+    }
+    assert d["ust_deneme_id"] == d["baglar"]["izgara_ust_deneme"] == ust.deneme_id
+    assert d["ayar_parmak_izi"] == cocuk.kayit_makbuzu.ayar_ozeti
+    assert (
+        d["strateji"]["ayar_parmak_izi"] != aktarim.kayit["strateji"]["ayar_parmak_izi"]
+    )
+    for alan in ("donemler", "veri_ayarlari", "risk_ayarlari", "masraf_ayarlari"):
+        assert d[alan] == aktarim.kayit[alan]
+    once = depo.yol.read_bytes()
+    with pytest.raises(deneme.PilotHatasi, match="dondurulmuş"):
+        aktarim.cocuk({"min_gun": 9})
+    assert depo.yol.read_bytes() == once
+    yontem = aktarim.kayit["yontem_ayarlari"]
+    yeni = s10_revizyon(
+        depo,
+        ust,
+        yontem_ayarlari=yontem
+        | dict(hucre_yontemi=yontem["hucre_yontemi"] | dict(keyfi=1)),
+    )
+    once = depo.yol.read_bytes()
+    with pytest.raises(deneme.PilotHatasi, match="yürütme"):
+        AyarAktarimi(depo, yeni.deneme_id).cocuk({"min_gun": 2})
+    assert depo.yol.read_bytes() == once
+
+
 def fiyatlar():
     kap = [100.0] * 40 + [103.0, 104.0, 105.0, 106.0]
     gunler = pd.bdate_range("2026-01-05", periods=len(kap))

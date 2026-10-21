@@ -1343,8 +1343,8 @@ araştırması ve kalıcı kimlik biçimi bu teslimin dışındadır.
 
 #### S11 ölçü ve sağlam bölge (#92)
 
-**Durum: seçim yöntemi Levent tarafından 21.10.2026 tarihinde onaylandı;
-uygulama ve kanıt bekliyor.** Bu kesin algoritma proje yorumudur. Tansu'nun
+**Durum: seçim yöntemi Levent tarafından 21.10.2026 tarihinde onaylandı ve
+kayıtlı açıklayıcı taramada uygulandı.** Bu kesin algoritma proje yorumudur. Tansu'nun
 [T1] geniş kârlı alan ilkesi, kesin komşuluk veya merkez formülü vermez.
 Levent bu işte çapraz komşuluğu, tam çevreyi, geniş bölgeyi ve iç merkez
 seçimini açıkça onayladı. Eski §5.10 ve §5.14 yöntemleri kendi anlamlarıyla korunur.
@@ -1381,8 +1381,8 @@ eşit kârlı bileşenler 0–3 ve 5–8 olur. Sol bileşenin uygun merkezleri 1
 sol bileşen seçildiğinde merkez 2 olur.
 
 Bu onay #93/#94'ün diğer yöntem eksiklerini, çiftin #128 risk dayanağını veya
-panelin bileşim kanıtını kapatmaz. Aşağıdaki yüzler dağıtıcının teknik sözleşmesidir;
-uygulama ve kanıtları henüz bekler. Kaynak okuması ve sadakat için YORUM seçimi
+panelin bileşim kanıtını kapatmaz. Aşağıdaki yüzler uygulanan teknik sözleşmedir.
+Kaynak okuması ve sadakat için YORUM seçimi
 getiriye göre yapılmaz. Bu araştırmada yöntem ve tarama alanı sonuç görülmeden
 kaydedilir; çıkan sonuca bakılarak seçim algoritması değiştirilmez.
 
@@ -1503,6 +1503,19 @@ bağlı mevcut `motor.Zincir` nesnesi olabilir. Yalnız üç belgeli giriş ekse
 olabilir; her çağrıda hücrenin kendi kurulum değerleri aktarılır. Kurulum değerli
 önbellek anahtarı değişmez. Uyumsuz mum veya çıkış ayarıyla önbellek kullanılmaz.
 Kayıtlı S09 durumları bu eski nesneyle paylaşılmaz; genel önbellek arayüzü eklenmez.
+
+Gözlenebilir kontroller: `tests/test_istatistik.py` başlangıç, birim, net sonuç, açık
+kısmi sonuç ve tarihli Sharpe sınırlarını; `tests/test_saglamlik.py` tam çevre,
+kenar, bileşen ve eşitlikleri; `tests/test_tansusinama.py` bütün hücreleri, kayıt
+sırasını, iki çağıranın aynı para sonucunu ve çocuklar arası veri yalıtımını sınar.
+`tests/test_ayar_aktarimi.py` tam çocuk yöntemini, `tests/test_kayit.py` gerçek
+çocuk/koşu/dönem bağlarını ve hatalı tam başarıyı; `tests/test_gelecek.py` gelecek
+fiyatın önceki dönem ve hücreyi değiştirmemesini denetler. Eski doğrudan düşüş
+çağıranı `tests/test_kabul.py` kapsamda kalır.
+
+Tam dönem getiri kanıtı için tarihli bütün üyelerin fiyatları ve gerekli limit
+kanıtı bulunmalıdır. Bunlar eksikken sonuçlar başarısız/eksik olarak görünür;
+sıfır işlemden başarılı hesap veya günlük izin türetilmez.
 
 D5 için eski `saglamlik.ema`, `tansusinama.ema_tablolari` ve kayıtlı akış gerçek EMA
 hücre çağrısını ortak sahibine verir; giriş günü, K1, kurulum/karantina, masraf ve
@@ -1934,7 +1947,7 @@ hesap/sonuç örneğinin üretildiği iddiası değildir. İlk ailenin açık al
 | WF — CLAUDE TEKNİK GİRDİ / yöntem kaydı eksik | D §2: kayan 12 ay eğitim, 3 ay test, çeyreklik ilerleme; ilk eğitim 2021, ilk OOS 2022-01-01–2022-03-31, son OOS 2025-10-01–2025-12-31. 2021 yalnız eğitim/keşif, beş yılın yıllık açıklayıcı sonucu yine gösterilir. Eski §5.14 genişleyen iki yıl yöntemi legacy kalır. Eğitimde seçilen ayar testte donar. 30 OOS/120 IS işlem sayıları araştırma uyarısıdır; ret eşiği değildir. Nihai kayıt pencere listesi, ısınma, seçim manifesti, açık işlem, ufuk ve veri/ayar kimliklerini birlikte taşımalıdır; ROBUST/RISK bağları eksikken tamamlanmaz. | **#93 ENGELLİ:** tam ve tutarlı WF yöntem kaydı olmadan uygulama başlamaz. | [L3]–[L5], [W1]; D §2. |
 | MC — ARAŞTIRMA UYUŞMAZLIĞI / açık | C Q81: 10.000, ardından 20.000/40.000/80.000/100.000 ve yakınsama açıklaması. D §4: varyant başına 1.000. İkisi aynı protokol değildir; biri sessizce üstün sayılmaz. Kesin tekrar ve yakınsama sözleşmesini dağıtıcı tek yöntem sürümünde bağlamalıdır. | **#94 ENGELLİ:** tekrar, örnekleme ve muhasebe dahil tam MC yöntem kaydı olmadan uygulama başlamaz. | [L5], [W2], [W9]; C Q81, D §4. |
 | MC örnekleme — kontrol edilmiş teknik girdi | D §4: net R sırasını yerine koymadan karıştırma; N işlemi N kez yerine koymalı çekme; hisselerde ortak tarih bloklarını yeniden örnekleme; %10 işlem kaçırma stresi; sayısal ayarda ±1 ızgara adımı/aynı değerden eşit olasılıklı tam yeniden sınama. Bunlar ayrı deneylerdir; %10 kalibre edilmiş hata oranı değildir. Sabit 42 tohum önerisi, üreteç/sürüm ve ayrı akış kimliğiyle kaydedilir. Ana girdi dondurulmuş WF OOS, 2021 için keşif etiketi. Her deney örnek birimi, ufuk, gerçekleşen tekrar sayısı, çıktı yüzdelikleri ve bağımlılık varsayımını taşır. | #94; önce WF, ROBUST ve RISK kayıtları gerekir. | [W2], [W9]; D §4, `mc-wf/arastirma.md` yöntem tablosu. |
-| ROBUST — LEVENT ONAYI / uygulama bekliyor | B Q75: çaprazlar dahil tek indeks adımı komşuluk, kenarda eksik komşuluk bayrağı; otomatik kabul/ret yok. C Q77: en küçük komşu skorunu en büyüt; Q95: kanonik demetle eşitlik. D §3: tam iç komşuluk, kenarı merkez seçme; en geniş bileşen, medyan, iç uzaklık, sonra en kötü komşu net R ve sözlüksel sıra. Eski §5.14 eksen komşusu ayrı legacy'dir. Tek seçim ve kenar politikası onaylanmadan hiçbiri yeni varsayılan yapılmaz. Izgara sınırları ve adımlar strateji manifestinde dondurulur. Levent 21.10.2026 bu işte S11 bölümündeki geniş bölge ve iç merkez yöntemini onayladı; araştırmaların eski uyuşmazlığı bu kayıtla çözülür. Uygulama kanıtı beklenir. | #92 seçici kısmı; #93/#94 diğer yöntem kayıtlarını bekler. | [T1], [W3]; B Q75, C Q76/Q77/Q95, D §3. |
+| ROBUST — LEVENT ONAYI / uygulandı | B Q75: çaprazlar dahil tek indeks adımı komşuluk, kenarda eksik komşuluk bayrağı; otomatik kabul/ret yok. C Q77: en küçük komşu skorunu en büyüt; Q95: kanonik demetle eşitlik. D §3: tam iç komşuluk, kenarı merkez seçme; en geniş bileşen, medyan, iç uzaklık, sonra en kötü komşu net R ve sözlüksel sıra. Eski §5.14 eksen komşusu ayrı legacy'dir. Tek seçim ve kenar politikası onaylanmadan hiçbiri yeni varsayılan yapılmaz. Izgara sınırları ve adımlar strateji manifestinde dondurulur. Levent 21.10.2026 bu işte S11 bölümündeki geniş bölge ve iç merkez yöntemini onayladı; araştırmaların eski uyuşmazlığı bu kayıtla çözülür. Uygulanan açıklayıcı taramanın sözleşmesi S11 bölümündedir. | #92 seçici kısmı; #93/#94 diğer yöntem kayıtlarını bekler. | [T1], [W3]; B Q75, C Q76/Q77/Q95, D §3. |
 | RISK — tek hisse bağlı; çift #128'e taşındı | Dağıtıcı 19.10, 02:10: %2 bütçe planlanan alış/stop komisyonu ve BSMV'yi içerir; adet aşağı tam sayıya yuvarlanır, kalan bütçe ayrıca döner. Uygulama ve R tanımının sahibi S08 risk ve maliyet hesabıdır. Çiftin adet ve R'si gerekçeli boştur; sayısal dayanağı #128 belirler. Eski §5.3 masrafsız R legacy kalır. | #89 tek hisse risk boyutlama; #128 çift; #92 net R eğrisi, #93, #94. | [L1], [T2], [T3], [W6]; D §1, C Q96; dağıtıcı 19.10, 02:10. |
 | BİLEŞİM — kanıt kapısı | A Q15'teki kaynak anlatısı, giriş/teyit/stop/hedefi tam bileşim kimliğine bağlanır. Ayrı ayrı izinli alanlar tam birleşimin iznini kanıtlamaz. Eski 24 tanım korunur; yeni panel izni kaynak eşlemesi ve #71 gölge çıktısı koşulundan ayrılmaz. | #83, #88, #96'nın izinli seçim kısmı. | [L5], [T3], [W8]; A Q15, taslak katalog tablosu; mevcut §4 gölge kuralı. |
 | SAHİP-64 — açık | Gerçek emir tutarı seçilmez. Sinyal platformunda yalnız açıkça varsayımsal tutarla kapasite/kayma senaryosu gösterilir; katılım ve etki katsayısı kalibre edilmiş BIST olgusu sayılmaz. | Gerçek tutarla kapasite iddiası; varsayımsal raporu engellemez. | [L1]; B Q64, [W4]. |

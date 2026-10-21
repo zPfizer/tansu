@@ -11,6 +11,8 @@ import os
 import shutil
 import subprocess
 import sys
+from copy import deepcopy
+from dataclasses import asdict
 from decimal import Decimal
 from pathlib import Path
 
@@ -1332,3 +1334,611 @@ def test_s10_donem_islem_ve_cocuk_referansi_ayni_kosuya_aittir(tmp_path):
             ozetler={},
         )
     assert depo.izle(ikinci.olay_id)["sonuc"]["cikti_referanslari"] == [yeni.olay_id]
+
+
+def pilot_arama_ust(depo):
+    donemler = [
+        dict(
+            ad=str(y),
+            baslangic=dt.date(y, 1, 1),
+            bitis=dt.date(y, 12, 31),
+            isinma_baslangici=dt.date(2018, 1, 1),
+            sinir_surumu="bagimsiz_donem_v1",
+        )
+        for y in range(2025, 2020, -1)
+    ]
+    donemler.append(donemler[-1] | dict(ad="birlesik", bitis=dt.date(2025, 12, 31)))
+    return pilot_deneme(
+        depo,
+        donemler=donemler,
+        yontem_ayarlari=dict(
+            yontem="kayitli_izgara_v1",
+            tekrar=0,
+            secim_politikasi="genis_bolge_net_r_v1",
+            olcu_politikasi="bagimsiz_olcu_v1",
+            eksenler=[dict(ad="esik", birim="oran", degerler=[0.010, 0.015])],
+            hucre_yontemi=dict(
+                yontem="kayitli_donem_v1",
+                tekrar=0,
+                yurutme_surumu="bagimsiz_islem_v1",
+                fiyat_politikasi="aof_v1",
+                muhasebe_politikasi="tani_referans_v1",
+            ),
+        ),
+    )
+
+
+def pilot_arama_donemi(kosu, cocuk, donem, hata):
+    islem = kosu.islem_kaydet(
+        sinyal_id=f"{cocuk['deneme_id']}:{donem['ad']}:TEST",
+        donem=donem,
+        birimler={"adet": "adet"},
+        muhasebe_politikasi="tani_referans_v1",
+        uyarilar=[],
+        cikti_referanslari=[],
+        olaylar=[
+            dict(pozisyon=dict(risk_girdisi=dict(islem_id=f"islem:{donem['ad']}")))
+        ],
+    )
+    refs = [islem.olay_id]
+    neden = "hesap başarısız" if hata else None
+    sonuc = pilot_donem_sonucu(
+        kosu,
+        donem,
+        is_id=f"donem:{donem['ad']}",
+        durum="hata" if hata else "tamamlandi",
+        islem_referanslari=refs,
+        icerik=dict(
+            deneme_id=cocuk["deneme_id"],
+            kosu_id=kosu.makbuz.kosu_id,
+            ayar_parmak_izi=cocuk["ayar_parmak_izi"],
+            strateji_ayar_parmak_izi=cocuk["strateji"]["ayar_parmak_izi"],
+            neden=neden,
+            asama="islem" if hata else None,
+        ),
+    )
+    return dict(
+        donem=donem,
+        is_id=f"donem:{donem['ad']}",
+        durum="hesap_hatasi" if hata else "tamamlandi",
+        neden=neden,
+        asama="islem" if hata else None,
+        sonuc_ref=sonuc.olay_id,
+        islem_referanslari=refs,
+        beklenen_semboller=["TEST"],
+        semboller=[
+            dict(
+                sembol="TEST",
+                durum="tamamlandi",
+                olcu=dict(
+                    politika="bagimsiz_olcu_v1",
+                    islemler=[
+                        dict(
+                            islem_id=f"islem:{donem['ad']}",
+                            islem_ref=islem.olay_id,
+                        )
+                    ],
+                    acik_kismi=[],
+                    egri_tanimi=dict(referanslar=refs),
+                ),
+            )
+        ],
+    )
+
+
+def pilot_arama_hucresi(depo, ust, indeks, hata=False):
+    esik = [0.010, 0.015][indeks]
+    strateji = pilot.katalog.legacy_coz("bugun", sayisal_ayarlar={"esik": esik})
+    kayit = pilot_deneme(
+        depo,
+        strateji,
+        ust_deneme=ust["deneme_id"],
+        baglar={"izgara_ust_deneme": ust["deneme_id"]},
+        donemler=ust["donemler"],
+        yontem_ayarlari=ust["yontem_ayarlari"]["hucre_yontemi"],
+    )
+    cocuk = depo.deneme_oku(kayit.deneme_id)
+    isler = [f"donem:{d['ad']}" for d in cocuk["donemler"]]
+    with pilot_kosu(depo, kayit.deneme_id, is_listesi=isler) as kosu:
+        donemler = [pilot_arama_donemi(kosu, cocuk, d, hata) for d in cocuk["donemler"]]
+        bitis = kosu.bitir(
+            durum="hata" if hata else "tamamlandi",
+            tamamlanan=[] if hata else isler,
+            basarisiz=isler if hata else [],
+            yontemler=[],
+            olculer={},
+            cikti_referanslari=[d["sonuc_ref"] for d in donemler],
+            ozetler={},
+        )
+    return dict(
+        indeks=[indeks],
+        is_id=f"hucre:{indeks}",
+        ayarlar={"esik": esik},
+        ust_deneme_id=ust["deneme_id"],
+        deneme_id=kayit.deneme_id,
+        kosu_id=kosu.makbuz.kosu_id,
+        ayar_parmak_izi=kayit.ayar_ozeti,
+        strateji_ayar_parmak_izi=strateji.ayar_parmak_izi,
+        tam_ayarlar=pilot._ayarlar(cocuk),
+        kayit_makbuzu=asdict(kayit),
+        baslangic_makbuzu=asdict(kosu.makbuz),
+        bitis_makbuzu=asdict(bitis),
+        durum="hesap_hatasi" if hata else "tamamlandi",
+        neden="hesap başarısız" if hata else None,
+        donemler=donemler,
+    )
+
+
+@pytest.fixture
+def pilot_arama(tmp_path, request):
+    depo = pilot.PilotKayit(tmp_path / "arama.jsonl")
+    kayit = pilot_arama_ust(depo)
+    ust = depo.deneme_oku(kayit.deneme_id)
+    with pilot_kosu(
+        depo, kayit.deneme_id, is_listesi=["arama", "hucre:0", "hucre:1"]
+    ) as kosu:
+        hucreler = [
+            pilot_arama_hucresi(depo, ust, 0),
+            pilot_arama_hucresi(depo, ust, 1, getattr(request, "param", False)),
+        ]
+        yield (
+            depo,
+            kosu,
+            dict(
+                is_id="arama",
+                hucreler=hucreler,
+                bolgeler=[],
+                politika_surumu="genis_bolge_net_r_v1",
+                birimler={"net_r": "R"},
+                uyarilar=[],
+                cikti_referanslari=[
+                    d["sonuc_ref"] for h in hucreler for d in h["donemler"]
+                ],
+            ),
+        )
+
+
+def pilot_arama_bitir(kosu, refs, **degisiklik):
+    return kosu.bitir(
+        **(
+            dict(
+                durum="tamamlandi",
+                tamamlanan=["arama", "hucre:0", "hucre:1"],
+                basarisiz=[],
+                yontemler=[],
+                olculer={},
+                cikti_referanslari=refs,
+                ozetler={},
+            )
+            | degisiklik
+        )
+    )
+
+
+def test_s11_arama_gercek_cocuk_sonuclarini_yayinlar_eski_kosu_kisitini_korur(
+    pilot_arama,
+):
+    depo, kosu, girdi = pilot_arama
+    once = depo.yol.read_bytes()
+    makbuz = kosu.arama_sonucu_kaydet(**girdi)
+    assert isinstance(makbuz, pilot.Makbuz), "Arama gerçek kalıcı kayıt makbuzu vermeli"
+    sonuc = pilot.PilotKayit(depo.yol).izle(makbuz.olay_id)["sonuc"]
+    assert sonuc["sonuc_turu"] == "arama_v1"
+    assert sonuc["deneme_id"] == kosu.makbuz.deneme_id
+    assert sonuc["hucreler"] == girdi["hucreler"]
+    assert sonuc["cikti_referanslari"] == girdi["cikti_referanslari"]
+    cocuk = girdi["hucreler"][0]
+    donem_izi = pilot.PilotKayit(depo.yol).izle(cocuk["donemler"][0]["sonuc_ref"])
+    assert donem_izi["deneme"]["ust_deneme_id"] == kosu.makbuz.deneme_id
+    assert donem_izi["baslangic"]["kosu_id"] == cocuk["kosu_id"]
+    assert (
+        donem_izi["sonuc"]["islem_referanslari"]
+        == cocuk["donemler"][0]["islem_referanslari"]
+    )
+    assert "sinyal_id" not in sonuc
+    assert depo.yol.read_bytes().startswith(once)
+    with pytest.raises(pilot.PilotHatasi, match="zaten kayıtlı"):
+        kosu.arama_sonucu_kaydet(**girdi)
+    d = girdi["hucreler"][0]["donemler"][0]
+    with pytest.raises(pilot.PilotHatasi, match="başka koşuya"):
+        pilot_donem_sonucu(
+            kosu, d["donem"], is_id="arama", cikti_referanslari=[d["sonuc_ref"]]
+        )
+    with pytest.raises(pilot.PilotHatasi, match="Her iş bir kez"):
+        pilot_arama_bitir(kosu, [makbuz.olay_id], tamamlanan=["arama", "hucre:0"])
+    with pytest.raises(pilot.PilotHatasi, match="Her iş bir kez"):
+        pilot_arama_bitir(
+            kosu, [makbuz.olay_id], tamamlanan=["arama", "hucre:0", "hucre:1", "arama"]
+        )
+    pilot_arama_bitir(kosu, [makbuz.olay_id])
+    assert depo.izle(makbuz.olay_id)["durum"] == "tamamlandi"
+
+
+@pytest.mark.parametrize(
+    "boz",
+    [
+        pytest.param(
+            lambda g: g["hucreler"][0].update(ust_deneme_id="baska-ust"), id="parent"
+        ),
+        pytest.param(
+            lambda g: g["hucreler"][0].update(deneme_id=g["hucreler"][1]["deneme_id"]),
+            id="child",
+        ),
+        pytest.param(
+            lambda g: g["hucreler"][0].update(kosu_id=g["hucreler"][1]["kosu_id"]),
+            id="run",
+        ),
+        pytest.param(
+            lambda g: g["hucreler"][0].update(ayar_parmak_izi="sahte"), id="full-hash"
+        ),
+        pytest.param(
+            lambda g: g["hucreler"][0].update(strateji_ayar_parmak_izi="sahte"),
+            id="strategy-hash",
+        ),
+        pytest.param(
+            lambda g: g["hucreler"][0]["tam_ayarlar"]["risk_ayarlari"].update(
+                oran=Decimal("0.9")
+            ),
+            id="full-settings",
+        ),
+        pytest.param(
+            lambda g: g["hucreler"][0]["ayarlar"].update(esik=0.015), id="axis-value"
+        ),
+        pytest.param(
+            lambda g: g["hucreler"][0].update(indeks=[1]), id="duplicate-coordinate"
+        ),
+        pytest.param(lambda g: g["hucreler"].pop(), id="missing-cell"),
+        pytest.param(lambda g: g["hucreler"][0]["donemler"].pop(), id="missing-period"),
+        pytest.param(
+            lambda g: g["hucreler"][0]["donemler"][0].update(sonuc_ref="yok"),
+            id="missing-result",
+        ),
+        pytest.param(
+            lambda g: g["hucreler"][0]["donemler"][0].update(
+                sonuc_ref=g["hucreler"][1]["donemler"][0]["sonuc_ref"]
+            ),
+            id="cross-child-result",
+        ),
+        pytest.param(
+            lambda g: g["hucreler"][0]["donemler"][0].update(
+                sonuc_ref=g["hucreler"][0]["donemler"][1]["sonuc_ref"]
+            ),
+            id="cross-period-result",
+        ),
+        pytest.param(
+            lambda g: g["hucreler"][0]["donemler"][0].update(
+                islem_referanslari=g["hucreler"][1]["donemler"][0]["islem_referanslari"]
+            ),
+            id="cross-child-trade",
+        ),
+        pytest.param(
+            lambda g: g["hucreler"][0]["donemler"][0]["semboller"][0]["olcu"][
+                "islemler"
+            ][0].update(
+                islem_ref=g["hucreler"][1]["donemler"][0]["islem_referanslari"][0]
+            ),
+            id="measured-trade",
+        ),
+        pytest.param(
+            lambda g: g["hucreler"][0]["baslangic_makbuzu"].update(ayar_ozeti="sahte"),
+            id="start-receipt",
+        ),
+        pytest.param(
+            lambda g: g["hucreler"][0]["kayit_makbuzu"].update(olay_id="sahte"),
+            id="registration-receipt",
+        ),
+        pytest.param(
+            lambda g: g["hucreler"][0]["donemler"][0].update(sonuc_ref=None),
+            id="unpublished-success",
+        ),
+        pytest.param(lambda g: g["cikti_referanslari"].pop(), id="missing-output"),
+        pytest.param(
+            lambda g: g["cikti_referanslari"].append(g["cikti_referanslari"][0]),
+            id="duplicate-output",
+        ),
+        pytest.param(
+            lambda g: g["hucreler"][0].update(durum="tanimlanmamis", neden="sahte"),
+            id="unknown-status",
+        ),
+        pytest.param(
+            lambda g: g["hucreler"][0]["donemler"][0]["semboller"][0]["olcu"].update(
+                politika="eksen_maksimin_legacy_v1"
+            ),
+            id="measurement-policy",
+        ),
+    ],
+)
+def test_s11_arama_sahte_hucre_bagini_yazmaz(pilot_arama, boz):
+    depo, kosu, girdi = pilot_arama
+    girdi = deepcopy(girdi)
+    boz(girdi)
+    once = depo.yol.read_bytes()
+    reddedildi = False
+    try:
+        kosu.arama_sonucu_kaydet(**girdi)
+    except pilot.PilotHatasi:
+        reddedildi = True
+    assert reddedildi, "Sahte çocuk veya sonuç bağı kalıcı arama sonucu olamaz"
+    assert depo.yol.read_bytes() == once
+
+
+@pytest.mark.parametrize("pilot_arama", [True], indirect=True)
+def test_s11_basarisiz_cocuk_tam_basari_olarak_bitirilemez(pilot_arama):
+    depo, kosu, girdi = pilot_arama
+    makbuz = kosu.arama_sonucu_kaydet(**girdi)
+    refs = [makbuz.olay_id] if makbuz is not None else []
+    once = depo.yol.read_bytes()
+    reddedildi = False
+    try:
+        pilot_arama_bitir(kosu, refs)
+    except pilot.PilotHatasi:
+        reddedildi = True
+    assert reddedildi, "Başarısız çocuk tamamlanan listesiyle tam başarıya çevrilemez"
+    assert depo.yol.read_bytes() == once
+    pilot_arama_bitir(
+        kosu,
+        refs,
+        durum="hata",
+        tamamlanan=["arama", "hucre:0"],
+        basarisiz=["hucre:1"],
+    )
+    assert depo.izle(makbuz.olay_id)["durum"] == "hata"
+
+
+@pytest.mark.parametrize(
+    "tur,yol,deger",
+    [
+        ("deneme", ("ust_deneme_id",), "baska-ust"),
+        ("deneme", ("baglar", "izgara_ust_deneme"), "baska-ust"),
+        ("deneme", ("risk_ayarlari", "oran"), Decimal("0.7")),
+        ("deneme", ("yontem_ayarlari", "muhasebe_politikasi"), "baska-yontem"),
+        ("baslangic", ("ayar_parmak_izi",), "sahte-ozet"),
+        ("baslangic", ("deneme_id",), "baska-cocuk"),
+        ("sonuc", ("kosu_id",), "baska-kosu"),
+        ("sonuc", ("ayar_parmak_izi",), "sahte-ozet"),
+        ("sonuc", ("icerik", "strateji_ayar_parmak_izi"), "sahte-strateji"),
+        ("sonuc", ("donem", "baslangic"), dt.date(2000, 1, 1)),
+        ("islem", ("kosu_id",), "baska-kosu"),
+        ("islem", ("donem", "baslangic"), dt.date(2000, 1, 1)),
+        ("islem", ("ayar_parmak_izi",), "sahte-ozet"),
+        ("bitis", ("tamamlanan",), []),
+        ("ust", ("ayar_parmak_izi",), "sahte-ust-ozet"),
+    ],
+)
+def test_s11_arama_gercek_kaydin_bagini_tekrar_dogrular(pilot_arama, tur, yol, deger):
+    depo, kosu, girdi = pilot_arama
+    h = girdi["hucreler"][0]
+    olaylar = depo.oku()
+    kimlik = kosu.makbuz.deneme_id if tur == "ust" else h["deneme_id"]
+    kayit_turu = "deneme" if tur == "ust" else tur
+    olay = next(
+        o
+        for o in olaylar
+        if o["kayit_turu"] == kayit_turu and o.get("deneme_id") == kimlik
+    )
+    alan = olay
+    for ad in yol[:-1]:
+        alan = alan[ad]
+    alan[yol[-1]] = deger
+    depo.yol.write_bytes(b"".join(pilot.kanonik(o) + b"\n" for o in olaylar))
+    once = depo.yol.read_bytes()
+    reddedildi = False
+    try:
+        kosu.arama_sonucu_kaydet(**girdi)
+    except pilot.PilotHatasi:
+        reddedildi = True
+    assert reddedildi, "Yuva doğru görünse de gerçek kayıt bağı tekrar doğrulanmalı"
+    assert depo.yol.read_bytes() == once
+
+
+def test_s11_yayin_olmadan_ust_arama_tamamlanamaz(tmp_path):
+    depo = pilot.PilotKayit(tmp_path / "arama.jsonl")
+    kayit = pilot_arama_ust(depo)
+    with pilot_kosu(
+        depo, kayit.deneme_id, is_listesi=["arama", "hucre:0", "hucre:1"]
+    ) as kosu:
+        reddedildi = False
+        try:
+            pilot_arama_bitir(kosu, [])
+        except pilot.PilotHatasi:
+            reddedildi = True
+        assert reddedildi, "Yayımlanmamış arama tam başarı olamaz"
+
+
+def test_s11_kayitsiz_cocuk_alti_gerekceli_yuvayla_kalir(pilot_arama):
+    depo, kosu, girdi = pilot_arama
+    girdi = deepcopy(girdi)
+    h = girdi["hucreler"][1]
+    h.update(
+        deneme_id=None,
+        kosu_id=None,
+        ayar_parmak_izi=None,
+        kayit_makbuzu=None,
+        baslangic_makbuzu=None,
+        bitis_makbuzu=None,
+        durum="kayit_hatasi",
+        neden="kayıt reddedildi",
+    )
+    for d in h["donemler"]:
+        d.update(
+            durum="baslamadi",
+            neden="kayıt reddedildi",
+            asama=None,
+            sonuc_ref=None,
+            islem_referanslari=[],
+            semboller=[],
+            beklenen_semboller=[],
+        )
+    girdi["cikti_referanslari"] = [
+        d["sonuc_ref"] for d in girdi["hucreler"][0]["donemler"]
+    ]
+    makbuz = kosu.arama_sonucu_kaydet(**girdi)
+    assert isinstance(makbuz, pilot.Makbuz), (
+        "Gerekçeli çalışmamış hücre görünür kalmalı"
+    )
+    kayit = depo.izle(makbuz.olay_id)["sonuc"]["hucreler"][1]
+    assert kayit["deneme_id"] is None
+    assert [d["durum"] for d in kayit["donemler"]] == ["baslamadi"] * 6
+    assert all(d["neden"] == "kayıt reddedildi" for d in kayit["donemler"])
+
+
+def test_s11_secilen_bolge_kayitsiz_cocuga_baglanamaz(pilot_arama):
+    depo, kosu, girdi = pilot_arama
+    girdi = deepcopy(girdi)
+    h = girdi["hucreler"][1]
+    h.update(
+        deneme_id=None,
+        kosu_id=None,
+        ayar_parmak_izi=None,
+        kayit_makbuzu=None,
+        baslangic_makbuzu=None,
+        bitis_makbuzu=None,
+        durum="kayit_hatasi",
+        neden="kayıt reddedildi",
+    )
+    for d in h["donemler"]:
+        d.update(
+            durum="baslamadi",
+            neden="kayıt reddedildi",
+            sonuc_ref=None,
+            islem_referanslari=[],
+            semboller=[],
+        )
+    girdi["cikti_referanslari"] = [
+        d["sonuc_ref"] for d in girdi["hucreler"][0]["donemler"]
+    ]
+    ust = depo.deneme_oku(kosu.makbuz.deneme_id)
+    girdi["bolgeler"] = [
+        dict(
+            politika="genis_bolge_net_r_v1",
+            strateji_id=ust["strateji"]["kayit_id"],
+            donem=h["donemler"][0]["donem"],
+            sembol="TEST",
+            secilen=[1],
+            secilen_deneme_id=None,
+            neden=None,
+        )
+    ]
+    reddedildi = False
+    try:
+        kosu.arama_sonucu_kaydet(**girdi)
+    except pilot.PilotHatasi:
+        reddedildi = True
+    assert reddedildi, "Kaydı olmayan çocuk seçilmiş sonuç olarak yayımlanamaz"
+
+
+def test_s11_yayin_sonrasi_hata_asli_hatayi_kapatmaz(pilot_arama):
+    depo, kosu, girdi = pilot_arama
+    kosu.arama_sonucu_kaydet(**girdi)
+    bitis = None
+    try:
+        bitis = pilot_arama_bitir(
+            kosu,
+            [],
+            durum="hata",
+            tamamlanan=[],
+            basarisiz=["arama", "hucre:0", "hucre:1"],
+        )
+    except pilot.PilotHatasi:
+        pass
+    assert isinstance(bitis, pilot.Makbuz), (
+        "Koşu bağlamının hata kapanışı asıl hatayı örtemez"
+    )
+    assert depo.oku()[-1]["durum"] == "hata"
+
+
+def test_s11_kosu_baglami_yayindan_sonraki_asli_hatayi_korur(tmp_path):
+    depo = pilot.PilotKayit(tmp_path / "arama.jsonl")
+    kayit = pilot_arama_ust(depo)
+    ust = depo.deneme_oku(kayit.deneme_id)
+    asil = RuntimeError("yayından sonraki asıl hata")
+    yakalanan = None
+    try:
+        with pilot_kosu(
+            depo, kayit.deneme_id, is_listesi=["arama", "hucre:0", "hucre:1"]
+        ) as kosu:
+            hucreler = [pilot_arama_hucresi(depo, ust, i) for i in range(2)]
+            makbuz = kosu.arama_sonucu_kaydet(
+                is_id="arama",
+                hucreler=hucreler,
+                bolgeler=[],
+                politika_surumu="genis_bolge_net_r_v1",
+                birimler={"net_r": "R"},
+                uyarilar=[],
+                cikti_referanslari=[
+                    d["sonuc_ref"] for h in hucreler for d in h["donemler"]
+                ],
+            )
+            once = depo.yol.read_bytes()
+            raise asil
+    except (RuntimeError, pilot.PilotHatasi) as hata:
+        yakalanan = hata
+    assert yakalanan is asil, "Hata kapanışı bağlamdan çıkan asıl hatayı değiştiremez"
+    assert depo.yol.read_bytes().startswith(once)
+    assert depo.izle(makbuz.olay_id)["durum"] == "hata"
+    assert depo.oku()[-1]["basarisiz"] == ["arama", "hucre:0", "hucre:1"]
+
+
+def test_s11_reddedilen_baslangic_makbuzu_basarili_sonuc_olamaz(pilot_arama):
+    depo, kosu, girdi = pilot_arama
+    girdi = deepcopy(girdi)
+    h = girdi["hucreler"][1]
+    h.update(
+        durum="hesap_hatasi",
+        neden="başlangıç makbuzu uyuşmuyor",
+        baslangic_makbuzu=None,
+        bitis_makbuzu=None,
+    )
+    for d in h["donemler"]:
+        d.update(
+            durum="baslamadi",
+            neden=h["neden"],
+            sonuc_ref=None,
+            islem_referanslari=[],
+            semboller=[],
+        )
+    girdi["cikti_referanslari"] = [
+        d["sonuc_ref"] for d in girdi["hucreler"][0]["donemler"]
+    ]
+    makbuz = kosu.arama_sonucu_kaydet(**girdi)
+    assert depo.izle(makbuz.olay_id)["sonuc"]["hucreler"][1]["durum"] == "hesap_hatasi"
+    assert depo.izle(makbuz.olay_id)["sonuc"]["hucreler"][1]["kosu_id"] == h["kosu_id"]
+
+
+@pytest.mark.parametrize("belirsiz", [False, True])
+def test_s11_arama_yazma_hatasi_sahte_makbuz_ve_bitis_uretmez(
+    tmp_path, monkeypatch, belirsiz
+):
+    depo = pilot.PilotKayit(tmp_path / "arama.jsonl")
+    kayit = pilot_arama_ust(depo)
+    ust = depo.deneme_oku(kayit.deneme_id)
+    tur = pilot.PilotBelirsizHatasi if belirsiz else pilot.PilotYazmaHatasi
+
+    def yazma_hatasi(*args):
+        raise OSError("arama yazma hatası")
+
+    with pytest.raises(tur):
+        with pilot_kosu(
+            depo, kayit.deneme_id, is_listesi=["arama", "hucre:0", "hucre:1"]
+        ) as kosu:
+            hucreler = [pilot_arama_hucresi(depo, ust, i) for i in range(2)]
+            once = depo.oku()
+            if belirsiz:
+                monkeypatch.setattr(
+                    pilot, "_lf_yaz", lambda *a: (None, OSError("belirsiz yayın"))
+                )
+            else:
+                monkeypatch.setattr(pilot, "_icerik_yaz", yazma_hatasi)
+            kosu.arama_sonucu_kaydet(
+                is_id="arama",
+                hucreler=hucreler,
+                bolgeler=[],
+                politika_surumu="genis_bolge_net_r_v1",
+                birimler={"net_r": "R"},
+                uyarilar=[],
+                cikti_referanslari=[
+                    d["sonuc_ref"] for h in hucreler for d in h["donemler"]
+                ],
+            )
+    assert depo.oku() == once
+    assert depo.kurtar()["cozumsuz_kosular"] == [kosu.makbuz.kosu_id]

@@ -1737,6 +1737,295 @@ def s10_revizyon(depo, makbuz, **degisiklik):
     )
 
 
+def s11_kayitli(tmp_path, monkeypatch, *, eksenler=None, **secenekler):
+    depo, eski, piyasa = s10_kayitli(tmp_path, monkeypatch, **secenekler)
+    y = depo.deneme_oku(eski.deneme_id)["yontem_ayarlari"]
+    makbuz = s10_revizyon(
+        depo,
+        eski,
+        yontem_ayarlari=dict(
+            yontem="kayitli_izgara_v1",
+            tekrar=0,
+            secim_politikasi="genis_bolge_net_r_v1",
+            olcu_politikasi="bagimsiz_olcu_v1",
+            eksenler=eksenler
+            if eksenler is not None
+            else [dict(ad="min_gun", birim="gun", degerler=[2, 3, 5])],
+            hucre_yontemi=y,
+        ),
+    )
+    return depo, makbuz, piyasa
+
+
+def s11_calistir(depo, makbuz, kok, **secenekler):
+    return ts.kayitli_izgara_calistir(
+        depo,
+        makbuz.deneme_id,
+        veri_koku=kok,
+        mod="gelistirme",
+        isci=1,
+        ilerleme=None,
+        **secenekler,
+    )
+
+
+def test_s11_kayitli_hucreler_alti_donemi_korur_ve_e1_paylasir(tmp_path, monkeypatch):
+    depo, makbuz, _ = s11_kayitli(tmp_path, monkeypatch)
+    hazirla = veri.veri_hazirla
+    istekler = []
+
+    def hesap(*a):
+        olaylar = depo.oku()
+        baslangic = [o for o in olaylar if o["kayit_turu"] == "baslangic"][-1]
+        assert baslangic["deneme_id"] != makbuz.deneme_id
+        d = depo.deneme_oku(baslangic["deneme_id"])
+        assert d["ust_deneme_id"] == makbuz.deneme_id
+        assert baslangic["ayar_parmak_izi"] == d["ayar_parmak_izi"]
+        istekler.append(a[0])
+        return hazirla(*a)
+
+    monkeypatch.setattr(veri, "veri_hazirla", hesap)
+    s = s11_calistir(depo, makbuz, tmp_path)
+    assert len(s.get("hucreler", [])) == 3, "Arama her kayıtlı koordinatı korumalı"
+    assert len(istekler) == 6
+    assert [h["indeks"] for h in s["hucreler"]] == [[0], [1], [2]]
+    assert all(len(h["donemler"]) == 6 for h in s["hucreler"])
+    assert all(h["durum"] == "islemsiz" for h in s["hucreler"])
+    assert all(b["secilen"] is None for b in s["bolgeler"])
+    iz = depo.izle(s["sonuc_makbuzu"].olay_id)
+    assert iz["sonuc"]["sonuc_turu"] == "arama_v1"
+    assert len(iz["sonuc"]["hucreler"]) == 3
+    assert "sinyal_id" not in iz["sonuc"]
+
+
+def test_s11_cocuk_kayit_hatasi_hesap_baslatmaz_tum_yuvalari_korur(
+    tmp_path, monkeypatch
+):
+    from tansu import deneme
+
+    depo, makbuz, _ = s11_kayitli(tmp_path, monkeypatch)
+    kaydet = depo.deneme_kaydet
+    hesaplar = []
+
+    def kayit(*a, **k):
+        if k.get("ust_deneme") == makbuz.deneme_id:
+            raise deneme.PilotYazmaHatasi("çocuk kaydı yazılamadı")
+        return kaydet(*a, **k)
+
+    monkeypatch.setattr(depo, "deneme_kaydet", kayit)
+    monkeypatch.setattr(veri, "veri_hazirla", lambda *a: hesaplar.append(a))
+    hata = None
+    try:
+        s11_calistir(depo, makbuz, tmp_path)
+    except deneme.PilotYazmaHatasi as yakalanan:
+        hata = yakalanan
+    assert hata is not None, "Kayıt hatası çağırana ulaşmalı"
+    assert hesaplar == []
+    assert len(hata.sonuc["hucreler"]) == 3
+    assert hata.sonuc["hucreler"][0]["durum"] == "kayit_hatasi"
+    assert all(len(h["donemler"]) == 6 for h in hata.sonuc["hucreler"])
+    assert all(h["deneme_id"] is None for h in hata.sonuc["hucreler"])
+    assert hata.sonuc["baslangic_makbuzu"].ayar_ozeti == makbuz.ayar_ozeti
+
+
+@pytest.mark.parametrize(
+    "eksen",
+    [
+        dict(ad="stop", birim="metin", degerler=["atr2"]),
+        dict(ad="min_gun", birim="gun", degerler=[3, 2]),
+        dict(ad="min_gun", birim="gun", degerler=[2, 2]),
+        dict(ad="min_gun", birim="gun", degerler=[1]),
+        dict(ad="esik", birim="gun", degerler=[0.010]),
+    ],
+)
+def test_s11_izinsiz_eksen_hesap_ve_cocuk_kaydindan_once_reddedilir(
+    tmp_path, monkeypatch, eksen
+):
+    from tansu import deneme
+
+    depo, makbuz, _ = s11_kayitli(tmp_path, monkeypatch, eksenler=[eksen])
+    once = depo.yol.read_bytes()
+    hesap = []
+    monkeypatch.setattr(veri, "veri_hazirla", lambda *a: hesap.append(a))
+    hata = None
+    try:
+        s11_calistir(depo, makbuz, tmp_path)
+    except deneme.PilotHatasi as yakalanan:
+        hata = yakalanan
+    assert hata is not None, "İzinsiz eksen hesap öncesinde reddedilmeli"
+    assert hesap == [] and depo.yol.read_bytes() == once
+
+
+@pytest.mark.parametrize("hedef", ["ust", "cocuk"])
+def test_s11_baslangicta_tam_ayar_degismesi_hesabi_engeller(
+    tmp_path, monkeypatch, hedef
+):
+    from contextlib import contextmanager
+    from dataclasses import replace
+    from tansu import deneme
+
+    depo, makbuz, _ = s11_kayitli(tmp_path, monkeypatch)
+    kosu = depo.kosu
+    hesap = []
+
+    @contextmanager
+    def degisen(deneme_id, **k):
+        with kosu(deneme_id, **k) as handle:
+            if (deneme_id == makbuz.deneme_id) == (hedef == "ust"):
+                handle.makbuz = replace(handle.makbuz, ayar_ozeti="degisen-tam-ayar")
+            yield handle
+
+    monkeypatch.setattr(depo, "kosu", degisen)
+    monkeypatch.setattr(veri, "veri_hazirla", lambda *a: hesap.append(a))
+    hata = None
+    try:
+        s = s11_calistir(depo, makbuz, tmp_path)
+    except deneme.PilotHatasi as yakalanan:
+        hata = yakalanan
+    assert hesap == []
+    if hedef == "ust":
+        assert hata is not None, "Üst başlangıç makbuzu tam ayarı doğrulamalı"
+    else:
+        assert all(h["durum"] == "hesap_hatasi" for h in s["hucreler"])
+        assert all(h["neden"] for h in s["hucreler"])
+
+
+def test_s11_bir_donem_hatasi_18_yuvayi_ve_gercek_makbuzlari_korur(
+    tmp_path, monkeypatch
+):
+    depo, makbuz, _ = s11_kayitli(tmp_path, monkeypatch)
+    hazirla = veri.veri_hazirla
+
+    def eksik(istek, *a):
+        if istek.baslangic == "2024-01-01":
+            raise veri.VeriHatasi("2024 fiyatı eksik")
+        return hazirla(istek, *a)
+
+    monkeypatch.setattr(veri, "veri_hazirla", eksik)
+    s = s11_calistir(depo, makbuz, tmp_path)
+    assert len(s["hucreler"]) == 3
+    for h in s["hucreler"]:
+        assert len(h["donemler"]) == 6
+        assert h["donemler"][1]["durum"] == "eksik"
+        assert "2024 fiyatı eksik" in h["donemler"][1]["neden"]
+        assert all(d["sonuc_ref"] for d in h["donemler"])
+    assert s["durum"] == "hata"
+    assert all(b["secilen"] is None for b in s["bolgeler"])
+
+
+def test_s11_iki_gercek_cagiran_ayni_elle_para_sonucunu_olcer():
+    from tansu import istatistik, saglamlik
+    from tests.test_motor import STD, r, s09_istek, s09_mumlar
+
+    m = s09_mumlar(
+        [
+            r(*STD),
+            r(*STD),
+            r(114, 115, 110, 114),
+            r(118, 120, 116, 118),
+            r(80, 82, 79, 81),
+        ]
+    )
+    durum = saglamlik.ema_hucre_calistir(
+        m,
+        dataclasses.replace(aileler.Parametre(), cikis="atr3"),
+        kurulum=None,
+        sinyal_konumlari={m.index[0]: "sinyal-1"},
+        yurutme=s09_istek(),
+    )
+    dolumlar = [
+        dict(dolum_id="al", yon="alis", adet=15, fiyat=100),
+        dict(dolum_id="yari", yon="satis", adet=7, fiyat=115),
+        dict(dolum_id="son", yon="satis", adet=8, fiyat=80),
+    ]
+    girdi = risk_satiri(dolumlar=dolumlar)
+    girdi["nominal_tutar"] = 8000.0
+    tablo = ts._getirili(pd.DataFrame([girdi]))
+    bir = istatistik.olc(durum["islemler"], politika="bagimsiz_olcu_v1")
+    iki = istatistik.olc(
+        [dict(islem_id="elle", sonuc=tablo.iloc[0].to_dict())],
+        politika="bagimsiz_olcu_v1",
+    )
+    # 1500 TL alış, 1445 TL satış. İki yönde masraf 4,638375 TL; net -59,638375 TL.
+    for sonuc in (bir, iki):
+        assert sonuc["olculer"]["net_sonuc"] == dict(
+            deger=pytest.approx(-59.638375), birim="TL", bos_nedeni=None
+        )
+        assert sonuc["olculer"]["masraf"] == dict(
+            deger=pytest.approx(4.638375), birim="TL", bos_nedeni=None
+        )
+        assert sonuc["olculer"]["islem"]["deger"] == 1
+        assert sonuc["islemler"][0]["paydalar"]["ilk_risk"] == pytest.approx(154.48875)
+    assert bir["olculer"] == iki["olculer"]
+
+
+def test_s11_tum_alan_hesap_oncesi_cozulur_alan_disi_hucre_korunur(
+    tmp_path, monkeypatch
+):
+    from tansu import katalog
+
+    depo, makbuz, _ = s11_kayitli(tmp_path, monkeypatch)
+    coz, hazirla = katalog.legacy_coz, veri.veri_hazirla
+    cozulmus = set()
+
+    def sinirli(*a, **k):
+        h = k.get("sayisal_ayarlar") or {}
+        if "min_gun" in h:
+            cozulmus.add(h["min_gun"])
+            if h["min_gun"] == 3:
+                raise katalog.KatalogHatasi("GECERSIZ_BILESIM", "birleşim izinli değil")
+        return coz(*a, **k)
+
+    def hesap(*a):
+        assert cozulmus == {2, 3, 5}, (
+            "İlk E1 çağrısı bütün alanın çözülmesini beklemeli"
+        )
+        return hazirla(*a)
+
+    monkeypatch.setattr(katalog, "legacy_coz", sinirli)
+    monkeypatch.setattr(veri, "veri_hazirla", hesap)
+    s = s11_calistir(depo, makbuz, tmp_path)
+    assert [h["indeks"] for h in s["hucreler"]] == [[0], [1], [2]]
+    assert s["hucreler"][1]["durum"] == "alan_disi"
+    assert "birleşim izinli değil" in s["hucreler"][1]["neden"]
+    assert s["hucreler"][1]["deneme_id"] is None
+    assert all(h["deneme_id"] for h in (s["hucreler"][0], s["hucreler"][2]))
+
+
+def test_s11_yayin_hatasi_dogrulanmis_makbuzlari_ve_yuvalari_korur(
+    tmp_path, monkeypatch
+):
+    from tansu import deneme
+
+    depo, makbuz, _ = s11_kayitli(tmp_path, monkeypatch)
+    ekle = depo._ekle
+
+    def yaz(olay, *a):
+        if olay.get("sonuc_turu") == "arama_v1":
+            raise deneme.PilotYazmaHatasi("üst sonuç yazılamadı")
+        return ekle(olay, *a)
+
+    monkeypatch.setattr(depo, "_ekle", yaz)
+    with pytest.raises(ts.AramaYazmaHatasi, match="üst sonuç yazılamadı") as hata:
+        s11_calistir(depo, makbuz, tmp_path)
+    s = hata.value.sonuc
+    assert s["sonuc_makbuzu"] is None and s["bitis_makbuzu"] is None
+    assert len(s["hucreler"]) == 3
+    assert sum(len(h["donemler"]) for h in s["hucreler"]) == 18
+    assert all(
+        h["kayit_makbuzu"] and h["baslangic_makbuzu"] and h["bitis_makbuzu"]
+        for h in s["hucreler"]
+    )
+    assert all(
+        depo.izle(d["sonuc_ref"])["sonuc"]["deneme_id"] == h["deneme_id"]
+        for h in s["hucreler"]
+        for d in h["donemler"]
+    )
+    assert not any(
+        o["kayit_turu"] == "bitis" and o["kosu_id"] == s["kosu_id"] for o in depo.oku()
+    )
+
+
 def test_s10_bir_ve_iki_spawn_isci_sayisal_sonucu_degistirmez(tmp_path, monkeypatch):
     import os
 
@@ -2271,3 +2560,36 @@ def test_s10_baslangic_makbuzu_farkli_ayara_bagliysa_hesap_baslamaz(
         "donem:2021",
         "donem:birlesik",
     ]
+
+
+def test_s11_bir_cocugun_bozdugu_paket_diger_cocuga_gecmez(tmp_path, monkeypatch):
+    from concurrent.futures import ThreadPoolExecutor
+
+    # Aynı süreçte E2 arızası enjekte edilir; gerçek spawn yolu diğer S11 testlerindedir.
+    monkeypatch.setattr(
+        ts.concurrent.futures,
+        "ProcessPoolExecutor",
+        lambda *, max_workers, mp_context: ThreadPoolExecutor(max_workers=max_workers),
+    )
+    depo, makbuz, _ = s11_kayitli(tmp_path, monkeypatch)
+    kurulum = aileler.ortak_donem_kurulumu
+    girisler = []
+
+    def bozulan(paket, strateji):
+        min_gun = next(a.deger for a in strateji.parametreler if a.ad == "min_gun")
+        girisler.append((min_gun, len(paket["piyasa"])))
+        if min_gun == 2:
+            paket["piyasa"].clear()
+            raise ValueError("çocuk kurulumu başarısız")
+        return kurulum(paket, strateji)
+
+    monkeypatch.setattr(aileler, "ortak_donem_kurulumu", bozulan)
+    sonuc = s11_calistir(depo, makbuz, tmp_path)
+    assert len(girisler) == 18 and all(sayi > 0 for _, sayi in girisler)
+    assert sonuc["hucreler"][0]["durum"] == "eksik"
+    assert [h["durum"] for h in sonuc["hucreler"][1:]] == ["islemsiz", "islemsiz"]
+    assert all(len(h["donemler"]) == 6 for h in sonuc["hucreler"])
+    assert all(
+        b["hucreler"][0]["kapali_islem_sayisi"] is None for b in sonuc["bolgeler"]
+    )
+    assert all(b["secilen"] is None for b in sonuc["bolgeler"])
