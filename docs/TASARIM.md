@@ -1370,9 +1370,133 @@ seçimini açıkça onayladı. Eski §5.10 ve §5.14 yöntemleri kendi anlamlar�
   seçilmiş diye etiketlenmez. Sınır ve eksik komşuluk bilgileri saklanır.
   Sonuç göstermek günlük uygunluk vermez; SAHİP-86/111/d5 kapıları sürer.
 
-Ölçü ve yürütme yüzleri, birimler, eğri başlangıcı ve kayıt şeması bu bölümde
-uygulamadan önce kesinleştirilir. Bu onay #93/#94'ün diğer yöntem eksiklerini,
-çiftin #128 risk dayanağını veya panelin bileşim kanıtını kapatmaz.
+Bu onay #93/#94'ün diğer yöntem eksiklerini, çiftin #128 risk dayanağını veya
+panelin bileşim kanıtını kapatmaz. Aşağıdaki yüzler dağıtıcının teknik sözleşmesidir;
+uygulama ve kanıtları henüz bekler. Kaynak okuması ve sadakat için YORUM seçimi
+getiriye göre yapılmaz. Bu araştırmada yöntem ve tarama alanı sonuç görülmeden
+kaydedilir; çıkan sonuca bakılarak seçim algoritması değiştirilmez.
+
+**Ortak yüzler ve sahipleri**
+
+| Yüz | Sahip ve sözleşme |
+|---|---|
+| `kayitli_izgara_calistir(depo, arama_deneme_id, *, veri_koku, mod, isci=None, ilerleme=print)` | E4, `tansu/tansusinama.py`. Kayıtlı üst denemeden tam hücre sonuçları, birimli ölçüler, bölge/seçim gerekçeleri ve E5 makbuzları döner. Kaydedilmemiş ayar alınmaz. |
+| `olc(islemler, *, politika, egri=None, karsilastirma=None)` | `tansu/istatistik.py`. Aynı açık politika ve aynı işlemler iki çağıranda aynı ölçüleri verir. Yeni girdi E3'ün işlem sonuçlarını taşır; eski çağıranlar kendi eski girdilerini politika uyarlayıcısıyla iletir. |
+| `egri_dususu(egri)` | `tansu/istatistik.py`. Başlangıç, tarih temeli, normalizasyon ve derinlik birimi girdide açıktır. Aynı zirve taraması eski ve yeni ölçülerde kullanılır. |
+| `sec(izgara, hucreler, *, politika)` | `tansu/saglamlik.py`. Sabit sayısal koordinatlar ve durumları üstünden saf seçim; bütün komşular, sınırlar, bölgeler, eşitlik bileşenleri ve seçilmedi nedeni döner. |
+| `ema_hucre_calistir(mumlar, p, *, kurulum, sinyal_konumlari, yurutme=None)` | `tansu/saglamlik.py`. Gerçek hücre çağrısının tek sahibi. Eski EMA döngüleri ve kayıtlı yol, kendi açık yürütme sürümleriyle bu hesabı kullanır. Genel geri çağırım veya yeni eklenti sistemi kurulmaz. |
+| `AyarAktarimi.cocuk(hucre)` | `tansu/aktarim.py`. Eski yolda yöntem kopyalama korunur. Doğrulanmış S11 üst denemesinde yalnız dondurulmuş tam S10 çocuk yöntemi türetilir; serbest yöntem geçersiz kılma alınmaz. |
+
+**Üst ve çocuk yöntemleri**
+
+Üst denemenin `yontem_ayarlari` alanı tam olarak şu anahtarları taşır.
+
+| Anahtar | Değer |
+|---|---|
+| `yontem`, `tekrar` | `kayitli_izgara_v1`, `0` |
+| `secim_politikasi`, `olcu_politikasi` | `genis_bolge_net_r_v1`, `bagimsiz_olcu_v1` |
+| `eksenler` | Sıralı `ad`, `birim`, `degerler` kayıtları. Yalnız seçili sayısal eksenler bulunur. |
+| `hucre_yontemi` | Tam S10 sözlüğü: `yontem=kayitli_donem_v1`, `tekrar=0`, `yurutme_surumu=bagimsiz_islem_v1`, `fiyat_politikasi=aof_v1`, `muhasebe_politikasi=tani_referans_v1`. |
+
+Sabit ayarlar ve katalog sürümü üst denemenin mevcut `strateji` alanındadır;
+ikinci bir sabit ayar kopyası tutulmaz. Dönem, veri, risk ve masraf alanları da
+üst denemeye aittir. Tam revizyon özeti eksenleri ve bütün yöntem sürümlerini kapsar.
+İzinli tarama mevcut belgeli EMA ızgarasıdır: `esik` için 0,010/0,012/0,015 oran,
+`min_gun` için 2/3/5 gün, `pencere` için 5/10/20 gün. Eksen değerleri bu değerlerin
+boş olmayan, artan ve tekil alt kümesidir; kanonik eksen sırası ad sırasıdır.
+Katalog çözümü E2'de kalır. Yeni aralık, kategorik varyant, çift riski veya panel
+seçim izni bu arama ile verilmez. Alan dışı istek ve ret nedeni korunur.
+
+E4 önce tüm koordinatları sınıflandırır ve hücre yuvalarını ayırır. E5 her izinli
+hücreyi `ust_deneme` ve `baglar.izgara_ust_deneme` ile kaydeder. Çocukta tam çözülmüş
+strateji, özgün strateji özeti, tam deneme özeti ve kayıt makbuzu bulunur. Tam
+çocuk ayarı tekrar okunur; beklenen üst bağ, yöntem ve iki özet doğrulanmadan
+hesap başlamaz. Aynı değere tekrar dönüş eski revizyonu silmez. Eski Holm sayımı değişmez.
+
+Üst aramanın E5 başlangıcı ve çocuğun kayıt/başlangıç makbuzları hesap öncesindedir.
+Çocuk kaydı başarısızsa o çocuğun E1–E3 hesabı başlamaz. Kayıt/yayın hatası E5'in
+belirsiz yazma kuralıyla dışarı çıkar; yazılamayan sonuç kalıcıymış gibi sunulmaz.
+Hata, doğrulanmış makbuzlarla eldeki hücre durumlarını korur. Her izinli hücrede
+altı dönem sonucu için yuva vardır; çalışmamış dönem gerekçeli `baslamadi` kalır.
+Hücre durumları tamamlandı, işlemsiz, eksik, hesap hatası, kayıt hatası veya alan
+dışı ayrımını korur. Hiçbiri kârlı alanı büyütmek için çıktıdan atılmaz.
+
+S10'un tam yöntem eşitliği değiştirilmez. İki kayıtlı giriş aynı özel yürütme
+gövdesini kullanır; ikinci S09 döngüsü yazılmaz. Hücreler sırayla yürür, aynı anda
+yalnız bir çocuğun mevcut en çok altı dönem işi çalışır. Arama ömründe E1 dönem
+paketleri paylaşılır; anahtar tam veri isteğini, ısınmayı, takvimi, görüntü/manifesti,
+üyeliği ve veri politikalarını kapsar. Çocukla uyuşmayan paket kullanılmaz. Ortak
+paket çocuğun değiştirilebilir işlem durumunu taşımaz; aramalar arasında önbellek yoktur.
+E2'nin değişmeyen gösterge hazırlığı yalnız aynı gösterge ve ısınma ayarıyla
+paylaşılabilir; sahibi E2'dir. Her çocuğun kurulumu, sinyali ve kimliği yeniden üretilir.
+Bir hız veya bellek kazancı iddiası bu sözleşmeden çıkarılmaz.
+
+**Ölçü ve eğri girdisi**
+
+Ölçü çıktısı yöntem kimliğini ve adla anahtarlanmış ölçüleri taşır. Her ölçüde
+`deger`, `birim` ve `bos_nedeni` vardır. Hesaplanabilen değer sonludur; boş değerin
+nedeni doludur. İşlem/seri referansı, payda ve muhasebe politikası sonuçta saklanır.
+Net fiyat getirisi ve referans sonucu `oran`, net sonuç/masraf `TL`, miktar `adet`,
+net R `R` birimindedir. Oran 0,10 değeri yüzde 10 demektir; ekranda yüzdeye çevrilir.
+Her nihai kapalı sonuç bir kez sayılır. Açık işlemin kısmi gerçekleşmeleri ve kalan
+adedi ayrı gösterilir; nihai kapalı sonucun üstüne eski kısmi kâr eklenmez.
+
+Eğri kaydı `tur`, `satirlar`, `baslangic_degeri`, `baslangic_ani`,
+`baslangic_politikasi`, `tarih_temeli`, `normalizasyon`, `birim`,
+`muhasebe_politikasi` ve işlem/seri referanslarını taşır. Satırda gözlem anı ve değer
+açıktır; eksik değer sıfırla tamamlanmaz. Yeni tanısal kapalı işlem eğrisinde aynı
+tarihteki kapalı sonuçlar birlikte toplanır; ilk nokta dönem başlangıcında 0'dır.
+`tani_net_r` başlangıcı 0 R, derinliği mutlak R farkıdır. `tani_referans` başlangıcı
+0 referans oranı, derinliği mutlak referans oranı farkıdır. İkisi de hesap bakiyesi,
+bileşik portföy getirisi, portföy yüzde düşüşü veya Calmar üretmez.
+
+Düşüş süresi zirvenin tarihinden yeniden aynı zirveye erişilen tarihe, erişilmediyse
+son gözleme kadardır; eşit zirve saati yeniden başlatır. Tarihli seride birim takvim
+günü, tarihsiz eski dizide gözlem adımıdır. Örnek: 1 Ocak 0 R, 3 Ocak 2 R, 5 Ocak
+1 R, 7 Ocak 3 R için derinlik 1 R, süre 4 takvim günüdür. Eski `dusus` ilk verilen
+kapanışı başlangıç sayar ve pozitif oran/gün döner. Eski `olculer` başlangıca 1 ekler
+ve negatif oranı korur. Bu yüzden [0,9; 1,0] kapanışları ilkinde 0, ikincide −0,1
+derinlik verir. Ortak hesap bu politika ayrımını silmez.
+
+Yeni Sharpe yalnız tarihleri hizalı günlük getiri ve geçmiş risksiz getiri,
+açık günlük payda, kaynak ve yıllıklandırma politikasıyla hesaplanır. Teknik
+`gunluk_fark_252_v1` politikasında günlük farkın ortalaması, örnek standart sapmasına
+(`ddof=1`) bölünür ve √252 ile çarpılır. Veri/payda/kaynak/hizalama eksikse, iki
+gözlem yoksa veya sapma sıfırsa sonuç gerekçeli boştur. Tanısal R listesi bu günlük
+seri değildir. Eski §5.14 sıfır faizli Sharpe ve Calmar yalnız kendi eski politikasında kalır.
+
+Eski politika kimlikleri `pozitif_fazla_legacy_v1` ve `eksen_maksimin_legacy_v1`,
+yeni seçici `genis_bolge_net_r_v1` olarak açıkça ayrılır. Eski JSON alanları ve
+saklanmış kimlikler yeniden adlandırılmaz. E4 ölçü girdisindeki politika seçimi
+eski sonucu yeni hesapmış gibi etiketlemez. Kategorik aileler aynı komşulukta birleştirilmez.
+
+**Üst arama sonucu ve kanıt**
+
+Mevcut E5 koşu tutacağına `arama_sonucu_kaydet(*, is_id, hucreler, bolgeler,
+politika_surumu, birimler, uyarilar, cikti_referanslari)` eklenir; çıktı makbuzdur.
+`sonuc_turu=arama_v1` üst koşuya aittir. Hücre kaydı kanonik indeksi, üst/çocuk kimliğini,
+tam ayarları ve iki özeti, altı dönem durumunu, birimli ölçüleri ve gerçek sonuç/işlem
+referanslarını taşır. Bölge kaydı strateji/hisse/dönemi, hücre ve komşularını,
+alan dışı/eksik komşuluğu, sınır ve eşitlik bileşenlerini, seçilen çocuğu veya nedenli
+boş seçimi taşır. Kayıp veya işlemsiz hücre sayısal mesafe hesabında kârlı değildir;
+eksik hücreye uydurma getiri atanmaz. Geçersiz alan atılırken indeksler sıkıştırılmaz.
+
+E5 üst bağı, çocuğun koşu ve dönemini, iki ayar özetini ve başvurulan gerçek sonuç
+kaydını doğrular. İşlem başvurusu aynı çocuk koşusu ve döneme aittir. Mevcut
+`donem_sonucu_kaydet` aynı koşu kısıtı gevşetilmez; yapay sinyal kimliği üretilmez.
+Üst başlangıcındaki hücre ve arama işleri bitişte kimlikle bir kez sayılır. Başarısız
+hücre veya eksik iş varken tam başarı yazılmaz. Tekrarlar önceki geçmişi silmez.
+
+D5 için eski `saglamlik.ema`, `tansusinama.ema_tablolari` ve kayıtlı akış gerçek EMA
+hücre çağrısını ortak sahibine verir; giriş günü, K1, kurulum/karantina, masraf ve
+çıktı uyarlamaları kendi eski anlamlarını korur. D7 için eski iki düşüş yüzü ortak
+zirve hesabını kullanır. Değişen hesaplar `tests/test_gelecek.py` kapsamına girer.
+El hesaplı ölçüler `tests/test_istatistik.py`, seçici `tests/test_saglamlik.py`,
+kayıtlı arama ve eski çağıranlar `tests/test_tansusinama.py`, üst/çocuk kayıt sınırı
+`tests/test_kayit.py` ve `tests/test_ayar_aktarimi.py` ile kanıtlanır. `dusus` çağıranı
+`tests/test_kabul.py` de etkilenir; E2 hazırlığı değişirse `tests/test_aileler.py` eklenir.
+Gerçek anlık görüntüdeki eksik veriyle başarısız koşu kimlik, ret ve tam hücre görünürlüğünü
+kanıtlayabilir; başarılı dolum, kârlılık veya tam dönem getiri kanıtı diye sunulmaz.
 
 #### Dolum, risk ve ölçünün anlamı
 
