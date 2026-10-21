@@ -523,6 +523,403 @@ def pilot_deneme(depo, varyant="bugun", **degisiklik):
     return depo.deneme_kaydet(varyant, **alanlar)
 
 
+@pytest.mark.parametrize(
+    "degisiklik",
+    [
+        dict(bilinmeyen=True),
+        dict(kontrol_noktalari=[1000.0]),
+        dict(hassasiyet_r=Decimal("0.01")),
+        dict(tohum=True),
+        dict(yontem="kayitli_monte_carlo_v999"),
+    ],
+)
+def test_s13_mc_yontemi_bilinmeyen_alani_ve_yanlis_turu_kaydetmez(tmp_path, degisiklik):
+    from tansu.deneme import PilotKayit, PilotHatasi
+    from tests.test_tansusinama import s13_yontem
+
+    depo = PilotKayit(tmp_path / "mc.jsonl")
+    yontem = s13_yontem(
+        dict(
+            deneme_id="wf",
+            kosu_id="wf-kosu",
+            sonuc_ref="wf-ozet",
+            bitis_ref="wf-bitis",
+            icerik_ozeti="00" * 32,
+        )
+    )
+    pilot_deneme(depo, yontem_ayarlari=yontem)
+    once = depo.yol.read_bytes()
+    hata = None
+    try:
+        pilot_deneme(depo, yontem_ayarlari=yontem | degisiklik)
+    except PilotHatasi as yakalanan:
+        hata = yakalanan
+    assert hata is not None, "MC yöntemi eksik veya bilinmeyen alanla kalıcı olamaz."
+    assert depo.yol.read_bytes() == once
+
+
+@pytest.mark.parametrize(
+    "alan",
+    [
+        "bilinmeyen",
+        "kontrol_turu",
+        "ayar_ozeti",
+        "yontem_surumu",
+        "dis_alan",
+        "kimlik_surumu",
+        "kaynak",
+        "strateji",
+    ],
+)
+def test_s13_kanonik_mc_deneme_degisimini_yeni_okuyucu_reddeder(tmp_path, alan):
+    from tests.test_tansusinama import s13_yontem
+
+    depo = pilot.PilotKayit(tmp_path / "mc.jsonl")
+    yontem = s13_yontem(
+        dict(
+            deneme_id="wf",
+            kosu_id="wf-kosu",
+            sonuc_ref="wf-ozet",
+            bitis_ref="wf-bitis",
+            icerik_ozeti="00" * 32,
+        )
+    )
+    pilot_deneme(depo, yontem_ayarlari=yontem)
+    olaylar = depo.oku()
+    assert len(olaylar) == 1
+    if alan == "bilinmeyen":
+        olaylar[0]["yontem_ayarlari"]["bilinmeyen"] = True
+    elif alan == "kontrol_turu":
+        olaylar[0]["yontem_ayarlari"]["kontrol_noktalari"] = [1000.0]
+    elif alan == "ayar_ozeti":
+        olaylar[0]["risk_ayarlari"]["oran"] = Decimal("0.03")
+    elif alan == "yontem_surumu":
+        olaylar[0]["yontem_ayarlari"]["yontem"] = "kayitli_monte_carlo_v999"
+    elif alan == "dis_alan":
+        olaylar[0]["bilinmeyen"] = True
+    elif alan == "kimlik_surumu":
+        olaylar[0]["kimlik_bicimi_surumu"] = "pilot_s03_v999"
+    elif alan == "strateji":
+        olaylar[0]["strateji"]["aile"] = "gecersiz"
+        olaylar[0]["ayar_parmak_izi"] = pilot._ayar_ozeti(pilot._ayarlar(olaylar[0]))
+    else:
+        olaylar[0]["kaynaklar"] = []
+    depo.yol.write_bytes(b"".join(pilot.kanonik(o) + b"\n" for o in olaylar))
+    once = depo.yol.read_bytes()
+    with pytest.raises(pilot.PilotHatasi):
+        pilot_deneme(pilot.PilotKayit(depo.yol))
+    assert depo.yol.read_bytes() == once
+    with pytest.raises(pilot.PilotHatasi):
+        pilot.PilotKayit(depo.yol).oku()
+
+
+def test_s13_baslamadan_hata_bitisinin_kimligi_ve_isleri_degistirilemez(tmp_path):
+    from tests.test_tansusinama import s13_yontem
+
+    depo = pilot.PilotKayit(tmp_path / "mc-bitis.jsonl")
+    y = s13_yontem(
+        dict(
+            deneme_id="wf",
+            kosu_id="wf-kosu",
+            sonuc_ref="wf-ozet",
+            bitis_ref="wf-bitis",
+            icerik_ozeti="00" * 32,
+        )
+    )
+    veri = dict(
+        kaynak="yerel",
+        veri_referanslari=["ag-1"],
+        manifest_ozeti="manifest-1",
+        uyelik_surumu="uyelik-1",
+    )
+    m = pilot_deneme(depo, yontem_ayarlari=y, veri_ayarlari=veri)
+    baska = pilot_deneme(depo, yontem_ayarlari=y, veri_ayarlari=veri)
+    eski = pilot_deneme(depo)
+    with pilot_kosu(
+        depo,
+        m.deneme_id,
+        kod_kimligi="kayitli_monte_carlo_v1:sha256:" + "00" * 32,
+        tohum=y["tohum"],
+        ureteci_surumu=y["uretec"],
+        is_listesi=["00" * 32],
+    ) as kosu:
+        kosu.bitir(
+            durum="hata",
+            tamamlanan=[],
+            basarisiz=["00" * 32],
+            yontemler=[y["yontem"]],
+            olculer={},
+            cikti_referanslari=[],
+            ozetler={},
+        )
+    fiziksel = depo.oku()
+    assert fiziksel[-1]["durum"] == "hata" and depo.kurtar()["cozumsuz_kosular"] == []
+    kabul_edilen = []
+    for boz in (
+        "isler",
+        "ayar",
+        "kaynak",
+        "alan",
+        "yinelenen",
+        "durum",
+        "ust",
+        "legacy_ust",
+    ):
+        olaylar = deepcopy(fiziksel)
+        bitis = olaylar[-1]
+        if boz == "isler":
+            bitis["basarisiz"] = []
+        elif boz == "ayar":
+            bitis["ayar_parmak_izi"] = "baska-ayar"
+        elif boz == "kaynak":
+            bitis["kaynaklar"] = []
+        elif boz == "alan":
+            bitis["bilinmeyen"] = True
+        elif boz == "yinelenen":
+            olaylar.append(dict(bitis, kayit_id="ikinci-bitis"))
+        elif boz == "durum":
+            bitis["durum"] = "bilinmeyen"
+        elif boz == "ust":
+            bitis["deneme_id"] = baska.deneme_id
+        else:
+            bitis["deneme_id"] = eski.deneme_id
+        yol = tmp_path / ("bitis-" + boz + ".jsonl")
+        yol.write_bytes(b"".join(pilot.kanonik(o) + b"\n" for o in olaylar))
+        try:
+            pilot.PilotKayit(yol).oku()
+        except pilot.PilotHatasi:
+            continue
+        kabul_edilen.append(boz)
+    baslangic_no = next(
+        i for i, o in enumerate(fiziksel) if o["kayit_turu"] == "baslangic"
+    )
+    eski_kayit = depo.deneme_oku(eski.deneme_id)
+    for boz in ("ust", "ust_ayar", "ust_ayar_kod", "tohum", "uretec", "alan"):
+        # No finish or typed MC event can hide a missing start READ guard.
+        olaylar = deepcopy(fiziksel[: baslangic_no + 1])
+        baslangic = olaylar[-1]
+        if boz.startswith("ust"):
+            baslangic["deneme_id"] = eski.deneme_id
+            if boz != "ust":
+                baslangic["ayar_parmak_izi"] = eski_kayit["ayar_parmak_izi"]
+            if boz == "ust_ayar_kod":
+                baslangic["kod_kimligi"] = "kod-1"
+        elif boz == "tohum":
+            baslangic["tohum"] += 1
+        elif boz == "uretec":
+            baslangic["ureteci_surumu"] = "random-v1"
+        else:
+            baslangic["bilinmeyen"] = True
+        yol = tmp_path / ("baslangic-" + boz + ".jsonl")
+        yol.write_bytes(b"".join(pilot.kanonik(o) + b"\n" for o in olaylar))
+        try:
+            pilot.PilotKayit(yol).oku()
+        except pilot.PilotHatasi:
+            continue
+        kabul_edilen.append("baslangic_" + boz)
+    assert kabul_edilen == [], (
+        "MC başlangıç öneki ve hata bitişi değişmez kimlik ve tam iş muhasebesi gerektirir."
+    )
+
+
+def test_s13_wf_parti_kesintisi_ve_kayitli_hata_sayimlari_ayridir(
+    tmp_path, monkeypatch
+):
+    from tansu import istatistik, tansusinama as ts
+    from tests.test_tansusinama import s13_kayitli, s13_kosu, s13_plan
+
+    depo, m, _, kaynak = s13_kayitli(tmp_path, monkeypatch)
+    ctx, d, g = s13_kosu(depo, m, kaynak)
+    with ctx as kosu:
+        is_, planlar = s13_plan(depo, kosu, d, g, deney="sira_v1", sayi=5)
+        kurtarma = depo.kurtar()["mc_belirsiz_kosular"][0]["isler"]
+        belirsiz = next(i for i in kurtarma if i["anahtar"] == is_["anahtar"])
+        assert belirsiz["denenen"] is None and belirsiz["kesin_tamamlanan"] == 0
+        assert belirsiz["deneme_yayin_belirsiz"] == [0, 4]
+        assert belirsiz["baslamayan_kanitli"] == 995
+        once = depo.yol.read_bytes()
+        with pytest.raises(pilot.PilotHatasi, match="belirsiz"):
+            kosu.bitir(
+                durum="hata",
+                tamamlanan=[],
+                basarisiz=[i["anahtar"] for i in g["isler"]],
+                yontemler=["kayitli_monte_carlo_v1"],
+                olculer={},
+                cikti_referanslari=[],
+                ozetler={},
+            )
+        assert depo.yol.read_bytes() == once
+        ikinci_ctx, ikinci_d, ikinci_g = s13_kosu(depo, m, kaynak)
+        with pytest.raises(ValueError, match="Yayın öncesi kesinti"):
+            with ikinci_ctx as ikinci_kosu:
+                s13_plan(depo, ikinci_kosu, ikinci_d, ikinci_g, deney="sira_v1", sayi=1)
+                raise ValueError("Yayın öncesi kesinti")
+        ikinci = next(
+            k
+            for k in depo.kurtar()["mc_belirsiz_kosular"]
+            if k["kosu_id"] == ikinci_kosu.makbuz.kosu_id
+        )
+        assert next(i for i in ikinci["isler"] if i["anahtar"] == is_["anahtar"])[
+            "deneme_yayin_belirsiz"
+        ] == [0, 0]
+        kayitlar = []
+        for p, pm in planlar[:2]:
+            olcu = istatistik.mc_senaryo_olculeri(g, is_, p["cekilis"])
+            kayitlar.append(
+                dict(
+                    plan_ref=pm.olay_id,
+                    durum="tamamlandi",
+                    **olcu,
+                    yeniden_sinama={},
+                    sonuc_referanslari=[],
+                    asama=None,
+                    neden=None,
+                )
+            )
+        kayitlar.append(
+            dict(
+                plan_ref=planlar[2][1].olay_id,
+                durum="hata",
+                olculer={},
+                sembol_olculeri={},
+                yeniden_sinama={},
+                sonuc_referanslari=[],
+                asama="olcum",
+                neden="Kontrollü hesap arızası.",
+            )
+        )
+        kosu.mc_sonuclari_kaydet(kayitlar=kayitlar)
+        kurtarma = depo.kurtar()["mc_belirsiz_kosular"][0]["isler"]
+        kayitli = next(i for i in kurtarma if i["anahtar"] == is_["anahtar"])
+        assert kayitli["denenen"] == 3 and kayitli["kesin_tamamlanan"] == 2
+        assert kayitli["deneme_yayin_belirsiz"] is None
+        assert kayitli["baslamayan_kanitli"] == 997
+        once = depo.yol.read_bytes()
+        with pytest.raises(pilot.PilotHatasi):
+            kosu.mc_planlari_kaydet(kayitlar=[planlar[0][0]])
+        with pytest.raises(pilot.PilotHatasi):
+            kosu.mc_sonuclari_kaydet(kayitlar=[kayitlar[0]])
+        with pytest.raises(pilot.PilotHatasi):
+            kosu.bitir(
+                durum="tamamlandi",
+                tamamlanan=[is_["anahtar"]],
+                basarisiz=[],
+                yontemler=["kayitli_monte_carlo_v1"],
+                olculer={},
+                cikti_referanslari=[],
+                ozetler={},
+            )
+        assert depo.yol.read_bytes() == once
+        olaylar = depo.oku()
+        ozetler = []
+        for i in g["isler"]:
+            sonuclar = pilot._mc_is_sonuclari(
+                olaylar, kosu.makbuz.kosu_id, i["anahtar"]
+            )
+            ozetler.append(
+                ts._mc_is_ozeti(
+                    i,
+                    1000,
+                    sonuclar,
+                    [],
+                    hata=ValueError("Kontrollü hesap arızası.")
+                    if i["anahtar"] == is_["anahtar"]
+                    else None,
+                )
+            )
+        yanlis = deepcopy(ozetler)
+        yanlis[0]["tamamlanan"] = 1000
+        with pytest.raises(pilot.PilotHatasi):
+            kosu.mc_ozet_kaydet(
+                kayit=dict(
+                    girdi_ref=planlar[0][0]["girdi_ref"], isler=yanlis, uyarilar=[]
+                )
+            )
+        om = kosu.mc_ozet_kaydet(
+            kayit=dict(girdi_ref=planlar[0][0]["girdi_ref"], isler=ozetler, uyarilar=[])
+        )
+        kosu.bitir(
+            durum="hata",
+            tamamlanan=[],
+            basarisiz=[i["anahtar"] for i in g["isler"]],
+            yontemler=["kayitli_monte_carlo_v1"],
+            olculer={},
+            cikti_referanslari=[om.olay_id],
+            ozetler={},
+        )
+
+    fiziksel = [
+        pilot._coz(json.loads(s)) for s in depo.yol.read_bytes().split(b"\n") if s
+    ]
+    kabul_edilen = []
+    for boz in (
+        "alan",
+        "surum",
+        "yontem",
+        "kosu",
+        "plan",
+        "olcu",
+        "ic_sema",
+        "kimlik",
+        "parti",
+        "bitis",
+        "dis_kimlik",
+        "tur_degistir",
+    ):
+        olaylar = deepcopy(fiziksel)
+        parti = next(
+            o
+            for o in olaylar
+            if o["kayit_turu"] == "mc_parti"
+            and o["kayit"]["kayitlar"][0]["kayit_turu"] == "mc_senaryo"
+        )
+        ic = parti["kayit"]["kayitlar"][0]
+        if boz == "alan":
+            ic["kayit"]["bilinmeyen"] = True
+        elif boz == "surum":
+            ic["surum"] = "mc_senaryo_v999"
+        elif boz == "yontem":
+            ic["yontem_surumu"] = "kayitli_ileri_v1"
+        elif boz == "kosu":
+            ic["kosu_id"] = "baska-kosu"
+        elif boz == "plan":
+            ic["kayit"]["plan_ref"] = planlar[1][1].olay_id
+        elif boz == "olcu":
+            ic["kayit"]["olculer"]["toplam_r"]["deger"] += 1.0
+        elif boz == "ic_sema":
+            ic["sema_surumu"] = "pilot_s03_v999"
+        elif boz == "kimlik":
+            ic["kayit_id"] = planlar[0][1].olay_id
+        elif boz == "parti":
+            ic["parti_ref"] = "kesinlesmemis-parti"
+        elif boz == "dis_kimlik":
+            ozet = next(o for o in olaylar if o["kayit_turu"] == "mc_ozet")
+            ozet["kayit_id"] = olaylar[0]["kayit_id"]
+            olaylar = olaylar[: olaylar.index(ozet) + 1]
+        elif boz == "tur_degistir":
+            girdi = next(o for o in olaylar if o["kayit_turu"] == "mc_girdi")
+            girdi["kayit_turu"] = "sonuc"
+            olaylar = olaylar[: olaylar.index(girdi) + 1]
+        else:
+            next(
+                o
+                for o in olaylar
+                if o["kayit_turu"] == "bitis" and o["kosu_id"] == kosu.makbuz.kosu_id
+            )["durum"] = "tamamlandi"
+        ic["icerik_ozeti"] = pilot._mc_ozet(ic["kayit"])
+        parti["icerik_ozeti"] = pilot._mc_ozet(parti["kayit"])
+        yol = tmp_path / ("mc-" + boz + ".jsonl")
+        yol.write_bytes(b"".join(pilot.kanonik(o) + b"\n" for o in olaylar))
+        try:
+            pilot.PilotKayit(yol).oku()
+        except pilot.PilotHatasi:
+            continue
+        kabul_edilen.append(boz)
+    assert kabul_edilen == [], (
+        "Yeni okuyucu kanonik fakat geçersiz MC kaydını reddetmelidir."
+    )
+
+
 def test_pilot_revizyonlar_eklenir_katalog_ve_eski_sayim_korunur(tmp_path):
     depo = pilot.PilotKayit(tmp_path / "pilot" / "olaylar.jsonl")
     once_kural = kayit.kayitla(P, ATR_N)["kural_id"]

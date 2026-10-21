@@ -4,6 +4,7 @@ from collections import Counter, defaultdict
 from datetime import date
 import math
 from numbers import Real
+from hashlib import sha256
 
 import numpy as np
 import pandas as pd
@@ -812,3 +813,396 @@ def blok_aralik(g, blok, tekrar=1000, tohum=0) -> tuple:
     ornek = g[(baslar[:, :, None] + np.arange(blok)).reshape(tekrar, -1)[:, :n]]
     alt, ust = np.percentile(ornek.mean(axis=1) * GUN, [2.5, 97.5])
     return float(alt), float(ust)
+
+
+MC_DENEYLER = (
+    "sira_v1",
+    "yerine_koyma_v1",
+    "ortak_tarih_blok_v1",
+    "islem_kacirma_v1",
+    "ayar_komsulugu_v1",
+)
+MC_NOKTALAR = (10000, 20000, 40000, 80000, 100000)
+MC_URETEC = "PCG64DXSM_SeedSequence_pool4_v1"
+
+
+def mc_anahtar(tanim):
+    """TASARIM 5.15 S13: makbuz kimliğinden bağımsız anlamsal içerik."""
+    from tansu.deneme import kanonik
+
+    return sha256(kanonik(tanim)).hexdigest()
+
+
+def mc_isleri(girdi, donemler, *, secim_var):
+    """TASARIM 5.15 S13: bütün gerekli kapsamları ve ölçülemeyen işleri korur."""
+    isler = []
+    for d in donemler:
+        gunler = [
+            t
+            for t in girdi["seanslar"]
+            if d["baslangic"].isoformat() <= t <= d["bitis"].isoformat()
+        ]
+        nufus = [r for r in girdi["nufus"] if r["cikis_tarih"] in gunler]
+        dilim = dict(
+            ad=d["ad"],
+            baslangic=d["baslangic"],
+            bitis=d["bitis"],
+            kesim=gunler[-1] if gunler else None,
+        )
+
+        def ekle(deney, sembol, blok=None, neden=None, *, dilim=dilim, ad=d["ad"]):
+            tanim = dict(
+                yontem="kayitli_monte_carlo_v1",
+                kaynak_ozeti=girdi["kaynak_ozeti"],
+                nufus_kurali="nihai_kapanis_dilimi_v1",
+                kapsam=sembol,
+                dilim=dilim,
+                deney=deney,
+                varyant=dict(blok=blok),
+            )
+            isler.append(
+                dict(
+                    anahtar=mc_anahtar(tanim),
+                    tanim=tanim,
+                    deney=deney,
+                    dilim=ad,
+                    sembol=sembol,
+                    blok=blok,
+                    durum="olculemedi" if neden else "hazir",
+                    neden=neden,
+                )
+            )
+
+        for deney in ("sira_v1", "yerine_koyma_v1"):
+            for s in girdi["semboller"]:
+                ekle(
+                    deney,
+                    s,
+                    neden=None
+                    if any(r["sembol"] == s for r in nufus)
+                    else "kapali_islem_yok",
+                )
+        gunluk = [
+            sum(r)
+            for t, r in zip(girdi["seanslar"], girdi["gunluk_r"], strict=True)
+            if t in gunler
+        ]
+        blok = mc_blok_tahmini(gunluk)
+        neden = "kapali_islem_yok" if not nufus else blok["neden"]
+        if neden:
+            ekle("ortak_tarih_blok_v1", "eklemeli", neden=neden)
+        else:
+            for boy in blok["uzunluklar"]:
+                ekle("ortak_tarih_blok_v1", "eklemeli", blok=boy)
+        ekle(
+            "islem_kacirma_v1", "eklemeli", neden=None if nufus else "kapali_islem_yok"
+        )
+        ekle(
+            "ayar_komsulugu_v1",
+            "eklemeli",
+            neden="kapali_islem_yok"
+            if not nufus
+            else None
+            if secim_var
+            else "secim_yok",
+        )
+    return isler
+
+
+def _mc_tamsayi(deger, ad, en_az=0):
+    if type(deger) is not int or deger < en_az:
+        raise ValueError(f"{ad}: en az {en_az} tamsayı gerekli.")
+
+
+def mc_plan(deney, anahtar, indeks, *, n, tohum=42, blok=None, komsu_sayilari=None):
+    """TASARIM 5.15 S13: indeksli, bütçeden bağımsız tek senaryonun çekilişi."""
+    if deney not in MC_DENEYLER:
+        raise ValueError("Bilinmeyen MC deneyi.")
+    if (
+        not isinstance(anahtar, str)
+        or len(anahtar) != 64
+        or any(c not in "0123456789abcdef" for c in anahtar)
+    ):
+        raise ValueError("MC anahtarı SHA-256 olmalıdır.")
+    try:
+        ozet = bytes.fromhex(anahtar)
+    except ValueError as hata:
+        raise ValueError("MC anahtarı SHA-256 olmalıdır.") from hata
+    for ad, deger in (("indeks", indeks), ("tohum", tohum), ("n", n)):
+        _mc_tamsayi(deger, ad)
+    if n == 0:
+        raise ValueError("Boş MC kaynak nüfusu.")
+    sozcukler = [int.from_bytes(ozet[i : i + 4], "little") for i in range(0, 32, 4)]
+    rng = np.random.Generator(
+        np.random.PCG64DXSM(
+            np.random.SeedSequence([tohum, *sozcukler, indeks], pool_size=4)
+        )
+    )
+    sonuc = dict(indeksler=[], maske=[], demet_indeksleri=[])
+    if deney == "sira_v1":
+        sonuc["indeksler"] = rng.permutation(n).astype(np.int64).tolist()
+    elif deney == "yerine_koyma_v1":
+        sonuc["indeksler"] = rng.integers(0, n, size=n, dtype=np.int64).tolist()
+    elif deney == "islem_kacirma_v1":
+        sonuc["maske"] = (rng.random(n, dtype=np.float64) >= 0.10).tolist()
+    elif deney == "ortak_tarih_blok_v1":
+        _mc_tamsayi(blok, "blok", 1)
+        if blok > n:
+            raise ValueError("Blok ufuktan uzun olamaz.")
+        yol = [int(rng.integers(0, n, dtype=np.int64))]
+        for _ in range(1, n):
+            yeni = rng.random(dtype=np.float64) < 1.0 / blok
+            yol.append(
+                int(rng.integers(0, n, dtype=np.int64)) if yeni else (yol[-1] + 1) % n
+            )
+        sonuc["indeksler"] = yol
+    else:
+        if not isinstance(komsu_sayilari, list) or len(komsu_sayilari) != n:
+            raise ValueError("Her seçim için izinli demet sayısı gerekli.")
+        for sayi in komsu_sayilari:
+            _mc_tamsayi(sayi, "komsu_sayisi", 1)
+        sonuc["demet_indeksleri"] = [
+            int(rng.integers(0, sayi, dtype=np.int64)) for sayi in komsu_sayilari
+        ]
+    return sonuc
+
+
+def mc_olc(adimlar, *, islem_r=None, kayip_birimi="islem"):
+    """TASARIM 5.15 S13: kapalı R tanısı; boş stres geçerli, boş kaynak değildir."""
+    degerler = list(adimlar)
+    islemler = degerler if islem_r is None else list(islem_r)
+    if kayip_birimi not in ("islem", "seans"):
+        raise ValueError("MC kayıp serisi işlem veya seans biriminde olmalıdır.")
+    if not all(_sonlu_sayi(v) for v in degerler + islemler):
+        raise ValueError("MC sonucu sonlu R gözlemleri gerektirir.")
+    yol = np.cumsum(np.asarray(degerler, dtype=np.float64)).tolist()
+    if not all(math.isfinite(v) for v in yol) or not math.isfinite(sum(islemler)):
+        raise ValueError("MC toplamı sonlu hesap aralığı dışında.")
+    egri = dict(
+        tur="tani_net_r",
+        satirlar=[dict(an=i, deger=v) for i, v in enumerate(yol, 1)],
+        baslangic_degeri=0.0,
+        baslangic_ani=0,
+        baslangic_politikasi="acik",
+        tarih_temeli="gozlem_adimi",
+        normalizasyon="ilk_planlanan_risk",
+        birim="R",
+        muhasebe_politikasi="kapali_gerceklesme_gunluk_r_v1",
+        referanslar=[],
+    )
+    en_uzun = kayip = 0
+    for r in degerler if kayip_birimi == "seans" else islemler:
+        kayip = kayip + 1 if r < 0 else 0
+        en_uzun = max(en_uzun, kayip)
+    return dict(
+        toplam_r=_olcu(float(sum(degerler)), "R"),
+        dusus_r=egri_dususu(egri)["derinlik"],
+        ortalama_r=_olcu(
+            float(np.mean(islemler)) if islemler else None, "R", "islem_yok"
+        ),
+        islem_sayisi=_olcu(len(islemler), "adet"),
+        kayip_serisi=_olcu(en_uzun, kayip_birimi),
+    )
+
+
+def mc_senaryo_olculeri(girdi, is_, cekilis, *, durumlar=None):
+    """TASARIM 5.15 S13: kayıtlı çekiliş veya gerçek E3 son durumlarının tek ölçü sahibi."""
+    d = is_["tanim"]["dilim"]
+    gunler = [
+        t
+        for t in girdi["seanslar"]
+        if d["baslangic"].isoformat() <= t <= d["bitis"].isoformat()
+    ]
+    nufus = [r for r in girdi["nufus"] if r["cikis_tarih"] in gunler]
+    deney = is_["deney"]
+    if deney in ("sira_v1", "yerine_koyma_v1"):
+        r = [r["net_r"] for r in nufus if r["sembol"] == is_["sembol"]]
+        olcu = mc_olc([r[i] for i in cekilis["indeksler"]])
+        return dict(olculer=olcu, sembol_olculeri={is_["sembol"]: olcu})
+    semboller = girdi["semboller"]
+    secilen = {s: [] for s in semboller}
+    gunluk = {s: [0.0] * len(gunler) for s in semboller}
+    if deney == "ortak_tarih_blok_v1":
+        nufus_ref = {r["islem_ref"]: r for r in girdi["nufus"]}
+        satirlar = [
+            (r, refs)
+            for t, r, refs in zip(
+                girdi["seanslar"],
+                girdi["gunluk_r"],
+                girdi["gunluk_islemler"],
+                strict=True,
+            )
+            if t in gunler
+        ]
+        for j, s in enumerate(semboller):
+            gunluk[s] = [satirlar[i][0][j] for i in cekilis["indeksler"]]
+            secilen[s] = [
+                nufus_ref[ref]["net_r"]
+                for i in cekilis["indeksler"]
+                for ref in satirlar[i][1][j]
+            ]
+    else:
+        if deney == "ayar_komsulugu_v1":
+            if durumlar is None:
+                raise ValueError("MC ayar stresi gerçek E3 sonucu gerektirir.")
+            nufus = []
+            for s, durum in sorted(durumlar.items()):
+                for i in durum["islemler"]:
+                    r, p = i["sonuc"], i["pozisyon"]
+                    if p["cikis_tarih"] in gunler:
+                        if (
+                            not _sonlu_sayi(r["ilk_risk"])
+                            or r["ilk_risk"] <= 0
+                            or not _sonlu_sayi(r["net_r"])
+                            or r["kalan_adet"] != 0
+                        ):
+                            raise ValueError(
+                                "MC stres sonucunun nihai R dayanağı eksik."
+                            )
+                        nufus.append(
+                            dict(
+                                sembol=s, cikis_tarih=p["cikis_tarih"], net_r=r["net_r"]
+                            )
+                        )
+            nufus.sort(key=lambda r: (r["cikis_tarih"], r["sembol"]))
+        elif deney == "islem_kacirma_v1":
+            nufus = [r for r, tut in zip(nufus, cekilis["maske"], strict=True) if tut]
+        else:
+            raise ValueError("Bilinmeyen MC ölçü deneyi.")
+        konum = {t: i for i, t in enumerate(gunler)}
+        for r in nufus:
+            gunluk[r["sembol"]][konum[r["cikis_tarih"]]] += r["net_r"]
+            secilen[r["sembol"]].append(r["net_r"])
+    sembol_olculeri = {s: mc_olc(gunluk[s], islem_r=secilen[s]) for s in semboller}
+    toplam = [sum(gunluk[s][i] for s in semboller) for i in range(len(gunler))]
+    return dict(
+        olculer=mc_olc(
+            toplam,
+            islem_r=[r for s in semboller for r in secilen[s]],
+            kayip_birimi="seans",
+        ),
+        sembol_olculeri=sembol_olculeri,
+    )
+
+
+def mc_blok_tahmini(gunluk):
+    """TASARIM 5.15 S13: bağımsız PPW2009/arch72 durağan boy uygulaması."""
+    x = np.asarray(gunluk, dtype=np.float64)
+    bos = dict(
+        yontem="ppw2009_arch72_v1", ham=None, uzunluklar=[], neden="blok_boyu_belirsiz"
+    )
+    if x.ndim != 1 or len(x) < 2 or not np.isfinite(x).all():
+        return bos
+    n = len(x)
+    kn = max(5, int(np.log10(n)))
+    ust_gecikme = int(np.ceil(np.sqrt(n))) + kn
+    if n <= ust_gecikme + 1 or np.ptp(x) == 0:
+        return bos
+    e = x - x.mean()
+    kov = np.array([np.dot(e[k:], e[: n - k]) / n for k in range(ust_gecikme + 1)])
+    payda = np.array(
+        [
+            np.sqrt(
+                np.dot(e[k + 1 :], e[k + 1 :]) * np.dot(e[: n - k - 1], e[: n - k - 1])
+            )
+            for k in range(ust_gecikme + 1)
+        ]
+    )
+    if not np.isfinite(payda).all() or (payda == 0).any():
+        return bos
+    korelasyon = np.abs(kov * n) / payda
+    bant = 2 * np.sqrt(np.log10(n) / n)
+    q = next(
+        (
+            k - kn
+            for k in range(kn, ust_gecikme + 1)
+            if np.all(korelasyon[k - kn : k] < bant)
+        ),
+        None,
+    )
+    m = min(2 * max(q, 1), ust_gecikme) if q is not None else ust_gecikme
+    k = np.arange(1, m + 1, dtype=np.float64)
+    agirlik = np.where(k / m <= 0.5, 1.0, 2 * (1 - k / m))
+    g = float(2 * np.sum(agirlik * k * kov[1 : m + 1]))
+    v = float(kov[0] + 2 * np.sum(agirlik * kov[1 : m + 1]))
+    if not math.isfinite(g) or not math.isfinite(v) or v == 0:
+        return bos
+    ham = min(
+        float(np.cbrt((g / v) ** 2 * n)), float(np.ceil(min(3 * np.sqrt(n), n / 3)))
+    )
+    if not math.isfinite(ham):
+        return bos
+    uzunluk = min(n, max(1, math.ceil(ham)))
+    return dict(
+        yontem="ppw2009_arch72_v1",
+        ham=ham,
+        uzunluklar=sorted(
+            {max(1, math.ceil(uzunluk / 2)), uzunluk, min(n, 2 * uzunluk)}
+        ),
+        neden=None,
+    )
+
+
+def _mc_uclar(sonuclar):
+    return [
+        float(v)
+        for ad in ("toplam_r", "dusus_r")
+        for v in np.quantile(
+            [s[ad]["deger"] for s in sonuclar], [0.05, 0.50, 0.95], method="linear"
+        )
+    ]
+
+
+def mc_kontrol(sonuclar, *, onceki=None):
+    """TASARIM 5.15 S13: altı uç için deneysel sayısal kararlılık, güven düzeyi değil."""
+    n = len(sonuclar)
+    if n not in (*MC_NOKTALAR, 1000):
+        raise ValueError("Kayıtlı MC kontrol noktası gerekli.")
+    for s in sonuclar:
+        for ad in ("toplam_r", "dusus_r"):
+            if s[ad] != _olcu(s[ad]["deger"], "R") or not _sonlu_sayi(s[ad]["deger"]):
+                raise ValueError("Kontrol için eksiksiz sonlu R gerekli.")
+    uclar = _mc_uclar(sonuclar)
+    fark = [
+        abs(a - b)
+        for a, b in zip(
+            _mc_uclar(sonuclar[::2]), _mc_uclar(sonuclar[1::2]), strict=True
+        )
+    ]
+    onceki_fark = (
+        [abs(a - b) for a, b in zip(uclar, onceki["uclar"], strict=True)]
+        if onceki
+        else None
+    )
+    gecis = all(v <= 0.01 for v in fark)
+    if onceki is not None:
+        sira = MC_NOKTALAR.index(n)
+        if sira == 0 or onceki["tekrar"] != MC_NOKTALAR[sira - 1]:
+            raise ValueError("Önceki kontrol ardışık olmalıdır.")
+    dur = (
+        n >= 20000
+        and onceki is not None
+        and gecis
+        and onceki["bolum_gecti"]
+        and all(v <= 0.01 for v in onceki_fark)
+    )
+    durum = (
+        "sayisal_kararlilik_gozlendi"
+        if dur
+        else "sinirda_kararsiz"
+        if n == 100000
+        else "on_gosterim"
+        if n == 1000
+        else "suruyor"
+    )
+    return dict(
+        tekrar=n,
+        uclar=uclar,
+        bolum_farklari=fark,
+        onceki_farklari=onceki_fark,
+        bolum_gecti=gecis,
+        durum=durum,
+        gecerli_sayilar={
+            ad: sum(s[ad]["deger"] is not None for s in sonuclar) for ad in sonuclar[0]
+        },
+    )

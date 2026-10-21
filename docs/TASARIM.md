@@ -1693,6 +1693,306 @@ seçimsiz dönem ve açık ufku; `tests/test_kayit.py` değişmez bağları ve t
 `tests/test_saglamlik.py` durum aktarımını; `tests/test_gelecek.py` eğitim
 kesiminden sonraki fiyat ve sonuçların eski seçimi değiştirmemesini sınar.
 
+#### S13 kayıtlı Monte Carlo (#94)
+
+**Durum: 21.10.2026 tarihinde benimsenmiş teknik sözleşme; uygulama ve kanıt
+bekliyor.** Dağıtıcı, #94 yöntem araştırmasını `kayitli_monte_carlo_v1` olarak
+benimsedi. Aşağıdaki kesin tercihler proje yorumudur. Tansu'nun MC/WF gereği
+kesin örnekleme, tekrar veya başarı eşiği vermez. Dayanak: [L5], [W2], [W9];
+#94 güncel brifi ve 21.10.2026 teknik yöntem kararı. Bu sözleşme SAHİP-86/111/d5,
+UYGUNLUK, çiftin #128 risk dayanağı veya kalıcı kimlik kapısını kapatmaz.
+
+**Giriş ve kaynak.** E4 yüzü
+`kayitli_monte_carlo_calistir(depo, mc_deneme_id, *, veri_koku, mod,
+ilerleme=print)` olur. İlk sürüm seridir. Kaydedilmemiş işlem listesi almaz.
+Mevcut Git, manifest, Decimal ve tam ayar özeti denetimleri korunur. MC'nin
+ayrı yöntem doğrulayıcısı vardır; S10/S11 ve eski genel senaryo yüzü gevşetilmez.
+Yöntem, tohum, bütçe, ufuk, örnek birimi veya durma ayarı değişince yeni deneme
+gerekir. Aynı ayarın yeniden çalışması yeni koşudur. Senaryolar yeni strateji
+hipotezi sayılmaz; eski Holm sayımı değişmez.
+
+Tek kaynak, E5'teki tamamlanmış `kayitli_ileri_v1` birleşik sonucu ve bitişidir.
+Kaynak deneme/koşu, yöntem, veri/manifest/üyelik, iki ayar özeti, seçim, sinyal,
+işlem ve taşıma başvuruları doğrulanır. Eski WF raporu, S10/S11, K1 veya elle
+verilen sonuç bu kaynağa çevrilmez. Eksik WF bölümü veya kapsamı tamamlanmış
+nüfus sayılamaz. Her işlem sinyal kabulünden dondurulmuş seçilmiş revizyona
+çözülür. Checkpoint açık işlem olarak kalır; nihai kapalı işlem sayılmaz.
+Bir nihai işlemin tekrarlı veya çelişen yayını reddedilir. Aynı değişmez
+başvurunun farklı dönemlerde görünmesi yeni işlem oluşturmaz.
+Her WF bölümünün olay ve taşıma bağı, o bölüm sonucundan önceki kalıcı kayıt
+önekiyle doğrulanır. Daha sonraki checkpoint, eski bölümün kaynağı sayılmaz.
+
+Kapalı nüfus, gerçek giriş dolumu, pozitif alınan adet, sıfır kalan adet,
+pozitif sonlu ilk planlanan risk ve bir sonlu nihai net R gerektirir. Açık ve
+bekleyen kimlikler görünür tutulur; kapalı nüfusa eklenmez. Boş kapalı nüfus
+`olculemedi/kapali_islem_yok` olur. Eksik risk veya sonuç sıfıra çevrilmez.
+Kısmi gerçekleşme nihai sonuca tekrar eklenmez. Sermaye modeli bulunmadığından
+hesap iflası, hesap yüzde düşüşü, Calmar veya fonlanmış portföy bakiyesi üretilmez.
+
+**Dilim ve kapsam.** Ana ufuk WF OOS 2022–2025'tir. 2021 eğitim yılı ana MC
+nüfusuna girmez. 2022, 2023, 2024, 2025 ve birleşik kapanış dilimleri ayrı
+işlerdir. Yıllık nüfus, o yılın son seansına kadar o yılın içinde nihai kapanışı
+olan işlemleri içerir. Önceki yıl girişleri dahil, sonraki yıl kapanışları
+hariçtir. WF giriş kohortu ve karar bölümü ayrı saklanır. Birleşik yol
+kronolojiktir; bağımsız yıllık başlangıçlar toplanmaz. Ayar stresi önce bütün
+OOS yolunu üretir, sonra aynı kapanış kuralıyla yıllara kesilir.
+
+Sıra ve yerine koyma deneyinde nüfus her strateji/sembol için ayrıdır.
+Bağımsız işlem adımları takvim günü veya ortak portföy yolu diye toplanmaz.
+Tarih hizalı deneyler sembol sütunları ile ayrıca etiketli eklemeli tanıyı
+korur. Her sayısal durma sonucu yalnız anahtarında belirtilen kapsam içindir;
+toplamın kararlılığı bütün hisselerin kararlılığı sayılamaz.
+
+| Deney | Örnekleme ve ufuk | Açık varsayım / sınır |
+|---|---|---|
+| `sira_v1` | N kapalı sonucu yerine koymadan düzgün permütasyon; N işlem adımı. | Her kaynak bir kez kullanılır; eklemeli toplam değişmez. Tek işlemde sıra belirsizliği yoktur. |
+| `yerine_koyma_v1` | N sonuçtan N bağımsız düzgün indeks; N işlem adımı. | IID bir duyarlılık varsayımıdır; bağımsız işlem muhasebesi bunu kanıtlamaz. |
+| `ortak_tarih_blok_v1` | T×S günlük vektörün durağan blok örneklemesi; T kayıtlı seans. | Tek tarih indeks yolu bütün sütunlarda aynıdır; durağanlık varsayımı sürer. |
+| `islem_kacirma_v1` | Her kaynak işlemi bağımsız 0,10 olasılıkla çıkar; kalan özgün tarih/boyutta kalır. | Kalibre edilmemiş işlem listesi stresi; boşalan yer yeni giriş veya tekrar seçim yaratmaz. |
+| `ayar_komsulugu_v1` | Donmuş her fold/sembolün izinli komşu demetinden düzgün çekiliş; gerçek E2/E3 yeniden sınaması. | Eğitim seçimi sabittir; sonuç yeni kazanan seçmez. |
+
+Beş deney de zorunlu iş listesinde bulunur. Yapay fiyat üretimi ayrı #166'dadır.
+Gerçek fiyatta ayar değiştirmek veya günlük R bloklarını çekmek fiyat üretimi
+diye adlandırılmaz. Yeni bağımlılık, genel yöntem çerçevesi, işçi seçeneği,
+ikinci işlem motoru veya CLI eklenmez.
+
+**Günlük muhasebe ve blok boyu.** `kapali_gerceklesme_gunluk_r_v1` her
+seans/sembolde o gün kapanan işlemlerin nihai net R toplamıdır. Her hücrenin
+kaynak işlem kimlikleri tutulur. Sıfır yalnız tam kaynak kapsamı ve kapanış
+yokluğu kanıtıyla yazılır. Kapsamı eksik hisse düşürülmez. Bu seri kısmi
+sonucu iki kez, gerçekleşmemiş kaybı veya gün içi maruziyeti saymaz;
+`tani_referans_v1` serisi yerine geçmez.
+
+Blok boyu günlük sütunların toplamından `ppw2009_arch72_v1` ile tahmin edilir.
+Birincil sabit referans [arch 7.2.0 durağan dalıdır](https://arch.readthedocs.io/en/latest/_modules/arch/bootstrap/base.html).
+Bağımsız uygulama yeni `arch` bağımlılığı veya kopya kitaplık kodu kullanmaz.
+N gözlemde merkezlenmiş seri kullanılır. `kn=max(5,int(log10(N)))`,
+`mmax=ceil(sqrt(N))+kn`, bant `2*sqrt(log10(N)/N)` ve üst sınır
+`ceil(min(3*sqrt(N),N/3))` olur. Gecikme i kovaryansı N'ye bölünür;
+korelasyon paydası i+1 sonrası ile i+1 öncesi kare toplamlarının geometrik
+ortalamasıdır. İlk kn önemsiz mutlak korelasyonun başlangıcı q ise
+`m=min(2*max(q,1),mmax)`, yoksa mmax kullanılır. Düz tepe ağırlığı
+`w(k)=1` (k/m≤1/2), aksi halde `2*(1-k/m)` olur.
+`g=2*sum(w(k)*k*kov(k))`, `v=kov(0)+2*sum(w(k)*kov(k))` ve
+ham durağan tahmin `((g*g/(v*v))*N)^(1/3)` üst sınıra kesilir.
+Gecikme hesabını tamamlayamayan kısa seri, sabit/sonlu olmayan seri,
+tanımsız korelasyon veya sıfır v `blok_boyu_belirsiz` olur. Gizli boy seçilmez.
+Sonlu sıfır tahmin tanımsız değildir. Ham tahmin ve girdi özeti saklanır.
+`L=min(T,max(1,ceil(L_hat)))` ile yarım `max(1,ceil(L/2))` ve iki kat
+`min(T,2*L)` ayrı, eşleri tekilleştirilmiş varyantlardır. Bu boy düşüş,
+kuyruk yüzdelikleri veya her hisse için en iyi boy iddiası değildir.
+
+İlk indeks [0,T)'den düzgündür. Her sonraki adımda 1/L olasılıkla yeni düzgün
+indeks çekilir; aksi halde önceki indeks bir artar ve T'de sarar. T adımın
+aynı indeksleri bütün sütunlara uygulanır. Çıktı takvimi ile kaynak indeksleri
+ayrı tutulur. Eski hareketli blok yardımcıları aynı anlamıyla kalır.
+
+**Gerçek ayar stresi.** İzinli eksenler yalnız `esik`, `min_gun`, `pencere`dir.
+Kayıtlı eksen sırasındaki {-1,0,1} indeks çarpımı kullanılır. Alan dışı veya
+katalogca yasak demetler çıkarılır; kanonik demet listesinden tek düzgün
+çekiliş yapılır. Çıkış ayarları sabittir. Seçimsiz fold yeni seçim üretmez.
+Her senaryo boş ilk OOS durumundan başlar ve bütün kronolojik yolu yeniden
+yürütür. Bekleyen/açık işlem kendi stresli giriş ayarını, ilk riskini ve
+değişmez sahibini çeyrekler arasında korur. Üyelik çıkışı mevcut çıkışları
+engellemez. Son ufuk zorla satış veya 2026 sonucu üretmez. Eksik fiyat,
+takvim, ısınma veya limit kanıtı özgün gerekçeli hatadır. Senaryolar değişebilir
+taşıma durumunu paylaşmaz. #93'ün gerçek E2/E3 gövdesi kullanılır.
+
+**Akış ve önek.** `Generator(PCG64DXSM(SeedSequence(...,pool_size=4)))`
+kullanılır. Varsayılan ana tohum 42'dir. NumPy sürümü, derlemesi ve ortam
+kaydedilir. Kanonik kodlama S03 `kanonik` yüzüdür. Anlamsal deney anahtarı
+yöntem, kaynak içerik özetleri, nüfus/kesim kuralı, kapsam, dilim, deney ve
+varyanttan hesaplanan SHA-256'dır. Özet sekiz little-endian uint32'ye ayrılır.
+Tohum dizisi `[ana_tohum,*ozet_sozcukleri,senaryo_indeksi]` olur. Yeni kayıt/koşu
+kimliği, saat, işçi, kontrol noktası veya istenen bütçe akış anahtarına girmez.
+Kaynak makbuz kimlikleri yalnız izlenebilirlikte kalır. Dondurulmuş sembol,
+işlem, fold ve demet sırası; float64 değerler ve int64 indeksler; çağrı sırası
+ve dizi şekilleri yöntem sürümüne aittir. İndeks, maske ve stres demetleri
+kaydedilir. Aynı içerikle yeni koşu aynı sayısal içeriği üretir; bütçe uzatmak
+önceki indeksleri değiştirmez.
+
+**Bütçe ve sayısal tanı.** Her deney/dilim/varyant/kapsamın ayrı bütçesi
+vardır. 1.000 tekrar `on_gosterim`dir ve nihai tamamlanma sayılmaz. Nihai
+kümülatif noktalar 10.000, 20.000, 40.000, 80.000, 100.000'dir. Toplam R ve
+sıfırdan başlayan pozitif en büyük düşüş R için p05/p50/p95,
+`numpy.quantile(method="linear")` ile hesaplanır; değerler yuvarlanmaz.
+Çift ve tek indeks gruplarının altı mutlak farkı ≤0,01 R olmalıdır. Ardışık
+iki nokta bu kontrolü geçmeli; son birleşik uçların önceki noktaya altı farkı
+da ≤0,01 R olmalıdır. En erken durma 20.000'dir. Etiket
+`sayisal_kararlilik_gozlendi` olur. 100.000'de bu sağlanmazsa
+`sinirda_kararsiz` olur. Bu mühendislik tanısı güven sertifikası, gelecek kâr
+aralığı, strateji başarı eşiği veya Andrews–Buchinsky algoritması değildir.
+Ortalama, kayıp serisi ve işlem sayısı kendi geçerli sayılarıyla gösterilir;
+altı uç durma iddiasına girmez. Bütün işlemler kaçırıldığında toplam/düşüş
+sıfır, ortalama `islem_yok` nedeniyle boştur; bu başlangıçtan boş nüfus değildir.
+
+**E5 türleri ve sıra.** Her türün tam alan ve başvuru doğrulaması yazmada ve
+yeniden okumada uygulanır. Bilinmeyen alan, yanlış tür/yöntem/üst/özet, tekrar
+kimlik ve sahte tamamlanma reddedilir. Ortak üst alanlar deneme, koşu,
+tam ayar özeti, yöntem sürümü ve kaynaklar olur. Senaryo kimliği
+`(ust_kosu,anlamsal_deney_anahtari,senaryo_indeksi)`dir; eski genel
+`senaryo_kaydet` tek sıra ve aynı koşu sözleşmesini korur.
+
+| Tür | İçerik ve zorunlu bağ |
+|---|---|
+| `mc_girdi_v1` | WF özet/bitiş, gerçek seçim/sinyal/işlem/checkpoint başvuruları; veri ve iki ayar özeti; sıralı kapalı nüfus, açık/dışlanan kimlikler, takvim/kapsam ve içerik özeti. |
+| `mc_plan_v1` | Girdi makbuzu, deney anahtarı ve tanımı, dilim/kapsam/varyant, sıfır tabanlı indeks, üreteç/akış, tohum, ufuk, kaynak indeksleri/maske veya bütün stres çocuk revizyonları/demetleri. |
+| `mc_senaryo_v1` | Tam plan makbuzu, birimli ölçüler, kaynak/çocuk sonuçları, durum/hata aşaması/nedeni ve içerik özeti; plan başına bir kesin sonuç. |
+| `mc_kontrol_v1` | Tamamlanmış indeks öneki, geçerli sayılar, altı uç, çift/tek ve önceki farkları, önceki kontrol başvurusu, durma gerekçesi. |
+| `mc_ozet_v1` | Kayıtlı her gerekli anahtar, durum, istenen/denenen/tamamlanan/hatalı/başlamayan sayılar, sayısal durmayla istenmeyen indeksler, plan/sonuç/kontrol başvuruları, yorum ve eksikler. |
+
+MC yöntem sözlüğü tam olarak `yontem`, `tekrar`, `kontrol_noktalari`,
+`calisma_turu`, `tohum`, `uretec`, `akis_surumu`, `muhasebe_politikasi`,
+`hassasiyet_r`, `deneyler`, `kaynak` alanlarını taşır. Sabitler sırasıyla bu
+bölümün yöntem adı, 1.000 veya 100.000 üst bütçe, ilgili kontrol listesi,
+`on_gosterim` veya `nihai`, negatif olmayan tamsayı, `PCG64DXSM_SeedSequence_pool4_v1`,
+`indeksli_v1`, `kapali_gerceklesme_gunluk_r_v1`, 0,01 R ve tablodaki beş deneydir.
+`kaynak` tam `deneme_id`, `kosu_id`, `sonuc_ref`, `bitis_ref`, `icerik_ozeti`
+alanlarını taşır. MC denemesinin dönemleri yukarıdaki beş kapanış dilimidir.
+MC başlangıcı, tek başına okunabilen kayıt önekinde de tam alanları ve kayıtlı
+üst deneme, ayar, veri, üyelik, kaynak, tohum ve üreteç bağlarını doğrular.
+MC sınıfı; kayıtlı MC üst kimliği, donmuş tam ayar özeti, MC kod ad alanı
+veya sabit MC üreteç işaretiyle belirlenir. Başka üst kimliğe çevirmek bu
+denetimi atlatmaz. Bütün günlüğün tutarlı yeniden yazımına karşı güvenlik
+iddiası yoktur; bu kapı kayıt sözleşmesinin değişmez bağlarını denetler.
+
+E5 koşu tutacağındaki yüzler `mc_girdi_kaydet`, `mc_plan_kaydet`,
+`mc_senaryo_sonucu_kaydet`, `mc_kontrol_kaydet`, `mc_ozet_kaydet` olur.
+Gerçek stres için ayrıca `mc_sinyal_kaydet(kayit=...)` yüzü ve
+`mc_sinyal_v1` türü bulunur. Bu altıncı dar rol, planı değiştirmeden E2
+çıktısını E3'ten önce kabul eder. Kayıt tam `plan_ref`, `secim_ref`,
+`deneme_id`, `bolum`, `sembol`, `tarih`, `sinyal` alanlarını taşır.
+`sinyal`, WF sinyalinin aynı tam E2/parametre/veri içeriğini taşır.
+E2 kaynak kaydının `semboller` listesi, tarihi ve strateji ayar özeti stres
+çocuğuna; veri manifest özeti MC başlangıcına bağlanır.
+Stres çocuğu planda bulunmalı ve özgün dondurulmuş seçime bağlı olmalıdır.
+Kalıcı makbuzun kimliği E3 sinyal kimliğidir. Makbuz yeniden okunmadan E3
+çalışmaz. WF'nin kendi sinyal kabul doğrulayıcısı gevşetilmez.
+Ortak özel WF hesap gövdesindeki MC plan ve stres çocuğu girdileri birlikte
+zorunludur. Yarım giriş, başka koşu/plan/çocuk veya değişmiş donmuş seçim E2
+ve E3'ten önce reddedilir. Seçimsiz bölümde yeni giriş kabulü oluşmaz.
+Her yüz yalnız `kayit` adlı nesneyi alır ve makbuz döner. MC olayının dış
+alanları S03 ortak kimlik/zaman/ayar/kaynak alanlarına ek olarak
+`surum`, `yontem_surumu`, `icerik_ozeti`, `kayit` olur. Türler `mc_girdi`,
+`mc_plan`, `mc_senaryo`, `mc_kontrol`, `mc_ozet`; sürümleri tablodaki `_v1`
+adlarıdır. Dış içerik özeti, yalnız `kayit` nesnesinin S03 kanonik SHA-256'sıdır.
+
+| `kayit` sahibi | Tam alanlar |
+|---|---|
+| girdi | `kaynak`, `kaynak_ozeti`, `nufus`, `acik_referanslari`, `secim_referanslari`, `sinyal_referanslari`, `kontrol_referanslari`, `seanslar`, `semboller`, `gunluk_r`, `gunluk_islemler`, `kapsam`, `isler` |
+| plan | `girdi_ref`, `anahtar`, `indeks`, `cekilis`, `stres_cocuklari` |
+| senaryo | `plan_ref`, `durum`, `olculer`, `sembol_olculeri`, `yeniden_sinama`, `sonuc_referanslari`, `asama`, `neden` |
+| kontrol | `girdi_ref`, `anahtar`, `onceki_ref`, `sonuc_referanslari`, `tani` |
+| özet | `girdi_ref`, `isler`, `uyarilar` |
+
+Nüfus satırı tam `islem_ref`, `islem_id`, `sembol`, `giris_tarih`,
+`cikis_tarih`, `net_r`, `ilk_risk`, `giris_kohortu`, `karar_bolumu` taşır.
+`kapsam` tam `baslangic`, `bitis`, `muhasebe_politikasi` taşır. İş tanımı
+`anahtar`, `tanim`, `deney`, `dilim`, `sembol`, `blok`, `durum`, `neden`
+taşır. `tanim` tam `yontem`, `kaynak_ozeti`, `nufus_kurali`, `kapsam`,
+`dilim`, `deney`, `varyant` taşır; varyant yalnız `blok` taşır. İşin anahtarı
+bu tanımın kanonik SHA-256'sıdır. Girdi sırasındaki işler başlangıç listesinin
+aynısıdır. `gunluk_islemler` her seans/sembolün kaynak işlem başvurularıdır.
+Tanımdaki `dilim`, tam `ad`, `baslangic`, `bitis`, son kayıtlı seans olan
+`kesim` alanlarını taşır; yalnız yıl adı kesim kanıtı sayılmaz.
+
+Çekiliş tam `indeksler`, `maske`, `demet_indeksleri` taşır. Planın stres çocuk
+satırı tam `bolum`, `sembol`, `secim_ref`, `deneme_id`, `ayar_parmak_izi`,
+`strateji_ayar_parmak_izi`, `demet` taşır. Senaryo ölçüleri tam `toplam_r`,
+`dusus_r`, `ortalama_r`, `islem_sayisi`, `kayip_serisi` taşır; her ölçü S11'in
+`deger`, `birim`, `bos_nedeni` biçimidir. Hatalı senaryoda ölçü, hisse ölçüleri
+ve yeniden sınama boş nesne; sonuç başvuruları boş listedir. Hata aşaması ve
+neden zorunludur. Başarısız girişim tamamlanmış yeniden sınama diye sunulmaz.
+`yeniden_sinama`, gerçek stresin son E3 durumlarını ve kronolojik bölüm
+durumlarını taşır; diğer deneylerde boştur. Stres ölçüsü bu değişmez
+plan/sinyal bağlarına dayanır. `sembol_olculeri` tarih hizalı deneyin ayrı
+hisse tanılarını korur; eklemeli kapsamın durma etiketi onlara yayılmaz.
+Eklemeli takvim tanısında kayıp serisi negatif ardışık seansları sayar ve
+birimi `seans`tır. Hisse/işlem tanısındaki birim `islem` olarak kalır.
+Yeniden sınamanın bölüm satırı tam `bolum`, `durum`, `hatalar` taşır.
+Kontrol tanısı tam `tekrar`, `uclar`, `bolum_farklari`, `onceki_farklari`,
+`bolum_gecti`, `durum`, `gecerli_sayilar` taşır. Tam sonuç öneğinin başvuruları
+sıralıdır. E5 kayıtlı sayılar/ölçü uçları ve önceki kontrol bağını doğrular;
+yeni fiyat veya işlem hesabı yürütmez.
+
+Özet iş satırı tam `anahtar`, `durum`, `neden`, `istenen`, `denenen`,
+`tamamlanan`, `hatali`, `baslamayan`, `durma_nedeniyle_istenmedi`,
+`basarisiz_indeks`, `sonuc_referanslari`, `kontrol_referanslari` taşır.
+Özet her girdi anahtarını bir kez içerir. Sayılar gerçek plan/sonuçlara uyar.
+MC bitişi, hesap başlamadan hata verse bile kendi başlangıcına, denemesine ve
+tam ayar özetine bağlıdır. Başlangıçtaki bütün işler bir kez muhasebeleştirilir;
+bilinmeyen alan/durum, kaynak değişikliği ve ikinci bitiş reddedilir.
+Ön gösterim nihai yöntemin tamamlanması değildir. Nihai sayısal durma veya
+100.000 bütçesi tamamlanan iş, hesap başarısızlığı ve ölçülemeyen iş ayrı kalır.
+
+**MC'ye özel kalıcı partiler.** `mc_parti_v1`, S03'ün mevcut kalıcı ekleme
+yoluyla yayımlanan fiziksel bir zarftır. `kayit` yalnız `kayitlar` listesidir.
+Her zarf aynı dar rolden 1–32 kayıt taşır. Plan zarfı tek deney anahtarı ve
+girdiyle; sinyal zarfı tek planla sınırlıdır.
+İç kayıtlar tam MC olayları veya yalnız bu koşuya bağlı stres çocuk deneme
+revizyonlarıdır; her birinin değişmez kimliği ve zarf kimliğini
+taşıyan `parti_ref` alanı vardır. Okuyucu yalnız kesinleşmiş zarfı açar ve
+içindeki her kaydı sırayla aynı kesin doğrulayıcıdan geçirir. Zarf/iç kayıt
+kimlikleri bütün günlükte tekildir. Başka partiye veya kesinleşmemiş plana
+başvuru reddedilir. MC türü, yöntem veya sürüm işareti taşıyan kayıt
+eski bir tür adıyla bu denetimi atlatamaz. İç kaydın S03 şema sürümü de
+doğrulanır; dış MC kimliği önceki bir kayıt kimliğini kullanamaz. Eski türlerin okuma ve yayın biçimi değişmez.
+
+MC iç doğrulayıcısı yalnız okuyucu/yazıcının daha önce doğruladığı kesin
+öneki kabul eder. Üst denemenin tam stratejisi, yöntem şeması ve tam ayar
+özeti deneme kayıt/okuma sınırında doğrulanır; her iç olay için aynı
+strateji ve tam özet yeniden hesaplanmaz. Her olayın üst, koşu, ayar özeti,
+yöntem, kaynak ve açık koşu bağları ayrıca doğrulanır. Stres çocuğunun kendi
+strateji ve tam ayar denetimi korunur. İç olay zarfın aynı nesnesiyse
+üyelik kesindir; ayrı nesnede kanonik içerik eşitliği yine zorunludur.
+Bu düzenleme önbellek, kaynak atlama veya ayrı doğrulayıcı oluşturmaz.
+
+E4 küçük sabit iç partiler kullanır; kullanıcı seçeneği eklemez. Planlar
+hesaptan önce, sinyal kabulleri E2'den sonra ve E3'ten önce yayımlanır.
+Sonuçlar indeks sırasıyla kalıcılaşır. Parti kontrol noktası sınırını aşmaz.
+Gerçek stresin büyük son durumları tek sonuçlu parti kullanabilir.
+Aynı donmuş fold/sembol/demetin değişmez stres revizyonu senaryolar arasında
+yeniden kullanılabilir. Senaryo bağı planda kalır; değişebilir E3 durumu paylaşılmaz.
+Stres çocuk yönteminde senaryo indeksi bulunmaz; `yontem=mc_stres_cocuk_v1`,
+`tekrar=0`, `bolum_id`, `sembol`, `secim_ref`, tam `hucre_yontemi` bulunur.
+
+Kalıcı sonuç yokluğu, hesabın hiç denenmediğini kanıtlamaz. Hesap ile sonuç
+yayını arasında kesinti varsa kurtarma `denenen=None` ve planın sonuçsuz
+indeks aralığını `deneme_yayin_belirsiz` olarak gösterir. Kesin tamamlanmış
+önek ayrıca görünür. Normal kaydedilmiş hesap hatasında önceki sonuçlar ve
+hatalı indeks birlikte kalıcılaşır; bundan sonraki planlı indeksler gerçekten
+başlamamıştır. Belirsiz yayında yeni başarılı özet veya bitiş uydurulmaz. Sonuçsuz plan aralığı
+varken özetsiz hata bitişi de reddedilir. Bağlamdan çıkan beklenmeyen hata,
+özgün hatayı ve kurtarmada görünen açık MC koşusunu korur.
+Tekrar bütçesi, anlamsal anahtar ve RNG öneği partilemeden etkilenmez.
+Bu temsil gerçek E2/E3 maliyeti veya nihai bütçenin uygulanabilirliği için
+ölçüm kanıtı değildir.
+
+Başlangıç ve girdi makbuzu yeniden okunmadan plan üretilmez. Stres çocuklarının
+kalıcı revizyonları ve tam plan makbuzu yeniden okunmadan E2/E3 çalışmaz.
+Sonuç kesin yayımlandıktan sonra tamamlanan sayılır. İlk hatalı senaryoda
+ilgili anahtar durur; başarısız indeks yeniden çekilmez. Tamamlanmış önek,
+başarısız indeks ve hata nedeniyle başlamayanlar korunur. Diğer bağımsız
+anahtarlar sürebilir. Gerekli iş eksik/başarısızsa genel sonuç eksiktir.
+Sayısal durmayla istenmeyen kalanlar hata nedeniyle başlamayandan ayrıdır.
+Yarım yüzdelikler yalnız `eksik` ve geçerli sayıyla gösterilir. Bütçe
+tamamlanması, sayısal kararlılık ve yarım koşu ayrı alanlardır. E5'in mevcut
+kalıcılığı belirsiz yayın/kurtarma davranışı korunur; onaysız makbuz var sayılmaz.
+
+Gözlenebilir kanıt: `tests/test_istatistik.py` el hesabı, PPW sabit örnekleri,
+ortak sütun hizası, akış öneki ve sayısal tanıyı; `tests/test_kayit.py` kaynak,
+şema, kimlik, kalıcı sıra ve bitiş sayımını; `tests/test_tansusinama.py` gerçek
+WF nüfusu, yıllık kapanış, açık işlemler, hata ve gerçek E2/E3 stresini sınar.
+Sabit kurulum günlü örnek taşıma/yayın bağını sınar. Ayrı küçük mum örneği,
+izinli stres çocuk ayarlarının değiştirilmemiş E2 kurulum hesabını ve gerçek
+E3 yolunu etkilediğini sınar; bu örnek piyasa sonucu kanıtı değildir.
+`tests/test_gelecek.py`, donmuş WF seçimi ve aynı MC çekilişi korunurken sonraki
+fiyat değişikliğinin önceki MC hesap yolunu değiştirmediğini sınar.
+Gerçek kanıt public E4 girişini yalnız TEMP kayıtlarına çalıştırır. Gerçek
+tamamlanmış WF kaynağı yoksa açık ret kanıtlanır; MC tamamlandı denmez.
+Tam piyasa bütçesinin süresi ölçülmedi. Küçük gerçek ön gösterimde süre ve
+depolama yalnız fiilen denenen/tamamlanan sayılarla raporlanır.
+
 #### Dolum, risk ve ölçünün anlamı
 
 - Claude'un kayıtlı **seçenek 2** kararı geçerlidir (18.10; yanıt Q74): ham `yüksek = düşük = tavan` gününde alış dolmaz, giriş sinyali düşer; ham `yüksek = düşük = taban` gününde satış bekler, ilk uygun kilitsiz günde yeniden işlenir. Sonraki fiyat kullanılır; her engel sayılır. B Q49'un açılış eşitliği ekleme önerisi bu kararı değiştirmez. Günlük çubuk gerçek emir kuyruğunu kanıtlamaz. Dayanak: [L5], [T4], [W4], [W5]; `tavan-taban/bulgular.md`, yanıt Q74.
@@ -2185,8 +2485,8 @@ değiştiremez. Kaynaksız birleşime seçim veya günlük etkinleştirme izni v
 | Kayıt / durum | İçerik, çelişki ve kapanış kanıtı | Engellediği iş | Dayanak |
 |---|---|---|---|
 | WF — TEKNİK YÖNTEM UYGULANDI / denetim ve tam veri kanıtı bekliyor | Dağıtıcı 21.10.2026 `kayitli_ileri_v1` yöntemini benimsedi. Tam pencere, seçim, taşıma, ufuk ve kayıt sözleşmesinin sahibi S12 bölümüdür. Eski §5.14 yöntemi legacy kalır. | #93 bağımsız denetim ve tam veriyle sonuç kanıtı bekliyor; MC ve günlük uygunluk kapıları sürer. | [L3]–[L5], [W1]; D §2; dağıtıcı 21.10.2026. |
-| MC — ARAŞTIRMA UYUŞMAZLIĞI / açık | C Q81: 10.000, ardından 20.000/40.000/80.000/100.000 ve yakınsama açıklaması. D §4: varyant başına 1.000. İkisi aynı protokol değildir; biri sessizce üstün sayılmaz. Kesin tekrar ve yakınsama sözleşmesini dağıtıcı tek yöntem sürümünde bağlamalıdır. | **#94 ENGELLİ:** tekrar, örnekleme ve muhasebe dahil tam MC yöntem kaydı olmadan uygulama başlamaz. | [L5], [W2], [W9]; C Q81, D §4. |
-| MC örnekleme — kontrol edilmiş teknik girdi | D §4: net R sırasını yerine koymadan karıştırma; N işlemi N kez yerine koymalı çekme; hisselerde ortak tarih bloklarını yeniden örnekleme; %10 işlem kaçırma stresi; sayısal ayarda ±1 ızgara adımı/aynı değerden eşit olasılıklı tam yeniden sınama. Bunlar ayrı deneylerdir; %10 kalibre edilmiş hata oranı değildir. Sabit 42 tohum önerisi, üreteç/sürüm ve ayrı akış kimliğiyle kaydedilir. Ana girdi dondurulmuş WF OOS, 2021 için keşif etiketi. Her deney örnek birimi, ufuk, gerçekleşen tekrar sayısı, çıktı yüzdelikleri ve bağımlılık varsayımını taşır. | #94; önce WF, ROBUST ve RISK kayıtları gerekir. | [W2], [W9]; D §4, `mc-wf/arastirma.md` yöntem tablosu. |
+| MC — benimsenmiş teknik yöntem / uygulama ve kanıt bekliyor | C Q81 ile D §4'ün tekrar uyuşmazlığı, 21.10.2026 dağıtıcı kararıyla S13'te bağlandı. Ön gösterim nihai tanı sayılmaz. Örnekleme, muhasebe, kayıt, tekrar ve sayısal durma sözleşmesinin tek sahibi S13'tür. | #94 uygulaması S13'e göre yürür. Tamamlanmış gerçek WF kaynağı ve gerçek yeniden sınama kanıtı olmadan yöntem tamamlandı denmez. Sahip kabul ve günlük izin kapıları açık kalır. | [L5], [W2], [W9]; C Q81, D §4; S13 teknik yöntem kararı. |
+| MC örnekleme — S13'e bağlı | D §4'ün beş ayrı deney girdisi, bağımlılık varsayımları ve kaynak sınırlaması S13'te sürümlendi. Eski araştırma önerisi yeni varsayılan veya başarı kararı oluşturmaz. | #94; kaynak WF, ROBUST ve RISK bağları S13 sınırında doğrulanır. | [W2], [W9]; D §4, `mc-wf/arastirma.md` yöntem tablosu; S13. |
 | ROBUST — LEVENT ONAYI / uygulandı | B Q75: çaprazlar dahil tek indeks adımı komşuluk, kenarda eksik komşuluk bayrağı; otomatik kabul/ret yok. C Q77: en küçük komşu skorunu en büyüt; Q95: kanonik demetle eşitlik. D §3: tam iç komşuluk, kenarı merkez seçme; en geniş bileşen, medyan, iç uzaklık, sonra en kötü komşu net R ve sözlüksel sıra. Eski §5.14 eksen komşusu ayrı legacy'dir. Tek seçim ve kenar politikası onaylanmadan hiçbiri yeni varsayılan yapılmaz. Izgara sınırları ve adımlar strateji manifestinde dondurulur. Levent 21.10.2026 bu işte S11 bölümündeki geniş bölge ve iç merkez yöntemini onayladı; araştırmaların eski uyuşmazlığı bu kayıtla çözülür. Uygulanan açıklayıcı taramanın sözleşmesi S11 bölümündedir. | #92 seçici kısmı; #93/#94 diğer yöntem kayıtlarını bekler. | [T1], [W3]; B Q75, C Q76/Q77/Q95, D §3. |
 | RISK — tek hisse bağlı; çift #128'e taşındı | Dağıtıcı 19.10, 02:10: %2 bütçe planlanan alış/stop komisyonu ve BSMV'yi içerir; adet aşağı tam sayıya yuvarlanır, kalan bütçe ayrıca döner. Uygulama ve R tanımının sahibi S08 risk ve maliyet hesabıdır. Çiftin adet ve R'si gerekçeli boştur; sayısal dayanağı #128 belirler. Eski §5.3 masrafsız R legacy kalır. | #89 tek hisse risk boyutlama; #128 çift; #92 net R eğrisi, #93, #94. | [L1], [T2], [T3], [W6]; D §1, C Q96; dağıtıcı 19.10, 02:10. |
 | BİLEŞİM — kanıt kapısı | A Q15'teki kaynak anlatısı, giriş/teyit/stop/hedefi tam bileşim kimliğine bağlanır. Ayrı ayrı izinli alanlar tam birleşimin iznini kanıtlamaz. Eski 24 tanım korunur; yeni panel izni kaynak eşlemesi ve #71 gölge çıktısı koşulundan ayrılmaz. | #83, #88, #96'nın izinli seçim kısmı. | [L5], [T3], [W8]; A Q15, taslak katalog tablosu; mevcut §4 gölge kuralı. |

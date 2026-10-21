@@ -21,6 +21,7 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 - Kayıtlı ileri yürüme, her çeyrekten önce eğitim seçimini kaydeder; tek kronolojik akışta açık ve bekleyen işlemlerin özgün ayarını korur. Eğitim dışlamaları, giriş kohortları ve açık ufuk ayrı kayıtlarla izlenir. (#93)
 - Küçük grup hazırlığı ayrı komut ve kayıt olayıyla eklendi. En fazla üç strateji revizyonu ve 60 kesin seans dondurulur; eksik kaynak tanımı, veri, takvim ve üyelik adlandırılmış engel olur. Hazırlık hesap başlatmaz; değişen tanım yeni revizyon ister, eski kayıt tarihçede kalır. İlk kaynak ailesi engelli kalır. (#116)
+- Kayıtlı Monte Carlo yöntemi beş ayrı deney, kapanış yılına göre tanı, ortak tarih blokları ve indeksli rastgele akışla tanımlandı. Kaynak, plan, yeniden sınama sinyali ve sonuç kayıtları koşu ve ayar bağlarıyla doğrulanır; ön gösterim, sayısal kararlılık ve eksik yürütme ayrı gösterilir. (#94)
 
 - Kayıtlı taramanın ölçü hissesi gerçek dönem ve işlem kayıtlarına bağlandı. Seçilen ayarın uygun merkez ve bileşen açıklamasıyla çelişmesi reddedilir; işlemsiz hisse kayıtları korunur. (#92)
 

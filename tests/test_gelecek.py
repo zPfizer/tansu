@@ -768,3 +768,66 @@ def test_s12_gelecek_fiyat_egitim_secimini_ve_acik_dislamayi_degistirmez(
         for h in once["egitim_cocuklari"]
     ]
     assert ilk["durum"] == "hata"
+
+
+def test_s13_wf_donmus_planinda_sonraki_fiyat_onceki_mc_yolunu_degistirmez(
+    tmp_path, monkeypatch
+):
+    from tansu import istatistik, saglamlik
+    from tests.test_tansusinama import s13_kayitli, s13_kosu, s13_plan
+
+    depo, m, piyasa, kaynak = s13_kayitli(tmp_path, monkeypatch)
+    donmus = [o["kayit_id"] for o in depo.oku() if o["kayit_turu"] == "ileri_secim"]
+    gorulen = []
+    asil = saglamlik.ema_hucre_calistir
+
+    def hesap(mumlar, *a, **kw):
+        if str(mumlar.index[-1].date()) == "2025-10-05":
+            gorulen.append(float(mumlar.kapanis.iloc[-1]))
+        return asil(mumlar, *a, **kw)
+
+    monkeypatch.setattr(saglamlik, "ema_hucre_calistir", hesap)
+
+    def yeniden():
+        ctx, d, g = s13_kosu(depo, m, kaynak)
+        with ctx as kosu:
+            is_, [(p, pm)] = s13_plan(depo, kosu, d, g)
+            tekrar, refler = tansusinama._mc_ayar_yeniden_sina(
+                depo, d, kosu, kaynak, p, pm.olay_id, tmp_path
+            )
+            olcu = istatistik.mc_senaryo_olculeri(
+                g, is_, p["cekilis"], durumlar=tekrar["durumlar"]
+            )
+            kosu.mc_senaryo_sonucu_kaydet(
+                kayit=dict(
+                    plan_ref=pm.olay_id,
+                    durum="tamamlandi",
+                    **olcu,
+                    yeniden_sinama=tekrar,
+                    sonuc_referanslari=refler,
+                    asama=None,
+                    neden=None,
+                )
+            )
+        return p, tekrar["durumlar"]["TEST"]
+
+    ilk_plan, ilk = yeniden()
+    for r in piyasa:
+        if r["tarih"] >= "2025-01-01":
+            for ad in ("aof", "kapanis", "yuksek", "dusuk"):
+                r[f"duzeltilmis_{ad}"]["deger"] *= 1.2
+            for ad in ("ham_yuksek", "ham_dusuk", "tavan", "taban"):
+                r[ad]["deger"] *= 1.2
+    son_plan, son = yeniden()
+    assert ilk_plan["cekilis"] == son_plan["cekilis"]
+    assert [i for i in ilk["iz"] if i["tarih"] <= "2022-12-31"] == [
+        i for i in son["iz"] if i["tarih"] <= "2022-12-31"
+    ]
+    assert ilk["islemler"][0]["sonuc"] == son["islemler"][0]["sonuc"]
+    assert (
+        ilk["islemler"][0]["pozisyon"]["ayar"] == son["islemler"][0]["pozisyon"]["ayar"]
+    )
+    assert gorulen == [100.0, 120.0]
+    assert [
+        o["kayit_id"] for o in depo.oku() if o["kayit_turu"] == "ileri_secim"
+    ] == donmus

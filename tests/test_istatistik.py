@@ -305,3 +305,218 @@ def test_s11_sharpe_gecersiz_tarih_icin_yilliklastirma_yapmaz(gun):
     assert sonuc is not None, "Geçersiz günlük tarih gerekçeli boş sonuç vermeli"
     assert sonuc["olculer"]["sharpe"]["deger"] is None
     assert sonuc["olculer"]["sharpe"]["bos_nedeni"]
+
+
+def test_s13_sira_her_kaynagi_bir_kez_kullanir_ve_el_toplamini_korur():
+    plan = istatistik.mc_plan("sira_v1", "00" * 32, 0, n=3)
+    assert sorted(plan.get("indeksler", [])) == [0, 1, 2]
+    r = [2.0, -3.0, 1.0]
+    assert sum(r[i] for i in plan["indeksler"]) == 0.0
+
+
+def test_s13_sabit_akis_ve_uzayan_butce_oneki():
+    ilk = [istatistik.mc_plan("yerine_koyma_v1", "00" * 32, i, n=5) for i in range(3)]
+    uzun = [istatistik.mc_plan("yerine_koyma_v1", "00" * 32, i, n=5) for i in range(7)]
+    assert ilk[0]["indeksler"] == [3, 1, 1, 4, 2]
+    assert ilk == uzun[:3]
+    assert istatistik.mc_plan("sira_v1", "00" * 32, 0, n=5)["indeksler"] == [
+        2,
+        0,
+        1,
+        4,
+        3,
+    ]
+    assert istatistik.mc_plan(
+        "ayar_komsulugu_v1", "00" * 32, 0, n=5, komsu_sayilari=[2, 3, 1, 2, 3]
+    )["demet_indeksleri"] == [1, 0, 0, 0, 2]
+
+
+def test_s13_ortak_blok_tek_indeks_yoluyla_sutunlari_hizalar():
+    p = istatistik.mc_plan("ortak_tarih_blok_v1", "00" * 32, 0, n=5, blok=2)
+    assert p["indeksler"] == [3, 4, 1, 4, 0]
+    kaynak = np.array([[1.0, -1.0], [2.0, -2.0], [3.0, -3.0], [4.0, -4.0], [5.0, -5.0]])
+    assert kaynak[p["indeksler"]].tolist() == [
+        [4.0, -4.0],
+        [5.0, -5.0],
+        [2.0, -2.0],
+        [5.0, -5.0],
+        [1.0, -1.0],
+    ]
+
+
+def test_s13_el_dususu_ve_tamamen_kacirilan_islemler():
+    sonuc = istatistik.mc_olc([2.0, -3.0, 1.0])
+    assert sonuc["toplam_r"]["deger"] == 0.0
+    assert sonuc["dusus_r"]["deger"] == 3.0
+    assert sonuc["kayip_serisi"]["deger"] == 1
+    bos = istatistik.mc_olc([], islem_r=[])
+    assert bos["toplam_r"]["deger"] == 0.0
+    assert bos["dusus_r"]["deger"] == 0.0
+    assert bos["ortalama_r"] == dict(deger=None, birim="R", bos_nedeni="islem_yok")
+    assert bos["islem_sayisi"]["deger"] == 0
+    with pytest.raises(ValueError, match="Boş"):
+        istatistik.mc_plan("islem_kacirma_v1", "00" * 32, 0, n=0)
+
+
+def s13_kapanis_girdisi():
+    return dict(
+        kaynak_ozeti="00" * 32,
+        seanslar=["2022-12-30", "2023-01-02", "2023-01-03"],
+        semboller=["A", "B"],
+        nufus=[
+            dict(
+                islem_ref="r1",
+                sembol="A",
+                giris_tarih="2022-12-01",
+                cikis_tarih="2022-12-30",
+                net_r=2.0,
+            ),
+            dict(
+                islem_ref="r2",
+                sembol="A",
+                giris_tarih="2022-12-30",
+                cikis_tarih="2023-01-02",
+                net_r=-3.0,
+            ),
+            dict(
+                islem_ref="r3",
+                sembol="B",
+                giris_tarih="2023-01-02",
+                cikis_tarih="2023-01-03",
+                net_r=1.0,
+            ),
+        ],
+        gunluk_r=[[2.0, 0.0], [-3.0, 0.0], [0.0, 1.0]],
+        gunluk_islemler=[[["r1"], []], [["r2"], []], [[], ["r3"]]],
+    )
+
+
+def test_s13_yil_kapanisa_gore_onceki_girisi_alir_ve_bos_kapsami_korur():
+    from datetime import date
+
+    g = s13_kapanis_girdisi()
+    donemler = [
+        dict(ad=str(y), baslangic=date(y, 1, 1), bitis=date(y, 12, 31))
+        for y in (2022, 2023, 2024)
+    ]
+    isler = istatistik.mc_isleri(g, donemler, secim_var=True)
+    assert {i["deney"] for i in isler} == set(istatistik.MC_DENEYLER)
+    is_ = next(
+        i
+        for i in isler
+        if (i["dilim"], i["deney"], i["sembol"]) == ("2023", "sira_v1", "A")
+    )
+    olcu = istatistik.mc_senaryo_olculeri(g, is_, dict(indeksler=[0]))
+    assert olcu["olculer"]["toplam_r"]["deger"] == -3.0
+    assert is_["tanim"]["dilim"]["kesim"] == "2023-01-03"
+    assert all(
+        i["durum"] == "olculemedi" and i["neden"] == "kapali_islem_yok"
+        for i in isler
+        if i["dilim"] == "2024"
+    )
+    assert all(
+        i["neden"] == "blok_boyu_belirsiz"
+        for i in isler
+        if i["deney"] == "ortak_tarih_blok_v1" and i["dilim"] != "2024"
+    )
+
+
+def test_s13_takvim_tanisi_ortak_satirlari_ve_kacirma_masrafini_korur():
+    from datetime import date
+
+    g = s13_kapanis_girdisi()
+    ortak = dict(
+        tanim=dict(dilim=dict(baslangic=date(2023, 1, 1), bitis=date(2023, 12, 31))),
+        sembol="eklemeli",
+    )
+    blok = istatistik.mc_senaryo_olculeri(
+        g, ortak | dict(deney="ortak_tarih_blok_v1"), dict(indeksler=[1, 0])
+    )
+    assert blok["olculer"]["toplam_r"]["deger"] == -2.0
+    assert blok["olculer"]["dusus_r"]["deger"] == 3.0
+    assert blok["olculer"]["islem_sayisi"]["deger"] == 2
+    assert blok["sembol_olculeri"]["A"]["toplam_r"]["deger"] == -3.0
+    assert blok["sembol_olculeri"]["B"]["toplam_r"]["deger"] == 1.0
+    atlanan = istatistik.mc_senaryo_olculeri(
+        g, ortak | dict(deney="islem_kacirma_v1"), dict(maske=[False, True])
+    )
+    assert atlanan["olculer"]["toplam_r"]["deger"] == 1.0
+    assert atlanan["olculer"]["dusus_r"]["deger"] == 0.0
+    assert atlanan["olculer"]["islem_sayisi"]["deger"] == 1
+    assert atlanan["sembol_olculeri"]["A"]["ortalama_r"]["bos_nedeni"] == "islem_yok"
+
+
+@pytest.mark.parametrize(
+    "seri,ham,boylar",
+    [
+        (list(range(20)), 4.5407054019398005, [3, 5, 10]),
+        ([1.0, -1.0] * 20, 14.0, [7, 14, 28]),
+        ([0.0, 2.0, -1.0, 3.0, -2.0, 1.0] * 10, 4.635991196842948, [3, 5, 10]),
+    ],
+)
+def test_s13_ppw_arch72_sabit_referanslari(seri, ham, boylar):
+    # S13 referans denklemleri bağımsız skaler toplamlarla hesaplandı.
+    sonuc = istatistik.mc_blok_tahmini(seri)
+    assert sonuc["ham"] == pytest.approx(ham, abs=1e-12)
+    assert sonuc["uzunluklar"] == boylar
+    assert sonuc["neden"] is None
+
+
+@pytest.mark.parametrize(
+    "seri", [[], [1.0], [1.0, 2.0], [1.0] * 40, [0.0, float("nan")] * 20]
+)
+def test_s13_tanimsiz_blok_boyu_gizli_varsayilan_uretmez(seri):
+    sonuc = istatistik.mc_blok_tahmini(seri)
+    assert sonuc["ham"] is None
+    assert sonuc["uzunluklar"] == []
+    assert sonuc["neden"] == "blok_boyu_belirsiz"
+
+
+def test_s13_sayisal_durma_ardisik_iki_nokta_ister():
+    s = istatistik.mc_olc([1.0, -2.0, 3.0])
+    preview = istatistik.mc_kontrol([s] * 1000)
+    ilk = istatistik.mc_kontrol([s] * 10000)
+    son = istatistik.mc_kontrol([s] * 20000, onceki=ilk)
+    assert preview["durum"] == "on_gosterim"
+    assert ilk["durum"] == "suruyor"
+    assert son["durum"] == "sayisal_kararlilik_gozlendi"
+    assert son["uclar"] == [2.0, 2.0, 2.0, 2.0, 2.0, 2.0]
+    assert son["onceki_farklari"] == [0.0] * 6
+    farkli = [
+        istatistik.mc_olc([0.0]) if i % 2 else istatistik.mc_olc([1.0])
+        for i in range(100000)
+    ]
+    kararsiz = istatistik.mc_kontrol(farkli)
+    assert kararsiz["durum"] == "sinirda_kararsiz"
+    assert kararsiz["tekrar"] == 100000
+    assert kararsiz["bolum_gecti"] is False
+
+
+def test_s13_yuzdelikler_dogrusal_ve_gecerli_sayilar_olcuye_ozgudur():
+    sonuclar = []
+    for i in range(1000):
+        s = istatistik.mc_olc([-0.5 * i, 1.5 * i])
+        if i < 7:
+            s["ortalama_r"] = dict(deger=None, birim="R", bos_nedeni="islem_yok")
+        sonuclar.append(s)
+    tani = istatistik.mc_kontrol(sonuclar)
+    assert tani["uclar"] == pytest.approx(
+        [49.95, 499.5, 949.05, 24.975, 249.75, 474.525]
+    )
+    assert tani["gecerli_sayilar"]["ortalama_r"] == 993
+    assert tani["gecerli_sayilar"]["dusus_r"] == 1000
+    assert tani["durum"] == "on_gosterim"
+
+
+@pytest.mark.parametrize(
+    "ad,kw",
+    [
+        ("sira_v1", dict(n=0)),
+        ("sira_v1", dict(n=True)),
+        ("ortak_tarih_blok_v1", dict(n=5, blok=6)),
+        ("ayar_komsulugu_v1", dict(n=2, komsu_sayilari=[0, 1])),
+    ],
+)
+def test_s13_gecersiz_plan_sessiz_duzeltilmez(ad, kw):
+    with pytest.raises(ValueError):
+        istatistik.mc_plan(ad, "00" * 32, 0, **kw)
