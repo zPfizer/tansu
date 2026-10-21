@@ -1375,8 +1375,11 @@ seçimini açıkça onayladı. Eski §5.10 ve §5.14 yöntemleri kendi anlamlar�
   Teknik mesafe, özgün ızgarada koordinat farklarının mutlak değerleri toplamıdır;
   sınır uzaklığı en yakın dış kenar indeksine kadardır. Geçersiz alan mesafe hedefi
   değildir; geometrik adım sayımı alan dışı koordinattan geçebilir. İndeksler
-  sıkıştırılmaz; eksik hücreye sayısal zarar atanmaz. Bu ölçüm, izinli koordinatlar
-  üzerinde yol bulunmasını veya erişilemeyen hedef için sonsuz puanı gerektirmez.
+  sıkıştırılmaz. Mesafe hedefi yalnız tamamlanmış, en az bir kapalı işlemi olan ve
+  sonlu toplam net R'si sıfır veya altında ölçülmüş hücredir. İşlemsiz, eksik,
+  başarısız veya başlamamış hücre mesafe hedefi değildir; sayısal zarar atanmaz.
+  Bu hücreler yine yerel kârlı çevreyi kanıtlayamaz ve görünür kalır. Bu ölçüm, izinli
+  koordinatlar üzerinde yol bulunmasını veya erişilemeyen hedef için sonsuz puanı gerektirmez.
 - Uygun merkez yoksa seçilmiş ayar yoktur. En iyi tek hücre gösterilebilir;
   seçilmiş diye etiketlenmez. Sınır ve eksik komşuluk bilgileri saklanır.
   Sonuç göstermek günlük uygunluk vermez; SAHİP-86/111/d5 kapıları sürer.
@@ -1501,11 +1504,15 @@ politika_surumu, birimler, uyarilar, cikti_referanslari)` eklenir; çıktı makb
 tam ayarları ve iki özeti, altı dönem durumunu, birimli ölçüleri ve gerçek sonuç/işlem
 referanslarını taşır. Bölge kaydı strateji/hisse/dönemi, hücre ve komşularını,
 alan dışı/eksik komşuluğu, sınır ve eşitlik bileşenlerini, seçilen çocuğu veya nedenli
-boş seçimi taşır. Kayıp veya işlemsiz hücre sayısal mesafe hesabında kârlı değildir;
-eksik hücreye uydurma getiri atanmaz. Geçersiz alan atılırken indeksler sıkıştırılmaz.
+boş seçimi taşır. Kârlılık ve ölçülmüş mesafe hedefleri yukarıdaki seçim sözleşmesine
+bağlıdır. Geçersiz alan atılırken indeksler sıkıştırılmaz.
 
 E5 üst bağı, çocuğun koşu ve dönemini, iki ayar özetini ve başvurulan gerçek sonuç
-kaydını doğrular. İşlem başvurusu aynı çocuk koşusu ve döneme aittir. Mevcut
+kaydını doğrular. Verilen bölgenin seçimi, seçilen çocuğun aynı dönemde tamamlanmış
+sonucuna ve aynı hissedeki tamamlanmış ölçüsüne bağlı olmalıdır. Başarısız, eksik,
+işlemsiz veya başlamamış dönem/hisse seçilmiş olarak yayımlanmaz. Başka dönemin
+başarısızlığı, tamamlanmış dönemin ayrı seçimini değiştirmez. İşlem başvurusu aynı
+çocuk koşusu ve döneme aittir. Mevcut
 `donem_sonucu_kaydet` aynı koşu kısıtı gevşetilmez; yapay sinyal kimliği üretilmez.
 Üst başlangıcındaki hücre ve arama işleri bitişte kimlikle bir kez sayılır. Başarısız
 hücre veya eksik iş varken tam başarı yazılmaz. Tekrarlar önceki geçmişi silmez.
@@ -1519,14 +1526,16 @@ Kayıtlı S09 durumları bu eski nesneyle paylaşılmaz; genel önbellek arayüz
 
 Gözlenebilir kontroller: `tests/test_istatistik.py` başlangıç, birim, net sonuç, açık
 kısmi sonuç ve tarihli Sharpe sınırlarını; `tests/test_saglamlik.py` tam çevre,
-kenar, bileşen ve eşitlikleri; `tests/test_tansusinama.py` bütün hücreleri, kayıt
+kenar, bileşen ve eşitlikleri, bilinmeyen sonucun mesafe hedefi olmamasını ve
+ölçülmüş sıfır/negatif sonucu; `tests/test_tansusinama.py` bütün hücreleri, kayıt
 sırasını, iki çağıranın aynı para sonucunu ve çocuklar arası veri yalıtımını sınar.
 İlk çocuk başlangıcı ve E1 öncesinde bütün kayıtların kalıcı olması; ikinci kaydın
 veya tam ayar doğrulamasının hatasında sıfır çocuk başlangıcı ve korunmuş yuvalar;
 eksik kapsamda altı E1 hazırlığıyla 18 görünür sonuç, E1/kimlik hatasının ise
 paylaşılmaması aynı sınamadadır.
 `tests/test_ayar_aktarimi.py` tam çocuk yöntemini ve özet uyuşmazlığında kalıcı makbuzu, `tests/test_kayit.py` gerçek
-çocuk/koşu/dönem bağlarını ve hatalı tam başarıyı; `tests/test_gelecek.py` gelecek
+çocuk/koşu/dönem bağlarını, başarısız dönem/hisse seçiminin reddini ve hatalı tam
+başarıyı; `tests/test_gelecek.py` gelecek
 fiyatın önceki dönem ve hücreyi değiştirmemesini denetler. Eski doğrudan düşüş
 çağıranı `tests/test_kabul.py` kapsamda kalır.
 
