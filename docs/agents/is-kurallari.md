@@ -27,7 +27,7 @@ References through `tansu-yeni-is` and a step title point to these shared steps.
 - KALDI means a false claim, broken behavior, security or privacy risk, or a missed instruction that breaks correctness or a written requirement. Written requirements include the spec, acceptance criteria, DEFINITION_OF_DONE items, and rule sentences that the output violates.
 - A false claim against the source is KALDI at every risk level. Doubt in the verdict, such as "KALDI olabilir", means KALDI. Each auditor writes `Yanlış iddia sayısı: N`. A pass with N greater than 0 is KALDI.
 - A verdict covers only the commit that the auditor read. A later commit needs a pass on its changes, including a fix commit without claim text. The PR body names the reviewed commit in `Denetlenen commit:`.
-- A later merge that brings only `origin/master` needs no new pass when CI is green. CI checks this exception (Kural 5).
+- A later merge that brings only `origin/main` needs no new pass when CI is green. CI checks this exception (Kural 5).
 - A fix that adds or changes claim text needs another pass, also after NOTLU GEÇTİ. Read only the changed lines. When an auditor names an error class, the dağıtıcı searches the whole diff for that pattern before the next pass.
 - Every review prompt states the goal from the job brief and latest PR body, never from an earlier prompt. Give no hint of the expected verdict or finding. For simplification, a deliberate deletion is a finding only if a needed rule was lost without a reason. Review the rest of the diff in full.
 - At most 3 review rounds. Each prompt and verdict names the round. If round 3 returns KALDI, stop. Do not start round 4. Find the root cause and define the job again. Send Levent the root cause in one line.
@@ -38,10 +38,10 @@ References through `tansu-yeni-is` and a step title point to these shared steps.
 ## Branch
 Choose the issue, PR, or direct path from [Issue and PR rule](issue-tracker.md#issue-and-pr-rule). For a PR without an issue, use `belge-<ad>` as the branch name.
 
-For the issue + PR path, if no issue exists, make one first with the issue template. Make the branch for the issue the GitHub way: `gh issue develop <N> --name <N>-<ad> --base master`. The branch name is the issue number and a short name in lower case ASCII letters, digits, and hyphens. Then run these in the main checkout: `git fetch origin`, then `git worktree add .claude/worktrees/<N>-<ad> <N>-<ad>`. If the session already runs in a Claude Code worktree, run `git fetch origin` and `git switch <N>-<ad>` in it. Source: docs.github.com "Creating a branch for an issue" (https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/creating-a-branch-for-an-issue). Clear the context between tickets. A worktree has no `.venv`. In a worktree, use the main venv `C:\Users\levent\Desktop\TANSU\.venv\Scripts\python.exe`. <!-- driftlint-ignore: local-only path of the main repository venv, absent in CI -->
+For the issue + PR path, if no issue exists, make one first with the issue template. Make the branch for the issue the GitHub way: `gh issue develop <N> --name <N>-<ad> --base main`. The branch name is the issue number and a short name in lower case ASCII letters, digits, and hyphens. Then run these in the main checkout: `git fetch origin`, then `git worktree add .claude/worktrees/<N>-<ad> <N>-<ad>`. If the session already runs in a Claude Code worktree, run `git fetch origin` and `git switch <N>-<ad>` in it. Source: docs.github.com "Creating a branch for an issue" (https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/creating-a-branch-for-an-issue). Clear the context between tickets. A worktree has no `.venv`. In a worktree, use the main venv `C:\Users\levent\Desktop\TANSU\.venv\Scripts\python.exe`. <!-- driftlint-ignore: local-only path of the main repository venv, absent in CI -->
 
 ## Check and evidence
-Before the final PR checks, merge `origin/master` into the branch.
+Before the final PR checks, merge `origin/main` into the branch.
 Use the main interpreter from "Branch" with `-X utf8 -m pytest -q <test files>` for affected code and callers.
 Then run `ruff check` and `ruff format --check` on the changed Python files.
 Run these checks before each commit. Everything must be green.
@@ -50,7 +50,7 @@ Reuse a successful run only if the checked files, dependencies, environment, and
 A commit with the same checked file content does not require another run.
 Never run the full test suite on the computer: CI on Windows runs it (Levent 17.10: "Bilgisayarda sadece değişikliğin ilgili olduğu test koşacak.").
 
-After a fix or a merge of `origin/master` changes a checked input, run the affected checks again.
+After a fix or a merge of `origin/main` changes a checked input, run the affected checks again.
 Do not paste the test and ruff output into the PR body: CI on Windows proves the tests, format, and lint.
 `## Gerçek veri kanıtı` holds only the output of the real-data run.
 
@@ -82,12 +82,12 @@ Push the branch to `origin`. Write the PR body with `.github/pull_request_templa
 
 Use the body and title forms from `docs/agents/issue-tracker.md` "Issue and PR rule". For a linked issue, the merge into the default branch closes it. CI checks the body and title (`.github/dod_kontrol.py`, Kural 1 and Kural 6). Source: docs.github.com "Linking a pull request to an issue" (https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/linking-a-pull-request-to-an-issue).
 
-For the issue + PR path, open a draft PR with this command chain: `git fetch -q origin && git merge-base --is-ancestor origin/master HEAD && git push -q -u origin <branch> && gh pr create --draft --base master --head <branch> --title "#<N> · <title>" --body-file <pr-govde.md>`. For a PR without an issue, use `belge-<ad>` for `<branch>` and `Belge · <title>` for `--title`. If risk requires review, fill `## Bağımsız inceleme` after the verdicts. Run `gh pr edit <N> --body-file <file>`, then `gh pr ready <N>`. The `dod` check skips a draft PR and runs at `gh pr ready`.
+For the issue + PR path, open a draft PR with this command chain: `git fetch -q origin && git merge-base --is-ancestor origin/main HEAD && git push -q -u origin <branch> && gh pr create --draft --base main --head <branch> --title "#<N> · <title>" --body-file <pr-govde.md>`. For a PR without an issue, use `belge-<ad>` for `<branch>` and `Belge · <title>` for `--title`. If risk requires review, fill `## Bağımsız inceleme` after the verdicts. Run `gh pr edit <N> --body-file <file>`, then `gh pr ready <N>`. The `dod` check skips a draft PR and runs at `gh pr ready`.
 
 After a PR update, read its actual state and body through `gh`. Use app binding only when the active interface provides it.
 
 ## Merge
-Apply "Change log and releases" before the change enters master and when its milestone closes.
+Apply "Change log and releases" before the change enters main and when its milestone closes.
 
 Merge when these conditions hold:
 - CI is green. `ci` runs on Windows only: the `kayit/` append-only step, `git diff --check`, ruff, pytest, and driftlint. `dod` is the PR body.
@@ -97,7 +97,7 @@ Wait for CI with one command: `gh pr checks <N> --watch` (timeout 600000 ms). Do
 
 When Levent asks for merge, the dağıtıcı merges after his approval with `gh pr merge <N> --merge`. On the issue + PR path, the merge closes the linked issue. A PR without an issue closes no issue. GitHub deletes the remote branch (auto-delete is on). Send Levent the completion note.
 
-Before closure, run `git fetch origin`. Check that the job commit is in `origin/master`.
+Before closure, run `git fetch origin`. Check that the job commit is in `origin/main`.
 Check both worktrees for pending changes and active jobs. Check untracked and ignored outputs for evidence that must remain.
 Preserve required evidence in the job record before deletion. Do not close a worktree with pending changes or active jobs.
 Ask Levent to approve deletion of the named worktree and branch. A merge request does not give this approval.
@@ -106,8 +106,8 @@ After these checks, close the approved worktree with `py -3 -X utf8 C:\Users\lev
 Run the command in the main checkout `C:\Users\levent\Desktop\TANSU`. <!-- driftlint-ignore: local-only path of the main repository, absent in CI -->
 Do not run it inside the worktree. Windows cannot delete the working directory of a process.
 The script stops with exit 1 before any change in that case.
-The script deletes the worktree. It runs `git pull --ff-only origin master` in the main checkout and deletes the local branch.
-It prints three proof lines: `kapanis: ana HEAD <sha> = origin/master`, `kapanis: is klasoru yok`, and `kapanis: uzak dal yok`.
+The script deletes the worktree. It runs `git pull --ff-only origin main` in the main checkout and deletes the local branch.
+It prints three proof lines: `kapanis: ana HEAD <sha> = origin/main`, `kapanis: is klasoru yok`, and `kapanis: uzak dal yok`.
 Paste them in the final report.
 Source: docs.github.com "GitHub flow" (https://docs.github.com/en/get-started/using-github/github-flow): "After you merge your pull request, delete your branch."
 
@@ -131,7 +131,7 @@ Write the output paths of the repository in `--summary`. A `--ref` outside the v
 
 Source: Levent 18.10.
 
-- Every change that enters master adds a line under `## [Yayımlanmamış]` in `CHANGELOG.md`, in the same commit. The writer who changes the code writes its line. This applies to merged PRs and direct small changes.
+- Every change that enters main adds a line under `## [Yayımlanmamış]` in `CHANGELOG.md`, in the same commit. The writer who changes the code writes its line. This applies to merged PRs and direct small changes.
 - When a milestone closes, the dağıtıcı makes a release. The dağıtıcı moves unpublished lines into a new version section with the release date. Use the next minor Semantic Versioning version, for example `0.1.0` to `0.2.0`. The dağıtıcı makes the matching tag, for example `v0.2.0`, and a GitHub release with that section as its notes.
 
 ## Short flows and skill naming

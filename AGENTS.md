@@ -53,8 +53,8 @@ If your output contradicts a decision in `docs/TASARIM.md`, say so explicitly in
 > _Contradicts TASARIM §5.1 (empty value stays empty), but worth reopening because…_
 
 ## Environment (Ortam)
-- Windows, PowerShell. Python is `.venv\Scripts\python.exe`. The main branch is `master`. The remote repository is `origin` (GitHub `zPfizer/tansu`, public). There is no other backup.
-- **Current rules (Güncel kurallar):** The current rules are on `origin/master`. Before a job, run `git fetch origin`. Read the rules from `origin/master`. A checkout that is behind `origin/master` gives old rules.
+- Windows, PowerShell. Python is `.venv\Scripts\python.exe`. The main branch is `main`. The remote repository is `origin` (GitHub `zPfizer/tansu`, public). There is no other backup.
+- **Current rules (Güncel kurallar):** The current rules are on `origin/main`. Before a job, run `git fetch origin`. Read the rules from `origin/main`. A checkout that is behind `origin/main` gives old rules.
 - Setup: `py -3.14 -m venv .venv`, then `.venv\Scripts\python.exe -m pip install -r requirements.lock.txt -e ".[dev]"`.
 - **Names (Adlar):** Code, file, column, and CSV header names are Turkish ASCII (`aile`, `adim`, `evren`). Report and card
   text uses Turkish characters. Use `pathlib` for paths. Open each file with an explicit `encoding="utf-8"` (for CSV,

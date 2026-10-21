@@ -11,6 +11,7 @@ import subprocess
 from pathlib import Path
 
 import pytest
+import yaml
 
 CI = Path(__file__).resolve().parents[1] / ".github" / "workflows" / "ci.yml"
 
@@ -55,7 +56,7 @@ def _git(cwd, *args):
 def klon(tmp_path):
     kaynak = tmp_path / "kaynak"
     kaynak.mkdir()
-    _git(kaynak, "init", "-q", "-b", "master")
+    _git(kaynak, "init", "-q", "-b", "main")
     _git(kaynak, "config", "user.email", "a@b.c")
     _git(kaynak, "config", "user.name", "n")
     (kaynak / "kayit").mkdir()
@@ -75,7 +76,7 @@ def klon(tmp_path):
     return hedef
 
 
-def _kos(klon, taban="master"):
+def _kos(klon, taban="main"):
     bash = _bash()
     if bash is None:
         pytest.skip("bash yok.")
@@ -91,6 +92,12 @@ def _kos(klon, taban="master"):
 def _kaydet(klon):
     _git(klon, "add", "-A", "--", "kayit")
     _git(klon, "commit", "-q", "-m", "dal")
+
+
+def test_ci_main_push_ve_pr_olaylarinda_calisir():
+    akis = yaml.load(CI.read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
+    assert akis["on"]["push"]["branches"] == ["main"]
+    assert "pull_request" in akis["on"]
 
 
 def test_betik_pipefail_ve_no_renames_icerir():

@@ -34,7 +34,7 @@ Read `C:\Users\levent\Desktop\YONETIM\beyin\knowledge\concepts\kod-standartlari-
   - If a test is wrong, first write the reason in the document.
   - Calculate the expected values by hand. Do not calculate them again the way the code does.
   - Write the constants in a test as literals.
-- **Baseline (Taban):** Never call a failing test "expected" or "not from this job" before you run the same test on `origin/master` in this session. Paste both outputs.
+- **Baseline (Taban):** Never call a failing test "expected" or "not from this job" before you run the same test on `origin/main` in this session. Paste both outputs.
 - **Edit loop (Düzenleme döngüsü):** Format Python files before the final review because formatting can rewrite them. Between edits, run only the changed module's tests. Final checks and evidence reuse follow `tansu-yeni-is` "Check and evidence".
 - **Do not look at the return (Getiriye bakma):** See `docs/aile-kurallari.md` §4.
 - **Rule parameter (Kural parametresi):** A rule parameter changes only with a TASARIM/KURALLAR change and as a new trial (deneme).

@@ -53,14 +53,14 @@ def _git(depo, *arg):
 def depo(tmp_path):
     dizin = tmp_path / "depo"
     dizin.mkdir()
-    _git(dizin, "init", "-b", "master", "--template=")
+    _git(dizin, "init", "-b", "main", "--template=")
     for dosya in ("tansu/a.py", "tests/test_a.py"):
         yol = dizin / dosya
         yol.parent.mkdir()
         yol.write_text("# İlk sürüm\n", encoding="utf-8")
     _git(dizin, "add", "tansu/a.py", "tests/test_a.py")
     _git(dizin, "commit", "-m", "taban")
-    _git(dizin, "update-ref", "refs/remotes/origin/master", "HEAD")
+    _git(dizin, "update-ref", "refs/remotes/origin/main", "HEAD")
     return dizin
 
 
@@ -144,8 +144,8 @@ def test_git_baslatilamazsa_gecer(depo):
 
 
 @pytest.mark.parametrize("test_degisti", [False, True])
-def test_origin_master_yoksa_yalniz_calisma_agaci_sayilir(depo, test_degisti):
-    _git(depo, "update-ref", "-d", "refs/remotes/origin/master")
+def test_origin_main_yoksa_yalniz_calisma_agaci_sayilir(depo, test_degisti):
+    _git(depo, "update-ref", "-d", "refs/remotes/origin/main")
     if test_degisti:
         (depo / "tests/test_a.py").write_text("# Yeni\n", encoding="utf-8")
     sonuc = _duzenle(depo)
@@ -154,8 +154,8 @@ def test_origin_master_yoksa_yalniz_calisma_agaci_sayilir(depo, test_degisti):
     )
 
 
-def test_origin_master_bozuksa_engellemez(depo):
-    (depo / ".git/refs/remotes/origin/master").write_text("bozuk\n", encoding="utf-8")
+def test_origin_main_bozuksa_engellemez(depo):
+    (depo / ".git/refs/remotes/origin/main").write_text("bozuk\n", encoding="utf-8")
     sonuc = _duzenle(depo)
     assert (sonuc.returncode, sonuc.stdout, sonuc.stderr) == (0, "", "")
 
