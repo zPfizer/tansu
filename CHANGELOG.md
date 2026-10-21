@@ -15,7 +15,7 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ### Eklendi
 
-- Kayıtlı taramada gerçek hisse/işlem bağı, işlemsiz hissenin korunması ve seçilen merkezin açıklamasıyla tutarlılığı için ek kayıt denetimi sözleşmesi belgelendi. Uygulama bekliyor. (#92)
+- Kayıtlı taramanın ölçü hissesi gerçek dönem ve işlem kayıtlarına bağlandı. Seçilen ayarın uygun merkez ve bileşen açıklamasıyla çelişmesi reddedilir; işlemsiz hisse kayıtları korunur. (#92)
 
 - Kayıtlı taramada bilinmeyen sonuç kayıp mesafesi sayılmaz. Başarısız dönem/hisse seçimi ve çelişkili seçildi etiketi kayıt sınırında reddedilir; bölge açıklamaları korunur. Eski düşüş süresinin açıklaması korunan ilk kapanış davranışına uyarlandı. (#92)
 

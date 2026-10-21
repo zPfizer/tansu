@@ -564,7 +564,7 @@ def _arama_donemi(olaylar, h, d):
     sonuc = _bul(olaylar, d["sonuc_ref"], "sonuc")
     _arama_donem_sonucu(h, d, sonuc)
     _cocuk_sonuc_baglari(olaylar, h["kosu_id"], sonuc["cikti_referanslari"])
-    _arama_olcu_baglari(olaylar, d)
+    _arama_olcu_baglari(olaylar, d, sonuc)
 
 
 def _arama_donem_sonucu(h, d, sonuc):
@@ -604,11 +604,17 @@ def _arama_islem_baglari(olaylar, h, d):
             raise PilotHatasi("İşlem başka çocuğa veya ayara bağlı.")
 
 
-def _arama_olcu_baglari(olaylar, d):
+def _arama_olcu_baglari(olaylar, d, sonuc):
+    """TASARIM 5.15 S11: hisse kimliğini gerçek dönem ve işleme bağla."""
+    semboller = [s["sembol"] for s in d["semboller"]]
+    if len(set(semboller)) != len(semboller) or set(semboller) != set(
+        sonuc["icerik"]["durumlar"]
+    ):
+        raise PilotHatasi("Ölçülerin hisse kümesi gerçek dönemle uyuşmuyor.")
     olculen = []
     for s in d["semboller"]:
         o = s["olcu"]
-        refs = _arama_olculen_islemler(olaylar, o)
+        refs = _arama_olculen_islemler(olaylar, s)
         olculen.extend(refs)
         egri = o.get("egri_tanimi")
         if egri is not None and not set(egri["referanslar"]) <= set(refs):
@@ -619,14 +625,16 @@ def _arama_olcu_baglari(olaylar, d):
         raise PilotHatasi("Ölçülerin işlem referansları dönemle uyuşmuyor.")
 
 
-def _arama_olculen_islemler(olaylar, olcu):
+def _arama_olculen_islemler(olaylar, sembol):
+    olcu = sembol["olcu"]
     if olcu["politika"] != "bagimsiz_olcu_v1":
         raise PilotHatasi("Arama ölçü politikası uyuşmuyor.")
     refs = []
     for i in olcu["islemler"] + olcu["acik_kismi"]:
         islem = _bul(olaylar, i["islem_ref"], "islem")
-        if islem["olaylar"][0]["pozisyon"]["risk_girdisi"]["islem_id"] != i["islem_id"]:
-            raise PilotHatasi("Ölçünün gerçek işlem kimliği uyuşmuyor.")
+        risk = islem["olaylar"][0]["pozisyon"]["risk_girdisi"]
+        if (risk["islem_id"], risk["sembol"]) != (i["islem_id"], sembol["sembol"]):
+            raise PilotHatasi("Ölçünün gerçek işlem veya hisse kimliği uyuşmuyor.")
         refs.append(i["islem_ref"])
     return refs
 
@@ -678,6 +686,7 @@ def _arama_bolge_baglari(ust, hucreler, bolgeler, politika):
         for h, ozet in zip(hucreler, b["hucreler"], strict=True):
             _arama_bolge_hucresi(h, b, ozet)
         _arama_secilen_cocuk(hucreler, b)
+        _arama_secilen_aciklamasi(b)
 
 
 def _arama_bolge_aciklamasi(b, indeksler):
@@ -741,6 +750,31 @@ def _arama_bolge_bileseni(c, indeksler):
             raise PilotHatasi("Bölgenin bileşen kimlikleri uyuşmuyor.")
     if c["kanonik_indeks"] not in c["indeksler"]:
         raise PilotHatasi("Bileşenin kanonik kimliği uyuşmuyor.")
+    if any(i not in c["indeksler"] for i in c["uygun_merkezler"]):
+        raise PilotHatasi("Bileşenin uygun merkezi kendi üyesi olmalıdır.")
+
+
+def _arama_secilen_aciklamasi(bolge):
+    """TASARIM 5.15 S11: seçilen merkez açıklamasındaki başvuruları doğrula."""
+    secilen = bolge["secilen"]
+    if secilen is None:
+        return
+    h = next(h for h in bolge["hucreler"] if h["indeks"] == secilen)
+    if (
+        h["karli"] is not True
+        or h["uygun_merkez"] is not True
+        or h["sinir"] is not False
+        or h["eksik_komsular"]
+    ):
+        raise PilotHatasi("Seçilen hücrenin uygun merkez açıklaması çelişkili.")
+    _arama_merkez_bileseni(bolge["bolgeler"], secilen)
+
+
+def _arama_merkez_bileseni(bolgeler, secilen):
+    uyeler = [c for c in bolgeler if secilen in c["indeksler"]]
+    merkezler = [c for c in bolgeler if secilen in c["uygun_merkezler"]]
+    if len(uyeler) != 1 or merkezler != uyeler:
+        raise PilotHatasi("Seçilen merkez tek bir uygun bileşene bağlı olmalıdır.")
 
 
 def _arama_bolge_hucresi(h, bolge, ozet):

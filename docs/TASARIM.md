@@ -1499,7 +1499,7 @@ eski sonucu yeni hesapmış gibi etiketlemez. Kategorik aileler aynı komşulukt
 **Üst arama sonucu ve kanıt**
 
 Gerçek hisse kümesi ve seçilen merkez açıklamasının aşağıdaki ek denetimleri
-onaylı teknik sözleşmedir; uygulama ve kanıtı bekleniyor (#92, 21.10.2026).
+mevcut kayıt yüzünde uygulanmıştır (#92, 21.10.2026).
 
 Mevcut E5 koşu tutacağına `arama_sonucu_kaydet(*, is_id, hucreler, bolgeler,
 politika_surumu, birimler, uyarilar, cikti_referanslari)` eklenir; çıktı makbuzdur.
@@ -1550,9 +1550,10 @@ eksik kapsamda altı E1 hazırlığıyla 18 görünür sonuç, E1/kimlik hatası
 paylaşılmaması aynı sınamadadır.
 `tests/test_ayar_aktarimi.py` tam çocuk yöntemini ve özet uyuşmazlığında kalıcı makbuzu, `tests/test_kayit.py` gerçek
 çocuk/koşu/dönem bağlarını, gerçek dönem ve işlem hissesini, iki yerde birlikte
-değiştirilen hisse adının, iki hisse arasında taşınan işlem başvurusunun, yinelenen
-veya kaybolan hisse açıklamasının reddini; işlemsiz hissenin korunmasını, bölgenin
-zorunlu açıklamalarını, seçilen merkezin hücre ve bileşenle tutarlılığını, başarısız
+değiştirilen hisse adının, iki hissenin ölçü başvurularının yer değiştirmesinin,
+yinelenen veya kaybolan hisse açıklamasının reddini; işlemsiz hissenin korunmasını,
+bölgenin zorunlu açıklamalarını, seçilen merkezin `karli`/`uygun_merkez`/`sinir`
+alanlarını, eksik komşuluğu ve tek uygun bileşen bağını, başarısız
 dönem/hisse seçiminin ve çelişkili en iyi hücre seçildi etiketinin reddini, hatalı tam başarıyı; `tests/test_gelecek.py` gelecek
 fiyatın önceki dönem ve hücreyi değiştirmemesini denetler. Eski doğrudan düşüş
 çağıranı `tests/test_kabul.py` kapsamda kalır.
