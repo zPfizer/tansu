@@ -1740,8 +1740,13 @@ kesiminden sonraki fiyat ve sonuçların eski seçimi değiştirmemesini sınar.
 
 #### S13 kayıtlı Monte Carlo (#94)
 
-**Durum: 21.10.2026 tarihinde benimsenmiş teknik sözleşme; uygulama ve kanıt
-bekliyor.** Dağıtıcı, #94 yöntem araştırmasını `kayitli_monte_carlo_v1` olarak
+**Durum: 21.10.2026 tarihinde benimsenen teknik yöntem uygulandı. Bağımsız
+denetim ve gerçek piyasa verisinden tamamlanmış WF kaynağıyla sonuç kanıtı
+bekleniyor.** Kontrollü genel giriş kanıtı kesilmiş bir koşudur; tam ön
+gösterim, nihai uyarlamalı bütçenin tamamlanması veya gerçek piyasa performansı
+kanıtı sayılmaz. `pay_kimligi` seçili tamamlanmış bir WF kaynağıyla olumlu MC
+kanıtı ve nihai bütçenin uygulanabilirlik kanıtı bekleniyor.
+Dağıtıcı, #94 yöntem araştırmasını `kayitli_monte_carlo_v1` olarak
 benimsedi. Aşağıdaki kesin tercihler proje yorumudur. Tansu'nun MC/WF gereği
 kesin örnekleme, tekrar veya başarı eşiği vermez. Dayanak: [L5], [W2], [W9];
 #94 güncel brifi ve 21.10.2026 teknik yöntem kararı. Bu sözleşme SAHİP-86/111/d5,
@@ -1815,7 +1820,7 @@ sonucu iki kez, gerçekleşmemiş kaybı veya gün içi maruziyeti saymaz;
 `tani_referans_v1` serisi yerine geçmez.
 
 Blok boyu günlük sütunların toplamından `ppw2009_arch72_v1` ile tahmin edilir.
-Birincil sabit referans [arch 7.2.0 durağan dalıdır](https://arch.readthedocs.io/en/latest/_modules/arch/bootstrap/base.html).
+Birincil sabit referans [arch 7.2.0 durağan dalıdır](https://raw.githubusercontent.com/bashtage/arch/v7.2.0/arch/bootstrap/base.py).
 Bağımsız uygulama yeni `arch` bağımlılığı veya kopya kitaplık kodu kullanmaz.
 N gözlemde merkezlenmiş seri kullanılır. `kn=max(5,int(log10(N)))`,
 `mmax=ceil(sqrt(N))+kn`, bant `2*sqrt(log10(N)/N)` ve üst sınır
@@ -1997,6 +2002,22 @@ yöntem, kaynak ve açık koşu bağları ayrıca doğrulanır. Stres çocuğunu
 strateji ve tam ayar denetimi korunur. İç olay zarfın aynı nesnesiyse
 üyelik kesindir; ayrı nesnede kanonik içerik eşitliği yine zorunludur.
 Bu düzenleme önbellek, kaynak atlama veya ayrı doğrulayıcı oluşturmaz.
+
+**Yerel okuma dizini (22.10.2026).** Aynı kesin öneğin
+her MC olayında yeniden taranmasını azaltmak için her yerel okuma boş bir
+önek diziniyle başlar. Dizin yalnız doğrulanmış önceki kayıtların nesne
+başvurularını tutar; ilk eşleşen tür/kimlik korunur. Plan ve sonuç listeleri
+koşu/deney anahtarına ayrılır. Her anahtarın indeks sırası korunurken ayrı
+anahtarların sonuçları iç içe gelebilir. Metin olmayan plan kimliğinde ilgili
+koşu/deneyin mevcut sıralayan sonuç yordamı kullanılır; eski ret davranışı
+korunur. Şimdiki veya sonraki kayıt kendi
+doğrulamasından önce görünür olmaz. Zarfın iç kayıtları sırayla doğrulanır;
+birinin reddi bütün okumayı durdurur ve yerel dizin atılır. Kurtarma bozuk
+tam zarftan kısmi sonuç döndürmez. Ekleme, mevcut kilit altında yeni okuyucunun
+doğruladığı önekten geçici dizin kurar. Her yeni okuma doğrulamayı baştan yapar.
+Okumalar arasında durum saklanmaz; kaynak, matematik, çocuk, sinyal, çekiliş,
+özet ve alan denetimleri atlanmaz. Eski ve WF kayıtlarının doğrulama kuralları değişmez.
+Bu düzenleme nihai bütçenin uygulanabilirlik kanıtı değildir.
 
 E4 küçük sabit iç partiler kullanır; kullanıcı seçeneği eklemez. Planlar
 hesaptan önce, sinyal kabulleri E2'den sonra ve E3'ten önce yayımlanır.
@@ -2629,7 +2650,7 @@ değiştiremez. Kaynaksız birleşime seçim veya günlük etkinleştirme izni v
 | Kayıt / durum | İçerik, çelişki ve kapanış kanıtı | Engellediği iş | Dayanak |
 |---|---|---|---|
 | WF — TEKNİK YÖNTEM UYGULANDI / denetim ve tam veri kanıtı bekliyor | Dağıtıcı 21.10.2026 `kayitli_ileri_v1` yöntemini benimsedi. Tam pencere, seçim, taşıma, ufuk ve kayıt sözleşmesinin sahibi S12 bölümüdür. Eski §5.14 yöntemi legacy kalır. | #93 bağımsız denetim ve tam veriyle sonuç kanıtı bekliyor; MC ve günlük uygunluk kapıları sürer. | [L3]–[L5], [W1]; D §2; dağıtıcı 21.10.2026. |
-| MC — benimsenmiş teknik yöntem / uygulama ve kanıt bekliyor | C Q81 ile D §4'ün tekrar uyuşmazlığı, 21.10.2026 dağıtıcı kararıyla S13'te bağlandı. Ön gösterim nihai tanı sayılmaz. Örnekleme, muhasebe, kayıt, tekrar ve sayısal durma sözleşmesinin tek sahibi S13'tür. | #94 uygulaması S13'e göre yürür. Tamamlanmış gerçek WF kaynağı ve gerçek yeniden sınama kanıtı olmadan yöntem tamamlandı denmez. Sahip kabul ve günlük izin kapıları açık kalır. | [L5], [W2], [W9]; C Q81, D §4; S13 teknik yöntem kararı. |
+| MC — teknik yöntem uygulandı / bağımsız denetim ve sonuç kanıtı bekliyor | C Q81 ile D §4'ün tekrar uyuşmazlığı, 21.10.2026 dağıtıcı kararıyla S13'te bağlandı. Ön gösterim nihai tanı sayılmaz. Örnekleme, muhasebe, kayıt, tekrar ve sayısal durma sözleşmesinin tek sahibi S13'tür. | Bağımsız denetim, tamamlanmış gerçek WF kaynağıyla sonuç, `pay_kimligi` seçili tamamlanmış WF kaynağıyla olumlu MC ve nihai bütçenin uygulanabilirlik kanıtı bekleniyor. Kesilmiş genel giriş tam ön gösterim sayılmaz. Sahip kabul ve günlük izin kapıları açık kalır. | [L5], [W2], [W9]; C Q81, D §4; S13 teknik yöntem kararı. |
 | MC örnekleme — S13'e bağlı | D §4'ün beş ayrı deney girdisi, bağımlılık varsayımları ve kaynak sınırlaması S13'te sürümlendi. Eski araştırma önerisi yeni varsayılan veya başarı kararı oluşturmaz. | #94; kaynak WF, ROBUST ve RISK bağları S13 sınırında doğrulanır. | [W2], [W9]; D §4, `mc-wf/arastirma.md` yöntem tablosu; S13. |
 | ROBUST — LEVENT ONAYI / uygulandı | B Q75: çaprazlar dahil tek indeks adımı komşuluk, kenarda eksik komşuluk bayrağı; otomatik kabul/ret yok. C Q77: en küçük komşu skorunu en büyüt; Q95: kanonik demetle eşitlik. D §3: tam iç komşuluk, kenarı merkez seçme; en geniş bileşen, medyan, iç uzaklık, sonra en kötü komşu net R ve sözlüksel sıra. Eski §5.14 eksen komşusu ayrı legacy'dir. Tek seçim ve kenar politikası onaylanmadan hiçbiri yeni varsayılan yapılmaz. Izgara sınırları ve adımlar strateji manifestinde dondurulur. Levent 21.10.2026 bu işte S11 bölümündeki geniş bölge ve iç merkez yöntemini onayladı; araştırmaların eski uyuşmazlığı bu kayıtla çözülür. Uygulanan açıklayıcı taramanın sözleşmesi S11 bölümündedir. | #92 seçici kısmı; #93/#94 diğer yöntem kayıtlarını bekler. | [T1], [W3]; B Q75, C Q76/Q77/Q95, D §3. |
 | RISK — tek hisse bağlı; çift #128'e taşındı | Dağıtıcı 19.10, 02:10: %2 bütçe planlanan alış/stop komisyonu ve BSMV'yi içerir; adet aşağı tam sayıya yuvarlanır, kalan bütçe ayrıca döner. Uygulama ve R tanımının sahibi S08 risk ve maliyet hesabıdır. Çiftin adet ve R'si gerekçeli boştur; sayısal dayanağı #128 belirler. Eski §5.3 masrafsız R legacy kalır. | #89 tek hisse risk boyutlama; #128 çift; #92 net R eğrisi, #93, #94. | [L1], [T2], [T3], [W6]; D §1, C Q96; dağıtıcı 19.10, 02:10. |

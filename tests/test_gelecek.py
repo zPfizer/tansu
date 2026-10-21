@@ -856,6 +856,8 @@ def test_s12_gelecek_fiyat_egitim_secimini_ve_acik_dislamayi_degistirmez(
 def test_s13_wf_donmus_planinda_sonraki_fiyat_onceki_mc_yolunu_degistirmez(
     tmp_path, monkeypatch
 ):
+    import json
+    from tansu import deneme
     from tansu import istatistik, saglamlik
     from tests.test_tansusinama import s13_kayitli, s13_kosu, s13_plan
 
@@ -914,3 +916,28 @@ def test_s13_wf_donmus_planinda_sonraki_fiyat_onceki_mc_yolunu_degistirmez(
     assert [
         o["kayit_id"] for o in depo.oku() if o["kayit_turu"] == "ileri_secim"
     ] == donmus
+
+    fiziksel = [
+        deneme._coz(json.loads(s)) for s in depo.yol.read_bytes().split(b"\n") if s
+    ]
+    plan_no = next(
+        i
+        for i, o in enumerate(fiziksel)
+        if o["kayit_turu"] == "mc_parti"
+        and o["kayit"]["kayitlar"][0]["kayit_turu"] == "mc_plan"
+    )
+    plan = fiziksel[plan_no]
+    cocuk_no = next(
+        i
+        for i, o in enumerate(fiziksel)
+        if o["kayit_turu"] == "mc_parti"
+        and o["kosu_id"] == plan["kosu_id"]
+        and o["kayit"]["kayitlar"][0]["kayit_turu"] == "deneme"
+    )
+    cocuk_id = plan["kayit"]["kayitlar"][0]["kayit"]["stres_cocuklari"][0]["deneme_id"]
+    fiziksel.insert(cocuk_no, fiziksel.pop(plan_no))
+    yol = tmp_path / "gelecek-cocuk.jsonl"
+    yol.write_bytes(b"".join(deneme.kanonik(o) + b"\n" for o in fiziksel))
+    with pytest.raises(deneme.PilotHatasi) as hata:
+        deneme.PilotKayit(yol).oku()
+    assert str(hata.value.__cause__) == "Kayıt bağı bulunamadı: " + cocuk_id
