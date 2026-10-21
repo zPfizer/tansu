@@ -766,3 +766,45 @@ def test_s11_gelecek_fiyat_ve_diger_hucreler_onceki_olcuyu_degistirmez(
     assert sonra["egri_olculeri"] == olculer[0]["egri_olculeri"]
     assert sonra["egri_tanimi"]["satirlar"] == olculer[0]["egri_tanimi"]["satirlar"]
     assert depo.yol.read_bytes().startswith(onceki_kayit)
+
+
+def test_s12_gelecek_fiyat_egitim_secimini_ve_acik_dislamayi_degistirmez(
+    tmp_path, monkeypatch
+):
+    from tests.test_tansusinama import s12_sinyalli, s12_calistir
+
+    depo, m, piyasa = s12_sinyalli(tmp_path, monkeypatch)
+    # Eksik ilk test satırı yalnız sonraki hesapları durdurur; eğitim ve seçim gerçektir.
+    piyasa[:] = [r for r in piyasa if r["tarih"] != "2022-01-04"]
+    ilk = s12_calistir(depo, m, tmp_path)
+    once = ilk["bolumler"][0]["secimler"][0]
+    assert "İstenen seans kapsamı uyuşmuyor" in ilk["bolumler"][0]["neden"]
+    assert once["durum"] == "secildi"
+    assert all(h["kapali_islem_sayisi"] == 1 for h in once["egitim_cocuklari"])
+    assert all(
+        h["dislanan"][0]["durum"] == "bekliyor" for h in once["egitim_cocuklari"]
+    )
+    for r in piyasa:
+        if r["tarih"] >= "2022-01-01":
+            for alan in ("aof", "kapanis", "yuksek", "dusuk"):
+                r[f"duzeltilmis_{alan}"]["deger"] *= 2
+    ikinci = s12_calistir(depo, m, tmp_path)
+    sonra = ikinci["bolumler"][0]["secimler"][0]
+    assert sonra["bolge"]["secilen"] == once["bolge"]["secilen"] == [1]
+    assert [
+        (h["kapali_islem_sayisi"], h["toplam_net_r"], h["dislanan"])
+        for h in sonra["egitim_cocuklari"]
+    ] == [
+        (h["kapali_islem_sayisi"], h["toplam_net_r"], h["dislanan"])
+        for h in once["egitim_cocuklari"]
+    ]
+    assert ilk["durum"] == "hata"
+    for sonuc in (ilk, ikinci):
+        ozet = next(
+            o["kayit"]
+            for o in depo.oku()
+            if o["kayit_id"] == sonuc["sonuc_makbuzu"].olay_id
+        )
+        assert ozet["olculer"] == {}
+        assert len(ozet["giris_kohort_sayimlari"]) == 16
+        assert all(x == {} for x in ozet["giris_kohort_sayimlari"].values())
