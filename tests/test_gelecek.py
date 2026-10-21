@@ -38,7 +38,8 @@ KESIM = [
 BAS = "2013-12-02"
 
 
-def test_s09_gelecek_mumlar_onceki_dolum_ve_izi_degistirmez():
+@pytest.mark.parametrize("kapanis", [100.0, 101.00001])
+def test_s09_gelecek_mumlar_onceki_dolum_ve_izi_degistirmez(kapanis):
     from tests.test_motor import r, s09_istek, s09_mumlar
 
     m = s09_mumlar(
@@ -49,6 +50,7 @@ def test_s09_gelecek_mumlar_onceki_dolum_ve_izi_degistirmez():
             r(100, 101, 99, 100),
         ]
     )
+    m.at[m.index[1], "kapanis"] = kapanis
     sinyaller = {m.index[0]: "sinyal-1"}
     ilk = motor.tara(m.iloc[:3], sinyaller, yurutme=s09_istek())
     m.loc[m.index[3], ["aof", "yuksek", "dusuk", "kapanis"]] = [1000, 1100, 900, 1000]

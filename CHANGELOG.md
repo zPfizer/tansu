@@ -6,6 +6,8 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ## [Yayımlanmamış]
 
+- İşlem kontrolü, düzeltilmiş AOF ve kapanışta veri kapısının mevcut yuvarlama payını kullanır; fiyatlar ve ham limit denetimi korunur. (#169)
+
 - #136: Kural kataloğu, aile kuralları ve kaynak dökümü tek sahipli belgelere ayrıldı; kaynak kimlikleri ve gerekli kısıtlar korundu.
 
 ### Değişti
