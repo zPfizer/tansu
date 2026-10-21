@@ -1206,3 +1206,68 @@ def mc_kontrol(sonuclar, *, onceki=None):
             ad: sum(s[ad]["deger"] is not None for s in sonuclar) for ad in sonuclar[0]
         },
     )
+
+
+def kapali_r_egrisi(islemler, donem):
+    gunler = {}
+    refs = []
+    for i in islemler:
+        if i["sonuc"].get("kalan_adet") == 0:
+            gun = i["pozisyon"]["cikis_tarih"][:10]
+            gunler.setdefault(gun, []).append(i["sonuc"].get("net_r"))
+            refs.append(i["islem_ref"])
+    satirlar, toplam = [], 0.0
+    for t, r in sorted(gunler.items()):
+        toplam = toplam + sum(r) if toplam is not None and None not in r else None
+        satirlar.append(dict(an=t, deger=toplam))
+    return dict(
+        tur="tani_net_r",
+        satirlar=satirlar,
+        baslangic_degeri=0.0,
+        baslangic_ani=donem["baslangic"].isoformat(),
+        baslangic_politikasi="acik",
+        tarih_temeli="takvim_gunu",
+        normalizasyon=dict(deger=1.0, birim="R", bos_nedeni=None),
+        birim="R",
+        muhasebe_politikasi="tani_net_r_v1",
+        referanslar=refs,
+    )
+
+
+def ileri_kontrol_sayimi(durum, bolum):
+    bas, son = bolum["baslangic"].isoformat(), bolum["bitis"].isoformat()
+    giren = [i for i in durum["islemler"] if bas <= i["pozisyon"]["giris_tarih"] <= son]
+    p = durum["pozisyon"]
+    tarihler = {i["pozisyon"]["giris_tarih"] for i in giren}
+    if p and p["giris_tarih"] and bas <= p["giris_tarih"] <= son:
+        tarihler.add(p["giris_tarih"])
+    return dict(
+        kapali_islem=len(giren),
+        ayri_giris_gunu=len(tarihler),
+        acik_islem=int(bool(p and p["durum"] == "acik")),
+        bekleyen_giris=int(bool(p and p["durum"] == "bekliyor")),
+    )
+
+
+def ileri_ozeti(islemler, *, semboller, donem, bolumler):
+    """TASARIM 5.15 S12: değişmez nihai işlemlerin ölçü ve giriş kohortu sayımı."""
+    semboller = sorted(semboller)
+    kaynaklar = {s: [] for s in semboller}
+    for i in islemler:
+        kaynaklar[i["pozisyon"]["risk_girdisi"]["sembol"]].append(i)
+    olculer = {
+        s: olc(k, politika="bagimsiz_olcu_v1", egri=kapali_r_egrisi(k, donem))
+        for s, k in kaynaklar.items()
+    }
+    sayimlar = {}
+    for b in bolumler:
+        bas, son = b["baslangic"].isoformat(), b["bitis"].isoformat()
+        sayimlar[b["ad"]] = {}
+        for s, kayitlar in kaynaklar.items():
+            giren = [i for i in kayitlar if bas <= i["pozisyon"]["giris_tarih"] <= son]
+            sayimlar[b["ad"]][s] = dict(
+                kapali_islem=sum(_kapali_sonuc(i["sonuc"]) for i in giren),
+                ayri_giris_gunu=len({i["pozisyon"]["giris_tarih"] for i in giren}),
+                acik_islem=sum(not _kapali_sonuc(i["sonuc"]) for i in giren),
+            )
+    return dict(olculer=olculer, giris_kohort_sayimlari=sayimlar)

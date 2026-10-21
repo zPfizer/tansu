@@ -831,7 +831,8 @@ def test_s12_gelecek_fiyat_egitim_secimini_ve_acik_dislamayi_degistirmez(
         if r["tarih"] >= "2022-01-01":
             for alan in ("aof", "kapanis", "yuksek", "dusuk"):
                 r[f"duzeltilmis_{alan}"]["deger"] *= 2
-    sonra = s12_calistir(depo, m, tmp_path)["bolumler"][0]["secimler"][0]
+    ikinci = s12_calistir(depo, m, tmp_path)
+    sonra = ikinci["bolumler"][0]["secimler"][0]
     assert sonra["bolge"]["secilen"] == once["bolge"]["secilen"] == [1]
     assert [
         (h["kapali_islem_sayisi"], h["toplam_net_r"], h["dislanan"])
@@ -841,6 +842,15 @@ def test_s12_gelecek_fiyat_egitim_secimini_ve_acik_dislamayi_degistirmez(
         for h in once["egitim_cocuklari"]
     ]
     assert ilk["durum"] == "hata"
+    for sonuc in (ilk, ikinci):
+        ozet = next(
+            o["kayit"]
+            for o in depo.oku()
+            if o["kayit_id"] == sonuc["sonuc_makbuzu"].olay_id
+        )
+        assert ozet["olculer"] == {}
+        assert len(ozet["giris_kohort_sayimlari"]) == 16
+        assert all(x == {} for x in ozet["giris_kohort_sayimlari"].values())
 
 
 def test_s13_wf_donmus_planinda_sonraki_fiyat_onceki_mc_yolunu_degistirmez(

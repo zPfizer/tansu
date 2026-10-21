@@ -5,6 +5,7 @@ import hashlib
 import json
 import os
 import shutil
+from io import BytesIO
 from dataclasses import dataclass, replace
 from copy import deepcopy
 from functools import cached_property
@@ -91,7 +92,7 @@ def _uyelik_tablosu(yol):
     return tablo
 
 
-def uyelik_hazirla(istek: UyelikIstegi) -> dict:
+def uyelik_hazirla(istek: UyelikIstegi, *, tablo_metni=None) -> dict:
     """Tarihli üyelik yanıtı (TASARIM 5.15)."""
     if (istek.evren_politikasi, istek.uyelik_surumu) != (
         "donemsel_bist30_v1",
@@ -99,7 +100,10 @@ def uyelik_hazirla(istek: UyelikIstegi) -> dict:
     ):
         raise VeriHatasi("bilinmeyen evren politikası/üyelik sürümü")
     yol = Path(__file__).parent / "referans" / istek.uyelik_surumu / "uyelik.csv"
-    tablo = _uyelik_tablosu(yol)
+    # TASARIM 5.15 #167: kayıtlı kaynak aynı parserdan dosyasız geçer.
+    tablo = _uyelik_tablosu(
+        yol if tablo_metni is None else BytesIO(tablo_metni.encode("utf-8"))
+    )
     gunler, eksik = {}, []
     for tarih in istek.tarihler:
         t = pd.Timestamp(tarih)
@@ -151,7 +155,9 @@ def uyelik_hazirla(istek: UyelikIstegi) -> dict:
         "gunler": gunler,
         "evren_politikasi": istek.evren_politikasi,
         "uyelik_surumu": istek.uyelik_surumu,
-        "tablo_parmak_izi": _sha256(yol),
+        "tablo_parmak_izi": _sha256(yol)
+        if tablo_metni is None
+        else hashlib.sha256(tablo_metni.encode("utf-8")).hexdigest(),
     }
 
 
@@ -174,16 +180,20 @@ def pay_kimligi_secimi_dogrula(secim):
         raise VeriHatasi("pay kimliği özeti geçersiz")
 
 
-def pay_kimligi_hazirla(secim, *, kaynak, goruntu_id, manifest_ozeti):
+def pay_kimligi_hazirla(secim, *, kaynak, goruntu_id, manifest_ozeti, tablo_metni=None):
     """TASARIM 5.15 #167: yalnız kanıtlı sağlayıcı/görüntü için eşleme."""
     pay_kimligi_secimi_dogrula(secim)
     bag = dict(kaynak=kaynak, goruntu_id=goruntu_id, manifest_ozeti=manifest_ozeti)
     if any(secim[a] != deger for a, deger in bag.items()):
         raise VeriHatasi("pay kimliği kaynak/görüntü/manifest bağı uyuşmuyor")
     yol = PAY_KIMLIGI_KOKU / secim["surum"] / "eslemeler.csv"
-    if _sha256(yol) != secim["tablo_ozeti"]:
+    # TASARIM 5.15 #167: tarihsel kayıt aynı kaynak baytlarını saklar.
+    bayt = yol.read_bytes() if tablo_metni is None else tablo_metni.encode("utf-8")
+    if hashlib.sha256(bayt).hexdigest() != secim["tablo_ozeti"]:
         raise VeriHatasi("pay kimliği tablo özeti uyuşmuyor")
-    tablo = pd.read_csv(yol, encoding="utf-8-sig", dtype=str, keep_default_na=False)
+    tablo = pd.read_csv(
+        BytesIO(bayt), encoding="utf-8-sig", dtype=str, keep_default_na=False
+    )
     if (
         set(tablo.columns)
         != {

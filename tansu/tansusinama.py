@@ -1128,29 +1128,39 @@ def _kayitli_hata(sonuc, asama, hata, **baglar):
     )
 
 
-def _kayitli_uyelik(v, gunler):
+def _kayitli_uyelik(v, gunler, *, uyelik_kaniti=None):
     """TASARIM 5.15 #167: S10/S12 aynı kayıtlı pay anahtarını kullanır."""
-    uyelik = veri.uyelik_hazirla(
-        veri.UyelikIstegi(tuple(gunler), v["evren_politikasi"], v["uyelik_surumu"])
+    istek = veri.UyelikIstegi(tuple(gunler), v["evren_politikasi"], v["uyelik_surumu"])
+    sakli = (
+        {}
+        if uyelik_kaniti is None
+        else dict(tablo_metni=uyelik_kaniti["uyelik_tablo_metni"])
     )
+    uyelik = veri.uyelik_hazirla(istek, **sakli)
     if uyelik["tablo_parmak_izi"] != v["uyelik_ozeti"]:
         raise ValueError("Üyelik parmak izi kayıtlı denemeyle uyuşmuyor.")
     if v.get("pay_kimligi") is not None:
+        sakli = (
+            {}
+            if uyelik_kaniti is None
+            else dict(tablo_metni=uyelik_kaniti["pay_kimligi_tablo_metni"])
+        )
         politika = veri.pay_kimligi_hazirla(
             v["pay_kimligi"],
             kaynak=v["kaynak"],
             goruntu_id=v["veri_referanslari"][0],
             manifest_ozeti=v["manifest_ozeti"],
+            **sakli,
         )
         uyelik = veri.pay_uyeligi(uyelik, politika)
     return uyelik
 
 
-def _donem_uyeligi(deneme, sonuc):
+def _donem_uyeligi(deneme, sonuc, *, uyelik_kaniti=None):
     v, d = deneme["veri_ayarlari"], sonuc["donem"]
     bas, son = d["baslangic"].isoformat(), d["bitis"].isoformat()
     gunler = [t for t in v["takvim"]["seanslar"] if bas <= t <= son]
-    uyelik = _kayitli_uyelik(v, gunler)
+    uyelik = _kayitli_uyelik(v, gunler, uyelik_kaniti=uyelik_kaniti)
     sonuc["uyelik"] = uyelik
     semboller = sorted({s for t in gunler for s in uyelik["gunler"][t]["semboller"]})
     return gunler, uyelik, semboller, bas, son
@@ -1951,7 +1961,7 @@ def _arama_islem_baglari(r):
 def _arama_sembol_olculeri(r):
     semboller = []
     for sembol, islemler in _arama_islem_baglari(r).items():
-        egri = _kapali_r_egrisi(islemler, r["donem"])
+        egri = istatistik.kapali_r_egrisi(islemler, r["donem"])
         olcu = istatistik.olc(islemler, politika="bagimsiz_olcu_v1", egri=egri)
         durum = _arama_donem_durumu(r, olcu["olculer"]["islem"]["deger"])
         semboller.append(dict(sembol=sembol, durum=durum, olcu=olcu))
@@ -1991,32 +2001,6 @@ def _arama_donem_durumu(r, sayi):
         if r["asama"]
         in ("veri", "uyelik", "isinma", "limit_kaniti", "kurulum", "gosterge")
         else "hesap_hatasi"
-    )
-
-
-def _kapali_r_egrisi(islemler, donem):
-    gunler = {}
-    refs = []
-    for i in islemler:
-        if i["sonuc"].get("kalan_adet") == 0:
-            gun = i["pozisyon"]["cikis_tarih"][:10]
-            gunler.setdefault(gun, []).append(i["sonuc"].get("net_r"))
-            refs.append(i["islem_ref"])
-    satirlar, toplam = [], 0.0
-    for t, r in sorted(gunler.items()):
-        toplam = toplam + sum(r) if toplam is not None and None not in r else None
-        satirlar.append(dict(an=t, deger=toplam))
-    return dict(
-        tur="tani_net_r",
-        satirlar=satirlar,
-        baslangic_degeri=0.0,
-        baslangic_ani=donem["baslangic"].isoformat(),
-        baslangic_politikasi="acik",
-        tarih_temeli="takvim_gunu",
-        normalizasyon=dict(deger=1.0, birim="R", bos_nedeni=None),
-        birim="R",
-        muhasebe_politikasi="tani_net_r_v1",
-        referanslar=refs,
     )
 
 
@@ -2216,8 +2200,50 @@ def _ileri_cocuk(depo, d, bolum, h, rol):
     return cocuk, makbuz
 
 
+def _ileri_uyelik_kaniti_dogrula(v, kanit):
+    """TASARIM 5.15 #167: E5 yalnız saklı kaynak ve kayıtlı bağları kullanır."""
+    alanlar = {"surum", "uyelik_tablo_metni", "pay_kimligi_tablo_metni"}
+    if (
+        not isinstance(kanit, dict)
+        or set(kanit) != alanlar
+        or kanit["surum"] != "ileri_uyelik_kaniti_v1"
+        or any(not isinstance(kanit[a], str) or not kanit[a] for a in alanlar)
+    ):
+        raise deneme_.PilotHatasi("Üyelik kanıtı eksik veya sürüm/alanları geçersiz.")
+    try:
+        _kayitli_uyelik(v, v["takvim"]["seanslar"], uyelik_kaniti=kanit)
+    except (veri.VeriHatasi, ValueError, TypeError, KeyError, UnicodeError) as hata:
+        raise deneme_.PilotHatasi(
+            f"Üyelik kanıtı kayıtlı kaynakla uyuşmuyor: {hata}"
+        ) from hata
+
+
+def _ileri_uyelik_kaniti(v):
+    """TASARIM 5.15 #167: E4 hesap öncesi iki kaynağın tam baytlarını dondurur."""
+    kok = Path(veri.__file__).parent / "referans"
+    kanit = dict(
+        surum="ileri_uyelik_kaniti_v1",
+        uyelik_tablo_metni=(kok / v["uyelik_surumu"] / "uyelik.csv")
+        .read_bytes()
+        .decode("utf-8"),
+        pay_kimligi_tablo_metni=(
+            veri.PAY_KIMLIGI_KOKU / v["pay_kimligi"]["surum"] / "eslemeler.csv"
+        )
+        .read_bytes()
+        .decode("utf-8"),
+    )
+    _ileri_uyelik_kaniti_dogrula(v, kanit)
+    return kanit
+
+
 def _ileri_kosu(depo, d, mod, kod, ortam, isler):
     v = d["veri_ayarlari"]
+    kanit = {}
+    if (
+        d["yontem_ayarlari"]["yontem"] == ILERI_SURUM
+        and v.get("pay_kimligi") is not None
+    ):
+        kanit["uyelik_kaniti"] = _ileri_uyelik_kaniti(v)
     return depo.kosu(
         d["deneme_id"],
         mod=mod,
@@ -2229,6 +2255,7 @@ def _ileri_kosu(depo, d, mod, kod, ortam, isler):
         bagimlilik_ozeti=ortam["lock_sha256"],
         tohum=None,
         is_listesi=isler,
+        **kanit,
     )
 
 
@@ -2295,7 +2322,7 @@ def _ileri_secimler(depo, d, kosu, bolum, kok, mod, kod, ortam, semboller):
                 olcu = istatistik.olc(
                     islemler,
                     politika="bagimsiz_olcu_v1",
-                    egri=_kapali_r_egrisi(islemler, r["donem"]),
+                    egri=istatistik.kapali_r_egrisi(islemler, r["donem"]),
                 )
                 n = olcu["olculer"]["islem"]["deger"]
                 o.update(
@@ -2574,21 +2601,6 @@ def _ileri_islemleri_yaz(kosu, d, durumlar, yayimlanan, *, son=False):
     return yeni
 
 
-def _ileri_sayim(durum, bolum):
-    bas, son = bolum["baslangic"].isoformat(), bolum["bitis"].isoformat()
-    giren = [i for i in durum["islemler"] if bas <= i["pozisyon"]["giris_tarih"] <= son]
-    p = durum["pozisyon"]
-    tarihler = {i["pozisyon"]["giris_tarih"] for i in giren}
-    if p and p["giris_tarih"] and bas <= p["giris_tarih"] <= son:
-        tarihler.add(p["giris_tarih"])
-    return dict(
-        kapali_islem=len(giren),
-        ayri_giris_gunu=len(tarihler),
-        acik_islem=int(bool(p and p["durum"] == "acik")),
-        bekleyen_giris=int(bool(p and p["durum"] == "bekliyor")),
-    )
-
-
 def _ileri_olaylar(durumlar):
     olaylar = {}
     for sembol, d in sorted(durumlar.items()):
@@ -2615,26 +2627,6 @@ def _ileri_olaylar(durumlar):
                     raise deneme_.PilotHatasi("Çelişen WF olay kimliği.")
                 olaylar[kimlik] = olay
     return sorted(olaylar.values(), key=lambda x: (x["tarih"], x["olay_id"]))
-
-
-def _ileri_birlesik_olculeri(d, durumlar, yayimlanan):
-    olculer, kohortlar = {}, {}
-    for sembol, durum in sorted(durumlar.items()):
-        islemler = list(_donem_islemleri(dict(durumlar={sembol: durum})))
-        kaynaklar = []
-        for _, i in islemler:
-            ref = yayimlanan.get(i["pozisyon"]["risk_girdisi"]["islem_id"])
-            if ref:
-                kaynaklar.append(i | dict(islem_ref=ref["kayit_ref"]))
-                kohortlar.setdefault(
-                    _ileri_kohort(i["pozisyon"]["giris_tarih"]), []
-                ).append(ref)
-        olculer[sembol] = istatistik.olc(
-            kaynaklar,
-            politika="bagimsiz_olcu_v1",
-            egri=_kapali_r_egrisi(kaynaklar, _ileri_ufuk(d)),
-        )
-    return dict(olculer=olculer, giris_kohortlari=dict(sorted(kohortlar.items())))
 
 
 def kayitli_ileri_calistir(depo, ileri_deneme_id, *, veri_koku, mod, ilerleme=print):
@@ -2753,7 +2745,9 @@ def kayitli_ileri_calistir(depo, ileri_deneme_id, *, veri_koku, mod, ilerleme=pr
                                 kayit_ref=makbuz.olay_id,
                             )
                         )
-                        b["sayimlar"][sembol] = _ileri_sayim(durum, bolum)
+                        b["sayimlar"][sembol] = istatistik.ileri_kontrol_sayimi(
+                            durum, bolum
+                        )
                     b["islem_refleri"] = _ileri_islemleri_yaz(
                         kosu, d, durumlar, yayimlanan, son=b is bolumler[-1]
                     )
@@ -2772,9 +2766,11 @@ def kayitli_ileri_calistir(depo, ileri_deneme_id, *, veri_koku, mod, ilerleme=pr
                         for s, n in b["sayimlar"].items()
                         if n["kapali_islem"] < 30
                     ]
-                    makbuz = kosu.ileri_sonucu_kaydet(
-                        kayit=dict(b, tur="bolum", olaylar=_ileri_olaylar(durumlar))
+                    kanit = deneme_._ileri_bolum_kaniti(
+                        depo.oku(), d, kosu.makbuz, bolum
                     )
+                    b.update(kanit)
+                    makbuz = kosu.ileri_sonucu_kaydet(kayit=b)
                     b["sonuc_ref"] = makbuz.olay_id
                     if ilerleme:
                         ilerleme(f"{b['bolum_id']}: {b['durum']}")
@@ -2792,47 +2788,20 @@ def kayitli_ileri_calistir(depo, ileri_deneme_id, *, veri_koku, mod, ilerleme=pr
                 ) as hata:
                     b.update(durum="hata", neden=str(hata))
                     b["hatalar"].append(dict(asama="ileri", neden=str(hata)))
-                    makbuz = kosu.ileri_sonucu_kaydet(
-                        kayit=dict(b, tur="bolum", olaylar=_ileri_olaylar(durumlar))
+                    kanit = deneme_._ileri_bolum_kaniti(
+                        depo.oku(), d, kosu.makbuz, bolum
                     )
+                    b.update(kanit)
+                    makbuz = kosu.ileri_sonucu_kaydet(kayit=b)
                     b["sonuc_ref"] = makbuz.olay_id
                     break
             sonuc["islemler"] = list(yayimlanan.values())
             tamamlanan = [b["bolum_id"] for b in bolumler if b["durum"] == "tamamlandi"]
             sonuc["durum"] = "tamamlandi" if len(tamamlanan) == 16 else "hata"
-            birlesik = dict(
-                tur="birlesik",
-                bolum_id="birlesik",
-                durum=sonuc["durum"],
-                donem=_ileri_ufuk(d),
-                bolum_refleri=[b["sonuc_ref"] for b in bolumler if "sonuc_ref" in b],
-                islem_refleri=sonuc["islemler"],
-                kontrol_refleri=[
-                    dict(rol="acik_kontrol", sembol=s, kayit_ref=r)
-                    for s, r in sorted(kontroller.items())
-                ],
-                olaylar=_ileri_olaylar(durumlar),
-                veri_gorulme_durumu="incelenmis_gecmis",
-                birimler=DONEM_BIRIMLERI,
-                muhasebe_politikasi="tani_referans_v1",
-                **_ileri_birlesik_olculeri(d, durumlar, yayimlanan),
-            )
+            birlesik = deneme_._ileri_birlesik_kaniti(depo.oku(), d, kosu.makbuz)
             sonuc["sonuc_makbuzu"] = kosu.ileri_sonucu_kaydet(kayit=birlesik)
-            if sonuc["durum"] == "tamamlandi":
-                tamamlanan.append("birlesik")
             sonuc["bitis_makbuzu"] = kosu.bitir(
-                durum=sonuc["durum"],
-                tamamlanan=tamamlanan,
-                basarisiz=[i for i in isler if i not in tamamlanan],
-                yontemler=[ILERI_SURUM],
-                olculer={},
-                cikti_referanslari=[sonuc["sonuc_makbuzu"].olay_id],
-                ozetler=dict(
-                    tamamlanan=len(tamamlanan),
-                    denenen=sum(b["durum"] != "baslamadi" for b in bolumler),
-                    basarisiz=sum(b["durum"] == "hata" for b in bolumler),
-                    baslamayan=sum(b["durum"] == "baslamadi" for b in bolumler),
-                ),
+                **deneme_._ileri_bitis_kaniti(depo.oku(), d, kosu.makbuz)
             )
     except Exception as hata:
         hata.sonuc = sonuc

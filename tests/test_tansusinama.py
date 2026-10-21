@@ -2168,33 +2168,54 @@ def test_s13_wf_stres_revizyonu_degisen_girisi_yamasiz_e2_ve_e3e_tasir(
     ]
 
 
-def test_s13_wf_genel_giris_iki_ucuz_anahtarin_binlik_onekini_dogal_hesaplar(
+def test_s13_wf_genel_giris_binlik_orneklerden_sonra_ilk_gercek_streste_kesilir(
     tmp_path, monkeypatch
 ):
-    from tansu import deneme
+    from collections import Counter
+    from hashlib import sha256
+    from time import perf_counter
+    from tansu import deneme, saglamlik
 
     depo, m, _, _ = s13_kayitli(tmp_path, monkeypatch)
-    kaydet = deneme._Kosu.mc_kontrol_kaydet
-    kontrol_sayisi = 0
+    ilk_baytlar = depo.yol.stat().st_size
+    sayac = Counter()
+    kaydet = deneme._Kosu.mc_sonuclari_kaydet
 
-    def kaydet_ve_dur(kosu, *, kayit):
-        nonlocal kontrol_sayisi
-        makbuz = kaydet(kosu, kayit=kayit)
-        kontrol_sayisi += 1
-        if kontrol_sayisi == 2:
+    def gozle(nesne, ad, etiket):
+        asil = getattr(nesne, ad)
+
+        def hesap(*a, **kw):
+            sayac[etiket] += 1
+            return asil(*a, **kw)
+
+        monkeypatch.setattr(nesne, ad, hesap)
+
+    gozle(veri, "veri_hazirla", "E1_veri")
+    gozle(aileler, "ortak_donem_kurulumu", "E2")
+    gozle(saglamlik, "ema_hucre_calistir", "E3")
+    gozle(ts, "_mc_ayar_yeniden_sina", "gercek_stres_denemesi")
+    gozle(ts, "_ileri_test_paketi", "ceyrek_verisi")
+
+    def kaydet_ve_dur(kosu, *, kayitlar):
+        makbuzlar = kaydet(kosu, kayitlar=kayitlar)
+        if any(k["yeniden_sinama"] for k in kayitlar):
+            sayac["kalici_stres_sonucu"] += 1
             raise KeyboardInterrupt(
-                "İki doğal binlik anahtar kaydından sonra kontrollü kesinti."
+                "İlk kalıcı gerçek stres sonucunda kontrollü kesinti."
             )
-        return makbuz
+        return makbuzlar
 
-    monkeypatch.setattr(deneme._Kosu, "mc_kontrol_kaydet", kaydet_ve_dur)
+    monkeypatch.setattr(deneme._Kosu, "mc_sonuclari_kaydet", kaydet_ve_dur)
+    baslangic = perf_counter()
     with pytest.raises(KeyboardInterrupt, match="kontrollü kesinti"):
         ts.kayitli_monte_carlo_calistir(
             depo, m.deneme_id, veri_koku=tmp_path, mod="gelistirme", ilerleme=None
         )
+    sure = perf_counter() - baslangic
     olaylar = depo.oku()
     girdi = next(o["kayit"] for o in olaylar if o["kayit_turu"] == "mc_girdi")
-    kontroller = [o["kayit"] for o in olaylar if o["kayit_turu"] == "mc_kontrol"]
+    tum_kontroller = [o["kayit"] for o in olaylar if o["kayit_turu"] == "mc_kontrol"]
+    kontroller = tum_kontroller[:2]
     assert len(kontroller) == 2
     kaynak_r = [
         r["net_r"] for r in girdi["nufus"] if r["cikis_tarih"].startswith("2022-")
@@ -2224,9 +2245,59 @@ def test_s13_wf_genel_giris_iki_ucuz_anahtarin_binlik_onekini_dogal_hesaplar(
             kontrol["tani"]["tekrar"] == 1000
             and kontrol["tani"]["durum"] == "on_gosterim"
         )
-    kurtarma = depo.kurtar()["mc_belirsiz_kosular"][0]["isler"]
+    tam_kurtarma = depo.kurtar()
+    isler = tam_kurtarma["mc_belirsiz_kosular"][0]["isler"]
+    kurtarma = [i for i in isler if i["anahtar"] in {k["anahtar"] for k in kontroller}]
     assert sum(i["kesin_tamamlanan"] for i in kurtarma) == 2000
     assert all(i["deneme_yayin_belirsiz"] is None for i in kurtarma)
+    senaryolar = [o for o in olaylar if o["kayit_turu"] == "mc_senaryo"]
+    stres = next(o for o in senaryolar if o["kayit"]["yeniden_sinama"])
+    plan = deneme._bul(olaylar, stres["kayit"]["plan_ref"], "mc_plan")["kayit"]
+    bekleyen = next(i for i in isler if i["anahtar"] == plan["anahtar"])
+    kanit = dict(
+        durum="ilk_kalici_stres_sonrasi_kesildi",
+        piyasa_kaniti=False,
+        on_gosterim_tamamlandi=False,
+        nihai_butce_uygulanabilirligi=False,
+        genel_giris_suresi_saniye=sure,
+        kaynak_kurulumu_sureye_dahil=False,
+        sayac=dict(sayac),
+        kayitli_butce=depo.deneme_oku(m.deneme_id)["yontem_ayarlari"]["tekrar"],
+        kaynak=girdi["kaynak"],
+        kaynak_kapali_nufus=len(girdi["nufus"]),
+        kaynak_seans_sayisi=len(girdi["seanslar"]),
+        kesin_tamamlanan=len(senaryolar),
+        hatali_senaryo=sum(o["kayit"]["durum"] != "tamamlandi" for o in senaryolar),
+        kontrol_sayisi=len(tum_kontroller),
+        ilk_gunluk_bayt=ilk_baytlar,
+        son_gunluk_bayt=depo.yol.stat().st_size,
+        gunluk_sha256=sha256(depo.yol.read_bytes()).hexdigest(),
+        kurtarma={k: v for k, v in tam_kurtarma.items() if k != "olaylar"},
+    )
+    (tmp_path / "mc-genel-giris-kaniti.json").write_text(
+        json.dumps(kanit, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+    assert kanit["kayitli_butce"] == 1000
+    assert len(tum_kontroller) == 3
+    kacirma = next(
+        i for i in girdi["isler"] if i["anahtar"] == tum_kontroller[2]["anahtar"]
+    )
+    assert kacirma["deney"] == "islem_kacirma_v1" and kacirma["dilim"] == "2022"
+    assert len(tum_kontroller[2]["sonuc_referanslari"]) == 1000
+    assert len(senaryolar) == 3001 and kanit["hatali_senaryo"] == 0
+    assert sayac == dict(
+        E1_veri=16,
+        E2=16,
+        E3=16,
+        gercek_stres_denemesi=1,
+        ceyrek_verisi=16,
+        kalici_stres_sonucu=1,
+    )
+    assert plan["indeks"] == 0
+    assert len(stres["kayit"]["yeniden_sinama"]["bolumler"]) == 16
+    assert bekleyen["kesin_tamamlanan"] == 1 and bekleyen["denenen"] is None
+    assert bekleyen["deneme_yayin_belirsiz"] == [1, 31]
+    assert sum(i["kesin_tamamlanan"] for i in isler) == 3001
     assert not any(
         o["kayit_turu"] in ("mc_ozet", "bitis") and o.get("deneme_id") == m.deneme_id
         for o in olaylar
@@ -3556,6 +3627,23 @@ def test_s12_bekleyen_ve_acik_islem_secimsiz_ceyrekte_surur_tek_kohort(
     ]
     assert len({e["olay_id"] for e in birlesik["olaylar"]}) == len(birlesik["olaylar"])
     assert all(e["tarih"] <= "2025-12-31" for e in birlesik["olaylar"])
+    assert r["bolumler"][1]["sayimlar"]["TEST"] == dict(
+        kapali_islem=0, ayri_giris_gunu=1, acik_islem=1, bekleyen_giris=0
+    )
+    assert r["bolumler"][2]["sayimlar"]["TEST"] == dict(
+        kapali_islem=0, ayri_giris_gunu=0, acik_islem=0, bekleyen_giris=0
+    )
+    assert "giris_kohort_sayimlari" in birlesik, "Nihai giriş kohortu sayımı zorunludur"
+    assert birlesik["giris_kohort_sayimlari"]["2022Q2"]["TEST"] == dict(
+        kapali_islem=1, ayri_giris_gunu=1, acik_islem=0
+    )
+    assert (
+        sum(
+            x["TEST"]["kapali_islem"]
+            for x in birlesik["giris_kohort_sayimlari"].values()
+        )
+        == 1
+    )
 
 
 @pytest.mark.parametrize("giris", ["kayitli_calistir", "kayitli_izgara_calistir"])
@@ -3615,9 +3703,15 @@ def test_s12_eksik_yontem_baslangic_ve_hesaptan_once_reddedilir(
 
 def test_s12_uyelikten_cikan_hissenin_acik_islemi_kaybolmaz(tmp_path, monkeypatch):
     from copy import deepcopy
+    from tansu import deneme
 
     depo, m, _ = s12_sinyalli(tmp_path, monkeypatch)
     asil = veri.veri_hazirla
+    ust = depo.deneme_oku(m.deneme_id)
+    test_donemleri = {
+        (b["baslangic"].isoformat(), b["bitis"].isoformat()) for b in ust["donemler"]
+    }
+    test_istekleri = []
 
     def uyelik(istek):
         return dict(
@@ -3634,6 +3728,8 @@ def test_s12_uyelikten_cikan_hissenin_acik_islemi_kaybolmaz(tmp_path, monkeypatc
         )
 
     def hazirla(istek, *a):
+        if (istek.baslangic, istek.bitis) in test_donemleri:
+            test_istekleri.append((istek.baslangic, tuple(istek.semboller)))
         p = asil(istek, *a)
         p["piyasa"] = [
             dict(deepcopy(r), sembol=s) for s in istek.semboller for r in p["piyasa"]
@@ -3664,6 +3760,81 @@ def test_s12_uyelikten_cikan_hissenin_acik_islemi_kaybolmaz(tmp_path, monkeypatc
         kontroller[-1]["durum"]["islemler"][0]["pozisyon"]["cikis_tarih"]
         == "2022-07-04"
     )
+
+    assert ("2022-07-01", ("DIGER", "TEST")) in test_istekleri
+    assert all(
+        "TEST" not in semboller
+        for bas, semboller in test_istekleri
+        if bas >= "2022-10-01"
+    ), "Boş eski üyenin geçmişi yeni fiyat veya ısınma isteği doğurmamalı"
+    olaylar = deneme.PilotKayit(depo.yol).oku()
+    baslangic = next(
+        o for o in olaylar if o["kayit_id"] == r["baslangic_makbuzu"].olay_id
+    )
+    for tur in ("aktif_kontrol_eksik", "eski_kontrol", "yetim_kontrol"):
+        bolum = "2022Q2" if tur == "aktif_kontrol_eksik" else "2022Q4"
+        hedef = next(
+            o
+            for o in olaylar
+            if o.get("sonuc_turu") == "ileri_v1" and o["bolum_id"] == bolum
+        )
+        onceki = olaylar[: olaylar.index(hedef)]
+        yanlis = deepcopy(hedef["kayit"])
+        if tur == "aktif_kontrol_eksik":
+            onceki = [
+                o
+                for o in onceki
+                if not (
+                    o["kayit_turu"] == "ileri_kontrol"
+                    and o["bolum_id"] == bolum
+                    and o["sembol"] == "TEST"
+                )
+            ]
+            yanlis.update(
+                deneme._ileri_bolum_kaniti(
+                    onceki, ust, r["baslangic_makbuzu"], hedef["kayit"]["donem"]
+                )
+            )
+        else:
+            ref = next(x for x in yanlis["kontrol_refleri"] if x["sembol"] == "TEST")
+            assert ref["kayit_ref"] == kontroller[-1]["kayit_id"]
+            ref["kayit_ref"] = (
+                kontroller[0]["kayit_id"]
+                if tur == "eski_kontrol"
+                else "kayitsiz-kontrol"
+            )
+        yol = tmp_path / (tur + ".jsonl")
+        baytlar = b"".join(deneme.kanonik(o) + b"\n" for o in onceki)
+        yol.write_bytes(baytlar)
+        kosu = deneme._Kosu(
+            deneme.PilotKayit(yol), r["baslangic_makbuzu"], ust, baslangic
+        )
+        with pytest.raises(deneme.PilotHatasi):
+            kosu.ileri_sonucu_kaydet(kayit=yanlis)
+        assert yol.read_bytes() == baytlar
+        yol.write_bytes(baytlar + deneme.kanonik(hedef | dict(kayit=yanlis)) + b"\n")
+        with pytest.raises(deneme.PilotHatasi):
+            deneme.PilotKayit(yol).oku()
+    kaynak = dict(
+        deneme_id=m.deneme_id,
+        kosu_id=r["kosu_id"],
+        sonuc_ref=r["sonuc_makbuzu"].olay_id,
+        bitis_ref=r["bitis_makbuzu"].olay_id,
+        icerik_ozeti="00" * 32,
+    )
+    kabul = deneme._mc_kaynagi(depo.oku(), kaynak, ozet_denetle=False)
+    assert kabul["nufus"][0]["cikis_tarih"] == "2022-07-04"
+    assert any(
+        o["sembol"] == "TEST"
+        and o["bolum_id"] == "2022Q3"
+        and o["durum"]["son_tarih"] == "2022-07-05"
+        for o in kabul["kontroller"]
+    )
+    boz = deepcopy(depo.oku())
+    birlesik = next(o for o in boz if o["kayit_id"] == kaynak["sonuc_ref"])
+    birlesik["kayit"]["giris_kohort_sayimlari"]["2022Q2"]["TEST"]["kapali_islem"] += 1
+    with pytest.raises(deneme.PilotHatasi):
+        deneme._mc_kaynagi(boz, kaynak, ozet_denetle=False)
 
 
 @pytest.mark.parametrize("eksik", ["isinma", "limit_kaniti"])
@@ -4198,6 +4369,8 @@ def test_pay_kimligi_kayitli_hata_hesaba_ve_onbellege_girmez(
 def test_s12_pay_kimligi_secim_sinyal_ve_tasinan_durumda_ayni_paydir(
     tmp_path, monkeypatch
 ):
+    from copy import deepcopy
+    from tansu import deneme
     from tests.test_kayit import pilot_deneme
     from tests.test_veri import pay_kimlikli_goruntu, satir
 
@@ -4306,3 +4479,43 @@ def test_s12_pay_kimligi_secim_sinyal_ve_tasinan_durumda_ayni_paydir(
     assert q1["pozisyon"]["risk_girdisi"]["sinyal_id"] == sinyal["kayit_id"]
     assert q2["pozisyon"]["risk_girdisi"]["sinyal_id"] == sinyal["kayit_id"]
     assert kontroller[1]["onceki_ref"] == kontroller[0]["kayit_id"]
+
+    # Gereken pay kümesi çağıranın eksilttiği güncel kayıtlardan türetilemez.
+    bolum = next(
+        o
+        for o in olaylar
+        if o.get("sonuc_turu") == "ileri_v1" and o["kayit"]["bolum_id"] == "2022Q1"
+    )
+    eksik = next(
+        o
+        for o in olaylar
+        if o["kayit_turu"] == "ileri_kontrol"
+        and o["bolum_id"] == "2022Q1"
+        and o["sembol"] == "AKBNK"
+    )
+    onceki = [o for o in olaylar[: olaylar.index(bolum)] if o is not eksik]
+    yanlis = deepcopy(bolum)
+    k = yanlis["kayit"]
+    k["kontrol_refleri"] = [r for r in k["kontrol_refleri"] if r["sembol"] != "AKBNK"]
+    del k["sayimlar"]["AKBNK"]
+    k["uyarilar"] = [r for r in k["uyarilar"] if r["sembol"] != "AKBNK"]
+    k["olaylar"] = [r for r in k["olaylar"] if r["sembol"] != "AKBNK"]
+    yol = tmp_path / "eksik-pay-kontrolu.jsonl"
+    onceki_bayt = b"".join(deneme.kanonik(o) + b"\n" for o in onceki)
+    yol.write_bytes(onceki_bayt)
+    baslangic = next(
+        o for o in onceki if o["kayit_id"] == sonuc["baslangic_makbuzu"].olay_id
+    )
+    kosu = deneme._Kosu(
+        deneme.PilotKayit(yol),
+        sonuc["baslangic_makbuzu"],
+        depo.deneme_oku(m.deneme_id),
+        baslangic,
+    )
+    with pytest.raises(deneme.PilotHatasi, match="başarı durumu"):
+        kosu.ileri_sonucu_kaydet(kayit=k)
+    assert yol.read_bytes() == onceki_bayt
+    yol.write_bytes(onceki_bayt + deneme.kanonik(yanlis) + b"\n")
+    with pytest.raises(deneme.PilotHatasi, match="Bozuk tam satır") as hata:
+        deneme.PilotKayit(yol).oku()
+    assert "başarı durumu" in str(hata.value.__cause__)
