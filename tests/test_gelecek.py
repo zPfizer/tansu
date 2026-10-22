@@ -38,8 +38,9 @@ KESIM = [
 BAS = "2013-12-02"
 
 
+@pytest.mark.parametrize("secim", [{}, {"kilit_politikasi": "ham_aralik_v1"}])
 @pytest.mark.parametrize("kapanis", [100.0, 101.00001])
-def test_s09_gelecek_mumlar_onceki_dolum_ve_izi_degistirmez(kapanis):
+def test_s09_gelecek_mumlar_onceki_dolum_ve_izi_degistirmez(kapanis, secim):
     from tests.test_motor import r, s09_istek, s09_mumlar
 
     m = s09_mumlar(
@@ -52,7 +53,9 @@ def test_s09_gelecek_mumlar_onceki_dolum_ve_izi_degistirmez(kapanis):
     )
     m.at[m.index[1], "kapanis"] = kapanis
     sinyaller = {m.index[0]: "sinyal-1"}
-    ilk = motor.tara(m.iloc[:3], sinyaller, yurutme=s09_istek())
+    if secim:
+        m = m.drop(columns=["tavan", "taban", "limit_kaniti"])
+    ilk = motor.tara(m.iloc[:3], sinyaller, yurutme=s09_istek(**secim))
     m.loc[m.index[3], ["aof", "yuksek", "dusuk", "kapanis"]] = [1000, 1100, 900, 1000]
     m.loc[m.index[3], ["ham_yuksek", "ham_dusuk", "tavan", "taban"]] = [
         1100,
@@ -60,7 +63,9 @@ def test_s09_gelecek_mumlar_onceki_dolum_ve_izi_degistirmez(kapanis):
         1200,
         800,
     ]
-    son = motor.tara(m, sinyaller, yurutme=s09_istek())
+    if secim:
+        m = m.drop(columns=["tavan", "taban"])
+    son = motor.tara(m, sinyaller, yurutme=s09_istek(**secim))
     assert son["islemler"] == ilk["islemler"]
     assert son["iz"][:3] == ilk["iz"]
     assert son["islemler"][0]["sonuc"]["net_sonuc"] == pytest.approx(-304.2525)

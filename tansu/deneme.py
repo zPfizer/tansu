@@ -304,6 +304,8 @@ def _cocuk_sonuc_baglari(olaylar, kosu_id, referanslar):
 
 def _arama_yontemi(ust, politika):
     """TASARIM 5.15 S11: kayıt sınırında yalnız dondurulmuş yöntem geçerlidir."""
+    from tansu.tansusinama import _kayitli_hucre_yontemi
+
     y = ust["yontem_ayarlari"]
     beklenen = dict(
         yontem="kayitli_izgara_v1",
@@ -311,13 +313,7 @@ def _arama_yontemi(ust, politika):
         secim_politikasi="genis_bolge_net_r_v1",
         olcu_politikasi="bagimsiz_olcu_v1",
         eksenler=y.get("eksenler"),
-        hucre_yontemi=dict(
-            yontem="kayitli_donem_v1",
-            tekrar=0,
-            yurutme_surumu="bagimsiz_islem_v1",
-            fiyat_politikasi="aof_v1",
-            muhasebe_politikasi="tani_referans_v1",
-        ),
+        hucre_yontemi=_kayitli_hucre_yontemi(y.get("hucre_yontemi")),
     )
     if kanonik(y) != kanonik(beklenen) or politika != y["secim_politikasi"]:
         raise PilotHatasi("Arama yöntemi veya seçim politikası uyuşmuyor.")

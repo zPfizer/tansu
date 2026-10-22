@@ -3632,3 +3632,89 @@ def test_s12_pay_kimligi_sakli_kaynak_ozeti_tek_basina_yetki_vermez(
         assert "Bozuk tam satır" in str(hata)
         assert "onaylı kaynak özeti" in str(hata.__cause__)
     assert kabul_edilen == [], "Çağıranın tutarlı özeti kaynağa yetki veremez"
+
+
+def test_s12_ham_aralik_politikasi_kontrol_ekleme_ve_taze_okumaya_baglidir(
+    tmp_path, monkeypatch
+):
+    from copy import deepcopy
+    from tansu import motor
+    from tests.test_tansusinama import s12_sinyalli, s12_calistir
+
+    depo, m, _ = s12_sinyalli(
+        tmp_path, monkeypatch, kilit_politikasi="ham_aralik_v1", limit=False
+    )
+    asil = pilot._Kosu.ileri_kontrol_kaydet
+    reddedilen = []
+
+    def politikasiz(durum):
+        d = deepcopy(durum)
+        d["yurutme"].pop("kilit_politikasi")
+        d.pop("butunluk")
+        return d | dict(butunluk=motor._iz_kodu(d))
+
+    def kontrol(kosu, *, bolum_id, sembol, durum, onceki_ref):
+        once = depo.yol.read_bytes()
+        with pytest.raises(ValueError, match="uyuşmuyor"):
+            asil(
+                kosu,
+                bolum_id=bolum_id,
+                sembol=sembol,
+                durum=politikasiz(durum),
+                onceki_ref=onceki_ref,
+            )
+        assert depo.yol.read_bytes() == once
+        reddedilen.append(bolum_id)
+        return asil(
+            kosu,
+            bolum_id=bolum_id,
+            sembol=sembol,
+            durum=durum,
+            onceki_ref=onceki_ref,
+        )
+
+    monkeypatch.setattr(pilot._Kosu, "ileri_kontrol_kaydet", kontrol)
+    r = s12_calistir(depo, m, tmp_path)
+    assert r["durum"] == "tamamlandi"
+    assert len(reddedilen) == 16
+    olaylar = pilot.PilotKayit(depo.yol).oku()
+    ust = depo.deneme_oku(m.deneme_id)
+    for o in olaylar:
+        if o["kayit_turu"] == "deneme" and o["ust_deneme_id"] == m.deneme_id:
+            assert (
+                o["yontem_ayarlari"]["hucre_yontemi"]
+                == ust["yontem_ayarlari"]["hucre_yontemi"]
+            )
+    for o in olaylar:
+        if o["kayit_turu"] == "ileri_kontrol":
+            o["durum"] = politikasiz(o["durum"])
+            break
+    yol = tmp_path / "politikasiz-kontrol.jsonl"
+    yol.write_bytes(b"".join(pilot.kanonik(o) + b"\n" for o in olaylar))
+    with pytest.raises(pilot.PilotHatasi, match="Bozuk tam satır") as hata:
+        pilot.PilotKayit(yol).oku()
+    assert "önceki durum veya yürütme bağı uyuşmuyor" in str(hata.value.__cause__)
+
+
+def test_kilit_politikasi_yeni_ayar_ozeti_eski_kaydi_degistirmez(tmp_path, monkeypatch):
+    from copy import deepcopy
+    from tests.test_tansusinama import s10_kayitli, s10_revizyon
+
+    depo, m, _ = s10_kayitli(tmp_path, monkeypatch)
+    eski = deepcopy(depo.deneme_oku(m.deneme_id))
+    assert "kilit_politikasi" not in eski["yontem_ayarlari"]
+    once = depo.yol.read_bytes()
+    yeni = s10_revizyon(
+        depo,
+        m,
+        yontem_ayarlari=eski["yontem_ayarlari"]
+        | dict(kilit_politikasi="ham_aralik_v1"),
+    )
+    assert yeni.ayar_ozeti != m.ayar_ozeti
+    assert depo.yol.read_bytes().startswith(once)
+    taze = pilot.PilotKayit(depo.yol)
+    assert taze.deneme_oku(m.deneme_id) == eski
+    assert (
+        taze.deneme_oku(yeni.deneme_id)["yontem_ayarlari"]["kilit_politikasi"]
+        == "ham_aralik_v1"
+    )

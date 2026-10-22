@@ -377,6 +377,9 @@ def _yurutme_dogrula(y):
     ):
         if y.get(alan) != deger:
             raise ValueError(f"bilinmeyen yürütme politikası: {alan}")
+    # TASARIM 5.15 #176: yalnız açık sürüm; eski kimliğe varsayılan ekleme.
+    if "kilit_politikasi" in y and y["kilit_politikasi"] != "ham_aralik_v1":
+        raise ValueError("bilinmeyen yürütme politikası: kilit_politikasi")
     if y.get("aile") == "cift_rotasyonu":
         raise ValueError("risk_dayanagi_eksik")
     if y.get("aile") != "ema_sikismasi":
@@ -447,7 +450,7 @@ def _fiyat_engeli(m):
     return None
 
 
-def _limitler(m):
+def _limitler(m, kilit_politikasi=None):
     bilinen = (
         isinstance(m.get("limit_kaniti"), str)
         and bool(m["limit_kaniti"].strip())
@@ -457,7 +460,14 @@ def _limitler(m):
         )
     )
     if not bilinen:
-        return False, False, False
+        # TASARIM 5.15 #176: aralık kilidi dışlar; sayısal limit üretmez.
+        kilit_cozuldu = (
+            kilit_politikasi == "ham_aralik_v1"
+            and all(m.get(k) is None for k in ("tavan", "taban", "limit_kaniti"))
+            and all(_pozitif_sayi(m.get(k)) for k in ("ham_yuksek", "ham_dusuk"))
+            and m["ham_yuksek"] > m["ham_dusuk"]
+        )
+        return kilit_cozuldu, False, False
     if not m["taban"] <= m["ham_dusuk"] <= m["ham_yuksek"] <= m["tavan"]:
         raise ValueError("ham fiyat veya limit sırası geçersiz")
     return (
@@ -489,8 +499,8 @@ def _yurut_gun(d, p, m):
     engel = _fiyat_engeli(m)
     if engel:
         return _engelli_gun(d, p, t, engel)
-    bilinen, ust, alt = _limitler(m)
-    if p.durum == "bekliyor" and (not bilinen or ust):
+    kilit_cozuldu, ust, alt = _limitler(m, d["yurutme"].get("kilit_politikasi"))
+    if p.durum == "bekliyor" and (not kilit_cozuldu or ust):
         _olay(
             d,
             t,
@@ -501,9 +511,9 @@ def _yurut_gun(d, p, m):
         return None
     # Değerleme, dolum kanıtına bağlı değildir; yalnız temiz işlem fiyatını taşır.
     d["degerleme"] = dict(tarih=t, fiyat=m["kapanis"])
-    if not bilinen:
+    if not kilit_cozuldu:
         _olay(d, t, "limit_bilinmiyor")
-    m = m | {"kilit_tavan": bool(ust), "kilit_taban": bool(alt or not bilinen)}
+    m = m | {"kilit_tavan": bool(ust), "kilit_taban": bool(alt or not kilit_cozuldu)}
     karar, eksik = _karar_gostergeleri(p, m)
     if eksik:
         _olay(d, t, "gosterge_eksik")
@@ -700,6 +710,17 @@ def islem_adimi(
     """TASARIM 5.15 S09: saf, JSON ile geri okunabilir tek hisse geçişi."""
     y = _duz(yurutme)
     _yurutme_dogrula(y)
+    if y.get("kilit_politikasi") == "ham_aralik_v1":
+        # _duz sonlu olmayanı None yapmadan, bozuk kanıtın yok sayılmasını engelle.
+        for alan in ("tavan", "taban", "limit_kaniti"):
+            deger = mum.get(alan)
+            if deger is None:
+                continue
+            gecerli = _pozitif_sayi(deger)
+            if alan == "limit_kaniti":
+                gecerli = isinstance(deger, str) and bool(deger.strip())
+            if not gecerli:
+                raise ValueError("geçersiz sayısal limit girdisi")
     m = _mum_dogrula(mum, sinyal)
     tarih = m["tarih"]
     girdi = _iz_kodu([m, sinyal, _duz(asdict(ayar)), _duz(kutu_alt), _duz(hedef)])

@@ -52,9 +52,14 @@ def s09_mumlar(satirlar=None):
     return df
 
 
-def test_s09_sonraki_seansta_bagimsiz_risk_adediyle_girer():
+@pytest.mark.parametrize("kilit_politikasi", [None, "ham_aralik_v1"])
+def test_s09_sonraki_seansta_bagimsiz_risk_adediyle_girer(kilit_politikasi):
     m = s09_mumlar()
-    sonuc = motor.tara(m, {m.index[0]: "sinyal-1"}, yurutme=s09_istek())
+    secim = {}
+    if kilit_politikasi is not None:
+        secim["kilit_politikasi"] = kilit_politikasi
+        m = m.drop(columns=["tavan", "taban", "limit_kaniti"])
+    sonuc = motor.tara(m, {m.index[0]: "sinyal-1"}, yurutme=s09_istek(**secim))
     assert [(d["yon"], d["adet"], d["fiyat"]) for d in sonuc["dolumlar"]] == [
         ("alis", 15, 100)
     ]
@@ -146,13 +151,15 @@ def test_s09_duzeltilmis_fiyat_yuvarlama_siniri(alan, fiyat, gecerli):
     assert son["degerleme"]["fiyat"] == (fiyat if alan == "kapanis" else 100.0)
 
 
-def test_s09_ham_limit_sirasina_yuvarlama_payi_uygulanmaz():
+@pytest.mark.parametrize("secim", [{}, {"kilit_politikasi": "ham_aralik_v1"}])
+def test_s09_ham_limit_sirasina_yuvarlama_payi_uygulanmaz(secim):
     m = s09_mumlar()
     m.at[m.index[1], "tavan"] = 100.9999
     with pytest.raises(ValueError, match="ham fiyat veya limit sırası geçersiz"):
-        motor.tara(m, {m.index[0]: "sinyal-1"}, yurutme=s09_istek())
+        motor.tara(m, {m.index[0]: "sinyal-1"}, yurutme=s09_istek(**secim))
 
 
+@pytest.mark.parametrize("secim", [{}, {"kilit_politikasi": "ham_aralik_v1"}])
 @pytest.mark.parametrize(
     "nominal, miktarlar, fiyatlar, masraf, net",
     [
@@ -160,7 +167,9 @@ def test_s09_ham_limit_sirasina_yuvarlama_payi_uygulanmaz():
         (600, [1, 1], [100, 80], 0.2835, -20.2835),
     ],
 )
-def test_s09_yari_adet_asagi_kalan_korunur(nominal, miktarlar, fiyatlar, masraf, net):
+def test_s09_yari_adet_asagi_kalan_korunur(
+    nominal, miktarlar, fiyatlar, masraf, net, secim
+):
     m = s09_mumlar(
         [
             r(*STD),
@@ -170,11 +179,13 @@ def test_s09_yari_adet_asagi_kalan_korunur(nominal, miktarlar, fiyatlar, masraf,
             r(80, 82, 79, 81),
         ]
     )
+    if secim:
+        m = m.drop(columns=["tavan", "taban", "limit_kaniti"])
     sonuc = motor.tara(
         m,
         {m.index[0]: "sinyal-1"},
         replace(aileler.Parametre(), cikis="atr3"),
-        yurutme=s09_istek(nominal_tutar=nominal),
+        yurutme=s09_istek(nominal_tutar=nominal, **secim),
     )
     islem = sonuc["islemler"][0]
     assert [d["adet"] for d in islem["dolumlar"]] == miktarlar
@@ -207,12 +218,14 @@ def test_s09_yari_adet_asagi_kalan_korunur(nominal, miktarlar, fiyatlar, masraf,
         ("islem_yok", "islem_yok"),
     ],
 )
-def test_s09_giris_engeli_dolum_uretmez(engel, neden):
+@pytest.mark.parametrize("secim", [{}, {"kilit_politikasi": "ham_aralik_v1"}])
+def test_s09_giris_engeli_dolum_uretmez(engel, neden, secim):
     m = s09_mumlar()
     t = m.index[1]
     if engel == "ust":
         m.loc[t, ["ham_yuksek", "ham_dusuk", "tavan"]] = 110
     elif engel == "bilinmiyor":
+        m["limit_kaniti"] = m["limit_kaniti"].astype(object)
         m.loc[t, "limit_kaniti"] = None
     elif engel == "gecersiz":
         m.loc[t, "aof"] = float("inf")
@@ -224,7 +237,7 @@ def test_s09_giris_engeli_dolum_uretmez(engel, neden):
         m.loc[t, "karantina"] = True
     else:
         m.loc[t, "islem"] = False
-    sonuc = motor.tara(m, {m.index[0]: "sinyal-1"}, yurutme=s09_istek())
+    sonuc = motor.tara(m, {m.index[0]: "sinyal-1"}, yurutme=s09_istek(**secim))
     assert sonuc["dolumlar"] == []
     assert sonuc["pozisyon"] is None
     assert sonuc["retler"][0]["neden"] == neden
@@ -1833,3 +1846,74 @@ def test_eski_motor_pay_kimligi_paketini_acikca_reddeder():
                 uyelik={}, referans=dict(pay_kimligi=dict(surum="pay_kimligi_v1"))
             ),
         )
+
+
+@pytest.mark.parametrize(
+    "girdi,dolar",
+    [
+        ({}, True),
+        ({"ham_yuksek": 100.0, "ham_dusuk": 100.0}, False),
+        ({"ham_yuksek": None}, False),
+        ({"ham_yuksek": float("inf")}, False),
+        ({"ham_dusuk": 0.0}, False),
+        ({"ham_dusuk": -1.0}, False),
+        ({"ham_yuksek": True}, False),
+        ({"ham_yuksek": 98.0}, False),
+        ({"tavan": 200.0}, False),
+        ({"taban": 50.0}, False),
+        ({"limit_kaniti": "eksik-sinir"}, False),
+        ({"tavan": 200.0, "taban": 50.0}, False),
+        (
+            {
+                "tavan": 200.0,
+                "taban": 50.0,
+                "limit_kaniti": "bilinen",
+                "ham_yuksek": 100.0,
+                "ham_dusuk": 100.0,
+            },
+            True,
+        ),
+    ],
+)
+def test_s09_ham_aralik_yalniz_tamamen_yok_sayisal_kanitta_kilidi_dislar(girdi, dolar):
+    m = s09_mumlar().drop(columns=["tavan", "taban", "limit_kaniti"])
+    y = s09_istek(kilit_politikasi="ham_aralik_v1")
+    ilk = motor.tara(m.iloc[:1], {m.index[0]: "sinyal-1"}, yurutme=y)
+    mum = dict(m.iloc[1]) | dict(tarih=m.index[1]) | girdi
+    once = dict(mum)
+    son = motor.islem_adimi(ilk, mum, yurutme=y)
+    assert bool(son["dolumlar"]) is dolar
+    assert mum == once
+    assert son["yurutme"] == y
+    if not dolar:
+        assert son["retler"][-1]["neden"] == "limit_bilinmiyor"
+    with pytest.raises(ValueError, match="uyuşmuyor"):
+        motor.islem_adimi(ilk, mum, yurutme=s09_istek())
+
+
+@pytest.mark.parametrize(
+    "girdi",
+    [
+        {"tavan": float("nan")},
+        {"taban": float("inf")},
+        {"tavan": 0},
+        {"taban": -1},
+        {"limit_kaniti": ""},
+        {"limit_kaniti": False},
+        {"tavan": 100.0, "taban": 50.0, "limit_kaniti": "bilinen"},
+    ],
+)
+def test_s09_ham_aralik_bozuk_sayisal_kaniti_atlamaz(girdi):
+    m = s09_mumlar().drop(columns=["tavan", "taban", "limit_kaniti"])
+    with pytest.raises(ValueError, match="limit"):
+        motor.tara(
+            m.assign(**girdi),
+            {m.index[0]: "sinyal-1"},
+            yurutme=s09_istek(kilit_politikasi="ham_aralik_v1"),
+        )
+
+
+@pytest.mark.parametrize("politika", [None, "", "baska_v1", False])
+def test_s09_bilinmeyen_kilit_politikasi_reddedilir(politika):
+    with pytest.raises(ValueError, match="kilit_politikasi"):
+        motor.tara(s09_mumlar(), {}, yurutme=s09_istek(kilit_politikasi=politika))

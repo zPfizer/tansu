@@ -1223,9 +1223,27 @@ Başka sembolün işlemi ortak nakit, slot veya portföy sınırı nedeniyle bu 
 Gün girdisi düzeltilmiş işlem fiyatları/göstergeler yanında ham yüksek/düşük,
 üst/alt limit ve limit kanıtını taşır. Eski kapanışa yakınlık bayrağı tam gün kilit kanıtı
 olarak kullanılmaz. Kanıt yoksa limit bilinmiyor kalır; o satırda kesin dolum üretilmez.
+Bunun tek istisnası aşağıdaki açık kayıtlı `ham_aralik_v1` kilit politikasıdır.
 Düzeltilmiş AOF ve kapanışın düşük/yüksek sınırında §5.13'ün mevcut yuvarlama payı uygulanır;
 girdi fiyatları değiştirilmez. Pay içi/dışı sınırlar ve girdi değişmezliği `tests/test_motor.py` ile denetlenir.
 Bilinen limitte tam gün kilit denetimi önceki dolum sözleşmesindeki ham eşitlikle yapılır.
+
+Levent'in 22.10.2026 onayı (#176): S10 hücre yönteminde ve S11/S12'nin `hucre_yontemi`
+kaydında isteğe bağlı `kilit_politikasi=ham_aralik_v1` seçilebilir. Seçenek yoksa eski
+sözlük, katı kanıt koşulu ve geçmiş okuma korunur; boş varsayılan alan eklenmez.
+Gerekçe: sonlu pozitif ham yüksek > düşük, herhangi bir sayısal sınır için iki Q74
+`yüksek = düşük = limit` eşitliğini de dışlar. Yalnız üst/alt limit ve sayısal limit
+kanıtı tamamen yoksa bu aralık, tam gün kilit bulunmadığının türetilmiş kanıtıdır.
+Sayısal limitler bilinmiyor kalır; limit veya `limit_kaniti` üretilmez. Bilinen
+limitlerin ham sıra ve eşitlik denetimleri önce gelir. Kısmi, bozuk veya çelişkili
+limit girdisi aralık yoluna düşmez. Sayısal kanıt yokken tek fiyatlı, eksik, sonsuz,
+pozitif olmayan veya ters ham aralık bu istisnayla dolum izni kazanmaz. Karantina ve diğer dolum engelleri korunur.
+Bu istisna giriş, stop, tam/kısmi çıkış ve taşınan durumda aynı sahipte uygulanır;
+AOF modeli, risk, masraf ve zamanlama değişmez. Günlük çubuk gerçek dolumu kanıtlamaz.
+Seçim yeni denemenin yöntem/ayar özetine ve yürütme kimliğine, ham değerler mevcut gün
+girdi özetine bağlıdır; farklı politikayla durum devamı reddedilir. E1 fiyat/kaynak
+kimliği ve hazırlık önbelleği değişmez. `tests/test_motor.py`, `tests/test_tansusinama.py`,
+`tests/test_kayit.py` ve `tests/test_gelecek.py` bu sınırları ve eski yolu denetler.
 Kapanış sinyali aynı güne doldurulmaz. Giriş sonraki seansın AOF modelini kullanır;
 giriş gününde tavan kilidi sinyali düşürür. Stopun önceliği ve aynı gün fiyat sırası eski
 motorun açık modeliyle korunur: stop dolumu `min(stop, AOF)` olur. Stopun önceliği
@@ -1741,7 +1759,7 @@ kesiminden sonraki fiyat ve sonuçların eski seçimi değiştirmemesini sınar.
 #### Dolum, risk ve ölçünün anlamı
 
 - Claude'un kayıtlı **seçenek 2** kararı geçerlidir (18.10; yanıt Q74): ham `yüksek = düşük = tavan` gününde alış dolmaz, giriş sinyali düşer; ham `yüksek = düşük = taban` gününde satış bekler, ilk uygun kilitsiz günde yeniden işlenir. Sonraki fiyat kullanılır; her engel sayılır. B Q49'un açılış eşitliği ekleme önerisi bu kararı değiştirmez. Günlük çubuk gerçek emir kuyruğunu kanıtlamaz. Dayanak: [L5], [T4], [W4], [W5]; `tavan-taban/bulgular.md`, yanıt Q74.
-- Limit ve adım ham fiyat ölçeğindedir. 2021–2025 için olağan Yıldız/Ana paylarında ±%10, adımda 06.11.2023 değişikliği kullanılır; üst limit aşağı, alt limit yukarı izinli adıma yuvarlanır. Menkul/gün istisnası, baz fiyat veya tarihli kural kanıtı yoksa bayrak bilinmiyor kalır; dolum kesinmiş gibi yazılmaz. Tablo sahibi §5.1'dir. Dayanak: [W5]; `fiyat-limiti/arastirma.md`, B1–B5.
+- Limit ve adım ham fiyat ölçeğindedir. 2021–2025 için olağan Yıldız/Ana paylarında ±%10, adımda 06.11.2023 değişikliği kullanılır; üst limit aşağı, alt limit yukarı izinli adıma yuvarlanır. Menkul/gün istisnası, baz fiyat veya tarihli kural kanıtı yoksa bayrak bilinmiyor kalır; dolum kesinmiş gibi yazılmaz. Yukarıdaki açık `ham_aralik_v1` seçimi yalnız tam gün eşitlik kilidini dışlar; sayısal limit kanıtı yerine geçmez. Tablo sahibi §5.1'dir. Dayanak: [W5]; `fiyat-limiti/arastirma.md`, B1–B5.
 - Kapanıştan üretilen karar o kapanışa geriye dönük doldurulmaz. Mevcut AOF yaklaşımı açık dolum politikası olarak korunur; D §1'in gerçek açılış önerisi İş Yatırım'da açılış varmış gibi uygulanmaz. Gerçek açılış isteyen varyantta alan yoksa ölçülemedi yazılır. Dayanak: [W4]; A Q23, D §1 ve §4'teki veri kaynağı sınırı.
 - Komisyon = dolum tutarı × 0,0015; BSMV = komisyon × 0,05. Toplam bu yönde 0,001575 × tutardır. Kısmi çıkış dahil her dolum ayrı hesaplanır; alış ve satış tutarı farklı olabilir. Kayma komisyona gömülmez. Dayanak: [L6]; C giriş, D §1, `mc-wf/arastirma.md` muhasebe sınırı.
 - Her işlem aynı varsayımsal referans tutarla normalleştirilir; önceki kâr referansı büyütmez. %2 planlanan risk, gerçekleşen kayba tavan garantisi değildir. İlk risk sonradan yükselen stopla değiştirilmez. Dayanak: [L1], [L2], [T2], [T3], [W6]; D §1.
