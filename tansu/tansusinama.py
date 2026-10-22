@@ -967,9 +967,20 @@ def _kayitli_istek(deneme):
     _kayitli_takvim(deneme["veri_ayarlari"].get("takvim", {}))
 
 
-def _yurutme_ayarlari(deneme):
-    if deneme["yontem_ayarlari"] != KAYITLI_YONTEM:
+def _kayitli_hucre_yontemi(yontem):
+    """TASARIM 5.15 #176: isteğe bağlı kilit seçimi eski sözlüğe eklenmez."""
+    beklenen = KAYITLI_YONTEM
+    if isinstance(yontem, dict) and "kilit_politikasi" in yontem:
+        beklenen = KAYITLI_YONTEM | dict(kilit_politikasi="ham_aralik_v1")
+    if not isinstance(yontem, dict) or deneme_.kanonik(yontem) != deneme_.kanonik(
+        beklenen
+    ):
         raise deneme_.PilotHatasi("Desteklenmeyen yürütme ayarı.")
+    return beklenen
+
+
+def _yurutme_ayarlari(deneme):
+    _kayitli_hucre_yontemi(deneme["yontem_ayarlari"])
     if deneme["masraf_ayarlari"] != {"masraf_surumu": islem_riski.MASRAF_SURUMU}:
         raise deneme_.PilotHatasi("Desteklenmeyen masraf ayarı.")
     if deneme["strateji"]["aile"] != katalog.AILE:
@@ -1260,18 +1271,28 @@ def _donem_kapsami(paket, gunler, uyelik, semboller, bas, son):
         raise ValueError("E1 gerekli tarihli üyeleri içermiyor.")
 
 
-def _s10_mumlar(paket, sembol, hesap):
+def _s10_mumlar(paket, sembol, hesap, *, kilit_politikasi=None):
     m = hesap["mumlar"].copy()
     m["onceki_rsi"] = m["rsi"].ffill().shift(1)
     m["onceki_dusuk"] = m["dusuk"].ffill().shift(1)
     satirlar = [r for r in paket["piyasa"] if r["sembol"] == sembol]
     for alan in ("ham_yuksek", "ham_dusuk", "tavan", "taban", "limit_kaniti"):
-        m[alan] = [
+        degerler = [
             r.get(alan, {}).get("deger")
             if isinstance(r.get(alan, {}), dict)
             else r.get(alan)
             for r in satirlar
         ]
+        # TASARIM 5.15 #176: yalnız açık politikada None ile NaN ayrılır.
+        # Seçenek yokken eski pandas gösterimi ve gün/durum özetleri korunur.
+        if kilit_politikasi == "ham_aralik_v1" and alan in (
+            "tavan",
+            "taban",
+            "limit_kaniti",
+        ):
+            m[alan] = pd.Series(degerler, index=m.index, dtype=object)
+        else:
+            m[alan] = degerler
     m["islem"] = [r["islem"] for r in satirlar]
     m["karantina"] = ["karantina" in r["kalite_bayraklari"] for r in satirlar]
     return m
@@ -1295,7 +1316,12 @@ def _donem_sembolu(deneme, sonuc, paket, sembol, hesap, strateji, p):
             sembol=sembol,
             tarih=ilk_uye,
         )
-    m = _s10_mumlar(paket, sembol, hesap)
+    m = _s10_mumlar(
+        paket,
+        sembol,
+        hesap,
+        kilit_politikasi=deneme["yontem_ayarlari"].get("kilit_politikasi"),
+    )
     sinyaller = _donem_sinyalleri(deneme, sonuc, paket, sembol, hesap, m, gunler)
     yurutme = dict(
         surum="bagimsiz_islem_v1",
@@ -1310,6 +1336,11 @@ def _donem_sembolu(deneme, sonuc, paket, sembol, hesap, strateji, p):
         risk_surumu=deneme["risk_ayarlari"]["risk_surumu"],
         masraf_surumu=deneme["masraf_ayarlari"]["masraf_surumu"],
         fiyat_politikasi=deneme["yontem_ayarlari"]["fiyat_politikasi"],
+        **{
+            k: deneme["yontem_ayarlari"][k]
+            for k in ("kilit_politikasi",)
+            if k in deneme["yontem_ayarlari"]
+        },
         strateji_ayar_parmak_izi=strateji.ayar_parmak_izi,
         deneme_ayar_parmak_izi=deneme["ayar_parmak_izi"],
     )
@@ -2107,12 +2138,12 @@ def _ileri_istek(d):
         secim_politikasi="genis_bolge_net_r_v1",
         olcu_politikasi="bagimsiz_olcu_v1",
         eksenler=y.get("eksenler"),
-        hucre_yontemi=KAYITLI_YONTEM,
+        hucre_yontemi=y.get("hucre_yontemi"),
         veri_gorulme_durumu="incelenmis_gecmis",
     )
     if y != beklenen:
         raise deneme_.PilotHatasi("Eksik veya desteklenmeyen WF yöntem kaydı.")
-    _yurutme_ayarlari(d | dict(yontem_ayarlari=KAYITLI_YONTEM))
+    _yurutme_ayarlari(d | dict(yontem_ayarlari=y["hucre_yontemi"]))
     _kayitli_veri_ayarlari(d["veri_ayarlari"])
     _kayitli_takvim(d["veri_ayarlari"].get("takvim", {}))
     _arama_eksenleri(y["eksenler"])
@@ -2167,7 +2198,7 @@ def _ileri_cocuk(depo, d, bolum, h, rol):
         tekrar=0,
         bolum_id=bolum["ad"],
         rol=rol,
-        hucre_yontemi=KAYITLI_YONTEM,
+        hucre_yontemi=d["yontem_ayarlari"]["hucre_yontemi"],
     )
     makbuz = depo.deneme_kaydet(
         strateji,
@@ -2268,7 +2299,14 @@ def _ileri_egitim(depo, cocuk, makbuz, kok, mod, kod, ortam, hazirlik):
         r = _kayitli_sonuc(cocuk, kosu.makbuz.kosu_id, is_id, donem)
         paket = _donem_verisi(cocuk, r, kok, hazirlik)
         if paket is not None:
-            r = _kayitli_donem((cocuk | dict(yontem_ayarlari=KAYITLI_YONTEM), r, paket))
+            r = _kayitli_donem(
+                (
+                    cocuk
+                    | dict(yontem_ayarlari=cocuk["yontem_ayarlari"]["hucre_yontemi"]),
+                    r,
+                    paket,
+                )
+            )
         r = _donem_yaz(kosu, r, [])
         bitis = kosu.bitir(
             durum=r["durum"],
@@ -2424,6 +2462,11 @@ def _ileri_yurutme(d, kosu_id, sembol):
         risk_surumu=d["risk_ayarlari"]["risk_surumu"],
         masraf_surumu=d["masraf_ayarlari"]["masraf_surumu"],
         fiyat_politikasi="aof_v1",
+        **{
+            k: d["yontem_ayarlari"]["hucre_yontemi"][k]
+            for k in ("kilit_politikasi",)
+            if k in d["yontem_ayarlari"]["hucre_yontemi"]
+        },
         strateji_ayar_parmak_izi=s["ayar_parmak_izi"],
         deneme_ayar_parmak_izi=d["ayar_parmak_izi"],
     )
@@ -2475,7 +2518,12 @@ def _ileri_test_sembolu(depo, d, kosu, r, paket, sembol, secim, onceki, uyelik):
     hesap = aileler_.ortak_donem_kurulumu(paket | dict(semboller=[sembol]), strateji)[
         sembol
     ]
-    m = _s10_mumlar(paket, sembol, hesap)
+    m = _s10_mumlar(
+        paket,
+        sembol,
+        hesap,
+        kilit_politikasi=d["yontem_ayarlari"]["hucre_yontemi"].get("kilit_politikasi"),
+    )
     bas, son = r["donem"]["baslangic"].isoformat(), r["donem"]["bitis"].isoformat()
     gunler = [t for t in paket["gunler"] if bas <= t <= son]
     isinma = int(hesap["isinma"].at[pd.Timestamp(gunler[0])])

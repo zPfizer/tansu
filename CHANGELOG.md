@@ -6,6 +6,12 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ## [Yayımlanmamış]
 
+- İsteğe bağlı kilit politikasında eski mum/durum gösterimi, yöntem alan türleri ve desteklenen sayısal skalerlerin kabulü korundu. (#176)
+
+- S10/S11/S12 ve kapsam açıklamalarındaki eksik limit kanıtı ifadeleri, S09'un mevcut `ham_aralik_v1` istisnasına bağlandı. (#176)
+
+- Açık `ham_aralik_v1` kilit politikası, sayısal kanıt tamamen yokken geçerli hareketli ham çubukta tam gün eşitlik kilidini dışlar; tek fiyat, bozuk/kısmi kanıt ve eski kayıtların katı davranışı korunur. (#176)
+
 - İşlem kontrolü, düzeltilmiş AOF ve kapanışta veri kapısının mevcut yuvarlama payını kullanır; fiyatlar ve ham limit denetimi korunur. (#169)
 - Kayıtlı ileri yürümede seçim alanı, sonuç içeriği ve nihai giriş kohortu sayımları aynı kaynak doğrulamasına bağlandı. Tam kontrollerin bitmesi için CI iş süresi 15 dakikadan 30 dakikaya çıkarıldı; testler ve başarı ölçütleri korundu. (#93)
 
