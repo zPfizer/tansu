@@ -6,6 +6,8 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ## [Yayımlanmamış]
 
+- CI testleri, eksiksiz ve çakışmasız iki gruba ayrılır; her grup kendi test kimliklerini çalıştırmadan önce doğrular ve 60 dakikalık süre sınırını korur. (#178)
+
 - Isınma seçimi olmayan eski kayıtlardaki hücre metaverisi korunur; yeni seçimde bozuk veya yanlış yerdeki politika kayıt öncesi reddedilir. (#178)
 
 - Kaynağa ve değişmez görüntüye bağlı açık ısınma seçimi, doğrulanmış doğal 500 gözlem bekleyişini eksik geçmişten ayırır; günlük eşik, tarihli üyeler, WF seçimi ve eski kayıtlar korunur. Yeni kanıt eklemede ve canlı tablosuz geçmiş okumada doğrulanır. (#178)
