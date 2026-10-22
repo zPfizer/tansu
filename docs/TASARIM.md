@@ -1337,8 +1337,9 @@ kesiştirerek düşürmek yasaktır. Üyelik açığı veya gerekli veri kapsam�
 çocuğu hata yapar; bugünkü liste kullanılmaz. İlk ve son takvim gününün tatil olması
 tek başına eksik veri sayılmaz; istenen seans kapsamı kayıtlı takvimle denetlenir.
 Sinyal ve giriş günü üyeliği ayrı kontrol edilir. Üyelikten çıkış açık işlemi kapatmaz.
-E1'in yaklaşık kilit bayrağı doğrulanmış limit kanıtı değildir. Limit kanıtı yoksa
-S09 dolum üretmez; aday ve engelin nedeni sonuçta korunur. Gerekli işlem
+E1'in yaklaşık kilit bayrağı doğrulanmış limit kanıtı değildir. S09'daki açık kayıtlı
+`ham_aralik_v1` istisnası dışında limit kanıtı yoksa S09 dolum üretmez; aday ve engelin
+nedeni sonuçta korunur. Gerekli işlem
 kanıtı eksik çocuk tam başarı sayılmaz; limit kanıtı aşaması ve eksikliği hata
 sonucunda korunur. Gerçekten adaysız dönem ile kanıt yokluğu nedeniyle dolumsuz
 kalan dönem aynı başarılı boş sonuç diye birleştirilmez.
@@ -1597,7 +1598,8 @@ fiyatın önceki dönem ve hücreyi değiştirmemesini denetler. Eski doğrudan 
 çağıranı `tests/test_kabul.py` kapsamda kalır.
 
 Tam dönem getiri kanıtı için tarihli bütün üyelerin fiyatları ve gerekli limit
-kanıtı bulunmalıdır. Bunlar eksikken sonuçlar başarısız/eksik olarak görünür;
+kanıtı bulunmalıdır; S09'daki açık kayıtlı `ham_aralik_v1` istisnası saklıdır.
+Bunlar eksikken sonuçlar başarısız/eksik olarak görünür;
 sıfır işlemden başarılı hesap veya günlük izin türetilmez.
 
 D5 için eski `saglamlik.ema`, `tansusinama.ema_tablolari` ve kayıtlı akış gerçek EMA
@@ -1660,6 +1662,7 @@ E1–E3 hesabından önce yazılıp yeniden okunur. Seçim eğitim kesimini ve s
 tarihini taşır; gerçek UTC makbuz zamanı ayrı kalır, geçmişe tarihlenmez.
 Seçim yoksa `secim_yok` ve gerekçesi yazılır. Eksik eğitim, ısınma, üyelik,
 fiyat, gösterge veya limit kanıtı başarılı boş seçim diye sunulmaz.
+Limit kanıtında S09'daki açık kayıtlı `ham_aralik_v1` istisnası saklıdır.
 
 OOS her sembol için tek sabit üst koşuda ve boş durumla başlar. Sonraki çeyrek
 E3'ün mühürlü durumunu aynen devralır; E4 durumu yeniden mühürlemez. Açık/bekleyen
@@ -1892,7 +1895,8 @@ Görüntüdeki 2021–2025 dizisi 1.250 gözlemdir; iptal edilen 08.02.2023 bu d
 yoktur. Ayrı XU100 dosyası bu dizinin yerine geçirilmez. TRALT'ın ilk gözlemi
 12.02.2010'dur; önceki 29 gerekli gün üretilmez ve istenen ısınma başlangıcı
 ötelenmez. Kod bağı kapsamı kanıtlayabilir; eksik ısınma, kalite veya limit kanıtı
-başarılı işlem ya da tam dönem getirisi sayılmaz. Sağlayıcının bütün düzeltme
+başarılı işlem ya da tam dönem getirisi sayılmaz; limit kanıtında S09'daki açık kayıtlı
+`ham_aralik_v1` istisnası saklıdır. Sağlayıcının bütün düzeltme
 geçmişi ve fiyat sınıfı kökeni bu sınırlı kod zinciriyle kanıtlanmış olmaz.
 
 Motorlar sorumluluk sınırıdır; ayrı servis zorunluluğu değildir. E1–E3 düz veri kayıtlarıyla çalışır;
