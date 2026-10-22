@@ -716,6 +716,8 @@ def islem_adimi(
             deger = mum.get(alan)
             if deger is None:
                 continue
+            # TASARIM 5.15 #176: bozuk sayı normalleşse de yokluk sayılmaz.
+            deger = _duz(deger)
             gecerli = _pozitif_sayi(deger)
             if alan == "limit_kaniti":
                 gecerli = isinstance(deger, str) and bool(deger.strip())

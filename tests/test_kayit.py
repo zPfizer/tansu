@@ -3718,3 +3718,26 @@ def test_kilit_politikasi_yeni_ayar_ozeti_eski_kaydi_degistirmez(tmp_path, monke
         taze.deneme_oku(yeni.deneme_id)["yontem_ayarlari"]["kilit_politikasi"]
         == "ham_aralik_v1"
     )
+
+
+@pytest.mark.parametrize("tekrar", [False, 0.0])
+@pytest.mark.parametrize("politika", [None, "ham_aralik_v1"])
+def test_s11_yerel_yontem_kapisi_esdeger_ama_kanonik_olmayan_turu_reddeder(
+    tmp_path, tekrar, politika
+):
+    # TASARIM 5.15: yerel S11 yayınının ortak yöntem kapısı türleri korur.
+    depo = pilot.PilotKayit(tmp_path / "kanonik-arama.jsonl")
+    kayit = pilot_arama_ust(depo)
+    ust = deepcopy(depo.deneme_oku(kayit.deneme_id))
+    hucre = ust["yontem_ayarlari"]["hucre_yontemi"]
+    hucre["tekrar"] = tekrar
+    if politika is not None:
+        hucre["kilit_politikasi"] = politika
+    once = depo.yol.read_bytes()
+    hata = None
+    try:
+        pilot._arama_yontemi(ust, "genis_bolge_net_r_v1")
+    except pilot.PilotHatasi as exc:
+        hata = str(exc)
+    assert hata is not None and "yürütme ayarı" in hata
+    assert depo.yol.read_bytes() == once

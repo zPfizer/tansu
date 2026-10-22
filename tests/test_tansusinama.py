@@ -3998,3 +3998,84 @@ def test_s10_ham_aralik_kismi_ve_bozuk_pandas_kaniti_basarili_yapmaz(
     neden = "limit_bilinmiyor" if kanit is None else "geçersiz sayısal limit girdisi"
     assert any(h["neden"] == neden for d in r["donemler"] for h in d["hatalar"])
     assert not any(d["dolumlar"] for x in r["donemler"] for d in x["durumlar"].values())
+
+
+def test_s10_eski_karisik_limit_gosterimi_kayitli_durum_devamini_korur(
+    tmp_path, monkeypatch
+):
+    # TASARIM 5.15: seçenek yokken eski float/None uyarlaması ve gün özeti korunur.
+    depo, m, piyasa = s10_kayitli(tmp_path, monkeypatch, sinyal=True, limit=False)
+    for satir in piyasa:
+        if satir["tarih"] >= "2021-01-01":
+            satir.update(
+                tavan=dict(deger=200),
+                taban=dict(deger=50),
+                limit_kaniti="sentetik kanıt",
+            )
+    from concurrent.futures import ThreadPoolExecutor
+
+    # Gözlemci aynı süreçte çalışır; E2/E3/E4/E5 ve sonuçlar gerçektir.
+    monkeypatch.setattr(
+        ts.concurrent.futures,
+        "ProcessPoolExecutor",
+        lambda *, max_workers, mp_context: ThreadPoolExecutor(max_workers=max_workers),
+    )
+    asil = ts.saglamlik.ema_hucre_calistir
+    cagrilar = []
+
+    def izle(mumlar, p, **ayarlar):
+        cagrilar.append((mumlar.copy(), p, ayarlar))
+        return asil(mumlar, p, **ayarlar)
+
+    monkeypatch.setattr(ts.saglamlik, "ema_hucre_calistir", izle)
+    sonuc = s10_calistir(depo, m, tmp_path)
+    assert sonuc["durum"] == "tamamlandi"
+    mumlar, p, ayarlar = cagrilar[4]
+    # Eski sözleşmede karışık tamsayı/None sınır sütunu float olur.
+    eski = asil(mumlar.assign(tavan=200.0, taban=50.0), p, **ayarlar)
+
+    kayitli = json.loads(json.dumps(eski))
+    hata = None
+    try:
+        devam = asil(mumlar.iloc[-1:], p, **(ayarlar | dict(onceki_durum=kayitli)))
+    except ValueError as exc:
+        hata = str(exc)
+    assert hata is None, hata
+    assert devam == kayitli
+    assert sonuc["donemler"][4]["durumlar"]["TEST"] == eski
+
+
+@pytest.mark.parametrize("giris", ["s10", "s11", "s12"])
+@pytest.mark.parametrize("tekrar", [False, 0.0])
+def test_kayitli_yontem_tamsayi_alanini_esdeger_turle_genisletmez(
+    tmp_path, monkeypatch, giris, tekrar
+):
+    from copy import deepcopy
+    from tansu.deneme import PilotHatasi
+
+    hazirla, calistir = {
+        "s10": (s10_kayitli, s10_calistir),
+        "s11": (s11_kayitli, s11_calistir),
+        "s12": (s12_kayitli, s12_calistir),
+    }[giris]
+    depo, m, _ = hazirla(tmp_path, monkeypatch)
+    y = deepcopy(depo.deneme_oku(m.deneme_id)["yontem_ayarlari"])
+    hucre = y if giris == "s10" else y["hucre_yontemi"]
+    hucre["tekrar"] = tekrar
+    hata = None
+    if giris in ("s10", "s12"):
+        once = depo.yol.read_bytes()
+        try:
+            s10_revizyon(depo, m, yontem_ayarlari=y)
+        except PilotHatasi as exc:
+            hata = str(exc)
+    else:
+        m = s10_revizyon(depo, m, yontem_ayarlari=y)
+        once = depo.yol.read_bytes()
+        try:
+            calistir(depo, m, tmp_path)
+        except PilotHatasi as exc:
+            hata = str(exc)
+    assert hata is not None
+    assert ("tamsayı" if giris == "s10" else "yürütme ayarı") in hata
+    assert depo.yol.read_bytes() == once

@@ -972,9 +972,11 @@ def _kayitli_hucre_yontemi(yontem):
     beklenen = KAYITLI_YONTEM
     if isinstance(yontem, dict) and "kilit_politikasi" in yontem:
         beklenen = KAYITLI_YONTEM | dict(kilit_politikasi="ham_aralik_v1")
-    if yontem != beklenen:
+    if not isinstance(yontem, dict) or deneme_.kanonik(yontem) != deneme_.kanonik(
+        beklenen
+    ):
         raise deneme_.PilotHatasi("Desteklenmeyen yürütme ayarı.")
-    return yontem
+    return beklenen
 
 
 def _yurutme_ayarlari(deneme):
@@ -1269,23 +1271,28 @@ def _donem_kapsami(paket, gunler, uyelik, semboller, bas, son):
         raise ValueError("E1 gerekli tarihli üyeleri içermiyor.")
 
 
-def _s10_mumlar(paket, sembol, hesap):
+def _s10_mumlar(paket, sembol, hesap, *, kilit_politikasi=None):
     m = hesap["mumlar"].copy()
     m["onceki_rsi"] = m["rsi"].ffill().shift(1)
     m["onceki_dusuk"] = m["dusuk"].ffill().shift(1)
     satirlar = [r for r in paket["piyasa"] if r["sembol"] == sembol]
     for alan in ("ham_yuksek", "ham_dusuk", "tavan", "taban", "limit_kaniti"):
-        # TASARIM 5.15 #176: None yokluğu, bozuk NaN kanıtına dönüşmesin.
-        m[alan] = pd.Series(
-            [
-                r.get(alan, {}).get("deger")
-                if isinstance(r.get(alan, {}), dict)
-                else r.get(alan)
-                for r in satirlar
-            ],
-            index=m.index,
-            dtype=object if alan in ("tavan", "taban", "limit_kaniti") else None,
-        )
+        degerler = [
+            r.get(alan, {}).get("deger")
+            if isinstance(r.get(alan, {}), dict)
+            else r.get(alan)
+            for r in satirlar
+        ]
+        # TASARIM 5.15 #176: yalnız açık politikada None ile NaN ayrılır.
+        # Seçenek yokken eski pandas gösterimi ve gün/durum özetleri korunur.
+        if kilit_politikasi == "ham_aralik_v1" and alan in (
+            "tavan",
+            "taban",
+            "limit_kaniti",
+        ):
+            m[alan] = pd.Series(degerler, index=m.index, dtype=object)
+        else:
+            m[alan] = degerler
     m["islem"] = [r["islem"] for r in satirlar]
     m["karantina"] = ["karantina" in r["kalite_bayraklari"] for r in satirlar]
     return m
@@ -1309,7 +1316,12 @@ def _donem_sembolu(deneme, sonuc, paket, sembol, hesap, strateji, p):
             sembol=sembol,
             tarih=ilk_uye,
         )
-    m = _s10_mumlar(paket, sembol, hesap)
+    m = _s10_mumlar(
+        paket,
+        sembol,
+        hesap,
+        kilit_politikasi=deneme["yontem_ayarlari"].get("kilit_politikasi"),
+    )
     sinyaller = _donem_sinyalleri(deneme, sonuc, paket, sembol, hesap, m, gunler)
     yurutme = dict(
         surum="bagimsiz_islem_v1",
@@ -2506,7 +2518,12 @@ def _ileri_test_sembolu(depo, d, kosu, r, paket, sembol, secim, onceki, uyelik):
     hesap = aileler_.ortak_donem_kurulumu(paket | dict(semboller=[sembol]), strateji)[
         sembol
     ]
-    m = _s10_mumlar(paket, sembol, hesap)
+    m = _s10_mumlar(
+        paket,
+        sembol,
+        hesap,
+        kilit_politikasi=d["yontem_ayarlari"]["hucre_yontemi"].get("kilit_politikasi"),
+    )
     bas, son = r["donem"]["baslangic"].isoformat(), r["donem"]["bitis"].isoformat()
     gunler = [t for t in paket["gunler"] if bas <= t <= son]
     isinma = int(hesap["isinma"].at[pd.Timestamp(gunler[0])])

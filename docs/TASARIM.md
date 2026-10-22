@@ -1231,6 +1231,10 @@ Bilinen limitte tam gün kilit denetimi önceki dolum sözleşmesindeki ham eşi
 Levent'in 22.10.2026 onayı (#176): S10 hücre yönteminde ve S11/S12'nin `hucre_yontemi`
 kaydında isteğe bağlı `kilit_politikasi=ham_aralik_v1` seçilebilir. Seçenek yoksa eski
 sözlük, katı kanıt koşulu ve geçmiş okuma korunur; boş varsayılan alan eklenmez.
+Seçenek yokken eski mum sayı gösterimi, gün/durum özetleri ve aynı gün devamı da korunur.
+Ortak S10/S11/S12 yöntem doğrulaması alan türlerini korur; tamsayı tekrar değeri,
+mantıksal veya ondalık eşdeğeriyle değiştirilemez. Açık politikada desteklenen sayı
+skalerleri mevcut normalleştirmeden geçer; bozuk sayı yokluk sayılmaz.
 Gerekçe: sonlu pozitif ham yüksek > düşük, herhangi bir sayısal sınır için iki Q74
 `yüksek = düşük = limit` eşitliğini de dışlar. Yalnız üst/alt limit ve sayısal limit
 kanıtı tamamen yoksa bu aralık, tam gün kilit bulunmadığının türetilmiş kanıtıdır.

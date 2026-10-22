@@ -12,6 +12,7 @@ planlanan risk, gerçekleşen kayıp).
 from dataclasses import replace
 import json
 
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -1896,6 +1897,10 @@ def test_s09_ham_aralik_yalniz_tamamen_yok_sayisal_kanitta_kilidi_dislar(girdi, 
     [
         {"tavan": float("nan")},
         {"taban": float("inf")},
+        {"tavan": np.float32("nan")},
+        {"taban": np.float32("inf")},
+        {"tavan": np.bool_(True)},
+        {"limit_kaniti": np.bool_(False)},
         {"tavan": 0},
         {"taban": -1},
         {"limit_kaniti": ""},
@@ -1917,3 +1922,27 @@ def test_s09_ham_aralik_bozuk_sayisal_kaniti_atlamaz(girdi):
 def test_s09_bilinmeyen_kilit_politikasi_reddedilir(politika):
     with pytest.raises(ValueError, match="kilit_politikasi"):
         motor.tara(s09_mumlar(), {}, yurutme=s09_istek(kilit_politikasi=politika))
+
+
+@pytest.mark.parametrize(
+    "sayi", [int, float, np.int64, np.int32, np.uint64, np.float32, np.float64]
+)
+@pytest.mark.parametrize("politika", [None, "ham_aralik_v1"])
+def test_s09_bilinen_limit_desteklenen_skalerle_ayni_dolumu_verir(sayi, politika):
+    # TASARIM 5.15: temsil türü bilinen sınırın geçerliliğini değiştirmez.
+    y = s09_istek(**({} if politika is None else dict(kilit_politikasi=politika)))
+    m = s09_mumlar()
+    ilk = motor.tara(m.iloc[:1], {m.index[0]: "s"}, yurutme=y)
+    satir = dict(m.iloc[1]) | dict(tarih=m.index[1], tavan=sayi(110), taban=sayi(90))
+    once = dict(satir)
+    hata = None
+    try:
+        sonuc = motor.islem_adimi(ilk, satir, yurutme=y)
+    except ValueError as exc:
+        hata = str(exc)
+    assert hata is None, hata
+    assert [(d["yon"], d["adet"], d["fiyat"]) for d in sonuc["dolumlar"]] == [
+        ("alis", 15, 100)
+    ]
+    assert satir == once
+    assert sonuc["yurutme"] == y

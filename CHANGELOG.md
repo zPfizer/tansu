@@ -6,6 +6,8 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ## [Yayımlanmamış]
 
+- İsteğe bağlı kilit politikasında eski mum/durum gösterimi, yöntem alan türleri ve desteklenen sayısal skalerlerin kabulü korundu. (#176)
+
 - S10/S11/S12 ve kapsam açıklamalarındaki eksik limit kanıtı ifadeleri, S09'un mevcut `ham_aralik_v1` istisnasına bağlandı. (#176)
 
 - Açık `ham_aralik_v1` kilit politikası, sayısal kanıt tamamen yokken geçerli hareketli ham çubukta tam gün eşitlik kilidini dışlar; tek fiyat, bozuk/kısmi kanıt ve eski kayıtların katı davranışı korunur. (#176)
