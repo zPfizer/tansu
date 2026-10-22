@@ -6,8 +6,10 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ## [Yayımlanmamış]
 
+- CI'da S13 dışı sınama bölümü 60 dakikalık süre sınırına takıldığı için aynı testler toplama sırasına göre dönüşümlü iki bölüme ayrıldı. Tam koleksiyon, çakışmasız dağılım ve çalışan bölümün test kimlikleri doğrulanır; süre sınırı ve testler korunur. (#94, #57)
+
 - MC kaydı ve ortak yeniden sınaması donmuş WF hücresinin eşleşmiş ısınma seçimine bağlandı. Yeni politikada bölüm durumları özgün mühür ve tam değişen alanlarla saklanır; geçmişler nihai durumun kanonik öneklerinden kayıpsız kurulur. Tam uygun kaynak koşusu kanıtı açık kalır. (#94, #178)
-- CI testleri ayrı #178 dalında eksiksiz ve çakışmasız iki gruba ayrıldı; ortak #94/#57 tesliminde MC dalının üç grubu korunur. Her grup kendi test kimliklerini çalıştırmadan önce doğrular ve 60 dakikalık süre sınırını korur. (#178)
+- CI testleri ayrı #178 dalında eksiksiz ve çakışmasız iki gruba ayrıldı; ortak #94/#57 tesliminde MC dalının dört grubu korunur. Her grup kendi test kimliklerini çalıştırmadan önce doğrular ve 60 dakikalık süre sınırını korur. (#178)
 
 - Isınma seçimi olmayan eski kayıtlardaki hücre metaverisi korunur; yeni seçimde bozuk veya yanlış yerdeki politika kayıt öncesi reddedilir. (#178)
 
@@ -29,7 +31,7 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 - Varyant raporu doğal ısınmanın özgün ilk gün sayımını, gerekli gözlemi ve dönem içindeki tamamlanma kanıtını JSON ve HTML içinde ayrı gösterir; kaynak başvuruları ve eski durumlar korunur. (#57, #178)
 
 
-- CI testleri üç Windows bölümüne ayrıldı; düğümlerin eksiksiz ve çakışmasız dağılımı hesap öncesinde doğrulanır. `ci` kapısı yalnız bütün bölümler başarılıysa geçer; 60 dakikalık sınır ve mevcut denetimler korunur. (#94)
+- CI testleri dört Windows bölümüne ayrıldı; düğümlerin eksiksiz ve çakışmasız dağılımı hesap öncesinde doğrulanır. `ci` kapısı yalnız bütün bölümler başarılıysa geçer; 60 dakikalık sınır ve mevcut denetimler korunur. (#94)
 
 - MC bitişi güncel plan, sonuç ve kontrol öneğini yeniden doğrular; çalışma türü ve tamamlanma üstverisi kayıtlı yöntemle uyuşur. Ham blok tahmini ile girdi özeti saklanır; kalıcı kontrol noktaları sırayla zorunludur. Eksik eski geliştirme girdisi açıkça reddedilir. (#94)
 

@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        bolum: [diger, sinama_s13, sinama_diger]
+        bolum: [diger, sinama_s13, sinama_diger_1, sinama_diger_2]
     defaults:
       run:
         shell: bash
@@ -70,7 +70,8 @@ jobs:
           BOLUMLER = {
               "diger": ["--ignore=tests/test_tansusinama.py"],
               "sinama_s13": ["tests/test_tansusinama.py", "-k", "s13"],
-              "sinama_diger": ["tests/test_tansusinama.py", "-k", "not s13"],
+              "sinama_diger_1": ["tests/test_tansusinama.py", "-k", "not s13"],
+              "sinama_diger_2": ["tests/test_tansusinama.py", "-k", "not s13"],
           }
           ALT_PYTEST = r"""import json
           import sys
@@ -156,6 +157,8 @@ jobs:
                   ad: pytest_kos(["--collect-only", *secenekler], gecici / f"{ad}.json")
                   for ad, secenekler in BOLUMLER.items()
               }
+              for sira, ad in enumerate(("sinama_diger_1", "sinama_diger_2")):
+                  bolumler[ad] = bolumler[ad][sira::2]
               dagilimi_dogrula(tum, bolumler)
               print(
                   "Doğrulanan düğümler:",
@@ -163,7 +166,11 @@ jobs:
                   {ad: len(d) for ad, d in bolumler.items()},
                   flush=True,
               )
-              pytest_kos(BOLUMLER[bolum], gecici / "calisan.json", gecici / f"{bolum}.json")
+              secim = gecici / f"{bolum}.txt"
+              secim.write_text("\n".join(bolumler[bolum]) + "\n", encoding="utf-8")
+              beklenen = gecici / f"{bolum}.json"
+              beklenen.write_text(json.dumps(bolumler[bolum]), encoding="utf-8")
+              pytest_kos([f"@{secim}"], gecici / "calisan.json", beklenen)
 
 
           if __name__ == "__main__":
