@@ -1835,6 +1835,15 @@ ham durağan tahmin `((g*g/(v*v))*N)^(1/3)` üst sınıra kesilir.
 Gecikme hesabını tamamlayamayan kısa seri, sabit/sonlu olmayan seri,
 tanımsız korelasyon veya sıfır v `blok_boyu_belirsiz` olur. Gizli boy seçilmez.
 Sonlu sıfır tahmin tanımsız değildir. Ham tahmin ve girdi özeti saklanır.
+22.10.2026 düzeltmesi: önceki geliştirme girdisinde eksik kalan kanıt artık saklanır.
+Her blok işinin `blok_tahmini`, tam `yontem`, `ham`, `uzunluklar`, `neden`,
+`girdi_ozeti` taşır; diğer işlerde bu alan `None` olur. Girdi özeti, sıralı
+`seanslar` ve mevcut yuvarlanmamış günlük toplam R'leri taşıyan
+`gunluk_toplam_r` nesnesinin S03 kanonik SHA-256'sıdır. Ölçülemeyen blok
+işinde de tahmin sonucu korunur. Bu kanıt `tanim` ve deney anahtarına girmez.
+22.10.2026 uyumluluk sınırı: kanıtı eksik birleşme öncesi geliştirme girdisi
+açıkça reddedilir; okumada doldurulmaz, günlük taşınmaz veya yeniden mühürlenmez.
+Özgün günlük ve kod sürümü korunur. Eski pilot ve WF kabulü değişmez.
 `L=min(T,max(1,ceil(L_hat)))` ile yarım `max(1,ceil(L/2))` ve iki kat
 `min(T,2*L)` ayrı, eşleri tekilleştirilmiş varyantlardır. Bu boy düşüş,
 kuyruk yüzdelikleri veya her hisse için en iyi boy iddiası değildir.
@@ -1870,7 +1879,11 @@ kaydedilir. Aynı içerikle yeni koşu aynı sayısal içeriği üretir; bütçe
 
 **Bütçe ve sayısal tanı.** Her deney/dilim/varyant/kapsamın ayrı bütçesi
 vardır. 1.000 tekrar `on_gosterim`dir ve nihai tamamlanma sayılmaz. Nihai
-kümülatif noktalar 10.000, 20.000, 40.000, 80.000, 100.000'dir. Toplam R ve
+kümülatif noktalar 10.000, 20.000, 40.000, 80.000, 100.000'dir.
+22.10.2026 düzeltmesi: kalıcı kontrol, kendi koşu/deneyinin doğrulanmış
+kontrollerinden sonraki yapılandırılmış noktayı gerektirir. İlk 10.000 veya
+ara nokta atlanamaz. Ön gösterimin tek noktası 1.000'dir. Tek başına saf
+sayısal tanı hesabı, kalıcı kontrol kabulü değildir. Toplam R ve
 sıfırdan başlayan pozitif en büyük düşüş R için p05/p50/p95,
 `numpy.quantile(method="linear")` ile hesaplanır; değerler yuvarlanmaz.
 Çift ve tek indeks gruplarının altı mutlak farkı ≤0,01 R olmalıdır. Ardışık
@@ -1945,7 +1958,7 @@ adlarıdır. Dış içerik özeti, yalnız `kayit` nesnesinin S03 kanonik SHA-25
 Nüfus satırı tam `islem_ref`, `islem_id`, `sembol`, `giris_tarih`,
 `cikis_tarih`, `net_r`, `ilk_risk`, `giris_kohortu`, `karar_bolumu` taşır.
 `kapsam` tam `baslangic`, `bitis`, `muhasebe_politikasi` taşır. İş tanımı
-`anahtar`, `tanim`, `deney`, `dilim`, `sembol`, `blok`, `durum`, `neden`
+`anahtar`, `tanim`, `deney`, `dilim`, `sembol`, `blok`, `durum`, `neden`, `blok_tahmini`
 taşır. `tanim` tam `yontem`, `kaynak_ozeti`, `nufus_kurali`, `kapsam`,
 `dilim`, `deney`, `varyant` taşır; varyant yalnız `blok` taşır. İşin anahtarı
 bu tanımın kanonik SHA-256'sıdır. Girdi sırasındaki işler başlangıç listesinin
@@ -1981,6 +1994,22 @@ tam ayar özetine bağlıdır. Başlangıçtaki bütün işler bir kez muhasebel
 bilinmeyen alan/durum, kaynak değişikliği ve ikinci bitiş reddedilir.
 Ön gösterim nihai yöntemin tamamlanması değildir. Nihai sayısal durma veya
 100.000 bütçesi tamamlanan iş, hesap başarısızlığı ve ölçülemeyen iş ayrı kalır.
+
+22.10.2026 bitiş düzeltmesi: bitiş sahibi, başvurulan özeti bitişten
+önceki tam doğrulanmış plan/sonuç/kontrol öneğine karşı yeniden doğrular.
+Özetten sonra eklenen sonuç veya sonuçsuz plan, eski özeti geçerli bitiş
+kanıtı yapmaz. Reddedilen bitiş dosyayı değiştirmez; açık koşunun kesin öneği
+ve belirsiz girişim/yayın aralığı kurtarmada korunur.
+`calisma_turu` kayıtlı yöntemden gelir. `yontem_tamamlandi` yalnız nihai
+yöntemde bütün gerekli işler doğrulanmış başarılı bitişe ulaştığında `True`
+olur; alanın türü bool'dur. Tam bitiş üstverisi bu iki alanı taşır.
+`yontemler`, yöntem adı ve kayıtlı çalışma türüdür; MC bitişinin `olculer`
+alanı boştur, ölçüler kendi deney özetlerinde kalır. Hata/iptalde boş üstveri
+veya yalnız metin `hata` alanı; boş yöntem listesi veya yalnız MC yöntem adı
+korunur. Tam üstveride hata/iptal ayrıca metin `hata` taşıyabilir.
+Çalışma türü veya tamamlanma iddiası varsa gerçek durumla aynı olmalıdır.
+Bu denetim yayın ve yeni okuyucuda aynı sahipten geçer. Özet sonrası yayın
+için yeni genel kilit kuralı eklenmez. Eski pilot ve WF bitişleri değişmez.
 
 **MC'ye özel kalıcı partiler.** `mc_parti_v1`, S03'ün mevcut kalıcı ekleme
 yoluyla yayımlanan fiziksel bir zarftır. `kayit` yalnız `kayitlar` listesidir.

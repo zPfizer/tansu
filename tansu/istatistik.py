@@ -850,7 +850,16 @@ def mc_isleri(girdi, donemler, *, secim_var):
             kesim=gunler[-1] if gunler else None,
         )
 
-        def ekle(deney, sembol, blok=None, neden=None, *, dilim=dilim, ad=d["ad"]):
+        def ekle(
+            deney,
+            sembol,
+            blok=None,
+            neden=None,
+            *,
+            tahmin=None,
+            dilim=dilim,
+            ad=d["ad"],
+        ):
             tanim = dict(
                 yontem="kayitli_monte_carlo_v1",
                 kaynak_ozeti=girdi["kaynak_ozeti"],
@@ -870,6 +879,7 @@ def mc_isleri(girdi, donemler, *, secim_var):
                     blok=blok,
                     durum="olculemedi" if neden else "hazir",
                     neden=neden,
+                    blok_tahmini=tahmin,
                 )
             )
 
@@ -888,12 +898,13 @@ def mc_isleri(girdi, donemler, *, secim_var):
             if t in gunler
         ]
         blok = mc_blok_tahmini(gunluk)
+        blok["girdi_ozeti"] = mc_anahtar(dict(seanslar=gunler, gunluk_toplam_r=gunluk))
         neden = "kapali_islem_yok" if not nufus else blok["neden"]
         if neden:
-            ekle("ortak_tarih_blok_v1", "eklemeli", neden=neden)
+            ekle("ortak_tarih_blok_v1", "eklemeli", neden=neden, tahmin=blok)
         else:
             for boy in blok["uzunluklar"]:
-                ekle("ortak_tarih_blok_v1", "eklemeli", blok=boy)
+                ekle("ortak_tarih_blok_v1", "eklemeli", blok=boy, tahmin=blok)
         ekle(
             "islem_kacirma_v1", "eklemeli", neden=None if nufus else "kapali_islem_yok"
         )

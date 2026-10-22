@@ -853,6 +853,32 @@ def test_s12_gelecek_fiyat_egitim_secimini_ve_acik_dislamayi_degistirmez(
         assert all(x == {} for x in ozet["giris_kohort_sayimlari"].values())
 
 
+def test_s13_blok_tahmininin_yillik_girdisi_sonraki_yildan_etkilenmez():
+    from datetime import date, timedelta
+    from tansu import istatistik
+
+    gunler = [
+        (date(y, 1, 1) + timedelta(days=i)).isoformat()
+        for y in (2022, 2023)
+        for i in range(20)
+    ]
+    g = dict(
+        kaynak_ozeti="00" * 32,
+        seanslar=gunler,
+        semboller=["A"],
+        nufus=[dict(sembol="A", cikis_tarih=t) for t in (gunler[19], gunler[-1])],
+        gunluk_r=[[float(i)] for i in range(40)],
+    )
+    donem = [dict(ad="2022", baslangic=date(2022, 1, 1), bitis=date(2022, 12, 31))]
+    ilk = istatistik.mc_isleri(g, donem, secim_var=True)
+    for i in range(20, 40):
+        g["gunluk_r"][i] = [-10000.0]
+    son = istatistik.mc_isleri(g, donem, secim_var=True)
+    blok = next(i for i in ilk if i["deney"] == "ortak_tarih_blok_v1")
+    assert blok.get("blok_tahmini", {}).get("ham") is not None
+    assert ilk == son
+
+
 def test_s13_wf_donmus_planinda_sonraki_fiyat_onceki_mc_yolunu_degistirmez(
     tmp_path, monkeypatch
 ):

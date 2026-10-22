@@ -472,6 +472,57 @@ def test_s13_tanimsiz_blok_boyu_gizli_varsayilan_uretmez(seri):
     assert sonuc["neden"] == "blok_boyu_belirsiz"
 
 
+def test_s13_blok_isi_ham_tahmini_ve_girdi_kimligini_korur():
+    from datetime import date, timedelta
+
+    gunler = [(date(2022, 1, 1) + timedelta(days=i)).isoformat() for i in range(20)]
+    g = dict(
+        kaynak_ozeti="00" * 32,
+        seanslar=gunler,
+        semboller=["A"],
+        nufus=[dict(sembol="A", cikis_tarih=gunler[-1])],
+        gunluk_r=[[float(i)] for i in range(20)],
+    )
+    donem = [dict(ad="2022", baslangic=date(2022, 1, 1), bitis=date(2022, 12, 31))]
+    isler = istatistik.mc_isleri(g, donem, secim_var=True)
+    bloklar = [i for i in isler if i["deney"] == "ortak_tarih_blok_v1"]
+    tahmin = bloklar[0].get("blok_tahmini", {})
+    assert tahmin.get("ham") == pytest.approx(4.5407054019398005, abs=1e-12)
+    assert set(tahmin) == {"yontem", "ham", "uzunluklar", "neden", "girdi_ozeti"}
+    assert tahmin["yontem"] == "ppw2009_arch72_v1"
+    assert tahmin["uzunluklar"] == [3, 5, 10] and tahmin["neden"] is None
+    assert len(tahmin["girdi_ozeti"]) == 64
+    assert all(i["blok_tahmini"] == tahmin for i in bloklar)
+    assert [i["anahtar"] for i in bloklar] == [
+        "aeeb575128503b883561d9efd08242716ad430b25a82c7516fede2d0053bbd66",
+        "3551b0af31bfeb11f7a030e89a0506ba4c8e5e558e41daef0069ec4c99380f10",
+        "0db16e4928ff3aa23d36538933906e42a311d4da7716655daae87066308b6b3b",
+    ]
+    assert all(i["blok_tahmini"] is None for i in isler if i not in bloklar)
+    diger = dict(
+        g,
+        seanslar=[
+            (date(2022, 1, 2) + timedelta(days=i)).isoformat() for i in range(20)
+        ],
+    )
+    son = next(
+        i
+        for i in istatistik.mc_isleri(diger, donem, secim_var=True)
+        if i["deney"] == "ortak_tarih_blok_v1"
+    )
+    assert son["blok_tahmini"]["ham"] == tahmin["ham"]
+    assert son["blok_tahmini"]["girdi_ozeti"] != tahmin["girdi_ozeti"]
+    bos = dict(g, gunluk_r=[[0.0]] * 20)
+    belirsiz = next(
+        i
+        for i in istatistik.mc_isleri(bos, donem, secim_var=True)
+        if i["deney"] == "ortak_tarih_blok_v1"
+    )
+    assert belirsiz["blok_tahmini"]["ham"] is None
+    assert belirsiz["blok_tahmini"]["uzunluklar"] == []
+    assert belirsiz["blok_tahmini"]["neden"] == "blok_boyu_belirsiz"
+
+
 def test_s13_sayisal_durma_ardisik_iki_nokta_ister():
     s = istatistik.mc_olc([1.0, -2.0, 3.0])
     preview = istatistik.mc_kontrol([s] * 1000)

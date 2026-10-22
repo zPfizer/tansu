@@ -13,6 +13,8 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ### Değişti
 
+- MC bitişi güncel plan, sonuç ve kontrol öneğini yeniden doğrular; çalışma türü ve tamamlanma üstverisi kayıtlı yöntemle uyuşur. Ham blok tahmini ile girdi özeti saklanır; kalıcı kontrol noktaları sırayla zorunludur. Eksik eski geliştirme girdisi açıkça reddedilir. (#94)
+
 - İleri yürümenin birleşmiş ve bağımsız denetimden geçmiş durumu yöntem kaydına işlendi; tam veriyle sonuç kanıtı ve günlük uygunluk kapıları korundu. (#93, #94)
 
 - MC kayıt aramaları her okumada doğrulanan önceki kayıtlardan kurulan yerel dizini kullanır; deney başına sıra, kaynak ve sayısal denetimler korunur. (#94)

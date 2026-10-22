@@ -804,7 +804,14 @@ def _mc_girdi_dogrula(olaylar, d, b, k, *, onek=None):
         raise PilotHatasi("MC günlük kapalı gerçekleşme kaynakla uyuşmuyor.")
     anahtarlar = []
     for is_ in k["isler"]:
-        _mc_alanlar(is_, "anahtar tanim deney dilim sembol blok durum neden")
+        _mc_alanlar(
+            is_, "anahtar tanim deney dilim sembol blok durum neden blok_tahmini"
+        )
+        if is_["deney"] == "ortak_tarih_blok_v1":
+            _mc_alanlar(is_["blok_tahmini"], "yontem ham uzunluklar neden girdi_ozeti")
+            _mc_ozet_dogrula(is_["blok_tahmini"]["girdi_ozeti"])
+        elif is_["blok_tahmini"] is not None:
+            raise PilotHatasi("MC blok tahmini yalnız tarih blok işine aittir.")
         t = is_["tanim"]
         _mc_alanlar(t, "yontem kaynak_ozeti nufus_kurali kapsam dilim deney varyant")
         _mc_alanlar(t["varyant"], "blok")
@@ -846,10 +853,12 @@ def _mc_girdi_dogrula(olaylar, d, b, k, *, onek=None):
             d["yontem_ayarlari"]["deneyler"]
         ):
             raise PilotHatasi("MC diliminde gerekli deney eksik.")
-    if k["isler"] != mc_isleri(
-        k,
-        d["donemler"],
-        secim_var=any(o["kayit"]["durum"] == "secildi" for o in kaynak["secimler"]),
+    if kanonik(k["isler"]) != kanonik(
+        mc_isleri(
+            k,
+            d["donemler"],
+            secim_var=any(o["kayit"]["durum"] == "secildi" for o in kaynak["secimler"]),
+        )
     ):
         raise PilotHatasi(
             "MC gerekli hisse/dilim/blok işleri veya kullanılabilirlik gerekçesi eksik."
@@ -1175,8 +1184,9 @@ def _mc_kontrol_dogrula(olaylar, d, b, k, *, onek=None):
     onceki = kontroller[-1] if kontroller else None
     if k["onceki_ref"] != (onceki["kayit_id"] if onceki else None):
         raise PilotHatasi("MC önceki kontrol bağı uyuşmuyor.")
-    if len(sonuclar) not in d["yontem_ayarlari"]["kontrol_noktalari"]:
-        raise PilotHatasi("MC kontrol noktası kayıtlı bütçede değil.")
+    noktalar = d["yontem_ayarlari"]["kontrol_noktalari"]
+    if len(kontroller) >= len(noktalar) or len(sonuclar) != noktalar[len(kontroller)]:
+        raise PilotHatasi("MC kalıcı kontrolü sonraki kayıtlı noktayı gerektirir.")
     tani = mc_kontrol(
         [o["kayit"]["olculer"] for o in sonuclar],
         onceki=onceki["kayit"]["tani"] if onceki else None,
@@ -1462,8 +1472,24 @@ def _mc_partiyi_ac(olaylar, parti, *, onek=None):
     return sonuc
 
 
-def _mc_bitis_dogrula(olaylar, kosu_id, durum, tamamlanan, basarisiz, referanslar):
-    b = _bul(olaylar, kosu_id, "baslangic", "kosu_id")
+def _mc_bitis_dogrula(
+    olaylar,
+    kosu_id,
+    durum,
+    tamamlanan,
+    basarisiz,
+    referanslar,
+    *,
+    yontemler,
+    olculer,
+    ozetler,
+    onek=None,
+):
+    """TASARIM 5.15 S13: bitiş iddiası güncel doğrulanmış öneğe bağlıdır."""
+    if onek is None:
+        onek = _mc_onek(olaylar)
+    b = _mc_bul(olaylar, kosu_id, "baslangic", "kosu_id", onek=onek)
+    d = _mc_bul(olaylar, b["deneme_id"], "deneme", "deneme_id", onek=onek)
     bildirilen = tamamlanan + basarisiz
     if (
         durum not in ("tamamlandi", "hata", "iptal")
@@ -1474,10 +1500,8 @@ def _mc_bitis_dogrula(olaylar, kosu_id, durum, tamamlanan, basarisiz, referansla
         raise PilotHatasi(
             "MC bitişinde durum, tekillik veya tam iş muhasebesi geçersiz."
         )
-    ozetler = [
-        o for o in olaylar if o["kayit_turu"] == "mc_ozet" and o["kosu_id"] == kosu_id
-    ]
-    if not ozetler:
+    ozet_kayitlari = _mc_rol_kayitlari(olaylar, "mc_ozet", kosu_id, onek=onek)
+    if not ozet_kayitlari:
         if any(
             i["deneme_yayin_belirsiz"] for i in _mc_kurtarma(olaylar, kosu_id)["isler"]
         ):
@@ -1486,20 +1510,51 @@ def _mc_bitis_dogrula(olaylar, kosu_id, durum, tamamlanan, basarisiz, referansla
             )
         if durum == "tamamlandi" or tamamlanan or referanslar:
             raise PilotHatasi("MC özeti olmadan iş tamamlanamaz.")
-        return
-    o = ozetler[-1]
-    biten = [
-        i["anahtar"]
-        for i in o["kayit"]["isler"]
-        if i["durum"]
-        in ("sayisal_kararlilik_gozlendi", "sinirda_kararsiz", "on_gosterim")
-    ]
+    else:
+        o = ozet_kayitlari[-1]
+        _mc_ozet_dogrula_kaydi(olaylar, d, b, o["kayit"], onek=onek)
+        biten = [
+            i["anahtar"]
+            for i in o["kayit"]["isler"]
+            if i["durum"]
+            in ("sayisal_kararlilik_gozlendi", "sinirda_kararsiz", "on_gosterim")
+        ]
+        if (
+            tamamlanan != biten
+            or referanslar != [o["kayit_id"]]
+            or (durum == "tamamlandi") != (len(biten) == len(o["kayit"]["isler"]))
+        ):
+            raise PilotHatasi(
+                "MC bitişi gerekli anahtarların gerçek durumuyla uyuşmuyor."
+            )
+    yontem = d["yontem_ayarlari"]["yontem"]
+    calisma = d["yontem_ayarlari"]["calisma_turu"]
+    izinli_yontemler = [[yontem, calisma]]
+    if durum != "tamamlandi":
+        izinli_yontemler.extend([[], [yontem]])
+    tam_alanlar = {"calisma_turu", "yontem_tamamlandi"}
+    alanlar = set(ozetler) if isinstance(ozetler, dict) else None
+    izinli_alanlar = [tam_alanlar]
+    if durum != "tamamlandi":
+        izinli_alanlar.extend([set(), {"hata"}, tam_alanlar | {"hata"}])
     if (
-        tamamlanan != biten
-        or referanslar != [o["kayit_id"]]
-        or (durum == "tamamlandi") != (len(biten) == len(o["kayit"]["isler"]))
+        not isinstance(yontemler, list)
+        or yontemler not in izinli_yontemler
+        or olculer != {}
+        or alanlar not in izinli_alanlar
     ):
-        raise PilotHatasi("MC bitişi gerekli anahtarların gerçek durumuyla uyuşmuyor.")
+        raise PilotHatasi("MC bitiş yöntemi, ölçüleri veya üstveri alanları geçersiz.")
+    if "hata" in ozetler and not isinstance(ozetler["hata"], str):
+        raise PilotHatasi("MC bitiş hata bilgisi metin olmalıdır.")
+    if tam_alanlar <= alanlar and (
+        ozetler["calisma_turu"] != calisma
+        or type(ozetler["yontem_tamamlandi"]) is not bool
+        or ozetler["yontem_tamamlandi"]
+        != (calisma == "nihai" and durum == "tamamlandi")
+    ):
+        raise PilotHatasi(
+            "MC bitiş üstverisi gerçek çalışma türü ve tamamlanmayla uyuşmuyor."
+        )
 
 
 def _mc_kurtarma(olaylar, kosu_id):
@@ -3636,6 +3691,10 @@ class PilotKayit:
                             olay["tamamlanan"],
                             olay["basarisiz"],
                             olay["cikti_referanslari"],
+                            yontemler=olay["yontemler"],
+                            olculer=olay["olculer"],
+                            ozetler=olay["ozetler"],
+                            onek=mc_onek,
                         )
             except (ValueError, KeyError, TypeError, IndexError) as hata:
                 raise PilotHatasi(f"Bozuk tam satır: {no}") from hata
@@ -4640,6 +4699,9 @@ class _Kosu:
                     tamamlanan,
                     basarisiz,
                     cikti_referanslari,
+                    yontemler=yontemler,
+                    olculer=olculer,
+                    ozetler=ozetler,
                 )
 
         makbuz = self._yaz(
