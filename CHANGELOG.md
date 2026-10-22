@@ -6,6 +6,8 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ## [Yayımlanmamış]
 
+- Isınma seçimi olmayan eski kayıtlardaki hücre metaverisi korunur; yeni seçimde bozuk veya yanlış yerdeki politika kayıt öncesi reddedilir. (#178)
+
 - Kaynağa ve değişmez görüntüye bağlı açık ısınma seçimi, doğrulanmış doğal 500 gözlem bekleyişini eksik geçmişten ayırır; günlük eşik, tarihli üyeler, WF seçimi ve eski kayıtlar korunur. Yeni kanıt eklemede ve canlı tablosuz geçmiş okumada doğrulanır. (#178)
 
 - İsteğe bağlı kilit politikasında eski mum/durum gösterimi, yöntem alan türleri ve desteklenen sayısal skalerlerin kabulü korundu. (#176)

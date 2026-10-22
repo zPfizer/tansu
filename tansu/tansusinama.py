@@ -994,11 +994,19 @@ def _yurutme_ayarlari(deneme):
 def _isinma_secimi_dogrula(v, y):
     """TASARIM 5.15 #178: eşleşmiş opt-in, hesap veya canlı kaynak gerektirmez."""
     hucre = y.get("hucre_yontemi", y)
-    secim = v.get("ilk_islem")
-    politika = hucre.get("isinma_politikasi")
-    if "ilk_islem" not in v and "isinma_politikasi" not in hucre:
+    if (
+        "ilk_islem" not in v
+        and "isinma_politikasi" not in y
+        and (not isinstance(hucre, dict) or "isinma_politikasi" not in hucre)
+    ):
         return False
-    if politika != "kaynakli_isinma_v1" or secim is None:
+    secim = v.get("ilk_islem")
+    if (
+        not isinstance(hucre, dict)
+        or ("hucre_yontemi" in y and "isinma_politikasi" in y)
+        or hucre.get("isinma_politikasi") != "kaynakli_isinma_v1"
+        or secim is None
+    ):
         raise deneme_.PilotHatasi(
             "İlk işlem kaynağı ve ısınma politikası birlikte seçilmelidir."
         )
