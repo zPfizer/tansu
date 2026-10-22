@@ -6,6 +6,7 @@ sonuç al-tut ve Tansu'nun tablo ölçüleriyle yan yana verilir. Kabul kararın
 """
 
 import concurrent.futures
+from collections import Counter
 import datetime as dt
 import itertools
 import json
@@ -1812,7 +1813,11 @@ def _kayitli_isleri_yurut(deneme, kosu, veri_koku, isci, ilerleme, hazirlik=None
         hata.yazilamayan_donem = sonuc
         raise
     except Exception as hata:
-        _kayitli_bitir(kosu, deneme, sonuclar, hata)
+        try:
+            _, hata.bitis_makbuzu = _kayitli_bitir(kosu, deneme, sonuclar, hata)
+        except Exception as bitis_hatasi:
+            bitis_hatasi.donem_sonuclari = sonuclar
+            raise
         hata.donem_sonuclari = sonuclar
         raise
     return sonuclar
@@ -1853,9 +1858,20 @@ def kayitli_calistir(depo, deneme_id, *, veri_koku, mod, isci=None, ilerleme=pri
 
 
 def _kayitli_yurut(
-    depo, deneme_id, veri_koku, mod, isci, ilerleme, *, hazirlik=None, beklenen=None
+    depo,
+    deneme_id,
+    veri_koku,
+    mod,
+    isci,
+    ilerleme,
+    *,
+    hazirlik=None,
+    beklenen=None,
+    ayar_ozeti=None,
 ):
     deneme, kod, ortam, isci = _kayitli_baslangic(depo, deneme_id, veri_koku, mod, isci)
+    if ayar_ozeti is not None and deneme["ayar_parmak_izi"] != ayar_ozeti:
+        raise deneme_.PilotHatasi("Toplu karşılaştırmanın kayıtlı ayarı değişti.")
     if beklenen is not None:
         _cocuk_ayari_dogrula(beklenen, deneme)
     v = deneme["veri_ayarlari"]
@@ -1877,6 +1893,7 @@ def _kayitli_yurut(
             else {}
         ),
     ) as kosu:
+        sonuclar = []
         try:
             if kosu.makbuz.ayar_ozeti != deneme["ayar_parmak_izi"]:
                 raise deneme_.PilotHatasi("Başlangıç makbuzu hesap ayarıyla uyuşmuyor.")
@@ -1886,6 +1903,8 @@ def _kayitli_yurut(
             durum, bitis = _kayitli_bitir(kosu, deneme, sonuclar)
         except Exception as hata:
             hata.baslangic_makbuzu = kosu.makbuz
+            if not hasattr(hata, "donem_sonuclari"):
+                hata.donem_sonuclari = sonuclar
             raise
     return dict(
         surum=KAYITLI_SURUM,
@@ -2197,6 +2216,9 @@ def _arama_hucresi_hatasi(h, hata, durum):
             else "reddedilen_baslangic_makbuzu"
         )
         h[alan] = asdict(makbuz)
+    bitis = getattr(hata, "bitis_makbuzu", None)
+    if bitis is not None:
+        h["bitis_makbuzu"] = asdict(bitis)
     sonuclar = getattr(hata, "donem_sonuclari", [])
     if sonuclar:
         _arama_donemlerini_aktar(h, sonuclar)
@@ -2363,6 +2385,210 @@ def _arama_bitir(kosu, sonuc, isler):
             ],
         ),
     )
+
+
+# TASARIM 5.15 Kayıtlı varyant karşılaştırması: yalnız mevcut adlandırılmış tanımlar.
+def _varyant_kayitlarini_dogrula(depo, esleme):
+    if not isinstance(esleme, dict) or set(esleme) != set(aileler_.VARYANTLAR):
+        raise deneme_.PilotHatasi("Mevcut varyantların tam ad→deneme eşlemesi gerekli.")
+    ids = list(esleme.values())
+    if any(type(i) is not str or not i.strip() for i in ids) or len(set(ids)) != len(
+        ids
+    ):
+        raise deneme_.PilotHatasi("Deneme kimlikleri dolu metin ve tekil olmalıdır.")
+    kayitlar, ortak = [], None
+    for ad in aileler_.VARYANTLAR:
+        d = depo.deneme_oku(esleme[ad])
+        _kayitli_istek(d)
+        s = d["strateji"]
+        if (
+            s["varyant"] != ad
+            or s["ayar_parmak_izi"] != katalog.legacy_coz(ad).ayar_parmak_izi
+        ):
+            raise deneme_.PilotHatasi(
+                f"{ad}: kayıt mevcut adlandırılmış varyantla uyuşmuyor."
+            )
+        girdi = deneme_.kanonik(
+            {
+                a: d[a]
+                for a in (
+                    "donemler",
+                    "veri_ayarlari",
+                    "yontem_ayarlari",
+                    "risk_ayarlari",
+                    "masraf_ayarlari",
+                )
+            }
+        )
+        if ortak is not None and ortak != girdi:
+            raise deneme_.PilotHatasi(f"{ad}: karşılaştırma girdileri farklı.")
+        ortak = girdi
+        kayitlar.append(d)
+    return kayitlar
+
+
+def _varyant_donemlerini_aktar(v, sonuclar):
+    _arama_donemlerini_aktar(v, sonuclar)
+    for r in sonuclar:
+        yuva = next(x for x in v["donemler"] if x["donem"] == r["donem"])
+        yuva.update(
+            kapali_islem_sayisi=(
+                sum(s["olcu"]["olculer"]["islem"]["deger"] for s in yuva["semboller"])
+                if r["durum"] == "tamamlandi"
+                else None
+            ),
+            acik_islemler=[
+                dict(
+                    sembol=ad,
+                    durum=d["durum"],
+                    sonuc=d["sonuc"],
+                    degerleme=d["degerleme"],
+                )
+                for ad, d in r["durumlar"].items()
+                if d["pozisyon"] is not None
+            ],
+            aday_sayisi=len(r["adaylar"]),
+            durum_sayilari={
+                ad: sum(d["durum"] == ad for d in r["durumlar"].values())
+                for ad in {d["durum"] for d in r["durumlar"].values()}
+            },
+            yontemler=r["yontemler"],
+            cikti_parmak_izi=r["cikti_parmak_izi"],
+        )
+        yuva["ret_nedenleri"] = dict(
+            Counter(ret["neden"] for d in r["durumlar"].values() for ret in d["retler"])
+        )
+        yuva["aday_nedenleri"] = dict(
+            Counter(
+                a["yurutme_nedeni"]
+                for a in r["adaylar"]
+                if a["yurutme_nedeni"] is not None
+            )
+        )
+        if r["durum"] == "tamamlandi" and yuva["acik_islemler"]:
+            yuva["durum"] = "acik_kismi"
+        for sembol in yuva["semboller"]:
+            if "dogal_bekleyis" in sembol:
+                ilk = r["isinma"][sembol["sembol"]]
+                sembol["isinma"] = {a: ilk[a] for a in ("gozlem", "gerekli", "tamam")}
+            olcu = sembol["olcu"]
+            if sembol["durum"] == "islemsiz" and olcu["acik_kismi"]:
+                sembol["durum"] = "acik_kismi"
+            sembol["olcu"] = {
+                a: olcu[a] for a in ("politika", "olculer", "egri_olculeri")
+            }
+
+
+def varyantlari_calistir(depo, deneme_idleri, *, veri_koku, isci=None, ilerleme=print):
+    """TASARIM 5.15 #57: kayıtlı varyantları destek raporu için ayrı yürüt."""
+    kayitlar = _varyant_kayitlarini_dogrula(depo, deneme_idleri)
+    _kayitli_isci(isci)
+    sonuc = dict(
+        surum="kayitli_varyantlar_v1",
+        tur="destek",
+        durum="baslamadi",
+        deneme_dosyasi=str(depo.yol),
+        varyantlar=[],
+    )
+    for d in kayitlar:
+        s, veri = d["strateji"], d["veri_ayarlari"]
+        v = {
+            a: s[a]
+            for a in (
+                "varyant",
+                "kayit_id",
+                "katalog_surumu",
+                "izin_durumu",
+                "eski_karsilastirma",
+            )
+        }
+        v.update(
+            deneme_id=d["deneme_id"],
+            kosu_id=None,
+            ayar_parmak_izi=d["ayar_parmak_izi"],
+            strateji_ayar_parmak_izi=s["ayar_parmak_izi"],
+            veri_referanslari=veri["veri_referanslari"],
+            manifest_ozeti=veri["manifest_ozeti"],
+            uyelik_ozeti=veri["uyelik_ozeti"],
+            uyelik_surumu=veri["uyelik_surumu"],
+            birimler=DONEM_BIRIMLERI,
+            yontemler=dict(
+                d["yontem_ayarlari"],
+                risk_surumu=d["risk_ayarlari"]["risk_surumu"],
+                masraf_surumu=d["masraf_ayarlari"]["masraf_surumu"],
+            ),
+            nominal_tutar=d["risk_ayarlari"]["nominal_tutar"],
+            durum="baslamadi",
+            neden="Varyant başlamadı.",
+            baslangic_makbuzu=None,
+            bitis_makbuzu=None,
+            donemler=_bos_hucre_donemleri(d, "Varyant başlamadı."),
+        )
+        for r in v["donemler"]:
+            r.update(kapali_islem_sayisi=None, acik_islemler=[], aday_sayisi=None)
+        sonuc["varyantlar"].append(v)
+    durdur = None
+    for v in sonuc["varyantlar"]:
+        if durdur is not None:
+            v["neden"] = durdur
+            for r in v["donemler"]:
+                r.update(asama="kayit", neden=durdur)
+            continue
+        try:
+            r = _kayitli_yurut(
+                depo,
+                v["deneme_id"],
+                veri_koku,
+                "gelistirme",
+                isci,
+                ilerleme,
+                ayar_ozeti=v["ayar_parmak_izi"],
+            )
+            v.update(
+                kosu_id=r["kosu_id"],
+                baslangic_makbuzu=asdict(r["baslangic_makbuzu"]),
+                bitis_makbuzu=asdict(r["bitis_makbuzu"]),
+            )
+            _varyant_donemlerini_aktar(v, r["donemler"])
+            v.update(
+                durum=r["durum"],
+                neden=next((d["neden"] for d in v["donemler"] if d["neden"]), None),
+            )
+            del r
+        except Exception as hata:
+            logging.exception("Varyant tamamlanamadı: %s", v["varyant"])
+            yazma = isinstance(hata, deneme_.PilotYazmaHatasi)
+            v.update(durum="kayit_hatasi" if yazma else "hesap_hatasi", neden=str(hata))
+            if isinstance(hata, deneme_.PilotBelirsizHatasi):
+                v["belirsiz_yayin"] = dict(
+                    kayit_id=hata.kayit_id,
+                    kosu_id=hata.kosu_id,
+                    deneme_id=hata.deneme_id,
+                )
+            bas = getattr(hata, "baslangic_makbuzu", None)
+            if bas is not None:
+                v.update(kosu_id=bas.kosu_id, baslangic_makbuzu=asdict(bas))
+            bitis = getattr(hata, "bitis_makbuzu", None)
+            if bitis is not None:
+                v["bitis_makbuzu"] = asdict(bitis)
+            _varyant_donemlerini_aktar(v, getattr(hata, "donem_sonuclari", []))
+            yazilamayan = getattr(hata, "yazilamayan_donem", None)
+            for r in v["donemler"]:
+                if r["durum"] == "baslamadi":
+                    r.update(asama="kayit" if yazma else "baslangic", neden=str(hata))
+                if yazilamayan is not None and r["donem"] == yazilamayan["donem"]:
+                    r.update(
+                        durum="kayit_hatasi",
+                        islem_referanslari=list(yazilamayan["islem_referanslari"]),
+                    )
+            if yazma:
+                durdur = str(hata)
+    sonuc["durum"] = (
+        "tamamlandi"
+        if all(v["durum"] == "tamamlandi" for v in sonuc["varyantlar"])
+        else "hata"
+    )
+    return sonuc
 
 
 # TASARIM 5.15 S12: ayrı yöntem; S10/S11 kesin doğrulayıcılarını gevşetmez.

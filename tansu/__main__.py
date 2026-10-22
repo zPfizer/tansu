@@ -1,4 +1,4 @@
-"""Komut girişi: `python -m tansu sadakat | kayit | sinama | tansu-sinama | grup-hazirla | denetim | evren-indir | sektor-indir | gunluk [tarih] [--kok veri] [--kimlik KIMLIK] [--resmi] [--son] [--varyant AD] [--isci N] [--hisse N] [--aile AILE] [--sektor-kok veri]` (TASARIM 3, 5.11, 5.14; `--varyant` kayit, sinama, tansu-sinama ve gunluk için, varsayılan bugun)."""
+"""Komut girişi: `python -m tansu sadakat | kayit | sinama | tansu-sinama | varyant-sinama | grup-hazirla | denetim | evren-indir | sektor-indir | gunluk [tarih] [--kok veri] [--kimlik KIMLIK] [--resmi] [--son] [--varyant AD] [--isci N] [--hisse N] [--aile AILE] [--sektor-kok veri]` (TASARIM 3, 5.11, 5.14; `--varyant` kayit, sinama, tansu-sinama ve gunluk için, varsayılan bugun)."""
 
 import argparse
 import datetime as dt
@@ -138,7 +138,61 @@ def _tansu_sinama(a, kok: Path, p, ayar_aktarimi=None) -> int:
     return 0
 
 
+def _tekil_varyant_eslemesi(ciftler):
+    esleme = dict(ciftler)
+    if len(esleme) != len(ciftler):
+        raise deneme.PilotHatasi("Varyant eşlemesinde yinelenen ad var.")
+    return esleme
+
+
+def _varyant_sinama(a, argv):
+    """TASARIM 5.15 #57: açık girdiler, ayrı destek çıktısı, başarısızlığa sıfır dışı çıkış."""
+    izinli = {"--varyant-denemeleri", "--deneme-dosyasi", "--kok", "--rapor", "--isci"}
+    if any(t.startswith("--") and t.split("=", 1)[0] not in izinli for t in argv):
+        raise deneme.PilotHatasi(
+            "Varyant sınaması yalnız açık kayıtlı destek girdilerini alır."
+        )
+    if not all((a.varyant_denemeleri, a.deneme_dosyasi, a.kok, a.rapor)) or a.tarih:
+        raise deneme.PilotHatasi(
+            "--varyant-denemeleri, --deneme-dosyasi, --kok ve --rapor gerekli"
+        )
+    kok, dizin = Path(a.kok).resolve(), Path(a.rapor).resolve()
+    girdiler = {Path(a.varyant_denemeleri).resolve(), Path(a.deneme_dosyasi).resolve()}
+    if dizin.is_relative_to((kok / "ag").resolve()) or any(
+        (dizin / ad).resolve() in girdiler
+        for ad in ("varyantlar.json", "varyantlar.html")
+    ):
+        raise deneme.PilotHatasi(
+            "Rapor görüntü veya girdi dosyasının üstüne yazılamaz."
+        )
+    try:
+        for ad in ("varyantlar.json", "varyantlar.html"):
+            if (dizin / ad).exists():
+                raise FileExistsError(
+                    f"Rapor var; yeni çıktı dizini gerekli: {dizin / ad}"
+                )
+        esleme = json.loads(
+            Path(a.varyant_denemeleri).read_text(encoding="utf-8"),
+            object_pairs_hook=_tekil_varyant_eslemesi,
+        )
+        dizin.mkdir(parents=True, exist_ok=True)
+        sonuc = tansusinama.varyantlari_calistir(
+            deneme.PilotKayit(a.deneme_dosyasi),
+            esleme,
+            veri_koku=kok,
+            isci=a.isci,
+        )
+        yollar = rapor.varyant_yaz(sonuc, dizin)
+    except (OSError, ValueError) as hata:
+        raise deneme.PilotHatasi(
+            f"Varyant girdisi veya raporu tamamlanamadı: {hata}"
+        ) from hata
+    print(f"{sonuc['durum']}: {yollar[0]}, {yollar[1]}")
+    return 0 if sonuc["durum"] == "tamamlandi" else 1
+
+
 def main(argv=None) -> int:
+    argv = list(sys.argv[1:] if argv is None else argv)
     ap = argparse.ArgumentParser(prog="tansu")
     ap.add_argument(
         "komut",
@@ -147,6 +201,7 @@ def main(argv=None) -> int:
             "kayit",
             "sinama",
             "tansu-sinama",
+            "varyant-sinama",
             "grup-hazirla",
             "denetim",
             "evren-indir",
@@ -157,7 +212,11 @@ def main(argv=None) -> int:
     ap.add_argument(
         "tarih", nargs="?", help="yalnız gunluk: YYYY-AA-GG (varsayılan bugün)"
     )
-    ap.add_argument("--kok", default="veri")
+    ap.add_argument("--kok")
+    ap.add_argument(
+        "--varyant-denemeleri", help="varyant-sinama: tam ad→deneme JSON yolu"
+    )
+    ap.add_argument("--rapor", help="varyant-sinama: çıktı dizini")
     ap.add_argument("--kimlik")
     ap.add_argument("--resmi", action="store_true")
     ap.add_argument(
@@ -203,8 +262,10 @@ def main(argv=None) -> int:
         help="tansu-sinama: günlük anlık görüntüde sektör yoksa sektörün okunacağı kök",
     )
     a = ap.parse_args(argv)
-    kok, p = Path(a.kok), aileler.VARYANTLAR[a.varyant]
+    kok, p = Path(a.kok or "veri"), aileler.VARYANTLAR[a.varyant]
     try:
+        if a.komut == "varyant-sinama":
+            return _varyant_sinama(a, argv)
         if a.komut == "grup-hazirla":
             if not a.grup_tanimi or not a.deneme_dosyasi:
                 raise deneme.PilotHatasi("--grup-tanimi ve --deneme-dosyasi gerekli")

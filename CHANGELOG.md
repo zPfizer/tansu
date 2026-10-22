@@ -26,6 +26,9 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ### Değişti
 
+- Varyant raporu doğal ısınmanın özgün ilk gün sayımını, gerekli gözlemi ve dönem içindeki tamamlanma kanıtını JSON ve HTML içinde ayrı gösterir; kaynak başvuruları ve eski durumlar korunur. (#57, #178)
+
+
 - CI testleri üç Windows bölümüne ayrıldı; düğümlerin eksiksiz ve çakışmasız dağılımı hesap öncesinde doğrulanır. `ci` kapısı yalnız bütün bölümler başarılıysa geçer; 60 dakikalık sınır ve mevcut denetimler korunur. (#94)
 
 - MC bitişi güncel plan, sonuç ve kontrol öneğini yeniden doğrular; çalışma türü ve tamamlanma üstverisi kayıtlı yöntemle uyuşur. Ham blok tahmini ile girdi özeti saklanır; kalıcı kontrol noktaları sırayla zorunludur. Eksik eski geliştirme girdisi açıkça reddedilir. (#94)
@@ -33,6 +36,7 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 - İleri yürümenin birleşmiş ve bağımsız denetimden geçmiş durumu yöntem kaydına işlendi; tam veriyle sonuç kanıtı ve günlük uygunluk kapıları korundu. (#93, #94)
 
 - MC kayıt aramaları her okumada doğrulanan önceki kayıtlardan kurulan yerel dizini kullanır; deney başına sıra, kaynak ve sayısal denetimler korunur. (#94)
+- Koordinatör hatasında yazılmış gerçek hata bitişi varyant ve S11 raporlarında korunur; dosya olan rapor yolu veya üst yolu hesap başlamadan reddedilir. (#57)
 
 - Saklı ileri yürüme kaynakları, çağıranın özetinden bağımsız yayımlanmış sürüm özetleriyle doğrulanır; tutarlı özetli sahte üyelik ve pay bağları eklemede ve geçmiş okumada reddedilir. (#167)
 - Tam denetimlerin tamamlanması için CI iş süresi 30 dakikadan 60 dakikaya çıkarıldı; testler ve başarı ölçütleri korundu. (#167)
@@ -49,6 +53,8 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 - Altı çalışma belgesi mevcut sahiplerinde birleştirildi; kontrol ve gerçek veri kanıtı inceleme öncesine alındı, küçük işte yazıcı devri ve kapsam kuralları sadeleştirildi. Eski bilet sözleşmesi geçmiş bölümüyle korundu.
 
 ### Eklendi
+
+- Mevcut 24 varyantın kayıtlı altı dönem sınaması için açık eşleme alan komut ve destek raporu eklendi; eksik sonuçlar ve gerçek kayıt başvuruları korunur. (#57)
 
 - Kayıtlı sağlayıcı ve görüntüye bağlı, açık seçimli pay kimliği eklendi. Tarihli KOZAA/TRMET ve KOZAL/TRALT kodları fiyat ve olay değerleri değiştirilmeden aynı pay geçmişine bağlanır. Eski etiket davranışı korunur; kaynak, özet ve çakışma hataları reddedilir. Eksik ısınma ve düzeltme kökeninin kanıt sınırı korunur. (#167)
 
