@@ -1223,9 +1223,31 @@ Başka sembolün işlemi ortak nakit, slot veya portföy sınırı nedeniyle bu 
 Gün girdisi düzeltilmiş işlem fiyatları/göstergeler yanında ham yüksek/düşük,
 üst/alt limit ve limit kanıtını taşır. Eski kapanışa yakınlık bayrağı tam gün kilit kanıtı
 olarak kullanılmaz. Kanıt yoksa limit bilinmiyor kalır; o satırda kesin dolum üretilmez.
+Bunun tek istisnası aşağıdaki açık kayıtlı `ham_aralik_v1` kilit politikasıdır.
 Düzeltilmiş AOF ve kapanışın düşük/yüksek sınırında §5.13'ün mevcut yuvarlama payı uygulanır;
 girdi fiyatları değiştirilmez. Pay içi/dışı sınırlar ve girdi değişmezliği `tests/test_motor.py` ile denetlenir.
 Bilinen limitte tam gün kilit denetimi önceki dolum sözleşmesindeki ham eşitlikle yapılır.
+
+Levent'in 22.10.2026 onayı (#176): S10 hücre yönteminde ve S11/S12'nin `hucre_yontemi`
+kaydında isteğe bağlı `kilit_politikasi=ham_aralik_v1` seçilebilir. Seçenek yoksa eski
+sözlük, katı kanıt koşulu ve geçmiş okuma korunur; boş varsayılan alan eklenmez.
+Seçenek yokken eski mum sayı gösterimi, gün/durum özetleri ve aynı gün devamı da korunur.
+Ortak S10/S11/S12 yöntem doğrulaması alan türlerini korur; tamsayı tekrar değeri,
+mantıksal veya ondalık eşdeğeriyle değiştirilemez. Açık politikada desteklenen sayı
+skalerleri mevcut normalleştirmeden geçer; bozuk sayı yokluk sayılmaz.
+Gerekçe: sonlu pozitif ham yüksek > düşük, herhangi bir sayısal sınır için iki Q74
+`yüksek = düşük = limit` eşitliğini de dışlar. Yalnız üst/alt limit ve sayısal limit
+kanıtı tamamen yoksa bu aralık, tam gün kilit bulunmadığının türetilmiş kanıtıdır.
+Sayısal limitler bilinmiyor kalır; limit veya `limit_kaniti` üretilmez. Bilinen
+limitlerin ham sıra ve eşitlik denetimleri önce gelir. Kısmi, bozuk veya çelişkili
+limit girdisi aralık yoluna düşmez. Sayısal kanıt yokken tek fiyatlı, eksik, sonsuz,
+pozitif olmayan veya ters ham aralık bu istisnayla dolum izni kazanmaz. Karantina ve diğer dolum engelleri korunur.
+Bu istisna giriş, stop, tam/kısmi çıkış ve taşınan durumda aynı sahipte uygulanır;
+AOF modeli, risk, masraf ve zamanlama değişmez. Günlük çubuk gerçek dolumu kanıtlamaz.
+Seçim yeni denemenin yöntem/ayar özetine ve yürütme kimliğine, ham değerler mevcut gün
+girdi özetine bağlıdır; farklı politikayla durum devamı reddedilir. E1 fiyat/kaynak
+kimliği ve hazırlık önbelleği değişmez. `tests/test_motor.py`, `tests/test_tansusinama.py`,
+`tests/test_kayit.py` ve `tests/test_gelecek.py` bu sınırları ve eski yolu denetler.
 Kapanış sinyali aynı güne doldurulmaz. Giriş sonraki seansın AOF modelini kullanır;
 giriş gününde tavan kilidi sinyali düşürür. Stopun önceliği ve aynı gün fiyat sırası eski
 motorun açık modeliyle korunur: stop dolumu `min(stop, AOF)` olur. Stopun önceliği
@@ -1319,8 +1341,9 @@ kesiştirerek düşürmek yasaktır. Üyelik açığı veya gerekli veri kapsam�
 çocuğu hata yapar; bugünkü liste kullanılmaz. İlk ve son takvim gününün tatil olması
 tek başına eksik veri sayılmaz; istenen seans kapsamı kayıtlı takvimle denetlenir.
 Sinyal ve giriş günü üyeliği ayrı kontrol edilir. Üyelikten çıkış açık işlemi kapatmaz.
-E1'in yaklaşık kilit bayrağı doğrulanmış limit kanıtı değildir. Limit kanıtı yoksa
-S09 dolum üretmez; aday ve engelin nedeni sonuçta korunur. Gerekli işlem
+E1'in yaklaşık kilit bayrağı doğrulanmış limit kanıtı değildir. S09'daki açık kayıtlı
+`ham_aralik_v1` istisnası dışında limit kanıtı yoksa S09 dolum üretmez; aday ve engelin
+nedeni sonuçta korunur. Gerekli işlem
 kanıtı eksik çocuk tam başarı sayılmaz; limit kanıtı aşaması ve eksikliği hata
 sonucunda korunur. Gerçekten adaysız dönem ile kanıt yokluğu nedeniyle dolumsuz
 kalan dönem aynı başarılı boş sonuç diye birleştirilmez.
@@ -1329,6 +1352,60 @@ S09'un bağımsız geçerli çıkışları yine işlenir. Sonlu ve bilinen fiyat
 geçersizliği, yetersiz bütçe, doğrulanmış kilit ve üyelik reddi ise hesaplanmış
 retlerdir. E4 risk formülünü yeniden hesaplamaz; eksik girdiyi bilinen fakat uygun
 olmayan girdiden ayırır, özgün S09 nedenini korur.
+
+**Kaynaklı doğal ısınma (#178, uygulanan aday, gerçek veri kanıtı ve inceleme bekleniyor)**
+
+Mevcut §5.1 eşiği değişmez. Kayıtlı hücre yönteminde açık
+`isinma_politikasi=kaynakli_isinma_v1` ile veri ayarındaki `ilk_islem` birlikte
+seçilir. Seçim tam olarak `surum=ilk_islem_v1`, `tablo_ozeti`, `kaynak`,
+`goruntu_id`, `manifest_ozeti` alanlarını taşır. Bilinmeyen, eşleşmeyen veya tek
+taraflı seçim E1 ve önbellekten önce reddedilir. Yokluğunda eski yöntem ve eski
+kayıt anlamı korunur. Seçim tam ayar özetine, E1 başvurusuna ve önbellek anahtarına
+girer. Bu sürümün iki ilk işlem günü kaydı ve özgün kaynak sınırı
+`tansu/referans/ilk_islem_v1/kaynaklar.md` dosyasındadır.
+
+E1 resmî ilk gün kaynağını sağlayıcı, görüntü ve manifestle bağlar. Kaynak sembolü
+mevcut pay kimliğiyle çözülür; aynı pay iki kez sayılmaz. Gözlenen ilk satır tek
+başına ilk işlem günü kaynağı olamaz. Doğal bekleyiş için kaynağın ilk günü ile
+ilk gerçek gözlem eşleşir; istenen ısınma bu günü kapsar. İlk günden sonuç kesimine
+kadar kayıtlı takvimin her gerekli gününde gerçek, sonlu ve pozitif kapanış bulunur.
+İlk günün takvimde olmaması, kırpılmış geçmiş ve iç boşluk hata kalır. Diğer
+fiyat, kalite, karantina ve üyelik denetimleri sürer; ön listeleme fiyatı üretilmez.
+Bu denetim kayıtlı gözlem takvimine göredir; eksiksiz resmî tatil takvimi iddiası değildir.
+
+E1 başvurusundaki `gecmis_kaniti`, çözülmüş pay başına `kaynak_id`,
+`ilk_islem_gunu`, `bitis`, `gozlem_ozeti` taşır. Özet, ilk günden kesime kadar
+sıralı gözlem günlerinin UTF-8 ISO metninden alınır; her günün sonunda LF vardır.
+İkinci günlük liste saklanmaz. Sayı ve 500'üncü gün, zaten bağlı kayıtlı takvimden
+türetilir; E4 bu sayı ile mevcut E2 sayacını karşılaştırır. Sonraki fiyatlar daha
+erken uygunluğu değiştiremez.
+
+Mevcut `isinma[pay]` içindeki `gozlem`, `gerekli`, `tamam` ilk değerlendirme gününü
+anlatmayı sürdürür. Yalnız kaynakla doğrulanmış eşik öncesi durumda
+`dogal_bekleyis={neden: dogal_isinma, ilk_gun, ilk_islem_gunu, kaynak_id,
+isinma_tamamlanma_gunu, e1_ref}` eklenir. Günler ISO metnidir; eşik kesime kadar
+dolmazsa tamamlanma günü `null` olur. `tamam` yalnız bool'dur. Bu neden, olağan
+uygun fakat işlemsiz sonuçtan ayrıdır; yeni başarı durumu veya yürütme izni değildir.
+Hiçbir tarihli üye düşmez. S11/S12 ölçü ve eğitim izdüşümü aynı nedeni gerçek çocuk
+sonucuna bağlar; bir payın doğal bekleyişi diğer üyelerin eğitimini eksik yapmaz.
+Günlük sinyal uygunluğu mevcut E2 sahibinde kalır. 499 gözlemde sinyal yoktur;
+500 dönem içinde dolunca diğer kurallar uygunsa günlük hesap engellenmez.
+
+Eşiğin dolması WF seçimi üretmez. Çeyrekte dondurulan pay seçimi, `secim_yok` ve
+seçimsiz yeni giriş yasağı korunur. Açık/bekleyen işlem, özgün giriş ayarları ve
+çıkışlar sürer. Yasal seçilmiş model yolunda engel olduğu gösterilmeyen çeyrek başı
+eşik kapısı sırf ulaşılamayan test için değiştirilmez.
+
+Yeni seçimin START kaydı hesap öncesi `uyelik_kaniti_v2` saklar: `surum`,
+`uyelik_tablo_metni`, `pay_kimligi_tablo_metni`, `ilk_islem_tablo_metni`.
+Pay metni yalnız pay kimliği seçilmediyse `null` olabilir. Üst ve çocuk S10/S11/S12
+başlangıçları aynı yayımlanmış özetli kaynak baytlarını korur. E5 ekleme ve yeni
+okuma aynı saf kaynak ayrıştırıcılarını kullanır; canlı tablo veya fiyat okumaz.
+Kayıtlı takvim, kaynak, kesim, E1 geçmiş özeti, sayı/tamamlanma ve gerekli üye kümesi
+ile çocuk nedenleri uzlaştırılır. Gerekli üyeler sunulan sonuç anahtarlarından
+türetilmez. Eksik kanıt başarı sayılmaz. Gerçek yeni E1 ve önbellek girişi canlı
+sabitlenmiş kaynakları yine denetler. Eski günlükler değiştirilmez; eski seçimsiz
+ve `ileri_uyelik_kaniti_v1` kayıtları yeni kanıta taşınmaz.
 
 E5 başlangıç makbuzu oluşmadan E1–E3 hesabı başlamaz. Başlangıç kaydı altı iş kimliğini,
 kod/veri/ortam bağlarını ve işçi politikasını içerir. İşçiler yalnız hesap yapar;
@@ -1579,7 +1656,8 @@ fiyatın önceki dönem ve hücreyi değiştirmemesini denetler. Eski doğrudan 
 çağıranı `tests/test_kabul.py` kapsamda kalır.
 
 Tam dönem getiri kanıtı için tarihli bütün üyelerin fiyatları ve gerekli limit
-kanıtı bulunmalıdır. Bunlar eksikken sonuçlar başarısız/eksik olarak görünür;
+kanıtı bulunmalıdır; S09'daki açık kayıtlı `ham_aralik_v1` istisnası saklıdır.
+Bunlar eksikken sonuçlar başarısız/eksik olarak görünür;
 sıfır işlemden başarılı hesap veya günlük izin türetilmez.
 
 D5 için eski `saglamlik.ema`, `tansusinama.ema_tablolari` ve kayıtlı akış gerçek EMA
@@ -1643,6 +1721,7 @@ E1–E3 hesabından önce yazılıp yeniden okunur. Seçim eğitim kesimini ve s
 tarihini taşır; gerçek UTC makbuz zamanı ayrı kalır, geçmişe tarihlenmez.
 Seçim yoksa `secim_yok` ve gerekçesi yazılır. Eksik eğitim, ısınma, üyelik,
 fiyat, gösterge veya limit kanıtı başarılı boş seçim diye sunulmaz.
+Limit kanıtında S09'daki açık kayıtlı `ham_aralik_v1` istisnası saklıdır.
 
 OOS her sembol için tek sabit üst koşuda ve boş durumla başlar. Sonraki çeyrek
 E3'ün mühürlü durumunu aynen devralır; E4 durumu yeniden mühürlemez. Açık/bekleyen
@@ -1785,6 +1864,56 @@ bekleyen kimlikler görünür tutulur; kapalı nüfusa eklenmez. Boş kapalı n�
 `olculemedi/kapali_islem_yok` olur. Eksik risk veya sonuç sıfıra çevrilmez.
 Kısmi gerçekleşme nihai sonuca tekrar eklenmez. Sermaye modeli bulunmadığından
 hesap iflası, hesap yüzde düşüşü, Calmar veya fonlanmış portföy bakiyesi üretilmez.
+
+**#178 tüketici bütünleştirmesi (teknik bağlar uygulandı; tam kaynak kanıtı bekleniyor).**
+MC üst yöntem şeması değişmez; üst kayda `hucre_yontemi` veya yeni ısınma
+politika alanı eklenmez. İlk işlem kaynağı seçildiğinde, kayıt yayın sınırı
+ve yalnız o kayıtta biten yeni okuma, başvurulan önceki WF denemesinin tam
+veri ayarını ve etkin hücre yönteminin eşleşmiş ısınma seçimini doğrular.
+Yalnız yöntem adını tanıyıp bu bağı atlamak yeterli değildir. Tamamlanmış
+kaynak uygunluğu yine hesap öncesindeki S13 kaynak denetiminden geçer.
+MC isteği, ortak E2/E3 yeniden sınaması ve son E3 durum denetimi aynı donmuş
+WF hücre yöntemini kullanır; `ham_aralik_v1` ve kaynaklı ısınma birlikte
+korunur. Bu yalnız bellek içi yürütme bağlamıdır; MC ayar özeti değişmez.
+İlk işlem kaynağı seçili MC'nin tarihsel üyelik/ısınma kanıtı, başvurulan
+WF başlangıcının doğrulanmış `uyelik_kaniti_v2` metinlerinden gelir.
+Okuma canlı tabloya dönmez. Doğal bekleyiş yalnız #178'in ortak kaynak ve
+sonuç sahipleri doğruladığında geçerlidir; bilinmeyen geçmiş eksikliği,
+üye eksiltme, seçimsiz giriş ve erken sinyal yasakları korunur.
+Yalnız bu yeni politika seçiliyse her stres bölümünde mevcut dönem,
+E1 referansı, ısınma alanları ve gerçek bölüm sonu E3 durumu korunur.
+`durumlar[sembol]`, yalnız `durum` ve `gecmis_onekleri` alanlarını taşır.
+`durum`, özgün tam E3 durumunun `iz`, `islemler` ve `retler` dışındaki bütün
+alanlarıdır; özgün tam durumun `butunluk` değeri de saklanır. Üç geçmiş
+listesinin uzunlukları `gecmis_onekleri` içinde saklanır; bool kabul edilmez.
+Her uzunluk sıfır ile aynı sembolün nihai listesinin uzunluğu arasındadır.
+Üretici, yayın öncesinde her gerçek ara geçmişi nihai durumun aynı uzunluktaki
+kanonik öneğiyle karşılaştırır; uyuşmazlık hata verir. Okuyucu bu üç öneği
+geri kurduktan sonra aynı katı E3 ayrıştırıcısını ve taşıma denetimlerini
+çalıştırır. Eksik `durum` sarmalayıcısı doğrudan motora verilmez. `dolumlar`,
+pozisyon, bekleyen risk girdileri, parasal sonuçlar ve kalan bütün değişen
+alanlar tam saklanır; sonraki girişin fiyatı veya stopu önceki duruma kopyalanmaz.
+Gerekçe: iki çeyrek, çeyrek başına 30 sembol ve 65 seanslık kontrollü örnekte,
+nihai durumlar 1.030.582 bayt iken tam ara durumlar ayrıca 1.531.045 bayt tuttu.
+Motorun kümülatif geçmişini her bölümde tekrar saklamak gerekli değildir.
+Bu ölçüm tam kaynak, çalışma süresi veya nihai bütçe uygunluğu kanıtı değildir.
+Üretim sırasında tam ara durumlar bellekte tutulur; tepe bellek azalması
+iddia edilmez. Okumada tam durumların kurulması ve doğrulanması sürer.
+Önceki durum ayrıca kopyalanmaz; sonraki bölüm, bir önceki geri kurulmuş son
+durumdan ve mevcut ilk boş durumdan başlar. Gerekli iş kümesi ortak tarihli
+üyelik ve aktif/karantina taşıma sahiplerinden gelir. Ortak durum okuyucusu,
+özgün plan/sinyal/ayar bağı, kesim ve geçmiş önek tutarlılığı birlikte denetlenir.
+Son bölüm gözlemlerinin birikmiş durumu, senaryonun nihai durumuyla aynıdır.
+Yalnız yapısal durum ayrıştırması tutarlı taşıma kanıtı sayılmaz. Aday tarihleri
+aynı planın kesin MC sinyal kabullerinden gelir; ikinci günlük liste tutulmaz.
+İlk işlem kaynağı seçilmemiş eski MC kayıtlarının kabulü değişmez.
+Kayıt eşleştirmesi ekleme ve yeni okumada sınandı. Ham aralıkla ortak yeniden
+sınama ve özgün ayar taşıması kontrollü girdide geçti. İki çeyreklik sahip
+kontrolü tam E3 durumunun kanonik geri kuruluşunu, değişmeyen nihai durumu,
+bozuk geçmiş/önek uzunluğu ve ara durum/iş kümesi retlerini sınar.
+Bu kurulmuş kontrol, uygun ve tamamlanmış kaynaklı ısınma WF/MC koşusu değildir.
+Böyle bir pozitif kaynak koşusu ve son ortak kaynak doğrulaması açık kalır.
+Bütünleştirme, #94/#57 kabulünü veya ayrı ikinci inceleme turlarını kapatmaz.
 
 **Dilim ve kapsam.** Ana ufuk WF OOS 2022–2025'tir. 2021 eğitim yılı ana MC
 nüfusuna girmez. 2022, 2023, 2024, 2025 ve birleşik kapanış dilimleri ayrı
@@ -2104,7 +2233,7 @@ depolama yalnız fiilen denenen/tamamlanan sayılarla raporlanır.
 #### Dolum, risk ve ölçünün anlamı
 
 - Claude'un kayıtlı **seçenek 2** kararı geçerlidir (18.10; yanıt Q74): ham `yüksek = düşük = tavan` gününde alış dolmaz, giriş sinyali düşer; ham `yüksek = düşük = taban` gününde satış bekler, ilk uygun kilitsiz günde yeniden işlenir. Sonraki fiyat kullanılır; her engel sayılır. B Q49'un açılış eşitliği ekleme önerisi bu kararı değiştirmez. Günlük çubuk gerçek emir kuyruğunu kanıtlamaz. Dayanak: [L5], [T4], [W4], [W5]; `tavan-taban/bulgular.md`, yanıt Q74.
-- Limit ve adım ham fiyat ölçeğindedir. 2021–2025 için olağan Yıldız/Ana paylarında ±%10, adımda 06.11.2023 değişikliği kullanılır; üst limit aşağı, alt limit yukarı izinli adıma yuvarlanır. Menkul/gün istisnası, baz fiyat veya tarihli kural kanıtı yoksa bayrak bilinmiyor kalır; dolum kesinmiş gibi yazılmaz. Tablo sahibi §5.1'dir. Dayanak: [W5]; `fiyat-limiti/arastirma.md`, B1–B5.
+- Limit ve adım ham fiyat ölçeğindedir. 2021–2025 için olağan Yıldız/Ana paylarında ±%10, adımda 06.11.2023 değişikliği kullanılır; üst limit aşağı, alt limit yukarı izinli adıma yuvarlanır. Menkul/gün istisnası, baz fiyat veya tarihli kural kanıtı yoksa bayrak bilinmiyor kalır; dolum kesinmiş gibi yazılmaz. Yukarıdaki açık `ham_aralik_v1` seçimi yalnız tam gün eşitlik kilidini dışlar; sayısal limit kanıtı yerine geçmez. Tablo sahibi §5.1'dir. Dayanak: [W5]; `fiyat-limiti/arastirma.md`, B1–B5.
 - Kapanıştan üretilen karar o kapanışa geriye dönük doldurulmaz. Mevcut AOF yaklaşımı açık dolum politikası olarak korunur; D §1'in gerçek açılış önerisi İş Yatırım'da açılış varmış gibi uygulanmaz. Gerçek açılış isteyen varyantta alan yoksa ölçülemedi yazılır. Dayanak: [W4]; A Q23, D §1 ve §4'teki veri kaynağı sınırı.
 - Komisyon = dolum tutarı × 0,0015; BSMV = komisyon × 0,05. Toplam bu yönde 0,001575 × tutardır. Kısmi çıkış dahil her dolum ayrı hesaplanır; alış ve satış tutarı farklı olabilir. Kayma komisyona gömülmez. Dayanak: [L6]; C giriş, D §1, `mc-wf/arastirma.md` muhasebe sınırı.
 - Her işlem aynı varsayımsal referans tutarla normalleştirilir; önceki kâr referansı büyütmez. %2 planlanan risk, gerçekleşen kayba tavan garantisi değildir. İlk risk sonradan yükselen stopla değiştirilmez. Dayanak: [L1], [L2], [T2], [T3], [W6]; D §1.
@@ -2237,7 +2366,8 @@ Görüntüdeki 2021–2025 dizisi 1.250 gözlemdir; iptal edilen 08.02.2023 bu d
 yoktur. Ayrı XU100 dosyası bu dizinin yerine geçirilmez. TRALT'ın ilk gözlemi
 12.02.2010'dur; önceki 29 gerekli gün üretilmez ve istenen ısınma başlangıcı
 ötelenmez. Kod bağı kapsamı kanıtlayabilir; eksik ısınma, kalite veya limit kanıtı
-başarılı işlem ya da tam dönem getirisi sayılmaz. Sağlayıcının bütün düzeltme
+başarılı işlem ya da tam dönem getirisi sayılmaz; limit kanıtında S09'daki açık kayıtlı
+`ham_aralik_v1` istisnası saklıdır. Sağlayıcının bütün düzeltme
 geçmişi ve fiyat sınıfı kökeni bu sınırlı kod zinciriyle kanıtlanmış olmaz.
 
 Motorlar sorumluluk sınırıdır; ayrı servis zorunluluğu değildir. E1–E3 düz veri kayıtlarıyla çalışır;

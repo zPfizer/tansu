@@ -45,6 +45,7 @@ KAYNAK_GUNU_EN_AZ = 20  # TASARIM 5.13: kaynak günü hatası için en az satır
 _YAYIMLANMIS_KAYNAK_OZETLERI = {
     "bist30_2021_2025_v1": "6e9ff3cd4a9ce4f2fe9a9ef9f77c36694f563bebe1ca2ba4f924643ce904ad07",
     "pay_kimligi_v1": "128cb4fdd2f310b3703d1e90dd6d83718b3a14185cd22c9a4bee6fd1190ea45d",
+    "ilk_islem_v1": "8a678750c0ebfbfebe730fc8b4f53eaeaac0f622111d1dcf095cfa054589f4f1",
 }
 
 
@@ -173,20 +174,121 @@ def uyelik_hazirla(istek: UyelikIstegi, *, tablo_metni=None) -> dict:
 PAY_KIMLIGI_KOKU = Path(__file__).parent / "referans"
 
 
-def pay_kimligi_secimi_dogrula(secim):
-    """TASARIM 5.15 #167: yalnız yapı denetimi; dosya veya piyasa okunmaz."""
+def _kaynak_secimi_dogrula(secim, surum, ad):
     alanlar = {"surum", "tablo_ozeti", "kaynak", "goruntu_id", "manifest_ozeti"}
     if not isinstance(secim, dict) or set(secim) != alanlar:
-        raise VeriHatasi("pay kimliği seçiminin alanları geçersiz")
-    if secim["surum"] != "pay_kimligi_v1":
-        raise VeriHatasi("bilinmeyen pay kimliği sürümü")
+        raise VeriHatasi(f"{ad} seçiminin alanları geçersiz")
+    if secim["surum"] != surum:
+        raise VeriHatasi(f"bilinmeyen {ad} sürümü")
     if any(not isinstance(secim[a], str) or not secim[a].strip() for a in alanlar):
-        raise VeriHatasi("pay kimliği seçiminin bağı boş")
+        raise VeriHatasi(f"{ad} seçiminin bağı boş")
     if any(
         len(secim[a]) != 64 or set(secim[a]) - set("0123456789abcdef")
         for a in ("tablo_ozeti", "manifest_ozeti")
     ):
-        raise VeriHatasi("pay kimliği özeti geçersiz")
+        raise VeriHatasi(f"{ad} özeti geçersiz")
+
+
+def pay_kimligi_secimi_dogrula(secim):
+    """TASARIM 5.15 #167: yalnız yapı denetimi; dosya veya piyasa okunmaz."""
+    _kaynak_secimi_dogrula(secim, "pay_kimligi_v1", "pay kimliği")
+
+
+ILK_ISLEM_KOKU = Path(__file__).parent / "referans"
+
+
+def ilk_islem_secimi_dogrula(secim):
+    """TASARIM 5.15 #178: kaynak seçimi yalnız yayımlanmış sürüme bağlıdır."""
+    _kaynak_secimi_dogrula(secim, "ilk_islem_v1", "ilk işlem")
+    if secim["tablo_ozeti"] != _YAYIMLANMIS_KAYNAK_OZETLERI["ilk_islem_v1"]:
+        raise VeriHatasi("ilk işlem sürümünün onaylı kaynak özeti uyuşmuyor")
+
+
+def ilk_islem_hazirla(
+    secim, *, kaynak, goruntu_id, manifest_ozeti, pay_kimligi=None, tablo_metni=None
+):
+    """TASARIM 5.15 #178: E1 ve tarihsel E5 aynı saf kaynak parserını kullanır."""
+    ilk_islem_secimi_dogrula(secim)
+    bag = dict(kaynak=kaynak, goruntu_id=goruntu_id, manifest_ozeti=manifest_ozeti)
+    if any(secim[a] != v for a, v in bag.items()):
+        raise VeriHatasi("ilk işlem kaynak/görüntü/manifest bağı uyuşmuyor")
+    bayt = (
+        (ILK_ISLEM_KOKU / secim["surum"] / "ilk_islem.csv").read_bytes()
+        if tablo_metni is None
+        else tablo_metni.encode("utf-8")
+    )
+    if hashlib.sha256(bayt).hexdigest() != secim["tablo_ozeti"]:
+        raise VeriHatasi("ilk işlem tablo özeti uyuşmuyor")
+    tablo = pd.read_csv(
+        BytesIO(bayt), encoding="utf-8-sig", dtype=str, keep_default_na=False
+    )
+    alanlar = {
+        "kaynak",
+        "kaynak_sembolu",
+        "borsa_kodu",
+        "unvan",
+        "ilk_islem_gunu",
+        "yayim_tarihi",
+        "kaynak_id",
+        "kaynak_url",
+        "goruntu_id",
+        "manifest_ozeti",
+    }
+    if (
+        set(tablo.columns) != alanlar
+        or tablo.empty
+        or tablo.apply(lambda x: x.str.strip()).eq("").any().any()
+    ):
+        raise VeriHatasi("ilk işlem tablosunun alanları geçersiz")
+    if any(not tablo[a].eq(v).all() for a, v in bag.items()):
+        raise VeriHatasi("ilk işlem tablosunun kaynak/görüntü/manifest bağı uyuşmuyor")
+    kayitlar = {}
+    for r in tablo.to_dict("records"):
+        for ad in ("ilk_islem_gunu", "yayim_tarihi"):
+            if dt.date.fromisoformat(r[ad]).isoformat() != r[ad]:
+                raise VeriHatasi("ilk işlem kaynağında tarih geçersiz")
+        pay = (
+            pay_sembolleri([r["kaynak_sembolu"]], pay_kimligi)[0]
+            if pay_kimligi
+            else r["kaynak_sembolu"]
+        )
+        kod = _borsa_kodu(pay, r["ilk_islem_gunu"], pay_kimligi) if pay_kimligi else pay
+        if pay in kayitlar or kod != r["borsa_kodu"]:
+            raise VeriHatasi("ilk işlem kaynağında tekrarlı veya çelişkili pay")
+        kayitlar[pay] = r
+    return kayitlar
+
+
+def ilk_islem_gecmis_kaniti(kayit, gunler, bitis):
+    """TASARIM 5.15 #178: bağlı takvimin kesilmiş öneki; fiyat hesabı değildir."""
+    ilk = kayit["ilk_islem_gunu"]
+    gunler = list(gunler)
+    if gunler != sorted(set(gunler)) or ilk not in gunler or ilk > bitis:
+        raise VeriHatasi("ilk işlem için kayıtlı takvim öneki eksik")
+    ozet = hashlib.sha256(
+        "".join(t + "\n" for t in gunler if ilk <= t <= bitis).encode("utf-8")
+    ).hexdigest()
+    return dict(
+        kaynak_id=kayit["kaynak_id"], ilk_islem_gunu=ilk, bitis=bitis, gozlem_ozeti=ozet
+    )
+
+
+def _ilk_islem_gozlemleri(istek, kayitlar, f, gunler, son, kapsam_bas):
+    kanit = {}
+    for pay in set(istek.semboller) & kayitlar.keys():
+        r = kayitlar[pay]
+        ilk = r["ilk_islem_gunu"]
+        if kapsam_bas > pd.Timestamp(ilk):
+            raise VeriHatasi(f"{pay}: ilk işlem geçmişi kırpılmış")
+        kanit[pay] = ilk_islem_gecmis_kaniti(r, gunler, _tarih(son))
+        beklenen = [t for t in gunler if ilk <= t <= _tarih(son)]
+        g = f[(f["sembol"] == pay) & (f["tarih"] <= son)].sort_values("tarih")
+        if list(g["tarih"].map(_tarih)) != beklenen or any(
+            not np.isfinite(g[ad]).all() or not g[ad].gt(0).all()
+            for ad in ("kapanis", "ham_kapanis")
+        ):
+            raise VeriHatasi(f"{pay}: ilk işlem geçmişi eksik veya geçersiz")
+    return kanit
 
 
 def pay_kimligi_hazirla(secim, *, kaynak, goruntu_id, manifest_ozeti, tablo_metni=None):
@@ -348,6 +450,7 @@ class VeriIstegi:
     isinma_donemi: tuple[str, str] | None = None
     evren_politikasi: str | None = None
     pay_kimligi: dict | None = None
+    ilk_islem: dict | None = None
 
 
 def veri_hazirla(istek: VeriIstegi, kimlik, kok) -> dict:
@@ -365,6 +468,15 @@ def veri_hazirla(istek: VeriIstegi, kimlik, kok) -> dict:
         a = pay_kimligi_uygula(a, politika)
         istek = replace(
             istek, semboller=tuple(pay_sembolleri(istek.semboller, politika))
+        )
+    ilk_islem = None
+    if istek.ilk_islem is not None:
+        ilk_islem = ilk_islem_hazirla(
+            istek.ilk_islem,
+            kaynak=istek.kaynak,
+            goruntu_id=kimlik,
+            manifest_ozeti=_sha256(Path(kok) / "ag" / kimlik / "manifest.json"),
+            pay_kimligi=politika,
         )
     gunler = a.gunler[a.gunler <= son]
     uyelik = None
@@ -453,6 +565,17 @@ def veri_hazirla(istek: VeriIstegi, kimlik, kok) -> dict:
             )
         ).hexdigest()
         referans["kayit_id"] += f"/{ozet}"
+    if ilk_islem is not None:
+        referans["ilk_islem"] = deepcopy(istek.ilk_islem)
+        referans["gecmis_kaniti"] = _ilk_islem_gozlemleri(
+            istek, ilk_islem, f, list(map(_tarih, gunler)), son, kapsam_bas
+        )
+        ozet = hashlib.sha256(
+            json.dumps(istek.ilk_islem, sort_keys=True, separators=(",", ":")).encode(
+                "utf-8"
+            )
+        ).hexdigest()
+        referans["kayit_id"] += f"/{ozet}"
     return {
         **({"uyelik": uyelik} if uyelik is not None else {}),
         "piyasa": piyasa,
@@ -474,6 +597,8 @@ def veri_hazirla(istek: VeriIstegi, kimlik, kok) -> dict:
 
 def _istek_donemi(istek):
     _kalite_surumu(istek.kalite_surumu)
+    if istek.ilk_islem is not None:
+        ilk_islem_secimi_dogrula(istek.ilk_islem)
     if not istek.semboller or len(set(istek.semboller)) != len(istek.semboller):
         raise VeriHatasi("istekte semboller boş veya tekrarlı")
     if any(

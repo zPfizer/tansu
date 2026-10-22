@@ -6,6 +6,16 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ## [Yayımlanmamış]
 
+- MC kaydı ve ortak yeniden sınaması donmuş WF hücresinin eşleşmiş ısınma seçimine bağlandı. Yeni politikada bölüm durumları özgün mühür ve tam değişen alanlarla saklanır; geçmişler nihai durumun kanonik öneklerinden kayıpsız kurulur. Tam uygun kaynak koşusu kanıtı açık kalır. (#94, #178)
+
+- Kaynağa ve değişmez görüntüye bağlı açık ısınma seçimi, doğrulanmış doğal 500 gözlem bekleyişini eksik geçmişten ayırır; günlük eşik, tarihli üyeler, WF seçimi ve eski kayıtlar korunur. Yeni kanıt eklemede ve canlı tablosuz geçmiş okumada doğrulanır. (#178)
+
+- İsteğe bağlı kilit politikasında eski mum/durum gösterimi, yöntem alan türleri ve desteklenen sayısal skalerlerin kabulü korundu. (#176)
+
+- S10/S11/S12 ve kapsam açıklamalarındaki eksik limit kanıtı ifadeleri, S09'un mevcut `ham_aralik_v1` istisnasına bağlandı. (#176)
+
+- Açık `ham_aralik_v1` kilit politikası, sayısal kanıt tamamen yokken geçerli hareketli ham çubukta tam gün eşitlik kilidini dışlar; tek fiyat, bozuk/kısmi kanıt ve eski kayıtların katı davranışı korunur. (#176)
+
 - İşlem kontrolü, düzeltilmiş AOF ve kapanışta veri kapısının mevcut yuvarlama payını kullanır; fiyatlar ve ham limit denetimi korunur. (#169)
 - Kayıtlı ileri yürümede seçim alanı, sonuç içeriği ve nihai giriş kohortu sayımları aynı kaynak doğrulamasına bağlandı. Tam kontrollerin bitmesi için CI iş süresi 15 dakikadan 30 dakikaya çıkarıldı; testler ve başarı ölçütleri korundu. (#93)
 

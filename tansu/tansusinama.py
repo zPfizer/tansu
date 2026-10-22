@@ -963,18 +963,243 @@ def _kayitli_istek(deneme):
     """TASARIM 5.15 S10: kayıtlı ayar dışında hesap varsayımı üretme."""
     _yurutme_ayarlari(deneme)
     _kayitli_veri_ayarlari(deneme["veri_ayarlari"])
+    _isinma_secimi_dogrula(deneme["veri_ayarlari"], deneme["yontem_ayarlari"])
     _kayitli_donemler(deneme["donemler"])
     _kayitli_takvim(deneme["veri_ayarlari"].get("takvim", {}))
 
 
-def _yurutme_ayarlari(deneme):
-    if deneme["yontem_ayarlari"] != KAYITLI_YONTEM:
+def _kayitli_hucre_yontemi(yontem):
+    """TASARIM 5.15 #176: isteğe bağlı kilit seçimi eski sözlüğe eklenmez."""
+    beklenen = KAYITLI_YONTEM
+    if isinstance(yontem, dict) and "isinma_politikasi" in yontem:
+        beklenen = beklenen | dict(isinma_politikasi="kaynakli_isinma_v1")
+    if isinstance(yontem, dict) and "kilit_politikasi" in yontem:
+        beklenen = beklenen | dict(kilit_politikasi="ham_aralik_v1")
+    if not isinstance(yontem, dict) or deneme_.kanonik(yontem) != deneme_.kanonik(
+        beklenen
+    ):
         raise deneme_.PilotHatasi("Desteklenmeyen yürütme ayarı.")
+    return beklenen
+
+
+def _yurutme_ayarlari(deneme):
+    _kayitli_hucre_yontemi(deneme["yontem_ayarlari"])
     if deneme["masraf_ayarlari"] != {"masraf_surumu": islem_riski.MASRAF_SURUMU}:
         raise deneme_.PilotHatasi("Desteklenmeyen masraf ayarı.")
     if deneme["strateji"]["aile"] != katalog.AILE:
         raise deneme_.PilotHatasi("Desteklenmeyen aile; çift için risk_dayanagi_eksik.")
     _kayitli_risk(deneme["risk_ayarlari"])
+
+
+def _isinma_secimi_dogrula(v, y):
+    """TASARIM 5.15 #178: eşleşmiş opt-in, hesap veya canlı kaynak gerektirmez."""
+    hucre = y.get("hucre_yontemi", y)
+    secim = v.get("ilk_islem")
+    politika = hucre.get("isinma_politikasi")
+    if "ilk_islem" not in v and "isinma_politikasi" not in hucre:
+        return False
+    if politika != "kaynakli_isinma_v1" or secim is None:
+        raise deneme_.PilotHatasi(
+            "İlk işlem kaynağı ve ısınma politikası birlikte seçilmelidir."
+        )
+    try:
+        veri.ilk_islem_secimi_dogrula(secim)
+    except veri.VeriHatasi as hata:
+        raise deneme_.PilotHatasi(str(hata)) from hata
+    if any(
+        secim[a] != deger
+        for a, deger in dict(
+            kaynak=v["kaynak"],
+            goruntu_id=v["veri_referanslari"][0],
+            manifest_ozeti=v["manifest_ozeti"],
+        ).items()
+    ):
+        raise deneme_.PilotHatasi("İlk işlem seçimi kayıtlı veri bağıyla uyuşmuyor.")
+    return True
+
+
+def _ilk_islem_kayitlari(v, *, uyelik_kaniti=None):
+    politika = None
+    if v.get("pay_kimligi") is not None:
+        politika = veri.pay_kimligi_hazirla(
+            v["pay_kimligi"],
+            kaynak=v["kaynak"],
+            goruntu_id=v["veri_referanslari"][0],
+            manifest_ozeti=v["manifest_ozeti"],
+            **(
+                {}
+                if uyelik_kaniti is None
+                else dict(tablo_metni=uyelik_kaniti["pay_kimligi_tablo_metni"])
+            ),
+        )
+    return veri.ilk_islem_hazirla(
+        v["ilk_islem"],
+        kaynak=v["kaynak"],
+        goruntu_id=v["veri_referanslari"][0],
+        manifest_ozeti=v["manifest_ozeti"],
+        pay_kimligi=politika,
+        **(
+            {}
+            if uyelik_kaniti is None
+            else dict(tablo_metni=uyelik_kaniti["ilk_islem_tablo_metni"])
+        ),
+    )
+
+
+def _dogal_bekleyis(v, ref, sembol, ilk, son, gerekli, kayitlar):
+    """TASARIM 5.15 #178: E2 sayacını değiştirmeden kaynak/takvim bağı türet."""
+    kaynak = kayitlar.get(sembol)
+    if kaynak is None:
+        return None
+    gunler = v["takvim"]["seanslar"]
+    kanit = veri.ilk_islem_gecmis_kaniti(kaynak, gunler, son)
+    if (
+        ref.get("ilk_islem") != v["ilk_islem"]
+        or ref.get("gecmis_kaniti", {}).get(sembol) != kanit
+    ):
+        raise ValueError("E1 ilk işlem geçmiş kanıtı kayıtlı takvimle uyuşmuyor.")
+    if kaynak["yayim_tarihi"] > ilk:
+        raise ValueError("İlk işlem kaynağı değerlendirme gününden sonra yayımlanmış.")
+    gozlemler = [t for t in gunler if kaynak["ilk_islem_gunu"] <= t <= son]
+    ilk_sayi = sum(t <= ilk for t in gozlemler)
+    tamam = gozlemler[gerekli - 1] if len(gozlemler) >= gerekli else None
+    neden = dict(
+        neden="dogal_isinma",
+        ilk_gun=ilk,
+        ilk_islem_gunu=kaynak["ilk_islem_gunu"],
+        kaynak_id=kaynak["kaynak_id"],
+        isinma_tamamlanma_gunu=tamam,
+        e1_ref=ref["kayit_id"],
+    )
+    return ilk_sayi, neden if ilk_sayi < gerekli else None
+
+
+def _isinma_kaydet(deneme, sonuc, paket, sembol, hesap, ilk, gerekli):
+    sayi = int(hesap["isinma"].at[pd.Timestamp(ilk)])
+    kayit = dict(gozlem=sayi, gerekli=gerekli, tamam=sayi >= gerekli)
+    sonuc["isinma"][sembol] = kayit
+    if deneme["veri_ayarlari"].get("ilk_islem") is not None:
+        bag = _dogal_bekleyis(
+            deneme["veri_ayarlari"],
+            paket["referans"],
+            sembol,
+            ilk,
+            sonuc["donem"]["bitis"].isoformat(),
+            gerekli,
+            paket["ilk_islem_kayitlari"],
+        )
+        if bag is not None:
+            if bag[0] != sayi:
+                raise ValueError(
+                    "E2 ısınma sayacı ilk işlem geçmiş kanıtıyla uyuşmuyor."
+                )
+            if bag[1] is not None:
+                kayit["dogal_bekleyis"] = bag[1]
+    if sayi < gerekli and "dogal_bekleyis" not in kayit:
+        _kayitli_hata(
+            sonuc,
+            "isinma",
+            f"{sembol}: {sayi}/{gerekli} gözlem",
+            sembol=sembol,
+            tarih=ilk,
+        )
+    return sayi
+
+
+def _isinma_referansi_dogrula(v, ref, donem, gereken, kayitlar):
+    """TASARIM 5.15 #178: E1 bağı ve kesim aynı saf sahipten doğrulanır."""
+    if (
+        ref.get("ilk_islem") != v["ilk_islem"]
+        or ref.get("manifest_parmak_izi") != v["manifest_ozeti"]
+        or ref.get("goruntu_id") != v["veri_referanslari"][0]
+        or ref.get("pay_kimligi") != v.get("pay_kimligi")
+    ):
+        raise ValueError("İlk işlem sonucu E1 kaynak bağı uyuşmuyor.")
+    ilk, son = donem["baslangic"].isoformat(), donem["bitis"].isoformat()
+    if ref.get("istenen_donem") != veri._donem(ilk, son) or ref.get(
+        "isinma_donemi"
+    ) != veri._donem(
+        donem["isinma_baslangici"],
+        donem["baslangic"] - dt.timedelta(days=1),
+    ):
+        raise ValueError(
+            "E1 ilk işlem dönem/ısınma kesimi kayıtlı sınırlarla uyuşmuyor."
+        )
+    beklenen = {
+        pay: veri.ilk_islem_gecmis_kaniti(kayitlar[pay], v["takvim"]["seanslar"], son)
+        for pay in gereken & kayitlar.keys()
+    }
+    if ref.get("gecmis_kaniti") != beklenen:
+        raise ValueError("E1 ilk işlem geçmiş kanıtı kayıtlı kesimle uyuşmuyor.")
+    return ilk, son
+
+
+def _isinma_sonucu_dogrula(d, r, kanit, gereken):
+    """TASARIM 5.15 #178: E5 saklı girdilerden sonuç bağını doğrular, hesap yapmaz."""
+    v = d["veri_ayarlari"]
+    kayitlar = _ilk_islem_kayitlari(v, uyelik_kaniti=kanit)
+    isinma = r.get("isinma", {})
+    ref = r.get("veri_referansi")
+    if ref is None:
+        if r["durum"] != "hata" or not r.get("hatalar") or isinma:
+            raise ValueError(
+                "İlk işlem sonucu E1 geçmiş kanıtı olmadan başarılı olamaz."
+            )
+        return
+    ilk, son = _isinma_referansi_dogrula(v, ref, r["donem"], gereken, kayitlar)
+    if (
+        not isinstance(isinma, dict)
+        or set(isinma) - gereken
+        or (r["durum"] == "tamamlandi" and set(isinma) != gereken)
+    ):
+        raise ValueError("İlk işlem sonucu gerekli tarihli üyeleri içermiyor.")
+    gerekli = next(
+        a["deger"] for a in d["strateji"]["parametreler"] if a["ad"] == "isinma"
+    )
+    uyelik = _kayitli_uyelik(
+        v, [t for t in v["takvim"]["seanslar"] if ilk <= t <= son], uyelik_kaniti=kanit
+    )
+    for pay, x in isinma.items():
+        if (
+            not isinstance(x, dict)
+            or set(x) - {"gozlem", "gerekli", "tamam", "dogal_bekleyis"}
+            or type(x.get("gozlem")) is not int
+            or x["gozlem"] < 0
+            or type(x.get("gerekli")) is not int
+            or x["gerekli"] != gerekli
+            or type(x.get("tamam")) is not bool
+            or x["tamam"] != (x["gozlem"] >= gerekli)
+        ):
+            raise ValueError("İlk işlem ısınma sayısı veya türü geçersiz.")
+        ilk_gun = next(
+            (t for t, g in uyelik["gunler"].items() if pay in g["semboller"]),
+            next(t for t in v["takvim"]["seanslar"] if ilk <= t <= son),
+        )
+        bag = _dogal_bekleyis(v, ref, pay, ilk_gun, son, gerekli, kayitlar)
+        dogal = bag[1] if bag else None
+        if (
+            (bag and bag[0] != x["gozlem"])
+            or x.get("dogal_bekleyis") != dogal
+            or ("dogal_bekleyis" in x and dogal is None)
+        ):
+            raise ValueError(
+                "Doğal ısınma nedeni, sayısı veya tamamlanma günü uyuşmuyor."
+            )
+        if (
+            not x["tamam"]
+            and dogal is None
+            and (
+                r["durum"] != "hata"
+                or not any(h.get("asama") == "isinma" for h in r.get("hatalar", []))
+            )
+        ):
+            raise ValueError("Kaynağı bilinmeyen ısınma eksikliği başarı olamaz.")
+        tamam = dogal["isinma_tamamlanma_gunu"] if dogal else None
+        if dogal and any(
+            pay in a["semboller"] and (tamam is None or a["tarih"] < tamam)
+            for a in r.get("adaylar", [])
+        ):
+            raise ValueError("Doğal ısınma dolmadan sinyal üretilmiş.")
 
 
 def _kayitli_risk(risk):
@@ -1182,6 +1407,7 @@ def _donem_veri_istegi(v, d, semboller, bas, son):
         ),
         v["evren_politikasi"],
         v.get("pay_kimligi"),
+        v.get("ilk_islem"),
     )
 
 
@@ -1189,6 +1415,7 @@ def _donem_paketi(deneme, sonuc, veri_koku, hazirlik, kapsam):
     gunler, uyelik, semboller, bas, son = kapsam
     v, d = deneme["veri_ayarlari"], sonuc["donem"]
     istek = _donem_veri_istegi(v, d, semboller, bas, son)
+    ilk_islem = _ilk_islem_kayitlari(v) if v.get("ilk_islem") is not None else None
     # TASARIM 5.15 S11: tam E1 isteği ve kaynaklar aramaya özel anahtardadır.
     anahtar = None
     if hazirlik is not None:
@@ -1213,8 +1440,19 @@ def _donem_paketi(deneme, sonuc, veri_koku, hazirlik, kapsam):
         or paket["uyelik"]["tablo_parmak_izi"] != v["uyelik_ozeti"]
         or paket["referans"].get("pay_kimligi") != v.get("pay_kimligi")
         or paket["uyelik"].get("pay_kimligi") != v.get("pay_kimligi")
+        or paket["referans"].get("ilk_islem") != v.get("ilk_islem")
     ):
         raise ValueError("E1 veri/üyelik referansı kayıtlı denemeyle uyuşmuyor.")
+    if ilk_islem is not None:
+        beklenen = {
+            pay: veri.ilk_islem_gecmis_kaniti(
+                ilk_islem[pay], v["takvim"]["seanslar"], son
+            )
+            for pay in set(semboller) & ilk_islem.keys()
+        }
+        if paket["referans"].get("gecmis_kaniti") != beklenen:
+            raise ValueError("E1 ilk işlem geçmiş kanıtı önbellek öncesi uyuşmuyor.")
+        paket["ilk_islem_kayitlari"] = ilk_islem
     if hazirlik is not None and anahtar not in hazirlik:
         hazirlik[anahtar] = deepcopy(paket)
     _donem_kapsami(paket, gunler, uyelik, semboller, bas, son)
@@ -1260,18 +1498,28 @@ def _donem_kapsami(paket, gunler, uyelik, semboller, bas, son):
         raise ValueError("E1 gerekli tarihli üyeleri içermiyor.")
 
 
-def _s10_mumlar(paket, sembol, hesap):
+def _s10_mumlar(paket, sembol, hesap, *, kilit_politikasi=None):
     m = hesap["mumlar"].copy()
     m["onceki_rsi"] = m["rsi"].ffill().shift(1)
     m["onceki_dusuk"] = m["dusuk"].ffill().shift(1)
     satirlar = [r for r in paket["piyasa"] if r["sembol"] == sembol]
     for alan in ("ham_yuksek", "ham_dusuk", "tavan", "taban", "limit_kaniti"):
-        m[alan] = [
+        degerler = [
             r.get(alan, {}).get("deger")
             if isinstance(r.get(alan, {}), dict)
             else r.get(alan)
             for r in satirlar
         ]
+        # TASARIM 5.15 #176: yalnız açık politikada None ile NaN ayrılır.
+        # Seçenek yokken eski pandas gösterimi ve gün/durum özetleri korunur.
+        if kilit_politikasi == "ham_aralik_v1" and alan in (
+            "tavan",
+            "taban",
+            "limit_kaniti",
+        ):
+            m[alan] = pd.Series(degerler, index=m.index, dtype=object)
+        else:
+            m[alan] = degerler
     m["islem"] = [r["islem"] for r in satirlar]
     m["karantina"] = ["karantina" in r["kalite_bayraklari"] for r in satirlar]
     return m
@@ -1283,19 +1531,13 @@ def _donem_sembolu(deneme, sonuc, paket, sembol, hesap, strateji, p):
     gunler = [t for t in paket["gunler"] if bas <= t <= son]
     uyelik = sonuc["uyelik"]["gunler"]
     ilk_uye = next(t for t in gunler if sembol in uyelik[t]["semboller"])
-    isinma = int(hesap["isinma"].at[pd.Timestamp(ilk_uye)])
-    sonuc["isinma"][sembol] = dict(
-        gozlem=isinma, gerekli=p.isinma, tamam=isinma >= p.isinma
+    _isinma_kaydet(deneme, sonuc, paket, sembol, hesap, ilk_uye, p.isinma)
+    m = _s10_mumlar(
+        paket,
+        sembol,
+        hesap,
+        kilit_politikasi=deneme["yontem_ayarlari"].get("kilit_politikasi"),
     )
-    if isinma < p.isinma:
-        _kayitli_hata(
-            sonuc,
-            "isinma",
-            f"{sembol}: {isinma}/{p.isinma} gözlem",
-            sembol=sembol,
-            tarih=ilk_uye,
-        )
-    m = _s10_mumlar(paket, sembol, hesap)
     sinyaller = _donem_sinyalleri(deneme, sonuc, paket, sembol, hesap, m, gunler)
     yurutme = dict(
         surum="bagimsiz_islem_v1",
@@ -1310,6 +1552,11 @@ def _donem_sembolu(deneme, sonuc, paket, sembol, hesap, strateji, p):
         risk_surumu=deneme["risk_ayarlari"]["risk_surumu"],
         masraf_surumu=deneme["masraf_ayarlari"]["masraf_surumu"],
         fiyat_politikasi=deneme["yontem_ayarlari"]["fiyat_politikasi"],
+        **{
+            k: deneme["yontem_ayarlari"][k]
+            for k in ("kilit_politikasi",)
+            if k in deneme["yontem_ayarlari"]
+        },
         strateji_ayar_parmak_izi=strateji.ayar_parmak_izi,
         deneme_ayar_parmak_izi=deneme["ayar_parmak_izi"],
     )
@@ -1616,6 +1863,11 @@ def _kayitli_yurut(
         bagimlilik_ozeti=ortam["lock_sha256"],
         tohum=None,
         is_listesi=isler,
+        **(
+            {"uyelik_kaniti": _ileri_uyelik_kaniti(v)}
+            if v.get("ilk_islem") is not None
+            else {}
+        ),
     ) as kosu:
         try:
             if kosu.makbuz.ayar_ozeti != deneme["ayar_parmak_izi"]:
@@ -1674,6 +1926,11 @@ def kayitli_izgara_calistir(
             bagimlilik_ozeti=ortam["lock_sha256"],
             tohum=None,
             is_listesi=isler,
+            **(
+                {"uyelik_kaniti": _ileri_uyelik_kaniti(v)}
+                if v.get("ilk_islem") is not None
+                else {}
+            ),
         ) as kosu:
             sonuc["baslangic_makbuzu"] = kosu.makbuz
             sonuc["kosu_id"] = kosu.makbuz.kosu_id
@@ -1964,7 +2221,15 @@ def _arama_sembol_olculeri(r):
         egri = istatistik.kapali_r_egrisi(islemler, r["donem"])
         olcu = istatistik.olc(islemler, politika="bagimsiz_olcu_v1", egri=egri)
         durum = _arama_donem_durumu(r, olcu["olculer"]["islem"]["deger"])
-        semboller.append(dict(sembol=sembol, durum=durum, olcu=olcu))
+        dogal = r["isinma"].get(sembol, {}).get("dogal_bekleyis")
+        semboller.append(
+            dict(
+                sembol=sembol,
+                durum=durum,
+                olcu=olcu,
+                **({"dogal_bekleyis": deepcopy(dogal)} if dogal is not None else {}),
+            )
+        )
     return semboller
 
 
@@ -2107,12 +2372,12 @@ def _ileri_istek(d):
         secim_politikasi="genis_bolge_net_r_v1",
         olcu_politikasi="bagimsiz_olcu_v1",
         eksenler=y.get("eksenler"),
-        hucre_yontemi=KAYITLI_YONTEM,
+        hucre_yontemi=y.get("hucre_yontemi"),
         veri_gorulme_durumu="incelenmis_gecmis",
     )
     if y != beklenen:
         raise deneme_.PilotHatasi("Eksik veya desteklenmeyen WF yöntem kaydı.")
-    _yurutme_ayarlari(d | dict(yontem_ayarlari=KAYITLI_YONTEM))
+    _yurutme_ayarlari(d | dict(yontem_ayarlari=y["hucre_yontemi"]))
     _kayitli_veri_ayarlari(d["veri_ayarlari"])
     _kayitli_takvim(d["veri_ayarlari"].get("takvim", {}))
     _arama_eksenleri(y["eksenler"])
@@ -2167,7 +2432,7 @@ def _ileri_cocuk(depo, d, bolum, h, rol):
         tekrar=0,
         bolum_id=bolum["ad"],
         rol=rol,
-        hucre_yontemi=KAYITLI_YONTEM,
+        hucre_yontemi=d["yontem_ayarlari"]["hucre_yontemi"],
     )
     makbuz = depo.deneme_kaydet(
         strateji,
@@ -2202,6 +2467,39 @@ def _ileri_cocuk(depo, d, bolum, h, rol):
 
 def _ileri_uyelik_kaniti_dogrula(v, kanit):
     """TASARIM 5.15 #167: E5 yalnız saklı kaynak ve kayıtlı bağları kullanır."""
+    if v.get("ilk_islem") is not None:
+        alanlar = {
+            "surum",
+            "uyelik_tablo_metni",
+            "pay_kimligi_tablo_metni",
+            "ilk_islem_tablo_metni",
+        }
+        if (
+            not isinstance(kanit, dict)
+            or set(kanit) != alanlar
+            or kanit["surum"] != "uyelik_kaniti_v2"
+            or any(
+                not isinstance(kanit[a], str) or not kanit[a]
+                for a in ("uyelik_tablo_metni", "ilk_islem_tablo_metni")
+            )
+            or (
+                v.get("pay_kimligi") is None
+                and kanit["pay_kimligi_tablo_metni"] is not None
+            )
+            or (
+                v.get("pay_kimligi") is not None
+                and (
+                    not isinstance(kanit["pay_kimligi_tablo_metni"], str)
+                    or not kanit["pay_kimligi_tablo_metni"]
+                )
+            )
+        ):
+            raise deneme_.PilotHatasi(
+                "Üyelik kanıtı ilk işlem alanları eksik veya geçersiz."
+            )
+        _kayitli_uyelik(v, v["takvim"]["seanslar"], uyelik_kaniti=kanit)
+        _ilk_islem_kayitlari(v, uyelik_kaniti=kanit)
+        return
     alanlar = {"surum", "uyelik_tablo_metni", "pay_kimligi_tablo_metni"}
     if (
         not isinstance(kanit, dict)
@@ -2222,7 +2520,9 @@ def _ileri_uyelik_kaniti(v):
     """TASARIM 5.15 #167: E4 hesap öncesi iki kaynağın tam baytlarını dondurur."""
     kok = Path(veri.__file__).parent / "referans"
     kanit = dict(
-        surum="ileri_uyelik_kaniti_v1",
+        surum="uyelik_kaniti_v2"
+        if v.get("ilk_islem") is not None
+        else "ileri_uyelik_kaniti_v1",
         uyelik_tablo_metni=(kok / v["uyelik_surumu"] / "uyelik.csv")
         .read_bytes()
         .decode("utf-8"),
@@ -2230,8 +2530,16 @@ def _ileri_uyelik_kaniti(v):
             veri.PAY_KIMLIGI_KOKU / v["pay_kimligi"]["surum"] / "eslemeler.csv"
         )
         .read_bytes()
-        .decode("utf-8"),
+        .decode("utf-8")
+        if v.get("pay_kimligi") is not None
+        else None,
     )
+    if v.get("ilk_islem") is not None:
+        kanit["ilk_islem_tablo_metni"] = (
+            (veri.ILK_ISLEM_KOKU / v["ilk_islem"]["surum"] / "ilk_islem.csv")
+            .read_bytes()
+            .decode("utf-8")
+        )
     _ileri_uyelik_kaniti_dogrula(v, kanit)
     return kanit
 
@@ -2242,7 +2550,7 @@ def _ileri_kosu(depo, d, mod, kod, ortam, isler):
     if (
         d["yontem_ayarlari"]["yontem"] == ILERI_SURUM
         and v.get("pay_kimligi") is not None
-    ):
+    ) or v.get("ilk_islem") is not None:
         kanit["uyelik_kaniti"] = _ileri_uyelik_kaniti(v)
     return depo.kosu(
         d["deneme_id"],
@@ -2268,7 +2576,14 @@ def _ileri_egitim(depo, cocuk, makbuz, kok, mod, kod, ortam, hazirlik):
         r = _kayitli_sonuc(cocuk, kosu.makbuz.kosu_id, is_id, donem)
         paket = _donem_verisi(cocuk, r, kok, hazirlik)
         if paket is not None:
-            r = _kayitli_donem((cocuk | dict(yontem_ayarlari=KAYITLI_YONTEM), r, paket))
+            r = _kayitli_donem(
+                (
+                    cocuk
+                    | dict(yontem_ayarlari=cocuk["yontem_ayarlari"]["hucre_yontemi"]),
+                    r,
+                    paket,
+                )
+            )
         r = _donem_yaz(kosu, r, [])
         bitis = kosu.bitir(
             durum=r["durum"],
@@ -2353,6 +2668,16 @@ def _ileri_secimler(depo, d, kosu, bolum, kok, mod, kod, ortam, semboller):
                         toplam_net_r=o["toplam_net_r"],
                         dislanan=dislanan,
                         uyarilar=["egitim_120_alti"] if n < 120 else [],
+                        **(
+                            {
+                                "dogal_bekleyis": deepcopy(
+                                    r["isinma"][sembol]["dogal_bekleyis"]
+                                )
+                            }
+                            if r["isinma"].get(sembol, {}).get("dogal_bekleyis")
+                            is not None
+                            else {}
+                        ),
                     )
                 )
             ozetler.append(o)
@@ -2424,6 +2749,11 @@ def _ileri_yurutme(d, kosu_id, sembol):
         risk_surumu=d["risk_ayarlari"]["risk_surumu"],
         masraf_surumu=d["masraf_ayarlari"]["masraf_surumu"],
         fiyat_politikasi="aof_v1",
+        **{
+            k: d["yontem_ayarlari"]["hucre_yontemi"][k]
+            for k in ("kilit_politikasi",)
+            if k in d["yontem_ayarlari"]["hucre_yontemi"]
+        },
         strateji_ayar_parmak_izi=s["ayar_parmak_izi"],
         deneme_ayar_parmak_izi=d["ayar_parmak_izi"],
     )
@@ -2468,6 +2798,7 @@ def _ileri_test_sembolu(
     *,
     mc_plan_ref=None,
     mc_cocuk_id=None,
+    mc_hucre_yontemi=None,
 ):
     # TASARIM 5.15 S13: MC iki değişmez bağı ortak E2/E3 hesabından önce doğrular.
     mc = mc_plan_ref is not None or mc_cocuk_id is not None
@@ -2485,6 +2816,22 @@ def _ileri_test_sembolu(
         for alan in ("referans", "uyelik")
     ):
         raise deneme_.PilotHatasi("MC E2 veri/üyelik pay kimliği kayıtla uyuşmuyor.")
+    yurutme_d = d
+    if d["yontem_ayarlari"].get("yontem") == MC_SURUM:
+        hucre = _kayitli_hucre_yontemi(mc_hucre_yontemi)
+        _isinma_secimi_dogrula(d["veri_ayarlari"], hucre)
+        if secilen and deneme_.kanonik(secilen["yontem_ayarlari"]["hucre_yontemi"]) != (
+            deneme_.kanonik(hucre)
+        ):
+            raise deneme_.PilotHatasi(
+                "MC E2 hücre yöntemi donmuş stres çocuğuyla uyuşmuyor."
+            )
+        # TASARIM 5.15 S13: kayıtlı MC üstü değişmez; yalnız ortak yürütme bağlamı.
+        yurutme_d = d | dict(yontem_ayarlari=dict(hucre_yontemi=hucre))
+    elif mc_hucre_yontemi is not None:
+        raise deneme_.PilotHatasi(
+            "MC hücre yöntemi yalnız MC yeniden sınamasında kullanılır."
+        )
     s = (secilen or d)["strateji"]
     strateji = katalog.legacy_coz(
         s["varyant"],
@@ -2499,15 +2846,17 @@ def _ileri_test_sembolu(
     hesap = aileler_.ortak_donem_kurulumu(paket | dict(semboller=[sembol]), strateji)[
         sembol
     ]
-    m = _s10_mumlar(paket, sembol, hesap)
+    m = _s10_mumlar(
+        paket,
+        sembol,
+        hesap,
+        kilit_politikasi=yurutme_d["yontem_ayarlari"]["hucre_yontemi"].get(
+            "kilit_politikasi"
+        ),
+    )
     bas, son = r["donem"]["baslangic"].isoformat(), r["donem"]["bitis"].isoformat()
     gunler = [t for t in paket["gunler"] if bas <= t <= son]
-    isinma = int(hesap["isinma"].at[pd.Timestamp(gunler[0])])
-    r["isinma"][sembol] = dict(
-        gozlem=isinma, gerekli=p.isinma, tamam=isinma >= p.isinma
-    )
-    if isinma < p.isinma:
-        _kayitli_hata(r, "isinma", f"{sembol}: {isinma}/{p.isinma} gözlem")
+    isinma = _isinma_kaydet(d, r, paket, sembol, hesap, gunler[0], p.isinma)
     sinyaller, kabuller = {}, []
     engeller = {
         x["tarih"]: x["kalite_bayraklari"]
@@ -2544,7 +2893,7 @@ def _ileri_test_sembolu(
         p,
         kurulum=hesap["kurulum"],
         sinyal_konumlari=sinyaller,
-        yurutme=_ileri_yurutme(d, kosu.makbuz.kosu_id, sembol),
+        yurutme=_ileri_yurutme(yurutme_d, kosu.makbuz.kosu_id, sembol),
         onceki_durum=onceki,
     )
     for ret in durum["retler"]:
@@ -2813,10 +3162,12 @@ MC_SURUM = "kayitli_monte_carlo_v1"
 _MC_PARTI = 32
 
 
-def _mc_istegi(d):
+def _mc_istegi(d, kaynak):
     """TASARIM 5.15 S13: MC'nin kesin yöntemi legacy yüzlerini değiştirmez."""
     deneme_._mc_yontemi(d["yontem_ayarlari"])
-    _yurutme_ayarlari(d | dict(yontem_ayarlari=KAYITLI_YONTEM))
+    hucre = kaynak["deneme"]["yontem_ayarlari"]["hucre_yontemi"]
+    _yurutme_ayarlari(d | dict(yontem_ayarlari=hucre))
+    _isinma_secimi_dogrula(d["veri_ayarlari"], hucre)
     _kayitli_veri_ayarlari(d["veri_ayarlari"])
     _kayitli_takvim(d["veri_ayarlari"]["takvim"])
     beklenen = [
@@ -3071,6 +3422,23 @@ def _mc_sinyalleri(depo, kosu, secim, secilen, plan_ref, kabuller):
     return sinyaller
 
 
+def _mc_bolum_durumunu_sakla(durum, nihai):
+    """TASARIM 5.15 S13/#178: her gerçek ara geçmiş, yayın öncesi nihai öneğe eşittir."""
+    uzunluklar = {}
+    for alan in ("iz", "islemler", "retler"):
+        uzunluklar[alan] = len(durum[alan])
+        if deneme_.kanonik(durum[alan]) != deneme_.kanonik(
+            nihai[alan][: uzunluklar[alan]]
+        ):
+            raise deneme_.PilotHatasi(
+                "MC bölüm geçmişi nihai durumun kanonik öneği değil."
+            )
+    return dict(
+        durum={a: deepcopy(x) for a, x in durum.items() if a not in uzunluklar},
+        gecmis_onekleri=uzunluklar,
+    )
+
+
 def _mc_ayar_yeniden_sina(depo, d, kosu, kaynak, plan, plan_ref, kok):
     """TASARIM 5.15 S13: donmuş seçimlerle aynı WF E1/E2/E3 yolu, tek taşıma."""
     olaylar = depo.oku()
@@ -3086,12 +3454,18 @@ def _mc_ayar_yeniden_sina(depo, d, kosu, kaynak, plan, plan_ref, kok):
     ):
         raise deneme_.PilotHatasi("MC yeniden sınama başka WF kaynağına bağlı.")
     v = d["veri_ayarlari"]
-    uyelik = _kayitli_uyelik(v, v["takvim"]["seanslar"])
+    sakli = (
+        dict(uyelik_kaniti=kaynak["baslangic"]["uyelik_kaniti"])
+        if v.get("ilk_islem") is not None
+        else {}
+    )
+    uyelik = _kayitli_uyelik(v, v["takvim"]["seanslar"], **sakli)
     secimler = {
         (o["bolum_id"], o["sembol"]): o["kayit"] | dict(secim_ref=o["kayit_id"])
         for o in kaynak["secimler"]
     }
     cocuklar = {(c["bolum"], c["sembol"]): c for c in plan["stres_cocuklari"]}
+    hucre = kaynak["deneme"]["yontem_ayarlari"]["hucre_yontemi"]
     durumlar, bolumler = {}, []
     for bolum in kaynak["deneme"]["donemler"]:
         r = _kayitli_sonuc(d, kosu.makbuz.kosu_id, bolum["ad"], bolum)
@@ -3112,11 +3486,28 @@ def _mc_ayar_yeniden_sina(depo, d, kosu, kaynak, plan, plan_ref, kok):
                 secim,
                 durumlar.get(sembol),
                 uyelik,
+                mc_hucre_yontemi=hucre,
                 **ayar,
             )
         if r["hatalar"]:
             raise ValueError(f"{bolum['ad']}: {r['neden']}")
-        bolumler.append(dict(bolum=bolum["ad"], durum="tamamlandi", hatalar=[]))
+        kanit = {}
+        if v.get("ilk_islem") is not None:
+            kanit = dict(
+                donem=bolum,
+                veri_referansi=r["veri_referansi"],
+                isinma=r["isinma"],
+                durumlar={s: deepcopy(durumlar[s]) for s in paket["semboller"]},
+            )
+        bolumler.append(
+            dict(bolum=bolum["ad"], durum="tamamlandi", hatalar=[], **kanit)
+        )
+    if v.get("ilk_islem") is not None:
+        for bolum in bolumler:
+            bolum["durumlar"] = {
+                s: _mc_bolum_durumunu_sakla(durum, durumlar[s])
+                for s, durum in bolum["durumlar"].items()
+            }
     refler = [
         o["kayit_id"]
         for o in depo.oku()
@@ -3279,8 +3670,8 @@ def kayitli_monte_carlo_calistir(depo, mc_deneme_id, *, veri_koku, mod, ilerleme
     if mod == "resmi" and kirli:
         raise kayit.KayitHatasi("Kirli ağaçta resmi koşu yapılamaz.")
     d = depo.deneme_oku(mc_deneme_id)
-    _mc_istegi(d)
     kaynak = deneme_._mc_kaynagi(depo.oku(), d["yontem_ayarlari"]["kaynak"])
+    _mc_istegi(d, kaynak)
     v = d["veri_ayarlari"]
     manifest = Path(veri_koku) / "ag" / v["veri_referanslari"][0] / "manifest.json"
     if sha256(manifest.read_bytes()).hexdigest() != v["manifest_ozeti"]:

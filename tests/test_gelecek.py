@@ -38,8 +38,9 @@ KESIM = [
 BAS = "2013-12-02"
 
 
+@pytest.mark.parametrize("secim", [{}, {"kilit_politikasi": "ham_aralik_v1"}])
 @pytest.mark.parametrize("kapanis", [100.0, 101.00001])
-def test_s09_gelecek_mumlar_onceki_dolum_ve_izi_degistirmez(kapanis):
+def test_s09_gelecek_mumlar_onceki_dolum_ve_izi_degistirmez(kapanis, secim):
     from tests.test_motor import r, s09_istek, s09_mumlar
 
     m = s09_mumlar(
@@ -52,7 +53,9 @@ def test_s09_gelecek_mumlar_onceki_dolum_ve_izi_degistirmez(kapanis):
     )
     m.at[m.index[1], "kapanis"] = kapanis
     sinyaller = {m.index[0]: "sinyal-1"}
-    ilk = motor.tara(m.iloc[:3], sinyaller, yurutme=s09_istek())
+    if secim:
+        m = m.drop(columns=["tavan", "taban", "limit_kaniti"])
+    ilk = motor.tara(m.iloc[:3], sinyaller, yurutme=s09_istek(**secim))
     m.loc[m.index[3], ["aof", "yuksek", "dusuk", "kapanis"]] = [1000, 1100, 900, 1000]
     m.loc[m.index[3], ["ham_yuksek", "ham_dusuk", "tavan", "taban"]] = [
         1100,
@@ -60,7 +63,9 @@ def test_s09_gelecek_mumlar_onceki_dolum_ve_izi_degistirmez(kapanis):
         1200,
         800,
     ]
-    son = motor.tara(m, sinyaller, yurutme=s09_istek())
+    if secim:
+        m = m.drop(columns=["tavan", "taban"])
+    son = motor.tara(m, sinyaller, yurutme=s09_istek(**secim))
     assert son["islemler"] == ilk["islemler"]
     assert son["iz"][:3] == ilk["iz"]
     assert son["islemler"][0]["sonuc"]["net_sonuc"] == pytest.approx(-304.2525)
@@ -967,3 +972,56 @@ def test_s13_wf_donmus_planinda_sonraki_fiyat_onceki_mc_yolunu_degistirmez(
     with pytest.raises(deneme.PilotHatasi) as hata:
         deneme.PilotKayit(yol).oku()
     assert str(hata.value.__cause__) == "Kayıt bağı bulunamadı: " + cocuk_id
+
+
+def test_dogal_isinma_499_500_ve_gelecek_fiyat_oneki(tmp_path, monkeypatch):
+    from tansu import katalog
+    from tests.test_tansusinama import dogal_isinma_kayitli
+
+    depo, m, _ = dogal_isinma_kayitli(tmp_path, monkeypatch)
+    v = depo.deneme_oku(m.deneme_id)["veri_ayarlari"]
+
+    def paket(son):
+        return veri.veri_hazirla(
+            veri.VeriIstegi(
+                ("ASTOR",),
+                "2024-01-01",
+                son,
+                v["kaynak"],
+                v["kalite_surumu"],
+                v["uyelik_surumu"],
+                v["duzeltme_surumu"],
+                v["takvim_ref"],
+                ("2018-01-01", "2023-12-31"),
+                ilk_islem=v["ilk_islem"],
+            ),
+            v["veri_referanslari"][0],
+            tmp_path,
+        )
+
+    strateji = katalog.legacy_coz("bugun")
+    onceki = aileler.ortak_donem_kurulumu(paket("2024-12-16"), strateji)["ASTOR"]
+    assert int(onceki["isinma"].iloc[-1]) == 499
+    assert onceki["sinyaller"] == []
+    tam = paket("2024-12-17")
+    simdi = aileler.ortak_donem_kurulumu(tam, strateji)["ASTOR"]
+    assert int(simdi["isinma"].iloc[-1]) == 500
+    assert [s["tarih"] for s in simdi["sinyaller"]] == ["2024-12-17"]
+    a = veri.oku(v["veri_referanslari"][0], tmp_path)
+    fiyat = a.fiyat.copy()
+    gelecek = fiyat["tarih"] > pd.Timestamp("2024-12-17")
+    fiyat.loc[gelecek, veri.FIYAT_SUTUNLARI] *= 3
+    monkeypatch.setattr(veri, "oku", lambda *args: replace(a, fiyat=fiyat))
+    sonra = paket("2024-12-17")
+    assert sonra["referans"]["gecmis_kaniti"] == tam["referans"]["gecmis_kaniti"]
+    yeniden = aileler.ortak_donem_kurulumu(sonra, strateji)["ASTOR"]
+    assert sonra["referans"]["kayit_id"] == tam["referans"]["kayit_id"]
+    assert [
+        {k: v for k, v in s.items() if k != "olusturma_zamani"}
+        for s in yeniden["sinyaller"]
+    ] == [
+        {k: v for k, v in s.items() if k != "olusturma_zamani"}
+        for s in simdi["sinyaller"]
+    ]
+    pd.testing.assert_frame_equal(yeniden["kurulum"], simdi["kurulum"])
+    pd.testing.assert_series_equal(yeniden["isinma"], simdi["isinma"])

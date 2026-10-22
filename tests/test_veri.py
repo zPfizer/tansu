@@ -1108,3 +1108,151 @@ def test_pay_kimligi_gercek_depo_tablosu_sabit_bagi_cozer():
         "pay_kimligi_v1/p001",
         "pay_kimligi_v1/p002",
     ]
+
+
+def ilk_islemli_goruntu(tmp_path, monkeypatch):
+    from dataclasses import dataclass
+    from hashlib import sha256
+
+    a = anlik(tmp_path)
+    manifest = sha256(
+        (tmp_path / "ag" / a.kimlik / "manifest.json").read_bytes()
+    ).hexdigest()
+    kok = tmp_path / "referans"
+    hedef = kok / "ilk_islem_v1"
+    hedef.mkdir(parents=True)
+    tablo = (
+        "kaynak,kaynak_sembolu,borsa_kodu,unvan,ilk_islem_gunu,yayim_tarihi,kaynak_id,kaynak_url,goruntu_id,manifest_ozeti\n"
+        f"yerel,CCOLA,CCOLA,Sentetik pay,2024-08-08,2024-08-07,fixture-ilk-gun,https://example.invalid/ilk-gun,{a.kimlik},{manifest}\n"
+    )
+    (hedef / "ilk_islem.csv").write_text(tablo, encoding="utf-8", newline="\n")
+    monkeypatch.setattr(veri, "ILK_ISLEM_KOKU", kok, raising=False)
+    secim = dict(
+        surum="ilk_islem_v1",
+        tablo_ozeti=sha256(tablo.encode("utf-8")).hexdigest(),
+        kaynak="yerel",
+        goruntu_id=a.kimlik,
+        manifest_ozeti=manifest,
+    )
+    monkeypatch.setitem(
+        veri._YAYIMLANMIS_KAYNAK_OZETLERI, "ilk_islem_v1", secim["tablo_ozeti"]
+    )
+
+    @dataclass(frozen=True)
+    class IlkIslemIstegi(veri.VeriIstegi):
+        ilk_islem: dict | None = None
+
+    istek = IlkIslemIstegi(
+        ("CCOLA",),
+        "2024-08-08",
+        "2024-08-15",
+        "yerel",
+        "legacy_tansu_v1",
+        "legacy_tansu_v1",
+        "is_yatirim",
+        "xu100",
+        ilk_islem=secim,
+    )
+    return a, istek, tablo
+
+
+def test_e1_ilk_islem_kaynakli_tam_gecmisi_basvuruya_baglar(tmp_path, monkeypatch):
+    from hashlib import sha256
+
+    a, istek, _ = ilk_islemli_goruntu(tmp_path, monkeypatch)
+    paket = veri.veri_hazirla(istek, a.kimlik, tmp_path)
+    assert paket["referans"].get("ilk_islem") == istek.ilk_islem, (
+        "E1 kaynaklı ilk gün seçimini veri başvurusuna bağlamalıdır"
+    )
+    assert paket["referans"]["gecmis_kaniti"]["CCOLA"] == dict(
+        kaynak_id="fixture-ilk-gun",
+        ilk_islem_gunu="2024-08-08",
+        bitis="2024-08-15",
+        gozlem_ozeti=sha256(
+            b"2024-08-08\n2024-08-09\n2024-08-12\n2024-08-13\n2024-08-14\n2024-08-15\n"
+        ).hexdigest(),
+    )
+    assert len(paket["piyasa"]) == 6
+
+
+@pytest.mark.parametrize(
+    "boz", ["surum", "ozet", "kaynak", "goruntu", "manifest", "fazla", "null"]
+)
+def test_e1_ilk_islem_bozuk_secim_reddedilir(tmp_path, monkeypatch, boz):
+    from copy import deepcopy
+    from dataclasses import replace
+
+    a, istek, _ = ilk_islemli_goruntu(tmp_path, monkeypatch)
+    secim = deepcopy(istek.ilk_islem)
+    alan = {
+        "surum": "surum",
+        "ozet": "tablo_ozeti",
+        "kaynak": "kaynak",
+        "goruntu": "goruntu_id",
+        "manifest": "manifest_ozeti",
+    }.get(boz)
+    if alan:
+        secim[alan] = "0" * 64 if boz in ("ozet", "manifest") else "yanlis"
+    elif boz == "fazla":
+        secim["izin"] = True
+    else:
+        secim["tablo_ozeti"] = None
+    with pytest.raises(veri.VeriHatasi):
+        veri.veri_hazirla(replace(istek, ilk_islem=secim), a.kimlik, tmp_path)
+
+
+@pytest.mark.parametrize(
+    "boz", ["ilk_satir", "ic_bosluk", "null", "takvim_oneki", "kirilmis_istek"]
+)
+def test_e1_ilk_islem_dogal_bekleyis_eksik_gecmisi_gizlemez(tmp_path, monkeypatch, boz):
+    from dataclasses import replace
+
+    a, istek, _ = ilk_islemli_goruntu(tmp_path, monkeypatch)
+    fiyat = a.fiyat.copy()
+    if boz in ("ilk_satir", "ic_bosluk"):
+        fiyat = (
+            fiyat.iloc[1:]
+            if boz == "ilk_satir"
+            else pd.concat(
+                [fiyat.drop(fiyat.index[2]), fiyat.assign(sembol="TAKVIM")],
+                ignore_index=True,
+            )
+        )
+    elif boz == "null":
+        fiyat.loc[fiyat.index[2], "kapanis"] = np.nan
+    elif boz == "takvim_oneki":
+        fiyat.loc[fiyat["tarih"] == pd.Timestamp("2024-08-08"), "xu100"] = 0
+    else:
+        istek = replace(
+            istek, baslangic="2024-08-12", isinma_donemi=("2024-08-09", "2024-08-11")
+        )
+    monkeypatch.setattr(veri, "oku", lambda *args: replace(a, fiyat=fiyat))
+    with pytest.raises(veri.VeriHatasi, match="ilk işlem"):
+        veri.veri_hazirla(istek, a.kimlik, tmp_path)
+
+
+def test_ilk_islem_gercek_kaynak_lf_ve_yayimlanmis_ozete_baglidir():
+    from hashlib import sha256
+    from pathlib import Path
+
+    yol = Path(veri.__file__).parent / "referans" / "ilk_islem_v1" / "ilk_islem.csv"
+    bayt = yol.read_bytes()
+    assert b"\r" not in bayt and bayt.endswith(b"\n")
+    assert sha256(bayt).hexdigest() == veri._YAYIMLANMIS_KAYNAK_OZETLERI["ilk_islem_v1"]
+    secim = dict(
+        surum="ilk_islem_v1",
+        tablo_ozeti=sha256(bayt).hexdigest(),
+        kaynak="is_yatirim",
+        goruntu_id="20261005-1949",
+        manifest_ozeti="a6c449c660c75f1850bca5d9e4bdb1ea71576ae443848abed103f9a661485d8f",
+    )
+    kaynak = veri.ilk_islem_hazirla(
+        secim,
+        kaynak=secim["kaynak"],
+        goruntu_id=secim["goruntu_id"],
+        manifest_ozeti=secim["manifest_ozeti"],
+    )
+    assert {s: r["ilk_islem_gunu"] for s, r in kaynak.items()} == {
+        "ASTOR": "2023-01-18",
+        "DSTKF": "2025-02-06",
+    }
