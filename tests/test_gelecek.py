@@ -856,3 +856,56 @@ def test_s12_gelecek_fiyat_egitim_secimini_ve_acik_dislamayi_degistirmez(
         assert ozet["olculer"] == {}
         assert len(ozet["giris_kohort_sayimlari"]) == 16
         assert all(x == {} for x in ozet["giris_kohort_sayimlari"].values())
+
+
+def test_dogal_isinma_499_500_ve_gelecek_fiyat_oneki(tmp_path, monkeypatch):
+    from tansu import katalog
+    from tests.test_tansusinama import dogal_isinma_kayitli
+
+    depo, m, _ = dogal_isinma_kayitli(tmp_path, monkeypatch)
+    v = depo.deneme_oku(m.deneme_id)["veri_ayarlari"]
+
+    def paket(son):
+        return veri.veri_hazirla(
+            veri.VeriIstegi(
+                ("ASTOR",),
+                "2024-01-01",
+                son,
+                v["kaynak"],
+                v["kalite_surumu"],
+                v["uyelik_surumu"],
+                v["duzeltme_surumu"],
+                v["takvim_ref"],
+                ("2018-01-01", "2023-12-31"),
+                ilk_islem=v["ilk_islem"],
+            ),
+            v["veri_referanslari"][0],
+            tmp_path,
+        )
+
+    strateji = katalog.legacy_coz("bugun")
+    onceki = aileler.ortak_donem_kurulumu(paket("2024-12-16"), strateji)["ASTOR"]
+    assert int(onceki["isinma"].iloc[-1]) == 499
+    assert onceki["sinyaller"] == []
+    tam = paket("2024-12-17")
+    simdi = aileler.ortak_donem_kurulumu(tam, strateji)["ASTOR"]
+    assert int(simdi["isinma"].iloc[-1]) == 500
+    assert [s["tarih"] for s in simdi["sinyaller"]] == ["2024-12-17"]
+    a = veri.oku(v["veri_referanslari"][0], tmp_path)
+    fiyat = a.fiyat.copy()
+    gelecek = fiyat["tarih"] > pd.Timestamp("2024-12-17")
+    fiyat.loc[gelecek, veri.FIYAT_SUTUNLARI] *= 3
+    monkeypatch.setattr(veri, "oku", lambda *args: replace(a, fiyat=fiyat))
+    sonra = paket("2024-12-17")
+    assert sonra["referans"]["gecmis_kaniti"] == tam["referans"]["gecmis_kaniti"]
+    yeniden = aileler.ortak_donem_kurulumu(sonra, strateji)["ASTOR"]
+    assert sonra["referans"]["kayit_id"] == tam["referans"]["kayit_id"]
+    assert [
+        {k: v for k, v in s.items() if k != "olusturma_zamani"}
+        for s in yeniden["sinyaller"]
+    ] == [
+        {k: v for k, v in s.items() if k != "olusturma_zamani"}
+        for s in simdi["sinyaller"]
+    ]
+    pd.testing.assert_frame_equal(yeniden["kurulum"], simdi["kurulum"])
+    pd.testing.assert_series_equal(yeniden["isinma"], simdi["isinma"])

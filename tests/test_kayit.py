@@ -3741,3 +3741,352 @@ def test_s11_yerel_yontem_kapisi_esdeger_ama_kanonik_olmayan_turu_reddeder(
         hata = str(exc)
     assert hata is not None and "yürütme ayarı" in hata
     assert depo.yol.read_bytes() == once
+
+
+def test_dogal_isinma_ekleme_ve_yeni_okuma_ayni_sakli_kaniti_denetler(
+    tmp_path, monkeypatch
+):
+    import builtins
+    from tansu import tansusinama as ts
+    from tests.test_tansusinama import dogal_isinma_kayitli
+
+    depo, m, _ = dogal_isinma_kayitli(tmp_path, monkeypatch)
+    d = depo.deneme_oku(m.deneme_id)
+    kod, ortam = ts._kayitli_kimlik(*kayit._git(), 1)
+    donem = d["donemler"][2]
+    is_id = "donem:2023"
+    with ts._ileri_kosu(depo, d, "gelistirme", kod, ortam, [is_id]) as kosu:
+        r = ts._kayitli_sonuc(d, kosu.makbuz.kosu_id, is_id, donem)
+        paket = ts._donem_verisi(d, r, tmp_path)
+        assert paket is not None
+        r = ts._kayitli_donem((d, r, paket))
+        assert r["durum"] == "tamamlandi", r["hatalar"]
+        assert r["isinma"]["ASTOR"]["dogal_bekleyis"]["isinma_tamamlanma_gunu"] is None
+        prefix = depo.yol.read_bytes()
+        for boz in (
+            "sayi",
+            "gerekli",
+            "bool",
+            "gelecek_500",
+            "kaynak_ref",
+            "eksik_neden",
+            "eksik_uye",
+            "e1_onek",
+            "e1_isinma_kesimi",
+        ):
+            yanlis = deepcopy(r)
+            x = yanlis["isinma"]["ASTOR"]
+            if boz == "sayi":
+                x["gozlem"] += 1
+            elif boz == "gerekli":
+                x["gerekli"] = 499
+            elif boz == "bool":
+                x["tamam"] = 0
+            elif boz == "gelecek_500":
+                x["dogal_bekleyis"]["isinma_tamamlanma_gunu"] = "2024-12-17"
+            elif boz == "kaynak_ref":
+                x["dogal_bekleyis"]["e1_ref"] = "yanlis"
+            elif boz == "eksik_neden":
+                del x["dogal_bekleyis"]
+            elif boz == "eksik_uye":
+                del yanlis["isinma"]["ASTOR"]
+                del yanlis["durumlar"]["ASTOR"]
+            elif boz == "e1_isinma_kesimi":
+                yanlis["veri_referansi"]["isinma_donemi"]["baslangic"] = "2023-07-03"
+            else:
+                yanlis["veri_referansi"]["gecmis_kaniti"]["ASTOR"]["gozlem_ozeti"] = (
+                    "0" * 64
+                )
+            with pytest.raises(pilot.PilotHatasi, match="[ıIİi]sınma|[ıIİi]şlem"):
+                kosu.donem_sonucu_kaydet(
+                    is_id=is_id,
+                    donem=donem,
+                    durum="tamamlandi",
+                    islem_referanslari=[],
+                    birimler=ts.DONEM_BIRIMLERI,
+                    muhasebe_politikasi="tani_referans_v1",
+                    uyarilar=[],
+                    cikti_referanslari=[],
+                    icerik=yanlis,
+                )
+            assert depo.yol.read_bytes() == prefix
+            o = dict(
+                kayit_id="fixture:" + boz,
+                sema_surumu=pilot.SURUM,
+                olusturma_zamani=__import__("datetime").datetime.now(
+                    __import__("datetime").timezone.utc
+                ),
+                kayit_turu="sonuc",
+                sonuc_turu="donem_v1",
+                deneme_id=m.deneme_id,
+                kosu_id=kosu.makbuz.kosu_id,
+                ayar_parmak_izi=m.ayar_ozeti,
+                is_id=is_id,
+                donem=donem,
+                durum="tamamlandi",
+                icerik=yanlis,
+            )
+            yol = tmp_path / (boz + "-okuma.jsonl")
+            yol.write_bytes(prefix + pilot.kanonik(o) + b"\n")
+            with pytest.raises(pilot.PilotHatasi, match="Bozuk tam satır"):
+                pilot.PilotKayit(yol).oku()
+        r = ts._donem_yaz(kosu, r, [])
+        kosu.bitir(
+            durum="tamamlandi",
+            tamamlanan=[is_id],
+            basarisiz=[],
+            yontemler=[],
+            olculer={},
+            cikti_referanslari=[r["makbuz"].olay_id],
+            ozetler={},
+        )
+    asil = depo.oku()
+    bas = next(o for o in asil if o["kayit_turu"] == "baslangic")
+    onceki = asil[: asil.index(bas)]
+    for boz in ("eksik", "surum", "kaynak"):
+        yanlis = deepcopy(bas)
+        if boz == "eksik":
+            del yanlis["uyelik_kaniti"]
+        elif boz == "surum":
+            yanlis["uyelik_kaniti"]["surum"] = "bilinmeyen"
+        else:
+            yanlis["uyelik_kaniti"]["ilk_islem_tablo_metni"] += "\n"
+        yol = tmp_path / (boz + "-baslangic.jsonl")
+        yol.write_bytes(
+            b"".join(pilot.kanonik(o) + b"\n" for o in onceki)
+            + pilot.kanonik(yanlis)
+            + b"\n"
+        )
+        with pytest.raises(pilot.PilotHatasi, match="Bozuk tam satır"):
+            pilot.PilotKayit(yol).oku()
+        yol.write_bytes(b"".join(pilot.kanonik(o) + b"\n" for o in onceki))
+        kwargs = {
+            a: bas[a]
+            for a in (
+                "mod",
+                "anlik_goruntu",
+                "manifest_ozeti",
+                "uyelik_surumu",
+                "kod_kimligi",
+                "ortam",
+                "bagimlilik_ozeti",
+                "tohum",
+                "is_listesi",
+                "ureteci_surumu",
+            )
+        }
+        if "uyelik_kaniti" in yanlis:
+            kwargs["uyelik_kaniti"] = yanlis["uyelik_kaniti"]
+        with pytest.raises(pilot.PilotHatasi, match="[Kk]anıt|[ıIİi]şlem"):
+            with pilot.PilotKayit(yol).kosu(m.deneme_id, **kwargs):
+                pytest.fail("Geçersiz START hesap sınırına ulaşamaz")
+    asil_open, asil_path_open = builtins.open, Path.open
+
+    def dosya_ac(yol, *args, **kwargs):
+        if isinstance(yol, (str, Path)) and Path(yol).name in (
+            "uyelik.csv",
+            "eslemeler.csv",
+            "ilk_islem.csv",
+        ):
+            raise OSError("canlı kaynaklar kapalı")
+        return asil_open(yol, *args, **kwargs)
+
+    def yol_ac(yol, *args, **kwargs):
+        if yol.name in ("uyelik.csv", "eslemeler.csv", "ilk_islem.csv"):
+            raise OSError("canlı kaynaklar kapalı")
+        return asil_path_open(yol, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "open", dosya_ac)
+    monkeypatch.setattr(Path, "open", yol_ac)
+    assert pilot.PilotKayit(depo.yol).oku() == asil
+
+
+@pytest.mark.parametrize(
+    "alan", ["pay_kimligi_tablo_metni", "uyelik_tablo_metni", "ilk_islem_tablo_metni"]
+)
+def test_dogal_isinma_start_bos_kaynak_canli_tabloya_donmez(
+    tmp_path, monkeypatch, alan
+):
+    from tansu import tansusinama as ts
+    from tests.test_tansusinama import s10_kayitli
+
+    asil_uyelik = veri.uyelik_hazirla
+    depo, eski, _ = s10_kayitli(tmp_path, monkeypatch)
+    monkeypatch.setattr(veri, "uyelik_hazirla", asil_uyelik)
+    d = depo.deneme_oku(eski.deneme_id)
+    kok = Path(veri.__file__).parent / "referans"
+    ilk_bayt = (kok / "ilk_islem_v1" / "ilk_islem.csv").read_bytes()
+    pay_bayt = (kok / "pay_kimligi_v1" / "eslemeler.csv").read_bytes()
+    uyelik_bayt = (kok / "bist30_2021_2025_v1" / "uyelik.csv").read_bytes()
+    from io import BytesIO
+
+    satir = pd.read_csv(BytesIO(ilk_bayt), dtype=str).iloc[0]
+    bag = {a: satir[a] for a in ("kaynak", "goruntu_id", "manifest_ozeti")}
+    v = d["veri_ayarlari"] | dict(
+        kaynak=bag["kaynak"],
+        veri_referanslari=[bag["goruntu_id"]],
+        manifest_ozeti=bag["manifest_ozeti"],
+        uyelik_ozeti=hashlib.sha256(uyelik_bayt).hexdigest(),
+        ilk_islem=dict(
+            surum="ilk_islem_v1",
+            tablo_ozeti=hashlib.sha256(ilk_bayt).hexdigest(),
+            **bag,
+        ),
+        pay_kimligi=dict(
+            surum="pay_kimligi_v1",
+            tablo_ozeti=hashlib.sha256(pay_bayt).hexdigest(),
+            **bag,
+        ),
+    )
+    m = pilot_deneme(
+        depo,
+        d["strateji"],
+        **{a: d[a] for a in ("donemler", "risk_ayarlari", "masraf_ayarlari")},
+        veri_ayarlari=v,
+        yontem_ayarlari=d["yontem_ayarlari"]
+        | dict(isinma_politikasi="kaynakli_isinma_v1"),
+    )
+    kanit = ts._ileri_uyelik_kaniti(v)
+    kwargs = dict(
+        mod="gelistirme",
+        anlik_goruntu=bag["goruntu_id"],
+        manifest_ozeti=bag["manifest_ozeti"],
+        uyelik_surumu=v["uyelik_surumu"],
+        is_listesi=["donem:2023"],
+        uyelik_kaniti=kanit,
+    )
+    with pytest.raises(RuntimeError, match="hesap yok"):
+        with pilot_kosu(depo, m.deneme_id, **kwargs):
+            raise RuntimeError("hesap yok")
+    olaylar = depo.oku()
+    bas = next(o for o in olaylar if o["kayit_turu"] == "baslangic")
+    prefix = b"".join(pilot.kanonik(o) + b"\n" for o in olaylar[: olaylar.index(bas)])
+    yanlis = deepcopy(bas)
+    yanlis["uyelik_kaniti"][alan] = None
+    yol = tmp_path / (alan + "-taze.jsonl")
+    yol.write_bytes(prefix + pilot.kanonik(yanlis) + b"\n")
+    asil_open = Path.open
+    canli_okuma = []
+
+    def ac(p, *args, **kwargs):
+        if p.name in ("uyelik.csv", "eslemeler.csv", "ilk_islem.csv"):
+            canli_okuma.append(p.name)
+            raise OSError("canlı tablo okuma yasak")
+        return asil_open(p, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "open", ac)
+    assert pilot.PilotKayit(depo.yol).oku() == olaylar
+    hatalar = []
+    once = depo.yol.read_bytes()
+    for oku in (False, True):
+        try:
+            if oku:
+                pilot.PilotKayit(yol).oku()
+            else:
+                with pilot_kosu(
+                    depo,
+                    m.deneme_id,
+                    **(kwargs | dict(uyelik_kaniti=yanlis["uyelik_kaniti"])),
+                ):
+                    raise RuntimeError("geçersiz START kabul edildi")
+        except (pilot.PilotHatasi, OSError) as hata:
+            hatalar.append(hata)
+    assert len(hatalar) == 2 and all(isinstance(h, pilot.PilotHatasi) for h in hatalar)
+    assert canli_okuma == [], "Eksik saklı metin canlı parser yoluna ulaşamaz"
+    assert depo.yol.read_bytes() == once
+
+
+@pytest.mark.parametrize("deger", [None, 0, [], "metadata"])
+def test_pilot_legacy_hucre_metaverisi_kayitta_korunur(tmp_path, deger):
+    depo = pilot.PilotKayit(tmp_path / "yeni-legacy.jsonl")
+    yontem = dict(yontem="legacy", tekrar=2, hucre_yontemi=deger)
+    makbuz, hata = None, None
+    try:
+        makbuz = pilot_deneme(depo, yontem_ayarlari=yontem)
+    except pilot.PilotHatasi as exc:
+        hata = str(exc)
+    assert makbuz is not None, f"Yeni seçim olmayan eski kayıt reddedildi: {hata}"
+    once = depo.yol.read_bytes()
+    kayitlar = pilot.PilotKayit(depo.yol).oku()
+    assert len(kayitlar) == 1 and kayitlar[0]["yontem_ayarlari"] == yontem
+    assert kayitlar[0]["ayar_parmak_izi"] == makbuz.ayar_ozeti
+    assert depo.yol.read_bytes() == once
+
+
+@pytest.mark.parametrize("deger", [None, 0, [], "metadata"])
+def test_pilot_legacy_hucre_metaverisi_tarihsel_okumada_korunur(tmp_path, deger):
+    tohum = pilot.PilotKayit(tmp_path / "tohum.jsonl")
+    pilot_deneme(tohum)
+    eski = tohum.oku()[0]
+    eski["yontem_ayarlari"]["hucre_yontemi"] = deger
+    # S07 eski kayıt biçimi: yalnız izinli metaveri ve onun tam ayar özeti değişir.
+    ayarlar = {
+        a: eski[a]
+        for a in (
+            "donemler",
+            "veri_ayarlari",
+            "yontem_ayarlari",
+            "risk_ayarlari",
+            "masraf_ayarlari",
+        )
+    }
+    ayarlar["strateji"] = {
+        k: v for k, v in eski["strateji"].items() if k != "olusturma_zamani"
+    }
+    eski["ayar_parmak_izi"] = pilot._ayar_ozeti(ayarlar)
+    yol = tmp_path / "tarihsel-legacy.jsonl"
+    once = pilot.kanonik(eski) + b"\n"
+    yol.write_bytes(once)
+    kayitlar, hata = None, None
+    try:
+        kayitlar = pilot.PilotKayit(yol).oku()
+    except pilot.PilotHatasi as exc:
+        hata = str(exc)
+    assert kayitlar is not None, f"Geçerli eski günlük yeni okumada reddedildi: {hata}"
+    assert kayitlar == [eski]
+    assert yol.read_bytes() == once
+
+
+@pytest.mark.parametrize(
+    "yer,deger",
+    [
+        (yer, deger)
+        for yer in ("dogrudan", "ic_ice")
+        for deger in (None, 0, [], "bilinmeyen")
+    ]
+    + [("bozuk_hucre", deger) for deger in (None, 0, [], "metadata")]
+    + [("golgelenen", "bilinmeyen")],
+)
+def test_pilot_secili_isinma_bozuk_politikayi_eski_metaveri_saymaz(
+    tmp_path, yer, deger
+):
+    depo = pilot.PilotKayit(tmp_path / "secili.jsonl")
+    pilot_deneme(depo)
+    once = depo.yol.read_bytes()
+    secim = dict(
+        surum="ilk_islem_v1",
+        tablo_ozeti=veri._YAYIMLANMIS_KAYNAK_OZETLERI["ilk_islem_v1"],
+        kaynak="yerel",
+        goruntu_id="ag-1",
+        manifest_ozeti="a" * 64,
+    )
+    v = dict(
+        kaynak="yerel",
+        veri_referanslari=["ag-1"],
+        manifest_ozeti="a" * 64,
+        ilk_islem=secim,
+    )
+    y = dict(yontem="legacy", tekrar=2)
+    if yer == "dogrudan":
+        y["isinma_politikasi"] = deger
+    elif yer == "ic_ice":
+        y["hucre_yontemi"] = dict(isinma_politikasi=deger)
+    elif yer == "bozuk_hucre":
+        y["hucre_yontemi"] = deger
+    else:
+        y["hucre_yontemi"] = dict(isinma_politikasi="kaynakli_isinma_v1")
+        y["isinma_politikasi"] = deger
+    with pytest.raises(pilot.PilotHatasi, match="birlikte"):
+        pilot_deneme(depo, veri_ayarlari=v, yontem_ayarlari=y)
+    assert depo.yol.read_bytes() == once
+    assert not any(o["kayit_turu"] == "baslangic" for o in depo.oku())
