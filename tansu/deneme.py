@@ -215,6 +215,10 @@ def _ayarlar(kayit):
     tekrar = kayit["yontem_ayarlari"].get("tekrar", 0)
     if type(tekrar) is not int or tekrar < 0:
         raise PilotHatasi("Tekrar negatif olmayan tamsayı olmalıdır.")
+    # TASARIM 5.15 #178: kayıtlı yöntem/veri çifti E1 öncesi doğrulanır.
+    from tansu.tansusinama import _isinma_secimi_dogrula
+
+    _isinma_secimi_dogrula(kayit["veri_ayarlari"], kayit["yontem_ayarlari"])
     _ondaliklar(kayit["risk_ayarlari"])
     _ondaliklar(kayit["masraf_ayarlari"])
     for ad, deger in kayit["eski_referans"].items():
@@ -609,6 +613,13 @@ def _arama_olcu_baglari(olaylar, d, sonuc):
         raise PilotHatasi("Ölçülerin hisse kümesi gerçek dönemle uyuşmuyor.")
     olculen = []
     for s in d["semboller"]:
+        dogal = (
+            sonuc["icerik"].get("isinma", {}).get(s["sembol"], {}).get("dogal_bekleyis")
+        )
+        if s.get("dogal_bekleyis") != dogal or (
+            "dogal_bekleyis" in s and dogal is None
+        ):
+            raise PilotHatasi("Arama doğal ısınma özeti gerçek çocukla uyuşmuyor.")
         o = s["olcu"]
         refs = _arama_olculen_islemler(olaylar, s)
         olculen.extend(refs)
@@ -985,6 +996,9 @@ def _ileri_egitim_bagi(olaylar, ust, b, sembol, h):
         d["strateji"]["ayar_parmak_izi"],
     ):
         raise PilotHatasi("WF eğitim ayar özetleri uyuşmuyor.")
+    dogal = r["icerik"].get("isinma", {}).get(sembol, {}).get("dogal_bekleyis")
+    if h.get("dogal_bekleyis") != dogal or ("dogal_bekleyis" in h and dogal is None):
+        raise PilotHatasi("WF doğal ısınma özeti gerçek çocukla uyuşmuyor.")
     durum = r["icerik"]["durumlar"].get(sembol, {})
     kapali = durum.get("islemler", [])
     if any(
@@ -1074,7 +1088,11 @@ def _ileri_secimi_dogrula(olaylar, ust, m, k):
         raise PilotHatasi("WF seçim kesimi veya dönemi uyuşmuyor.")
     cocuklar = {}
     for h in k["egitim_cocuklari"]:
-        if set(h) != {
+        if set(h) - (
+            {"dogal_bekleyis"}
+            if ust["veri_ayarlari"].get("ilk_islem") is not None
+            else set()
+        ) != {
             "deneme_id",
             "kosu_id",
             "ayar_parmak_izi",
@@ -1410,7 +1428,10 @@ def _ileri_bolum_kontrolleri(olaylar, ust, m, b):
     onceki = {o["sembol"]: o for o in kontroller if o["bolum_id"] < b["ad"]}
     guncel = {o["sembol"]: o for o in kontroller if o["bolum_id"] == b["ad"]}
     sakli = {}
-    if ust["veri_ayarlari"].get("pay_kimligi") is not None:
+    if (
+        ust["veri_ayarlari"].get("pay_kimligi") is not None
+        or ust["veri_ayarlari"].get("ilk_islem") is not None
+    ):
         baslangic = _bul(olaylar, m.kosu_id, "baslangic", "kosu_id")
         sakli["uyelik_kaniti"] = baslangic["uyelik_kaniti"]
     _, _, uyeler, _, _ = _donem_uyeligi(ust, dict(donem=b), **sakli)
@@ -1737,6 +1758,109 @@ def _ileri_bitisini_dogrula(olaylar, ust, m, baslangic, o):
         )
 
 
+def _isinma_olayi_dogrula(olaylar, o):
+    """TASARIM 5.15 #178: aynı yeni kaynak sınırı ekleme ve taze okumada uygulanır."""
+    from tansu import veri
+    from tansu.tansusinama import (
+        _isinma_secimi_dogrula,
+        _isinma_sonucu_dogrula,
+        _ileri_uyelik_kaniti_dogrula,
+        _donem_uyeligi,
+    )
+
+    try:
+        d = (
+            o
+            if o.get("kayit_turu") == "deneme"
+            else next(
+                (
+                    x
+                    for x in olaylar
+                    if x.get("kayit_turu") == "deneme"
+                    and x.get("deneme_id") == o.get("deneme_id")
+                ),
+                None,
+            )
+        )
+        if d is None:
+            return
+        if not _isinma_secimi_dogrula(d["veri_ayarlari"], d["yontem_ayarlari"]):
+            return
+        if _ayar_ozeti(_ayarlar(d)) != d["ayar_parmak_izi"]:
+            raise PilotHatasi("İlk işlem kaydının tam ayar özeti uyuşmuyor.")
+        if o["kayit_turu"] == "deneme":
+            return
+        v = d["veri_ayarlari"]
+        bas = (
+            o
+            if o["kayit_turu"] == "baslangic"
+            else _bul(olaylar, o["kosu_id"], "baslangic", "kosu_id")
+        )
+        if (
+            bas["deneme_id"] != d["deneme_id"]
+            or bas["ayar_parmak_izi"] != d["ayar_parmak_izi"]
+            or bas["anlik_goruntu"] != v["veri_referanslari"][0]
+            or bas["manifest_ozeti"] != v["manifest_ozeti"]
+        ):
+            raise PilotHatasi("İlk işlem başlangıcının kayıtlı veri bağı uyuşmuyor.")
+        if o["kayit_turu"] == "baslangic":
+            _ileri_uyelik_kaniti_dogrula(v, bas.get("uyelik_kaniti"))
+        elif o["kayit_turu"] == "sonuc":
+            if o.get("sonuc_turu") == "arama_v1":
+                _arama_yayini(
+                    olaylar,
+                    Makbuz(
+                        bas["kayit_id"],
+                        d["deneme_id"],
+                        bas["kosu_id"],
+                        d["ayar_parmak_izi"],
+                    ),
+                    o,
+                )
+                return
+            r = o.get("icerik") if o.get("sonuc_turu") == "donem_v1" else o.get("kayit")
+            if r is None or (
+                o.get("sonuc_turu") == "ileri_v1" and r.get("tur") != "bolum"
+            ):
+                return
+            kanit = bas["uyelik_kaniti"]
+            if o.get("sonuc_turu") == "donem_v1":
+                if (
+                    kanonik(o["donem"]) != kanonik(r["donem"])
+                    or o["durum"] != r["durum"]
+                    or not any(kanonik(r["donem"]) == kanonik(x) for x in d["donemler"])
+                ):
+                    raise PilotHatasi(
+                        "İlk işlem dönem sonucu kayıtlı dönemle uyuşmuyor."
+                    )
+                gereken = set(
+                    _donem_uyeligi(d, dict(donem=r["donem"]), uyelik_kaniti=kanit)[2]
+                )
+            else:
+                _, _, gereken = _ileri_bolum_kontrolleri(
+                    olaylar,
+                    d,
+                    Makbuz(
+                        bas["kayit_id"],
+                        d["deneme_id"],
+                        bas["kosu_id"],
+                        d["ayar_parmak_izi"],
+                    ),
+                    r["donem"],
+                )
+            _isinma_sonucu_dogrula(d, r, kanit, gereken)
+    except (
+        veri.VeriHatasi,
+        ValueError,
+        KeyError,
+        TypeError,
+        IndexError,
+        AttributeError,
+        StopIteration,
+    ) as hata:
+        raise PilotHatasi(f"Kaynaklı ısınma kanıtı geçersiz: {hata}") from hata
+
+
 def _ileri_olayi_dogrula(olaylar, o):
     """S12 yayını ve okuyucu aynı doğrulanmış önceki kayıtları kullanır."""
     try:
@@ -1822,7 +1946,10 @@ def _ileri_olayi_dogrula(olaylar, o):
                 "kaynaklar",
                 "bos_nedenleri",
             }
-            if ust["veri_ayarlari"].get("pay_kimligi") is not None:
+            if (
+                ust["veri_ayarlari"].get("pay_kimligi") is not None
+                or ust["veri_ayarlari"].get("ilk_islem") is not None
+            ):
                 from tansu.tansusinama import _ileri_uyelik_kaniti_dogrula
 
                 alanlar.add("uyelik_kaniti")
@@ -2265,6 +2392,8 @@ class PilotKayit:
                 olay = _coz(json.loads(satir))
                 if olay["sema_surumu"] != SURUM or kanonik(olay) + b"\n" != satir:
                     raise ValueError("Şema veya kodlama uyuşmuyor.")
+                if olay.get("kayit_turu") != "grup_hazirligi":
+                    _isinma_olayi_dogrula(olaylar, olay)
                 if olay.get("kayit_turu") == "grup_hazirligi":
                     _grup_olayi_dogrula(olay)
                 elif _ileri_kaydi_mi(olaylar, olay):
@@ -2596,6 +2725,7 @@ class PilotKayit:
                 olaylar, _ = self._oku()
                 if denetle:
                     denetle(olaylar)
+                _isinma_olayi_dogrula(olaylar, olay)
                 if _ileri_kaydi_mi(olaylar, olay):
                     _ileri_olayi_dogrula(olaylar, olay)
                 ham = self.yol.read_bytes() if self.yol.exists() else b""

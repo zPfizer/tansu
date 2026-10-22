@@ -1353,6 +1353,60 @@ geçersizliği, yetersiz bütçe, doğrulanmış kilit ve üyelik reddi ise hesa
 retlerdir. E4 risk formülünü yeniden hesaplamaz; eksik girdiyi bilinen fakat uygun
 olmayan girdiden ayırır, özgün S09 nedenini korur.
 
+**Kaynaklı doğal ısınma (#178, uygulanan aday, gerçek veri kanıtı ve inceleme bekleniyor)**
+
+Mevcut §5.1 eşiği değişmez. Kayıtlı hücre yönteminde açık
+`isinma_politikasi=kaynakli_isinma_v1` ile veri ayarındaki `ilk_islem` birlikte
+seçilir. Seçim tam olarak `surum=ilk_islem_v1`, `tablo_ozeti`, `kaynak`,
+`goruntu_id`, `manifest_ozeti` alanlarını taşır. Bilinmeyen, eşleşmeyen veya tek
+taraflı seçim E1 ve önbellekten önce reddedilir. Yokluğunda eski yöntem ve eski
+kayıt anlamı korunur. Seçim tam ayar özetine, E1 başvurusuna ve önbellek anahtarına
+girer. Bu sürümün iki ilk işlem günü kaydı ve özgün kaynak sınırı
+`tansu/referans/ilk_islem_v1/kaynaklar.md` dosyasındadır.
+
+E1 resmî ilk gün kaynağını sağlayıcı, görüntü ve manifestle bağlar. Kaynak sembolü
+mevcut pay kimliğiyle çözülür; aynı pay iki kez sayılmaz. Gözlenen ilk satır tek
+başına ilk işlem günü kaynağı olamaz. Doğal bekleyiş için kaynağın ilk günü ile
+ilk gerçek gözlem eşleşir; istenen ısınma bu günü kapsar. İlk günden sonuç kesimine
+kadar kayıtlı takvimin her gerekli gününde gerçek, sonlu ve pozitif kapanış bulunur.
+İlk günün takvimde olmaması, kırpılmış geçmiş ve iç boşluk hata kalır. Diğer
+fiyat, kalite, karantina ve üyelik denetimleri sürer; ön listeleme fiyatı üretilmez.
+Bu denetim kayıtlı gözlem takvimine göredir; eksiksiz resmî tatil takvimi iddiası değildir.
+
+E1 başvurusundaki `gecmis_kaniti`, çözülmüş pay başına `kaynak_id`,
+`ilk_islem_gunu`, `bitis`, `gozlem_ozeti` taşır. Özet, ilk günden kesime kadar
+sıralı gözlem günlerinin UTF-8 ISO metninden alınır; her günün sonunda LF vardır.
+İkinci günlük liste saklanmaz. Sayı ve 500'üncü gün, zaten bağlı kayıtlı takvimden
+türetilir; E4 bu sayı ile mevcut E2 sayacını karşılaştırır. Sonraki fiyatlar daha
+erken uygunluğu değiştiremez.
+
+Mevcut `isinma[pay]` içindeki `gozlem`, `gerekli`, `tamam` ilk değerlendirme gününü
+anlatmayı sürdürür. Yalnız kaynakla doğrulanmış eşik öncesi durumda
+`dogal_bekleyis={neden: dogal_isinma, ilk_gun, ilk_islem_gunu, kaynak_id,
+isinma_tamamlanma_gunu, e1_ref}` eklenir. Günler ISO metnidir; eşik kesime kadar
+dolmazsa tamamlanma günü `null` olur. `tamam` yalnız bool'dur. Bu neden, olağan
+uygun fakat işlemsiz sonuçtan ayrıdır; yeni başarı durumu veya yürütme izni değildir.
+Hiçbir tarihli üye düşmez. S11/S12 ölçü ve eğitim izdüşümü aynı nedeni gerçek çocuk
+sonucuna bağlar; bir payın doğal bekleyişi diğer üyelerin eğitimini eksik yapmaz.
+Günlük sinyal uygunluğu mevcut E2 sahibinde kalır. 499 gözlemde sinyal yoktur;
+500 dönem içinde dolunca diğer kurallar uygunsa günlük hesap engellenmez.
+
+Eşiğin dolması WF seçimi üretmez. Çeyrekte dondurulan pay seçimi, `secim_yok` ve
+seçimsiz yeni giriş yasağı korunur. Açık/bekleyen işlem, özgün giriş ayarları ve
+çıkışlar sürer. Yasal seçilmiş model yolunda engel olduğu gösterilmeyen çeyrek başı
+eşik kapısı sırf ulaşılamayan test için değiştirilmez.
+
+Yeni seçimin START kaydı hesap öncesi `uyelik_kaniti_v2` saklar: `surum`,
+`uyelik_tablo_metni`, `pay_kimligi_tablo_metni`, `ilk_islem_tablo_metni`.
+Pay metni yalnız pay kimliği seçilmediyse `null` olabilir. Üst ve çocuk S10/S11/S12
+başlangıçları aynı yayımlanmış özetli kaynak baytlarını korur. E5 ekleme ve yeni
+okuma aynı saf kaynak ayrıştırıcılarını kullanır; canlı tablo veya fiyat okumaz.
+Kayıtlı takvim, kaynak, kesim, E1 geçmiş özeti, sayı/tamamlanma ve gerekli üye kümesi
+ile çocuk nedenleri uzlaştırılır. Gerekli üyeler sunulan sonuç anahtarlarından
+türetilmez. Eksik kanıt başarı sayılmaz. Gerçek yeni E1 ve önbellek girişi canlı
+sabitlenmiş kaynakları yine denetler. Eski günlükler değiştirilmez; eski seçimsiz
+ve `ileri_uyelik_kaniti_v1` kayıtları yeni kanıta taşınmaz.
+
 E5 başlangıç makbuzu oluşmadan E1–E3 hesabı başlamaz. Başlangıç kaydı altı iş kimliğini,
 kod/veri/ortam bağlarını ve işçi politikasını içerir. İşçiler yalnız hesap yapar;
 E5'e ana süreç yazar. Sonuç sırası işçi tamamlanma sırasından bağımsızdır. Sayısal

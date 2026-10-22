@@ -6,6 +6,8 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ## [Yayımlanmamış]
 
+- Kaynağa ve değişmez görüntüye bağlı açık ısınma seçimi, doğrulanmış doğal 500 gözlem bekleyişini eksik geçmişten ayırır; günlük eşik, tarihli üyeler, WF seçimi ve eski kayıtlar korunur. Yeni kanıt eklemede ve canlı tablosuz geçmiş okumada doğrulanır. (#178)
+
 - İsteğe bağlı kilit politikasında eski mum/durum gösterimi, yöntem alan türleri ve desteklenen sayısal skalerlerin kabulü korundu. (#176)
 
 - S10/S11/S12 ve kapsam açıklamalarındaki eksik limit kanıtı ifadeleri, S09'un mevcut `ham_aralik_v1` istisnasına bağlandı. (#176)
