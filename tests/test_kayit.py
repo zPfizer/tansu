@@ -5427,3 +5427,99 @@ def test_s13_kurulmus_isinma_sahibi_ara_durumu_ve_is_kumesini_korur(
         ),
         encoding="utf-8",
     )
+
+
+@pytest.mark.parametrize("deger", [None, 0, [], "metadata"])
+def test_pilot_legacy_hucre_metaverisi_kayitta_korunur(tmp_path, deger):
+    depo = pilot.PilotKayit(tmp_path / "yeni-legacy.jsonl")
+    yontem = dict(yontem="legacy", tekrar=2, hucre_yontemi=deger)
+    makbuz, hata = None, None
+    try:
+        makbuz = pilot_deneme(depo, yontem_ayarlari=yontem)
+    except pilot.PilotHatasi as exc:
+        hata = str(exc)
+    assert makbuz is not None, f"Yeni seçim olmayan eski kayıt reddedildi: {hata}"
+    once = depo.yol.read_bytes()
+    kayitlar = pilot.PilotKayit(depo.yol).oku()
+    assert len(kayitlar) == 1 and kayitlar[0]["yontem_ayarlari"] == yontem
+    assert kayitlar[0]["ayar_parmak_izi"] == makbuz.ayar_ozeti
+    assert depo.yol.read_bytes() == once
+
+
+@pytest.mark.parametrize("deger", [None, 0, [], "metadata"])
+def test_pilot_legacy_hucre_metaverisi_tarihsel_okumada_korunur(tmp_path, deger):
+    tohum = pilot.PilotKayit(tmp_path / "tohum.jsonl")
+    pilot_deneme(tohum)
+    eski = tohum.oku()[0]
+    eski["yontem_ayarlari"]["hucre_yontemi"] = deger
+    # S07 eski kayıt biçimi: yalnız izinli metaveri ve onun tam ayar özeti değişir.
+    ayarlar = {
+        a: eski[a]
+        for a in (
+            "donemler",
+            "veri_ayarlari",
+            "yontem_ayarlari",
+            "risk_ayarlari",
+            "masraf_ayarlari",
+        )
+    }
+    ayarlar["strateji"] = {
+        k: v for k, v in eski["strateji"].items() if k != "olusturma_zamani"
+    }
+    eski["ayar_parmak_izi"] = pilot._ayar_ozeti(ayarlar)
+    yol = tmp_path / "tarihsel-legacy.jsonl"
+    once = pilot.kanonik(eski) + b"\n"
+    yol.write_bytes(once)
+    kayitlar, hata = None, None
+    try:
+        kayitlar = pilot.PilotKayit(yol).oku()
+    except pilot.PilotHatasi as exc:
+        hata = str(exc)
+    assert kayitlar is not None, f"Geçerli eski günlük yeni okumada reddedildi: {hata}"
+    assert kayitlar == [eski]
+    assert yol.read_bytes() == once
+
+
+@pytest.mark.parametrize(
+    "yer,deger",
+    [
+        (yer, deger)
+        for yer in ("dogrudan", "ic_ice")
+        for deger in (None, 0, [], "bilinmeyen")
+    ]
+    + [("bozuk_hucre", deger) for deger in (None, 0, [], "metadata")]
+    + [("golgelenen", "bilinmeyen")],
+)
+def test_pilot_secili_isinma_bozuk_politikayi_eski_metaveri_saymaz(
+    tmp_path, yer, deger
+):
+    depo = pilot.PilotKayit(tmp_path / "secili.jsonl")
+    pilot_deneme(depo)
+    once = depo.yol.read_bytes()
+    secim = dict(
+        surum="ilk_islem_v1",
+        tablo_ozeti=veri._YAYIMLANMIS_KAYNAK_OZETLERI["ilk_islem_v1"],
+        kaynak="yerel",
+        goruntu_id="ag-1",
+        manifest_ozeti="a" * 64,
+    )
+    v = dict(
+        kaynak="yerel",
+        veri_referanslari=["ag-1"],
+        manifest_ozeti="a" * 64,
+        ilk_islem=secim,
+    )
+    y = dict(yontem="legacy", tekrar=2)
+    if yer == "dogrudan":
+        y["isinma_politikasi"] = deger
+    elif yer == "ic_ice":
+        y["hucre_yontemi"] = dict(isinma_politikasi=deger)
+    elif yer == "bozuk_hucre":
+        y["hucre_yontemi"] = deger
+    else:
+        y["hucre_yontemi"] = dict(isinma_politikasi="kaynakli_isinma_v1")
+        y["isinma_politikasi"] = deger
+    with pytest.raises(pilot.PilotHatasi, match="birlikte"):
+        pilot_deneme(depo, veri_ayarlari=v, yontem_ayarlari=y)
+    assert depo.yol.read_bytes() == once
+    assert not any(o["kayit_turu"] == "baslangic" for o in depo.oku())

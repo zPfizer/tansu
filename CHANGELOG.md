@@ -7,6 +7,9 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 ## [Yayımlanmamış]
 
 - MC kaydı ve ortak yeniden sınaması donmuş WF hücresinin eşleşmiş ısınma seçimine bağlandı. Yeni politikada bölüm durumları özgün mühür ve tam değişen alanlarla saklanır; geçmişler nihai durumun kanonik öneklerinden kayıpsız kurulur. Tam uygun kaynak koşusu kanıtı açık kalır. (#94, #178)
+- CI testleri ayrı #178 dalında eksiksiz ve çakışmasız iki gruba ayrıldı; ortak #94/#57 tesliminde MC dalının üç grubu korunur. Her grup kendi test kimliklerini çalıştırmadan önce doğrular ve 60 dakikalık süre sınırını korur. (#178)
+
+- Isınma seçimi olmayan eski kayıtlardaki hücre metaverisi korunur; yeni seçimde bozuk veya yanlış yerdeki politika kayıt öncesi reddedilir. (#178)
 
 - Kaynağa ve değişmez görüntüye bağlı açık ısınma seçimi, doğrulanmış doğal 500 gözlem bekleyişini eksik geçmişten ayırır; günlük eşik, tarihli üyeler, WF seçimi ve eski kayıtlar korunur. Yeni kanıt eklemede ve canlı tablosuz geçmiş okumada doğrulanır. (#178)
 
