@@ -7,9 +7,13 @@ on:
 
 jobs:
   # Yalnız Windows: Tansu Levent'in Windows bilgisayarında çalışır (Levent 17.10). Adımlar Git Bash ile koşar.
-  ci:
+  testler:
     runs-on: windows-latest
     timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        bolum: [diger, sinama_s13, sinama_diger]
     defaults:
       run:
         shell: bash
@@ -49,10 +53,137 @@ jobs:
       - run: python -m pip install -r requirements.lock.txt -e ".[dev]"
       - run: ruff check tansu tests .github
       - run: ruff format --check tansu tests .github
-      - run: pytest -q
+      - name: pytest dağılımını doğrula ve bölümü çalıştır
+        env:
+          BOLUM: ${{ matrix.bolum }}
+          BOLUM_SAYISI: ${{ strategy.job-total }}
+        run: |
+          python -X utf8 - <<'PY'
+          import json
+          import os
+          import subprocess
+          import sys
+          import tempfile
+          from collections import Counter
+          from pathlib import Path
+
+          BOLUMLER = {
+              "diger": ["--ignore=tests/test_tansusinama.py"],
+              "sinama_s13": ["tests/test_tansusinama.py", "-k", "s13"],
+              "sinama_diger": ["tests/test_tansusinama.py", "-k", "not s13"],
+          }
+          ALT_PYTEST = r"""import json
+          import sys
+          from collections import Counter
+          from pathlib import Path
+
+          import pytest
+
+
+          class DugumKaydi:
+              def pytest_collection_finish(self, session):
+                  dugumler = [oge.nodeid for oge in session.items]
+                  Path(sys.argv[2]).write_text(json.dumps(dugumler), encoding="utf-8")
+                  if len(sys.argv) == 4:
+                      beklenen = json.loads(Path(sys.argv[3]).read_text(encoding="utf-8"))
+                      if Counter(dugumler) != Counter(beklenen):
+                          raise pytest.UsageError(
+                              "Çalışan bölüm doğrulanmış dağılımla uyuşmuyor."
+                          )
+
+
+          raise SystemExit(pytest.main(json.loads(sys.argv[1]), plugins=[DugumKaydi()]))
+          """
+
+
+          def dugumleri_dogrula(dugumler):
+              if not isinstance(dugumler, list) or not dugumler:
+                  raise ValueError("Düğüm listesi boş veya bozuk.")
+              if any(not isinstance(dugum, str) or not dugum for dugum in dugumler):
+                  raise ValueError("Düğüm kimliği bozuk.")
+              if len(set(dugumler)) != len(dugumler):
+                  raise ValueError("Yinelenen düğüm kimliği.")
+
+
+          def dagilimi_dogrula(tum, bolumler):
+              dugumleri_dogrula(tum)
+              if set(bolumler) != set(BOLUMLER):
+                  raise ValueError("Bölüm kümesi eksik veya bilinmiyor.")
+              birlesim = Counter()
+              for dugumler in bolumler.values():
+                  dugumleri_dogrula(dugumler)
+                  if set(birlesim).intersection(dugumler):
+                      raise ValueError("Bölümler arasında ortak düğüm var.")
+                  birlesim.update(dugumler)
+              if birlesim != Counter(tum):
+                  raise ValueError("Bölümlerin birleşimi varsayılan koleksiyonla uyuşmuyor.")
+
+
+          def pytest_kos(secenekler, cikti, beklenen=None):
+              komut = [
+                  sys.executable,
+                  "-B",
+                  "-X",
+                  "utf8",
+                  "-c",
+                  ALT_PYTEST,
+                  json.dumps(["-q", *secenekler]),
+                  str(cikti),
+              ]
+              if beklenen is not None:
+                  komut.append(str(beklenen))
+              sonuc = subprocess.run(
+                  komut,
+                  capture_output=beklenen is None,
+                  text=True,
+                  encoding="utf-8",
+              )
+              if sonuc.returncode:
+                  if beklenen is None:
+                      print(sonuc.stdout, end="")
+                      print(sonuc.stderr, end="", file=sys.stderr)
+                  raise SystemExit(sonuc.returncode)
+              return json.loads(cikti.read_text(encoding="utf-8"))
+
+
+          def main():
+              bolum = os.environ["BOLUM"]
+              if bolum not in BOLUMLER or int(os.environ["BOLUM_SAYISI"]) != len(BOLUMLER):
+                  raise ValueError("Matris bölümü veya bölüm sayısı geçersiz.")
+              gecici = Path(tempfile.mkdtemp(prefix="tansu-ci-pytest-"))
+              tum = pytest_kos(["--collect-only"], gecici / "tum.json")
+              bolumler = {
+                  ad: pytest_kos(["--collect-only", *secenekler], gecici / f"{ad}.json")
+                  for ad, secenekler in BOLUMLER.items()
+              }
+              dagilimi_dogrula(tum, bolumler)
+              print(
+                  "Doğrulanan düğümler:",
+                  len(tum),
+                  {ad: len(d) for ad, d in bolumler.items()},
+                  flush=True,
+              )
+              pytest_kos(BOLUMLER[bolum], gecici / "calisan.json", gecici / f"{bolum}.json")
+
+
+          if __name__ == "__main__":
+              main()
+          PY
       # driftlint yalnız talimat dosyalarını bulur (AGENTS.md, CLAUDE.md, .claude/skills); yerel .scratch/ ve arsiv/ klasörleri git dışında ve .driftlintrc.json ile tarama dışında.
       # docs/agents/*.md dosyalarını bulmaz; onların ölü yolları tests/test_sahipler.py denetler.
       - uses: actions/setup-node@v4
         with:
           node-version: "24.19.0"
       - run: npx --yes @alifurkangokce/driftlint@0.19.0 .
+
+  ci:
+    runs-on: windows-latest
+    timeout-minutes: 5
+    needs: [testler]
+    if: ${{ always() }}
+    steps:
+      - name: Bütün bölümler başarılı olmalı
+        shell: bash
+        env:
+          SONUC: ${{ needs.testler.result }}
+        run: test "$SONUC" = "success"
