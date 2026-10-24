@@ -15,6 +15,7 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 - Eski CSV/geçmiş çelişkisi kalıcı reddedilir; saklı günlük ekranı istenen günü taşır ve aynı tekrar saati korur. Ortak çıktı yazmaları işletim sistemi kilidiyle ayrılır; meşgul çağrı sahibin ekranını değiştirmez. Yerel davranış kanıtı alındı. (#126)
 
 - Günlük komut doğrulanmış saklı görüntüyü indirme yapmadan kullanır; isteğe bağlı çıktı kökü örtük yazmaları ayırır ve aynı-gün görüntü çelişkisi reddedilir. Teslim #94’e bağlı. (#126)
+- Claude ve Codex'te aynı sözleşmeyi ve pstack kaynağını kullanan TANSU yönetici ajanı uygulamanın görünür yerel ajan arayüzünden çalışır; sürüm hazır olduğunda onay bekler, Windows Görev Zamanlayıcı kullanılmaz. (#181)
 
 - CI testleri, eksiksiz ve çakışmasız iki gruba ayrılır; her grup kendi test kimliklerini çalıştırmadan önce doğrular ve 60 dakikalık süre sınırını korur. (#178)
 

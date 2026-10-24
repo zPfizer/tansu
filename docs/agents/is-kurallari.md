@@ -12,7 +12,8 @@ References through `tansu-yeni-is` and a step title point to these shared steps.
 - At every scope, the reviewer count follows risk under "Auditor and rounds".
 
 ## Who writes
-- Levent assigns the writer and picks the tool (Claude or Codex) for each job. There is no default reviewer.
+- Levent assigns the writer and picks the tool for a delegated job. There is no default reviewer.
+- The standing coordinator follows [Standing project coordinator](yonetici.md) for daily assignments and release approval.
 - Give each file one writer for the job. Other agents read it without editing. The dağıtıcı is the dispatcher.
 - For a one-line addition to a locked file, the writer also searches for duplicate rules in other files.
 - Use the active tool's agent interface. Reviewers must not edit files. Only the assigned writer may edit its named files.
@@ -20,7 +21,7 @@ References through `tansu-yeni-is` and a step title point to these shared steps.
 ## Auditor and rounds
 - Documents only: no reviewer. Normal code: one reviewer. Risky code: two reviewers.
 - Risky code covers money, data integrity, `kayit/`, CI, the PR check itself, and security.
-- Levent picks the tool. Each reviewer, called an auditor here, works in a different session from the writer.
+- Levent picks the tool unless the standing coordinator assignment covers that choice. Each auditor works in a different session from the writer.
 - The auditor checks the flow steps, the diff, and the latest PR body. Name each step with no trace.
 - For delete or archive work, check the final file list, links, and changes outside the scope.
 - Verdicts are GEÇTİ, NOTLU GEÇTİ, and KALDI. NOTLU GEÇTİ covers low-risk test gaps, style notes, and process-order points that do not affect the output.
