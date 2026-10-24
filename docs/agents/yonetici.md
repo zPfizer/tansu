@@ -32,23 +32,38 @@ Share source evidence and the brain search duty with delegates. Give each worktr
 
 ## Durable work
 
-Use the existing GitHub issues and milestones as the work queue. Keep one coordinator checkpoint under the main checkout's `.scratch/tansu-yonetici/`.
-Both clients share this checkpoint and decision log. Do not create a separate Claude queue or Codex queue.
-Record the owning client, session, host, process ID, and process start time before work.
-A second coordinator reads without edits while that process still owns the release. A timestamp alone does not prove that an owner stopped.
-For a handoff, the old owner checkpoints its work and names the receiving client and session. The receiver records acceptance before edits.
-If the owner stopped, check the process identity, saved session, branches, and pending changes before recovery.
-Record the evidence and new owner first. If the owner's state is uncertain, do not start another writer.
+Use the existing GitHub issues and milestones as the work queue. Keep one current checkpoint under the main checkout's `.scratch/tansu-yonetici/`.
+Both clients share `durum.md` and `decisions.tsv` there. Do not create another tracker or another standing coordinator.
+Keep the current checkpoint within 60 lines and 6000 UTF-8 bytes, including blank lines.
+Record the owner client and saved chat ID, release target, active worktree and candidate SHA, verified result and evidence, open gates, and next command.
+Record host, process ID, and process start time as supporting evidence. A shared app-server process does not prove that a particular chat still runs.
+Update the current fields after a meaningful result and before an interruption, compaction, or handoff. Replace obsolete status instead of appending history.
+Append each decision once to the existing decision log. Keep full outputs and review reports in their existing evidence files.
+
+Before shortening an old checkpoint, copy its exact bytes to a dated file under the same directory's `arsiv/` folder.
+Verify equal SHA256 values before replacing the checkpoint. Keep the archive path and hash in the short checkpoint.
+Preserve the decision log's existing bytes and every original evidence file. An archive is evidence, not another work queue.
+Write the new checkpoint to a sibling temporary file. Verify its limits and required fields before replacing the current file.
+Verify that the source checkpoint has not changed before replacement. If it changed, reread it and reconcile the update first.
+
+### Resume and context
+
+Continue the same visible user chat. Read the short checkpoint first, then verify current Git state, the saved owner chat, and active jobs.
+Load only the owner documents and evidence needed for the next action. Open historical archives only for a specific unresolved detail.
+Reuse authoritative sources already opened for the same task while their contents and scope remain unchanged, as the shared brain connection permits.
+Give delegates their explicit task, role, worktree, acceptance conditions, validation commands, and relevant source pointers. Do not copy unrelated conversation history.
+Keep large searches and tool outputs in the responsible worker's context. Return the result, evidence paths, verified revision, and open work.
+Before client-native compaction, update and read back the short checkpoint. Resume from that checkpoint after compaction or interruption.
+If the checkpoint is absent or stale, recover the missing fields from current issues, Git state, and named evidence. Preserve uncertainty as unresolved.
+Read back external operations before repeating them. Never use an old success as evidence for a changed candidate.
+
+A second coordinator reads without edits until the current owner explicitly hands off or the receiver verifies that the owner stopped.
+For a handoff, the old owner checkpoints its work and names the receiving client and saved chat. The receiver records acceptance before edits.
+A timestamp or shared process alone cannot settle ownership. If ownership is uncertain, do not start another writer.
 A client change requires Levent's instruction. The same client can recover a stopped session without a new product decision.
-The checkpoint records the session ID, release target, current work, branches, reviewed revisions, evidence, blockers, and next action.
-Use one decision log in that directory through `pstack:show-me-your-work`. Do not create a second task tracker.
 Before delegation, give each unit a concrete acceptance condition and required checks.
 First prove one unit from assignment through verification. Scale independent work only after that path works.
 Preserve other sessions and their worktrees. Inspect active work before claiming a ticket. Never take over another writer's pending changes.
-
-Keep a durable checkpoint before a context limit, quota limit, or interruption. Resume the exact saved session or restore from that checkpoint.
-If the checkpoint is missing or old, reconstruct it from current issues, Git state, and saved run evidence.
-Preserve uncertain work as unresolved. Read back external operations before repeating them.
 A saved agent definition is not a running process. Never claim background work continues after the process stops.
 Do not install Windows Task Scheduler tasks, timers, or a replacement polling service.
 
