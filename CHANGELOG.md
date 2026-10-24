@@ -6,7 +6,7 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ## [Yayımlanmamış]
 
-- Kesilen kayıtlı ileri sınama için aynı koşudan güvenli devam sözleşmesi kararlaştırıldı. Kod/veri bağı, özgün makbuzlar, tek yürütme sahibi ve dayanıklı dönem sınırı tanımlandı; uygulama, gerçek kesinti kanıtı ve bağımsız inceleme bekleniyor. (#180)
+- Yeni kayıtlı ileri sınamaya açık koşu kimliğiyle devam eklendi. Tamamlanmış çeyrekler ve özgün makbuzlar korunur; kod/veri bağı, tek yürütme sahibi ve dayanıklı dönem sınırları denetlenir. Gerçek veriyle tamamlanmış kesinti/devam kanıtı ve bağımsız inceleme teslim PR’ında izlenir. (#180)
 
 - Yeni hedef kanıtı denetimi, E3 alanı taşımayan eski kısa dönem özetini tam işlem durumu saymaz. S11 çocuk sonucu yazımı ve yeni okuyucuyla eski kayıt okuması korunur; yeni kanıt, kaynak/ayar bağı ve bozuk E3 durumu retleri korunur. (#57, #94)
 

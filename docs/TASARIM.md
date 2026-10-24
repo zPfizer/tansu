@@ -1895,25 +1895,29 @@ seçimsiz dönem ve açık ufku; `tests/test_kayit.py` değişmez bağları ve t
 `tests/test_saglamlik.py` durum aktarımını; `tests/test_gelecek.py` eğitim
 kesiminden sonraki fiyat ve sonuçların eski seçimi değiştirmemesini sınar.
 
-**Kesinti sonrası devam — sözleşme kararlaştırıldı; uygulama ve kanıt bekliyor.**
+**Kesinti sonrası devam (#180).**
 Dayanak: Levent'in 24.10.2026 tarihinde kesilen çalışmanın nedenini bulma ve sonraki kesintilerden güvenli devam etme talebi. Bu ek yürütme sözleşmesidir; strateji, parametre, getiri veya günlük uygunluk kararı değildir.
 
 `kayitli_ileri_calistir(depo, ileri_deneme_id, *, veri_koku, mod, devam_kosu_id=None, ilerleme=print)` yüzünde boş devam kimliği yeni koşu açar. Açık kimlik yalnız belirtilen koşuya devam eder; son koşu kendiliğinden seçilmez.
-Yeni başlangıç `ortam.ileri_devam_surumu=ileri_devam_v1` taşır. Bu alanı taşımayan eski koşular okunur, devam ettirilmez.
+Yeni başlangıç `ortam.ileri_devam_surumu=ileri_devam_v1` taşır. Bu alanı taşımayan eski koşular okunur, devam ettirilmez. Alan varsa yalnız `ileri_devam_v1` metni geçerlidir; açık boş değer veya bilinmeyen sürüm reddedilir.
 
 Devam aynı üst koşu kimliğini, ayar revizyonunu ve özgün makbuzları korur. Tamamlanmış çeyrek yeniden hesaplanmaz. Tamamlanmamış çeyrek önceki tamamlanmış çeyreğin mühürlü durumundan yeniden yürütülebilir. Önceden yayımlanmış aynı içerikli olayda özgün makbuz kullanılır; ikinci olay yazılmaz. Aynı işte farklı içerik, birden fazla aday veya sırasız kayıt açık hatadır.
+
+Yeniden yürütülen E1/E2 aynı veri üzerinde yeni istek saati üretir. Önceden yayımlanmış aynı özgün sinyal kimliğinde, E2 sinyalinin `olusturma_zamani`, E1 veri referansının `olusturma_zamani` ve E1'in `yerel_goruntu` kaynak girdilerindeki istek günü `tarih` özgün kayıttan korunur. Bunlar hesap çalıştırma üst verisidir; fiyat satırının veya sinyal gününün tarihi değildir. Alanların varlığı, kaynak sayısı, sırası ve diğer bütün içerik aynı olmalıdır. Bu saatler korunduktan sonra E1 referansının ve E2 sinyalinin tam kanonik içeriği özgün kayıtla karşılaştırılır. Görüntünün bütün manifest dosyaları önceden doğrulanır; fiyat, kaynak kimliği, parametre, risk veya işlem alanı karşılaştırmadan çıkarılmaz.
 
 Yeni eğitim ve test çocuklarının `baglar.ileri_ust_kosu` alanı özgün üst başlangıca bağlanır. Üst koşu, çeyrek, rol ve izinli koordinat bir çocuk revizyonunu tanımlar. Eğitim çocuğunun başlangıcı bir kez yazılır. Açık çocuk aynı kimlikle sürer; yayımlanmış sonucu ve bitişi yeniden yazılmaz. Bu bağ yeni yöntem parametresi değildir.
 
 Kod dosyaları, Git kökeni, çalışma ortamı, bağımlılıklar, tam ayarlar, görüntü dosyaları, manifest ve kayıtlı kaynaklar ilk başlangıçla uyuşmalıdır. Değişmiş girdi eski koşuya karıştırılmaz. Yeni kodla çalışma yeni koşudur.
 
-E5'in `ileri_devam(kosu_id, *, mod, kod_kimligi, ortam, bagimlilik_ozeti)` bağlamı yalnız doğrulanmış koşu tutacağını geri kurar; hesap yapmaz. Yeni başlangıç ve devam aynı yerel süreçler arası yürütme kilidini kullanır. Kilit hesap süresince gerçek işçi süreçte tutulur. Aynı denemenin aynı günlükte ikinci yürütmesi reddedilir. Kilit dosyasının varlığı veya eski PID tek başına canlı süreç kanıtı değildir.
+E5'in `ileri_devam(kosu_id, *, mod, kod_kimligi, ortam, bagimlilik_ozeti)` bağlamı yalnız doğrulanmış koşu tutacağını geri kurar; hesap yapmaz. Yeni başlangıç ve devam aynı yerel süreçler arası yürütme kilidini kullanır. Kilit, günlüğün kanonik yolunun yanında aynı denemeye bağlıdır; süreçlerin geçici klasörleri farklı olsa da ortak kalır. Kilit hesap süresince gerçek işçi süreçte tutulur. Aynı denemenin aynı günlükte ikinci yürütmesi reddedilir. Kilit dosyasının varlığı veya eski PID tek başına canlı süreç kanıtı değildir.
 
 Bozuk tam satır, belirsiz olay bağı veya çözülemeyen çocuk bağı devamı durdurur. Yalnız dosyanın sonundaki LF'siz ve yayımlanmamış parça, S03'ün eklemeli kesik işaretiyle ayrılabilir; olay sayılmaz ve içeriği tamamlanmaz. Kesik açıkça bildirilir. Eski baytlar değiştirilmez. İç boşluk veya sınıflandırılamayan kuyruk reddedilir. Hesap/veri hatasıyla başarısız olmuş çeyrek veya bitiş başarıya çevrilmez. Kesinti tek başına bitiş değildir.
 
 Birleşik sonuç ve bitiş mevcut S12 kaynak izdüşümünden üretilir. Birleşik sonuç yayımlanmış, bitiş eksikse yalnız bitiş tamamlanır. Geçerli başarılı bitişten sonraki aynı devam isteği kayıtlı sonucu döndürür; hesap ve ekleme yapmaz. MC kabulü S13'teki tamamlanmış kaynak koşullarına bağlı kalır.
 
 `python -m tansu ileri-sinama --deneme-dosyasi PILOT --deneme-id ID --kok DATA [--resmi] [--devam-kosu-id RUN]` bu yüzü çağırır. Açık dosya ve kimlik girdileri zorunludur. Eski `tansu-sinama` komutu bu yola çevrilmez.
+
+Bu yüzün kabul kanıtı #180 ile bağlı teslim PR’ında izlenir. `tests/test_tansusinama.py`, zorla sona eren işçiden yeni süreçle devamı, kayıt yazma sınırlarından yeniden yürütmeyi, özgün önek ve makbuzların korunmasını, önceki çeyreklerin atlanmasını ve kesintisiz koşuyla sayısal/durum eşitliğini sınar. Bağımsız koşuların aynı günkü tanı olayları, koşuya bağlı kimliklerin sırası yerine tarih, sembol, olay türü ve sayısal içerikle eşleştirilir; çokluk ve hesaba ait bütün sayısal alanlar korunur. `tests/test_kayit.py`, son kesik satırı, tam satır bozulmasını, farklı geçici klasörlerde ortak yürütme kilidini ve süreç ölümüyle kilit salımını, dayanıklılık hatasını ve değişmiş kimlik/veri/kaynak retlerini sınar. Bu testler gerçek piyasa verisiyle tamamlanmış koşunun yerine geçmez.
 
 #### S13 kayıtlı Monte Carlo (#94)
 
@@ -2665,9 +2669,9 @@ revizyondur; aynı değerleri kaydetmek veya önceki değere dönmek eski revizy
 Kaydedilmiş ayarın tekrar koşusu aynı denemeye bağlı yeni koşudur. Dayanak: #84 gövdesi ve
 Levent'in 18.10 tarihli bu işe verilen girdileri; ortak kayıt sözleşmesi ve C07.
 
-**#180 dayanıklılık sözleşmesi kararlaştırıldı; uygulama ve kanıt bekliyor.**
+**#180 dayanıklılık sözleşmesi.**
 
-**Devam edebilir WF için dayanıklılık eki.** `ileri_devam_v1` işaretli WF, üst başlangıç, çeyrek sonucu ve üst bitiş makbuzundan sonra günlük dosyasını ekleme kilidi altında diske aktarır. Bu aktarım önceki çocuk ve test kayıtlarını da kapsar. Başlangıç veya başarı ilerlemesi ancak aktarım bitince bildirilir; sonraki çeyrek bundan önce başlamaz. Aktarım başarısızsa makbuz kimliğiyle dayanıklılık belirsizliği bildirilir ve yürütme durur; yeni hata bitişi yazılmaz. Görünür olay geri alınmış sayılmaz. S03'ün olay başına LF görünürlüğü ve makbuz davranışı değişmez. Devam, yalnız doğrulanmış son LF'siz parçayı mevcut kesik işaretiyle eklemeli ayırabilir; bozuk tam satırı veya belirsiz bağı onaramaz.
+**Devam edebilir WF için dayanıklılık eki.** WF tutacağının `ileri_dayaniklastir(makbuz)` yüzü, aynı üst koşunun başlangıç, çeyrek sonucu veya bitiş makbuzunu doğrulayıp aktarır. Aktarım başarısızlığı makbuz kimliğini taşıyan `PilotDayaniklilikHatasi` verir; görünürlük belirsizliğinden ayrı tutulur. `ileri_devam_v1` işaretli WF, üst başlangıç, çeyrek sonucu ve üst bitiş makbuzundan sonra günlük dosyasını ekleme kilidi altında diske aktarır. Bu aktarım önceki çocuk ve test kayıtlarını da kapsar. Başlangıç veya başarı ilerlemesi ancak aktarım bitince bildirilir; sonraki çeyrek bundan önce başlamaz. Aktarım başarısızsa makbuz kimliğiyle dayanıklılık belirsizliği bildirilir ve yürütme durur; yeni hata bitişi yazılmaz. Görünür olay geri alınmış sayılmaz. S03'ün olay başına LF görünürlüğü ve makbuz davranışı değişmez. Devam, yalnız doğrulanmış son LF'siz parçayı mevcut kesik işaretiyle eklemeli ayırabilir; bozuk tam satırı veya belirsiz bağı onaramaz.
 
 E5'in pilot yüzü `tansu/deneme.py` içindeki `PilotKayit` sınıfıdır. Dosya yolu çağıranın
 açık girdisidir; eski `kayit/deneme.jsonl` pilot dosyası değildir. Pilot ayrı bir alanda tutulur.

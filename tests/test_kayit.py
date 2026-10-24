@@ -3920,6 +3920,339 @@ def test_grup_pay_kimligi_gecmisi_guncel_tabloyu_okumaz(tmp_path, monkeypatch):
         pilot.PilotKayit(depo.yol).oku()
 
 
+def _s12_acik_kosu(tmp_path, monkeypatch):
+    from tansu import tansusinama as ts
+    from tests.test_tansusinama import s12_kayitli
+
+    depo, deneme, _ = s12_kayitli(tmp_path, monkeypatch)
+
+    def kes(_):
+        raise KeyboardInterrupt
+
+    with pytest.raises(KeyboardInterrupt):
+        ts.kayitli_ileri_calistir(
+            depo,
+            deneme.deneme_id,
+            veri_koku=tmp_path,
+            mod="gelistirme",
+            ilerleme=kes,
+        )
+    baslangiclar = [
+        o
+        for o in depo.oku()
+        if o["kayit_turu"] == "baslangic" and o["deneme_id"] == deneme.deneme_id
+    ]
+    assert len(baslangiclar) == 1
+    return depo, deneme, baslangiclar[0]
+
+
+def _s12_devam_kimligi(b):
+    return dict(
+        mod=b["mod"],
+        kod_kimligi=b["kod_kimligi"],
+        ortam=b["ortam"],
+        bagimlilik_ozeti=b["bagimlilik_ozeti"],
+    )
+
+
+@pytest.mark.parametrize("kuyruk", [b"kesik-icerik", b"bozuk-tam-satir\n"])
+def test_s12_devam_yalniz_son_lfsiz_kuyrugu_ayirir(tmp_path, monkeypatch, kuyruk):
+    depo, _, bas = _s12_acik_kosu(tmp_path, monkeypatch)
+    once = depo.yol.read_bytes()
+    with depo.yol.open("ab") as dosya:
+        dosya.write(kuyruk)
+    if kuyruk.endswith(b"\n"):
+        with pytest.raises(pilot.PilotHatasi):
+            with depo.ileri_devam(bas["kosu_id"], **_s12_devam_kimligi(bas)):
+                pass
+        assert depo.yol.read_bytes() == once + kuyruk
+    else:
+        with depo.ileri_devam(bas["kosu_id"], **_s12_devam_kimligi(bas)) as kosu:
+            assert any("Eksik satır" in u for u in kosu.makbuz.uyarilar)
+        assert depo.yol.read_bytes() == once + kuyruk + pilot._KESIK
+        assert depo.oku()[-1] == bas
+
+
+def test_s12_kesik_kuyruk_uyarisi_hesaptan_once_gorunur(tmp_path, monkeypatch):
+    from tansu import tansusinama as ts
+
+    depo, deneme, bas = _s12_acik_kosu(tmp_path, monkeypatch)
+    with depo.yol.open("ab") as dosya:
+        dosya.write(b"yarim-satir")
+    once = depo.yol.read_bytes()
+    mesajlar = []
+
+    def ilerleme(mesaj):
+        mesajlar.append(mesaj)
+        if "Eksik satır" in mesaj:
+            raise KeyboardInterrupt
+
+    def hesaplama_yasak(*_args, **_kwargs):
+        pytest.fail("WF uyarıdan önce hesaplamaya geçti")
+
+    monkeypatch.setattr(veri, "oku", lambda *_: None)
+    monkeypatch.setattr(ts, "_ileri_secimler", hesaplama_yasak)
+    with pytest.raises(KeyboardInterrupt):
+        ts.kayitli_ileri_calistir(
+            depo,
+            deneme.deneme_id,
+            veri_koku=tmp_path,
+            mod="gelistirme",
+            devam_kosu_id=bas["kosu_id"],
+            ilerleme=ilerleme,
+        )
+    assert any("Eksik satır" in mesaj for mesaj in mesajlar)
+    assert depo.yol.read_bytes() == once + pilot._KESIK
+
+
+def test_s12_devam_bilinmeyen_isaret_ve_aktarim_hatasi(tmp_path, monkeypatch):
+    depo, deneme, bas = _s12_acik_kosu(tmp_path, monkeypatch)
+    once = depo.yol.read_bytes()
+    with pytest.raises(pilot.PilotHatasi, match="Bilinmeyen WF devam sürümü"):
+        with depo.kosu(
+            deneme.deneme_id,
+            mod=bas["mod"],
+            anlik_goruntu=bas["anlik_goruntu"],
+            manifest_ozeti=bas["manifest_ozeti"],
+            uyelik_surumu=bas["uyelik_surumu"],
+            kod_kimligi=bas["kod_kimligi"],
+            ortam=bas["ortam"] | {"ileri_devam_surumu": None},
+            bagimlilik_ozeti=bas["bagimlilik_ozeti"],
+            tohum=None,
+            is_listesi=bas["is_listesi"],
+        ):
+            pass
+    assert depo.yol.read_bytes() == once
+    olaylar = deepcopy(depo.oku())
+    olaylar[-1]["ortam"]["ileri_devam_surumu"] = None
+    bozuk = tmp_path / "isaret-yok.jsonl"
+    bozuk.write_bytes(b"".join(pilot.kanonik(o) + b"\n" for o in olaylar))
+    with pytest.raises(pilot.PilotHatasi):
+        pilot.PilotKayit(bozuk).oku()
+
+    def aktarim_hatasi(_):
+        raise OSError("disk aktarımı")
+
+    with depo.ileri_devam(bas["kosu_id"], **_s12_devam_kimligi(bas)) as kosu:
+        monkeypatch.setattr(pilot.os, "fsync", aktarim_hatasi)
+        with pytest.raises(pilot.PilotDayaniklilikHatasi) as hata:
+            kosu.ileri_dayaniklastir(kosu.makbuz)
+    assert hata.value.kayit_id == bas["kayit_id"]
+    assert depo.yol.read_bytes() == once
+    assert not any(o["kayit_turu"] == "bitis" for o in depo.oku())
+
+
+def test_s12_devam_ikinci_surec_kilidi_ve_os_salimi(tmp_path, monkeypatch):
+    depo, _, bas = _s12_acik_kosu(tmp_path, monkeypatch)
+    kod = (
+        "import sys,time; from tansu.deneme import PilotKayit; "
+        "d=PilotKayit(sys.argv[1]); k=sys.argv[2]; "
+        "b=next(o for o in d.oku() if o.get('kosu_id')==k and o['kayit_turu']=='baslangic'); "
+        "with d.ileri_devam(k, mod=b['mod'], kod_kimligi=b['kod_kimligi'], "
+        "ortam=b['ortam'], bagimlilik_ozeti=b['bagimlilik_ozeti']): "
+        "print('KILITLI',flush=True); time.sleep(30)"
+    )
+    # Bileşik with ifadesi ayrı satır ister; süreç kodu tek argüman olarak kalır.
+    kod = kod.replace("; with d.ileri_devam", "\nwith d.ileri_devam")
+    surec = subprocess.Popen(
+        [sys.executable, "-B", "-X", "utf8", "-c", kod, str(depo.yol), bas["kosu_id"]],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        cwd=Path(__file__).resolve().parents[1],
+    )
+    try:
+        assert surec.stdout.readline().strip() == "KILITLI", surec.stderr.read()
+        with pytest.raises(pilot.PilotHatasi, match="başka işçide"):
+            with depo.ileri_devam(bas["kosu_id"], **_s12_devam_kimligi(bas)):
+                pass
+    finally:
+        surec.terminate()
+        surec.wait(timeout=10)
+    with depo.ileri_devam(bas["kosu_id"], **_s12_devam_kimligi(bas)):
+        pass
+
+
+def test_s12_devam_farkli_temp_ile_ayni_gunlugu_iki_isci_acamaz(tmp_path, monkeypatch):
+    depo, _, bas = _s12_acik_kosu(tmp_path, monkeypatch)
+    kod = """
+import sys, tempfile, time
+from tansu.deneme import PilotHatasi, PilotKayit
+d = PilotKayit(sys.argv[1])
+k = sys.argv[2]
+b = next(o for o in d.oku() if o.get('kosu_id') == k and o['kayit_turu'] == 'baslangic')
+print('TEMP:' + tempfile.gettempdir(), flush=True)
+try:
+    with d.ileri_devam(k, mod=b['mod'], kod_kimligi=b['kod_kimligi'],
+                       ortam=b['ortam'], bagimlilik_ozeti=b['bagimlilik_ozeti']):
+        print('KILITLI' if sys.argv[3] == 'tut' else 'ACILDI', flush=True)
+        if sys.argv[3] == 'tut':
+            time.sleep(30)
+except PilotHatasi as hata:
+    print('RED:' + str(hata), flush=True)
+    sys.exit(2)
+"""
+    birinci_temp = tmp_path / "ilk-temp"
+    ikinci_temp = tmp_path / "ikinci-temp"
+    birinci_temp.mkdir()
+    ikinci_temp.mkdir()
+    birinci_env = os.environ.copy() | dict(
+        TEMP=str(birinci_temp), TMP=str(birinci_temp)
+    )
+    ikinci_env = os.environ.copy() | dict(TEMP=str(ikinci_temp), TMP=str(ikinci_temp))
+    komut = [
+        sys.executable,
+        "-B",
+        "-X",
+        "utf8",
+        "-c",
+        kod,
+        str(depo.yol),
+        bas["kosu_id"],
+    ]
+    tutan = subprocess.Popen(
+        [*komut, "tut"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        env=birinci_env,
+        cwd=Path(__file__).resolve().parents[1],
+    )
+    try:
+        assert Path(
+            tutan.stdout.readline().strip().removeprefix("TEMP:")
+        ).resolve() == (birinci_temp.resolve())
+        assert tutan.stdout.readline().strip() == "KILITLI", tutan.stderr.read()
+        ikinci = subprocess.run(
+            [*komut, "dene"],
+            capture_output=True,
+            text=True,
+            timeout=15,
+            env=ikinci_env,
+            cwd=Path(__file__).resolve().parents[1],
+        )
+        assert Path(ikinci.stdout.splitlines()[0].removeprefix("TEMP:")).resolve() == (
+            ikinci_temp.resolve()
+        )
+        assert ikinci.returncode == 2, (ikinci.stdout, ikinci.stderr)
+        assert "RED:WF denemesi başka işçide yürütülüyor." in ikinci.stdout
+    finally:
+        tutan.terminate()
+        tutan.wait(timeout=10)
+    serbest = subprocess.run(
+        [*komut, "dene"],
+        capture_output=True,
+        text=True,
+        timeout=15,
+        env=ikinci_env,
+        cwd=Path(__file__).resolve().parents[1],
+    )
+    assert serbest.returncode == 0, (serbest.stdout, serbest.stderr)
+    assert serbest.stdout.splitlines()[-1] == "ACILDI"
+
+
+@pytest.mark.parametrize("alan", ["mod", "kod_kimligi", "ortam", "bagimlilik_ozeti"])
+def test_s12_devam_degisen_yurutme_kimligini_yazmaz(tmp_path, monkeypatch, alan):
+    depo, _, bas = _s12_acik_kosu(tmp_path, monkeypatch)
+    once = depo.yol.read_bytes()
+    kimlik = _s12_devam_kimligi(bas)
+    kimlik[alan] = dict(kimlik[alan], bagimliliklar={}) if alan == "ortam" else "farkli"
+    with pytest.raises(pilot.PilotHatasi):
+        with depo.ileri_devam(bas["kosu_id"], **kimlik):
+            pass
+    assert depo.yol.read_bytes() == once
+
+
+def test_s12_devam_manifest_sabitken_goruntu_bayti_degismesin(tmp_path, monkeypatch):
+    from tansu import tansusinama as ts
+    from tests.test_tansusinama import s12_kayitli
+
+    depo, ilk, _ = s12_kayitli(tmp_path, monkeypatch)
+    d = depo.deneme_oku(ilk.deneme_id)
+    goruntu = tmp_path / "ag" / "wf-goruntu"
+    goruntu.mkdir()
+    fiyat = goruntu / "fiyat.parquet"
+    pd.DataFrame(columns=["sembol", "tarih"]).to_parquet(fiyat)
+    (goruntu / "olaylar.json").write_text("{}", encoding="utf-8")
+    manifest = goruntu / "manifest.json"
+    manifest.write_text(
+        json.dumps(
+            dict(
+                kimlik="wf-goruntu",
+                dosyalar={
+                    p.name: hashlib.sha256(p.read_bytes()).hexdigest()
+                    for p in (fiyat, goruntu / "olaylar.json")
+                },
+            )
+        ),
+        encoding="utf-8",
+    )
+    v = d["veri_ayarlari"] | dict(
+        veri_referanslari=["wf-goruntu"],
+        manifest_ozeti=hashlib.sha256(manifest.read_bytes()).hexdigest(),
+    )
+    m = pilot_deneme(
+        depo,
+        d["strateji"],
+        donemler=d["donemler"],
+        veri_ayarlari=v,
+        yontem_ayarlari=d["yontem_ayarlari"],
+        risk_ayarlari=d["risk_ayarlari"],
+        masraf_ayarlari=d["masraf_ayarlari"],
+        eski_referans=d["eski_referans"],
+    )
+
+    def kes(_):
+        raise KeyboardInterrupt
+
+    with pytest.raises(KeyboardInterrupt):
+        ts.kayitli_ileri_calistir(
+            depo, m.deneme_id, veri_koku=tmp_path, mod="gelistirme", ilerleme=kes
+        )
+    bas = next(
+        o
+        for o in depo.oku()
+        if o["kayit_turu"] == "baslangic" and o["deneme_id"] == m.deneme_id
+    )
+    with fiyat.open("ab") as dosya:
+        dosya.write(b"degisti")
+    once = depo.yol.read_bytes()
+    with pytest.raises(veri.VeriHatasi, match="manifest uyuşmuyor"):
+        ts.kayitli_ileri_calistir(
+            depo,
+            m.deneme_id,
+            veri_koku=tmp_path,
+            mod="gelistirme",
+            devam_kosu_id=bas["kosu_id"],
+            ilerleme=None,
+        )
+    assert depo.yol.read_bytes() == once
+
+
+def test_s12_devam_uyelik_kaynagi_degismisse_yazmaz(tmp_path, monkeypatch):
+    from tansu import tansusinama as ts
+
+    depo, deneme, bas = _s12_acik_kosu(tmp_path, monkeypatch)
+    once = depo.yol.read_bytes()
+    asil = veri.uyelik_hazirla
+
+    def degisen(istek):
+        return asil(istek) | dict(tablo_parmak_izi="farkli-uyelik")
+
+    monkeypatch.setattr(veri, "oku", lambda *_: None)
+    monkeypatch.setattr(veri, "uyelik_hazirla", degisen)
+    with pytest.raises(ValueError, match="Üyelik parmak izi"):
+        ts.kayitli_ileri_calistir(
+            depo,
+            deneme.deneme_id,
+            veri_koku=tmp_path,
+            mod="gelistirme",
+            devam_kosu_id=bas["kosu_id"],
+            ilerleme=None,
+        )
+    assert depo.yol.read_bytes() == once
+
+
 def test_s12_okuyucu_ust_revizyonu_tek_basina_dogrular(tmp_path, monkeypatch):
     from tests.test_tansusinama import s12_kayitli
 

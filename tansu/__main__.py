@@ -201,6 +201,7 @@ def main(argv=None) -> int:
             "kayit",
             "sinama",
             "tansu-sinama",
+            "ileri-sinama",
             "varyant-sinama",
             "grup-hazirla",
             "denetim",
@@ -246,6 +247,7 @@ def main(argv=None) -> int:
         "--isci", type=int, help="tansu-sinama: işçi sayısı (varsayılan: makineye göre)"
     )
     ap.add_argument("--deneme-id", help="tansu-sinama ve gunluk: kayıtlı deneme")
+    ap.add_argument("--devam-kosu-id", help="ileri-sinama: açık WF koşu kimliği")
     ap.add_argument(
         "--deneme-dosyasi", help="denemenin veya hazırlığın açık pilot dosya yolu"
     )
@@ -264,6 +266,48 @@ def main(argv=None) -> int:
     a = ap.parse_args(argv)
     kok, p = Path(a.kok or "veri"), aileler.VARYANTLAR[a.varyant]
     try:
+        if a.devam_kosu_id and a.komut != "ileri-sinama":
+            raise deneme.PilotHatasi("--devam-kosu-id yalnız ileri-sinama içindir.")
+        if a.komut == "ileri-sinama":
+            yasak = {
+                "--varyant",
+                "--hisse",
+                "--isci",
+                "--aile",
+                "--kimlik",
+                "--son",
+                "--n",
+                "--tekrar",
+                "--sektor-kok",
+                "--rapor",
+                "--varyant-denemeleri",
+                "--grup-tanimi",
+            }
+            if (
+                not a.deneme_dosyasi
+                or not a.deneme_id
+                or not a.kok
+                or a.tarih
+                or any(x.split("=", 1)[0] in yasak for x in argv)
+            ):
+                raise deneme.PilotHatasi(
+                    "İleri sınama açık --deneme-dosyasi, --deneme-id ve --kok ister; "
+                    "eski yöntem seçeneklerini kabul etmez."
+                )
+            sonuc = tansusinama.kayitli_ileri_calistir(
+                deneme.PilotKayit(a.deneme_dosyasi),
+                a.deneme_id,
+                veri_koku=kok,
+                mod="resmi" if a.resmi else "gelistirme",
+                devam_kosu_id=a.devam_kosu_id,
+                ilerleme=lambda mesaj: print(mesaj, flush=True),
+            )
+            print(
+                f"WF koşu {sonuc['kosu_id']}: {sonuc['durum']}; "
+                f"bitiş makbuzu {sonuc['bitis_makbuzu'].olay_id}",
+                flush=True,
+            )
+            return 0 if sonuc["durum"] == "tamamlandi" else 1
         if a.komut == "varyant-sinama":
             return _varyant_sinama(a, argv)
         if a.komut == "grup-hazirla":
@@ -363,8 +407,17 @@ def main(argv=None) -> int:
         deneme.PilotHatasi,
         deneme.PilotYazmaHatasi,
     ) as e:
-        print(e, file=sys.stderr)
+        print(
+            f"{type(e).__name__}: {e}" if a.komut == "ileri-sinama" else e,
+            file=sys.stderr,
+            flush=True,
+        )
         return 1
+    except KeyboardInterrupt:
+        if a.komut != "ileri-sinama":
+            raise
+        print("WF kesildi; koşu sonucu çözümsüz kaldı.", file=sys.stderr, flush=True)
+        return 130
     return 0
 
 

@@ -8,6 +8,8 @@ giriş 03.02 AOF 104, çıkış 04.02 son kapanış 110 (veri sonu). Dönem 02.0
 """
 
 import dataclasses
+import datetime as dt
+from decimal import Decimal
 import json
 import re
 
@@ -3573,6 +3575,80 @@ def test_s12_onalti_secimsiz_ceyrek_ve_gercek_makbuzlar(tmp_path, monkeypatch):
     assert bitis["basarisiz"] == []
 
 
+def test_s12_biten_kosu_ayni_kimlikle_sonucu_yeniden_verir(tmp_path, monkeypatch):
+    from tansu import deneme
+
+    depo, m, _ = s12_kayitli(tmp_path, monkeypatch)
+    monkeypatch.setattr(veri, "oku", lambda *_: None)
+    onceki = s12_calistir(depo, m, tmp_path)
+    baytlar = depo.yol.read_bytes()
+    try:
+        devam = ts.kayitli_ileri_calistir(
+            deneme.PilotKayit(depo.yol),
+            m.deneme_id,
+            veri_koku=tmp_path,
+            mod="gelistirme",
+            devam_kosu_id=onceki["kosu_id"],
+            ilerleme=None,
+        )
+    except TypeError as hata:
+        assert False, f"S12 kayıtlı koşuya devam yüzü gerekli: {hata}"
+    assert devam == onceki
+    assert depo.yol.read_bytes() == baytlar
+
+
+def test_s12_cli_once_gelen_eski_secimi_yazmadan_reddeder(tmp_path, capsys):
+    yol = tmp_path / "pilot.jsonl"
+    kod = komut.main(
+        [
+            "--hisse",
+            "1",
+            "ileri-sinama",
+            "--deneme-dosyasi",
+            str(yol),
+            "--deneme-id",
+            "deneme",
+            "--kok",
+            str(tmp_path),
+        ]
+    )
+    assert kod == 1
+    assert "eski yöntem seçeneklerini kabul etmez" in capsys.readouterr().err
+    assert not yol.exists()
+
+
+def test_s12_kesilen_sinyal_ozgun_makbuzla_surer(tmp_path, monkeypatch):
+    from tansu import deneme
+
+    depo, m, _ = s12_sinyalli(tmp_path, monkeypatch)
+    monkeypatch.setattr(veri, "oku", lambda *_: None)
+    asil = deneme._Kosu.ileri_sinyal_kaydet
+
+    def kes(kosu, **alanlar):
+        asil(kosu, **alanlar)
+        raise KeyboardInterrupt
+
+    monkeypatch.setattr(deneme._Kosu, "ileri_sinyal_kaydet", kes)
+    with pytest.raises(KeyboardInterrupt):
+        s12_calistir(depo, m, tmp_path)
+    monkeypatch.setattr(deneme._Kosu, "ileri_sinyal_kaydet", asil)
+    eski = [o for o in depo.oku() if o["kayit_turu"] == "ileri_sinyal"]
+    assert len(eski) == 1
+    kosu_id = eski[0]["kosu_id"]
+    devam = ts.kayitli_ileri_calistir(
+        deneme.PilotKayit(depo.yol),
+        m.deneme_id,
+        veri_koku=tmp_path,
+        mod="gelistirme",
+        devam_kosu_id=kosu_id,
+        ilerleme=None,
+    )
+    assert devam["durum"] == "tamamlandi"
+    sinyaller = [o for o in depo.oku() if o["kayit_turu"] == "ileri_sinyal"]
+    assert sinyaller[0] == eski[0]
+    assert len({o["kayit_id"] for o in sinyaller}) == len(sinyaller)
+
+
 def test_s12_secim_kayit_hatasi_test_hesabini_baslatmaz(tmp_path, monkeypatch):
     from tansu import deneme
 
@@ -3638,6 +3714,470 @@ def s12_sinyalli(
             r[f"duzeltilmis_{ad}"]["deger"] = fiyat + fark
         r["ham_yuksek"]["deger"], r["ham_dusuk"]["deger"] = fiyat + 1, fiyat - 1
     return depo, m, piyasa
+
+
+def s12_surec_kaynagi(kok, deneme_id):
+    """Aynı sentetik E1 girdisini yeni Python sürecinde kurar."""
+    from pathlib import Path
+
+    from tansu import deneme
+
+    kok = Path(kok)
+    piyasa = json.loads((kok / "piyasa.json").read_text(encoding="utf-8"))
+    depo = deneme.PilotKayit(kok / "pilot.jsonl")
+    v = next(
+        o["veri_ayarlari"]
+        for s in depo.yol.read_text(encoding="utf-8").splitlines()
+        if (o := deneme._coz(json.loads(s))).get("deneme_id") == deneme_id
+        and o["kayit_turu"] == "deneme"
+    )
+    gunler = v["takvim"]["seanslar"]
+
+    def uyelik(istek):
+        return dict(
+            gunler={
+                t: dict(
+                    semboller=["TEST"],
+                    kanitlar=[dict(kayit_id="uye-TEST", sembol="TEST")],
+                )
+                for t in istek.tarihler
+            },
+            evren_politikasi=v["evren_politikasi"],
+            uyelik_surumu=v["uyelik_surumu"],
+            tablo_parmak_izi=v["uyelik_ozeti"],
+        )
+
+    def paket(istek, kimlik, veri_koku):
+        assert any(o["kayit_turu"] == "baslangic" for o in depo.oku())
+        secilen = [
+            r for r in piyasa if istek.isinma_donemi[0] <= r["tarih"] <= istek.bitis
+        ]
+        return dict(
+            semboller=["TEST"],
+            piyasa=secilen,
+            gunler=[r["tarih"] for r in secilen],
+            uyelik=uyelik(
+                veri.UyelikIstegi(
+                    tuple(t for t in gunler if istek.baslangic <= t <= istek.bitis),
+                    v["evren_politikasi"],
+                    v["uyelik_surumu"],
+                )
+            ),
+            referans=dict(
+                kayit_id="s10/veri/legacy_tansu_v1",
+                goruntu_id="s10",
+                manifest_parmak_izi=v["manifest_ozeti"],
+                uyelik_tablo_parmak_izi=v["uyelik_ozeti"],
+                istenen_donem=dict(baslangic=istek.baslangic, bitis=istek.bitis),
+            ),
+            kalite=dict(bozuk_satirlar=[], hata_nedenleri=[], uyarilar=[]),
+        )
+
+    tarihler = pd.DatetimeIndex(
+        ["2021-01-04", "2021-10-05", "2022-01-05", "2024-10-04", "2025-10-05"]
+    )
+
+    def kurulum(f, p):
+        t = tarihler.intersection(f.index)
+        return pd.DataFrame(dict(kutu_alt=95.0, kutu_ust=101.0, hedef=110.0), index=t)
+
+    veri.uyelik_hazirla = uyelik
+    veri.veri_hazirla = paket
+    veri.oku = lambda *_: None
+    aileler.kurulum = kurulum
+
+
+_S12_ANLAMLI_ALANLAR = {
+    "durum",
+    "neden",
+    "tur",
+    "rol",
+    "sembol",
+    "yon",
+    "eylem",
+    "cikis_nedeni",
+    "asama",
+    "bolum_id",
+    "tarih",
+    "baslangic",
+    "bitis",
+    "son_tarih",
+    "sinyal_tarih",
+    "giris_tarih",
+    "cikis_tarih",
+}
+_S12_ANLAMLI_LISTELER = {"hatalar", "hata_nedenleri", "uyarilar", "kalite_bayraklari"}
+
+
+def s12_sonuc_alanlari(icerik, yol=()):
+    if isinstance(icerik, dict):
+        return {(*yol, "anahtarlar"): tuple(sorted(icerik))} | {
+            k: v
+            for ad, deger in icerik.items()
+            for k, v in s12_sonuc_alanlari(deger, (*yol, ad)).items()
+        }
+    if isinstance(icerik, list):
+        if icerik and all(
+            isinstance(o, dict) and {"olay_id", "tur", "tarih", "sembol"} <= o.keys()
+            for o in icerik
+        ):
+            # S12 olay kimliği koşuya bağlıdır; aynı günün olayları buna göre sıralanır.
+            icerik = sorted(
+                icerik,
+                key=lambda o: (
+                    o["tarih"],
+                    o["sembol"],
+                    o["tur"],
+                    repr(sorted(s12_sonuc_alanlari(o).items())),
+                ),
+            )
+        return {(*yol, "adet"): len(icerik)} | {
+            k: v
+            for i, deger in enumerate(icerik)
+            for k, v in s12_sonuc_alanlari(deger, (*yol, i)).items()
+        }
+    if type(icerik) in (int, float, Decimal, bool):
+        return {yol: icerik} if not yol or yol[-1] != "isci_pid" else {}
+    if (
+        yol
+        and (
+            yol[-1] in _S12_ANLAMLI_ALANLAR
+            or (isinstance(yol[-1], str) and yol[-1].endswith("_tarih"))
+            or any(ad in _S12_ANLAMLI_LISTELER for ad in yol)
+        )
+        and (icerik is None or isinstance(icerik, (str, dt.date)))
+    ):
+        return {yol: icerik}
+    return {}
+
+
+def test_s12_eski_sinyal_oneginden_secimsiz_tasinan_sembol_hesaplanir(
+    tmp_path, monkeypatch
+):
+    from types import SimpleNamespace
+
+    depo, makbuz, _ = s12_kayitli(tmp_path, monkeypatch)
+    d = depo.deneme_oku(makbuz.deneme_id)
+    bolum = d["donemler"][0]
+    r = dict(donem=bolum, adaylar=[])
+    paket = dict(gunler=[bolum["baslangic"].isoformat()], piyasa=[])
+    onceki = dict(pozisyon=dict(durum="acik"), karantina_kalan=0)
+    kosu = SimpleNamespace(
+        makbuz=SimpleNamespace(kosu_id="eski-kosu"),
+        _tekrar_adaylari=[
+            dict(
+                kayit_turu="ileri_sinyal",
+                secim_ref="daha-once-secilen-sembol",
+                sinyal=dict(kaynak_sinyal=dict(kayit_id="eski-sinyal")),
+            )
+        ],
+    )
+    monkeypatch.setattr(
+        aileler,
+        "ortak_donem_kurulumu",
+        lambda *_: {"TEST": dict(sinyaller=[], kurulum=pd.DataFrame())},
+    )
+    monkeypatch.setattr(
+        ts,
+        "_s10_mumlar",
+        lambda *_args, **_kwargs: pd.DataFrame(
+            index=pd.DatetimeIndex([bolum["baslangic"].isoformat()])
+        ),
+    )
+    monkeypatch.setattr(ts, "_isinma_kaydet", lambda *_: 0)
+
+    def hesapla(*_args, onceki_durum, **_kwargs):
+        assert onceki_durum is onceki
+        return dict(retler=[], pozisyon=onceki["pozisyon"])
+
+    monkeypatch.setattr(ts.saglamlik, "ema_hucre_calistir", hesapla)
+    sonuc = ts._ileri_test_sembolu(
+        depo, d, kosu, r, paket, "TEST", None, onceki, dict(gunler={})
+    )
+    assert sonuc["pozisyon"] == onceki["pozisyon"]
+
+
+def test_s12_isci_olumu_yeni_surecte_ayni_kosuyu_tamamlar(tmp_path, monkeypatch):
+    import subprocess
+    import sys
+    from pathlib import Path
+
+    from tansu import deneme
+
+    kesik_kok, tam_kok = tmp_path / "kesik", tmp_path / "tam"
+    kesik_kok.mkdir()
+    tam_kok.mkdir()
+    kesik_depo, kesik_deneme, piyasa = s12_sinyalli(kesik_kok, monkeypatch)
+    (kesik_kok / "piyasa.json").write_text(
+        json.dumps(piyasa, ensure_ascii=False), encoding="utf-8"
+    )
+    tam_depo, tam_deneme, _ = s12_sinyalli(tam_kok, monkeypatch)
+    tam = s12_calistir(tam_depo, tam_deneme, tam_kok)
+    assert tam["durum"] == "tamamlandi"
+
+    kod = """
+import os, sys
+from pathlib import Path
+from tansu import __main__ as komut, deneme, tansusinama as ts
+from tests.test_tansusinama import s12_surec_kaynagi
+kok, deneme_id, rol = Path(sys.argv[1]), sys.argv[2], sys.argv[3]
+s12_surec_kaynagi(kok, deneme_id)
+if rol == 'kes':
+    asil = deneme._Kosu.ileri_dayaniklastir
+    def kes(self, makbuz):
+        asil(self, makbuz)
+        o = deneme._bul(self._depo.oku(), makbuz.olay_id)
+        if o['kayit_turu'] == 'sonuc' and o.get('bolum_id') == '2022Q2':
+            os._exit(77)
+    deneme._Kosu.ileri_dayaniklastir = kes
+else:
+    asil = ts._ileri_secimler
+    def hesap(*a, **kw):
+        print('HESAP:' + a[3]['ad'], flush=True)
+        return asil(*a, **kw)
+    ts._ileri_secimler = hesap
+argv = ['ileri-sinama', '--deneme-dosyasi', str(kok / 'pilot.jsonl'),
+        '--deneme-id', deneme_id, '--kok', str(kok)]
+if rol != 'kes':
+    argv += ['--devam-kosu-id', sys.argv[4]]
+sys.exit(komut.main(argv))
+"""
+    ortak = [
+        sys.executable,
+        "-B",
+        "-X",
+        "utf8",
+        "-c",
+        kod,
+        str(kesik_kok),
+        kesik_deneme.deneme_id,
+    ]
+    kes = subprocess.run(
+        [*ortak, "kes"],
+        cwd=Path(__file__).resolve().parents[1],
+        capture_output=True,
+        text=True,
+        timeout=600,
+    )
+    assert kes.returncode == 77, (kes.stdout, kes.stderr)
+    kesik_depo = deneme.PilotKayit(kesik_depo.yol)
+    once = kesik_depo.oku()
+    baslangiclar = [
+        o
+        for o in once
+        if o["kayit_turu"] == "baslangic" and o["deneme_id"] == kesik_deneme.deneme_id
+    ]
+    assert len(baslangiclar) == 1
+    kosu_id = baslangiclar[0]["kosu_id"]
+    assert [o["bolum_id"] for o in once if o.get("sonuc_turu") == "ileri_v1"] == [
+        "2022Q1",
+        "2022Q2",
+    ]
+    acik_kaynak = dict(
+        deneme_id=kesik_deneme.deneme_id,
+        kosu_id=kosu_id,
+        sonuc_ref="tamamlanmadi",
+        bitis_ref="tamamlanmadi",
+        icerik_ozeti="00" * 32,
+    )
+    with pytest.raises(deneme.PilotHatasi):
+        deneme._mc_kaynagi(once, acik_kaynak, ozet_denetle=False)
+    baytlar = kesik_depo.yol.read_bytes()
+    devam = subprocess.run(
+        [*ortak, "devam", kosu_id],
+        cwd=Path(__file__).resolve().parents[1],
+        capture_output=True,
+        text=True,
+        timeout=600,
+    )
+    assert devam.returncode == 0, (devam.stdout, devam.stderr)
+    assert "HESAP:2022Q1" not in devam.stdout
+    assert "HESAP:2022Q2" not in devam.stdout
+    assert "HESAP:2022Q3" in devam.stdout
+    assert kesik_depo.yol.read_bytes().startswith(baytlar)
+    sonra = kesik_depo.oku()
+    assert sonra[: len(once)] == once
+    referans = tam_depo.oku()
+    assert [o["kayit_turu"] for o in sonra] == [o["kayit_turu"] for o in referans]
+    assert (
+        len(
+            [
+                o
+                for o in sonra
+                if o["kayit_turu"] == "baslangic"
+                and o["deneme_id"] == kesik_deneme.deneme_id
+            ]
+        )
+        == 1
+    )
+    assert (
+        len(
+            [o for o in sonra if o["kayit_turu"] == "bitis" and o["kosu_id"] == kosu_id]
+        )
+        == 1
+    )
+    child_baslar = [
+        o["deneme_id"]
+        for o in sonra
+        if o["kayit_turu"] == "baslangic" and o["deneme_id"] != kesik_deneme.deneme_id
+    ]
+    assert len(child_baslar) == len(set(child_baslar))
+    birlesik = next(
+        o
+        for o in sonra
+        if o.get("sonuc_turu") == "ileri_v1" and o["bolum_id"] == "birlesik"
+    )
+    bitis = next(
+        o for o in sonra if o["kayit_turu"] == "bitis" and o["kosu_id"] == kosu_id
+    )
+    kaynak = acik_kaynak | dict(
+        sonuc_ref=birlesik["kayit_id"], bitis_ref=bitis["kayit_id"]
+    )
+    kabul = deneme._mc_kaynagi(sonra, kaynak, ozet_denetle=False)
+    assert kabul["nufus"]
+
+    def durum_izleri(olaylar):
+        bolumler = [
+            (o["bolum_id"], o["kayit"]["durum"], o["kayit"].get("neden"))
+            for o in olaylar
+            if o.get("sonuc_turu") == "ileri_v1"
+        ]
+        kontroller = []
+        for o in olaylar:
+            if o["kayit_turu"] != "ileri_kontrol":
+                continue
+            d = o["durum"]
+            p = d["pozisyon"]
+            kontroller.append(
+                (
+                    o["bolum_id"],
+                    o["sembol"],
+                    d["durum"],
+                    d["son_tarih"],
+                    None
+                    if p is None
+                    else (
+                        p["durum"],
+                        p["sinyal_tarih"],
+                        p["giris_tarih"],
+                        p["cikis_tarih"],
+                    ),
+                )
+            )
+        return bolumler, kontroller
+
+    assert durum_izleri(sonra) == durum_izleri(referans)
+
+    assert s12_sonuc_alanlari(sonra) == s12_sonuc_alanlari(referans)
+
+
+def test_s12_son_ceyrek_yayin_onekleri_ayni_kosuda_surer(tmp_path, monkeypatch):
+    from tansu import deneme
+
+    depo, m, _ = s12_sinyalli(tmp_path, monkeypatch)
+    tam = s12_calistir(depo, m, tmp_path)
+    assert tam["durum"] == "tamamlandi"
+    olaylar = depo.oku()
+    kosu_id = tam["kosu_id"]
+    cocuk = next(
+        o
+        for o in olaylar
+        if o["kayit_turu"] == "deneme"
+        and o.get("baglar", {}).get("ileri_ust_kosu") == kosu_id
+        and o["yontem_ayarlari"].get("bolum_id") == "2025Q4"
+        and o["yontem_ayarlari"].get("rol") == "egitim"
+    )
+    cocuk_bas = next(
+        o
+        for o in olaylar
+        if o["kayit_turu"] == "baslangic" and o["deneme_id"] == cocuk["deneme_id"]
+    )
+    cocuk_olaylari = [o for o in olaylar if o.get("kosu_id") == cocuk_bas["kosu_id"]]
+    secim = next(
+        o
+        for o in olaylar
+        if o["kayit_turu"] == "ileri_secim" and o["bolum_id"] == "2025Q4"
+    )
+    kontrol = next(
+        o
+        for o in olaylar
+        if o["kayit_turu"] == "ileri_kontrol" and o["bolum_id"] == "2025Q4"
+    )
+    ceyrek = next(
+        o
+        for o in olaylar
+        if o.get("sonuc_turu") == "ileri_v1" and o["bolum_id"] == "2025Q4"
+    )
+    birlesik = next(
+        o
+        for o in olaylar
+        if o.get("sonuc_turu") == "ileri_v1" and o["bolum_id"] == "birlesik"
+    )
+    ust_bitis = next(
+        o for o in olaylar if o["kayit_turu"] == "bitis" and o["kosu_id"] == kosu_id
+    )
+    sinirlar = [
+        ("cocuk-revizyon", cocuk),
+        ("cocuk-baslangic", cocuk_bas),
+        ("cocuk-islem", next(o for o in cocuk_olaylari if o["kayit_turu"] == "islem")),
+        ("cocuk-sonuc", next(o for o in cocuk_olaylari if o["kayit_turu"] == "sonuc")),
+        ("cocuk-bitis", next(o for o in cocuk_olaylari if o["kayit_turu"] == "bitis")),
+        ("secim", secim),
+        ("kontrol", kontrol),
+        ("ceyrek", ceyrek),
+        ("birlesik", birlesik),
+        ("ust-bitis", ust_bitis),
+    ]
+    monkeypatch.setattr(veri, "oku", lambda *_: None)
+    asil = ts._ileri_secimler
+    hesaplanan = []
+
+    def izle(*args, **kwargs):
+        hesaplanan.append(args[3]["ad"])
+        return asil(*args, **kwargs)
+
+    monkeypatch.setattr(ts, "_ileri_secimler", izle)
+    for ad, olay in sinirlar:
+        sira = olaylar.index(olay)
+        onek = b"".join(deneme.kanonik(o) + b"\n" for o in olaylar[: sira + 1])
+        assert depo.yol.read_bytes().startswith(onek)
+        yol = tmp_path / f"{ad}.jsonl"
+        yol.write_bytes(onek)
+        hesaplanan.clear()
+        r = ts.kayitli_ileri_calistir(
+            deneme.PilotKayit(yol),
+            m.deneme_id,
+            veri_koku=tmp_path,
+            mod="gelistirme",
+            devam_kosu_id=kosu_id,
+            ilerleme=None,
+        )
+        assert r["durum"] == "tamamlandi", ad
+        assert hesaplanan == (["2025Q4"] if sira < olaylar.index(ceyrek) else []), ad
+        assert yol.read_bytes().startswith(onek), ad
+        tekrar = deneme.PilotKayit(yol).oku()
+        assert tekrar[: sira + 1] == olaylar[: sira + 1], ad
+        assert (
+            len(
+                [
+                    o
+                    for o in tekrar
+                    if o["kayit_turu"] == "baslangic" and o["deneme_id"] == m.deneme_id
+                ]
+            )
+            == 1
+        ), ad
+        assert (
+            len(
+                [
+                    o
+                    for o in tekrar
+                    if o["kayit_turu"] == "bitis" and o["kosu_id"] == kosu_id
+                ]
+            )
+            == 1
+        ), ad
+        assert s12_sonuc_alanlari(tekrar) == s12_sonuc_alanlari(olaylar), ad
 
 
 @pytest.mark.parametrize(
@@ -3913,6 +4453,7 @@ def test_s12_uyelikten_cikan_hissenin_acik_islemi_kaybolmaz(tmp_path, monkeypatc
 def test_s12_eksik_egitim_basarili_secimsiz_donem_degildir(
     tmp_path, monkeypatch, eksik
 ):
+    from tansu import deneme
     from tests.test_kayit import pilot_deneme
 
     depo, m, piyasa = s12_sinyalli(tmp_path, monkeypatch)
@@ -3947,6 +4488,19 @@ def test_s12_eksik_egitim_basarili_secimsiz_donem_degildir(
         sonuc = next(o for o in olaylar if o["kayit_id"] == h["sonuc_ref"])
         assert any(e["asama"] == eksik for e in sonuc["icerik"]["hatalar"])
     assert r["durum"] == "hata"
+
+    once = depo.yol.read_bytes()
+    monkeypatch.setattr(veri, "oku", lambda *_: None)
+    with pytest.raises(deneme.PilotHatasi, match="Başarısız WF"):
+        ts.kayitli_ileri_calistir(
+            depo,
+            m.deneme_id,
+            veri_koku=tmp_path,
+            mod="gelistirme",
+            devam_kosu_id=r["kosu_id"],
+            ilerleme=None,
+        )
+    assert depo.yol.read_bytes() == once
 
 
 def test_grup_hazirla_komutu_eksikleri_kaydeder_sinama_baslatmaz(tmp_path, capsys):
