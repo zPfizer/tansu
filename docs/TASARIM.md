@@ -2606,6 +2606,15 @@ veya çubuksuz sonuç bilinen günü düşürüp sonraki çağrıyı eski ekran�
 temelli kısa yoluna döndüremez. Ön gösterim bu normal ekran zincirine girmez.
 Gerçekten eski, açık istenen gün taşımayan giriş ekranının mevcut saat
 temelli kısa yolu korunur; bu açıklama eski ekranlara gün bilgisi uydurmaz.
+Seçeneksiz indirmeden üretilen açık günlü `BUGÜN ÇUBUK YOK` ekranında,
+istenen gün önekinden hemen sonra `Girdi: indirme. ` yazılır. Bu açık köken,
+günlükte tamamlanma satırı gerektiren saklı çubuksuz başarıdan ayrılır.
+Aynı gün seçeneksiz kısa yol ve eski ekranın geçiş kontrolü bu işaretli
+indirme sonucundan eksik günlük hatası veya tamamlanma satırı üretmez.
+İşaretli ekranın günlüğe satır eklemeyen mevcut indirme davranışı korunur.
+Sonraki saklı çağrı kendi görüntüsünü yine doğrular ve kendi kabul
+kontrollerinden geçer. Saklı çubuksuz başarıda gerekli günlük satırı yoksa
+hata devam eder; yalnız satırın yokluğundan indirme kökeni çıkarılmaz.
 Ancak çağrı kart CSV'si yazacaksa mevcut günün başka görüntüye ait
 kabulünü veya ret işaretini geçemez. Aynı görüntü kimliğinde de yeni hesaplanan
 kartlar, kabul edilmiş kart değerleriyle uyuşmalıdır. Uyuşmayan yeni hesap

@@ -6,7 +6,7 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ## [Yayımlanmamış]
 
-- Bilinen istenen günün türetilmiş seçeneksiz başarı, hata ve çubuksuz ekranlarda korunması belgelendi. Gerçekten eski ekrandaki saat temelli kısa yol korunur. Uygulama bekliyor. (#126)
+- Bilinen istenen günün türetilmiş seçeneksiz başarı, hata ve çubuksuz ekranlarda korunması belgelendi. Çubuksuz indirmenin açık kökeni, günlük satırı uydurmadan mevcut tekrarı korur. Gerçekten eski ekrandaki saat temelli kısa yol korunur. Uygulama bekliyor. (#126)
 
 - Seçeneksiz günlük kısa yolu yeni saklı ekranın açık istenen gününü ve kabul edilen çıktısını doğrular; eski metadata içermeyen ekranın davranışı korunur. Yerel davranış kanıtı alındı. (#126)
 
