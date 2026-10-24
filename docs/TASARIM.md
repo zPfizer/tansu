@@ -2279,9 +2279,70 @@ doğrulamasından önce görünür olmaz. Zarfın iç kayıtları sırayla doğr
 birinin reddi bütün okumayı durdurur ve yerel dizin atılır. Kurtarma bozuk
 tam zarftan kısmi sonuç döndürmez. Ekleme, mevcut kilit altında yeni okuyucunun
 doğruladığı önekten geçici dizin kurar. Her yeni okuma doğrulamayı baştan yapar.
-Okumalar arasında durum saklanmaz; kaynak, matematik, çocuk, sinyal, çekiliş,
+Bağımsız okumalar arasında durum saklanmaz. Aşağıdaki MC yazım bağlamı
+bu cümlenin dar istisnasıdır; kaynak, matematik, çocuk, sinyal, çekiliş,
 özet ve alan denetimleri atlanmaz. Eski ve WF kayıtlarının doğrulama kuralları değişmez.
 Bu düzenleme nihai bütçenin uygulanabilirlik kanıtı değildir.
+
+**Tek sahipli MC yazımı (#184, 24.10.2026).** Dağıtıcı, sınamaların
+tamamlanması ve tekrar okuma yükünün azaltılması kapsamında bu teknik
+sözleşmeyi benimsedi. **Durum: uygulama ve gerçek veri kanıtı bekleniyor.**
+Bu, Tansu'nun strateji kuralı değildir. Gerekçe: büyüyen aynı günlükte her
+MC yayınından önce bütün geçmişi yeniden ayrıştırmak ve doğrulamak,
+önceden doğrulanmış olayların maliyetini yeni her partiye tekrar yükler.
+
+`PilotKayit.mc_yazim(deneme_id)`, genel MC girişinin kaynak kabulünden ve
+girdi üretiminden önce açtığı tek bağlamdır. Korunan yol yalnız Windows'ta,
+mevcut olağan dosyanın gerçek yerel sabit NTFS biriminde kullanılır.
+Birim ve dosya kimliği edinilen tutacak üzerinden tekrar doğrulanır.
+Bilinen destek dışı ortamlar mevcut tam okuma yolunu kullanır; bilinmeyen
+sınıflama, API hatası veya uygun ortamda koruma edinme hatası işlemi durdurur.
+Başarısız korumanın ardından daha zayıf yazım yoluna geçilmez.
+
+İşletim sistemi başka yazıcıyı, silme/yeniden adlandırmayı ve önceden açık
+yazılabilir eşlemeyle birlikte edinimi engelleyen tutacağı tüm bağlam boyunca
+tutar. Veri tutacağı yalnız okuma ve sona ekleme yetkisi taşır. Ayrı özel
+kontrol tutacağı yalnız kalıcılık onayı için kullanılır. Tutacaklar alt
+sürece aktarılmaz. Başlangıçta tam günlük mevcut doğal okuyucuyla doğrulanır;
+yalnız bundan sonra özel olay öneği ve yerel MC dizini tutulabilir.
+Yol, dosya kimliği ve beklenen fiziksel son her korunan işlemde denetlenir.
+Yeniden giriş, bağlamlar arası paylaşım ve yolun başka hedefe çevrilmesi reddedilir.
+
+Dar sorgular `mc_kayit(kimlik, tur, alan="kayit_id")`,
+`mc_kaynak(kaynak_ref)`, `mc_komsular(girdi_ref)` ve
+`mc_makbuzlar(kosu, makbuzlar, tur)` olur. Mevcut anlamsal sahipleri kullanır,
+yalnız istenen ayrılmış olağan nesneleri döndürürler. Makbuz sorgusu gerçek
+fiziksel kaydı tekrar okuyup içerik ve üyelik bağını doğrular; yazıcının
+döndürdüğü nesne tek başına dosya kanıtı değildir. Genel `oku` ve kurtarma
+yüzleri her çağrıda doğal tam okuma yapar. Özel önek veya dizin çağırana
+verilmez; gelişigüzel sorgu işlevine aktarılmaz. Destek dışı ortamda aynı
+dar sorgular doğal okuyucuyu kullanır.
+
+Yeni istek kanonik kodlanıp özel kopyaya çözülür. Doğal okuyucunun aynı
+kayıt kabul sahipleri bütün olayı ve parti içini sırayla doğrular.
+Dizin ve mantıksal parti açılımı geçici tutulur; hatalı iç kayıt önceki
+kesin öneği değiştirmez. Fiziksel dosyada parti tek zarftır. İçerik,
+ilk kalıcılık onayı, LF, ikinci kalıcılık onayı ve eklenen fiziksel
+aralığın tam geri okuması başarılı olmadan önek/dizin/son konum ilerlemez
+ve makbuz onaylanmaz. Kısmi kuyruk mevcut ayırıcıyla korunur; eski bayt
+yeniden yazılmaz ve kuyruk olay sayılmaz.
+
+Sahiplik, kabul, yazım, kalıcılık veya geri okuma hatası bağlamı geçersiz
+kılar. Sonraki yayın ve otomatik hata bitişi engellenir; asıl hata korunur.
+Görünür olup onaylanamayan kayıt geri alınmış sayılmaz; bağımsız doğal
+kurtarma belirler. Sağlıklı yazımda olağan hesap hatasının gerekçeli
+senaryo kaydı korunur. Çıkışta tutacaklar kapanır ve özel durum atılır.
+Yeni bağlam tam doğrulamayla başlar.
+
+E4, dosyadan doğrulanmış sinyal kimliklerini yayın sırasında taşır.
+Sonuç başvurularının tamlığını mevcut sahibi denetler. E4 biriken sonuçlarda
+yalnız kimlik, durum ve ölçüleri tutar; E3 geçmişlerini ikinci kez biriktirmez.
+Kayıt şeması, çekiliş, bütçe, hesap ve seçim kuralları değişmez.
+`tests/test_kayit.py` koruma, ayrılmış kopya, parti bütünlüğü, fiziksel
+onay, hata ve taze kurtarmayı; `tests/test_tansusinama.py` genel MC yolunda
+yayın sırasını, sinyal bağını ve aynı hesap/taşıma sonucunu sınar.
+Gerçek veri ön gösterimi süre, tamamlanan iş, dosya büyümesi ve tepe bellek
+ölçmeden nihai bütçe uygunluğu veya hızlanma iddia edilmez.
 
 E4 küçük sabit iç partiler kullanır; kullanıcı seçeneği eklemez. Planlar
 hesaptan önce, sinyal kabulleri E2'den sonra ve E3'ten önce yayımlanır.

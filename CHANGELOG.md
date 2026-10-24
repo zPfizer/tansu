@@ -6,6 +6,8 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ## [Yayımlanmamış]
 
+- Kayıtlı MC yürütmesi, uygun Windows NTFS günlüğünü tek yazıcı altında açar; yeni olayları mevcut kabul kurallarıyla sırayla doğrular, kalıcılık ve fiziksel geri okuma tamamlanınca makbuz verir. Dar sorgular doğal okuyucuyla aynı kayıtları döndürür; destek dışı dosya ortamında doğal yazım kullanılır. E4 sinyal kimliklerini yayın sırasında taşır ve sonuç geçmişlerini ikinci kez biriktirmez. Gerçek veriyle süre ve bellek ön gösterimi bekleniyor. (#184)
+
 - Tam CI'da S12 testleri 60 dakikada tamamlanmadığı için S13 dışı sınama grubu dört bölüme ayrıldı. On bölüm aynı test kimliklerini eksiksiz ve çakışmasız çalıştırır; süre sınırı korunur. (#180, #94, #57)
 
 - CI'da süre sınırına takılan genel ve S13 bölümleri de ayrıldı. Aynı tam koleksiyon sekiz bölümde çakışmasız çalışır; her testin adı ve en uzun testlerin süreleri görünür. 60 dakikalık sınır ve çalışan bölümün kimlik denetimi korunur. (#180, #94, #57)

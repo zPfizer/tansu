@@ -11,6 +11,9 @@ import json
 import math
 import os
 from pathlib import Path
+import stat
+import sys
+from threading import Lock, get_ident
 from uuid import uuid4
 
 from tansu import katalog
@@ -4335,6 +4338,485 @@ class Makbuz:
     uyarilar: list[str] = field(default_factory=list)
 
 
+def _olayi_kabul(olaylar, olay, mc_onek, *, dizine_ekle=True):
+    """Doğal okuyucu ile MC yazıcısının ortak, sıralı kabul denetimi."""
+    if olay.get("sonuc_turu") == "donem_v1":
+        _donem_hedef_kaniti_dogrula(
+            olay["icerik"],
+            next(
+                (
+                    o
+                    for o in olaylar
+                    if o["kayit_turu"] == "deneme"
+                    and o["deneme_id"] == olay["deneme_id"]
+                ),
+                None,
+            ),
+        )
+    if olay.get("kayit_turu") != "grup_hazirligi":
+        _isinma_olayi_dogrula(olaylar, olay)
+    if olay.get("kayit_turu") == "grup_hazirligi":
+        _grup_olayi_dogrula(olay)
+    elif _ileri_kaydi_mi(olaylar, olay):
+        _ileri_olayi_dogrula(olaylar, olay)
+    _ileri_yeni_cocuk_dogrula(olaylar, olay)
+    if olay["kayit_turu"] == "deneme" and str(
+        olay["yontem_ayarlari"].get("yontem", "")
+    ).startswith("kayitli_monte_carlo"):
+        _mc_alanlar(
+            olay,
+            "kayit_id sema_surumu olusturma_zamani kayit_turu deneme_id kimlik_bicimi_surumu olusturan neden strateji donemler veri_ayarlari yontem_ayarlari risk_ayarlari masraf_ayarlari ust_deneme_id eski_referans baglar kaynaklar bos_nedenleri ayar_parmak_izi",
+        )
+        if (
+            olay["kimlik_bicimi_surumu"] != SURUM
+            or olay["kaynaklar"] != olay["strateji"]["kaynaklar"]
+        ):
+            raise PilotHatasi("MC denemesinin kimlik sürümü veya kaynakları uyuşmuyor.")
+        _strateji_kaydi(olay["strateji"])
+        if _ayar_ozeti(_ayarlar(olay)) != olay["ayar_parmak_izi"]:
+            raise PilotHatasi("MC kayıtlı denemenin tam ayar özeti uyuşmuyor.")
+    if _mc_baslangic_mi(olaylar, olay):
+        _mc_baslangic_dogrula(olaylar, olay)
+    if olay["kayit_turu"] == "mc_parti":
+        return _mc_partiyi_ac(olaylar, olay, onek=mc_onek)
+    if _mc_isareti(olay):
+        _mc_kayit_dogrula(olaylar, olay, onek=mc_onek)
+    if olay["kayit_turu"] == "bitis":
+        baslangic = next(
+            (
+                o
+                for o in olaylar
+                if o["kayit_turu"] == "baslangic" and o["kosu_id"] == olay["kosu_id"]
+            ),
+            None,
+        )
+        d = next(
+            (
+                o
+                for o in olaylar
+                if o["kayit_turu"] == "deneme"
+                and o["deneme_id"]
+                == (baslangic["deneme_id"] if baslangic else olay["deneme_id"])
+            ),
+            None,
+        )
+        if d and d["yontem_ayarlari"].get("yontem") == "kayitli_monte_carlo_v1":
+            _mc_alanlar(
+                olay,
+                "kayit_id sema_surumu olusturma_zamani kayit_turu deneme_id kosu_id ayar_parmak_izi kaynaklar durum tamamlanan basarisiz yontemler olculer cikti_referanslari ozetler bitis_zamani",
+            )
+            b = _bul(olaylar, olay["kosu_id"], "baslangic", "kosu_id")
+            _mc_ayni_kosu(olay, d, b)
+            if olay["kaynaklar"] != d["kaynaklar"]:
+                raise PilotHatasi("MC bitişinin kaynak bağı uyuşmuyor.")
+            _mc_bitis_dogrula(
+                olaylar,
+                olay["kosu_id"],
+                olay["durum"],
+                olay["tamamlanan"],
+                olay["basarisiz"],
+                olay["cikti_referanslari"],
+                yontemler=olay["yontemler"],
+                olculer=olay["olculer"],
+                ozetler=olay["ozetler"],
+                onek=mc_onek,
+            )
+    if dizine_ekle:
+        _mc_onege_ekle(mc_onek, olay)
+    return [olay]
+
+
+def _deneme_kaydi_dogrula(kayit):
+    _strateji_kaydi(kayit["strateji"])
+    if _ayar_ozeti(_ayarlar(kayit)) != kayit["ayar_parmak_izi"]:
+        raise PilotHatasi("Ayar özeti uyuşmuyor.")
+    return kayit
+
+
+def _mc_onek_kopyasi(onek):
+    return dict(
+        kimlikler=onek["kimlikler"].copy(),
+        baglar=onek["baglar"].copy(),
+        roller={k: v.copy() for k, v in onek["roller"].items()},
+        isler={k: v.copy() for k, v in onek["isler"].items()},
+        sonuc_planlari=onek["sonuc_planlari"].copy(),
+        sirali_sonuc_isleri=onek["sirali_sonuc_isleri"].copy(),
+    )
+
+
+def _aralik_oku(fd, konum, uzunluk):
+    os.lseek(fd, konum, os.SEEK_SET)
+    parcalar = []
+    kalan = uzunluk
+    while kalan:
+        parca = os.read(fd, min(kalan, 1024 * 1024))
+        if not parca:
+            raise PilotHatasi("MC fiziksel aralığı eksik okundu.")
+        parcalar.append(parca)
+        kalan -= len(parca)
+    return b"".join(parcalar)
+
+
+def _mc_winapi():
+    import ctypes
+    from ctypes import wintypes
+
+    k = ctypes.WinDLL("kernel32", use_last_error=True)
+    k.GetVolumePathNameW.argtypes = [wintypes.LPCWSTR, wintypes.LPWSTR, wintypes.DWORD]
+    k.GetVolumePathNameW.restype = wintypes.BOOL
+    k.GetDriveTypeW.argtypes = [wintypes.LPCWSTR]
+    k.GetDriveTypeW.restype = wintypes.UINT
+    k.GetVolumeInformationW.argtypes = [
+        wintypes.LPCWSTR,
+        wintypes.LPWSTR,
+        wintypes.DWORD,
+        ctypes.POINTER(wintypes.DWORD),
+        ctypes.POINTER(wintypes.DWORD),
+        ctypes.POINTER(wintypes.DWORD),
+        wintypes.LPWSTR,
+        wintypes.DWORD,
+    ]
+    k.GetVolumeInformationW.restype = wintypes.BOOL
+    k.GetVolumeInformationByHandleW.argtypes = [
+        wintypes.HANDLE,
+        wintypes.LPWSTR,
+        wintypes.DWORD,
+        ctypes.POINTER(wintypes.DWORD),
+        ctypes.POINTER(wintypes.DWORD),
+        ctypes.POINTER(wintypes.DWORD),
+        wintypes.LPWSTR,
+        wintypes.DWORD,
+    ]
+    k.GetVolumeInformationByHandleW.restype = wintypes.BOOL
+    k.GetFinalPathNameByHandleW.argtypes = [
+        wintypes.HANDLE,
+        wintypes.LPWSTR,
+        wintypes.DWORD,
+        wintypes.DWORD,
+    ]
+    k.GetFinalPathNameByHandleW.restype = wintypes.DWORD
+    k.CreateFileW.argtypes = [
+        wintypes.LPCWSTR,
+        wintypes.DWORD,
+        wintypes.DWORD,
+        wintypes.LPVOID,
+        wintypes.DWORD,
+        wintypes.DWORD,
+        wintypes.HANDLE,
+    ]
+    k.CreateFileW.restype = wintypes.HANDLE
+    k.GetCurrentProcess.restype = wintypes.HANDLE
+    k.DuplicateHandle.argtypes = [
+        wintypes.HANDLE,
+        wintypes.HANDLE,
+        wintypes.HANDLE,
+        ctypes.POINTER(wintypes.HANDLE),
+        wintypes.DWORD,
+        wintypes.BOOL,
+        wintypes.DWORD,
+    ]
+    k.DuplicateHandle.restype = wintypes.BOOL
+    k.CloseHandle.argtypes = [wintypes.HANDLE]
+    k.CloseHandle.restype = wintypes.BOOL
+    return k, ctypes, wintypes
+
+
+def _mc_birim(k, ctypes, wintypes, *, yol=None, tutacak=None):
+    fs = ctypes.create_unicode_buffer(256)
+    ad = ctypes.create_unicode_buffer(256)
+    seri, en, bayrak = wintypes.DWORD(), wintypes.DWORD(), wintypes.DWORD()
+    if yol is not None:
+        kok = ctypes.create_unicode_buffer(32768)
+        if not k.GetVolumePathNameW(str(yol), kok, len(kok)):
+            raise ctypes.WinError(ctypes.get_last_error())
+        surucu = k.GetDriveTypeW(kok.value)
+        if surucu not in (2, 3, 4, 5, 6):
+            raise PilotHatasi("MC günlüğünün birim türü bilinmiyor.")
+        if surucu != 3:
+            return None
+        args = (
+            kok.value,
+            ad,
+            len(ad),
+            ctypes.byref(seri),
+            ctypes.byref(en),
+            ctypes.byref(bayrak),
+            fs,
+            len(fs),
+        )
+        basarili = k.GetVolumeInformationW(*args)
+    else:
+        args = (
+            tutacak,
+            ad,
+            len(ad),
+            ctypes.byref(seri),
+            ctypes.byref(en),
+            ctypes.byref(bayrak),
+            fs,
+            len(fs),
+        )
+        basarili = k.GetVolumeInformationByHandleW(*args)
+    if not basarili:
+        raise ctypes.WinError(ctypes.get_last_error())
+    return seri.value, fs.value.upper()
+
+
+@contextmanager
+def _mc_koruma(yol):
+    """Dosyanın tam erişimli kontrol ve yalnız sona ekleyen veri tutacakları."""
+    import msvcrt
+
+    k, ctypes, wintypes = _mc_winapi()
+    birim = _mc_birim(k, ctypes, wintypes, yol=yol)
+    if birim is None or birim[1] != "NTFS":
+        yield None
+        return
+    ana = k.CreateFileW(str(yol), 0xC0000000, 1, None, 3, 0x80, None)
+    if ana == wintypes.HANDLE(-1).value:
+        raise ctypes.WinError(ctypes.get_last_error())
+    ek = wintypes.HANDLE()
+    kontrol_fd = veri_fd = None
+    try:
+        if _mc_birim(k, ctypes, wintypes, tutacak=ana) != birim:
+            raise PilotHatasi("MC günlüğünün gerçek birimi değişti.")
+        son_yol = ctypes.create_unicode_buffer(32768)
+        uzunluk = k.GetFinalPathNameByHandleW(ana, son_yol, len(son_yol), 0)
+        if not uzunluk or uzunluk >= len(son_yol):
+            raise ctypes.WinError(ctypes.get_last_error())
+        if os.path.normcase(son_yol.value.removeprefix("\\\\?\\")) != os.path.normcase(
+            str(yol)
+        ):
+            raise PilotHatasi("MC günlüğü başka dosyaya yöneldi.")
+        if (
+            _mc_birim(k, ctypes, wintypes, yol=son_yol.value.removeprefix("\\\\?\\"))
+            != birim
+        ):
+            raise PilotHatasi("MC günlüğünün gerçek sabit birimi değişti.")
+        islem = k.GetCurrentProcess()
+        if not k.DuplicateHandle(
+            islem, ana, islem, ctypes.byref(ek), 0x80000004, False, 0
+        ):
+            raise ctypes.WinError(ctypes.get_last_error())
+        kontrol_fd = msvcrt.open_osfhandle(ana, os.O_BINARY | os.O_NOINHERIT)
+        ana = None
+        veri_fd = msvcrt.open_osfhandle(
+            ek.value, os.O_APPEND | os.O_BINARY | os.O_NOINHERIT
+        )
+        ek = None
+        yield kontrol_fd, veri_fd, birim
+    finally:
+        etkin_hata = sys.exc_info()[1]
+        kapatma_hatasi = None
+        for windows, tutacak in (
+            (False, veri_fd),
+            (False, kontrol_fd),
+            (True, ek),
+            (True, ana),
+        ):
+            if tutacak is not None:
+                try:
+                    if windows:
+                        if not k.CloseHandle(tutacak):
+                            raise ctypes.WinError(ctypes.get_last_error())
+                    else:
+                        os.close(tutacak)
+                except OSError as hata:
+                    if kapatma_hatasi is None:
+                        kapatma_hatasi = hata
+        if etkin_hata is None and kapatma_hatasi is not None:
+            raise kapatma_hatasi
+
+
+class _MCOturum:
+    def __init__(self, depo, tutacaklar, deneme_id):
+        self.depo = depo
+        self.yol = depo.yol
+        self.deneme_id = deneme_id
+        self.kosu_id = None
+        self.sahip = get_ident()
+        self.gecersiz = False
+        self.tutacaklar = tutacaklar
+        self.olaylar = self.onek = self.araliklar = None
+        if tutacaklar is None:
+            return
+        self.kontrol_fd, self.veri_fd, self.birim = tutacaklar
+        self.kimlik = os.fstat(self.veri_fd)
+        self.son = self.kimlik.st_size
+        self._sahiplik()
+        ham = _aralik_oku(self.veri_fd, 0, self.son)
+        self.olaylar, _ = depo._oku(ham=ham)
+        self.onek = _mc_onek(self.olaylar)
+        self.araliklar = {}
+        konum = 0
+        for satir in ham.splitlines(keepends=True):
+            if satir.endswith(b"\n") and not satir.endswith(_KESIK):
+                olay = _coz(json.loads(satir))
+                kimlikler = [olay["kayit_id"]]
+                if olay["kayit_turu"] == "mc_parti":
+                    kimlikler.extend(o["kayit_id"] for o in olay["kayit"]["kayitlar"])
+                for kimlik in kimlikler:
+                    self.araliklar[kimlik] = (konum, len(satir), sha256(satir).digest())
+            konum += len(satir)
+        if konum != self.son:
+            raise PilotHatasi("MC başlangıç okumasında fiziksel son değişti.")
+        self._sahiplik()
+
+    def _sahiplik(self):
+        if get_ident() != self.sahip or self.gecersiz:
+            raise PilotHatasi("MC yazım bağlamı başka işçiye ait veya geçersiz.")
+        if self.tutacaklar is None:
+            return
+        try:
+            yol = self.depo.yol
+            if yol != self.yol or yol.resolve() != self.yol:
+                raise PilotHatasi("MC günlük yolu değişti.")
+            a, b = os.stat(yol), os.fstat(self.veri_fd)
+            if (
+                not stat.S_ISREG(a.st_mode)
+                or (a.st_dev, a.st_ino) != (self.kimlik.st_dev, self.kimlik.st_ino)
+                or (b.st_dev, b.st_ino) != (self.kimlik.st_dev, self.kimlik.st_ino)
+                or a.st_size != self.son
+                or b.st_size != self.son
+            ):
+                raise PilotHatasi("MC günlüğünün yolu, kimliği veya sonu değişti.")
+        except Exception:
+            self.gecersiz = True
+            raise
+
+    def kayit(self, kimlik, tur, alan="kayit_id"):
+        try:
+            self._sahiplik()
+            if self.tutacaklar is None:
+                sonuc = _bul(self.depo.oku(), kimlik, tur, alan)
+            else:
+                dizinde = alan == "kayit_id" or (alan, tur) in (
+                    ("deneme_id", "deneme"),
+                    ("kosu_id", "baslangic"),
+                )
+                sonuc = (
+                    _mc_bul(self.olaylar, kimlik, tur, alan, onek=self.onek)
+                    if dizinde
+                    else _bul(self.olaylar, kimlik, tur, alan)
+                )
+            if tur == "deneme":
+                _deneme_kaydi_dogrula(sonuc)
+            return deepcopy(sonuc)
+        except BaseException:
+            self.gecersiz = True
+            raise
+
+    def makbuz(self, makbuz, tur):
+        try:
+            self._sahiplik()
+            if self.tutacaklar is None:
+                return deepcopy(_bul(self.depo.oku(), makbuz.olay_id, tur))
+            kimlik = makbuz.olay_id
+            olay = _mc_bul(self.olaylar, kimlik, tur, onek=self.onek)
+            konum, uzunluk, ozet = self.araliklar[kimlik]
+            satir = _aralik_oku(self.veri_fd, konum, uzunluk)
+            if sha256(satir).digest() != ozet:
+                raise PilotHatasi("MC fiziksel makbuz içeriği değişti.")
+            fiziksel = _coz(json.loads(satir))
+            uyeler = (
+                [fiziksel, *fiziksel["kayit"]["kayitlar"]]
+                if fiziksel["kayit_turu"] == "mc_parti"
+                else [fiziksel]
+            )
+            if not any(o.get("kayit_id") == kimlik and o == olay for o in uyeler):
+                raise PilotHatasi("MC makbuzunun zarf üyeliği uyuşmuyor.")
+            self._sahiplik()
+            return deepcopy(olay)
+        except BaseException:
+            self.gecersiz = True
+            raise
+
+    def ekle(self, olay):
+        try:
+            self._ekle_sahipli(olay)
+        except BaseException:
+            self.gecersiz = True
+            raise
+
+    def _ekle_sahipli(self, olay):
+        self._sahiplik()
+        if self.tutacaklar is None:
+            raise PilotHatasi("MC koruması etkin değil.")
+        with self.depo._kilit():
+            self._sahiplik()
+            try:
+                satir = kanonik(olay)
+                ayrik = _coz(json.loads(satir))
+                tur = ayrik["kayit_turu"]
+                if (
+                    tur
+                    not in {
+                        "baslangic",
+                        "mc_girdi",
+                        "mc_parti",
+                        "mc_plan",
+                        "mc_sinyal",
+                        "mc_senaryo",
+                        "mc_kontrol",
+                        "mc_ozet",
+                        "bitis",
+                    }
+                    or ayrik.get("deneme_id") != self.deneme_id
+                ):
+                    raise PilotHatasi(
+                        "MC bağlamı başka kayıt türünü veya denemeyi yazamaz."
+                    )
+                if tur == "baslangic":
+                    if self.kosu_id is not None:
+                        raise PilotHatasi("MC bağlamında ikinci koşu açılamaz.")
+                    yeni_kosu = ayrik["kosu_id"]
+                else:
+                    if self.kosu_id is None or ayrik.get("kosu_id") != self.kosu_id:
+                        raise PilotHatasi("MC kaydı başka kök koşuya bağlı.")
+                    yeni_kosu = None
+                dizin = (
+                    _mc_onek_kopyasi(self.onek)
+                    if ayrik["kayit_turu"] == "mc_parti"
+                    else self.onek
+                )
+                if ayrik.get("kosu_id") and any(
+                    o["kayit_turu"] == "bitis" and o["kosu_id"] == ayrik["kosu_id"]
+                    for o in self.olaylar
+                ):
+                    raise PilotHatasi("Koşu zaten bitti.")
+                kabul = _olayi_kabul(self.olaylar, ayrik, dizin, dizine_ekle=False)
+                # Eksik kuyruğun ayırıcısı yeni tam satırdan önce gelir.
+                kuyruk = _aralik_oku(self.veri_fd, self.son - 1, 1) if self.son else b""
+                eklenecek = (_KESIK if self.son and kuyruk != b"\n" else b"") + satir
+                bas = self.son + len(eklenecek) - len(satir)
+                if os.write(self.veri_fd, eklenecek) != len(eklenecek):
+                    raise OSError("MC içeriği eksik yazıldı.")
+                os.fsync(self.kontrol_fd)
+                if os.write(self.veri_fd, b"\n") != 1:
+                    raise OSError("MC satır sonu yazılamadı.")
+                os.fsync(self.kontrol_fd)
+                yazilan = _aralik_oku(self.veri_fd, self.son, len(eklenecek) + 1)
+                if yazilan != eklenecek + b"\n":
+                    raise PilotHatasi("MC fiziksel yayın geri okuması uyuşmuyor.")
+                yeni_son = self.son + len(yazilan)
+                if os.fstat(self.veri_fd).st_size != yeni_son:
+                    raise PilotHatasi("MC fiziksel son uyuşmuyor.")
+                if ayrik["kayit_turu"] != "mc_parti":
+                    _mc_onege_ekle(dizin, ayrik)
+                self.onek = dizin
+                self.olaylar.extend(kabul)
+                self.son = yeni_son
+                if yeni_kosu is not None:
+                    self.kosu_id = yeni_kosu
+                aralik = (bas, len(satir) + 1, sha256(satir + b"\n").digest())
+                for kayit in kabul:
+                    self.araliklar[kayit["kayit_id"]] = aralik
+                self._sahiplik()
+            except BaseException:
+                self.gecersiz = True
+                raise
+
+
 class PilotKayit:
     """E5 yalnız kaydeder; hesap işlevi almaz (TASARIM 5.15)."""
 
@@ -4342,6 +4824,104 @@ class PilotKayit:
         self.yol = Path(yol).resolve()
         if self.yol.name == "deneme.jsonl":
             raise PilotHatasi("Eski deneme dosyası pilot alanı değildir.")
+        self._mc_baglam = None
+        self._mc_durum_kilidi = Lock()
+
+    @contextmanager
+    def mc_yazim(self, deneme_id):
+        """TASARIM 5.15 S13: MC girişinden önce tek sahipli yazım bağlamı."""
+        if not self._mc_durum_kilidi.acquire(blocking=False):
+            raise PilotHatasi("MC yazım bağlamı zaten etkin.")
+        try:
+            if self._mc_baglam is not None:
+                raise PilotHatasi("MC yazım bağlamı zaten etkin.")
+            try:
+                dosya = self.yol.stat()
+            except FileNotFoundError:
+                dosya = None
+            if os.name == "nt" and dosya is not None:
+                if not stat.S_ISREG(dosya.st_mode):
+                    raise PilotHatasi("MC günlüğü olağan dosya değil.")
+                koruma = _mc_koruma(self.yol)
+            else:
+                koruma = nullcontext(None)
+            with koruma as tutacaklar:
+                self._mc_baglam = _MCOturum(self, tutacaklar, deneme_id)
+                try:
+                    deneme = self._mc_baglam.kayit(deneme_id, "deneme", "deneme_id")
+                    if (
+                        deneme["yontem_ayarlari"].get("yontem")
+                        != "kayitli_monte_carlo_v1"
+                    ):
+                        raise PilotHatasi(
+                            "MC yazım bağlamı yalnız MC denemesine açılır."
+                        )
+                    yield self
+                finally:
+                    self._mc_baglam = None
+        finally:
+            self._mc_durum_kilidi.release()
+
+    def mc_kayit(self, kimlik, tur, alan="kayit_id"):
+        if self._mc_baglam is None:
+            sonuc = _bul(self.oku(), kimlik, tur, alan)
+            if tur == "deneme":
+                _deneme_kaydi_dogrula(sonuc)
+            return deepcopy(sonuc)
+        return self._mc_baglam.kayit(kimlik, tur, alan)
+
+    def mc_makbuzlar(self, kosu, makbuzlar, tur):
+        if self._mc_baglam is None:
+            olaylar = self.oku()
+            sonuc = [deepcopy(_bul(olaylar, m.olay_id, tur)) for m in makbuzlar]
+            for o, m in zip(sonuc, makbuzlar, strict=True):
+                if (o["kosu_id"], o["deneme_id"], o["ayar_parmak_izi"]) != (
+                    kosu.makbuz.kosu_id,
+                    m.deneme_id,
+                    m.ayar_ozeti,
+                ):
+                    raise PilotHatasi("MC makbuzunun koşu veya ayar bağı uyuşmuyor.")
+            return sonuc
+        try:
+            sonuc = [self._mc_baglam.makbuz(m, tur) for m in makbuzlar]
+            for o, m in zip(sonuc, makbuzlar, strict=True):
+                if (o["kosu_id"], o["deneme_id"], o["ayar_parmak_izi"]) != (
+                    kosu.makbuz.kosu_id,
+                    m.deneme_id,
+                    m.ayar_ozeti,
+                ):
+                    raise PilotHatasi("MC makbuzunun koşu veya ayar bağı uyuşmuyor.")
+            return sonuc
+        except BaseException:
+            self._mc_baglam.gecersiz = True
+            raise
+
+    def mc_kaynak(self, kaynak_ref):
+        if self._mc_baglam is None:
+            return deepcopy(_mc_kaynagi(self.oku(), kaynak_ref))
+        oturum = self._mc_baglam
+        try:
+            oturum._sahiplik()
+            olaylar = oturum.olaylar if oturum.tutacaklar is not None else self.oku()
+            return deepcopy(_mc_kaynagi(olaylar, kaynak_ref))
+        except BaseException:
+            oturum.gecersiz = True
+            raise
+
+    def mc_komsular(self, girdi_ref):
+        if self._mc_baglam is None:
+            olaylar = self.oku()
+            girdi = _bul(olaylar, girdi_ref, "mc_girdi")
+            return deepcopy(_mc_komsular(olaylar, girdi["kayit"]))
+        oturum = self._mc_baglam
+        try:
+            oturum._sahiplik()
+            olaylar = oturum.olaylar if oturum.tutacaklar is not None else self.oku()
+            girdi = _mc_bul(olaylar, girdi_ref, "mc_girdi", onek=oturum.onek)
+            return deepcopy(_mc_komsular(olaylar, girdi["kayit"]))
+        except BaseException:
+            oturum.gecersiz = True
+            raise
 
     @contextmanager
     def _ileri_yurutme_kilidi(self, deneme_id):
@@ -4392,12 +4972,14 @@ class PilotKayit:
                 else:
                     fcntl.flock(dosya.fileno(), fcntl.LOCK_UN)
 
-    def _oku(self):
-        if not self.yol.exists():
-            return [], []
+    def _oku(self, *, ham=None):
+        if ham is None:
+            if not self.yol.exists():
+                return [], []
+            ham = self.yol.read_bytes()
         olaylar, uyarilar = [], []
         mc_onek = _mc_onek()
-        for no, satir in enumerate(self.yol.read_bytes().splitlines(keepends=True), 1):
+        for no, satir in enumerate(ham.splitlines(keepends=True), 1):
             if not satir.endswith(b"\n") or satir.endswith(_KESIK):
                 uyarilar.append(f"Eksik satır: {no}")
                 continue
@@ -4405,105 +4987,9 @@ class PilotKayit:
                 olay = _coz(json.loads(satir))
                 if olay["sema_surumu"] != SURUM or kanonik(olay) + b"\n" != satir:
                     raise ValueError("Şema veya kodlama uyuşmuyor.")
-                if olay.get("sonuc_turu") == "donem_v1":
-                    _donem_hedef_kaniti_dogrula(
-                        olay["icerik"],
-                        next(
-                            (
-                                o
-                                for o in olaylar
-                                if o["kayit_turu"] == "deneme"
-                                and o["deneme_id"] == olay["deneme_id"]
-                            ),
-                            None,
-                        ),
-                    )
-                if olay.get("kayit_turu") != "grup_hazirligi":
-                    _isinma_olayi_dogrula(olaylar, olay)
-                if olay.get("kayit_turu") == "grup_hazirligi":
-                    _grup_olayi_dogrula(olay)
-                elif _ileri_kaydi_mi(olaylar, olay):
-                    _ileri_olayi_dogrula(olaylar, olay)
-                _ileri_yeni_cocuk_dogrula(olaylar, olay)
-                if olay["kayit_turu"] == "deneme" and str(
-                    olay["yontem_ayarlari"].get("yontem", "")
-                ).startswith("kayitli_monte_carlo"):
-                    _mc_alanlar(
-                        olay,
-                        "kayit_id sema_surumu olusturma_zamani kayit_turu deneme_id kimlik_bicimi_surumu olusturan neden strateji donemler veri_ayarlari yontem_ayarlari risk_ayarlari masraf_ayarlari ust_deneme_id eski_referans baglar kaynaklar bos_nedenleri ayar_parmak_izi",
-                    )
-                    if (
-                        olay["kimlik_bicimi_surumu"] != SURUM
-                        or olay["kaynaklar"] != olay["strateji"]["kaynaklar"]
-                    ):
-                        raise PilotHatasi(
-                            "MC denemesinin kimlik sürümü veya kaynakları uyuşmuyor."
-                        )
-                    _strateji_kaydi(olay["strateji"])
-                    if _ayar_ozeti(_ayarlar(olay)) != olay["ayar_parmak_izi"]:
-                        raise PilotHatasi(
-                            "MC kayıtlı denemenin tam ayar özeti uyuşmuyor."
-                        )
-                if _mc_baslangic_mi(olaylar, olay):
-                    _mc_baslangic_dogrula(olaylar, olay)
-                if olay["kayit_turu"] == "mc_parti":
-                    olaylar.extend(_mc_partiyi_ac(olaylar, olay, onek=mc_onek))
-                    continue
-                if _mc_isareti(olay):
-                    _mc_kayit_dogrula(olaylar, olay, onek=mc_onek)
-                if olay["kayit_turu"] == "bitis":
-                    baslangic = next(
-                        (
-                            o
-                            for o in olaylar
-                            if o["kayit_turu"] == "baslangic"
-                            and o["kosu_id"] == olay["kosu_id"]
-                        ),
-                        None,
-                    )
-                    d = next(
-                        (
-                            o
-                            for o in olaylar
-                            if o["kayit_turu"] == "deneme"
-                            and o["deneme_id"]
-                            == (
-                                baslangic["deneme_id"]
-                                if baslangic
-                                else olay["deneme_id"]
-                            )
-                        ),
-                        None,
-                    )
-                    if (
-                        d
-                        and d["yontem_ayarlari"].get("yontem")
-                        == "kayitli_monte_carlo_v1"
-                    ):
-                        _mc_alanlar(
-                            olay,
-                            "kayit_id sema_surumu olusturma_zamani kayit_turu deneme_id kosu_id ayar_parmak_izi kaynaklar durum tamamlanan basarisiz yontemler olculer cikti_referanslari ozetler bitis_zamani",
-                        )
-                        b = _bul(olaylar, olay["kosu_id"], "baslangic", "kosu_id")
-                        _mc_ayni_kosu(olay, d, b)
-                        if olay["kaynaklar"] != d["kaynaklar"]:
-                            raise PilotHatasi("MC bitişinin kaynak bağı uyuşmuyor.")
-                        _mc_bitis_dogrula(
-                            olaylar,
-                            olay["kosu_id"],
-                            olay["durum"],
-                            olay["tamamlanan"],
-                            olay["basarisiz"],
-                            olay["cikti_referanslari"],
-                            yontemler=olay["yontemler"],
-                            olculer=olay["olculer"],
-                            ozetler=olay["ozetler"],
-                            onek=mc_onek,
-                        )
+                olaylar.extend(_olayi_kabul(olaylar, olay, mc_onek))
             except (ValueError, KeyError, TypeError, IndexError) as hata:
                 raise PilotHatasi(f"Bozuk tam satır: {no}") from hata
-            _mc_onege_ekle(mc_onek, olay)
-            olaylar.append(olay)
         return olaylar, uyarilar
 
     def oku(self):
@@ -4514,10 +5000,7 @@ class PilotKayit:
         """TASARIM 5.15 S07: hesap öncesinde tam ayarı ve özgün özeti denetle."""
         try:
             kayit = _bul(self.oku(), deneme_id, "deneme", "deneme_id")
-            _strateji_kaydi(kayit["strateji"])
-            if _ayar_ozeti(_ayarlar(kayit)) != kayit["ayar_parmak_izi"]:
-                raise PilotHatasi("Ayar özeti uyuşmuyor.")
-            return kayit
+            return _deneme_kaydi_dogrula(kayit)
         except OSError as hata:
             raise PilotYazmaHatasi(f"{deneme_id}: {hata}") from hata
         except (ValueError, KeyError, TypeError, AttributeError, OverflowError) as hata:
@@ -4721,6 +5204,8 @@ class PilotKayit:
                 if kosu._yazma_hatasi:
                     raise PilotYazmaHatasi("Koşu kayıt hatasıyla durdu.")
             except Exception as hata:
+                if self._mc_baglam is not None and self._mc_baglam.gecersiz:
+                    raise
                 if isinstance(hata, (PilotBelirsizHatasi, PilotDayaniklilikHatasi)):
                     raise
                 if "ileri_ust_kosu" in deneme.get("baglar", {}) or (
@@ -4944,6 +5429,24 @@ class PilotKayit:
         return sonuc
 
     def _ekle(self, olay, denetle=None):
+        if self._mc_baglam is not None and self._mc_baglam.tutacaklar is not None:
+            olay = {
+                "kayit_id": f"{SURUM}:{uuid4()}",
+                "sema_surumu": SURUM,
+                "olusturma_zamani": datetime.now(timezone.utc),
+                **olay,
+            }
+            makbuz = Makbuz(
+                olay["kayit_id"],
+                olay.get("deneme_id"),
+                olay.get("kosu_id"),
+                olay.get("ayar_parmak_izi"),
+            )
+            try:
+                self._mc_baglam.ekle(olay)
+            except OSError as hata:
+                raise PilotBelirsizHatasi(makbuz) from hata
+            return makbuz
         yayinlandi = False
         try:
             olay = {

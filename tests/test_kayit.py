@@ -613,6 +613,578 @@ def test_s13_kanonik_mc_deneme_degisimini_yeni_okuyucu_reddeder(tmp_path, alan):
         pilot.PilotKayit(depo.yol).oku()
 
 
+def _s13_mc_baglam_deposu(tmp_path):
+    from tests.test_tansusinama import s13_yontem
+
+    depo = pilot.PilotKayit(tmp_path / "mc-baglam.jsonl")
+    yontem = s13_yontem(
+        dict(
+            deneme_id="wf",
+            kosu_id="wf-kosu",
+            sonuc_ref="wf-ozet",
+            bitis_ref="wf-bitis",
+            icerik_ozeti="00" * 32,
+        )
+    )
+    m = pilot_deneme(
+        depo,
+        yontem_ayarlari=yontem,
+        veri_ayarlari=dict(
+            kaynak="yerel",
+            veri_referanslari=["ag-1"],
+            manifest_ozeti="manifest-1",
+            uyelik_surumu="uyelik-1",
+        ),
+    )
+    return depo, m, yontem
+
+
+def _s13_mc_kosu_alanlari(yontem):
+    return dict(
+        kod_kimligi="kayitli_monte_carlo_v1:sha256:" + "00" * 32,
+        tohum=yontem["tohum"],
+        ureteci_surumu=yontem["uretec"],
+        is_listesi=["00" * 32],
+    )
+
+
+def test_s13_mc_yazim_dogrulanmis_ayrik_kayit_ve_tek_sahip(tmp_path):
+    depo, m, yontem = _s13_mc_baglam_deposu(tmp_path)
+    with depo.mc_yazim(m.deneme_id):
+        ilk = depo.mc_kayit(m.deneme_id, "deneme", "deneme_id")
+        ilk["yontem_ayarlari"]["tekrar"] = -1
+        ikinci = depo.mc_kayit(m.deneme_id, "deneme", "deneme_id")
+        assert ikinci["yontem_ayarlari"]["tekrar"] == yontem["tekrar"]
+        with pytest.raises(pilot.PilotHatasi, match="zaten etkin"):
+            with depo.mc_yazim(m.deneme_id):
+                pass
+    assert depo.mc_kayit(m.deneme_id, "deneme", "deneme_id") == ikinci
+    assert pilot.PilotKayit(depo.yol).deneme_oku(m.deneme_id) == ikinci
+
+
+def test_s13_mc_yayindan_sonra_cagiran_nesnesi_kaydi_degistirmez(tmp_path):
+    depo, m, yontem = _s13_mc_baglam_deposu(tmp_path)
+    ortam = {"python": "3.14", "sinama": {"etiket": "ilk"}}
+    with depo.mc_yazim(m.deneme_id):
+        with pilot_kosu(
+            depo, m.deneme_id, ortam=ortam, **_s13_mc_kosu_alanlari(yontem)
+        ) as kosu:
+            kayit = depo.mc_makbuzlar(kosu, [kosu.makbuz], "baslangic")[0]
+            ortam["sinama"]["etiket"] = "degisti"
+            kosu._baslangic["ortam"]["sinama"]["etiket"] = "ikinci"
+            tekrar = depo.mc_kayit(kosu.makbuz.kosu_id, "baslangic", "kosu_id")
+            assert tekrar["ortam"]["sinama"]["etiket"] == "ilk"
+            assert tekrar == kayit
+    dogal = pilot.PilotKayit(depo.yol).oku()
+    assert dogal[-1]["ortam"]["sinama"]["etiket"] == "ilk"
+
+
+def test_s13_mc_korunan_ve_dogal_baslangic_ayni_alanlari_kabul_eder(
+    tmp_path, monkeypatch
+):
+    depo, m, yontem = _s13_mc_baglam_deposu(tmp_path)
+    dogal_yol = tmp_path / "mc-dogal.jsonl"
+    dogal_yol.write_bytes(depo.yol.read_bytes())
+    dogal = pilot.PilotKayit(dogal_yol)
+    alanlar = _s13_mc_kosu_alanlari(yontem)
+    with depo.mc_yazim(m.deneme_id):
+        with pilot_kosu(depo, m.deneme_id, **alanlar) as kosu:
+            korunan = depo.mc_makbuzlar(kosu, [kosu.makbuz], "baslangic")[0]
+            assert depo.mc_kayit(kosu.makbuz.kosu_id, "baslangic", "kosu_id") == korunan
+            assert depo.mc_kayit("legacy", "baslangic", "mod") == korunan
+            assert pilot.PilotKayit(depo.yol).oku()[-1] == korunan
+    with monkeypatch.context() as degisiklik:
+        degisiklik.setattr(pilot, "_mc_birim", lambda *args, **kwargs: None)
+        with dogal.mc_yazim(m.deneme_id):
+            assert dogal._mc_baglam.tutacaklar is None
+            with pilot_kosu(dogal, m.deneme_id, **alanlar) as kosu:
+                kayit = dogal.mc_makbuzlar(kosu, [kosu.makbuz], "baslangic")[0]
+                assert (
+                    dogal.mc_kayit(kosu.makbuz.kosu_id, "baslangic", "kosu_id") == kayit
+                )
+                assert dogal.mc_kayit("legacy", "baslangic", "mod") == kayit
+                assert pilot.PilotKayit(dogal.yol).oku()[-1] == kayit
+    for alan in ("kayit_id", "kosu_id", "olusturma_zamani"):
+        korunan.pop(alan)
+        kayit.pop(alan)
+    assert korunan == kayit
+
+
+def test_s13_mc_baglam_dis_okuma_yazma_adlandirma_ve_bagi(tmp_path):
+    import json
+    import os
+    import subprocess
+    import sys
+
+    depo, m, _ = _s13_mc_baglam_deposu(tmp_path)
+    bag = tmp_path / "mc-hardlink.jsonl"
+    tasinan = tmp_path / "mc-tasinan.jsonl"
+    os.link(depo.yol, bag)
+    once = depo.yol.read_bytes()
+    kod = (
+        "import json,os,sys\n"
+        "islem,yol,bag,tasinan=sys.argv[1:]\n"
+        "try:\n"
+        " if islem=='oku':\n"
+        "  with open(yol,'rb') as f: sonuc=len(f.read())\n"
+        " elif islem in ('ekle','ekle_ac'):\n"
+        "  fd=os.open(yol,os.O_WRONLY|os.O_APPEND)\n"
+        "  try:\n"
+        "   if islem=='ekle': os.write(fd,b'BAD')\n"
+        "  finally: os.close(fd)\n"
+        "  sonuc='acildi'\n"
+        " elif islem in ('bag','bag_ac'):\n"
+        "  fd=os.open(bag,os.O_RDWR)\n"
+        "  try:\n"
+        "   if islem=='bag': os.write(fd,b'BAD')\n"
+        "  finally: os.close(fd)\n"
+        "  sonuc='acildi'\n"
+        " elif islem=='tasi':\n"
+        "  os.rename(yol,tasinan);os.rename(tasinan,yol);sonuc='tasindi'\n"
+        " print(json.dumps({'izin':True,'sonuc':sonuc}))\n"
+        "except OSError as e:\n"
+        " print(json.dumps({'izin':False,'errno':e.errno,'winerror':getattr(e,'winerror',None)}))\n"
+    )
+    with depo.mc_yazim(m.deneme_id):
+        korunan = depo._mc_baglam.tutacaklar is not None
+        islemler = [
+            "oku",
+            "ekle" if korunan else "ekle_ac",
+            "bag" if korunan else "bag_ac",
+            "tasi",
+        ]
+        gozlemler = {}
+        for islem in islemler:
+            sonuc = subprocess.run(
+                [
+                    sys.executable,
+                    "-B",
+                    "-X",
+                    "utf8",
+                    "-c",
+                    kod,
+                    islem,
+                    str(depo.yol),
+                    str(bag),
+                    str(tasinan),
+                ],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                timeout=10,
+                check=True,
+                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+            )
+            gozlemler[islem] = json.loads(sonuc.stdout)
+        assert gozlemler["oku"] == {"izin": True, "sonuc": len(once)}
+        if korunan:
+            for islem in ("ekle", "bag", "tasi"):
+                assert gozlemler[islem]["izin"] is False
+                assert gozlemler[islem]["errno"] == 13
+        else:
+            for islem in ("ekle_ac", "bag_ac", "tasi"):
+                assert gozlemler[islem]["izin"] is True
+        assert depo.mc_kayit(m.deneme_id, "deneme", "deneme_id")
+        assert depo.yol.read_bytes() == once
+    assert pilot.PilotKayit(depo.yol).deneme_oku(m.deneme_id)
+
+
+def test_s13_mc_onceden_acik_yazici_ve_esleme_korumayi_reddeder(tmp_path):
+    import subprocess
+    import sys
+    from threading import Timer
+
+    depo, m, _ = _s13_mc_baglam_deposu(tmp_path)
+    with depo.mc_yazim(m.deneme_id):
+        korunan = depo._mc_baglam.tutacaklar is not None
+    with depo.yol.open("r+b"):
+        if korunan:
+            with pytest.raises(OSError):
+                with depo.mc_yazim(m.deneme_id):
+                    pass
+        else:
+            with depo.mc_yazim(m.deneme_id):
+                assert depo._mc_baglam.tutacaklar is None
+                assert depo.mc_kayit(m.deneme_id, "deneme", "deneme_id")
+
+    kod = (
+        "import mmap,sys\n"
+        "f=open(sys.argv[1],'r+b')\n"
+        "v=mmap.mmap(f.fileno(),0,access=mmap.ACCESS_WRITE)\n"
+        "f.close()\n"
+        "print('READY',flush=True)\n"
+        "assert sys.stdin.readline().strip()=='RELEASE'\n"
+        "v.close()\n"
+    )
+    isci = subprocess.Popen(
+        [sys.executable, "-B", "-X", "utf8", "-c", kod, str(depo.yol)],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        encoding="utf-8",
+        creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+    )
+    zamanlayici = Timer(20, isci.kill)
+    zamanlayici.start()
+    try:
+        assert isci.stdout.readline().strip() == "READY"
+        if korunan:
+            with pytest.raises(OSError):
+                with depo.mc_yazim(m.deneme_id):
+                    pass
+        else:
+            with depo.mc_yazim(m.deneme_id):
+                assert depo._mc_baglam.tutacaklar is None
+                assert depo.mc_kayit(m.deneme_id, "deneme", "deneme_id")
+        isci.stdin.write("RELEASE\n")
+        isci.stdin.flush()
+        assert isci.wait(timeout=10) == 0, isci.stderr.read()
+    finally:
+        zamanlayici.cancel()
+        if isci.poll() is None:
+            isci.kill()
+            isci.wait(timeout=10)
+    with depo.mc_yazim(m.deneme_id):
+        assert (depo._mc_baglam.tutacaklar is not None) is korunan
+        assert depo.mc_kayit(m.deneme_id, "deneme", "deneme_id")
+
+
+def test_s13_mc_isci_aniden_cikinca_koruma_serbest_kalir(tmp_path):
+    import os
+    import subprocess
+    import sys
+
+    depo, m, _ = _s13_mc_baglam_deposu(tmp_path)
+    kod = (
+        "import os,sys\n"
+        "from tansu.deneme import PilotKayit\n"
+        "with PilotKayit(sys.argv[1]).mc_yazim(sys.argv[2]) as d:\n"
+        " print(int(d._mc_baglam.tutacaklar is not None),flush=True)\n"
+        " os._exit(77)\n"
+    )
+    sonuc = subprocess.run(
+        [sys.executable, "-B", "-X", "utf8", "-c", kod, str(depo.yol), m.deneme_id],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        timeout=20,
+        creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+    )
+    assert sonuc.returncode == 77, sonuc.stderr
+    korunan = sonuc.stdout.strip() == "1"
+    with depo.mc_yazim(m.deneme_id):
+        assert (depo._mc_baglam.tutacaklar is not None) is korunan
+        assert depo.mc_kayit(m.deneme_id, "deneme", "deneme_id")
+    fd = os.open(depo.yol, os.O_WRONLY | os.O_APPEND)
+    os.close(fd)
+    assert pilot.PilotKayit(depo.yol).deneme_oku(m.deneme_id)
+
+
+def test_s13_mc_veri_tutacagi_onegi_kesemez_yalniz_sona_ekler(tmp_path):
+    import ctypes
+    import os
+    from ctypes import wintypes
+
+    depo, m, _ = _s13_mc_baglam_deposu(tmp_path)
+    once = depo.yol.read_bytes()
+    with depo.mc_yazim(m.deneme_id):
+        oturum = depo._mc_baglam
+        if oturum.tutacaklar is None:
+            assert depo.mc_kayit(m.deneme_id, "deneme", "deneme_id")
+            assert depo.yol.read_bytes() == once
+        else:
+            import msvcrt
+
+            kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+            kernel.SetEndOfFile.argtypes = [wintypes.HANDLE]
+            kernel.SetEndOfFile.restype = wintypes.BOOL
+            fd = oturum.veri_fd
+            os.lseek(fd, 0, os.SEEK_SET)
+            assert not kernel.SetEndOfFile(wintypes.HANDLE(msvcrt.get_osfhandle(fd)))
+            assert ctypes.get_last_error() == 5
+            assert depo.yol.read_bytes() == once
+            assert os.write(fd, pilot._KESIK) == len(pilot._KESIK)
+            os.fsync(oturum.kontrol_fd)
+            assert depo.yol.read_bytes() == once + pilot._KESIK
+            with pytest.raises(pilot.PilotHatasi, match="sonu değişti"):
+                depo.mc_kayit(m.deneme_id, "deneme", "deneme_id")
+            assert oturum.gecersiz
+    assert pilot.PilotKayit(depo.yol).deneme_oku(m.deneme_id)
+
+
+def test_s13_mc_yazim_ayni_dosyanin_baska_yolunu_reddeder(tmp_path):
+    import os
+
+    depo, m, _ = _s13_mc_baglam_deposu(tmp_path)
+    diger = tmp_path / "mc-diger-ad.jsonl"
+    os.link(depo.yol, diger)
+    with depo.mc_yazim(m.deneme_id):
+        asil = depo.yol
+        depo.yol = diger
+        try:
+            if depo._mc_baglam.tutacaklar is None:
+                assert depo.mc_kayit(m.deneme_id, "deneme", "deneme_id")
+            else:
+                with pytest.raises(pilot.PilotHatasi, match="yolu değişti"):
+                    depo.mc_kayit(m.deneme_id, "deneme", "deneme_id")
+        finally:
+            depo.yol = asil
+        if depo._mc_baglam.tutacaklar is None:
+            assert not depo._mc_baglam.gecersiz
+        else:
+            assert depo._mc_baglam.gecersiz
+            with pytest.raises(pilot.PilotHatasi, match="geçersiz"):
+                depo.mc_kayit(m.deneme_id, "deneme", "deneme_id")
+    assert pilot.PilotKayit(asil).deneme_oku(m.deneme_id)
+
+
+def test_s13_mc_yazim_yabanci_kaydi_ve_sorgu_hatasini_durdurur(tmp_path):
+    depo, m, _ = _s13_mc_baglam_deposu(tmp_path)
+    once = depo.yol.read_bytes()
+    with depo.mc_yazim(m.deneme_id):
+        if depo._mc_baglam.tutacaklar is None:
+            assert depo.mc_kayit(m.deneme_id, "deneme", "deneme_id")
+            assert not depo._mc_baglam.gecersiz
+        else:
+            cagirdi = []
+            with pytest.raises(pilot.PilotHatasi, match="başka kayıt türünü"):
+                depo._ekle(
+                    dict(kayit_turu="ayar_bagi", deneme_id=m.deneme_id),
+                    lambda olaylar: cagirdi.append(olaylar),
+                )
+            assert not cagirdi
+            assert depo._mc_baglam.gecersiz
+    assert depo.yol.read_bytes() == once
+    with depo.mc_yazim(m.deneme_id):
+        with pytest.raises(pilot.PilotHatasi, match="Kayıt bağı bulunamadı"):
+            depo.mc_kayit("yok", "mc_plan")
+        assert depo._mc_baglam.gecersiz
+        with pytest.raises(pilot.PilotHatasi, match="geçersiz"):
+            depo.mc_kayit(m.deneme_id, "deneme", "deneme_id")
+
+
+def test_s13_mc_yazim_baska_kosuyu_ve_yanlis_makbuzu_durdurur(tmp_path):
+    from types import SimpleNamespace
+
+    depo, m, yontem = _s13_mc_baglam_deposu(tmp_path)
+    with depo.mc_yazim(m.deneme_id):
+        with pilot_kosu(
+            depo,
+            m.deneme_id,
+            kod_kimligi="kayitli_monte_carlo_v1:sha256:" + "00" * 32,
+            tohum=yontem["tohum"],
+            ureteci_surumu=yontem["uretec"],
+            is_listesi=["00" * 32],
+        ) as kosu:
+            sahte = SimpleNamespace(
+                makbuz=pilot.Makbuz(
+                    "sahte", m.deneme_id, "başka-koşu", kosu.makbuz.ayar_ozeti
+                )
+            )
+            with pytest.raises(pilot.PilotHatasi, match="koşu veya ayar bağı"):
+                depo.mc_makbuzlar(sahte, [kosu.makbuz], "baslangic")
+            assert depo._mc_baglam.gecersiz
+    assert pilot.PilotKayit(depo.yol).oku()
+
+
+def test_s13_mc_fiziksel_makbuz_geri_okuma_hatasi_baglami_durdurur(
+    tmp_path, monkeypatch
+):
+    depo, m, yontem = _s13_mc_baglam_deposu(tmp_path)
+    with depo.mc_yazim(m.deneme_id):
+        with pilot_kosu(depo, m.deneme_id, **_s13_mc_kosu_alanlari(yontem)) as kosu:
+            oturum = depo._mc_baglam
+            if oturum.tutacaklar is None:
+                assert depo.mc_makbuzlar(kosu, [kosu.makbuz], "baslangic")
+                assert not oturum.gecersiz
+            else:
+                once = depo.yol.read_bytes()
+                asil_oku = pilot._aralik_oku
+                konum, uzunluk, _ = oturum.araliklar[kosu.makbuz.olay_id]
+
+                def bozuk_oku(fd, bas, sayi):
+                    if (bas, sayi) == (konum, uzunluk):
+                        return b"X" * sayi
+                    return asil_oku(fd, bas, sayi)
+
+                with monkeypatch.context() as degisiklik:
+                    degisiklik.setattr(pilot, "_aralik_oku", bozuk_oku)
+                    with pytest.raises(pilot.PilotHatasi, match="fiziksel makbuz"):
+                        depo.mc_makbuzlar(kosu, [kosu.makbuz], "baslangic")
+                assert oturum.gecersiz
+                with pytest.raises(pilot.PilotHatasi, match="geçersiz"):
+                    depo.mc_kayit(m.deneme_id, "deneme", "deneme_id")
+                assert depo.yol.read_bytes() == once
+    assert pilot.PilotKayit(depo.yol).oku()[-1]["kayit_turu"] == "baslangic"
+
+
+def test_s13_mc_yazim_ikinci_koku_reddeder(tmp_path):
+    depo, m, yontem = _s13_mc_baglam_deposu(tmp_path)
+    alanlar = dict(
+        kod_kimligi="kayitli_monte_carlo_v1:sha256:" + "00" * 32,
+        tohum=yontem["tohum"],
+        ureteci_surumu=yontem["uretec"],
+        is_listesi=["00" * 32],
+    )
+    with depo.mc_yazim(m.deneme_id):
+        with pilot_kosu(depo, m.deneme_id, **alanlar):
+            once = depo.yol.read_bytes()
+            if depo._mc_baglam.tutacaklar is None:
+                with pilot_kosu(depo, m.deneme_id, **alanlar):
+                    pass
+                assert len(depo.oku()) == 3
+                assert not depo._mc_baglam.gecersiz
+            else:
+                with pytest.raises(pilot.PilotHatasi, match="ikinci koşu"):
+                    with pilot_kosu(depo, m.deneme_id, **alanlar):
+                        pass
+                assert depo._mc_baglam.gecersiz
+                assert depo.yol.read_bytes() == once
+
+
+def test_s13_mc_yayin_kesintisi_ikinci_yazimi_engeller(tmp_path, monkeypatch):
+    depo, m, yontem = _s13_mc_baglam_deposu(tmp_path)
+    alanlar = dict(
+        kod_kimligi="kayitli_monte_carlo_v1:sha256:" + "00" * 32,
+        tohum=yontem["tohum"],
+        ureteci_surumu=yontem["uretec"],
+        is_listesi=["00" * 32],
+    )
+    with depo.mc_yazim(m.deneme_id):
+        if depo._mc_baglam.tutacaklar is None:
+            with pilot_kosu(depo, m.deneme_id, **alanlar):
+                pass
+            assert len(depo.oku()) == 2
+            assert not depo._mc_baglam.gecersiz
+        else:
+            once = depo.yol.read_bytes()
+            veri_fd = depo._mc_baglam.veri_fd
+            asil_yaz = pilot.os.write
+
+            def kes(fd, baytlar):
+                if fd == veri_fd:
+                    raise KeyboardInterrupt("Yayın kesildi.")
+                return asil_yaz(fd, baytlar)
+
+            with monkeypatch.context() as degisiklik:
+                degisiklik.setattr(pilot.os, "write", kes)
+                with pytest.raises(KeyboardInterrupt, match="Yayın kesildi"):
+                    with pilot_kosu(depo, m.deneme_id, **alanlar):
+                        pass
+            assert depo._mc_baglam.gecersiz
+            with pytest.raises(pilot.PilotHatasi, match="geçersiz"):
+                with pilot_kosu(depo, m.deneme_id, **alanlar):
+                    pass
+            assert depo.yol.read_bytes() == once
+    assert pilot.PilotKayit(depo.yol).deneme_oku(m.deneme_id)
+
+
+@pytest.mark.parametrize(
+    "asama", ["icerik_kisa", "lf_kisa", "ilk_fsync", "ikinci_fsync", "geri_okuma"]
+)
+def test_s13_mc_yayin_asamalari_makbuz_vermez_ve_taze_okuyucu_kurtarir(
+    tmp_path, monkeypatch, asama
+):
+    depo, m, yontem = _s13_mc_baglam_deposu(tmp_path)
+    once = depo.yol.read_bytes()
+    korunan = False
+    with depo.mc_yazim(m.deneme_id):
+        oturum = depo._mc_baglam
+        korunan = oturum.tutacaklar is not None
+        if oturum.tutacaklar is None:
+            with pilot_kosu(depo, m.deneme_id, **_s13_mc_kosu_alanlari(yontem)):
+                pass
+            assert not oturum.gecersiz
+        else:
+            asil_yaz = pilot.os.write
+            asil_fsync = pilot.os.fsync
+            asil_oku = pilot._aralik_oku
+            fsync_sayisi = []
+
+            def yaz(fd, baytlar):
+                if fd == oturum.veri_fd and (
+                    (asama == "icerik_kisa" and baytlar != b"\n")
+                    or (asama == "lf_kisa" and baytlar == b"\n")
+                ):
+                    return 0
+                return asil_yaz(fd, baytlar)
+
+            def fsync(fd):
+                if fd == oturum.kontrol_fd:
+                    fsync_sayisi.append(True)
+                    if (asama == "ilk_fsync" and len(fsync_sayisi) == 1) or (
+                        asama == "ikinci_fsync" and len(fsync_sayisi) == 2
+                    ):
+                        raise OSError("Kalıcılık onayı kesildi.")
+                return asil_fsync(fd)
+
+            def oku(fd, konum, uzunluk):
+                if asama == "geri_okuma" and konum >= len(once) and uzunluk > 1:
+                    return b"X" * uzunluk
+                return asil_oku(fd, konum, uzunluk)
+
+            with monkeypatch.context() as degisiklik:
+                degisiklik.setattr(pilot.os, "write", yaz)
+                degisiklik.setattr(pilot.os, "fsync", fsync)
+                degisiklik.setattr(pilot, "_aralik_oku", oku)
+                hata_turu = (
+                    pilot.PilotHatasi
+                    if asama == "geri_okuma"
+                    else pilot.PilotBelirsizHatasi
+                )
+                with pytest.raises(hata_turu):
+                    with pilot_kosu(depo, m.deneme_id, **_s13_mc_kosu_alanlari(yontem)):
+                        pass
+            assert oturum.gecersiz
+            with pytest.raises(pilot.PilotHatasi, match="geçersiz"):
+                depo.mc_kayit(m.deneme_id, "deneme", "deneme_id")
+    dogal = pilot.PilotKayit(depo.yol)
+    beklenen = 2 if not korunan or asama in ("ikinci_fsync", "geri_okuma") else 1
+    assert len(dogal.oku()) == beklenen
+    if beklenen == 1:
+        pilot_deneme(dogal)
+        assert len(pilot.PilotKayit(depo.yol).oku()) == 2
+
+
+def test_s13_mc_koruma_kapatma_hatasi_asli_gizlemez(tmp_path, monkeypatch):
+    import os
+
+    depo, _, _ = _s13_mc_baglam_deposu(tmp_path)
+    asil_kapat = pilot.os.close
+    kapananlar = []
+    asil_hata = ValueError("İşlem hatası")
+
+    def kapat(fd):
+        kapananlar.append(fd)
+        asil_kapat(fd)
+        if len(kapananlar) == 1:
+            raise OSError("İlk kapatma raporu")
+
+    if os.name == "nt":
+        yakalanan = None
+        with monkeypatch.context() as degisiklik:
+            degisiklik.setattr(pilot.os, "close", kapat)
+            try:
+                with pilot._mc_koruma(depo.yol) as tutacaklar:
+                    if tutacaklar is None:
+                        assert depo.deneme_oku(depo.oku()[0]["deneme_id"])
+                    else:
+                        raise asil_hata
+            except ValueError as hata:
+                yakalanan = hata
+        if kapananlar:
+            assert yakalanan is asil_hata
+            assert len(kapananlar) == 2
+        else:
+            assert yakalanan is None
+            assert depo.oku()
+    else:
+        with depo.mc_yazim(depo.oku()[0]["deneme_id"]):
+            assert depo._mc_baglam.tutacaklar is None
+            assert depo.mc_kayit(depo.oku()[0]["deneme_id"], "deneme", "deneme_id")
+
+
 def test_s13_baslamadan_hata_bitisinin_kimligi_ve_isleri_degistirilemez(tmp_path):
     from tests.test_tansusinama import s13_yontem
 
@@ -1366,6 +1938,55 @@ def test_s13_wf_parti_kesintisi_ve_kayitli_hata_sayimlari_ayridir(
         yol.write_bytes(depo.yol.read_bytes())
         assert okuyucu.oku() == depo.oku()
         assert okuyucu.kurtar() == depo.kurtar()
+
+    with depo.mc_yazim(m.deneme_id):
+        korunan = depo._mc_baglam.tutacaklar is not None
+        yeni_ctx, yeni_d, yeni_g = s13_kosu(depo, m, kaynak)
+        with yeni_ctx as yeni_kosu:
+            yeni_is, yeni_planlar = s13_plan(
+                depo, yeni_kosu, yeni_d, yeni_g, deney="sira_v1", sayi=1
+            )
+            ilk_plan = yeni_planlar[0][0]
+            nufus = len(ilk_plan["cekilis"]["indeksler"])
+            ikinci = dict(
+                ilk_plan,
+                indeks=1,
+                cekilis=istatistik.mc_plan(
+                    "sira_v1",
+                    yeni_is["anahtar"],
+                    1,
+                    n=nufus,
+                    tohum=yeni_d["yontem_ayarlari"]["tohum"],
+                ),
+            )
+            bozuk_ucuncu = dict(ikinci)
+            once = depo.yol.read_bytes()
+            with pytest.raises(pilot.PilotHatasi, match="MC plan indeksi yinelenmiş"):
+                yeni_kosu.mc_planlari_kaydet(kayitlar=[ikinci, bozuk_ucuncu])
+            assert depo.yol.read_bytes() == once
+            if depo._mc_baglam.tutacaklar is None:
+                assert not depo._mc_baglam.gecersiz
+                yeni_kosu.mc_planlari_kaydet(kayitlar=[ikinci])
+            else:
+                assert depo._mc_baglam.gecersiz
+                with pytest.raises(pilot.PilotHatasi, match="geçersiz"):
+                    yeni_kosu.mc_planlari_kaydet(kayitlar=[ikinci])
+                assert depo.yol.read_bytes() == once
+    taze = pilot.PilotKayit(depo.yol)
+    plan_indeksleri = [
+        o["kayit"]["indeks"]
+        for o in taze.oku()
+        if o["kayit_turu"] == "mc_plan" and o["kosu_id"] == yeni_kosu.makbuz.kosu_id
+    ]
+    assert plan_indeksleri == ([0] if korunan else [0, 1])
+    with depo.mc_yazim(m.deneme_id):
+        taze_ctx, taze_d, taze_g = s13_kosu(depo, m, kaynak)
+        with taze_ctx as taze_kosu:
+            _, taze_planlar = s13_plan(
+                depo, taze_kosu, taze_d, taze_g, deney="sira_v1", sayi=1
+            )
+            assert len(taze_planlar) == 1
+    assert pilot.PilotKayit(depo.yol).oku()
 
 
 def test_pilot_revizyonlar_eklenir_katalog_ve_eski_sayim_korunur(tmp_path):

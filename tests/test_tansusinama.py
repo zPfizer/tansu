@@ -1882,15 +1882,13 @@ def s13_kosu(depo, makbuz, kaynak):
 
 
 def s13_plan(depo, kosu, d, g, *, deney="ayar_komsulugu_v1", sayi=1):
-    from tansu import deneme
-
     gm = kosu.mc_girdi_kaydet(kayit=g)
     is_ = next(
         i
         for i in g["isler"]
         if i["dilim"] == "2022" and i["deney"] == deney and i["durum"] == "hazir"
     )
-    komsular = deneme._mc_komsular(depo.oku(), g)
+    komsular = depo.mc_komsular(gm.olay_id)
     planlar = ts._mc_planlar(depo, kosu, d, g, gm.olay_id, is_, 0, sayi, komsular, {})
     return is_, planlar
 
@@ -1912,6 +1910,119 @@ def test_s13_wf_bos_nufus_bes_deneyi_sifir_risk_diye_tamamlamaz(tmp_path, monkey
     assert depo.izle(sonuc["sonuc_makbuzu"].olay_id)["durum"] == "hata"
 
 
+def test_s13_mc_kosusu_dis_yaziciyi_baglam_boyunca_engeller(tmp_path, monkeypatch):
+    import ctypes
+    import os
+    import subprocess
+    import sys
+    from ctypes import wintypes
+
+    depo, m, _, _ = s13_kayitli(tmp_path, monkeypatch, sinyalli=False)
+    korunabilir = False
+    if os.name == "nt":
+        kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+        kernel.GetVolumePathNameW.argtypes = (
+            wintypes.LPCWSTR,
+            wintypes.LPWSTR,
+            wintypes.DWORD,
+        )
+        kernel.GetVolumePathNameW.restype = wintypes.BOOL
+        kernel.GetDriveTypeW.argtypes = (wintypes.LPCWSTR,)
+        kernel.GetDriveTypeW.restype = wintypes.UINT
+        kernel.GetVolumeInformationW.argtypes = (
+            wintypes.LPCWSTR,
+            wintypes.LPWSTR,
+            wintypes.DWORD,
+            ctypes.POINTER(wintypes.DWORD),
+            ctypes.POINTER(wintypes.DWORD),
+            ctypes.POINTER(wintypes.DWORD),
+            wintypes.LPWSTR,
+            wintypes.DWORD,
+        )
+        kernel.GetVolumeInformationW.restype = wintypes.BOOL
+        root = ctypes.create_unicode_buffer(1024)
+        assert kernel.GetVolumePathNameW(str(depo.yol), root, len(root))
+        drive = kernel.GetDriveTypeW(root.value)
+        assert drive not in (0, 1)
+        if drive == 3:
+            fs = ctypes.create_unicode_buffer(64)
+            assert kernel.GetVolumeInformationW(
+                root.value, None, 0, None, None, None, fs, len(fs)
+            )
+            korunabilir = fs.value == "NTFS"
+    probe = (
+        "import os,sys\n"
+        "try:\n"
+        "    fd=os.open(sys.argv[1],os.O_RDWR)\n"
+        "except PermissionError:\n"
+        "    sys.exit(0)\n"
+        "except OSError as error:\n"
+        "    print(error)\n"
+        "    sys.exit(2)\n"
+        "else:\n"
+        "    os.close(fd)\n"
+        "    sys.exit(1)\n"
+    )
+    attempts = []
+
+    def observe(_):
+        if not attempts:
+            result = subprocess.run(
+                [sys.executable, "-B", "-X", "utf8", "-c", probe, str(depo.yol)],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                timeout=10,
+                check=False,
+                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+            )
+            attempts.append((result.returncode, result.stdout, result.stderr))
+
+    result = ts.kayitli_monte_carlo_calistir(
+        depo, m.deneme_id, veri_koku=tmp_path, mod="gelistirme", ilerleme=observe
+    )
+    assert result["durum"] == "eksik"
+    assert attempts == [(0 if korunabilir else 1, "", "")], (
+        "MC koşusu sırasında başka süreç günlüğü yazmak için açmamalıdır.",
+        attempts,
+    )
+
+
+def test_s13_mc_gecersiz_yazim_hatasi_senaryo_kaydi_ile_degistirilmez(monkeypatch):
+    from types import SimpleNamespace
+    from tansu import deneme as deneme_
+
+    hata = deneme_.PilotHatasi("MC fiziksel yayın geri okuması uyuşmuyor.")
+    yayinlar = []
+    depo = SimpleNamespace(_mc_baglam=SimpleNamespace(gecersiz=True))
+    kosu = SimpleNamespace(mc_sonuclari_kaydet=lambda **_: yayinlar.append(True))
+    monkeypatch.setattr(
+        ts,
+        "_mc_planlar",
+        lambda *args: [({"cekilis": {}}, SimpleNamespace(olay_id="plan"))],
+    )
+
+    def bozuk_okuma(*args):
+        raise hata
+
+    monkeypatch.setattr(ts, "_mc_ayar_yeniden_sina", bozuk_okuma)
+    with pytest.raises(deneme_.PilotHatasi) as yakalanan:
+        ts._mc_isi_yurut(
+            depo,
+            kosu,
+            {"yontem_ayarlari": {"tekrar": 1, "kontrol_noktalari": [1]}},
+            {},
+            {},
+            "girdi",
+            {"durum": "olculebilir", "deney": "ayar_komsulugu_v1"},
+            "kok",
+            [],
+            {},
+        )
+    assert yakalanan.value is hata
+    assert yayinlar == []
+
+
 def test_s13_wf_gercek_ayar_stresi_kendi_sinyalini_ceyrekler_arasi_korur(
     tmp_path, monkeypatch
 ):
@@ -1921,10 +2032,33 @@ def test_s13_wf_gercek_ayar_stresi_kendi_sinyalini_ceyrekler_arasi_korur(
     depo, m, _, kaynak = s13_kayitli(
         tmp_path, monkeypatch, kilit_politikasi="ham_aralik_v1"
     )
+    korunan_yol = tmp_path / "mc-korunan-es.jsonl"
+    korunan_yol.write_bytes(depo.yol.read_bytes())
+    korunan_depo = deneme.PilotKayit(korunan_yol)
     ctx, d, g = s13_kosu(depo, m, kaynak)
     asil = ts._ileri_test_sembolu
     tasima = {}
     sinyal_yayini = ts._mc_sinyalleri
+    asil_adim = motor.islem_adimi
+    adim_girdileri = {"yerel": [], "korunan": []}
+    etkin_adim = [None]
+
+    def adim(durum, mum, sinyal=None, **kwargs):
+        if etkin_adim[0] is not None:
+            adim_girdileri[etkin_adim[0]].append(
+                [
+                    motor._duz(mum),
+                    sinyal,
+                    motor._duz(dataclasses.asdict(kwargs["ayar"])),
+                    motor._duz(kwargs["kutu_alt"]),
+                    motor._duz(kwargs["hedef"]),
+                    motor._duz(kwargs["kurulum_kaniti"]),
+                    motor._duz(kwargs["yurutme"]),
+                ]
+            )
+        return asil_adim(durum, mum, sinyal, **kwargs)
+
+    monkeypatch.setattr(motor, "islem_adimi", adim)
     yanlis_secim = dict(
         surum="pay_kimligi_v1",
         tablo_ozeti="00" * 32,
@@ -1934,7 +2068,7 @@ def test_s13_wf_gercek_ayar_stresi_kendi_sinyalini_ceyrekler_arasi_korur(
     )
     sinyal_siniri = []
 
-    def yayin(depo, kosu, secim, secilen, plan_ref, kabuller):
+    def yayin(depo, kosu, secim, secilen, plan_ref, kabuller, refler):
         if kabuller and not sinyal_siniri:
             for boz in ("pay_kimligi", "e2_bagi"):
                 kabul = deepcopy(kabuller[0])
@@ -1944,10 +2078,10 @@ def test_s13_wf_gercek_ayar_stresi_kendi_sinyalini_ceyrekler_arasi_korur(
                     kabul["kaynak_sinyal"]["baglar"]["veri_ref_id"] = "baska-e1"
                 once = depo.yol.read_bytes()
                 with pytest.raises(deneme.PilotHatasi):
-                    sinyal_yayini(depo, kosu, secim, secilen, plan_ref, [kabul])
+                    sinyal_yayini(depo, kosu, secim, secilen, plan_ref, [kabul], refler)
                 assert depo.yol.read_bytes() == once
                 sinyal_siniri.append(boz)
-        return sinyal_yayini(depo, kosu, secim, secilen, plan_ref, kabuller)
+        return sinyal_yayini(depo, kosu, secim, secilen, plan_ref, kabuller, refler)
 
     monkeypatch.setattr(ts, "_mc_sinyalleri", yayin)
 
@@ -2033,12 +2167,15 @@ def test_s13_wf_gercek_ayar_stresi_kendi_sinyalini_ceyrekler_arasi_korur(
                         mc_cocuk_id=cocuk["deneme_id"],
                     )
         tekrar, refler, hata = None, None, None
+        etkin_adim[0] = "yerel"
         try:
             tekrar, refler = ts._mc_ayar_yeniden_sina(
                 depo, d, kosu, kaynak, p, pm.olay_id, tmp_path
             )
         except (KeyError, deneme.PilotHatasi) as yakalanan:
             hata = yakalanan
+        finally:
+            etkin_adim[0] = None
         assert tekrar is not None, (
             f"MC ortak yol donmuş hücre yöntemini kullanmalıdır: {hata}"
         )
@@ -2104,6 +2241,212 @@ def test_s13_wf_gercek_ayar_stresi_kendi_sinyalini_ceyrekler_arasi_korur(
         )
         with pytest.raises(deneme.PilotHatasi):
             deneme.PilotKayit(yol).oku()
+
+    yerel_tekrar = deepcopy(tekrar)
+    yerel_olcu = deepcopy(olcu)
+    yerel_tasima = deepcopy(tasima)
+    yerel_refler = list(refler)
+    yerel_sinyaller = [deneme._bul(olaylar, r, "mc_sinyal") for r in yerel_refler]
+    yerel_senaryo = deneme._bul(olaylar, sm.olay_id, "mc_senaryo")
+    monkeypatch.setattr(ts, "_mc_sinyalleri", sinyal_yayini)
+    tasima.clear()
+
+    with korunan_depo.mc_yazim(m.deneme_id):
+        korunan_ctx, korunan_d, korunan_g = s13_kosu(korunan_depo, m, kaynak)
+        with korunan_ctx as korunan_kosu:
+            korunan_is, [(korunan_plan, korunan_pm)] = s13_plan(
+                korunan_depo, korunan_kosu, korunan_d, korunan_g
+            )
+            etkin_adim[0] = "korunan"
+            try:
+                korunan_tekrar, korunan_refler = ts._mc_ayar_yeniden_sina(
+                    korunan_depo,
+                    korunan_d,
+                    korunan_kosu,
+                    kaynak,
+                    korunan_plan,
+                    korunan_pm.olay_id,
+                    tmp_path,
+                )
+            finally:
+                etkin_adim[0] = None
+            korunan_olcu = istatistik.mc_senaryo_olculeri(
+                korunan_g,
+                korunan_is,
+                korunan_plan["cekilis"],
+                durumlar=korunan_tekrar["durumlar"],
+            )
+            korunan_sm = korunan_kosu.mc_senaryo_sonucu_kaydet(
+                kayit=dict(
+                    plan_ref=korunan_pm.olay_id,
+                    durum="tamamlandi",
+                    **korunan_olcu,
+                    yeniden_sinama=korunan_tekrar,
+                    sonuc_referanslari=korunan_refler,
+                    asama=None,
+                    neden=None,
+                )
+            )
+            korunan_senaryo = korunan_depo.mc_makbuzlar(
+                korunan_kosu, [korunan_sm], "mc_senaryo"
+            )[0]
+            korunan_sinyaller = [
+                korunan_depo.mc_kayit(r, "mc_sinyal") for r in korunan_refler
+            ]
+
+    assert korunan_plan["cekilis"] == p["cekilis"]
+    assert korunan_olcu == yerel_olcu
+    assert len(korunan_refler) == len(yerel_refler) > 0
+    assert [o["kayit_id"] for o in yerel_sinyaller] == yerel_refler
+    assert [o["kayit_id"] for o in korunan_sinyaller] == korunan_refler
+    assert yerel_senaryo["kayit"]["sonuc_referanslari"] == yerel_refler
+    assert korunan_senaryo["kayit"]["sonuc_referanslari"] == korunan_refler
+
+    def kimlikler(plan, pm, kosu, sm, refler):
+        sonuc = {
+            plan["girdi_ref"]: "<GIRDI>",
+            pm.olay_id: "<PLAN>",
+            kosu.makbuz.kosu_id: "<KOSU>",
+            sm.olay_id: "<SENARYO>",
+        }
+        sonuc.update({r: f"<SINYAL:{i}>" for i, r in enumerate(refler)})
+        sonuc.update(
+            {
+                c["deneme_id"]: f"<COCUK:{c['bolum']}:{c['sembol']}>"
+                for c in plan["stres_cocuklari"]
+            }
+        )
+        return sonuc
+
+    def ayir(deger, esleme):
+        if isinstance(deger, str):
+            if deger in esleme:
+                return esleme[deger]
+            for kimlik, etiket in esleme.items():
+                if deger.startswith(kimlik + ":"):
+                    return etiket + deger[len(kimlik) :]
+            return deger
+        if isinstance(deger, dict):
+            return {k: ayir(v, esleme) for k, v in deger.items()}
+        if isinstance(deger, list):
+            return [ayir(v, esleme) for v in deger]
+        return deger
+
+    def muhur_haric(deger):
+        if isinstance(deger, dict):
+            return {k: muhur_haric(v) for k, v in deger.items() if k != "butunluk"}
+        if isinstance(deger, list):
+            return [muhur_haric(v) for v in deger]
+        return deger
+
+    yerel_kimlikler = kimlikler(p, pm, kosu, sm, yerel_refler)
+    korunan_kimlikler = kimlikler(
+        korunan_plan, korunan_pm, korunan_kosu, korunan_sm, korunan_refler
+    )
+    for durum in (
+        *yerel_tekrar["durumlar"].values(),
+        *korunan_tekrar["durumlar"].values(),
+        *yerel_tasima.values(),
+        *tasima.values(),
+    ):
+        assert motor._durumu_oku(durum, durum["yurutme"])["surum"] == "islem_durumu_v1"
+    for sembol, yerel_durum in yerel_tekrar["durumlar"].items():
+        korunan_durum = korunan_tekrar["durumlar"][sembol]
+        assert len(yerel_durum["butunluk"]) == len(korunan_durum["butunluk"]) == 64
+        assert len(yerel_durum["islemler"]) == len(korunan_durum["islemler"])
+        for i, (eski_islem, yeni_islem) in enumerate(
+            zip(yerel_durum["islemler"], korunan_durum["islemler"], strict=True)
+        ):
+            etiket = f"<ISLEM:{sembol}:{i}>"
+            yerel_kimlikler.setdefault(
+                eski_islem["pozisyon"]["risk_girdisi"]["islem_id"], etiket
+            )
+            korunan_kimlikler.setdefault(
+                yeni_islem["pozisyon"]["risk_girdisi"]["islem_id"], etiket
+            )
+        if yerel_durum["pozisyon"] and korunan_durum["pozisyon"]:
+            etiket = f"<ACIK_ISLEM:{sembol}>"
+            yerel_kimlikler.setdefault(
+                yerel_durum["pozisyon"]["risk_girdisi"]["islem_id"], etiket
+            )
+            korunan_kimlikler.setdefault(
+                korunan_durum["pozisyon"]["risk_girdisi"]["islem_id"], etiket
+            )
+
+    def ilk_fark(eski, yeni, yol="$"):
+        if type(eski) is not type(yeni):
+            return yol, repr(eski)[:120], repr(yeni)[:120]
+        if isinstance(eski, dict):
+            if eski.keys() != yeni.keys():
+                return yol, list(eski), list(yeni)
+            for ad in eski:
+                fark = ilk_fark(eski[ad], yeni[ad], f"{yol}.{ad}")
+                if fark is not None:
+                    return fark
+        elif isinstance(eski, list):
+            if len(eski) != len(yeni):
+                return yol, len(eski), len(yeni)
+            for i, (a, b) in enumerate(zip(eski, yeni, strict=True)):
+                fark = ilk_fark(a, b, f"{yol}[{i}]")
+                if fark is not None:
+                    return fark
+        elif eski != yeni:
+            return yol, repr(eski)[:120], repr(yeni)[:120]
+        return None
+
+    assert adim_girdileri["yerel"]
+    assert len(adim_girdileri["yerel"]) == len(adim_girdileri["korunan"])
+    yerel_girdiler = ayir(adim_girdileri["yerel"], yerel_kimlikler)
+    korunan_girdiler = ayir(adim_girdileri["korunan"], korunan_kimlikler)
+    assert deneme.kanonik(yerel_girdiler) == deneme.kanonik(korunan_girdiler), ilk_fark(
+        yerel_girdiler, korunan_girdiler
+    )
+    for sembol, yerel_durum in yerel_tekrar["durumlar"].items():
+        korunan_durum = korunan_tekrar["durumlar"][sembol]
+        if yerel_durum.get("son_girdi") and korunan_durum.get("son_girdi"):
+            etiket = f"<SON_GIRDI:{sembol}>"
+            yerel_kimlikler.setdefault(yerel_durum["son_girdi"], etiket)
+            korunan_kimlikler.setdefault(korunan_durum["son_girdi"], etiket)
+    for bolum, yerel_durum in yerel_tasima.items():
+        korunan_durum = tasima[bolum]
+        if yerel_durum.get("son_girdi") and korunan_durum.get("son_girdi"):
+            etiket = f"<SON_GIRDI:{bolum}>"
+            yerel_kimlikler.setdefault(yerel_durum["son_girdi"], etiket)
+            korunan_kimlikler.setdefault(korunan_durum["son_girdi"], etiket)
+    assert deneme.kanonik(ayir(muhur_haric(yerel_tekrar), yerel_kimlikler)) == (
+        deneme.kanonik(ayir(muhur_haric(korunan_tekrar), korunan_kimlikler))
+    )
+
+    yerel_tasima_alanlari = ayir(muhur_haric(yerel_tasima), yerel_kimlikler)
+    korunan_tasima_alanlari = ayir(muhur_haric(tasima), korunan_kimlikler)
+    assert deneme.kanonik(yerel_tasima_alanlari) == deneme.kanonik(
+        korunan_tasima_alanlari
+    ), ilk_fark(yerel_tasima_alanlari, korunan_tasima_alanlari)
+
+    def sabit_alanlar(olay):
+        alanlar = {
+            a: v
+            for a, v in olay.items()
+            if a not in ("kayit_id", "olusturma_zamani", "icerik_ozeti", "parti_ref")
+        }
+        if olay["kayit_turu"] == "mc_sinyal":
+            alanlar = deepcopy(alanlar)
+            alanlar["kayit"]["sinyal"]["kaynak_sinyal"]["olusturma_zamani"] = (
+                "<URETILEN_ZAMAN>"
+            )
+        return alanlar
+
+    for onceki, sonraki in zip(yerel_sinyaller, korunan_sinyaller, strict=True):
+        assert deneme.kanonik(
+            ayir(muhur_haric(sabit_alanlar(onceki)), yerel_kimlikler)
+        ) == deneme.kanonik(
+            ayir(muhur_haric(sabit_alanlar(sonraki)), korunan_kimlikler)
+        )
+    assert deneme.kanonik(
+        ayir(muhur_haric(sabit_alanlar(yerel_senaryo)), yerel_kimlikler)
+    ) == deneme.kanonik(
+        ayir(muhur_haric(sabit_alanlar(korunan_senaryo)), korunan_kimlikler)
+    )
 
 
 def test_s13_wf_stres_revizyonu_degisen_girisi_yamasiz_e2_ve_e3e_tasir(
