@@ -6,6 +6,8 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ## [Yayımlanmamış]
 
+- Kesilen kayıtlı ileri sınama için aynı koşudan güvenli devam sözleşmesi kararlaştırıldı. Kod/veri bağı, özgün makbuzlar, tek yürütme sahibi ve dayanıklı dönem sınırı tanımlandı; uygulama, gerçek kesinti kanıtı ve bağımsız inceleme bekleniyor. (#180)
+
 - Yeni hedef kanıtı denetimi, E3 alanı taşımayan eski kısa dönem özetini tam işlem durumu saymaz. S11 çocuk sonucu yazımı ve yeni okuyucuyla eski kayıt okuması korunur; yeni kanıt, kaynak/ayar bağı ve bozuk E3 durumu retleri korunur. (#57, #94)
 
 - E2'nin izinli `hedef_bulunamadi` nedeni ortak E3 işlemine kaynak, ayar ve kimlik kanıtıyla taşınır; eksik kurulum ve bozuk fiyat retleri korunur. Legacy EMA aynı gün aktarımı aile sahibinin ilk özgün dönem kuralına bağlanır; bütün E2 adayları, aynı girdili kanıtsız E3 kimlikleri, eski kayıt okuması ve native kabul bağları korunur. Yeni uyarlayıcının uygun olmayan gün girdileri yeni hesapta farklı durum özeti üretebilir. Gerçek veriyle yeniden sınama ve bağımsız inceleme bekleniyor. (#57, #94)
