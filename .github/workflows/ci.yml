@@ -22,6 +22,8 @@ jobs:
           - sinama_s13_4
           - sinama_diger_1
           - sinama_diger_2
+          - sinama_diger_3
+          - sinama_diger_4
     defaults:
       run:
         shell: bash
@@ -84,11 +86,13 @@ jobs:
               "sinama_s13_4": ["tests/test_tansusinama.py", "-k", "s13"],
               "sinama_diger_1": ["tests/test_tansusinama.py", "-k", "not s13"],
               "sinama_diger_2": ["tests/test_tansusinama.py", "-k", "not s13"],
+              "sinama_diger_3": ["tests/test_tansusinama.py", "-k", "not s13"],
+              "sinama_diger_4": ["tests/test_tansusinama.py", "-k", "not s13"],
           }
           BOLUM_GRUPLARI = (
               ("diger_1", "diger_2"),
               ("sinama_s13_1", "sinama_s13_2", "sinama_s13_3", "sinama_s13_4"),
-              ("sinama_diger_1", "sinama_diger_2"),
+              ("sinama_diger_1", "sinama_diger_2", "sinama_diger_3", "sinama_diger_4"),
           )
           ALT_PYTEST = r"""import json
           import sys

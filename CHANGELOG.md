@@ -6,6 +6,8 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ## [Yayımlanmamış]
 
+- Tam CI'da S12 testleri 60 dakikada tamamlanmadığı için S13 dışı sınama grubu dört bölüme ayrıldı. On bölüm aynı test kimliklerini eksiksiz ve çakışmasız çalıştırır; süre sınırı korunur. (#180, #94, #57)
+
 - CI'da süre sınırına takılan genel ve S13 bölümleri de ayrıldı. Aynı tam koleksiyon sekiz bölümde çakışmasız çalışır; her testin adı ve en uzun testlerin süreleri görünür. 60 dakikalık sınır ve çalışan bölümün kimlik denetimi korunur. (#180, #94, #57)
 
 - WF eğitim çocuğunun E3 durumu, S10 hesabındaki tam E1 veri kimliğiyle denetlenir; kayıtlı seçim bağları bağımsız doğrulanır. Sonuç makbuzu oluşmadan çıkan hata, çocuk kapanışıyla örtülmez. (#180)
