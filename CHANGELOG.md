@@ -6,7 +6,7 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ## [Yayımlanmamış]
 
-- Seçeneksiz günlük kısa yolunun yeni saklı ekrandaki açık istenen günü kullanması tanımlandı; eski metadata içermeyen ekranın davranışı korunur. Uygulama ve kanıt bekliyor. (#126)
+- Seçeneksiz günlük kısa yolu yeni saklı ekranın açık istenen gününü ve kabul edilen çıktısını doğrular; eski metadata içermeyen ekranın davranışı korunur. Yerel davranış kanıtı alındı. (#126)
 
 - Aynı görüntü kimliğindeki yeniden indirme, kabul edilen kart değerlerini değiştiremez; farklı yeni hesap sağlam eski çıktıyı bozuk saymadan reddedilir. Yerel davranış kanıtı alındı. (#126)
 

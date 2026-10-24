@@ -13,6 +13,10 @@ import csv
 import datetime as dt
 import json
 import os
+import subprocess
+import sys
+import threading
+import time
 from dataclasses import replace
 from types import SimpleNamespace
 
@@ -700,6 +704,7 @@ def test_sakli_cubuksuz_tamamlanma_onceki_kart_girdisini_degistirmez(tmp_path, k
     "son,onceki_gunluk",
     [
         ("2026-10-05", False),
+        ("2026-10-05", True),
         ("yok", False),
         ("gecersiz", False),
         ("yok", True),
@@ -825,3 +830,528 @@ def test_cikti_koku_diger_komutlarda_yan_etkiden_once_reddedilir(tmp_path, capsy
     assert hata.value.code == 2
     assert "yalnız gunluk" in capsys.readouterr().err
     assert list(tmp_path.iterdir()) == []
+
+
+@pytest.mark.parametrize("ekran", ["basarili", "sorunlu", "yok"])
+@pytest.mark.parametrize("csv_var", [True, False], ids=["baska_kart", "eksik_csv"])
+def test_eski_dolu_kart_celiskisi_tekrarda_basariya_donmez(tmp_path, ekran, csv_var):
+    kagit_aile()
+    a = veri.indir(["XXXX"], tmp_path, kaynak(), simdi=SIMDI)
+    b = veri.indir(["XXXX"], tmp_path, kaynak(), simdi=SIMDI.replace(minute=31))
+    for kimlik in (a, b):
+        assert (
+            gunluk.gunluk(
+                TARIH,
+                tmp_path,
+                simdi=SIMDI,
+                kimlik=kimlik,
+                cikti_koku=tmp_path / kimlik,
+                p=P,
+                atr_n=2,
+            )
+            == 0
+        )
+    cikti = tmp_path / "eski"
+    rapor_yolu = cikti / "rapor"
+    rapor_yolu.mkdir(parents=True)
+    gunluk_yolu = cikti / "kayit/kartlar.jsonl"
+    gunluk_yolu.parent.mkdir()
+    once = (tmp_path / a / "kayit/kartlar.jsonl").read_bytes()
+    assert len(json.loads(once)["kartlar"]) == 1
+    gunluk_yolu.write_bytes(once)
+    csv_yolu = rapor_yolu / "kartlar-20261005.csv"
+    csv_once = (tmp_path / b / "rapor/kartlar-20261005.csv").read_bytes()
+    assert b.encode() in csv_once
+    if csv_var:
+        csv_yolu.write_bytes(csv_once)
+    if ekran != "yok":
+        satirlar = (
+            (tmp_path / b / "rapor/durum.txt").read_text(encoding="utf-8").splitlines()
+        )
+        satirlar[0] = "TAMAM" if ekran == "basarili" else "SORUNLU"
+        satirlar[-1] = "Eylem: eski çıktı"
+        (rapor_yolu / "durum.txt").write_text(
+            "\n".join(satirlar) + "\n", encoding="utf-8"
+        )
+    kodlar = [
+        gunluk.gunluk(TARIH, tmp_path, simdi=SIMDI, kimlik=k, cikti_koku=cikti)
+        for k in (a, b, a)
+    ]
+    assert kodlar == [1, 1, 1]
+    assert gunluk_yolu.read_bytes().startswith(once)
+    satirlar = [
+        json.loads(s) for s in gunluk_yolu.read_text(encoding="utf-8").splitlines()
+    ]
+    assert len(satirlar) == 2
+    assert satirlar[-1]["durum"] == (
+        "KART GÜNLÜĞÜ EKSİK" if ekran == "basarili" else "KAYIT ÇELİŞKİSİ"
+    )
+    assert "kartlar" not in satirlar[-1]
+    assert (rapor_yolu / "durum.txt").read_text(encoding="utf-8").startswith("SORUNLU")
+    if csv_var:
+        assert csv_yolu.read_bytes() == csv_once
+    else:
+        assert not csv_yolu.exists()
+
+
+@pytest.mark.parametrize(
+    "gun", ["2026-10-05", "2026-10-06"], ids=["kartli", "cubuksuz"]
+)
+def test_geri_donulen_gunun_ayni_tekrari_ekrani_ve_saati_korur(tmp_path, gun):
+    a = veri.indir(["XXXX"], tmp_path, kaynak(), simdi=SIMDI)
+    b = veri.indir(["XXXX"], tmp_path, kaynak(), simdi=SIMDI.replace(minute=31))
+    cikti = tmp_path / "disari"
+    for dakika, tarih, kimlik in [(30, gun, a), (31, "2026-10-07", b), (32, gun, a)]:
+        assert (
+            gunluk.gunluk(
+                tarih,
+                tmp_path,
+                simdi=SIMDI.replace(day=24, minute=dakika),
+                kimlik=kimlik,
+                cikti_koku=cikti,
+            )
+            == 0
+        )
+    once = {
+        p.relative_to(cikti): p.read_bytes() for p in cikti.rglob("*") if p.is_file()
+    }
+    assert (
+        gunluk.gunluk(
+            gun,
+            tmp_path,
+            simdi=SIMDI.replace(day=24, minute=33),
+            kimlik=a,
+            cikti_koku=cikti,
+        )
+        == 0
+    )
+    assert {
+        p.relative_to(cikti): p.read_bytes() for p in cikti.rglob("*") if p.is_file()
+    } == once
+
+
+@pytest.mark.parametrize(
+    "ilk_sakli, ikinci_sakli",
+    [(True, True), (True, False), (False, True)],
+    ids=["sakli", "indirme", "indirme_sahibi"],
+)
+def test_ortusen_gunluk_cagrisi_sahibin_ciktisini_yazamaz(
+    tmp_path, monkeypatch, ilk_sakli, ikinci_sakli
+):
+    kagit_aile()
+    a = veri.indir(["XXXX"], tmp_path, kaynak(), simdi=SIMDI)
+    b = veri.indir(["XXXX"], tmp_path, kaynak(), simdi=SIMDI.replace(minute=31))
+    cikti = tmp_path / "disari"
+    if not ilk_sakli:
+        (cikti / "rapor").mkdir(parents=True)
+        (cikti / "rapor/durum.txt").write_text(
+            "SORUNLU\nSon başarılı koşu: yok\nAnlık görüntü: yok\nSon çubuk: yok\nSembol sayısı: yok\nEylem: önceki hata\n",
+            encoding="utf-8",
+        )
+    girdi, devam = threading.Event(), threading.Event()
+    gercek = gunluk._kartlar
+    sonuclar = []
+
+    def duraklat(anlik, *args, **kwargs):
+        if anlik.kimlik == a:
+            girdi.set()
+            assert devam.wait(10)
+        return gercek(anlik, *args, **kwargs)
+
+    monkeypatch.setattr(gunluk, "_kartlar", duraklat)
+    isci = threading.Thread(
+        target=lambda: sonuclar.append(
+            gunluk.gunluk(
+                TARIH,
+                tmp_path,
+                simdi=SIMDI,
+                kimlik=a if ilk_sakli else None,
+                kaynak=kaynak(),
+                semboller=["XXXX"],
+                cikti_koku=cikti,
+                p=P,
+                atr_n=2,
+            )
+        )
+    )
+    isci.start()
+    try:
+        assert girdi.wait(10)
+        once = {
+            p.relative_to(cikti): p.read_bytes()
+            for p in cikti.rglob("*")
+            if p.is_file() and p.suffix != ".kilit"
+        }
+        kod = gunluk.gunluk(
+            TARIH,
+            tmp_path,
+            simdi=SIMDI.replace(minute=31),
+            kimlik=b if ikinci_sakli else None,
+            kaynak=kaynak(),
+            semboller=["XXXX"],
+            cikti_koku=cikti,
+            p=P,
+            atr_n=2,
+        )
+        sonra = {
+            p.relative_to(cikti): p.read_bytes()
+            for p in cikti.rglob("*")
+            if p.is_file() and p.suffix != ".kilit"
+        }
+    finally:
+        devam.set()
+        isci.join(10)
+    assert not isci.is_alive()
+    assert kod == 1
+    assert sonra == once
+    assert sonuclar == [0]
+    assert (cikti / "rapor/durum.txt").read_text(encoding="utf-8").startswith("TAMAM")
+    assert f"Anlık görüntü: {a}" in (cikti / "rapor/durum.txt").read_text(
+        encoding="utf-8"
+    )
+    assert (
+        json.loads((cikti / "kayit/kartlar.jsonl").read_text(encoding="utf-8"))["anlik"]
+        == a
+    )
+    assert a.encode() in (cikti / "rapor/kartlar-20261005.csv").read_bytes()
+
+
+@pytest.mark.parametrize("eski_alanlar", [False, True], ids=["yeni", "eski"])
+def test_ekransiz_tutarli_kart_gunlugu_csv_ile_basariya_doner(tmp_path, eski_alanlar):
+    kagit_aile()
+    a = veri.indir(["XXXX"], tmp_path, kaynak(), simdi=SIMDI)
+    kaynak_cikti = tmp_path / "kaynak-cikti"
+    assert (
+        gunluk.gunluk(
+            TARIH,
+            tmp_path,
+            simdi=SIMDI,
+            kimlik=a,
+            cikti_koku=kaynak_cikti,
+            p=P,
+            atr_n=2,
+        )
+        == 0
+    )
+    cikti = tmp_path / "disari"
+    (cikti / "rapor").mkdir(parents=True)
+    (cikti / "kayit").mkdir()
+    csv_yolu = cikti / "rapor/kartlar-20261005.csv"
+    csv_yolu.write_bytes((kaynak_cikti / "rapor/kartlar-20261005.csv").read_bytes())
+    satir = json.loads(
+        (kaynak_cikti / "kayit/kartlar.jsonl").read_text(encoding="utf-8")
+    )
+    assert len(satir["kartlar"]) == 1
+    if eski_alanlar:
+        satir["kartlar"] = [
+            {k.capitalize(): v for k, v in kart.items()} for kart in satir["kartlar"]
+        ]
+    gunluk_yolu = cikti / "kayit/kartlar.jsonl"
+    gunluk_yolu.write_text(
+        json.dumps(satir, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
+    once = (csv_yolu.read_bytes(), gunluk_yolu.read_bytes())
+    assert (
+        gunluk.gunluk(
+            TARIH, tmp_path, simdi=SIMDI.replace(day=24), kimlik=a, cikti_koku=cikti
+        )
+        == 0
+    )
+    assert (csv_yolu.read_bytes(), gunluk_yolu.read_bytes()) == once
+    assert (cikti / "rapor/durum.txt").read_text(encoding="utf-8").startswith("TAMAM")
+
+
+def test_indirme_ret_sonrasi_kabul_edilen_csvyi_degistiremez(tmp_path):
+    kagit_aile()
+    a = veri.indir(["XXXX"], tmp_path, kaynak(), simdi=SIMDI)
+    cikti = tmp_path / "disari"
+    assert (
+        gunluk.gunluk(
+            TARIH, tmp_path, simdi=SIMDI, kimlik=a, cikti_koku=cikti, p=P, atr_n=2
+        )
+        == 0
+    )
+    csv_yolu = cikti / "rapor/kartlar-20261005.csv"
+    gunluk_yolu = cikti / "kayit/kartlar.jsonl"
+    once = (csv_yolu.read_bytes(), gunluk_yolu.read_bytes())
+    assert (
+        gunluk.gunluk(
+            TARIH, tmp_path, simdi=SIMDI, kimlik="../gecersiz", cikti_koku=cikti
+        )
+        == 1
+    )
+    assert (
+        gunluk.gunluk(
+            TARIH,
+            tmp_path,
+            simdi=SIMDI.replace(minute=32),
+            kaynak=kaynak(),
+            semboller=["XXXX"],
+            cikti_koku=cikti,
+            p=P,
+            atr_n=2,
+        )
+        == 1
+    )
+    assert (csv_yolu.read_bytes(), gunluk_yolu.read_bytes()) == once
+    assert "farklı görüntü kimliğine bağlı" in (cikti / "rapor/durum.txt").read_text(
+        encoding="utf-8"
+    )
+
+
+def test_ayri_rapor_ortak_gunluk_eszamanli_kabulu_paylasir(tmp_path, monkeypatch):
+    a = veri.indir(["XXXX"], tmp_path, kaynak(), simdi=SIMDI)
+    b = veri.indir(["XXXX"], tmp_path, kaynak(), simdi=SIMDI.replace(minute=31))
+    girdi, devam = threading.Event(), threading.Event()
+    gercek = gunluk._kartlar
+    sonuc = []
+    rapor_a = rapor.RAPOR_DIZINI
+    rapor_b = tmp_path / "b-rapor"
+
+    def duraklat(anlik, *args, **kwargs):
+        if anlik.kimlik == a:
+            girdi.set()
+            assert devam.wait(10)
+        return gercek(anlik, *args, **kwargs)
+
+    monkeypatch.setattr(gunluk, "_kartlar", duraklat)
+    isci = threading.Thread(
+        target=lambda: sonuc.append(
+            gunluk.gunluk(TARIH, tmp_path, simdi=SIMDI, kimlik=a)
+        )
+    )
+    isci.start()
+    try:
+        assert girdi.wait(10)
+        monkeypatch.setattr(rapor, "RAPOR_DIZINI", rapor_b)
+        kod = gunluk.gunluk(TARIH, tmp_path, simdi=SIMDI, kimlik=b)
+    finally:
+        devam.set()
+        isci.join(10)
+    assert not isci.is_alive()
+    assert kod == 1
+    assert sonuc == [0]
+    assert not (rapor_b / "durum.txt").exists()
+    assert not list(rapor_b.glob("*.csv"))
+    assert f"Anlık görüntü: {a}" in (rapor_a / "durum.txt").read_text(encoding="utf-8")
+    assert (
+        json.loads((kayit.KAYIT_DIZINI / "kartlar.jsonl").read_text(encoding="utf-8"))[
+            "anlik"
+        ]
+        == a
+    )
+
+
+def test_surec_kilidi_ayri_ciktiyi_engellemez_olunce_birakir(tmp_path):
+    a = veri.indir(["XXXX"], tmp_path, kaynak(), simdi=SIMDI)
+    b = veri.indir(["XXXX"], tmp_path, kaynak(), simdi=SIMDI.replace(minute=31))
+    cikti = tmp_path / "ortak"
+    hazir = tmp_path / "surec-hazir.txt"
+    kod = """
+import datetime as dt
+import sys
+from pathlib import Path
+from tansu import gunluk, kayit
+kok, cikti, kimlik, hazir = sys.argv[1:]
+kayit.KAYIT_DIZINI = Path(kok) / "kayit"
+gercek = gunluk._kartlar
+def duraklat(*a, **kw):
+    Path(hazir).write_text("hazir", encoding="utf-8")
+    sys.stdin.readline()
+    return gercek(*a, **kw)
+gunluk._kartlar = duraklat
+raise SystemExit(gunluk.gunluk("2026-10-05", kok, simdi=dt.datetime(2026, 10, 24, 19, 30), kimlik=kimlik, cikti_koku=cikti))
+"""
+    surec = subprocess.Popen(
+        [
+            sys.executable,
+            "-B",
+            "-X",
+            "utf8",
+            "-c",
+            kod,
+            str(tmp_path),
+            str(cikti),
+            a,
+            str(hazir),
+        ],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        encoding="utf-8",
+    )
+    try:
+        son = time.monotonic() + 15
+        while not hazir.exists() and surec.poll() is None and time.monotonic() < son:
+            time.sleep(0.02)
+        assert hazir.exists(), "alt süreç kart hesabına ulaşmadı"
+        assert (
+            gunluk.gunluk(TARIH, tmp_path, simdi=SIMDI, kimlik=b, cikti_koku=cikti) == 1
+        )
+        assert not (cikti / "rapor/durum.txt").exists()
+        assert not (cikti / "kayit/kartlar.jsonl").exists()
+        assert (
+            gunluk.gunluk(
+                TARIH, tmp_path, simdi=SIMDI, kimlik=b, cikti_koku=tmp_path / "ayri"
+            )
+            == 0
+        )
+    finally:
+        if surec.poll() is None:
+            surec.terminate()
+        cikis, hata = surec.communicate(timeout=10)
+    assert surec.returncode is not None, (cikis, hata)
+    assert gunluk.gunluk(TARIH, tmp_path, simdi=SIMDI, kimlik=b, cikti_koku=cikti) == 0
+    assert (
+        json.loads((cikti / "kayit/kartlar.jsonl").read_text(encoding="utf-8"))["anlik"]
+        == b
+    )
+
+
+@pytest.mark.parametrize(
+    "min_gun, cikis", [(3, 0), (100, 1)], ids=["ayni_kartlar", "farkli_kartlar"]
+)
+def test_ayni_kimlikli_indirme_kabul_edilen_kartlari_degistiremez(
+    tmp_path, min_gun, cikis
+):
+    kagit_aile()
+    a = veri.indir(["XXXX"], tmp_path, kaynak(), simdi=SIMDI)
+    cikti = tmp_path / "disari"
+    assert (
+        gunluk.gunluk(
+            TARIH, tmp_path, simdi=SIMDI, kimlik=a, cikti_koku=cikti, p=P, atr_n=2
+        )
+        == 0
+    )
+    csv_yolu = cikti / "rapor/kartlar-20261005.csv"
+    gunluk_yolu = cikti / "kayit/kartlar.jsonl"
+    once = (csv_yolu.read_bytes(), gunluk_yolu.read_bytes())
+    assert len(json.loads(once[1])["kartlar"]) == 1
+    assert (
+        gunluk.gunluk(
+            TARIH, tmp_path, simdi=SIMDI, kimlik="../gecersiz", cikti_koku=cikti
+        )
+        == 1
+    )
+    assert (
+        gunluk.gunluk(
+            TARIH,
+            tmp_path,
+            simdi=SIMDI,
+            kaynak=kaynak(),
+            semboller=["XXXX"],
+            cikti_koku=cikti,
+            p=replace(P, min_gun=min_gun),
+            atr_n=2,
+        )
+        == cikis
+    )
+    assert (csv_yolu.read_bytes(), gunluk_yolu.read_bytes()) == once
+    if cikis:
+        assert "kabul edilen kartlarla uyuşmuyor" in (
+            cikti / "rapor/durum.txt"
+        ).read_text(encoding="utf-8")
+    else:
+        assert (
+            (cikti / "rapor/durum.txt").read_text(encoding="utf-8").startswith("TAMAM")
+        )
+
+
+@pytest.mark.parametrize(
+    "ilk_gun", ["2026-10-05", "2026-10-06"], ids=["tamam", "cubuksuz"]
+)
+@pytest.mark.parametrize("ayni_gun", [True, False], ids=["ayni_istek", "bugun"])
+def test_seceneksiz_kisa_yol_sakli_ekranin_istenen_gununu_kullanir(
+    tmp_path, ilk_gun, ayni_gun
+):
+    a = veri.indir(["XXXX"], tmp_path, kaynak(), simdi=SIMDI)
+    assert gunluk.gunluk(ilk_gun, tmp_path, simdi=SIMDI.replace(day=24), kimlik=a) == 0
+    ekran = rapor.RAPOR_DIZINI / "durum.txt"
+    once = ekran.read_bytes()
+    k = kaynak()
+    assert (
+        gunluk.gunluk(
+            ilk_gun if ayni_gun else "2026-10-24",
+            tmp_path,
+            simdi=SIMDI.replace(day=24, minute=31),
+            kaynak=k,
+            semboller=["XXXX"],
+        )
+        == 0
+    )
+    if ayni_gun:
+        assert k.cagri == 0
+        assert ekran.read_bytes() == once
+    else:
+        assert k.cagri > 0
+        assert ekran.read_text(encoding="utf-8").startswith("BUGÜN ÇUBUK YOK")
+        assert "Anlık görüntü: 20261024-1931" in ekran.read_text(encoding="utf-8")
+
+
+@pytest.mark.parametrize(
+    "bozuk", ["eksik_csv", "farkli_csv", "eksik_gunluk", "farkli_gunluk", "ret"]
+)
+def test_seceneksiz_sakli_basarisi_kabul_edilen_ciktiyi_dogrular(
+    tmp_path, monkeypatch, bozuk
+):
+    kagit_aile()
+    a = veri.indir(["XXXX"], tmp_path, kaynak(), simdi=SIMDI)
+    b = veri.indir(["XXXX"], tmp_path, kaynak(), simdi=SIMDI.replace(minute=31))
+    for kimlik in (a, b):
+        assert (
+            gunluk.gunluk(
+                TARIH,
+                tmp_path,
+                simdi=SIMDI,
+                kimlik=kimlik,
+                cikti_koku=tmp_path / kimlik,
+                p=P,
+                atr_n=2,
+            )
+            == 0
+        )
+    cikti = tmp_path / "sinanan"
+    rapor_yolu, kayit_yolu = cikti / "rapor", cikti / "kayit"
+    rapor_yolu.mkdir(parents=True)
+    kayit_yolu.mkdir()
+    (rapor_yolu / "durum.txt").write_bytes(
+        (tmp_path / a / "rapor/durum.txt").read_bytes()
+    )
+    csv_yolu = rapor_yolu / "kartlar-20261005.csv"
+    csv_once = (
+        tmp_path / (b if bozuk == "farkli_csv" else a) / "rapor/kartlar-20261005.csv"
+    ).read_bytes()
+    if bozuk != "eksik_csv":
+        csv_yolu.write_bytes(csv_once)
+    gunluk_yolu = kayit_yolu / "kartlar.jsonl"
+    once = (
+        b""
+        if bozuk == "eksik_gunluk"
+        else (
+            tmp_path / (b if bozuk == "farkli_gunluk" else a) / "kayit/kartlar.jsonl"
+        ).read_bytes()
+    )
+    if bozuk == "ret":
+        once += (
+            json.dumps(
+                {"tarih": "2026-10-05", "anlik": a, "durum": "KART GÜNLÜĞÜ EKSİK"},
+                ensure_ascii=False,
+            )
+            + "\n"
+        ).encode("utf-8")
+    if once:
+        gunluk_yolu.write_bytes(once)
+    monkeypatch.setattr(rapor, "RAPOR_DIZINI", rapor_yolu)
+    monkeypatch.setattr(kayit, "KAYIT_DIZINI", kayit_yolu)
+    k = kaynak()
+    assert (
+        gunluk.gunluk(TARIH, tmp_path, simdi=SIMDI, kaynak=k, semboller=["XXXX"]) == 1
+    )
+    assert k.cagri == 0
+    assert gunluk_yolu.read_bytes().startswith(once)
+    assert (rapor_yolu / "durum.txt").read_text(encoding="utf-8").startswith("SORUNLU")
+    if bozuk == "eksik_csv":
+        assert not csv_yolu.exists()
+    else:
+        assert csv_yolu.read_bytes() == csv_once

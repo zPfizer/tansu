@@ -2597,7 +2597,7 @@ da uygulanır. Olağan indirme, uygunluk ve çubuksuz davranış değişmez.
 Seçeneksiz çağrı, açık istenen gün taşıyan saklı başarı ekranını yalnız o gün
 istendiğinde kısa yoldan kabul eder. Bu hem `TAMAM` hem `BUGÜN ÇUBUK YOK`
 için geçerlidir. Açık istenen gün taşımayan eski ekranın mevcut saat temelli
-kısa yolu korunur. Bu metadata etkileşiminin düzeltmesi henüz uygulanmadı.
+kısa yolu korunur.
 Ancak çağrı kart CSV'si yazacaksa mevcut günün başka görüntüye ait
 kabulünü veya ret işaretini geçemez. Aynı görüntü kimliğinde de yeni hesaplanan
 kartlar, kabul edilmiş kart değerleriyle uyuşmalıdır. Uyuşmayan yeni hesap

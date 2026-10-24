@@ -7,6 +7,7 @@ import math
 import os
 import re
 import shutil
+from contextlib import ExitStack, contextmanager
 from pathlib import Path
 
 import pandas as pd
@@ -28,6 +29,7 @@ ERKEN = dt.time(18, 15)  # TASARIM 6.2: bundan önce çubuk yarım olabilir
 KAGIT_AY = 6  # TASARIM 5.8: en az kâğıt dönem
 BASARILI = ("TAMAM", "BUGÜN ÇUBUK YOK")
 KARTLI = ("Kâğıt", "Canlı")
+RET = ("KART GÜNLÜĞÜ EKSİK", "KAYIT ÇELİŞKİSİ")
 SUTUNLAR = [
     "tarih",
     "hisse",
@@ -198,13 +200,11 @@ def _gunluk_satirlari(yol):
 
 
 def _kart_gunlugu(
-    tarih, kimlik, kartlar, yol=None, durum=None, tarih_kaynagi=None
+    tarih, kimlik, kartlar, yol=None, durum=None, tarih_kaynagi=None, neden=None
 ) -> None:
     yol = yol if yol is not None else kayit.KAYIT_DIZINI / "kartlar.jsonl"
     yol.parent.mkdir(parents=True, exist_ok=True)
     gun = tarih.date().isoformat() if tarih is not None else None
-    if any(s["tarih"] == gun for s in _gunluk_satirlari(yol)):
-        return
     satir = {"tarih": gun, "anlik": kimlik}
     if kartlar is not None:
         satir["kartlar"] = [dict(zip(SUTUNLAR, k, strict=True)) for k in kartlar]
@@ -212,36 +212,156 @@ def _kart_gunlugu(
         satir["durum"] = durum
     if tarih_kaynagi is not None:
         satir["tarih_kaynagi"] = tarih_kaynagi
+    if neden is not None:
+        satir["neden"] = neden
+    satirlar = _gunluk_satirlari(yol)
+    if durum in RET:
+        if satir in satirlar:
+            return
+    elif _gun_bagi(tarih, kimlik, satirlar) is not None:
+        return
     with yol.open("a", encoding="utf-8") as f:  # yalnız ekleme
         f.write(json.dumps(satir, ensure_ascii=False, sort_keys=True) + "\n")
 
 
-def _eski_durum_bagi(onceki, yol):
+def _gun_bagi(tarih, kimlik, satirlar):
+    """TASARIM 6 #126: ret işareti, aynı günün başarı satırından önce gelir."""
+    gun = tarih.date().isoformat()
+    for s in satirlar:
+        if s.get("durum") in RET and s["tarih"] in (None, gun):
+            raise veri.VeriHatasi(
+                f"{s['durum']}: {s.get('neden', 'önceki başarının kart kaydı bulunamadı')}"
+            )
+    bag = next((s for s in satirlar if s["tarih"] == gun), None)
+    if bag is not None and bag["anlik"] != kimlik:
+        raise veri.VeriHatasi("bugünün başarılı koşusu farklı görüntü kimliğine bağlı")
+    return bag
+
+
+def _ekran_gunu(onceki):
+    alanlar = dict(s.split(": ", 1) for s in onceki[1:] if ": " in s)
+    acik_gun = re.match(
+        r"İstenen gün: (\d{4}-\d{2}-\d{2})\. ", alanlar.get("Eylem", "")
+    )
+    gun = (
+        acik_gun[1]
+        if acik_gun
+        else alanlar.get("Son çubuk", "")
+        if onceki[:1] == ["TAMAM"]
+        else ""
+    )
+    try:
+        return pd.Timestamp(dt.date.fromisoformat(gun))
+    except ValueError:
+        return None
+
+
+def _kart_degerleri(kartlar):
+    sonuc = []
+    for kart in kartlar:
+        degerler = (
+            [_alan(kart, s) for s in SUTUNLAR] if isinstance(kart, dict) else kart
+        )
+        sonuc.append(["" if v is None else str(v) for v in degerler])
+    return sonuc
+
+
+def _csv_dogrula(bag, dizin, gunluk_yolu):
+    """TASARIM 6 #126: kabul edilen kartlar gerçek CSV ile birlikte doğrulanır."""
+    if bag.get("durum", "TAMAM") != "TAMAM":
+        return
+    tarih = pd.Timestamp(bag["tarih"])
+    yol = dizin / f"kartlar-{tarih:%Y%m%d}.csv"
+    neden = None
+    try:
+        with yol.open(encoding="utf-8-sig", newline="") as f:
+            satirlar = list(csv.reader(f, delimiter=";"))
+        beklenen = _kart_degerleri(bag["kartlar"])
+        if satirlar != [SUTUNLAR, *beklenen]:
+            neden = "kart CSV içeriği kabul edilen günlükle uyuşmuyor"
+    except OSError, ValueError, KeyError, TypeError, csv.Error:
+        neden = "kabul edilen kart CSV veya kart alanları okunamıyor"
+    if neden is not None:
+        _kart_gunlugu(
+            tarih, bag["anlik"], None, gunluk_yolu, "KAYIT ÇELİŞKİSİ", neden=neden
+        )
+        raise veri.VeriHatasi(f"KAYIT ÇELİŞKİSİ: {neden}")
+    return beklenen
+
+
+def _eski_durum_bagi(onceki, yol, dizin):
     """TASARIM 6 #126: eski ekran kaybolmadan uyum veya ret kaydını korur."""
     if not onceki or onceki[0] not in BASARILI:
         return
     alanlar = dict(s.split(": ", 1) for s in onceki[1:] if ": " in s)
     kimlik = alanlar.get("Anlık görüntü", "yok")
-    satirlar = _gunluk_satirlari(yol)
-    if any(
-        s.get("anlik") == kimlik and s.get("durum", "TAMAM") == onceki[0]
-        for s in satirlar
-    ):
-        return
+    tarih = _ekran_gunu(onceki)
     cubuksuz = onceki[0] == "BUGÜN ÇUBUK YOK"
-    gun = alanlar.get("Son başarılı koşu" if cubuksuz else "Son çubuk", "")
-    try:
-        tarih = pd.Timestamp(dt.date.fromisoformat(gun[:10]))
-    except ValueError:
-        tarih = None
-    _kart_gunlugu(
-        tarih,
-        kimlik,
-        [] if cubuksuz and tarih is not None else None,
-        yol,
-        "BUGÜN ÇUBUK YOK" if cubuksuz and tarih is not None else "KART GÜNLÜĞÜ EKSİK",
-        "eski_kosu_saati" if cubuksuz else None,
+    eski_cubuksuz = cubuksuz and not alanlar.get("Eylem", "").startswith(
+        "İstenen gün: "
     )
+    if eski_cubuksuz:
+        try:
+            tarih = pd.Timestamp(
+                dt.date.fromisoformat(alanlar.get("Son başarılı koşu", "")[:10])
+            )
+        except ValueError:
+            tarih = None
+    gun = tarih.date().isoformat() if tarih is not None else None
+    satirlar = _gunluk_satirlari(yol)
+    if any(s.get("durum") in RET and s["tarih"] in (None, gun) for s in satirlar):
+        return
+    bag = next(
+        (
+            s
+            for s in satirlar
+            if s["tarih"] == gun
+            and s["anlik"] == kimlik
+            and s.get("durum", "TAMAM") == onceki[0]
+        ),
+        None,
+    )
+    if bag is not None:
+        _csv_dogrula(bag, dizin, yol)
+        return
+    if eski_cubuksuz and tarih is not None:
+        if any(s["tarih"] == gun for s in satirlar):
+            _kart_gunlugu(
+                tarih,
+                kimlik,
+                None,
+                yol,
+                "KAYIT ÇELİŞKİSİ",
+                neden="eski çubuksuz ekranın uyum anahtarı başka sonuca bağlı",
+            )
+        else:
+            _kart_gunlugu(tarih, kimlik, [], yol, "BUGÜN ÇUBUK YOK", "eski_kosu_saati")
+    else:
+        _kart_gunlugu(tarih, kimlik, None, yol, "KART GÜNLÜĞÜ EKSİK")
+
+
+@contextmanager
+def _cikti_kilidi(dizin):
+    """TASARIM 6 #126: kilit dosyası kalır; sahipliği işletim sistemi bırakır."""
+    dizin.mkdir(parents=True, exist_ok=True)
+    with (dizin / ".gunluk.kilit").open("a+b") as dosya:
+        dosya.seek(0)
+        if os.name == "nt":
+            import msvcrt
+
+            msvcrt.locking(dosya.fileno(), msvcrt.LK_NBLCK, 1)
+        else:
+            import fcntl
+
+            fcntl.flock(dosya.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        try:
+            yield
+        finally:
+            dosya.seek(0)
+            if os.name == "nt":
+                msvcrt.locking(dosya.fileno(), msvcrt.LK_UNLCK, 1)
+            else:
+                fcntl.flock(dosya.fileno(), fcntl.LOCK_UN)
 
 
 def _alan(kart, ad):
@@ -253,7 +373,7 @@ def _acik_hisseler() -> set:
     """Dünkü her kartın hissesi, durumundan bağımsız: evrenden çıksa da pozisyon açık kalır (TASARIM 5.2, 6.2)."""
     yol = kayit.KAYIT_DIZINI / "kartlar.jsonl"
     for satir in reversed(_gunluk_satirlari(yol)):
-        if satir.get("durum") not in ("BUGÜN ÇUBUK YOK", "KART GÜNLÜĞÜ EKSİK"):
+        if satir.get("durum") not in ("BUGÜN ÇUBUK YOK", *RET):
             return {_alan(k, "hisse") for k in satir["kartlar"]}
     return set()
 
@@ -323,155 +443,193 @@ def gunluk(
     # TASARIM 5.15 S07: önizleme normal günlüğün tamamlanma ve kart durumunu yazmaz.
     dizin = rapor_dizini / "onizleme" / aktarim.kosu_id if onizleme else rapor_dizini
     yol = dizin / "durum.txt"
-    onceki = yol.read_text(encoding="utf-8").splitlines() if yol.exists() else []
-    saat = next(
-        (x.split(": ", 1)[1] for x in onceki if x.startswith("Son başarılı koşu: ")),
-        "yok",
-    )
-
-    def bitir(durum, eylem, kimlik="yok", son="yok", sayi="yok") -> int:
-        basarili = durum in BASARILI
-        satirlar = [
-            durum,
-            f"Son başarılı koşu: {simdi:%Y-%m-%d %H:%M}"
-            if basarili
-            else f"Son başarılı koşu: {saat}",
-            f"Anlık görüntü: {kimlik}",
-            f"Son çubuk: {son}",
-            f"Sembol sayısı: {sayi}",
-            f"Eylem: {eylem}",
-        ]
-        _yaz(yol, lambda f: f.write("\n".join(satirlar) + "\n"))
-        print(durum, "-", eylem)
-        return 0 if basarili else 1
-
-    istenen_kimlik = kimlik
-    kimlik, son, sayi = kimlik or "yok", "yok", "yok"
+    kilitler = ExitStack()
     try:
-        anlik = None
-        if istenen_kimlik is not None:
-            if not onizleme:
-                _eski_durum_bagi(onceki, kart_yolu)
-            if not re.fullmatch(r"[A-Za-z0-9_-]+", istenen_kimlik):
-                raise veri.VeriHatasi(f"geçersiz görüntü kimliği: {istenen_kimlik!r}")
-            anlik = veri.oku(istenen_kimlik, kok)
+        alanlar = {dizin.resolve()}
+        if not onizleme:
+            alanlar.add(kart_yolu.parent.resolve())
+        for alan in sorted(alanlar):
+            kilitler.enter_context(_cikti_kilidi(alan))
+    except OSError as hata:
+        kilitler.close()
+        print(
+            f"SORUNLU - Günlük çıktı kilidi alınamadı; başka koşu çalışıyor olabilir: {hata}"
+        )
+        return 1
+    try:
+        onceki = yol.read_text(encoding="utf-8").splitlines() if yol.exists() else []
+        acik_gunlu_ekran = any(s.startswith("Eylem: İstenen gün: ") for s in onceki)
+        saat = next(
+            (
+                x.split(": ", 1)[1]
+                for x in onceki
+                if x.startswith("Son başarılı koşu: ")
+            ),
+            "yok",
+        )
+
+        def bitir(durum, eylem, kimlik="yok", son="yok", sayi="yok") -> int:
+            basarili = durum in BASARILI
+            if istenen_kimlik is not None and not onizleme:
+                eylem = f"İstenen gün: {tarih.date().isoformat()}. {eylem}"
+            satirlar = [
+                durum,
+                f"Son başarılı koşu: {simdi:%Y-%m-%d %H:%M}"
+                if basarili
+                else f"Son başarılı koşu: {saat}",
+                f"Anlık görüntü: {kimlik}",
+                f"Son çubuk: {son}",
+                f"Sembol sayısı: {sayi}",
+                f"Eylem: {eylem}",
+            ]
+            _yaz(yol, lambda f: f.write("\n".join(satirlar) + "\n"))
+            print(durum, "-", eylem)
+            return 0 if basarili else 1
+
+        istenen_kimlik = kimlik
+        kimlik, son, sayi = kimlik or "yok", "yok", "yok"
+        try:
+            anlik = None
+            if istenen_kimlik is not None:
+                if not onizleme:
+                    _eski_durum_bagi(onceki, kart_yolu, dizin)
+                if not re.fullmatch(r"[A-Za-z0-9_-]+", istenen_kimlik):
+                    raise veri.VeriHatasi(
+                        f"geçersiz görüntü kimliği: {istenen_kimlik!r}"
+                    )
+                anlik = veri.oku(istenen_kimlik, kok)
+                if aktarim is not None:
+                    aktarim.veri_bagla(kimlik)
+                    aktarim.ayar_dogrula(p)
+                if not onizleme:
+                    bag = _gun_bagi(tarih, kimlik, _gunluk_satirlari(kart_yolu))
+                    if bag is not None:
+                        _csv_dogrula(bag, dizin, kart_yolu)
+                        durum = bag.get("durum", "TAMAM")
+                        if (
+                            onceki[:1] == [durum]
+                            and f"Anlık görüntü: {kimlik}" in onceki
+                            and _ekran_gunu(onceki) == tarih
+                        ):
+                            print("Bugünün başarılı koşusu var; bir şey yapılmadı.")
+                            return 0
+                        return bitir(
+                            durum,
+                            "Bugün işlem günü değil ya da çubuk yok; bir şey yapma."
+                            if durum == "BUGÜN ÇUBUK YOK"
+                            else f"Önceki başarılı kart tablosu korundu: {dizin / f'kartlar-{tarih:%Y%m%d}.csv'}",
+                            kimlik,
+                            anlik.gunler[-1].date().isoformat(),
+                            anlik.fiyat["sembol"].nunique(),
+                        )
+            if (
+                istenen_kimlik is None
+                and onceki[:1]
+                and onceki[0] in BASARILI
+                and (
+                    _ekran_gunu(onceki) == tarih
+                    if acik_gunlu_ekran
+                    else saat[:10] == tarih.date().isoformat()
+                )
+                and not onizleme
+            ):
+                if acik_gunlu_ekran:
+                    # TASARIM 6 #126: seçeneksiz çağrı saklı ekranın kabulünü devralır.
+                    _eski_durum_bagi(onceki, kart_yolu, dizin)
+                    alanlar = dict(s.split(": ", 1) for s in onceki[1:] if ": " in s)
+                    bag = _gun_bagi(
+                        tarih, alanlar["Anlık görüntü"], _gunluk_satirlari(kart_yolu)
+                    )
+                    if bag is None:
+                        raise veri.VeriHatasi(
+                            "KART GÜNLÜĞÜ EKSİK: devralınacak başarı bulunamadı"
+                        )
+                    _csv_dogrula(bag, dizin, kart_yolu)
+                print("Bugünün başarılı koşusu var; bir şey yapılmadı.")
+                return 0
+            if simdi.date() == tarih.date() and simdi.time() < ERKEN:
+                return bitir(
+                    "VERİ YOK",
+                    "Koşu 18:15'ten önce başladı, kart üretilmedi (çubuk yarım olabilir). 18:15'ten sonra yeniden çalıştır.",
+                )
+            if anlik is None:
+                _temizle(veri_koku)
+                semboller = semboller or _semboller(kok, tarih)
+                kimlik = veri.indir(
+                    semboller,
+                    veri_koku / "gunluk",
+                    kaynak or kaynak_modulu.IsYatirim(),
+                    simdi=simdi,
+                )
+                anlik = veri.oku(kimlik, veri_koku / "gunluk")
             if aktarim is not None:
                 aktarim.veri_bagla(kimlik)
                 aktarim.ayar_dogrula(p)
+            son, sayi = anlik.gunler[-1], anlik.fiyat["sembol"].nunique()
+            bilgi = dict(kimlik=kimlik, son=son.date().isoformat(), sayi=sayi)
+            if son.date() != tarih.date():
+                if istenen_kimlik is not None and not onizleme:
+                    _kart_gunlugu(tarih, kimlik, [], kart_yolu, "BUGÜN ÇUBUK YOK")
+                return bitir(
+                    "BUGÜN ÇUBUK YOK",
+                    "Bugün işlem günü değil ya da çubuk yok; bir şey yapma.",
+                    **bilgi,
+                )
+            sorunlar = _kapi_sorunlari(anlik, son)
+            if sorunlar:
+                return bitir(
+                    "SORUNLU",
+                    "Kart üretilmedi: veri kapısı başarısız ("
+                    + "; ".join(sorunlar)
+                    + "). Kartlara güvenme.",
+                    **bilgi,
+                )
+            kartlar = _kartlar(anlik, tarih, p, atr_n, aktarim)
+            csv_yol = dizin / f"kartlar-{tarih:%Y%m%d}.csv"
+
+            def yaz_csv(f):
+                w = csv.writer(f, delimiter=";")
+                w.writerow(SUTUNLAR)
+                w.writerows(kartlar)
+
             if not onizleme:
-                # TASARIM 6 #126: kabul, değişen ekranı değil istenen günün bağını okur.
-                satirlar = _gunluk_satirlari(kart_yolu)
-                gun = tarih.date().isoformat()
-                bag = next((s for s in satirlar if s["tarih"] is None), None)
-                if bag is None:
-                    bag = next((s for s in satirlar if s["tarih"] == gun), None)
+                # TASARIM 6 #126: indirme de kabul edilen başka kimliğin CSV'sini yazamaz.
+                bag = _gun_bagi(tarih, kimlik, _gunluk_satirlari(kart_yolu))
                 if bag is not None:
-                    if bag.get("durum") == "KART GÜNLÜĞÜ EKSİK":
+                    kabul = _csv_dogrula(bag, dizin, kart_yolu)
+                    if _kart_degerleri(kartlar) != kabul:
                         raise veri.VeriHatasi(
-                            "KART GÜNLÜĞÜ EKSİK: önceki başarının kart kaydı bulunamadı"
+                            "yeni hesap kabul edilen kartlarla uyuşmuyor"
                         )
-                    if bag["anlik"] != kimlik:
-                        raise veri.VeriHatasi(
-                            "bugünün başarılı koşusu farklı görüntü kimliğine bağlı"
-                        )
-                    durum = bag.get("durum", "TAMAM")
-                    if (
-                        onceki[:1] == [durum]
-                        and f"Anlık görüntü: {kimlik}" in onceki
-                        and satirlar[-1]["tarih"] == gun
-                    ):
-                        print("Bugünün başarılı koşusu var; bir şey yapılmadı.")
-                        return 0
-                    return bitir(
-                        durum,
-                        "Bugün işlem günü değil ya da çubuk yok; bir şey yapma."
-                        if durum == "BUGÜN ÇUBUK YOK"
-                        else f"Önceki başarılı kart tablosu korundu: {dizin / f'kartlar-{tarih:%Y%m%d}.csv'}",
-                        kimlik,
-                        anlik.gunler[-1].date().isoformat(),
-                        anlik.fiyat["sembol"].nunique(),
-                    )
-        if (
-            istenen_kimlik is None
-            and onceki[:1]
-            and onceki[0] in BASARILI
-            and saat[:10] == tarih.date().isoformat()
-            and not onizleme
-        ):
-            print("Bugünün başarılı koşusu var; bir şey yapılmadı.")
-            return 0
-        if simdi.date() == tarih.date() and simdi.time() < ERKEN:
+            try:
+                _yaz(csv_yol, yaz_csv)
+            except PermissionError:
+                return bitir(
+                    "SORUNLU",
+                    f"Kart yazılamadı: {csv_yol.name} açık, kapatıp yeniden çalıştır.",
+                    **bilgi,
+                )
+            if not onizleme:
+                _kart_gunlugu(tarih, kimlik, kartlar, kart_yolu)
+            return bitir(
+                "TAMAM",
+                f"Bugün {len(kartlar)} kart var: {csv_yol} dosyasını aç."
+                if kartlar
+                else f"Bugün kart yok; bir şey yapma. Tablo: {csv_yol}",
+                **bilgi,
+            )
+        except veri.KaynakYok:
             return bitir(
                 "VERİ YOK",
-                "Koşu 18:15'ten önce başladı, kart üretilmedi (çubuk yarım olabilir). 18:15'ten sonra yeniden çalıştır.",
+                "Kaynağa ulaşılamadı, kart üretilmedi. Saat başı yeniden denenir.",
             )
-        if anlik is None:
-            _temizle(veri_koku)
-            semboller = semboller or _semboller(kok, tarih)
-            kimlik = veri.indir(
-                semboller,
-                veri_koku / "gunluk",
-                kaynak or kaynak_modulu.IsYatirim(),
-                simdi=simdi,
-            )
-            anlik = veri.oku(kimlik, veri_koku / "gunluk")
-        if aktarim is not None:
-            aktarim.veri_bagla(kimlik)
-            aktarim.ayar_dogrula(p)
-        son, sayi = anlik.gunler[-1], anlik.fiyat["sembol"].nunique()
-        bilgi = dict(kimlik=kimlik, son=son.date().isoformat(), sayi=sayi)
-        if son.date() != tarih.date():
-            if istenen_kimlik is not None and not onizleme:
-                _kart_gunlugu(tarih, kimlik, [], kart_yolu, "BUGÜN ÇUBUK YOK")
-            return bitir(
-                "BUGÜN ÇUBUK YOK",
-                "Bugün işlem günü değil ya da çubuk yok; bir şey yapma.",
-                **bilgi,
-            )
-        sorunlar = _kapi_sorunlari(anlik, son)
-        if sorunlar:
+        except Exception as hata:  # noqa: BLE001 — her hata SORUNLU yazılır, çıkış kodu 1
             return bitir(
                 "SORUNLU",
-                "Kart üretilmedi: veri kapısı başarısız ("
-                + "; ".join(sorunlar)
-                + "). Kartlara güvenme.",
-                **bilgi,
+                f"Kart üretilmedi: {hata}. Hatayı oku ve yeniden çalıştır.",
+                kimlik,
+                str(son)[:10] if son != "yok" else son,
+                sayi,
             )
-        kartlar = _kartlar(anlik, tarih, p, atr_n, aktarim)
-        csv_yol = dizin / f"kartlar-{tarih:%Y%m%d}.csv"
-
-        def yaz_csv(f):
-            w = csv.writer(f, delimiter=";")
-            w.writerow(SUTUNLAR)
-            w.writerows(kartlar)
-
-        try:
-            _yaz(csv_yol, yaz_csv)
-        except PermissionError:
-            return bitir(
-                "SORUNLU",
-                f"Kart yazılamadı: {csv_yol.name} açık, kapatıp yeniden çalıştır.",
-                **bilgi,
-            )
-        if not onizleme:
-            _kart_gunlugu(tarih, kimlik, kartlar, kart_yolu)
-        return bitir(
-            "TAMAM",
-            f"Bugün {len(kartlar)} kart var: {csv_yol} dosyasını aç."
-            if kartlar
-            else f"Bugün kart yok; bir şey yapma. Tablo: {csv_yol}",
-            **bilgi,
-        )
-    except veri.KaynakYok:
-        return bitir(
-            "VERİ YOK",
-            "Kaynağa ulaşılamadı, kart üretilmedi. Saat başı yeniden denenir.",
-        )
-    except Exception as hata:  # noqa: BLE001 — her hata SORUNLU yazılır, çıkış kodu 1
-        return bitir(
-            "SORUNLU",
-            f"Kart üretilmedi: {hata}. Hatayı oku ve yeniden çalıştır.",
-            kimlik,
-            str(son)[:10] if son != "yok" else son,
-            sayi,
-        )
+    finally:
+        kilitler.close()
