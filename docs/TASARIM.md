@@ -2498,7 +2498,9 @@ izni vermez. Fon/kripto kapsamı ve kalıcı kimlik onayı bu motor sürümünü
 
 Saklı girdi ve çıktı ayrımı uygulandı. İkinci incelemenin eski çelişkili
 çıktı, geri dönülen günün saati ve eşzamanlı kabul hataları düzeltildi;
-yerel davranış kanıtı alındı. Teslim, bağımsız inceleme ve temiz commit üzerinde
+yerel davranış kanıtı alındı. Üçüncü inceleme, seçeneksiz yeniden hesapta
+bilinen istenen günün yeni ekrandan düştüğünü gösterdi. Aşağıdaki türetilmiş
+ekran sözleşmesinin uygulaması bekliyor. Teslim, bağımsız inceleme ve temiz commit üzerinde
 gerçek komut kanıtı gerektirir. Kaynak: #126'nın 22.10.2026
 uygulama sözleşmesi ve 24.10.2026 ikinci inceleme karşı örnekleri. Teslim #94'e
 bağlıdır; bu hazırlık bir aileyi etkinleştirmez ve #127'nin aktif aile kartı
@@ -2596,8 +2598,14 @@ Bu yazma sahipliği, saklı girdiyle aynı çıktıyı paylaşabilen seçeneksiz
 da uygulanır. Olağan indirme, uygunluk ve çubuksuz davranış değişmez.
 Seçeneksiz çağrı, açık istenen gün taşıyan saklı başarı ekranını yalnız o gün
 istendiğinde kısa yoldan kabul eder. Bu hem `TAMAM` hem `BUGÜN ÇUBUK YOK`
-için geçerlidir. Açık istenen gün taşımayan eski ekranın mevcut saat temelli
-kısa yolu korunur.
+için geçerlidir. Açık istenen gün taşıyan ekrandan sonra seçeneksiz çağrı
+yeni bir normal durum ekranı üretirse, bu ekran da mevcut çağrının istenen
+gününü aynı `Eylem:` önekiyle taşır. Bu bilgi `TAMAM`, `BUGÜN ÇUBUK YOK`,
+`SORUNLU` ve `VERİ YOK` sonuçlarında korunur. Böylece yeniden hesap, hata
+veya çubuksuz sonuç bilinen günü düşürüp sonraki çağrıyı eski ekranın saat
+temelli kısa yoluna döndüremez. Ön gösterim bu normal ekran zincirine girmez.
+Gerçekten eski, açık istenen gün taşımayan giriş ekranının mevcut saat
+temelli kısa yolu korunur; bu açıklama eski ekranlara gün bilgisi uydurmaz.
 Ancak çağrı kart CSV'si yazacaksa mevcut günün başka görüntüye ait
 kabulünü veya ret işaretini geçemez. Aynı görüntü kimliğinde de yeni hesaplanan
 kartlar, kabul edilmiş kart değerleriyle uyuşmalıdır. Uyuşmayan yeni hesap
@@ -2612,6 +2620,8 @@ korunmasıdır; ayrı çıktı ayrı etkin üretim geçmişi oluşturmaz.
 Sınama sınırı: aynı ve farklı çalıştırma günlerinde A/B/B, A/bozuk veya
 geçersiz girdi/B, A/gün2/B/gün1; dolu sentetik kartla eski CSV/geçmiş çelişkisi;
 geri dönülen kartlı ve çubuksuz günün daha geç dakikadaki aynı tekrarları;
+bilinen günden türeyen seçeneksiz başarı, hata ve çubuksuz ekranların ardından
+başka gün isteği; aynı günün geçerli devri ve gerçekten eski ekranın kısa yolu;
 aynı çıktı ve paylaşılan günlükte örtüşen çağrılar; ayrı çıktıların bağımsızlığı
 ve süreç kapanınca kilidin bırakılması. Kontroller CSV ve günlük korunmasını,
 ön gösterim ayrımını ve meşgul çağrının ekranı değiştirmemesini kapsar.
