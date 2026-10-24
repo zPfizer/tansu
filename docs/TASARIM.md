@@ -2419,7 +2419,7 @@ izni vermez. Fon/kripto kapsamı ve kalıcı kimlik onayı bu motor sürümünü
      say, en fazla 1 saat, çalışma klasörü depo kökü, yalnız ağ varken.
    - Başarısızsa 4 saat boyunca saatte bir yeniden dener. Hata ya da kapı başarısızlığında çıkış kodu
      ≠ 0 olur.
-   - `durum.txt`'teki son başarılı koşu bugünse `gunluk`, aşağıdaki saklı girdi doğrulaması ve kimlik koşulu sağlandıktan sonra çıkar.
+   - Görüntü seçilmemişse `durum.txt`'teki son başarılı koşu bugün olduğunda `gunluk` çıkar. Saklı girdide aşağıdaki doğrulama ve kalıcı gün bağı kullanılır.
    - Saat Europe/Istanbul.
 2. **Veri** (m6, C-4, İ: 10-074, 18-071):
    - Tam indirme geçici klasöre yapılır. Kapılar geçerse yeni anlık görüntü olur; geçmezse kart
@@ -2469,6 +2469,7 @@ izni vermez. Fon/kripto kapsamı ve kalıcı kimlik onayı bu motor sürümünü
      masraf) · portföy fazla getirisi (K2'ye göre, yıllık, blok bootstrap %95 aralık +%x,x ile +%x,x) · kâğıt dönem 3/6 ay".
 6. **Açık kartlar ayrıca saklanmaz:** her gün sinyal gününden itibaren Adım ile yeniden hesaplanır. Günün
    kart çıktısı `kayit/kartlar.jsonl`'e yalnız eklenir; kâğıt üstü dönem geriye dönük değişmez. (C-5)
+   Saklı girdinin tamamlanmış gün ve görüntü bağı da bu günlüğe aittir; biçim ve eski kayıt uyumu aşağıdaki #126 sözleşmesindedir.
 7. **`rapor/durum.txt`** (İ: 16-036, 16-070, 13-082, 17-048):
    - İlk satır: `TAMAM` / `SORUNLU` / `VERİ YOK` / `BUGÜN ÇUBUK YOK` (tatil, çıkış 0).
    - Ardından: son başarılı koşu saati, anlık görüntü kimliği, son çubuk tarihi, sembol sayısı ve bir
@@ -2495,8 +2496,9 @@ izni vermez. Fon/kripto kapsamı ve kalıcı kimlik onayı bu motor sürümünü
 
 ### Saklı girdi ve ayrı çıktı kökü (#126)
 
-Uygulandı; bağımsız inceleme ve teslim bekliyor. Kaynak: #126'nın
-22.10.2026 uygulama sözleşmesi. Teslim #94'e bağlıdır; bu hazırlık bir aileyi
+Saklı girdi ve çıktı ayrımı uygulandı. İlk incelemede bulunan tekrar hatasının
+aşağıdaki kalıcı gün bağı düzeltmesi uygulama bekliyor. Kaynak: #126'nın
+22.10.2026 uygulama sözleşmesi ve 24.10.2026 inceleme karşı örnekleri. Teslim #94'e bağlıdır; bu hazırlık bir aileyi
 etkinleştirmez ve #127'nin aktif aile kartı kanıtının yerine geçmez.
 
 `gunluk(tarih, ..., kimlik=None, cikti_koku=None)` ve günlük komutun mevcut
@@ -2516,9 +2518,52 @@ geçmişinin girdi kaynağı mevcut `kayit/` olarak kalır; ayrı çıktı ayrı
 Açık `--deneme-dosyasi` çağıranın seçtiği yazılabilir dosya olarak kalır;
 depoya yazmama kanıtında bu dosya da dışarıda seçilir.
 
-Saklı görüntü, başarılı aynı-gün kısa yolundan önce doğrulanır. Önceki başarılı
-durumun görüntü kimliği aynıysa kısa yol korunur; farklıysa açık çelişki
-verilir. Kayıtlı denemenin veri ve ayar bağları, ön gösterim ayrımı, son çubuk,
+Saklı görüntü, başarılı gün kısa yolundan önce doğrulanır. Başarılı günün
+bağı, seçilen çıktı kökündeki `kartlar.jsonl` satırının `tarih` ve `anlik`
+alanlarıdır. `tarih` komutta istenen gündür; çalıştırma saati değildir.
+İstenen günün bağı varsa aynı görüntü kısa yoldan çıkar; farklı görüntü
+açık çelişki verir. Bu kalıcı kabul kapısı yalnız saklı girdi için çalışır.
+Ret, bozuk veya geçersiz girdi ve başka bir günün başarısı bu bağı silemez.
+Ret durumu `SORUNLU` olarak görünür; önceki başarılı CSV ve günlük satırları
+değişmez. Günlüğe yazılmış başarı, durum ekranının yazılması yarıda kalsa da
+yeniden kabulün dayanağıdır. Gün başına bir bağ vardır; eski satır yeniden yazılmaz.
+Aynı görüntüyle tekrar, ekran başka bir günü veya başarısızlığı gösteriyorsa
+doğrulanmış görüntü ve günlükteki sonuçla başarı ekranını yeniden yazar.
+CSV ve günlük değişmez; ekran zaten aynı günün aynı başarısını gösteriyorsa
+mevcut ekran ve son başarılı koşu saati korunur.
+
+`TAMAM` satırları mevcut `tarih`, `anlik`, `kartlar` biçimini korur.
+Saklı girdide `BUGÜN ÇUBUK YOK` başarısı aynı günlüğe `kartlar: []` ve
+`durum: "BUGÜN ÇUBUK YOK"` ile eklenir; CSV üretmez. Önceki kart geçmişinden
+hisse seçimi bu tamamlanma satırlarını ve aşağıdaki eksik geçmiş işaretini
+atlar; son gerçek kart çıktısını
+kullanır. `durum` alanı olmayan eski günlük satırı gerçek kart çıktısıdır.
+Gerçek `TAMAM` satırının boş kart listesi eski anlamını korur; atlanmaz.
+Ön gösterim bu bağları okumaz ve yazmaz; kendi durum ve CSV alanında kalır.
+Görüntü seçilmemiş indirmede çubuksuz sonuç için yeni günlük satırı eklenmez;
+mevcut durum kısa yolu ve çıktı biçimi korunur.
+
+Eski altı satırlık `durum.txt` biçimi korunur; bu dosya son denemenin ekranıdır.
+Eski `TAMAM` koşularının istenen günü mevcut kart günlüğünden okunur.
+Günlüğü bulunmayan eski `BUGÜN ÇUBUK YOK` başarısı, ekran değiştirilmeden önce
+saklı girdi yolunda tamamlanma satırı olarak eklenir. Bu satırın tarih anahtarı
+eski son başarılı koşu tarihidir ve `tarih_kaynagi: "eski_kosu_saati"` taşır.
+Bu, eski davranışı koruyan uyum kabulüdür; asıl istenen gün bilinmez.
+Çalıştırma saati geçmiş bir günün kanıtı veya Tansu kuralı sayılmaz.
+Eski `TAMAM` ekranının `Son çubuk` günü için günlük satırı yoksa saklı girdi
+aynı günlüğe `durum: "KART GÜNLÜĞÜ EKSİK"`, o gün ve görüntü kimliğinden oluşan
+eksiklik işareti ekler; kart satırı uydurmaz. Bu işaret başarı değildir.
+O güne yönelik saklı girdi açık hata verir; ekranın `SORUNLU` olması sonraki
+denemede bu engeli kaldırmaz. `Son çubuk` yoksa veya geçersizse işarette
+`tarih: null` kalır; gün uydurulmaz ve saklı girdi bu bilinmeyen geçmiş için
+açık hata verir. Eski satırlar değiştirilmez ve otomatik veri
+onarımı yapılmaz. Geçiş kayıtları ekran değiştirilmeden önce korunur;
+saklı görüntü yine her kabul veya kısa yoldan önce E1 ile doğrulanır.
+
+Sınama sınırı: aynı ve farklı çalıştırma günlerinde A/B/B, A/bozuk veya
+geçersiz girdi/B, A/gün2/B/gün1; çubuksuz başarı, eski kayıt uyumu,
+değişmeyen CSV/günlük ve ön gösterim ayrımı.
+Kayıtlı denemenin veri ve ayar bağları, ön gösterim ayrımı, son çubuk,
 18:15 sınırı ve uygunluk kapıları korunur. Tarih yoksa bugün kullanılır.
 Yeni seçenekler yoksa mevcut indirme ve çıktı yolları korunur. CSV biçimi,
 atomik yazma, yalnız eklenen kart geçmişi ve hata çıkışları değişmez;
