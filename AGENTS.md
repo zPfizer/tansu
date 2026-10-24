@@ -6,7 +6,7 @@ If they conflict with code or omit a case, stop. Fix the document first. Write t
 ## Current state (Şimdiki durum)
 This section holds temporary states only. Each line has a date and an owner. Delete a line when its end condition is true.
 
-- 2026-10-24, owner: coordinator. Local native agent entries use the setup worktree's coordinator contract until issue #181 merges. Preserve that worktree.
+- 2026-10-24, owner: coordinator. Preserve the setup worktree until both installed native entries point to the merged contract and fresh startup checks pass.
 
 ## Documents and owners (Belgeler ve sahipleri)
 Each fact has one owner file. Other files refer to that owner. Read the files in the order of the table.
