@@ -266,6 +266,19 @@ def _kart_degerleri(kartlar):
     return sonuc
 
 
+def _indirilen_cubuksuz(onceki):
+    """TASARIM 6 #126: açık indirme kökeni tamamlanma satırı gerektirmez."""
+    gun = _ekran_gunu(onceki)
+    return (
+        onceki[:1] == ["BUGÜN ÇUBUK YOK"]
+        and gun is not None
+        and any(
+            s.startswith(f"Eylem: İstenen gün: {gun:%Y-%m-%d}. Girdi: indirme. ")
+            for s in onceki
+        )
+    )
+
+
 def _csv_dogrula(bag, dizin, gunluk_yolu):
     """TASARIM 6 #126: kabul edilen kartlar gerçek CSV ile birlikte doğrulanır."""
     if bag.get("durum", "TAMAM") != "TAMAM":
@@ -291,7 +304,7 @@ def _csv_dogrula(bag, dizin, gunluk_yolu):
 
 def _eski_durum_bagi(onceki, yol, dizin):
     """TASARIM 6 #126: eski ekran kaybolmadan uyum veya ret kaydını korur."""
-    if not onceki or onceki[0] not in BASARILI:
+    if not onceki or onceki[0] not in BASARILI or _indirilen_cubuksuz(onceki):
         return
     alanlar = dict(s.split(": ", 1) for s in onceki[1:] if ": " in s)
     kimlik = alanlar.get("Anlık görüntü", "yok")
@@ -470,7 +483,10 @@ def gunluk(
 
         def bitir(durum, eylem, kimlik="yok", son="yok", sayi="yok") -> int:
             basarili = durum in BASARILI
-            if istenen_kimlik is not None and not onizleme:
+            # TASARIM 6 #126: türetilen ekran da bilinen istenen günü taşır.
+            if (istenen_kimlik is not None or acik_gunlu_ekran) and not onizleme:
+                if istenen_kimlik is None and durum == "BUGÜN ÇUBUK YOK":
+                    eylem = f"Girdi: indirme. {eylem}"
                 eylem = f"İstenen gün: {tarih.date().isoformat()}. {eylem}"
             satirlar = [
                 durum,
@@ -533,7 +549,7 @@ def gunluk(
                 )
                 and not onizleme
             ):
-                if acik_gunlu_ekran:
+                if acik_gunlu_ekran and not _indirilen_cubuksuz(onceki):
                     # TASARIM 6 #126: seçeneksiz çağrı saklı ekranın kabulünü devralır.
                     _eski_durum_bagi(onceki, kart_yolu, dizin)
                     alanlar = dict(s.split(": ", 1) for s in onceki[1:] if ": " in s)

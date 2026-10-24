@@ -1290,6 +1290,207 @@ def test_seceneksiz_kisa_yol_sakli_ekranin_istenen_gununu_kullanir(
 
 
 @pytest.mark.parametrize(
+    "sonuc, durum, cikis",
+    [
+        ("tamam", "TAMAM", 0),
+        ("cubuksuz", "BUGÜN ÇUBUK YOK", 0),
+        ("sorunlu", "SORUNLU", 1),
+        ("veri_yok", "VERİ YOK", 1),
+    ],
+)
+def test_seceneksiz_yeni_ekran_bilinen_istenen_gunu_korur(
+    tmp_path, sonuc, durum, cikis
+):
+    # TASARIM 6 #126: yeni ekran bilinen günü düşürüp eski kısa yola dönemez.
+    kagit_aile()
+    simdi = SIMDI.replace(day=24)
+    a = veri.indir(["XXXX"], tmp_path, kaynak(), simdi=simdi)
+    assert a == "20261024-1930"
+    cikti = tmp_path / "disari"
+    assert (
+        gunluk.gunluk(
+            TARIH, tmp_path, simdi=simdi, kimlik=a, cikti_koku=cikti, p=P, atr_n=2
+        )
+        == 0
+    )
+    ekran = cikti / "rapor/durum.txt"
+    csv_yolu = cikti / "rapor/kartlar-20261005.csv"
+    gunluk_yolu = cikti / "kayit/kartlar.jsonl"
+    kabul = (csv_yolu.read_bytes(), gunluk_yolu.read_bytes())
+    assert len(json.loads(kabul[1])["kartlar"]) == 1
+    assert (
+        gunluk.gunluk(
+            TARIH, tmp_path, simdi=simdi, kimlik="../gecersiz", cikti_koku=cikti
+        )
+        == 1
+    )
+
+    class ArizaliKaynak:
+        cagri = 0
+
+        def fiyat(self, sembol, bas, son):
+            self.cagri += 1
+            hata = ValueError if sonuc == "sorunlu" else KaynakHatasi
+            raise hata("kaynak yanıtı alınamadı")
+
+        olaylar = fiyat
+
+    def indir(gun, k, zaman=simdi):
+        return gunluk.gunluk(
+            gun,
+            tmp_path,
+            simdi=zaman,
+            kaynak=k,
+            semboller=["XXXX"],
+            cikti_koku=cikti,
+            p=P,
+            atr_n=2,
+        )
+
+    istenen_gun = "2026-10-06" if sonuc == "cubuksuz" else "2026-10-05"
+    k = ArizaliKaynak() if cikis else kaynak()
+    assert indir(istenen_gun, k) == cikis
+    uretilen = [(istenen_gun, durum, ekran.read_text(encoding="utf-8").splitlines())]
+    assert k.cagri == 1
+    if cikis:
+        tekrar = kaynak()
+        assert indir(TARIH, tekrar) == 0
+        assert tekrar.cagri == 1
+        uretilen.append(
+            ("2026-10-05", "TAMAM", ekran.read_text(encoding="utf-8").splitlines())
+        )
+    assert (csv_yolu.read_bytes(), gunluk_yolu.read_bytes()) == kabul
+
+    bugun = kaynak()
+    assert indir("2026-10-24", bugun, simdi.replace(minute=31)) == 0
+    son_ekran = ekran.read_text(encoding="utf-8").splitlines()
+    uretilen.append(("2026-10-24", "BUGÜN ÇUBUK YOK", son_ekran))
+    son_baytlar = ekran.read_bytes()
+    ayni_gun = kaynak()
+    assert indir("2026-10-24", ayni_gun, simdi.replace(minute=32)) == 0
+    assert ayni_gun.cagri == 0
+    assert ekran.read_bytes() == son_baytlar
+    for gun, beklenen, satirlar in uretilen:
+        assert len(satirlar) == 6
+        assert satirlar[0] == beklenen
+        assert satirlar[5].startswith(f"Eylem: İstenen gün: {gun}. ")
+    assert bugun.cagri == 1
+    assert son_ekran[0] == "BUGÜN ÇUBUK YOK"
+    assert son_ekran[2] == "Anlık görüntü: 20261024-1931"
+    assert son_ekran[3] == "Son çubuk: 2026-10-05"
+    assert (csv_yolu.read_bytes(), gunluk_yolu.read_bytes()) == kabul
+
+
+@pytest.mark.parametrize(
+    "ilk_gun, durum", [("2026-10-05", "TAMAM"), ("2026-10-06", "BUGÜN ÇUBUK YOK")]
+)
+def test_eski_gun_bilgisi_olmayan_ekran_saat_kisa_yolunu_korur(
+    tmp_path, ilk_gun, durum
+):
+    k = kaynak()
+    assert kos(tmp_path, k, tarih=ilk_gun, simdi=SIMDI.replace(day=24)) == 0
+    ekran = rapor.RAPOR_DIZINI / "durum.txt"
+    once = ekran.read_bytes()
+    satirlar = durum_satirlari()
+    assert len(satirlar) == 6
+    assert satirlar[0] == durum
+    assert not satirlar[5].startswith("Eylem: İstenen gün: ")
+    assert (
+        kos(tmp_path, k, tarih="2026-10-24", simdi=SIMDI.replace(day=24, minute=31))
+        == 0
+    )
+    assert k.cagri == 1
+    assert ekran.read_bytes() == once
+
+
+@pytest.mark.parametrize(
+    "koken, secim, cikis",
+    [
+        ("indirme", "ayni", 0),
+        ("indirme", "eksik", 1),
+        ("sakli", "ayni", 1),
+        ("benzer_isaret", "ayni", 1),
+    ],
+)
+def test_cubuksuz_indirme_kokeni_sakli_girdi_kontrolunu_kaldirmaz(
+    tmp_path, koken, secim, cikis
+):
+    a = veri.indir(["XXXX"], tmp_path, kaynak(), simdi=SIMDI)
+    cikti = tmp_path / "disari"
+    assert (
+        gunluk.gunluk(
+            TARIH, tmp_path, simdi=SIMDI.replace(day=24), kimlik=a, cikti_koku=cikti
+        )
+        == 0
+    )
+    gecmis = cikti / "kayit/kartlar.jsonl"
+    kabul = gecmis.read_bytes()
+    ekran = cikti / "rapor/durum.txt"
+    k = kaynak()
+    assert (
+        gunluk.gunluk(
+            "2026-10-24",
+            tmp_path,
+            simdi=SIMDI.replace(day=24),
+            kimlik=None if koken == "indirme" else a,
+            kaynak=k,
+            semboller=["XXXX"],
+            cikti_koku=cikti,
+        )
+        == 0
+    )
+    assert k.cagri == int(koken == "indirme")
+    if koken != "indirme":
+        gecmis.write_bytes(kabul)  # saklı başarının gerekli tamamlanma kaydı eksik
+    if koken == "benzer_isaret":
+        metin = ekran.read_text(encoding="utf-8")
+        ekran.write_text(
+            metin.replace(
+                "İstenen gün: 2026-10-24. ",
+                "İstenen gün: 2026-10-24. Girdi: indirmeX. ",
+            ),
+            encoding="utf-8",
+        )
+    assert gecmis.read_bytes() == kabul
+    assert (
+        gunluk.gunluk(
+            "2026-10-24",
+            tmp_path,
+            simdi=SIMDI.replace(day=24, minute=31),
+            kimlik=a if secim == "ayni" else "bulunamayan",
+            kaynak=k,
+            cikti_koku=cikti,
+        )
+        == cikis
+    )
+    assert k.cagri == int(koken == "indirme")
+    satirlar = [json.loads(s) for s in gecmis.read_text(encoding="utf-8").splitlines()]
+    son_ekran = ekran.read_text(encoding="utf-8").splitlines()
+    assert len(son_ekran) == 6
+    assert son_ekran[5].startswith("Eylem: İstenen gün: 2026-10-24. ")
+    if koken == "indirme":
+        assert not any(
+            s.get("durum") in ("KART GÜNLÜĞÜ EKSİK", "KAYIT ÇELİŞKİSİ")
+            for s in satirlar
+        )
+        if secim == "eksik":
+            assert son_ekran[0] == "SORUNLU"
+            assert gecmis.read_bytes() == kabul
+        else:
+            assert son_ekran[0] == "BUGÜN ÇUBUK YOK"
+            assert satirlar[-1] == {
+                "tarih": "2026-10-24",
+                "anlik": "20261005-1930",
+                "kartlar": [],
+                "durum": "BUGÜN ÇUBUK YOK",
+            }
+    else:
+        assert son_ekran[0] == "SORUNLU"
+        assert satirlar[-1]["durum"] == "KART GÜNLÜĞÜ EKSİK"
+        assert satirlar[-1]["tarih"] == "2026-10-24"
+
+
+@pytest.mark.parametrize(
     "bozuk", ["eksik_csv", "farkli_csv", "eksik_gunluk", "farkli_gunluk", "ret"]
 )
 def test_seceneksiz_sakli_basarisi_kabul_edilen_ciktiyi_dogrular(

@@ -2499,8 +2499,9 @@ izni vermez. Fon/kripto kapsamı ve kalıcı kimlik onayı bu motor sürümünü
 Saklı girdi ve çıktı ayrımı uygulandı. İkinci incelemenin eski çelişkili
 çıktı, geri dönülen günün saati ve eşzamanlı kabul hataları düzeltildi;
 yerel davranış kanıtı alındı. Üçüncü inceleme, seçeneksiz yeniden hesapta
-bilinen istenen günün yeni ekrandan düştüğünü gösterdi. Aşağıdaki türetilmiş
-ekran sözleşmesinin uygulaması bekliyor. Teslim, bağımsız inceleme ve temiz commit üzerinde
+bilinen istenen günün yeni ekrandan düştüğünü gösterdi. Türetilmiş ekranlar
+bu bilgiyi korur; çubuksuz indirme açık kökeniyle ayrılır.
+Teslim, bağımsız inceleme ve temiz commit üzerinde
 gerçek komut kanıtı gerektirir. Kaynak: #126'nın 22.10.2026
 uygulama sözleşmesi ve 24.10.2026 ikinci inceleme karşı örnekleri. Teslim #94'e
 bağlıdır; bu hazırlık bir aileyi etkinleştirmez ve #127'nin aktif aile kartı
