@@ -4151,6 +4151,130 @@ except PilotHatasi as hata:
     assert serbest.stdout.splitlines()[-1] == "ACILDI"
 
 
+def test_s12_egitim_sonucu_tam_e1_kimligini_yazar_ve_yeniden_okur(
+    tmp_path, monkeypatch
+):
+    from tansu import tansusinama as ts
+    from tests.test_tansusinama import s12_kayitli
+
+    depo, eski, _ = s12_kayitli(tmp_path, monkeypatch)
+    d = depo.deneme_oku(eski.deneme_id)
+    secim = dict(
+        surum="pay_kimligi_v1",
+        tablo_ozeti=veri._YAYIMLANMIS_KAYNAK_OZETLERI["pay_kimligi_v1"],
+        kaynak=d["veri_ayarlari"]["kaynak"],
+        goruntu_id="s10",
+        manifest_ozeti=d["veri_ayarlari"]["manifest_ozeti"],
+    )
+    v = deepcopy(d["veri_ayarlari"]) | dict(pay_kimligi=secim)
+    m = pilot_deneme(
+        depo,
+        d["strateji"],
+        donemler=d["donemler"],
+        veri_ayarlari=v,
+        yontem_ayarlari=d["yontem_ayarlari"],
+        risk_ayarlari=d["risk_ayarlari"],
+        masraf_ayarlari=d["masraf_ayarlari"],
+    )
+    e1, ekle, uyelik = veri.veri_hazirla, depo._ekle, veri.uyelik_hazirla
+    ek = hashlib.sha256(
+        json.dumps(secim, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+
+    def pay_uyeligi(uyelik, _politika):
+        return uyelik | dict(pay_kimligi=secim)
+
+    def paket(*args):
+        p = e1(*args)
+        p["referans"].update(
+            pay_kimligi=secim, kayit_id=p["referans"]["kayit_id"] + "/" + ek
+        )
+        p["uyelik"]["pay_kimligi"] = secim
+        return p
+
+    def ilk_sonucta_dur(olay, *args):
+        makbuz = ekle(olay, *args)
+        if olay["kayit_turu"] == "sonuc" and olay.get("sonuc_turu") == "donem_v1":
+            raise KeyboardInterrupt
+        return makbuz
+
+    monkeypatch.setattr(veri, "uyelik_hazirla", lambda istek, **_kw: uyelik(istek))
+    monkeypatch.setattr(veri, "pay_kimligi_hazirla", lambda *_a, **_k: {})
+    monkeypatch.setattr(veri, "pay_uyeligi", pay_uyeligi)
+    monkeypatch.setattr(veri, "veri_hazirla", paket)
+    monkeypatch.setattr(depo, "_ekle", ilk_sonucta_dur)
+    with pytest.raises(KeyboardInterrupt):
+        ts.kayitli_ileri_calistir(
+            depo, m.deneme_id, veri_koku=tmp_path, mod="gelistirme", ilerleme=None
+        )
+    olaylar = pilot.PilotKayit(depo.yol).oku()
+    sonuc = next(o for o in olaylar if o.get("sonuc_turu") == "donem_v1")
+    durum = sonuc["icerik"]["durumlar"]["TEST"]
+    assert (
+        durum["iz"]
+        and durum["yurutme"]["veri_ref_id"]
+        == (sonuc["icerik"]["veri_referansi"]["kayit_id"])
+    )
+    assert durum["yurutme"]["veri_ref_id"].endswith("/" + ek)
+
+    yanlis = deepcopy(olaylar)
+    sonuc = next(o for o in yanlis if o.get("sonuc_turu") == "donem_v1")
+    ref = sonuc["icerik"]["veri_referansi"]
+    ref["kayit_id"] += "/yanlis"
+    durum = sonuc["icerik"]["durumlar"]["TEST"]
+    durum["yurutme"]["veri_ref_id"] = ref["kayit_id"]
+    durum.pop("butunluk")
+    durum["butunluk"] = motor._iz_kodu(durum)
+    icerik = sonuc["icerik"]
+    icerik.pop("cikti_parmak_izi")
+    icerik["cikti_parmak_izi"] = hashlib.sha256(pilot.kanonik(icerik)).hexdigest()
+    onek = b"".join(pilot.kanonik(o) + b"\n" for o in yanlis[: yanlis.index(sonuc)])
+    ekle_yolu = tmp_path / "yanlis-e1-ekle.jsonl"
+    ekle_yolu.write_bytes(onek)
+    eklenen = {
+        k: v
+        for k, v in sonuc.items()
+        if k not in ("kayit_id", "sema_surumu", "olusturma_zamani")
+    }
+    with pytest.raises(pilot.PilotHatasi, match="WF çocuk E1 kimliği"):
+        pilot.PilotKayit(ekle_yolu)._ekle(eklenen)
+    assert ekle_yolu.read_bytes() == onek
+    yol = tmp_path / "yanlis-e1.jsonl"
+    yol.write_bytes(b"".join(pilot.kanonik(o) + b"\n" for o in yanlis))
+    with pytest.raises(pilot.PilotHatasi, match="Bozuk tam satır") as hata:
+        pilot.PilotKayit(yol).oku()
+    assert "WF çocuk E1 kimliği" in str(hata.value.__cause__)
+
+
+def test_s12_egitim_sonucsuz_hatasi_ozgun_kalir(tmp_path, monkeypatch):
+    from tansu import tansusinama as ts
+    from tests.test_tansusinama import s12_kayitli
+
+    depo, m, _ = s12_kayitli(tmp_path, monkeypatch)
+    asil = ValueError("özgün eğitim hatası")
+
+    def boz(*_args):
+        raise asil
+
+    monkeypatch.setattr(ts, "_donem_yaz", boz)
+    with pytest.raises(ValueError, match="özgün eğitim hatası") as hata:
+        ts.kayitli_ileri_calistir(
+            depo, m.deneme_id, veri_koku=tmp_path, mod="gelistirme", ilerleme=None
+        )
+    assert hata.value is asil
+    olaylar = depo.oku()
+    cocuklar = {
+        o["kosu_id"]
+        for o in olaylar
+        if o["kayit_turu"] == "baslangic" and o["deneme_id"] != m.deneme_id
+    }
+    assert len(cocuklar) == 1
+    assert not any(
+        o["kayit_turu"] in ("sonuc", "bitis") and o.get("kosu_id") in cocuklar
+        for o in olaylar
+    )
+
+
 @pytest.mark.parametrize("alan", ["mod", "kod_kimligi", "ortam", "bagimlilik_ozeti"])
 def test_s12_devam_degisen_yurutme_kimligini_yazmaz(tmp_path, monkeypatch, alan):
     depo, _, bas = _s12_acik_kosu(tmp_path, monkeypatch)

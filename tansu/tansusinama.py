@@ -1537,6 +1537,30 @@ def _s10_mumlar(paket, sembol, hesap, *, kilit_politikasi=None):
     return m
 
 
+def _donem_yurutme(deneme, kosu_id, sembol, veri_ref_id, strateji):
+    return dict(
+        surum="bagimsiz_islem_v1",
+        aile=simulator.AILE,
+        strateji_id=strateji.kayit_id,
+        strateji_surumu=strateji.katalog_surumu,
+        deneme_id=deneme["deneme_id"],
+        kosu_id=kosu_id,
+        veri_ref_id=veri_ref_id,
+        sembol=sembol,
+        nominal_tutar=float(deneme["risk_ayarlari"]["nominal_tutar"]),
+        risk_surumu=deneme["risk_ayarlari"]["risk_surumu"],
+        masraf_surumu=deneme["masraf_ayarlari"]["masraf_surumu"],
+        fiyat_politikasi=deneme["yontem_ayarlari"]["fiyat_politikasi"],
+        **{
+            k: deneme["yontem_ayarlari"][k]
+            for k in ("kilit_politikasi",)
+            if k in deneme["yontem_ayarlari"]
+        },
+        strateji_ayar_parmak_izi=strateji.ayar_parmak_izi,
+        deneme_ayar_parmak_izi=deneme["ayar_parmak_izi"],
+    )
+
+
 def _donem_sembolu(deneme, sonuc, paket, sembol, hesap, strateji, p):
     d = sonuc["donem"]
     bas, son = d["baslangic"].isoformat(), d["bitis"].isoformat()
@@ -1554,26 +1578,8 @@ def _donem_sembolu(deneme, sonuc, paket, sembol, hesap, strateji, p):
     sinyaller = _donem_sinyalleri(
         deneme, sonuc, paket, sembol, hesap, m, gunler, secilen
     )
-    yurutme = dict(
-        surum="bagimsiz_islem_v1",
-        aile=simulator.AILE,
-        strateji_id=strateji.kayit_id,
-        strateji_surumu=strateji.katalog_surumu,
-        deneme_id=deneme["deneme_id"],
-        kosu_id=sonuc["kosu_id"],
-        veri_ref_id=paket["referans"]["kayit_id"],
-        sembol=sembol,
-        nominal_tutar=float(deneme["risk_ayarlari"]["nominal_tutar"]),
-        risk_surumu=deneme["risk_ayarlari"]["risk_surumu"],
-        masraf_surumu=deneme["masraf_ayarlari"]["masraf_surumu"],
-        fiyat_politikasi=deneme["yontem_ayarlari"]["fiyat_politikasi"],
-        **{
-            k: deneme["yontem_ayarlari"][k]
-            for k in ("kilit_politikasi",)
-            if k in deneme["yontem_ayarlari"]
-        },
-        strateji_ayar_parmak_izi=strateji.ayar_parmak_izi,
-        deneme_ayar_parmak_izi=deneme["ayar_parmak_izi"],
+    yurutme = _donem_yurutme(
+        deneme, sonuc["kosu_id"], sembol, paket["referans"]["kayit_id"], strateji
     )
     kabuller = {}
     for s in hesap["sinyaller"]:
@@ -3800,6 +3806,10 @@ def kayitli_ileri_calistir(
                     ArithmeticError,
                     OSError,
                 ) as hata:
+                    if deneme_._ileri_sonucsuz_cocuk_var(
+                        depo.oku(), kosu.makbuz.kosu_id
+                    ):
+                        raise
                     b.update(durum="hata", neden=str(hata))
                     b["hatalar"].append(dict(asama="ileri", neden=str(hata)))
                     kanit = deneme_._ileri_bolum_kaniti(

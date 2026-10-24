@@ -2603,6 +2603,22 @@ def _ileri_ayni_kosu(o, m):
         raise PilotHatasi("WF başvurusu başka koşuya veya ayara bağlı.")
 
 
+def _ileri_sonucsuz_cocuk_var(olaylar, ust_kosu_id):
+    cocuklar = {
+        o["deneme_id"]
+        for o in olaylar
+        if o["kayit_turu"] == "deneme"
+        and o.get("baglar", {}).get("ileri_ust_kosu") == ust_kosu_id
+    }
+    baslayanlar = {
+        o["kosu_id"]
+        for o in olaylar
+        if o["kayit_turu"] == "baslangic" and o["deneme_id"] in cocuklar
+    }
+    sonuclar = {o["kosu_id"] for o in olaylar if o["kayit_turu"] == "sonuc"}
+    return bool(baslayanlar - sonuclar)
+
+
 def _ileri_cocuk_bagi(olaylar, ust, b, kimlik, rol):
     d = _bul(olaylar, kimlik, "deneme", "deneme_id")
     donem = (
@@ -2753,8 +2769,8 @@ def _ileri_yeni_cocuk_dogrula(olaylar, o):
         ):
             raise PilotHatasi("WF çocuk başlangıcı üst yürütmeye bağlı değil.")
     elif o["kayit_turu"] == "sonuc":
-        from tansu import motor
-        from tansu.tansusinama import _donem_islemleri, _ileri_yurutme
+        from tansu import motor, veri
+        from tansu.tansusinama import _donem_islemleri, _donem_yurutme
 
         bas = _bul(olaylar, o["kosu_id"], "baslangic", "kosu_id")
         if (
@@ -2795,8 +2811,49 @@ def _ileri_yeni_cocuk_dogrula(olaylar, o):
             )
         ):
             raise PilotHatasi("WF çocuk işlemleri mühürlü sonuçla uyuşmuyor.")
+        v = d["veri_ayarlari"]
+        ref = o["icerik"].get("veri_referansi")
+        if ref is None:
+            if o["icerik"]["durumlar"]:
+                raise PilotHatasi("WF çocuk E3 durumu E1 referansı olmadan yazılamaz.")
+        elif (
+            not isinstance(ref, dict)
+            or ref.get("kayit_id")
+            != veri._veri_kayit_id(
+                v["veri_referanslari"][0],
+                v["kalite_surumu"],
+                pay_kimligi=v.get("pay_kimligi"),
+                ilk_islem=v.get("ilk_islem"),
+            )
+            or ref.get("goruntu_id") != v["veri_referanslari"][0]
+            or ref.get("manifest_parmak_izi") != v["manifest_ozeti"]
+            or ref.get("pay_kimligi") != v.get("pay_kimligi")
+            or ref.get("ilk_islem") != v.get("ilk_islem")
+        ):
+            raise PilotHatasi("WF çocuk E1 kimliği kayıtlı seçimle uyuşmuyor.")
+        yurutme_d = d | dict(yontem_ayarlari=d["yontem_ayarlari"]["hucre_yontemi"])
+        s = d["strateji"]
+        strateji = katalog.legacy_coz(
+            s["varyant"],
+            s["katalog_surumu"],
+            sayisal_ayarlar={
+                a["ad"]: a["deger"]
+                for a in s["parametreler"]
+                if a["koken"] == "legacy_izgara"
+            },
+        )
+        if (
+            strateji.kayit_id != s["kayit_id"]
+            or strateji.ayar_parmak_izi != s["ayar_parmak_izi"]
+        ):
+            raise PilotHatasi("WF çocuk stratejisi katalogla uyuşmuyor.")
         for sembol, durum in o["icerik"]["durumlar"].items():
-            motor._durumu_oku(durum, _ileri_yurutme(d, o["kosu_id"], sembol))
+            motor._durumu_oku(
+                durum,
+                _donem_yurutme(
+                    yurutme_d, o["kosu_id"], sembol, ref["kayit_id"], strateji
+                ),
+            )
     else:
         sonuclar = [
             x
@@ -4666,7 +4723,13 @@ class PilotKayit:
             except Exception as hata:
                 if isinstance(hata, (PilotBelirsizHatasi, PilotDayaniklilikHatasi)):
                     raise
-                if surum and isinstance(hata, PilotHatasi):
+                if "ileri_ust_kosu" in deneme.get("baglar", {}) or (
+                    surum
+                    and (
+                        isinstance(hata, PilotHatasi)
+                        or _ileri_sonucsuz_cocuk_var(self.oku(), kosu.makbuz.kosu_id)
+                    )
+                ):
                     raise
                 if not kosu._bitti and not kosu._yazma_hatasi:
                     if deneme["yontem_ayarlari"].get(

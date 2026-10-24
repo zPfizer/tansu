@@ -6,6 +6,8 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ## [Yayımlanmamış]
 
+- WF eğitim çocuğunun E3 durumu, S10 hesabındaki tam E1 veri kimliğiyle denetlenir; kayıtlı seçim bağları bağımsız doğrulanır. Sonuç makbuzu oluşmadan çıkan hata, çocuk kapanışıyla örtülmez. (#180)
+
 - Yeni kayıtlı ileri sınamaya açık koşu kimliğiyle devam eklendi. Tamamlanmış çeyrekler ve özgün makbuzlar korunur; kod/veri bağı, tek yürütme sahibi ve dayanıklı dönem sınırları denetlenir. Gerçek veriyle tamamlanmış kesinti/devam kanıtı ve bağımsız inceleme teslim PR’ında izlenir. (#180)
 
 - Yeni hedef kanıtı denetimi, E3 alanı taşımayan eski kısa dönem özetini tam işlem durumu saymaz. S11 çocuk sonucu yazımı ve yeni okuyucuyla eski kayıt okuması korunur; yeni kanıt, kaynak/ayar bağı ve bozuk E3 durumu retleri korunur. (#57, #94)

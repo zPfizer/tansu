@@ -559,23 +559,11 @@ def veri_hazirla(istek: VeriIstegi, kimlik, kok) -> dict:
         )
     if politika is not None:
         referans["pay_kimligi"] = deepcopy(istek.pay_kimligi)
-        ozet = hashlib.sha256(
-            json.dumps(istek.pay_kimligi, sort_keys=True, separators=(",", ":")).encode(
-                "utf-8"
-            )
-        ).hexdigest()
-        referans["kayit_id"] += f"/{ozet}"
     if ilk_islem is not None:
         referans["ilk_islem"] = deepcopy(istek.ilk_islem)
         referans["gecmis_kaniti"] = _ilk_islem_gozlemleri(
             istek, ilk_islem, f, list(map(_tarih, gunler)), son, kapsam_bas
         )
-        ozet = hashlib.sha256(
-            json.dumps(istek.ilk_islem, sort_keys=True, separators=(",", ":")).encode(
-                "utf-8"
-            )
-        ).hexdigest()
-        referans["kayit_id"] += f"/{ozet}"
     return {
         **({"uyelik": uyelik} if uyelik is not None else {}),
         "piyasa": piyasa,
@@ -618,10 +606,26 @@ def _istek_donemi(istek):
     return bas, son, kapsam_bas
 
 
+def _veri_kayit_id(kimlik, kalite_surumu, *, pay_kimligi=None, ilk_islem=None):
+    kayit_id = f"{kimlik}/veri/{kalite_surumu}"
+    for secim in (pay_kimligi, ilk_islem):
+        if secim is not None:
+            ozet = hashlib.sha256(
+                json.dumps(secim, sort_keys=True, separators=(",", ":")).encode("utf-8")
+            ).hexdigest()
+            kayit_id += f"/{ozet}"
+    return kayit_id
+
+
 def _veri_referansi(istek, kimlik, kok, meta, fiili):
     return {
         **meta,
-        "kayit_id": f"{kimlik}/veri/{istek.kalite_surumu}",
+        "kayit_id": _veri_kayit_id(
+            kimlik,
+            istek.kalite_surumu,
+            pay_kimligi=istek.pay_kimligi,
+            ilk_islem=istek.ilk_islem,
+        ),
         "kayit_turu": "veri_referansi",
         "goruntu_id": kimlik,
         "manifest_parmak_izi": _sha256(Path(kok) / "ag" / kimlik / "manifest.json"),
