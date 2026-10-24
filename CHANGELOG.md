@@ -6,6 +6,8 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ## [Yayımlanmamış]
 
+- Günlük komutun saklı görüntü ve ayrı çıktı kökü sözleşmesi kaydedildi; uygulama ve kanıt bekliyor, teslim #94’e bağlı. (#126)
+
 - CI testleri, eksiksiz ve çakışmasız iki gruba ayrılır; her grup kendi test kimliklerini çalıştırmadan önce doğrular ve 60 dakikalık süre sınırını korur. (#178)
 
 - Isınma seçimi olmayan eski kayıtlardaki hücre metaverisi korunur; yeni seçimde bozuk veya yanlış yerdeki politika kayıt öncesi reddedilir. (#178)

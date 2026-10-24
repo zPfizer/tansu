@@ -2419,7 +2419,7 @@ izni vermez. Fon/kripto kapsamı ve kalıcı kimlik onayı bu motor sürümünü
      say, en fazla 1 saat, çalışma klasörü depo kökü, yalnız ağ varken.
    - Başarısızsa 4 saat boyunca saatte bir yeniden dener. Hata ya da kapı başarısızlığında çıkış kodu
      ≠ 0 olur.
-   - `durum.txt`'teki son başarılı koşu bugünse `gunluk` hiçbir şey yapmadan çıkar.
+   - `durum.txt`'teki son başarılı koşu bugünse `gunluk`, aşağıdaki saklı girdi doğrulaması ve kimlik koşulu sağlandıktan sonra çıkar.
    - Saat Europe/Istanbul.
 2. **Veri** (m6, C-4, İ: 10-074, 18-071):
    - Tam indirme geçici klasöre yapılır. Kapılar geçerse yeni anlık görüntü olur; geçmezse kart
@@ -2492,6 +2492,37 @@ izni vermez. Fon/kripto kapsamı ve kalıcı kimlik onayı bu motor sürümünü
      nedeni, getiri.
    - Sayı biçimi tek bir yardımcıdan gelir: yüzde virgüllü (`locale` yok); TL raporda nokta binlik,
      CSV'de binliksiz; tarih ISO.
+
+### Saklı girdi ve ayrı çıktı kökü (#126)
+
+Onaylı teknik sözleşme; uygulama ve kanıt bekliyor. Kaynak: #126'nın
+22.10.2026 uygulama sözleşmesi. Teslim #94'e bağlıdır; bu hazırlık bir aileyi
+etkinleştirmez ve #127'nin aktif aile kartı kanıtının yerine geçmez.
+
+`gunluk(tarih, ..., kimlik=None, cikti_koku=None)` ve günlük komutun mevcut
+`--kimlik` seçeneği, `--kok/ag/<kimlik>` görüntüsünü `veri.oku` ile manifest ve
+dosya özetlerini doğrulayarak okur. Kimlik tek klasör adıdır; boş, yol taşıyan
+ve geçersiz kimlik reddedilir. Saklı modda sağlayıcı oluşturulmaz, sembol
+keşfi, indirme ve indirme temizliği çalışmaz. Eksik veya bozuk görüntü açık
+hatadır; başka görüntüye veya ağa geçilmez. Görüntü değişmez.
+
+`--cikti-koku` yalnız günlük komutta kabul edilir; diğer komutlarda yan etki
+öncesi reddedilir. Verilirse durum, kart CSV ve ön gösterim çıktıları bu kökün
+`rapor/` altına; örtük ayar bağı `rapor/ayar-baglari.jsonl` yoluna; kart geçmişi
+`kayit/kartlar.jsonl` yoluna; indirme kullanılıyorsa yeni görüntü
+`veri/gunluk/ag/` altına gider. Küresel yol sabitleri değişmez. Önceki kart
+geçmişinin girdi kaynağı mevcut `kayit/` olarak kalır; ayrı çıktı ayrı etkin
+üretim geçmişi oluşturmaz. Saklı görüntünün içine yazan çıktı seçimi reddedilir.
+Açık `--deneme-dosyasi` çağıranın seçtiği yazılabilir dosya olarak kalır;
+depoya yazmama kanıtında bu dosya da dışarıda seçilir.
+
+Saklı görüntü, başarılı aynı-gün kısa yolundan önce doğrulanır. Önceki başarılı
+durumun görüntü kimliği aynıysa kısa yol korunur; farklıysa açık çelişki
+verilir. Kayıtlı denemenin veri ve ayar bağları, ön gösterim ayrımı, son çubuk,
+18:15 sınırı ve uygunluk kapıları korunur. Tarih yoksa bugün kullanılır.
+Yeni seçenekler yoksa mevcut indirme ve çıktı yolları korunur. CSV biçimi,
+atomik yazma, yalnız eklenen kart geçmişi ve hata çıkışları değişmez;
+başarı mesajı üretilen CSV'nin gerçek konumunu gösterir.
 
 ## 7. Uygulama sırası
 
