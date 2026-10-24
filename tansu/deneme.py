@@ -1176,6 +1176,7 @@ def _mc_durum_kaniti(olaylar, d, b, k, sembol, durum, yurutme_d):
     for poz in pozisyonlar:
         risk = poz["risk_girdisi"]
         sinyal = _bul(olaylar, risk["sinyal_id"], "mc_sinyal")
+        motor.hedef_kaniti_dogrula(poz, sinyal["kayit"]["sinyal"])
         _mc_ayni_kosu(sinyal, d, b)
         if (
             sinyal["kayit"]["plan_ref"] != k["plan_ref"]
@@ -1856,7 +1857,71 @@ def _is_listesi_dogrula(is_listesi):
     return list(is_listesi)
 
 
-def _donem_ciktisi_dogrula(durum, birimler, icerik, islem_ref, uyarilar, cikti_ref):
+def _donem_hedef_kaniti_dogrula(icerik, deneme):
+    """TASARIM 5.15: isteğe bağlı yeni kanıt özgün dönem adayına bağlıdır."""
+    from tansu import motor
+
+    try:
+        for durum in icerik.get("durumlar", {}).values():
+            pozisyonlar = [
+                durum["pozisyon"],
+                *(i["pozisyon"] for i in durum["islemler"]),
+            ]
+            pozisyonlar = [
+                p
+                for p in pozisyonlar
+                if p is not None
+                and (
+                    "hedef_yok_kaniti" in p["risk_girdisi"]
+                    or (p["ayar"]["hedef"] == "tansu" and p["hedef"] is None)
+                )
+            ]
+            if not pozisyonlar:
+                continue
+            motor._durumu_oku(durum, durum["yurutme"])
+            for p in pozisyonlar:
+                parametreler = motor._duz(
+                    {a["ad"]: a["deger"] for a in deneme["strateji"]["parametreler"]}
+                )
+                if (
+                    kanonik(p["ayar"]) != kanonik(parametreler)
+                    or durum["yurutme"]["strateji_ayar_parmak_izi"]
+                    != deneme["strateji"]["ayar_parmak_izi"]
+                    or icerik["veri_referansi"]["manifest_parmak_izi"]
+                    != deneme["veri_ayarlari"]["manifest_ozeti"]
+                    or icerik["veri_referansi"]["goruntu_id"]
+                    not in deneme["veri_ayarlari"]["veri_referanslari"]
+                ):
+                    raise ValueError(
+                        "hedef yokluğu kayıtlı denemenin ayar veya verisiyle uyuşmuyor"
+                    )
+                risk = p["risk_girdisi"]
+                adaylar = [
+                    s for s in icerik["adaylar"] if s["kayit_id"] == risk["sinyal_id"]
+                ]
+                if (
+                    len(adaylar) != 1
+                    or adaylar[0]["baglar"]["ayar_parmak_izi"]
+                    != durum["yurutme"]["strateji_ayar_parmak_izi"]
+                ):
+                    raise ValueError("özgün E2 adayı veya ayarı uyuşmuyor")
+                motor.hedef_kaniti_dogrula(
+                    p,
+                    dict(
+                        sembol=risk["sembol"],
+                        tarih=p["sinyal_tarih"],
+                        kaynak_sinyal=adaylar[0],
+                        parametreler=parametreler,
+                        veri_ref=icerik["veri_referansi"],
+                    ),
+                )
+    except (KeyError, TypeError, ValueError) as hata:
+        raise PilotHatasi("Dönem hedef yokluğu kanıtı uyuşmuyor.") from hata
+
+
+def _donem_ciktisi_dogrula(
+    durum, birimler, icerik, islem_ref, uyarilar, cikti_ref, deneme
+):
     if durum not in ("tamamlandi", "hata"):
         raise PilotHatasi("Dönem durumu tanımsız.")
     if not isinstance(birimler, dict) or not birimler or not isinstance(icerik, dict):
@@ -1867,6 +1932,7 @@ def _donem_ciktisi_dogrula(durum, birimler, icerik, islem_ref, uyarilar, cikti_r
         _metin(ref)
     if len(set(islem_ref)) != len(islem_ref):
         raise PilotHatasi("İşlem referansı yinelenmiş.")
+    _donem_hedef_kaniti_dogrula(icerik, deneme)
 
 
 def _donem_yayini_dogrula(olaylar, kosu_id, is_id, donem):
@@ -2819,6 +2885,7 @@ def _ileri_pozisyon_bagi(olaylar, ust, m, p):
 
     risk = p["risk_girdisi"]
     sinyal = _bul(olaylar, risk["sinyal_id"], "ileri_sinyal")
+    motor.hedef_kaniti_dogrula(p, sinyal["sinyal"])
     _ileri_ayni_kosu(sinyal, m)
     y = _ileri_yurutme(ust, m.kosu_id, sinyal["sembol"])
     if (
@@ -4023,6 +4090,19 @@ class PilotKayit:
                 olay = _coz(json.loads(satir))
                 if olay["sema_surumu"] != SURUM or kanonik(olay) + b"\n" != satir:
                     raise ValueError("Şema veya kodlama uyuşmuyor.")
+                if olay.get("sonuc_turu") == "donem_v1":
+                    _donem_hedef_kaniti_dogrula(
+                        olay["icerik"],
+                        next(
+                            (
+                                o
+                                for o in olaylar
+                                if o["kayit_turu"] == "deneme"
+                                and o["deneme_id"] == olay["deneme_id"]
+                            ),
+                            None,
+                        ),
+                    )
                 if olay.get("kayit_turu") != "grup_hazirligi":
                     _isinma_olayi_dogrula(olaylar, olay)
                 if olay.get("kayit_turu") == "grup_hazirligi":
@@ -4697,7 +4777,13 @@ class _Kosu:
             raise PilotHatasi("Dönem kayıtlı denemede yok.")
         _metin(muhasebe_politikasi)
         _donem_ciktisi_dogrula(
-            durum, birimler, icerik, islem_referanslari, uyarilar, cikti_referanslari
+            durum,
+            birimler,
+            icerik,
+            islem_referanslari,
+            uyarilar,
+            cikti_referanslari,
+            self._deneme,
         )
 
         def denetle(olaylar):

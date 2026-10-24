@@ -5,6 +5,7 @@ Mum: tarih, aof, yuksek, dusuk, kapanis, sma250, atr, islem, karantina, kilit_ta
 Yalnız etkin kuralın okuduğu sütunlar: hacim (kurulum), rsi, onceki_rsi, sma50, onceki_dusuk.
 """
 
+from copy import deepcopy
 from dataclasses import asdict, dataclass, replace
 from hashlib import sha256
 import json
@@ -254,6 +255,7 @@ def tara(
     *,
     yurutme=None,
     onceki_durum=None,
+    kurulum_kanitlari=None,
 ) -> tuple | dict:
     """Tek Adım döngüsü (`islemler` ve günlük kart ortak kullanır).
 
@@ -262,7 +264,11 @@ def tara(
     son mumda kapanan pozisyon ya da None; iptal dahil).
     Açık `yurutme` isteğinde S09 sözlüğü döner; `islem_adimi` ile aynı geçiş kullanılır."""
     if yurutme is not None:
-        return _islem_tara(mumlar, sinyaller, ayar, kurulum, yurutme, onceki_durum)
+        return _islem_tara(
+            mumlar, sinyaller, ayar, kurulum, yurutme, onceki_durum, kurulum_kanitlari
+        )
+    if kurulum_kanitlari is not None:
+        raise ValueError("kurulum kanıtı açık E3 yürütmesi gerektirir")
     if onceki_durum is not None:
         raise ValueError("önceki durum açık yürütme isteği gerektirir")
     return _legacy_tara(mumlar, sinyaller, ayar, kurulum)
@@ -289,7 +295,7 @@ def _legacy_tara(mumlar, sinyaller, ayar, kurulum):
     return kapali, dusen, p, kapanan
 
 
-def _islem_tara(mumlar, sinyaller, ayar, kurulum, yurutme, durum):
+def _islem_tara(mumlar, sinyaller, ayar, kurulum, yurutme, durum, kanitlar):
     if not isinstance(sinyaller, dict):
         raise ValueError("yeni yürütmede sinyaller tarih-kimlik eşlemesi olmalı")
     if mumlar.empty:
@@ -300,8 +306,19 @@ def _islem_tara(mumlar, sinyaller, ayar, kurulum, yurutme, durum):
     if len(gun_sinyalleri) != len(sinyaller):
         raise ValueError("aynı güne birden çok sinyal kimliği verildi")
     kb = _islem_kurulumu(kurulum)
+    if kanitlar is not None and (
+        not isinstance(kanitlar, dict) or not set(kanitlar) <= set(sinyaller.values())
+    ):
+        raise ValueError("kurulum kanıtı sinyal kimliğine bağlı olmalı")
     for tarih, satir in mumlar.iterrows():
-        alt, hedef = kb.get(_gun_tarihi(tarih), (None, None))
+        gun = _gun_tarihi(tarih)
+        alt, hedef = kb.get(gun, (None, None))
+        sinyal = gun_sinyalleri.get(gun)
+        kanit = None
+        if kanitlar is not None and sinyal in kanitlar:
+            if gun not in kb:
+                raise ValueError("kurulum kanıtının kurulum satırı eksik")
+            kanit = dict(sinyal_id=sinyal, sinyal=kanitlar[sinyal])
         durum = islem_adimi(
             durum,
             {**satir.to_dict(), "tarih": tarih},
@@ -310,6 +327,7 @@ def _islem_tara(mumlar, sinyaller, ayar, kurulum, yurutme, durum):
             ayar=ayar,
             kutu_alt=alt,
             hedef=hedef,
+            kurulum_kaniti=kanit,
         )
     return durum
 
@@ -610,10 +628,13 @@ def _durumu_oku(durum, y):
     kod = d.pop("butunluk", None)
     if kod != _iz_kodu(d) or d["surum"] != "islem_durumu_v1" or d["yurutme"] != y:
         raise ValueError("önceki durum veya yürütme bağı uyuşmuyor")
+    for p in [d["pozisyon"], *(i["pozisyon"] for i in d["islemler"])]:
+        if p is not None:
+            hedef_kaniti_dogrula(p)
     return d
 
 
-def _sinyali_al(d, p, m, sinyal, ayar, kutu_alt, hedef):
+def _sinyali_al(d, p, m, sinyal, ayar, kutu_alt, hedef, kanit):
     if sinyal is None:
         return p
     if p is not None:
@@ -625,29 +646,178 @@ def _sinyali_al(d, p, m, sinyal, ayar, kutu_alt, hedef):
     if not _atr_gecerli(m.get("atr")):
         _olay(d, m["tarih"], "gecersiz_risk_girdisi", sinyal, tur="dusen_sinyal")
         return None
-    if _kurulum_eksik(ayar, kutu_alt, hedef):
+    if _kurulum_eksik(ayar, kutu_alt, hedef, kanit is not None):
         _olay(d, m["tarih"], "kurulum_eksik", sinyal, tur="dusen_sinyal")
         return None
     d["yari_islenen"] = False
+    kimlik = [d["yurutme"], sinyal, m["tarih"], _duz(asdict(ayar)), kutu_alt, hedef]
+    if kanit is not None:
+        kimlik.append(kanit)
     return replace(
         bekleyen(m["atr"], m["tarih"], ayar, kutu_alt, hedef),
         risk_girdisi=d["yurutme"]
         | {
             "sinyal_id": sinyal,
             "ayar_parmak_izi": _iz_kodu(_duz(asdict(ayar))),
-            "islem_id": _iz_kodu(
-                [d["yurutme"], sinyal, m["tarih"], _duz(asdict(ayar)), kutu_alt, hedef]
-            ),
+            "islem_id": _iz_kodu(kimlik),
+            **({"hedef_yok_kaniti": kanit} if kanit is not None else {}),
         },
     )
 
 
-def _kurulum_eksik(ayar, kutu_alt, hedef):
+def hedef_yoklugu_kanitlari(kabuller):
+    """TASARIM 5.15: mevcut kabul gövdesinden yalnız izin adaylarını taşı."""
+    return {
+        kimlik: k
+        for kimlik, k in kabuller.items()
+        if k["kaynak_sinyal"]["hedef"].get("bos_nedeni") == "hedef_bulunamadi"
+    }
+
+
+def _hedef_ozeti_dogrula(ozet, sinyal, ayar, tarih, sembol, kutu_alt, hedef):
+    """TASARIM 5.15: yalnız kaynaklı hedef yokluğu giriş izni taşır."""
+    alanlar = {
+        "sinyal_id",
+        "kaynak_sinyal_id",
+        "sembol",
+        "tarih",
+        "veri_ref_id",
+        "strateji_ayar_parmak_izi",
+        "parametreler",
+        "kutu_alt",
+        "hedef",
+    }
+    if (
+        not isinstance(ozet, dict)
+        or set(ozet) != alanlar
+        or any(
+            not isinstance(ozet[a], str) or not ozet[a].strip()
+            for a in (
+                "sinyal_id",
+                "kaynak_sinyal_id",
+                "veri_ref_id",
+                "strateji_ayar_parmak_izi",
+            )
+        )
+        or ozet["sinyal_id"] != sinyal
+        or ozet["tarih"] != tarih
+        or ozet["sembol"] != sembol
+        or _iz_kodu(ozet["parametreler"]) != _iz_kodu(_duz(asdict(ayar)))
+        or ayar.hedef != "tansu"
+        or hedef is not None
+        or ozet["hedef"]
+        != dict(deger=None, birim="TL/adet", bos_nedeni="hedef_bulunamadi")
+        or (ozet["kutu_alt"] is not None and not _pozitif_sayi(ozet["kutu_alt"]))
+        or ozet["kutu_alt"] != kutu_alt
+        or (kutu_alt is not None and not _pozitif_sayi(kutu_alt))
+        or (ayar.stop == "kutu" and kutu_alt is None)
+    ):
+        raise ValueError("hedef yokluğu kanıtı kurulumla uyuşmuyor")
+    return ozet
+
+
+def _hedef_yok_kaniti(kanit, sinyal, ayar, tarih, sembol, kutu_alt, hedef):
+    try:
+        k = kanit["sinyal"]
+        s = k["kaynak_sinyal"]
+        if (
+            kanit["sinyal_id"] != sinyal
+            or k["sembol"] != sembol
+            or k["tarih"] != tarih
+            or s["semboller"] != [sembol]
+            or s["tarih"] != tarih
+            or s["sema_surumu"] != "kurulum_s06_v1"
+            or s["kayit_turu"] != "sinyal"
+            or s["aile"] != "ema_sikisma"
+            or s.get("yurutme_nedeni") not in (None, "sonraki_seans_ufuk_disinda")
+            or s["baglar"]["veri_ref_id"] != k["veri_ref"]["kayit_id"]
+            or s["kutu_alt"]["birim"] != "TL/adet"
+        ):
+            raise ValueError("hedef yokluğu kaynak bağı uyuşmuyor")
+        ozet = dict(
+            sinyal_id=sinyal,
+            kaynak_sinyal_id=s["kayit_id"],
+            sembol=sembol,
+            tarih=tarih,
+            veri_ref_id=s["baglar"]["veri_ref_id"],
+            strateji_ayar_parmak_izi=s["baglar"]["ayar_parmak_izi"],
+            parametreler=k["parametreler"],
+            kutu_alt=s["kutu_alt"]["deger"],
+            hedef=s["hedef"],
+        )
+        return deepcopy(
+            _hedef_ozeti_dogrula(ozet, sinyal, ayar, tarih, sembol, kutu_alt, hedef)
+        )
+    except (KeyError, TypeError) as hata:
+        raise ValueError("hedef yokluğu kanıtı eksik veya bozuk") from hata
+
+
+def _hedef_kimligini_dogrula(p, kanit):
+    risk = p["risk_girdisi"]
+    y = {
+        a: v
+        for a, v in risk.items()
+        if a
+        not in (
+            "sinyal_id",
+            "ayar_parmak_izi",
+            "islem_id",
+            "hedef_yok_kaniti",
+            "giris_fiyat",
+            "ilk_stop",
+        )
+    }
+    kimlik = [
+        y,
+        risk["sinyal_id"],
+        p["sinyal_tarih"],
+        p["ayar"],
+        p["kutu_alt"],
+        p["hedef"],
+    ]
+    if kanit is not None:
+        kimlik.append(kanit)
+    if risk["islem_id"] != _iz_kodu(kimlik):
+        raise ValueError("hedef yokluğu kanıtı işlem kimliğinden farklı")
+
+
+def hedef_kaniti_dogrula(pozisyon, kabul=None):
+    """TASARIM 5.15: E3 durumu ve E5 özgün kabulü aynı kanıtı doğrular."""
+    risk = pozisyon["risk_girdisi"]
+    if "hedef_yok_kaniti" not in risk:
+        if (
+            kabul is not None
+            and pozisyon["ayar"]["hedef"] == "tansu"
+            and pozisyon["hedef"] is None
+        ):
+            raise ValueError("hedef yokluğu için özgün kabul kanıtı gerekli")
+        return
+    kanit = risk["hedef_yok_kaniti"]
+    ayar = aileler.Parametre(
+        **dict(pozisyon["ayar"], periyotlar=tuple(pozisyon["ayar"]["periyotlar"]))
+    )
+    bag = (
+        risk["sinyal_id"],
+        ayar,
+        pozisyon["sinyal_tarih"],
+        risk["sembol"],
+        pozisyon["kutu_alt"],
+        pozisyon["hedef"],
+    )
+    _hedef_ozeti_dogrula(kanit, *bag)
+    _hedef_kimligini_dogrula(pozisyon, kanit)
+    if kabul is not None and kanit != _hedef_yok_kaniti(
+        dict(sinyal_id=risk["sinyal_id"], sinyal=kabul), *bag
+    ):
+        raise ValueError("hedef yokluğu kanıtı özgün kayıttan farklı")
+
+
+def _kurulum_eksik(ayar, kutu_alt, hedef, hedef_yok=False):
     for deger in (kutu_alt, hedef):
         if deger is not None and not _pozitif_sayi(deger):
             raise ValueError("kurulum fiyatı sonlu ve pozitif olmalı")
     return (ayar.stop == "kutu" and kutu_alt is None) or (
-        ayar.hedef != "yok" and hedef is None
+        ayar.hedef != "yok" and hedef is None and not hedef_yok
     )
 
 
@@ -706,6 +876,7 @@ def islem_adimi(
     ayar=aileler.Parametre(),
     kutu_alt=None,
     hedef=None,
+    kurulum_kaniti=None,
 ):
     """TASARIM 5.15 S09: saf, JSON ile geri okunabilir tek hisse geçişi."""
     y = _duz(yurutme)
@@ -725,7 +896,14 @@ def islem_adimi(
                 raise ValueError("geçersiz sayısal limit girdisi")
     m = _mum_dogrula(mum, sinyal)
     tarih = m["tarih"]
-    girdi = _iz_kodu([m, sinyal, _duz(asdict(ayar)), _duz(kutu_alt), _duz(hedef)])
+    kanit = None
+    girdi_degerleri = [m, sinyal, _duz(asdict(ayar)), _duz(kutu_alt), _duz(hedef)]
+    if kurulum_kaniti is not None:
+        kanit = _hedef_yok_kaniti(
+            kurulum_kaniti, sinyal, ayar, tarih, y["sembol"], kutu_alt, hedef
+        )
+        girdi_degerleri.append(kanit)
+    girdi = _iz_kodu(girdi_degerleri)
     d = _durumu_oku(durum, y)
     if d["son_tarih"] is not None and tarih <= d["son_tarih"]:
         if tarih == d["son_tarih"] and girdi == d["son_girdi"]:
@@ -739,7 +917,7 @@ def islem_adimi(
     d["karantina_kalan"] = (
         KARANTINA_GUN if m["karantina"] else max(0, d["karantina_kalan"] - 1)
     )
-    p = _sinyali_al(d, p, m, sinyal, ayar, kutu_alt, hedef)
+    p = _sinyali_al(d, p, m, sinyal, ayar, kutu_alt, hedef, kanit)
     return _durumu_tamamla(d, p, tarih, girdi)
 
 

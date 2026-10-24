@@ -1198,8 +1198,9 @@ sözlük döndürür. Yürütme isteği verilmezse eski dört öğeli sonuç ve 
 Bu hesap dosya yazmaz, veri indirmez ve eski `Zincir` önbelleğini yeni hesap için kullanmaz.
 Yeni yüz, gün başına çözülmüş tek kurulum ister; kurulum tarihinin tekrarı aynı içerikte olsa da
 hatadır. Eski çok dönemli kurulumu ilk satırdan seçme davranışı eski yolda korunur. `stop=kutu`
-için kutu altı, `hedef=tansu` için hedef gerekli alanlardır; eksikse aday `kurulum_eksik`
-gerekçesiyle doluma geçmez. Yeni yolda eksik kutu yerine ATR stopu veya seçilmiş hedefin
+için kutu altı gereklidir; `hedef=tansu` yokluğu yalnız aşağıdaki ortak EMA kurulum
+sözleşmesinin kimliğe bağlı `hedef_bulunamadi` kanıtıyla izinlidir. Diğer gerekli
+kurulum eksikleri `kurulum_eksik` gerekçesiyle doluma geçmez. Yeni yolda eksik kutu yerine ATR stopu veya seçilmiş hedefin
 sessizce atlanması yoktur; uygulanmayan alanın boşluğu bu ret değildir.
 
 Yürütme isteği `bagimsiz_islem_v1`, mevcut `ema_sikismasi` ailesi, strateji kimliği/sürümü,
@@ -1328,6 +1329,17 @@ korur. Dönemde kurulum yoksa boş sonuç geçerlidir.
 Günlük `ortak_kurulum` aynı hesap sahibini kullanır. Kayıtlı sayısal ızgara
 ayarları katalogdan aynı değerlerle doğrulanır; gizli varsayılan atanmaz.
 Yeni yürütücü E2'yi her tarihte bütün geçmişi yeniden hesaplatacak biçimde çağırmaz.
+
+**Aynı gün uyarlayıcısı (uygulanan aday, inceleme ve gerçek veri kanıtı bekliyor, 24.10.2026).** S10 ve
+S12/MC, E3'ten ve kalıcı sinyal kabulünden önce mevcut legacy EMA ailesinin
+`aile-kurallari.md` §3 Modül 1 "Çıkış paketi" içindeki aynı gün kuralını uygular.
+Bu kayıt mevcut YORUM'un taşımasıdır; Tansu'ya ait yeni bir seçim kuralı değildir.
+E4 özgün kurulum satırı ile sinyali korunan konumlarına göre birlikte eşler;
+gün, özgün kimlik ve kutu/hedef değerleri uyuşmalıdır. E2'nin tüm satırları ve
+aday kanıtı korunur. Yalnız seçilen özgün kimlik ve tam satır, mevcut tarih/sembol
+uygunluğundan geçerse E3'e ve tek kalıcı kabule gider. Uygun olmayan günün kurulum
+satırı E3'e verilmez. Kimlik metni veya fiyat sıralanmaz; bozuk ya da boş gerekli
+girdide sonraki döneme geçilmez. Genel E3 tekrarlı girdi kontrolü değişmez.
 
 Altı çocuk işin sırası 2025, 2024, 2023, 2022, 2021 ve birleşik dönemdir.
 Her çocuk dönem ve iş kimliğini taşır. Yıllık işler boş işlem durumuyla başlar;
@@ -2517,6 +2529,48 @@ girdilerini taşır. ATR stopunun dolum fiyatı henüz bilinmediği için ilk st
 boştur. Kutu stopu kutu altını taşır. `hedef=yok` için hedef uygulanmaz; `hedef=tansu`
 için bulunamayan hedef `hedef_bulunamadi` nedeniyle boştur. Bu, eski §3 Modül 1
 kurulumunun hedef yokluğu davranışını değiştirmez ve varsayılan hedef üretmez.
+**Hedef yokluğu aktarım düzeltmesi (uygulanan aday, inceleme ve gerçek veri kanıtı bekliyor, 24.10.2026).**
+E3'ün yalnız sayısal hedefi alan yolu, E2'nin `hedef_bulunamadi` nedenini kaybetti.
+BIMAS 07.12.2021 özgün adayında kutu altı ve ilk stop 26,15166 iken hedef bu
+nedenle boştur; aynı kimlik `kurulum_eksik` diye reddedilmiştir.
+Kanıt başvurusu: [#57](https://github.com/zPfizer/tansu/issues/57) ve
+[#94](https://github.com/zPfizer/tansu/issues/94) gerçek veri koşusu, E5 dönem sonucu
+`pilot_s03_v1:5682df4e-c763-4402-93e1-3e646c9e73cc`, özgün günlük satırı 99;
+günlük SHA-256: `25d1f9a7c8bc4cb4dadc4b4ad7b6a1303be2da9d96c2ac95a3384ab0884392cd`.
+Bu düzeltme yukarıdaki
+mevcut hedef yokluğu kuralını uygular; hedef, stop veya strateji seçmez.
+`test_s10_eksik_gerekli_hedef_sinyali_basarili_bos_donem_yapmaz` bu izinli E2
+boşluğunu gerçek eksik girdiye eşitlediği için yanlış beklentidir. Gerçek eksik
+kurulumun reddi korunur; sınama önce izinli yokluğu gerçek eksikten ayırır.
+
+S09'a isteğe bağlı `kurulum_kaniti`, toplu yola kimliğe bağlı `kurulum_kanitlari`
+verilebilir. Kanıt mevcut kabul gövdesini (`sembol`, `tarih`, `kaynak_sinyal`, tam
+`parametreler`, `veri_ref`) taşır. Gün, sembol, E3 ve özgün E2 kimliği, seçilen
+ayarlar, veri bağı ve aynı kurulum değerleri doğrulanmadan izin vermez. Yalnız
+`hedef=tansu`, gerçek `None` ve tam `hedef_bulunamadi` nedeninin birlikte bulunması
+hedefsiz işleme izin verir. E2 tablosundaki olağan `NaN`, eşlenmiş özgün değer
+kaydındaki `None/hedef_bulunamadi` ile doğrulanıp toplu E3 sınırında `None` olur.
+Doğrudan günlük çağrıdaki `NaN`, sonsuz veya çelişkili kaynak değeri izin değildir.
+Gerekli kutu, kurulum satırı ve bozuk fiyat retleri kalır.
+S10, S12 ve MC aynı E3 doğrulayıcısını kullanır; seçilen çocuk ve kalıcı kabul bağı
+mevcut E4/E5 sahiplerinde kalır. Üst WF yürütme kimliği çocuk kimliğine çevrilmez.
+
+İzin kanıtının kararlı anlamı yeni gün girdisi ve işlem kimliğine, ayrıca pozisyonun
+`risk_girdisi.hedef_yok_kaniti` alanına bağlanır. Üretim zamanı özete girmez.
+Aynı girdileri alan kanıtsız E3 çağrısının girdi listesi ve işlem kimliği değişmez;
+eski saklı kayıtların mühürlü okuması korunur;
+eski `None` geriye dönük izin sayılmaz. Yeni kanıt kaynak kayıtla yeniden doğrulanır;
+günlük ve toplu geçiş aynı sonucu verir. S10 yeniden okumada tam parametre ve veri
+bağı pozisyonun kendi özetinden değil, özgün kayıtlı denemeden doğrulanır. Yeni
+hedefsiz `hedef=tansu` kabulü kanıt silinerek eski kanıtsız kabul gibi sunulamaz;
+eski katı S09 yolu bu konumda geçerli pozisyon üretmezdi. Genel eski kanıtsız durum
+okuması korunur. E2 tekrarları ve bütün adaylar korunur; E4'ün aynı gün aktarımı
+S10 uyarlayıcı sözleşmesindeki aile sahibine bağlıdır. Yeni uyarlayıcı uygun olmayan
+günde E3'e kurulum değeri vermediği için yeni tam hesapta durum özetleri farklı
+olabilir. Eski S10 hesabını bayt düzeyinde aynı üretme veya eski/yeni uyarlayıcıyla
+aynı gün devam etme iddiası yoktur. Eski kayıt yazılmaz veya bu uyarlayıcıyla devam
+ettirilmez. Yeni gerçek sınama, yeni günlükte fiili kaynak/kod kimliğiyle başlar.
+
 Çift ailesi ayrı kuralını korur; EMA katalog kaydıyla çift hesabı yapılmaz.
 Dayanak: #87 sözleşme sınırı ve `aile-kurallari.md` §3 Modül 1.
 

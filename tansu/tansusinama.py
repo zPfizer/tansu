@@ -1547,7 +1547,10 @@ def _donem_sembolu(deneme, sonuc, paket, sembol, hesap, strateji, p):
         hesap,
         kilit_politikasi=deneme["yontem_ayarlari"].get("kilit_politikasi"),
     )
-    sinyaller = _donem_sinyalleri(deneme, sonuc, paket, sembol, hesap, m, gunler)
+    secilen = _aile_kurulum_secimi(hesap, sembol)
+    sinyaller = _donem_sinyalleri(
+        deneme, sonuc, paket, sembol, hesap, m, gunler, secilen
+    )
     yurutme = dict(
         surum="bagimsiz_islem_v1",
         aile=simulator.AILE,
@@ -1569,11 +1572,24 @@ def _donem_sembolu(deneme, sonuc, paket, sembol, hesap, strateji, p):
         strateji_ayar_parmak_izi=strateji.ayar_parmak_izi,
         deneme_ayar_parmak_izi=deneme["ayar_parmak_izi"],
     )
+    kabuller = {}
+    for s in hesap["sinyaller"]:
+        if s["kayit_id"] in sinyaller.values():
+            if s["baglar"]["ayar_parmak_izi"] != strateji.ayar_parmak_izi:
+                raise ValueError("E2 kurulumunun seçilen ayar bağı uyuşmuyor")
+            kabuller[s["kayit_id"]] = dict(
+                sembol=sembol,
+                tarih=s["tarih"],
+                kaynak_sinyal=s,
+                parametreler=motor._duz(asdict(p)),
+                veri_ref=paket["referans"],
+            )
     durum = saglamlik.ema_hucre_calistir(
         m.loc[bas:son],
         p,
+        kurulum_kanitlari=motor.hedef_yoklugu_kanitlari(kabuller),
         sinyal_konumlari=sinyaller,
-        kurulum=hesap["kurulum"],
+        kurulum=_kabul_kurulumu(hesap, secilen, sinyaller.values()),
         yurutme=yurutme,
     )
     sonuc["durumlar"][sembol] = durum
@@ -1610,7 +1626,48 @@ def _sinyal_uygunlugu(sembol, t, uyelik, sonraki, engeller, m):
     return None
 
 
-def _donem_sinyalleri(deneme, sonuc, paket, sembol, hesap, m, gunler):
+def _aile_kurulum_secimi(hesap, sembol):
+    """Aile kuralları §3 Modül 1: ilk özgün dönem satırı ve kimliği birlikte kalır."""
+    kurulum, sinyaller = hesap["kurulum"], hesap["sinyaller"]
+    if len(kurulum) != len(sinyaller):
+        raise ValueError("E2 kurulum satırı ve sinyal sayısı uyuşmuyor")
+    secilen, gunler, kimlikler = {}, set(), set()
+    for i, ((t, satir), sinyal) in enumerate(
+        zip(kurulum.iterrows(), sinyaller, strict=True)
+    ):
+        kimlik = sinyal["kayit_id"]
+        if (
+            sinyal["semboller"] != [sembol]
+            or sinyal["tarih"] != pd.Timestamp(t).date().isoformat()
+            or kimlik in kimlikler
+            or not kimlik.startswith(f"{sembol}:{sinyal['tarih']}:")
+            or not kimlik.endswith(":" + sinyal["baglar"]["ayar_parmak_izi"])
+        ):
+            raise ValueError(
+                "E2 kurulum satırının özgün kimlik veya gün bağı uyuşmuyor"
+            )
+        for ad in ("kutu_alt", "kutu_ust", "hedef"):
+            deger = satir[ad]
+            if sinyal[ad]["birim"] != "TL/adet" or (
+                sinyal[ad]["deger"] != (None if pd.isna(deger) else deger)
+            ):
+                raise ValueError("E2 kurulum satırı ve özgün değer kaydı uyuşmuyor")
+        kimlikler.add(kimlik)
+        if t not in gunler:
+            secilen[kimlik] = i
+            gunler.add(t)
+    return secilen
+
+
+def _kabul_kurulumu(hesap, secilen, kimlikler):
+    return (
+        hesap["kurulum"]
+        .iloc[[i for kimlik, i in secilen.items() if kimlik in kimlikler]]
+        .copy()
+    )
+
+
+def _donem_sinyalleri(deneme, sonuc, paket, sembol, hesap, m, gunler, secilen):
     uyelik = sonuc["uyelik"]["gunler"]
     engeller = {
         r["tarih"]: r["kalite_bayraklari"]
@@ -1633,9 +1690,7 @@ def _donem_sinyalleri(deneme, sonuc, paket, sembol, hesap, m, gunler):
             bos_nedenleri={},
         )
         sonuc["adaylar"].append(aday)
-        if neden is None:
-            if pd.Timestamp(t) in sinyaller:
-                raise ValueError(f"{sembol}/{t}: birden çok günlük kurulum")
+        if neden is None and s["kayit_id"] in secilen:
             sinyaller[pd.Timestamp(t)] = s["kayit_id"]
     return sinyaller
 
@@ -3091,7 +3146,8 @@ def _ileri_test_sembolu(
     bas, son = r["donem"]["baslangic"].isoformat(), r["donem"]["bitis"].isoformat()
     gunler = [t for t in paket["gunler"] if bas <= t <= son]
     isinma = _isinma_kaydet(d, r, paket, sembol, hesap, gunler[0], p.isinma)
-    sinyaller, kabuller = {}, []
+    kurulum_secimi = _aile_kurulum_secimi(hesap, sembol)
+    sinyaller, kabuller, kabul_gunleri = {}, [], {}
     engeller = {
         x["tarih"]: x["kalite_bayraklari"]
         for x in paket["piyasa"]
@@ -3104,7 +3160,7 @@ def _ileri_test_sembolu(
             t = sinyal["tarih"]
             neden = _sinyal_uygunlugu(sembol, t, uyelik["gunler"], sonraki, engeller, m)
             r["adaylar"].append(sinyal | dict(yurutme_nedeni=neden))
-            if neden is None:
+            if neden is None and sinyal["kayit_id"] in kurulum_secimi:
                 kabul = dict(
                     sembol=sembol,
                     tarih=t,
@@ -3112,6 +3168,7 @@ def _ileri_test_sembolu(
                     parametreler=motor._duz(asdict(p)),
                     veri_ref=paket["referans"],
                 )
+                kabul_gunleri[t] = kabul
                 if mc:
                     kabuller.append(kabul)
                 else:
@@ -3125,7 +3182,17 @@ def _ileri_test_sembolu(
     durum = saglamlik.ema_hucre_calistir(
         m.loc[bas:son],
         p,
-        kurulum=hesap["kurulum"],
+        kurulum=_kabul_kurulumu(
+            hesap,
+            kurulum_secimi,
+            {k["kaynak_sinyal"]["kayit_id"] for k in kabul_gunleri.values()},
+        ),
+        kurulum_kanitlari=motor.hedef_yoklugu_kanitlari(
+            {
+                kimlik: kabul_gunleri[t.date().isoformat()]
+                for t, kimlik in sinyaller.items()
+            }
+        ),
         sinyal_konumlari=sinyaller,
         yurutme=_ileri_yurutme(yurutme_d, kosu.makbuz.kosu_id, sembol),
         onceki_durum=onceki,

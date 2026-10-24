@@ -6,6 +6,8 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ## [Yayımlanmamış]
 
+- E2'nin izinli `hedef_bulunamadi` nedeni ortak E3 işlemine kaynak, ayar ve kimlik kanıtıyla taşınır; eksik kurulum ve bozuk fiyat retleri korunur. Legacy EMA aynı gün aktarımı aile sahibinin ilk özgün dönem kuralına bağlanır; bütün E2 adayları, aynı girdili kanıtsız E3 kimlikleri, eski kayıt okuması ve native kabul bağları korunur. Yeni uyarlayıcının uygun olmayan gün girdileri yeni hesapta farklı durum özeti üretebilir. Gerçek veriyle yeniden sınama ve bağımsız inceleme bekleniyor. (#57, #94)
+
 - CI'da S13 dışı sınama bölümü 60 dakikalık süre sınırına takıldığı için aynı testler toplama sırasına göre dönüşümlü iki bölüme ayrıldı. Tam koleksiyon, çakışmasız dağılım ve çalışan bölümün test kimlikleri doğrulanır; süre sınırı ve testler korunur. (#94, #57)
 
 - MC kaydı ve ortak yeniden sınaması donmuş WF hücresinin eşleşmiş ısınma seçimine bağlandı. Yeni politikada bölüm durumları özgün mühür ve tam değişen alanlarla saklanır; geçmişler nihai durumun kanonik öneklerinden kayıpsız kurulur. Tam uygun kaynak koşusu kanıtı açık kalır. (#94, #178)

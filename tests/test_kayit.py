@@ -5523,3 +5523,80 @@ def test_pilot_secili_isinma_bozuk_politikayi_eski_metaveri_saymaz(
         pilot_deneme(depo, veri_ayarlari=v, yontem_ayarlari=y)
     assert depo.yol.read_bytes() == once
     assert not any(o["kayit_turu"] == "baslangic" for o in depo.oku())
+
+
+@pytest.mark.parametrize(
+    "boz",
+    [None, "kaynak", "kanit", "sil", "sil_yeniden_muhurle", "ayar_yeniden_muhurle"],
+)
+def test_s10_hedef_yoklugu_native_kaynak_bagi_ve_eski_okuma(tmp_path, monkeypatch, boz):
+    from tests.test_tansusinama import s10_hedef_yoklugu, s10_calistir
+
+    depo, m = s10_hedef_yoklugu(tmp_path, monkeypatch)
+    sonuc = s10_calistir(depo, m, tmp_path)
+    olaylar = depo.oku()
+    olay = next(
+        o
+        for o in olaylar
+        if o.get("sonuc_turu") == "donem_v1" and o["donem"]["ad"] == "2021"
+    )
+    durum = olay["icerik"]["durumlar"]["TEST"]
+    assert "hedef_yok_kaniti" in durum["pozisyon"]["risk_girdisi"]
+    if boz is None:
+        once = depo.yol.read_bytes()
+        assert (
+            pilot.PilotKayit(depo.yol).izle(sonuc["donemler"][4]["makbuz"].olay_id)[
+                "sonuc"
+            ]["icerik"]["durumlar"]["TEST"]
+            == durum
+        )
+        assert depo.yol.read_bytes() == once
+        return
+    if boz == "kaynak":
+        olay["icerik"]["adaylar"][0]["kayit_id"] = "baska-kaynak"
+    elif boz == "kanit":
+        durum["pozisyon"]["risk_girdisi"]["hedef_yok_kaniti"]["kaynak_sinyal_id"] = (
+            "baska-kaynak"
+        )
+    else:
+        pozisyon = durum["pozisyon"]
+        risk = pozisyon["risk_girdisi"]
+        if boz == "ayar_yeniden_muhurle":
+            pozisyon["ayar"]["pencere"] += 1
+            risk["hedef_yok_kaniti"]["parametreler"]["pencere"] += 1
+            risk["ayar_parmak_izi"] = motor._iz_kodu(pozisyon["ayar"])
+        else:
+            del risk["hedef_yok_kaniti"]
+        if boz != "sil":
+            # Saldırı yalnız dış mührü değil, yeni kimlik ve girdi özetini de değiştirir.
+            y = {
+                a: v
+                for a, v in risk.items()
+                if a
+                not in (
+                    "sinyal_id",
+                    "ayar_parmak_izi",
+                    "islem_id",
+                    "hedef_yok_kaniti",
+                    "giris_fiyat",
+                    "ilk_stop",
+                )
+            }
+            kimlik = [
+                y,
+                risk["sinyal_id"],
+                pozisyon["sinyal_tarih"],
+                pozisyon["ayar"],
+                pozisyon["kutu_alt"],
+                pozisyon["hedef"],
+            ]
+            if "hedef_yok_kaniti" in risk:
+                kimlik.append(risk["hedef_yok_kaniti"])
+            risk["islem_id"] = motor._iz_kodu(kimlik)
+            durum["son_girdi"] = motor._iz_kodu(["saldirganin_yeni_girdisi", kimlik])
+    durum["butunluk"] = motor._iz_kodu(
+        {a: v for a, v in durum.items() if a != "butunluk"}
+    )
+    depo.yol.write_bytes(b"".join(pilot.kanonik(o) + b"\n" for o in olaylar))
+    with pytest.raises(pilot.PilotHatasi, match="Bozuk tam satır"):
+        pilot.PilotKayit(depo.yol).oku()

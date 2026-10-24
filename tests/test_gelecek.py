@@ -1025,3 +1025,23 @@ def test_dogal_isinma_499_500_ve_gelecek_fiyat_oneki(tmp_path, monkeypatch):
     ]
     pd.testing.assert_frame_equal(yeniden["kurulum"], simdi["kurulum"])
     pd.testing.assert_series_equal(yeniden["isinma"], simdi["isinma"])
+
+
+def test_izinli_hedef_yoklugu_gelecek_mumdan_onceki_durumu_degistirmez():
+    from tests.test_motor import hedef_yoklugu_ornegi
+
+    m, p, k, y, kanit = hedef_yoklugu_ornegi()
+    sinyaller = {m.index[0]: kanit["sinyal_id"]}
+    ayarlar = dict(yurutme=y, kurulum_kanitlari={kanit["sinyal_id"]: kanit["sinyal"]})
+    once = motor.tara(m, sinyaller, p, k, **ayarlar)
+    tam = pd.concat([m, m.set_axis(pd.DatetimeIndex(["2021-12-08"]))])
+    for fiyat in (100.0, 500.0):
+        tam.loc["2021-12-08", ["aof", "yuksek", "dusuk", "kapanis"]] = fiyat
+        sakli = deepcopy(once)
+        toplu = motor.tara(tam, sinyaller, p, k, **ayarlar)
+        devam = motor.tara(
+            tam.iloc[1:], {}, p, k.iloc[:0], yurutme=y, onceki_durum=once
+        )
+        assert once == sakli
+        assert devam["iz"][: len(once["iz"])] == once["iz"]
+        assert devam == toplu
