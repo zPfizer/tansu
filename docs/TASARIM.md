@@ -2496,10 +2496,10 @@ izni vermez. Fon/kripto kapsamı ve kalıcı kimlik onayı bu motor sürümünü
 
 ### Saklı girdi ve ayrı çıktı kökü (#126)
 
-Saklı girdi ve çıktı ayrımı uygulandı. İkinci inceleme, eski çelişkili
-çıktının başarı sayılması, geri dönülen günün saatinin değişmesi ve eşzamanlı
-kabul hatalarını gösterdi. Aşağıdaki son düzeltme sözleşmesi henüz uygulanmadı;
-uygulama, kanıt ve bağımsız inceleme bekliyor. Kaynak: #126'nın 22.10.2026
+Saklı girdi ve çıktı ayrımı uygulandı. İkinci incelemenin eski çelişkili
+çıktı, geri dönülen günün saati ve eşzamanlı kabul hataları düzeltildi;
+yerel davranış kanıtı alındı. Teslim, bağımsız inceleme ve temiz commit üzerinde
+gerçek komut kanıtı gerektirir. Kaynak: #126'nın 22.10.2026
 uygulama sözleşmesi ve 24.10.2026 ikinci inceleme karşı örnekleri. Teslim #94'e
 bağlıdır; bu hazırlık bir aileyi etkinleştirmez ve #127'nin aktif aile kartı
 kanıtının yerine geçmez.
@@ -2593,8 +2593,12 @@ sistemi tutar ve süreç kapanınca bırakır. Kilit dosyaları silinmez. Uygula
 standart kütüphaneyi kullanır; yeni hizmet veya bağımlılık eklenmez.
 
 Bu yazma sahipliği, saklı girdiyle aynı çıktıyı paylaşabilen seçeneksiz çağrıda
-da uygulanır. Olağan indirme, uygunluk, durum kısa yolu ve çubuksuz davranış
-değişmez. Ancak çağrı kart CSV'si yazacaksa mevcut günün başka görüntüye ait
+da uygulanır. Olağan indirme, uygunluk ve çubuksuz davranış değişmez.
+Seçeneksiz çağrı, açık istenen gün taşıyan saklı başarı ekranını yalnız o gün
+istendiğinde kısa yoldan kabul eder. Bu hem `TAMAM` hem `BUGÜN ÇUBUK YOK`
+için geçerlidir. Açık istenen gün taşımayan eski ekranın mevcut saat temelli
+kısa yolu korunur. Bu metadata etkileşiminin düzeltmesi henüz uygulanmadı.
+Ancak çağrı kart CSV'si yazacaksa mevcut günün başka görüntüye ait
 kabulünü veya ret işaretini geçemez. Aynı görüntü kimliğinde de yeni hesaplanan
 kartlar, kabul edilmiş kart değerleriyle uyuşmalıdır. Uyuşmayan yeni hesap
 CSV yazılmadan reddedilir; sağlam eski CSV ve günlük korunur. Bu yeni hesap
