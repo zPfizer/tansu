@@ -4827,6 +4827,17 @@ class PilotKayit:
         self._mc_baglam = None
         self._mc_durum_kilidi = Lock()
 
+    def __reduce__(self):
+        """TASARIM 5.15 S13: işçiye yalnız yol geçer; yerel durum yeniden kurulur."""
+        if not self._mc_durum_kilidi.acquire(blocking=False):
+            raise PilotHatasi("Etkin MC yazım bağlamı süreç işçisine aktarılamaz.")
+        try:
+            if self._mc_baglam is not None:
+                raise PilotHatasi("Etkin MC yazım bağlamı süreç işçisine aktarılamaz.")
+            return PilotKayit, (str(self.yol),)
+        finally:
+            self._mc_durum_kilidi.release()
+
     @contextmanager
     def mc_yazim(self, deneme_id):
         """TASARIM 5.15 S13: MC girişinden önce tek sahipli yazım bağlamı."""

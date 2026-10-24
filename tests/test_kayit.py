@@ -662,6 +662,44 @@ def test_s13_mc_yazim_dogrulanmis_ayrik_kayit_ve_tek_sahip(tmp_path):
     assert pilot.PilotKayit(depo.yol).deneme_oku(m.deneme_id) == ikinci
 
 
+def test_s13_mc_bosta_kayit_surece_yoluyla_aktarilir(tmp_path):
+    import pickle
+
+    depo, m, _ = _s13_mc_baglam_deposu(tmp_path)
+    tasinan = pickle.loads(pickle.dumps(depo))
+    assert tasinan.yol == depo.yol
+    assert tasinan.deneme_oku(m.deneme_id) == depo.deneme_oku(m.deneme_id)
+    with tasinan.mc_yazim(m.deneme_id):
+        assert tasinan.mc_kayit(m.deneme_id, "deneme", "deneme_id")
+
+
+def test_s13_mc_etkin_kayit_surece_beklemeden_aktarilmaz(tmp_path):
+    import pickle
+    from threading import Event, Thread
+
+    depo, m, _ = _s13_mc_baglam_deposu(tmp_path)
+    bitti = Event()
+    hatalar = []
+
+    def aktar():
+        try:
+            pickle.dumps(depo)
+        except (pilot.PilotHatasi, TypeError) as hata:
+            hatalar.append(hata)
+        finally:
+            bitti.set()
+
+    with depo.mc_yazim(m.deneme_id):
+        isci = Thread(target=aktar, daemon=True)
+        isci.start()
+        assert bitti.wait(1), "Etkin MC bağlamının aktarımı beklememelidir."
+        assert len(hatalar) == 1
+        assert isinstance(hatalar[0], pilot.PilotHatasi)
+        assert "Etkin MC" in str(hatalar[0])
+        isci.join(timeout=1)
+    assert pickle.loads(pickle.dumps(depo)).deneme_oku(m.deneme_id)
+
+
 def test_s13_mc_yayindan_sonra_cagiran_nesnesi_kaydi_degistirmez(tmp_path):
     depo, m, yontem = _s13_mc_baglam_deposu(tmp_path)
     ortam = {"python": "3.14", "sinama": {"etiket": "ilk"}}

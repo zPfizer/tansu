@@ -2308,6 +2308,13 @@ yalnız bundan sonra özel olay öneği ve yerel MC dizini tutulabilir.
 Yol, dosya kimliği ve beklenen fiziksel son her korunan işlemde denetlenir.
 Yeniden giriş, bağlamlar arası paylaşım ve yolun başka hedefe çevrilmesi reddedilir.
 
+MC bağlamı dışındaki `PilotKayit` nesnesi süreç sınırından yalnız çözülmüş
+dosya yoluyla geçer. Alıcı süreç kendi doğal okuyucusunu ve yerel kilidini
+yeniden oluşturur. Etkin bağlamın aktarımı beklemeden hata verir; tutacak,
+doğrulanmış önek/dizin, sahip iş parçacığı ve kilit aktarılmaz. Gerekçe:
+yerel kilit nesnesi mevcut E4 süreç işçilerine doğrudan taşınamaz; koruma
+eklenmesi bu işçilerin doğal kayıt yolunu bozmamalıdır.
+
 Dar sorgular `mc_kayit(kimlik, tur, alan="kayit_id")`,
 `mc_kaynak(kaynak_ref)`, `mc_komsular(girdi_ref)` ve
 `mc_makbuzlar(kosu, makbuzlar, tur)` olur. Mevcut anlamsal sahipleri kullanır,
@@ -2339,8 +2346,9 @@ Sonuç başvurularının tamlığını mevcut sahibi denetler. E4 biriken sonuç
 yalnız kimlik, durum ve ölçüleri tutar; E3 geçmişlerini ikinci kez biriktirmez.
 Kayıt şeması, çekiliş, bütçe, hesap ve seçim kuralları değişmez.
 `tests/test_kayit.py` koruma, ayrılmış kopya, parti bütünlüğü, fiziksel
-onay, hata ve taze kurtarmayı; `tests/test_tansusinama.py` genel MC yolunda
+onay, hata, süreç aktarımı ve taze kurtarmayı; `tests/test_tansusinama.py` genel MC yolunda
 yayın sırasını, sinyal bağını ve aynı hesap/taşıma sonucunu sınar.
+`tests/test_ayar_aktarimi.py` mevcut süreç işçilerinin tam kayıt bağlarını sınar.
 Gerçek veri ön gösterimi süre, tamamlanan iş, dosya büyümesi ve tepe bellek
 ölçmeden nihai bütçe uygunluğu veya hızlanma iddia edilmez.
 
