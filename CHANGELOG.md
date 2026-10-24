@@ -6,6 +6,8 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ## [Yayımlanmamış]
 
+- Aynı görüntü kimliğindeki yeniden indirme, kabul edilen kart değerlerini değiştiremez; farklı yeni hesap sağlam eski çıktıyı bozuk saymadan reddedilir. Sözleşme açıklaması, uygulama ve kanıt bekliyor. (#126)
+
 - Saklı girdinin gün bağı düzeltmesinde ikinci inceleme açık hatalar buldu. Son düzeltme sözleşmesi eski CSV/geçmiş çelişkisinin kalıcı reddini, ekranın açık istenen gün bilgisini ve ortak çıktıların tek yazıcısını tanımlar; uygulama ve kanıt bekliyor. (#126)
 
 - Günlük komut doğrulanmış saklı görüntüyü indirme yapmadan kullanır; isteğe bağlı çıktı kökü örtük yazmaları ayırır ve aynı-gün görüntü çelişkisi reddedilir. Teslim #94’e bağlı. (#126)

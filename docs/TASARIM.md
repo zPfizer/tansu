@@ -2595,8 +2595,13 @@ standart kütüphaneyi kullanır; yeni hizmet veya bağımlılık eklenmez.
 Bu yazma sahipliği, saklı girdiyle aynı çıktıyı paylaşabilen seçeneksiz çağrıda
 da uygulanır. Olağan indirme, uygunluk, durum kısa yolu ve çubuksuz davranış
 değişmez. Ancak çağrı kart CSV'si yazacaksa mevcut günün başka görüntüye ait
-kabulünü veya ret işaretini geçemez. Önceki hatadan sonra yeniden indirme bu
-kabulü değiştirme izni değildir. Çelişki CSV yazılmadan reddedilir; günlük
+kabulünü veya ret işaretini geçemez. Aynı görüntü kimliğinde de yeni hesaplanan
+kartlar, kabul edilmiş kart değerleriyle uyuşmalıdır. Uyuşmayan yeni hesap
+CSV yazılmadan reddedilir; sağlam eski CSV ve günlük korunur. Bu yeni hesap
+farkı, eski çıktının bozuk olduğu iddiası veya kalıcı bozukluk işareti değildir.
+Başarı veya başarıya dönüş öncesinde mevcut kabul edilmiş CSV de günlükle
+uyuşmalıdır. Önceki hatadan sonra yeniden indirme bu kabulü değiştirme izni
+değildir. Çelişki CSV yazılmadan reddedilir; günlük
 satırı eklenmediği halde çağrı `TAMAM` bildiremez. Bu sınır mevcut kabulün
 korunmasıdır; ayrı çıktı ayrı etkin üretim geçmişi oluşturmaz.
 
