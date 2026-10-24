@@ -2496,8 +2496,8 @@ izni vermez. Fon/kripto kapsamı ve kalıcı kimlik onayı bu motor sürümünü
 
 ### Saklı girdi ve ayrı çıktı kökü (#126)
 
-Saklı girdi ve çıktı ayrımı uygulandı. İlk incelemede bulunan tekrar hatasının
-aşağıdaki kalıcı gün bağı düzeltmesi uygulama bekliyor. Kaynak: #126'nın
+Saklı girdi, çıktı ayrımı ve kalıcı gün bağı uygulandı; düzeltmenin bağımsız
+incelemesi ve teslimi bekliyor. Kaynak: #126'nın
 22.10.2026 uygulama sözleşmesi ve 24.10.2026 inceleme karşı örnekleri. Teslim #94'e bağlıdır; bu hazırlık bir aileyi
 etkinleştirmez ve #127'nin aktif aile kartı kanıtının yerine geçmez.
 

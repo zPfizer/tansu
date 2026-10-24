@@ -6,7 +6,7 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ## [Yayımlanmamış]
 
-- Saklı girdinin başarılı gün bağının kart günlüğünde korunması tanımlandı; ret, tekrar ve geçmiş gün çalıştırması için kök düzeltme uygulama bekliyor. Seçeneksiz indirme davranışı korunur. (#126)
+- Saklı girdinin başarılı gün bağı kart günlüğünde korunur; ret, tekrar ve geçmiş gün çalıştırması artık bu bağı silemez. Aynı görüntüyle tekrar başarı ekranını geri getirir. Seçeneksiz indirme davranışı korunur. (#126)
 
 - Günlük komut doğrulanmış saklı görüntüyü indirme yapmadan kullanır; isteğe bağlı çıktı kökü örtük yazmaları ayırır ve aynı-gün görüntü çelişkisi reddedilir. Teslim #94’e bağlı. (#126)
 
