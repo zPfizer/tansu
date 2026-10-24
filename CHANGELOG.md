@@ -6,6 +6,8 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ## [Yayımlanmamış]
 
+- CI'da süre sınırına takılan genel ve S13 bölümleri de ayrıldı. Aynı tam koleksiyon sekiz bölümde çakışmasız çalışır; her testin adı ve en uzun testlerin süreleri görünür. 60 dakikalık sınır ve çalışan bölümün kimlik denetimi korunur. (#180, #94, #57)
+
 - WF eğitim çocuğunun E3 durumu, S10 hesabındaki tam E1 veri kimliğiyle denetlenir; kayıtlı seçim bağları bağımsız doğrulanır. Sonuç makbuzu oluşmadan çıkan hata, çocuk kapanışıyla örtülmez. (#180)
 
 - Yeni kayıtlı ileri sınamaya açık koşu kimliğiyle devam eklendi. Tamamlanmış çeyrekler ve özgün makbuzlar korunur; kod/veri bağı, tek yürütme sahibi ve dayanıklı dönem sınırları denetlenir. Gerçek veriyle tamamlanmış kesinti/devam kanıtı ve bağımsız inceleme teslim PR’ında izlenir. (#180)

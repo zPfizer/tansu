@@ -13,7 +13,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        bolum: [diger, sinama_s13, sinama_diger_1, sinama_diger_2]
+        bolum:
+          - diger_1
+          - diger_2
+          - sinama_s13_1
+          - sinama_s13_2
+          - sinama_s13_3
+          - sinama_s13_4
+          - sinama_diger_1
+          - sinama_diger_2
     defaults:
       run:
         shell: bash
@@ -68,11 +76,20 @@ jobs:
           from pathlib import Path
 
           BOLUMLER = {
-              "diger": ["--ignore=tests/test_tansusinama.py"],
-              "sinama_s13": ["tests/test_tansusinama.py", "-k", "s13"],
+              "diger_1": ["--ignore=tests/test_tansusinama.py"],
+              "diger_2": ["--ignore=tests/test_tansusinama.py"],
+              "sinama_s13_1": ["tests/test_tansusinama.py", "-k", "s13"],
+              "sinama_s13_2": ["tests/test_tansusinama.py", "-k", "s13"],
+              "sinama_s13_3": ["tests/test_tansusinama.py", "-k", "s13"],
+              "sinama_s13_4": ["tests/test_tansusinama.py", "-k", "s13"],
               "sinama_diger_1": ["tests/test_tansusinama.py", "-k", "not s13"],
               "sinama_diger_2": ["tests/test_tansusinama.py", "-k", "not s13"],
           }
+          BOLUM_GRUPLARI = (
+              ("diger_1", "diger_2"),
+              ("sinama_s13_1", "sinama_s13_2", "sinama_s13_3", "sinama_s13_4"),
+              ("sinama_diger_1", "sinama_diger_2"),
+          )
           ALT_PYTEST = r"""import json
           import sys
           from collections import Counter
@@ -128,7 +145,7 @@ jobs:
                   "utf8",
                   "-c",
                   ALT_PYTEST,
-                  json.dumps(["-q", *secenekler]),
+                  json.dumps(secenekler),
                   str(cikti),
               ]
               if beklenen is not None:
@@ -152,13 +169,18 @@ jobs:
               if bolum not in BOLUMLER or int(os.environ["BOLUM_SAYISI"]) != len(BOLUMLER):
                   raise ValueError("Matris bölümü veya bölüm sayısı geçersiz.")
               gecici = Path(tempfile.mkdtemp(prefix="tansu-ci-pytest-"))
-              tum = pytest_kos(["--collect-only"], gecici / "tum.json")
-              bolumler = {
-                  ad: pytest_kos(["--collect-only", *secenekler], gecici / f"{ad}.json")
-                  for ad, secenekler in BOLUMLER.items()
-              }
-              for sira, ad in enumerate(("sinama_diger_1", "sinama_diger_2")):
-                  bolumler[ad] = bolumler[ad][sira::2]
+              tum = pytest_kos(["-q", "--collect-only"], gecici / "tum.json")
+              bolumler = {}
+              for grup in BOLUM_GRUPLARI:
+                  secenekler = BOLUMLER[grup[0]]
+                  if any(BOLUMLER[ad] != secenekler for ad in grup):
+                      raise ValueError("Bölüm grubu seçimleri uyuşmuyor.")
+                  dugumler = pytest_kos(
+                      ["-q", "--collect-only", *secenekler],
+                      gecici / f"{grup[0]}-tum.json",
+                  )
+                  for sira, ad in enumerate(grup):
+                      bolumler[ad] = dugumler[sira :: len(grup)]
               dagilimi_dogrula(tum, bolumler)
               print(
                   "Doğrulanan düğümler:",
@@ -170,7 +192,11 @@ jobs:
               secim.write_text("\n".join(bolumler[bolum]) + "\n", encoding="utf-8")
               beklenen = gecici / f"{bolum}.json"
               beklenen.write_text(json.dumps(bolumler[bolum]), encoding="utf-8")
-              pytest_kos([f"@{secim}"], gecici / "calisan.json", beklenen)
+              pytest_kos(
+                  ["-vv", "--durations=20", f"@{secim}"],
+                  gecici / "calisan.json",
+                  beklenen,
+              )
 
 
           if __name__ == "__main__":
