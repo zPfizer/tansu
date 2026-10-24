@@ -6,7 +6,7 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ## [Yayımlanmamış]
 
-- Yönetici güncel durumu kısa kayıttan sürdürür; eski kayıt ve kanıtlar korunur, yalnız gerekli geçmiş açılır. (#185)
+- Yönetici güncel durumu kısa kayıttan sürdürür; eski kayıt ve kanıtlar korunur, yalnız gerekli geçmiş açılır. Beyin araması mevcut proje girişini kullanır. (#185)
 
 - Claude ve Codex'te aynı sözleşmeyi ve pstack kaynağını kullanan TANSU yönetici ajanı uygulamanın görünür yerel ajan arayüzünden çalışır; sürüm hazır olduğunda onay bekler, Windows Görev Zamanlayıcı kullanılmaz. (#181)
 

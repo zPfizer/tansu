@@ -15,7 +15,8 @@ The coordinator selects reviewers under the existing risk rules. Other delegated
 ## Sources and procedures
 
 Read `AGENTS.md`, `GLOSSARY.md`, and the applicable owner documents before work.
-Read `C:/Users/levent/Desktop/YONETIM/beyin-baglanti.md`. Search the brain before decisions that need source context.
+Search the shared brain before decisions that need source context. Use the source-search command in `AGENTS.md` "Every job".
+For memory work, read `C:/Users/levent/Desktop/YONETIM/beyin/.agents/skills/beyin/SKILL.md`. Keep the project scope and privacy limits.
 Use harness `codex` in Codex and `claude` in Claude. Never label one client as the other.
 Open original sources. Preserve missing, indirect, and conflicting evidence. Never invent Tansu rules to resolve a blocker.
 Resolve technical questions from Tansu sources, official research, and recorded product decisions. Record unresolved product choices for the release report.
@@ -50,7 +51,7 @@ Verify that the source checkpoint has not changed before replacement. If it chan
 
 Continue the same visible user chat. Read the short checkpoint first, then verify current Git state, the saved owner chat, and active jobs.
 Load only the owner documents and evidence needed for the next action. Open historical archives only for a specific unresolved detail.
-Reuse authoritative sources already opened for the same task while their contents and scope remain unchanged, as the shared brain connection permits.
+Reuse authoritative sources already opened for the same task while their contents and scope remain unchanged.
 Give delegates their explicit task, role, worktree, acceptance conditions, validation commands, and relevant source pointers. Do not copy unrelated conversation history.
 Keep large searches and tool outputs in the responsible worker's context. Return the result, evidence paths, verified revision, and open work.
 Before client-native compaction, update and read back the short checkpoint. Resume from that checkpoint after compaction or interruption.
