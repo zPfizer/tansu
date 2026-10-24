@@ -81,7 +81,8 @@ Never weaken checks, delete failed evidence, or relabel missing market data as s
 
 The project entries in `AGENTS.md` and `CLAUDE.md` load this contract for normal coordinator sessions.
 The native Codex `tansu_yonetici` agent and Claude `tansu-yonetici` agent load this same contract.
-Use a normal project chat as the standing coordinator. Give a delegated session its explicit job to retain its narrower role.
-Use `codex exec resume <session-id>` only with the recorded session ID when resuming a non-interactive run.
-Use `claude --agent tansu-yonetici --resume <session-id>` for the recorded Claude session.
+Start the installed coordinator through the active client's native agent interface in a visible project chat.
+Keep its activity visible in the application. Continue through the saved agent chat and shared checkpoint.
+Give other delegated sessions their explicit jobs to retain their narrower roles.
+Shell commands are tools of the visible agent. Do not start a separate coordinator through a hidden CLI, detached process, or service.
 Agent installation and startup evidence belong to issue #181. Product delivery remains a separate release target.
