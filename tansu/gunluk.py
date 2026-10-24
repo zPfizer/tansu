@@ -5,6 +5,7 @@ import datetime as dt
 import json
 import math
 import os
+import re
 import shutil
 from pathlib import Path
 
@@ -188,8 +189,8 @@ def _yaz(yol: Path, yaz_fn) -> None:
         raise
 
 
-def _kart_gunlugu(tarih, kimlik, kartlar) -> None:
-    yol = kayit.KAYIT_DIZINI / "kartlar.jsonl"
+def _kart_gunlugu(tarih, kimlik, kartlar, yol=None) -> None:
+    yol = yol if yol is not None else kayit.KAYIT_DIZINI / "kartlar.jsonl"
     yol.parent.mkdir(parents=True, exist_ok=True)
     gun = tarih.date().isoformat()
     if yol.exists() and any(
@@ -275,31 +276,32 @@ def gunluk(
     p=aileler.Parametre(),
     atr_n=motor.ATR_N,
     aktarim=None,
+    kimlik=None,
+    cikti_koku=None,
 ) -> int:
     """Günlük koşu; çıkış kodu: TAMAM ve BUGÜN ÇUBUK YOK 0, SORUNLU ve VERİ YOK 1. `kaynak`, `semboller`, `p` testte verilir."""
     tarih, kok = pd.Timestamp(tarih), Path(kok)
     simdi = simdi or dt.datetime.now(veri.ISTANBUL)
+    # TASARIM 6 #126: çıktı yolları girdinin ve küresel sabitlerin yerine geçmez.
+    cikti = Path(cikti_koku) if cikti_koku is not None else None
+    rapor_dizini = cikti / "rapor" if cikti is not None else rapor.RAPOR_DIZINI
+    veri_koku = cikti / "veri" if cikti is not None else kok
+    kart_yolu = (
+        cikti / "kayit" if cikti is not None else kayit.KAYIT_DIZINI
+    ) / "kartlar.jsonl"
+    if kimlik is not None and re.fullmatch(r"[A-Za-z0-9_-]+", kimlik):
+        goruntu = (kok / "ag" / kimlik).resolve()
+        if any(y.resolve().is_relative_to(goruntu) for y in (rapor_dizini, kart_yolu)):
+            raise veri.VeriHatasi("çıktı yolu saklı görüntünün içine yazamaz")
     onizleme = aktarim is not None and aktarim.deneme_id is not None
     # TASARIM 5.15 S07: önizleme normal günlüğün tamamlanma ve kart durumunu yazmaz.
-    dizin = (
-        rapor.RAPOR_DIZINI / "onizleme" / aktarim.kosu_id
-        if onizleme
-        else rapor.RAPOR_DIZINI
-    )
+    dizin = rapor_dizini / "onizleme" / aktarim.kosu_id if onizleme else rapor_dizini
     yol = dizin / "durum.txt"
     onceki = yol.read_text(encoding="utf-8").splitlines() if yol.exists() else []
     saat = next(
         (x.split(": ", 1)[1] for x in onceki if x.startswith("Son başarılı koşu: ")),
         "yok",
     )
-    if (
-        onceki[:1]
-        and onceki[0] in BASARILI
-        and saat[:10] == tarih.date().isoformat()
-        and (aktarim is None or aktarim.deneme_id is None)
-    ):
-        print("Bugünün başarılı koşusu var; bir şey yapılmadı.")
-        return 0
 
     def bitir(durum, eylem, kimlik="yok", son="yok", sayi="yok") -> int:
         basarili = durum in BASARILI
@@ -317,19 +319,44 @@ def gunluk(
         print(durum, "-", eylem)
         return 0 if basarili else 1
 
-    kimlik = son = sayi = "yok"
+    istenen_kimlik = kimlik
+    kimlik, son, sayi = kimlik or "yok", "yok", "yok"
     try:
+        anlik = None
+        if istenen_kimlik is not None:
+            if not re.fullmatch(r"[A-Za-z0-9_-]+", istenen_kimlik):
+                raise veri.VeriHatasi(f"geçersiz görüntü kimliği: {istenen_kimlik!r}")
+            anlik = veri.oku(istenen_kimlik, kok)
+            if aktarim is not None:
+                aktarim.veri_bagla(kimlik)
+                aktarim.ayar_dogrula(p)
+        if (
+            onceki[:1]
+            and onceki[0] in BASARILI
+            and saat[:10] == tarih.date().isoformat()
+            and not onizleme
+        ):
+            if istenen_kimlik is not None and f"Anlık görüntü: {kimlik}" not in onceki:
+                raise veri.VeriHatasi(
+                    "bugünün başarılı koşusu farklı görüntü kimliğine bağlı"
+                )
+            print("Bugünün başarılı koşusu var; bir şey yapılmadı.")
+            return 0
         if simdi.date() == tarih.date() and simdi.time() < ERKEN:
             return bitir(
                 "VERİ YOK",
                 "Koşu 18:15'ten önce başladı, kart üretilmedi (çubuk yarım olabilir). 18:15'ten sonra yeniden çalıştır.",
             )
-        _temizle(kok)
-        semboller = semboller or _semboller(kok, tarih)
-        kimlik = veri.indir(
-            semboller, kok / "gunluk", kaynak or kaynak_modulu.IsYatirim(), simdi=simdi
-        )
-        anlik = veri.oku(kimlik, kok / "gunluk")
+        if anlik is None:
+            _temizle(veri_koku)
+            semboller = semboller or _semboller(kok, tarih)
+            kimlik = veri.indir(
+                semboller,
+                veri_koku / "gunluk",
+                kaynak or kaynak_modulu.IsYatirim(),
+                simdi=simdi,
+            )
+            anlik = veri.oku(kimlik, veri_koku / "gunluk")
         if aktarim is not None:
             aktarim.veri_bagla(kimlik)
             aktarim.ayar_dogrula(p)
@@ -367,12 +394,12 @@ def gunluk(
                 **bilgi,
             )
         if not onizleme:
-            _kart_gunlugu(tarih, kimlik, kartlar)
+            _kart_gunlugu(tarih, kimlik, kartlar, kart_yolu)
         return bitir(
             "TAMAM",
-            f"Bugün {len(kartlar)} kart var: rapor/{csv_yol.relative_to(rapor.RAPOR_DIZINI).as_posix()} dosyasını aç."
+            f"Bugün {len(kartlar)} kart var: {csv_yol} dosyasını aç."
             if kartlar
-            else "Bugün kart yok; bir şey yapma.",
+            else f"Bugün kart yok; bir şey yapma. Tablo: {csv_yol}",
             **bilgi,
         )
     except veri.KaynakYok:

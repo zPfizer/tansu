@@ -183,7 +183,7 @@ Siteye giriş için varyantın [kural kaydına](#58-dönemler) bağlı tarihli s
 - Koşu, canlı borsapy'ye bağlı kalmaz.
 
 **`__main__` ayrıntısı:**
-- `gunluk` bayrak almaz. Bugünün tarihini parametre olarak alabilir (varsayılan bugün; test için).
+- `gunluk` tarih alabilir (varsayılan bugün); saklı girdi ve ayrı çıktı seçenekleri §6’da tanımlıdır.
 - `sinama` geliştirmede 200 tekrar koşar; `sinama --son` 5.7'deki tam tekrar sayısını koşar.
 - Yakalanmayan istisna günlüğe yazılır, çıkış kodu 1 olur.
 
@@ -2495,7 +2495,7 @@ izni vermez. Fon/kripto kapsamı ve kalıcı kimlik onayı bu motor sürümünü
 
 ### Saklı girdi ve ayrı çıktı kökü (#126)
 
-Onaylı teknik sözleşme; uygulama ve kanıt bekliyor. Kaynak: #126'nın
+Uygulandı; bağımsız inceleme ve teslim bekliyor. Kaynak: #126'nın
 22.10.2026 uygulama sözleşmesi. Teslim #94'e bağlıdır; bu hazırlık bir aileyi
 etkinleştirmez ve #127'nin aktif aile kartı kanıtının yerine geçmez.
 

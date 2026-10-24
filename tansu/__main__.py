@@ -159,6 +159,7 @@ def main(argv=None) -> int:
     )
     ap.add_argument("--kok", default="veri")
     ap.add_argument("--kimlik")
+    ap.add_argument("--cikti-koku", type=Path, help="yalnız gunluk: ayrı çıktı kökü")
     ap.add_argument("--resmi", action="store_true")
     ap.add_argument(
         "--son",
@@ -203,7 +204,12 @@ def main(argv=None) -> int:
         help="tansu-sinama: günlük anlık görüntüde sektör yoksa sektörün okunacağı kök",
     )
     a = ap.parse_args(argv)
+    if a.cikti_koku is not None and a.komut != "gunluk":
+        ap.error("--cikti-koku yalnız gunluk komutunda kullanılabilir")
     kok, p = Path(a.kok), aileler.VARYANTLAR[a.varyant]
+    rapor_dizini = (
+        a.cikti_koku / "rapor" if a.cikti_koku is not None else rapor.RAPOR_DIZINI
+    )
     try:
         if a.komut == "grup-hazirla":
             if not a.grup_tanimi or not a.deneme_dosyasi:
@@ -235,7 +241,7 @@ def main(argv=None) -> int:
         if a.komut in ("tansu-sinama", "gunluk"):
             ayar_aktarimi = aktarim.AyarAktarimi(
                 deneme.PilotKayit(
-                    a.deneme_dosyasi or rapor.RAPOR_DIZINI / "ayar-baglari.jsonl"
+                    a.deneme_dosyasi or rapor_dizini / "ayar-baglari.jsonl"
                 ),
                 a.deneme_id,
                 p=p,
@@ -251,6 +257,8 @@ def main(argv=None) -> int:
                 kok,
                 p=p,
                 aktarim=ayar_aktarimi,
+                kimlik=a.kimlik,
+                cikti_koku=a.cikti_koku,
             )
         if a.komut == "evren-indir":
             print(_evren_indir(kok))

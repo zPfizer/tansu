@@ -503,3 +503,165 @@ def test_dunku_kartin_hissesi_durumundan_bagimsiz_indirilir(tmp_path, durum):
     yol.write_text(json.dumps(satir_) + "\n", encoding="utf-8")
     gunluk.gunluk(TARIH, tmp_path, simdi=SIMDI, kaynak=k, p=P, atr_n=2)
     assert "YYYY" in k.istenen
+
+
+@pytest.mark.parametrize("bozuk", [False, True])
+def test_sakli_komut_ag_yoluna_girmeden_disariya_yazar(tmp_path, monkeypatch, bozuk):
+    from tansu import __main__ as komut
+    from tansu import deneme
+
+    kimlik = veri.indir(["XXXX"], tmp_path, kaynak(), simdi=SIMDI)
+    goruntu = tmp_path / "ag" / kimlik
+    if bozuk:
+        (goruntu / "olaylar.json").write_text("{}", encoding="utf-8")
+    once = {p.name: p.read_bytes() for p in goruntu.iterdir()}
+    cagrilar = []
+
+    def yasak(*a, **kw):
+        cagrilar.append(True)
+        raise AssertionError("saklı mod ağ/temizlik yoluna girdi")
+
+    monkeypatch.setattr(gunluk, "_temizle", yasak)
+    monkeypatch.setattr(gunluk, "_semboller", yasak)
+    monkeypatch.setattr(veri, "indir", yasak)
+    monkeypatch.setattr(gunluk.kaynak_modulu, "IsYatirim", yasak)
+    cikti = tmp_path / "disari"
+    try:
+        kod = komut.main(
+            [
+                "gunluk",
+                "2026-10-05",
+                "--kok",
+                str(tmp_path),
+                "--kimlik",
+                kimlik,
+                "--cikti-koku",
+                str(cikti),
+            ]
+        )
+    except SystemExit as hata:
+        kod = hata.code
+    assert kod == int(bozuk)
+    assert cagrilar == []
+    assert {p.name: p.read_bytes() for p in goruntu.iterdir()} == once
+    durum = (cikti / "rapor/durum.txt").read_text(encoding="utf-8")
+    assert durum.startswith("SORUNLU" if bozuk else "TAMAM")
+    assert not rapor.RAPOR_DIZINI.exists()
+    assert not kayit.KAYIT_DIZINI.exists()
+    if bozuk:
+        assert "manifest uyuşmuyor" in durum
+        assert not (cikti / "kayit/kartlar.jsonl").exists()
+    else:
+        csv_yol = cikti / "rapor/kartlar-20261005.csv"
+        assert csv_yol.read_text(encoding="utf-8-sig").splitlines() == [
+            ";".join(BASLIK)
+        ]
+        assert str(csv_yol) in durum
+        assert (
+            json.loads((cikti / "kayit/kartlar.jsonl").read_text(encoding="utf-8"))[
+                "anlik"
+            ]
+            == kimlik
+        )
+        bag = deneme.PilotKayit(cikti / "rapor/ayar-baglari.jsonl").oku()
+        assert bag[-1]["veri_ref_id"] == kimlik
+
+
+@pytest.mark.parametrize(
+    "degisiklik", ["ayni", "farkli", "bozuk", "manifest", "eksik", "gecersiz"]
+)
+def test_sakli_girdi_basarili_ayni_gun_kisa_yolundan_once_dogrulanir(
+    tmp_path, degisiklik
+):
+    kimlik = veri.indir(["XXXX"], tmp_path, kaynak(), simdi=SIMDI)
+    cikti = tmp_path / "disari"
+    assert (
+        gunluk.gunluk(TARIH, tmp_path, simdi=SIMDI, kimlik=kimlik, cikti_koku=cikti)
+        == 0
+    )
+    durum_yolu = cikti / "rapor/durum.txt"
+    once = durum_yolu.read_bytes()
+    if degisiklik == "farkli":
+        kimlik = veri.indir(
+            ["XXXX"], tmp_path, kaynak(), simdi=SIMDI.replace(minute=31)
+        )
+    elif degisiklik == "bozuk":
+        (tmp_path / "ag" / kimlik / "olaylar.json").write_text("{}", encoding="utf-8")
+    elif degisiklik == "manifest":
+        (tmp_path / "ag" / kimlik / "manifest.json").write_text("{", encoding="utf-8")
+    elif degisiklik == "eksik":
+        kimlik = "bulunamayan"
+    elif degisiklik == "gecersiz":
+        kimlik = "../20261005-1930"
+    assert gunluk.gunluk(
+        TARIH, tmp_path, simdi=SIMDI, kimlik=kimlik, cikti_koku=cikti
+    ) == int(degisiklik != "ayni")
+    if degisiklik == "ayni":
+        assert durum_yolu.read_bytes() == once
+    else:
+        assert durum_yolu.read_text(encoding="utf-8").startswith("SORUNLU")
+    assert (
+        len((cikti / "kayit/kartlar.jsonl").read_text(encoding="utf-8").splitlines())
+        == 1
+    )
+
+
+@pytest.mark.parametrize(
+    "kimlik", ["", ".", "..", "a/b", "a\\b", "C:veri", "/veri", "a "]
+)
+def test_gecersiz_sakli_kimlik_indirme_yoluna_dusmez(tmp_path, monkeypatch, kimlik):
+    cagrilar = []
+    monkeypatch.setattr(veri, "indir", lambda *a, **kw: cagrilar.append(True))
+    assert gunluk.gunluk(TARIH, tmp_path, simdi=SIMDI, kimlik=kimlik) == 1
+    assert "geçersiz görüntü kimliği" in durum_satirlari()[-1]
+    assert cagrilar == []
+
+
+def test_sakli_goruntunun_icindeki_cikti_yolu_yazmadan_reddedilir(tmp_path):
+    kimlik = veri.indir(["XXXX"], tmp_path, kaynak(), simdi=SIMDI)
+    goruntu = tmp_path / "ag" / kimlik
+    once = {p.name: p.read_bytes() for p in goruntu.iterdir()}
+    with pytest.raises(veri.VeriHatasi, match="görüntünün içine"):
+        gunluk.gunluk(TARIH, tmp_path, simdi=SIMDI, kimlik=kimlik, cikti_koku=goruntu)
+    assert {p.name: p.read_bytes() for p in goruntu.iterdir()} == once
+
+
+def test_ayri_cikti_indirmeyi_tasir_onceki_kart_girdisini_korur(tmp_path):
+    k = Kayitli({"XXXX": fiyatlar(), "YYYY": fiyatlar()}, {"XXXX": [], "YYYY": []})
+    veri.indir(["XXXX"], tmp_path, k, simdi=SIMDI.replace(day=4))
+    k.istenen.clear()
+    yol = kayit.KAYIT_DIZINI / "kartlar.jsonl"
+    yol.parent.mkdir(parents=True)
+    once = json.dumps({"tarih": "2026-10-02", "kartlar": [{"hisse": "YYYY"}]}) + "\n"
+    yol.write_text(once, encoding="utf-8")
+    cikti = tmp_path / "disari"
+    assert gunluk.gunluk(TARIH, tmp_path, simdi=SIMDI, kaynak=k, cikti_koku=cikti) == 0
+    assert "YYYY" in k.istenen
+    assert yol.read_text(encoding="utf-8") == once
+    assert (cikti / "veri/gunluk/ag/20261005-1930/manifest.json").is_file()
+    assert not (tmp_path / "gunluk").exists()
+    assert not rapor.RAPOR_DIZINI.exists()
+    assert (cikti / "kayit/kartlar.jsonl").is_file()
+
+
+@pytest.mark.parametrize(
+    "ad",
+    [
+        "kayit",
+        "sadakat",
+        "sinama",
+        "tansu-sinama",
+        "grup-hazirla",
+        "denetim",
+        "evren-indir",
+        "sektor-indir",
+    ],
+)
+def test_cikti_koku_diger_komutlarda_yan_etkiden_once_reddedilir(tmp_path, capsys, ad):
+    from tansu import __main__ as komut
+
+    with pytest.raises(SystemExit) as hata:
+        komut.main([ad, "--cikti-koku", str(tmp_path / "disari")])
+    assert hata.value.code == 2
+    assert "yalnız gunluk" in capsys.readouterr().err
+    assert list(tmp_path.iterdir()) == []

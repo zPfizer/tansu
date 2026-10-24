@@ -838,3 +838,81 @@ def test_s11_cocuk_ozeti_uyusmazsa_kayit_makbuzu_korunur(tmp_path, monkeypatch):
     kayit = deneme.PilotKayit(depo.yol).deneme_oku(makbuz.deneme_id)
     assert kayit["ayar_parmak_izi"] == makbuz.ayar_ozeti
     assert kayit["ust_deneme_id"] == ust.deneme_id
+
+
+@pytest.mark.parametrize("uyusmazlik", [None, "veri", "ayar"])
+def test_sakli_onizleme_acik_pilot_ve_ayri_cikti_sinirlarini_korur(
+    tmp_path, monkeypatch, uyusmazlik
+):
+    from tansu.aktarim import AyarAktarimi
+
+    anlik = anlik_hazirla(tmp_path, {"A": fiyatlar()[:-1]})
+    depo, m = kayitli(tmp_path, monkeypatch)
+    aktarim = AyarAktarimi(depo, m.deneme_id)
+    if uyusmazlik == "veri":
+        aktarim.kayit["veri_ayarlari"]["veri_referanslari"] = ["baska"]
+    p = replace(aktarim.p, stop="kutu") if uyusmazlik == "ayar" else aktarim.p
+    tarih = anlik.gunler[-1].date()
+    cikti = tmp_path / "disari"
+    assert gunluk.gunluk(
+        tarih,
+        tmp_path,
+        simdi=dt.datetime.combine(tarih, dt.time(19, 30)),
+        p=p,
+        aktarim=aktarim,
+        kimlik=anlik.kimlik,
+        cikti_koku=cikti,
+    ) == int(uyusmazlik is not None)
+    onizleme = cikti / "rapor/onizleme" / aktarim.kosu_id
+    durum = (onizleme / "durum.txt").read_text(encoding="utf-8")
+    assert durum.startswith("TAMAM" if uyusmazlik is None else "SORUNLU")
+    if uyusmazlik is None:
+        assert (onizleme / f"kartlar-{tarih:%Y%m%d}.csv").is_file()
+        assert any(o.get("asama") == "sonuc" for o in depo.oku())
+    else:
+        assert "uyuşmuyor" in durum
+        assert not any(o.get("asama") == "sonuc" for o in depo.oku())
+    assert not (cikti / "rapor/ayar-baglari.jsonl").exists()
+    assert not (cikti / "kayit").exists()
+    assert not rapor.RAPOR_DIZINI.exists()
+    assert not kayit.KAYIT_DIZINI.exists()
+
+
+@pytest.mark.parametrize("goruntude", [False, True])
+def test_sakli_cli_acik_pilot_yolunu_korur_ortusen_ciktida_yazmaz(
+    tmp_path, monkeypatch, capsys, goruntude
+):
+    anlik = anlik_hazirla(tmp_path, {"A": fiyatlar()[:-1]})
+    depo, m = kayitli(tmp_path, monkeypatch)
+    once = depo.yol.read_bytes()
+    goruntu = tmp_path / "ag" / anlik.kimlik
+    veri_once = {p.name: p.read_bytes() for p in goruntu.iterdir()}
+    cikti = goruntu if goruntude else tmp_path / "disari"
+    kod, hata = komutu_kos(
+        [
+            "gunluk",
+            str(anlik.gunler[-1].date()),
+            "--kok",
+            str(tmp_path),
+            "--kimlik",
+            anlik.kimlik,
+            "--cikti-koku",
+            str(cikti),
+            "--deneme-id",
+            m.deneme_id,
+            "--deneme-dosyasi",
+            str(depo.yol),
+        ],
+        capsys,
+    )
+    assert kod == int(goruntude)
+    assert {p.name: p.read_bytes() for p in goruntu.iterdir()} == veri_once
+    if goruntude:
+        assert "görüntünün içine" in hata
+        assert depo.yol.read_bytes() == once
+    else:
+        assert any(o.get("asama") == "sonuc" for o in depo.oku())
+        assert len(list((cikti / "rapor/onizleme").glob("*/durum.txt"))) == 1
+        assert not (cikti / "rapor/ayar-baglari.jsonl").exists()
+    assert not rapor.RAPOR_DIZINI.exists()
+    assert not kayit.KAYIT_DIZINI.exists()
