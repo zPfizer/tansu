@@ -6,6 +6,8 @@ If they conflict with code or omit a case, stop. Fix the document first. Write t
 ## Current state (Şimdiki durum)
 This section holds temporary states only. Each line has a date and an owner. Delete a line when its end condition is true.
 
+- 2026-10-24, owner: coordinator. Local native agent entries use the setup worktree's coordinator contract until issue #181 merges. Preserve that worktree.
+
 ## Documents and owners (Belgeler ve sahipleri)
 Each fact has one owner file. Other files refer to that owner. Read the files in the order of the table.
 Evidence may repeat a source quote with its reference. The quote does not create another rule owner.
@@ -22,6 +24,7 @@ Evidence may repeat a source quote with its reference. The quote does not create
 | `docs/sadakat.md` | the fidelity (sadakat) measurement |
 | `AGENTS.md` | the entry, the environment, the current state, "Every job", and the work flow table |
 | `docs/agents/` | job rules, shared delivery, git, short flows E, H, I, and skill naming (`is-kurallari.md`). Task Scheduler (`zamanlayici.md`). Issues and triage labels (`issue-tracker.md`). driftlint does not scan this folder. `tests/test_sahipler.py` checks its paths |
+| `.codex/` | Codex entry configuration and native agent definitions. `docs/agents/yonetici.md` owns the standing coordinator assignment |
 | `.claude/skills/` | the work flow procedures, one skill per job type |
 | `docs/strateji-taslak/`, `docs/strateji-modulleri-taslak.md` (local, not in git) | proposals that wait for approval. They own no fact. They are outside the drift check. These local files need not exist <!-- driftlint-ignore: local-only, gitignored, absent in CI --> |
 | `CODING_STANDARDS.md`, `DEFINITION_OF_DONE.md` | the Tansu code rules (`## Tansu`; the general rules are in the file that `CODING_STANDARDS.md` points to) and the done criteria (`## Tansu`) |
@@ -76,9 +79,10 @@ If your output contradicts a decision in `docs/TASARIM.md`, say so explicitly in
 1. Write the intent of Levent and the flow letter in one line at the top of the first reply only. After that line, the result comes first. All text that Levent can see is Turkish, also the wrap_up text.
 2. Unknown error or missing fact: run `py -3 -X utf8 C:\Users\levent\Desktop\YONETIM\beyin\beyin.py context "<q>" --harness <active-harness> --project TANSU --no-sync` first. Use `codex` or `claude` for the active agent. Report a failed lookup and continue from original sources. Do not invent the missing fact. <!-- driftlint-ignore: local-only path of the brain tool, absent in CI -->
 3. If the work type is unclear, compare the request with the work flow table. Before you write an instruction or prompt: `asd-ste100`.
-4. The main session resolves technical questions from sources. It may use `vekil` for recorded decisions and recommendations. It may use `okuyucu` for broad source searches. Both helpers are optional. Levent gets money, scope, direction, taste, and product decisions absent from Tansu notes. Also ask him about secrets, any deletion, outgoing work, Task Scheduler changes, and work that cannot be undone.
+4. The main session resolves technical questions from sources. It may use `vekil` for recorded decisions and recommendations. It may use `okuyucu` for broad source searches. Both helpers are optional. For the standing coordinator, `docs/agents/yonetici.md` owns authority and communication. For other jobs, Levent gets money, scope, direction, taste, and product decisions absent from Tansu notes. Also ask him about secrets, any deletion, outgoing work, Task Scheduler changes, and work that cannot be undone.
 5. If a claim has no source: `thinking-circle-of-competence`. If the problem type is unclear: `thinking-cynefin`. If the method is unclear: `thinking-model-router`.
 6. Choose the flow and the scope (`docs/agents/is-kurallari.md` "Scope").
+7. Unless this is an explicitly delegated job, act as the standing coordinator under `docs/agents/yonetici.md`. A delegated job keeps its assigned role and scope.
 
 ## Work flow (İş akışı)
 The `mattpocock-skills` package is optional. Follow the written steps without it. Source: Levent, 19.10.2026.
