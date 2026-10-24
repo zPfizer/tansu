@@ -2,7 +2,8 @@
 
 from datetime import date, datetime, timezone
 from decimal import Decimal
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
+from copy import deepcopy
 from dataclasses import asdict, dataclass, field
 from hashlib import sha256
 from itertools import product
@@ -34,6 +35,14 @@ class PilotBelirsizHatasi(PilotYazmaHatasi):
         self.kosu_id = makbuz.kosu_id
         self.deneme_id = makbuz.deneme_id
         super().__init__(f"Pilot yayın sonucu belirsiz: {self.kayit_id}")
+
+
+class PilotDayaniklilikHatasi(PilotYazmaHatasi):
+    """S03 WF aktarımı doğrulanamadı; görünür makbuz geri alınamaz."""
+
+    def __init__(self, makbuz):
+        self.kayit_id = makbuz.olay_id
+        super().__init__(f"WF dayanıklılığı belirsiz: {self.kayit_id}")
 
 
 def _icerik_yaz(fd, satir):
@@ -215,10 +224,17 @@ def _ayarlar(kayit):
     tekrar = kayit["yontem_ayarlari"].get("tekrar", 0)
     if type(tekrar) is not int or tekrar < 0:
         raise PilotHatasi("Tekrar negatif olmayan tamsayı olmalıdır.")
+    if str(kayit["yontem_ayarlari"].get("yontem", "")).startswith(
+        "kayitli_monte_carlo"
+    ):
+        _mc_yontemi(kayit["yontem_ayarlari"])
     # TASARIM 5.15 #178: kayıtlı yöntem/veri çifti E1 öncesi doğrulanır.
     from tansu.tansusinama import _isinma_secimi_dogrula
 
-    _isinma_secimi_dogrula(kayit["veri_ayarlari"], kayit["yontem_ayarlari"])
+    if not str(kayit["yontem_ayarlari"].get("yontem", "")).startswith(
+        "kayitli_monte_carlo"
+    ):
+        _isinma_secimi_dogrula(kayit["veri_ayarlari"], kayit["yontem_ayarlari"])
     _ondaliklar(kayit["risk_ayarlari"])
     _ondaliklar(kayit["masraf_ayarlari"])
     for ad, deger in kayit["eski_referans"].items():
@@ -248,6 +264,1588 @@ def _ayar_ozeti(ayarlar):
     return f"{SURUM}:sha256:{sha256(kanonik(ayarlar)).hexdigest()}"
 
 
+def _mc_alanlar(kayit, alanlar):
+    if not isinstance(kayit, dict) or set(kayit) != set(alanlar.split()):
+        raise PilotHatasi(f"MC alanları eksik veya bilinmeyen: {alanlar}")
+
+
+def _mc_ozet(kayit):
+    return sha256(kanonik(kayit)).hexdigest()
+
+
+def _mc_ozet_dogrula(ozet):
+    if (
+        not isinstance(ozet, str)
+        or len(ozet) != 64
+        or any(c not in "0123456789abcdef" for c in ozet)
+    ):
+        raise PilotHatasi("MC içerik özeti SHA-256 olmalıdır.")
+
+
+def _mc_yontemi(y):
+    """TASARIM 5.15 S13: ayrı, tam yöntem şeması; legacy yöntemler değişmez."""
+    from tansu.istatistik import MC_DENEYLER, MC_NOKTALAR, MC_URETEC
+
+    _mc_alanlar(
+        y,
+        "yontem tekrar kontrol_noktalari calisma_turu tohum uretec akis_surumu muhasebe_politikasi hassasiyet_r deneyler kaynak",
+    )
+    on_gosterim = y["calisma_turu"] == "on_gosterim"
+    if y["calisma_turu"] not in ("on_gosterim", "nihai") or y != dict(
+        yontem="kayitli_monte_carlo_v1",
+        tekrar=1000 if on_gosterim else 100000,
+        kontrol_noktalari=[1000] if on_gosterim else list(MC_NOKTALAR),
+        calisma_turu=y["calisma_turu"],
+        tohum=y["tohum"],
+        uretec=MC_URETEC,
+        akis_surumu="indeksli_v1",
+        muhasebe_politikasi="kapali_gerceklesme_gunluk_r_v1",
+        hassasiyet_r=0.01,
+        deneyler=list(MC_DENEYLER),
+        kaynak=y["kaynak"],
+    ):
+        raise PilotHatasi("Desteklenmeyen MC yöntem ayarı.")
+    if (
+        type(y["tohum"]) is not int
+        or y["tohum"] < 0
+        or type(y["tekrar"]) is not int
+        or any(type(n) is not int for n in y["kontrol_noktalari"])
+    ):
+        raise PilotHatasi("MC tohumu ve bütçesi tamsayı olmalıdır.")
+    _mc_alanlar(y["kaynak"], "deneme_id kosu_id sonuc_ref bitis_ref icerik_ozeti")
+    for ad in ("deneme_id", "kosu_id", "sonuc_ref", "bitis_ref"):
+        _metin(y["kaynak"][ad])
+    _mc_ozet_dogrula(y["kaynak"]["icerik_ozeti"])
+
+
+def _mc_baslangic_mi(olaylar, o):
+    from tansu.istatistik import MC_URETEC
+
+    return o["kayit_turu"] == "baslangic" and (
+        str(o.get("kod_kimligi", "")).startswith("kayitli_monte_carlo")
+        or o.get("ureteci_surumu") == MC_URETEC
+        or any(
+            e["kayit_turu"] == "deneme"
+            and str(e["yontem_ayarlari"].get("yontem", "")).startswith(
+                "kayitli_monte_carlo"
+            )
+            and (
+                e["deneme_id"] == o.get("deneme_id")
+                or e["ayar_parmak_izi"] == o.get("ayar_parmak_izi")
+            )
+            for e in olaylar
+        )
+    )
+
+
+def _mc_baslangic_dogrula(olaylar, o):
+    _mc_alanlar(
+        o,
+        "kayit_id sema_surumu olusturma_zamani kayit_turu deneme_id kosu_id ayar_parmak_izi mod anlik_goruntu manifest_ozeti uyelik_surumu kod_kimligi ortam bagimlilik_ozeti tohum ureteci_surumu is_listesi kaynaklar bos_nedenleri",
+    )
+    d = _bul(olaylar, o["deneme_id"], "deneme", "deneme_id")
+    y, v = d["yontem_ayarlari"], d["veri_ayarlari"]
+    _mc_yontemi(y)
+    _mc_ayni_kosu(o, d, o)
+    _kosu_meta_dogrula(
+        tuple(
+            o[k]
+            for k in (
+                "mod",
+                "anlik_goruntu",
+                "manifest_ozeti",
+                "uyelik_surumu",
+                "kod_kimligi",
+                "bagimlilik_ozeti",
+            )
+        ),
+        o["ortam"],
+        o["tohum"],
+        o["ureteci_surumu"],
+    )
+    _is_listesi_dogrula(o["is_listesi"])
+    if (
+        o["tohum"] != y["tohum"]
+        or o["ureteci_surumu"] != y["uretec"]
+        or o["manifest_ozeti"] != v.get("manifest_ozeti")
+        or o["anlik_goruntu"] not in v["veri_referanslari"]
+        or o["uyelik_surumu"] != v.get("uyelik_surumu")
+        or o["kaynaklar"] != d["kaynaklar"]
+        or o["bos_nedenleri"] != {}
+        or not o["kod_kimligi"].startswith("kayitli_monte_carlo_v1:sha256:")
+        or any(
+            e["kayit_turu"] == "baslangic" and e["kosu_id"] == o["kosu_id"]
+            for e in olaylar
+        )
+    ):
+        raise PilotHatasi(
+            "MC başlangıcının değişmez yöntem, veri veya koşu bağı uyuşmuyor."
+        )
+    _mc_ozet_dogrula(o["kod_kimligi"].removeprefix("kayitli_monte_carlo_v1:sha256:"))
+    if v.get("ilk_islem") is not None:
+        from tansu.tansusinama import _ileri_uyelik_kaniti_dogrula
+
+        kaynak = _mc_isinma_kaynagi(olaylar, d)
+        bas = _bul(olaylar, y["kaynak"]["kosu_id"], "baslangic", "kosu_id")
+        _mc_ayni_kosu(bas, kaynak, bas)
+        _ileri_uyelik_kaniti_dogrula(v, bas.get("uyelik_kaniti"))
+
+
+def _mc_ayni_kosu(o, d, b):
+    if (b["deneme_id"], b["ayar_parmak_izi"]) != (
+        d["deneme_id"],
+        d["ayar_parmak_izi"],
+    ) or (o["deneme_id"], o["kosu_id"], o["ayar_parmak_izi"]) != (
+        d["deneme_id"],
+        b["kosu_id"],
+        d["ayar_parmak_izi"],
+    ):
+        raise PilotHatasi("MC başvurusu başka koşuya veya ayara bağlı.")
+
+
+def _mc_kaynagi(olaylar, kaynak, *, ozet_denetle=True):
+    """TASARIM 5.15 S13: yalnız gerçek tamamlanmış WF olaylarının kayıt bağları."""
+    from tansu import motor
+
+    try:
+        d = _bul(olaylar, kaynak["deneme_id"], "deneme", "deneme_id")
+        b = _bul(olaylar, kaynak["kosu_id"], "baslangic", "kosu_id")
+        s = _bul(olaylar, kaynak["sonuc_ref"], "sonuc")
+        f = _bul(olaylar, kaynak["bitis_ref"], "bitis")
+    except (PilotHatasi, KeyError) as hata:
+        raise PilotHatasi(f"kaynak_wf_yok: {hata}") from hata
+    if (
+        d["yontem_ayarlari"].get("yontem") != "kayitli_ileri_v1"
+        or s.get("sonuc_turu") != "ileri_v1"
+    ):
+        raise PilotHatasi("MC kaynağı kayıtlı WF birleşik sonucu olmalıdır.")
+    _ileri_ust(d)
+    if _ayar_ozeti(_ayarlar(d)) != d["ayar_parmak_izi"]:
+        raise PilotHatasi("WF kaynak tam ayar özeti uyuşmuyor.")
+    for o in (b, s, f):
+        _mc_ayni_kosu(o, d, b)
+    k = s["kayit"]
+    isler = [x["ad"] for x in d["donemler"]] + ["birlesik"]
+    if (
+        (k["tur"], k["bolum_id"], k["durum"], f["durum"])
+        != ("birlesik", "birlesik", "tamamlandi", "tamamlandi")
+        or f["tamamlanan"] != isler
+        or f["basarisiz"]
+        or f["cikti_referanslari"] != [s["kayit_id"]]
+        or b["is_listesi"] != isler
+    ):
+        raise PilotHatasi("WF kaynak kapsamı ve bitişi tamamlanmış değil.")
+    m = Makbuz(b["kayit_id"], d["deneme_id"], b["kosu_id"], d["ayar_parmak_izi"])
+    _ileri_sonucu_dogrula(olaylar[: olaylar.index(s)], d, m, k)
+    bolumler = [_bul(olaylar, r, "sonuc") for r in k["bolum_refleri"]]
+    if [o["kayit"]["bolum_id"] for o in bolumler] != isler[:-1] or len(
+        {o["kayit_id"] for o in bolumler}
+    ) != 16:
+        raise PilotHatasi("WF kaynak bölümleri eksik veya yinelenmiş.")
+    secimler = []
+    for o in bolumler:
+        _mc_ayni_kosu(o, d, b)
+        q = o["kayit"]
+        if (
+            o.get("sonuc_turu") != "ileri_v1"
+            or q["tur"] != "bolum"
+            or q["durum"] != "tamamlandi"
+        ):
+            raise PilotHatasi("WF kaynak bölümünün türü veya durumu geçersiz.")
+        on = olaylar[: olaylar.index(o)]
+        _ileri_sonucu_dogrula(on, d, m, q)
+        _isinma_olayi_dogrula(on, o)
+        donem = next(x for x in d["donemler"] if x["ad"] == q["bolum_id"])
+        gunler = [
+            t
+            for t in d["veri_ayarlari"]["takvim"]["seanslar"]
+            if donem["baslangic"].isoformat() <= t <= donem["bitis"].isoformat()
+        ]
+        uyelik = q["uyelik"]
+        if (
+            set(uyelik["gunler"]) != set(gunler)
+            or uyelik["tablo_parmak_izi"] != d["veri_ayarlari"]["uyelik_ozeti"]
+            or q["veri_referansi"]["manifest_parmak_izi"]
+            != d["veri_ayarlari"]["manifest_ozeti"]
+            or q["hatalar"]
+            or (
+                d["veri_ayarlari"].get("ilk_islem") is None
+                and any(not x["tamam"] for x in q["isinma"].values())
+            )
+        ):
+            raise PilotHatasi("WF günlük veri, üyelik, ısınma veya hata kapsamı eksik.")
+        for secim in q["secimler"]:
+            e = _bul(olaylar, secim["secim_ref"], "ileri_secim")
+            _mc_ayni_kosu(e, d, b)
+            if e.get("surum") != "ileri_secim_v1" or e["kayit"] != {
+                a: v for a, v in secim.items() if a != "secim_ref"
+            }:
+                raise PilotHatasi("WF seçim açıklaması gerçek makbuzla uyuşmuyor.")
+            _ileri_secimi_dogrula(olaylar[: olaylar.index(e)], d, m, e["kayit"])
+            secimler.append(e)
+    if len({(e["bolum_id"], e["sembol"]) for e in secimler}) != len(secimler):
+        raise PilotHatasi("WF kaynak seçimi yinelenmiş.")
+    sinyaller = [
+        o
+        for o in olaylar
+        if o["kayit_turu"] == "ileri_sinyal" and o["kosu_id"] == b["kosu_id"]
+    ]
+    for o in sinyaller:
+        _mc_ayni_kosu(o, d, b)
+        secim, cocuk = _ileri_sinyal_bagi(olaylar, d, m, o["secim_ref"])
+        if (
+            o.get("surum") != "ileri_sinyal_v1"
+            or secim not in secimler
+            or (
+                o["test_deneme_id"],
+                o["deneme_ayar_parmak_izi"],
+                o["strateji_ayar_parmak_izi"],
+                o["sembol"],
+                o["karar_bolumu"],
+            )
+            != (
+                cocuk["deneme_id"],
+                cocuk["ayar_parmak_izi"],
+                cocuk["strateji"]["ayar_parmak_izi"],
+                secim["sembol"],
+                secim["bolum_id"],
+            )
+        ):
+            raise PilotHatasi("WF kaynak sinyalinin seçim veya ayar bağı uyuşmuyor.")
+        p = motor._duz({a["ad"]: a["deger"] for a in cocuk["strateji"]["parametreler"]})
+        if o["sinyal"]["parametreler"] != p or (
+            o["sinyal"]["sembol"],
+            o["sinyal"]["tarih"],
+        ) != (o["sembol"], o["tarih"]):
+            raise PilotHatasi("WF kaynak sinyalinin tam parametresi uyuşmuyor.")
+    islemler = [_bul(olaylar, r["kayit_ref"], "islem") for r in k["islem_refleri"]]
+    yayinlar = [
+        o
+        for o in olaylar
+        if o["kayit_turu"] == "islem"
+        and o.get("kosu_id") == b["kosu_id"]
+        and o.get("islem_turu") == "ileri_islem_v1"
+    ]
+    if {o["kayit_id"] for o in yayinlar} != {o["kayit_id"] for o in islemler} or len(
+        {o["islem_id"] for o in yayinlar}
+    ) != len(yayinlar):
+        raise PilotHatasi("WF nihai işlem yayını eksik veya yinelenmiş.")
+    nufus, acik, anlam = [], [], []
+    for o in islemler:
+        _mc_ayni_kosu(o, d, b)
+        i = o["olaylar"][0]
+        p, r = i["pozisyon"], i["sonuc"]
+        sinyal = _ileri_pozisyon_bagi(olaylar, d, m, p)
+        if (o["sinyal_id"], o["islem_id"], o["sembol"], o["karar_bolumu"]) != (
+            sinyal["kayit_id"],
+            p["risk_girdisi"]["islem_id"],
+            sinyal["sembol"],
+            sinyal["karar_bolumu"],
+        ):
+            raise PilotHatasi("WF işlem sahibinin sinyal bağı uyuşmuyor.")
+        if o["rol"] == "tamamlanmis_islem":
+            if (
+                r["kalan_adet"] != 0
+                or not r["alinan_adet"] > 0
+                or any(
+                    type(r[a]) not in (int, float) or not math.isfinite(r[a])
+                    for a in ("ilk_risk", "net_r")
+                )
+                or r["ilk_risk"] <= 0
+                or not i["dolumlar"]
+                or i["dolumlar"][0]["yon"] != "alis"
+            ):
+                raise PilotHatasi(
+                    "WF kapalı işlemin gerçek giriş veya nihai R dayanağı eksik."
+                )
+            nufus.append(
+                dict(
+                    islem_ref=o["kayit_id"],
+                    islem_id=o["islem_id"],
+                    sembol=o["sembol"],
+                    giris_tarih=p["giris_tarih"],
+                    cikis_tarih=p["cikis_tarih"],
+                    net_r=r["net_r"],
+                    ilk_risk=r["ilk_risk"],
+                    giris_kohortu=o["giris_kohortu"],
+                    karar_bolumu=o["karar_bolumu"],
+                )
+            )
+        elif o["rol"] == "acik_ufuk" and r["kalan_adet"] > 0 and r["net_r"] is None:
+            acik.append(o["kayit_id"])
+        else:
+            raise PilotHatasi("WF açık/kapalı rolü sonuçla uyuşmuyor.")
+        anlam.append(
+            dict(
+                sembol=o["sembol"],
+                rol=o["rol"],
+                giris=p["giris_tarih"],
+                cikis=p["cikis_tarih"],
+                karar_bolumu=o["karar_bolumu"],
+                giris_kohortu=o["giris_kohortu"],
+                parametreler=sinyal["sinyal"]["parametreler"],
+                sonuc={a: v for a, v in r.items() if a != "gerceklesen_kismi_sonuclar"}
+                | dict(
+                    gerceklesen_kismi_sonuclar=[
+                        {a: v for a, v in z.items() if a != "dolum_id"}
+                        for z in r.get("gerceklesen_kismi_sonuclar", [])
+                    ]
+                ),
+                dolumlar=[
+                    {a: v for a, v in z.items() if a != "dolum_id"}
+                    for z in i["dolumlar"]
+                ],
+            )
+        )
+    kontroller = [
+        _bul(olaylar, r["kayit_ref"], "ileri_kontrol") for r in k["kontrol_refleri"]
+    ]
+    for o in kontroller:
+        _mc_ayni_kosu(o, d, b)
+        if o.get("surum") != "ileri_kontrol_v1":
+            raise PilotHatasi("WF kaynak checkpoint türü uyuşmuyor.")
+        motor._durumu_oku(o["durum"], o["durum"]["yurutme"])
+        p = o["durum"]["pozisyon"]
+        if p:
+            _ileri_pozisyon_bagi(olaylar, d, m, p)
+    nufus.sort(
+        key=lambda r: (r["cikis_tarih"], r["sembol"], r["giris_tarih"], r["islem_id"])
+    )
+    secim_anlami = []
+    for e in sorted(secimler, key=lambda e: (e["bolum_id"], e["sembol"])):
+        q = e["kayit"]
+        test = (
+            _bul(olaylar, q["test_deneme_id"], "deneme", "deneme_id")
+            if q["test_deneme_id"]
+            else None
+        )
+        secim_anlami.append(
+            dict(
+                bolum=e["bolum_id"],
+                sembol=e["sembol"],
+                durum=q["durum"],
+                strateji=_ayarlar(test)["strateji"] if test else None,
+            )
+        )
+    icerik = dict(
+        ayarlar=_ayarlar(d),
+        secimler=secim_anlami,
+        islemler=sorted(
+            anlam, key=lambda x: (x["sembol"], x["giris"] or "", x["cikis"] or "")
+        ),
+    )
+    ozet = _mc_ozet(icerik)
+    if ozet_denetle and kaynak["icerik_ozeti"] != ozet:
+        raise PilotHatasi("WF kaynak içerik özeti uyuşmuyor.")
+    return dict(
+        deneme=d,
+        baslangic=b,
+        sonuc=s,
+        bitis=f,
+        nufus=nufus,
+        acik=acik,
+        secimler=secimler,
+        sinyaller=sinyaller,
+        kontroller=kontroller,
+        icerik_ozeti=ozet,
+    )
+
+
+_MC_ALANLAR = {
+    "mc_girdi": "kaynak kaynak_ozeti nufus acik_referanslari secim_referanslari sinyal_referanslari kontrol_referanslari seanslar semboller gunluk_r gunluk_islemler kapsam isler",
+    "mc_plan": "girdi_ref anahtar indeks cekilis stres_cocuklari",
+    "mc_sinyal": "plan_ref secim_ref deneme_id bolum sembol tarih sinyal",
+    "mc_senaryo": "plan_ref durum olculer sembol_olculeri yeniden_sinama sonuc_referanslari asama neden",
+    "mc_kontrol": "girdi_ref anahtar onceki_ref sonuc_referanslari tani",
+    "mc_ozet": "girdi_ref isler uyarilar",
+    "mc_parti": "kayitlar",
+}
+
+
+def _mc_olculer(o):
+    _mc_alanlar(o, "toplam_r dusus_r ortalama_r islem_sayisi kayip_serisi")
+    for ad, birim in (
+        ("toplam_r", "R"),
+        ("dusus_r", "R"),
+        ("ortalama_r", "R"),
+        ("islem_sayisi", "adet"),
+        ("kayip_serisi", o["kayip_serisi"]["birim"]),
+    ):
+        v = o[ad]
+        _mc_alanlar(v, "deger birim bos_nedeni")
+        if (
+            v["birim"] != birim
+            or (
+                v["deger"] is None
+                and (ad != "ortalama_r" or v["bos_nedeni"] != "islem_yok")
+            )
+            or (
+                v["deger"] is not None
+                and (
+                    type(v["deger"]) not in (int, float)
+                    or not math.isfinite(v["deger"])
+                    or v["bos_nedeni"] is not None
+                )
+            )
+        ):
+            raise PilotHatasi(
+                "MC ölçüsünün birimi, değeri veya boşluk nedeni geçersiz."
+            )
+    if o["kayip_serisi"]["birim"] not in ("islem", "seans"):
+        raise PilotHatasi("MC kayıp serisinin birimi geçersiz.")
+    if o["dusus_r"]["deger"] < 0 or any(
+        type(o[a]["deger"]) is not int or o[a]["deger"] < 0
+        for a in ("islem_sayisi", "kayip_serisi")
+    ):
+        raise PilotHatasi("MC düşüşü ve sayıları negatif olamaz.")
+
+
+def _mc_onek(olaylar=()):
+    """TASARIM 5.15 S13: yalnız bu okumanın doğrulanmış önceki kayıtları."""
+    onek = dict(
+        kimlikler=set(),
+        baglar={},
+        roller={},
+        isler={},
+        sonuc_planlari=set(),
+        sirali_sonuc_isleri=set(),
+    )
+    for o in olaylar:
+        _mc_onege_ekle(onek, o)
+    return onek
+
+
+def _mc_onege_ekle(onek, o):
+    tur = o["kayit_turu"]
+    for alan in ("kayit_id", "deneme_id", "kosu_id"):
+        if alan == "deneme_id" and tur != "deneme":
+            continue
+        if alan == "kosu_id" and tur != "baslangic":
+            continue
+        if isinstance(o.get(alan), str):
+            onek["baglar"].setdefault((alan, tur, o[alan]), o)
+    if isinstance(o.get("kayit_id"), str):
+        onek["kimlikler"].add(o["kayit_id"])
+    kosu = o.get("kosu_id")
+    if not isinstance(kosu, str):
+        return
+    onek["roller"].setdefault((tur, kosu), []).append(o)
+    if tur in ("mc_plan", "mc_kontrol"):
+        onek["isler"].setdefault((tur, kosu, o["kayit"]["anahtar"]), []).append(o)
+        if tur == "mc_plan" and not isinstance(o["kayit_id"], str):
+            onek["sirali_sonuc_isleri"].add((kosu, o["kayit"]["anahtar"]))
+    elif tur == "mc_senaryo":
+        ref = o["kayit"]["plan_ref"]
+        p = (
+            onek["baglar"][("kayit_id", "mc_plan", ref)]
+            if isinstance(ref, str)
+            else next(
+                p for p in onek["roller"][("mc_plan", kosu)] if p["kayit_id"] == ref
+            )
+        )
+        onek["isler"].setdefault((tur, kosu, p["kayit"]["anahtar"]), []).append(o)
+        if isinstance(ref, str):
+            onek["sonuc_planlari"].add(ref)
+
+
+def _mc_bul(olaylar, kimlik, tur, alan="kayit_id", *, onek=None):
+    if onek is None or not isinstance(kimlik, str):
+        return _bul(olaylar, kimlik, tur, alan)
+    try:
+        return onek["baglar"][(alan, tur, kimlik)]
+    except KeyError:
+        raise PilotHatasi(f"Kayıt bağı bulunamadı: {kimlik}") from None
+
+
+def _mc_kimlik_var(olaylar, kimlik, onek):
+    if isinstance(kimlik, str):
+        return kimlik in onek["kimlikler"]
+    return any(o["kayit_id"] == kimlik for o in olaylar)
+
+
+def _mc_rol_kayitlari(olaylar, tur, kosu_id, *, anahtar=None, onek=None):
+    if onek is not None and isinstance(kosu_id, str):
+        if anahtar is not None:
+            return onek["isler"].get((tur, kosu_id, anahtar), [])
+        return onek["roller"].get((tur, kosu_id), [])
+    return [
+        o
+        for o in olaylar
+        if o["kayit_turu"] == tur
+        and o.get("kosu_id") == kosu_id
+        and (anahtar is None or o["kayit"]["anahtar"] == anahtar)
+    ]
+
+
+def _mc_ref(olaylar, ref, tur, d, b, *, onek=None):
+    o = _mc_bul(olaylar, ref, tur, onek=onek)
+    _mc_ayni_kosu(o, d, b)
+    return o["kayit"]
+
+
+def _mc_girdi_dogrula(olaylar, d, b, k, *, onek=None):
+    from tansu.istatistik import mc_isleri
+
+    kaynak = _mc_kaynagi(olaylar, d["yontem_ayarlari"]["kaynak"])
+    for a in ("strateji", "veri_ayarlari", "risk_ayarlari", "masraf_ayarlari"):
+        if kanonik(_ayarlar(d)[a]) != kanonik(_ayarlar(kaynak["deneme"])[a]):
+            raise PilotHatasi(f"MC kaynakla aynı donmuş ayarı kullanmalıdır: {a}")
+    if (
+        k["kaynak"] != d["yontem_ayarlari"]["kaynak"]
+        or k["kaynak_ozeti"] != kaynak["icerik_ozeti"]
+        or k["nufus"] != kaynak["nufus"]
+        or k["acik_referanslari"] != kaynak["acik"]
+    ):
+        raise PilotHatasi("MC girdi nüfusu gerçek WF kaynağıyla uyuşmuyor.")
+    for alan, tur in (
+        ("secim_referanslari", "secimler"),
+        ("sinyal_referanslari", "sinyaller"),
+        ("kontrol_referanslari", "kontroller"),
+    ):
+        if k[alan] != [o["kayit_id"] for o in kaynak[tur]]:
+            raise PilotHatasi("MC kaynak başvuruları eksik veya sırası farklı.")
+    _mc_alanlar(k["kapsam"], "baslangic bitis muhasebe_politikasi")
+    if k["kapsam"] != dict(
+        baslangic="2022-01-01",
+        bitis="2025-12-31",
+        muhasebe_politikasi="kapali_gerceklesme_gunluk_r_v1",
+    ):
+        raise PilotHatasi("MC OOS kapsamı geçersiz.")
+    seanslar = [
+        t
+        for t in kaynak["deneme"]["veri_ayarlari"]["takvim"]["seanslar"]
+        if "2022-01-01" <= t <= "2025-12-31"
+    ]
+    semboller = sorted(
+        {o["sembol"] for o in kaynak["secimler"]}
+        | {o["sembol"] for o in kaynak["kontroller"]}
+    )
+    if k["seanslar"] != seanslar or k["semboller"] != semboller:
+        raise PilotHatasi("MC günlük takvim veya hisse kapsamı eksik.")
+    degerler = [[0.0 for _ in semboller] for _ in seanslar]
+    refler = [[[] for _ in semboller] for _ in seanslar]
+    for r in k["nufus"]:
+        i, j = seanslar.index(r["cikis_tarih"]), semboller.index(r["sembol"])
+        degerler[i][j] += r["net_r"]
+        refler[i][j].append(r["islem_ref"])
+    if (k["gunluk_r"], k["gunluk_islemler"]) != (degerler, refler):
+        raise PilotHatasi("MC günlük kapalı gerçekleşme kaynakla uyuşmuyor.")
+    anahtarlar = []
+    for is_ in k["isler"]:
+        _mc_alanlar(
+            is_, "anahtar tanim deney dilim sembol blok durum neden blok_tahmini"
+        )
+        if is_["deney"] == "ortak_tarih_blok_v1":
+            _mc_alanlar(is_["blok_tahmini"], "yontem ham uzunluklar neden girdi_ozeti")
+            _mc_ozet_dogrula(is_["blok_tahmini"]["girdi_ozeti"])
+        elif is_["blok_tahmini"] is not None:
+            raise PilotHatasi("MC blok tahmini yalnız tarih blok işine aittir.")
+        t = is_["tanim"]
+        _mc_alanlar(t, "yontem kaynak_ozeti nufus_kurali kapsam dilim deney varyant")
+        _mc_alanlar(t["varyant"], "blok")
+        if t != dict(
+            yontem="kayitli_monte_carlo_v1",
+            kaynak_ozeti=k["kaynak_ozeti"],
+            nufus_kurali="nihai_kapanis_dilimi_v1",
+            kapsam=is_["sembol"],
+            dilim=dict(
+                ad=is_["dilim"],
+                baslangic=next(
+                    x["baslangic"] for x in d["donemler"] if x["ad"] == is_["dilim"]
+                ),
+                bitis=next(
+                    x["bitis"] for x in d["donemler"] if x["ad"] == is_["dilim"]
+                ),
+                kesim=next(
+                    (t for t in reversed(seanslar) if t[:4] == is_["dilim"]),
+                    seanslar[-1],
+                ),
+            ),
+            deney=is_["deney"],
+            varyant=dict(blok=is_["blok"]),
+        ) or is_["anahtar"] != _mc_ozet(t):
+            raise PilotHatasi("MC anlamsal deney anahtarı uyuşmuyor.")
+        if (
+            is_["deney"] not in d["yontem_ayarlari"]["deneyler"]
+            or is_["dilim"] not in [x["ad"] for x in d["donemler"]]
+            or is_["sembol"] not in [*semboller, "eklemeli"]
+            or is_["durum"] not in ("hazir", "olculemedi")
+            or (is_["durum"] == "hazir") != (is_["neden"] is None)
+        ):
+            raise PilotHatasi("MC iş kapsamı veya kullanılabilirlik durumu geçersiz.")
+        anahtarlar.append(is_["anahtar"])
+    if anahtarlar != b["is_listesi"] or len(set(anahtarlar)) != len(anahtarlar):
+        raise PilotHatasi("MC gerekli iş listesi başlangıçla uyuşmuyor.")
+    for dilim in d["donemler"]:
+        if {x["deney"] for x in k["isler"] if x["dilim"] == dilim["ad"]} != set(
+            d["yontem_ayarlari"]["deneyler"]
+        ):
+            raise PilotHatasi("MC diliminde gerekli deney eksik.")
+    if kanonik(k["isler"]) != kanonik(
+        mc_isleri(
+            k,
+            d["donemler"],
+            secim_var=any(o["kayit"]["durum"] == "secildi" for o in kaynak["secimler"]),
+        )
+    ):
+        raise PilotHatasi(
+            "MC gerekli hisse/dilim/blok işleri veya kullanılabilirlik gerekçesi eksik."
+        )
+
+
+def _mc_plan_dogrula(olaylar, d, b, k, *, onek=None):
+    from tansu.istatistik import mc_plan
+
+    g = _mc_ref(olaylar, k["girdi_ref"], "mc_girdi", d, b, onek=onek)
+    is_ = next((i for i in g["isler"] if i["anahtar"] == k["anahtar"]), None)
+    if (
+        is_ is None
+        or is_["durum"] != "hazir"
+        or type(k["indeks"]) is not int
+        or not 0 <= k["indeks"] < d["yontem_ayarlari"]["tekrar"]
+    ):
+        raise PilotHatasi("MC planının kayıtlı işi veya indeksi geçersiz.")
+    onceki = _mc_rol_kayitlari(
+        olaylar, "mc_plan", b["kosu_id"], anahtar=k["anahtar"], onek=onek
+    )
+    if k["indeks"] != len(onceki):
+        raise PilotHatasi("MC plan indeksi yinelenmiş veya öneği kesiyor.")
+    if any(
+        o["kayit"]["durum"] == "hata"
+        for o in _mc_is_sonuclari(olaylar, b["kosu_id"], k["anahtar"], onek=onek)
+    ):
+        raise PilotHatasi("MC başarısız indeks sonrasında yeni plan çekilemez.")
+    _mc_alanlar(k["cekilis"], "indeksler maske demet_indeksleri")
+    if not isinstance(k["stres_cocuklari"], list):
+        raise PilotHatasi("MC stres çocukları liste olmalıdır.")
+    if is_["deney"] != "ayar_komsulugu_v1":
+        if k["stres_cocuklari"]:
+            raise PilotHatasi("Bu MC deneyinde stres çocuğu olamaz.")
+        dilim = next(x for x in d["donemler"] if x["ad"] == is_["dilim"])
+        seans = [
+            t
+            for t in g["seanslar"]
+            if dilim["baslangic"].isoformat() <= t <= dilim["bitis"].isoformat()
+        ]
+        nufus = [
+            r
+            for r in g["nufus"]
+            if r["cikis_tarih"] in seans
+            and (is_["sembol"] == "eklemeli" or r["sembol"] == is_["sembol"])
+        ]
+        n = len(seans) if is_["deney"] == "ortak_tarih_blok_v1" else len(nufus)
+        beklenen = mc_plan(
+            is_["deney"],
+            k["anahtar"],
+            k["indeks"],
+            n=n,
+            tohum=d["yontem_ayarlari"]["tohum"],
+            blok=is_["blok"],
+        )
+        if k["cekilis"] != beklenen:
+            raise PilotHatasi("MC kayıtlı çekilişi indeksli üreteçle uyuşmuyor.")
+    else:
+        _mc_stres_cocuklari(olaylar, d, b, g, is_, k)
+
+
+def _mc_senaryo_dogrula(olaylar, d, b, k, *, onek=None):
+    p = _mc_ref(olaylar, k["plan_ref"], "mc_plan", d, b, onek=onek)
+    onceki = _mc_is_sonuclari(olaylar, b["kosu_id"], p["anahtar"], onek=onek)
+    if p["indeks"] != len(onceki) or any(o["kayit"]["durum"] == "hata" for o in onceki):
+        raise PilotHatasi("MC sonuçları tamamlanmış öneği korumalıdır.")
+    yinelenen = (
+        k["plan_ref"] in onek["sonuc_planlari"]
+        if onek is not None and isinstance(k["plan_ref"], str)
+        else any(
+            o["kayit_turu"] == "mc_senaryo" and o["kayit"]["plan_ref"] == k["plan_ref"]
+            for o in olaylar
+        )
+    )
+    if yinelenen:
+        raise PilotHatasi("MC planının sonucu zaten yayımlandı.")
+    if k["durum"] not in ("tamamlandi", "hata"):
+        raise PilotHatasi("MC senaryo durumu geçersiz.")
+    if k["durum"] == "tamamlandi":
+        _mc_olculer(k["olculer"])
+        if k["asama"] is not None or k["neden"] is not None:
+            raise PilotHatasi("MC tamamlanmış sonuç hata taşıyamaz.")
+        for o in k["sembol_olculeri"].values():
+            _mc_olculer(o)
+        _mc_sonuc_kaniti(olaylar, d, b, p, k, onek=onek)
+    elif (
+        k["olculer"]
+        or k["sembol_olculeri"]
+        or k["yeniden_sinama"]
+        or k["sonuc_referanslari"]
+        or not k["asama"]
+        or not k["neden"]
+    ):
+        raise PilotHatasi("MC hatası aşama ve neden taşımalıdır.")
+
+
+def _mc_komsular(olaylar, g):
+    kaynak = _bul(olaylar, g["kaynak"]["deneme_id"], "deneme", "deneme_id")
+    eksenler = kaynak["yontem_ayarlari"]["eksenler"]
+    sonuc = []
+    secimler = [_bul(olaylar, ref, "ileri_secim") for ref in g["secim_referanslari"]]
+    for o in sorted(secimler, key=lambda o: (o["bolum_id"], o["sembol"])):
+        if o["kayit"]["durum"] != "secildi":
+            continue
+        secilen = _bul(olaylar, o["kayit"]["test_deneme_id"], "deneme", "deneme_id")
+        p = {a["ad"]: a["deger"] for a in secilen["strateji"]["parametreler"]}
+        degerler = []
+        for e in eksenler:
+            i = e["degerler"].index(p[e["ad"]])
+            degerler.append(e["degerler"][max(0, i - 1) : i + 2])
+        demetler = []
+        for demet in product(*degerler):
+            sayisal = {e["ad"]: v for e, v in zip(eksenler, demet, strict=True)}
+            try:
+                katalog.legacy_coz(
+                    secilen["strateji"]["varyant"],
+                    secilen["strateji"]["katalog_surumu"],
+                    sayisal_ayarlar=sayisal,
+                )
+            except ValueError:
+                continue
+            demetler.append(sayisal)
+        if not demetler:
+            raise PilotHatasi("MC seçimin izinli komşu demeti yok.")
+        sonuc.append(dict(secim=o, taban=secilen, demetler=demetler))
+    return sonuc
+
+
+def _mc_stres_cocuklari(olaylar, d, b, g, is_, k):
+    from tansu.istatistik import mc_plan
+
+    komsular = _mc_komsular(olaylar, g)
+    cekilis = mc_plan(
+        "ayar_komsulugu_v1",
+        k["anahtar"],
+        k["indeks"],
+        n=len(komsular),
+        tohum=d["yontem_ayarlari"]["tohum"],
+        komsu_sayilari=[len(q["demetler"]) for q in komsular],
+    )
+    if k["cekilis"] != cekilis or len(k["stres_cocuklari"]) != len(komsular):
+        raise PilotHatasi("MC stres çekilişi veya tam çocuk listesi uyuşmuyor.")
+    for c, q, i in zip(
+        k["stres_cocuklari"], komsular, cekilis["demet_indeksleri"], strict=True
+    ):
+        _mc_alanlar(
+            c,
+            "bolum sembol secim_ref deneme_id ayar_parmak_izi strateji_ayar_parmak_izi demet",
+        )
+        secim, taban = q["secim"], q["taban"]
+        cocuk = _bul(olaylar, c["deneme_id"], "deneme", "deneme_id")
+        if (
+            c["bolum"],
+            c["sembol"],
+            c["secim_ref"],
+            c["demet"],
+            c["ayar_parmak_izi"],
+            c["strateji_ayar_parmak_izi"],
+        ) != (
+            secim["bolum_id"],
+            secim["sembol"],
+            secim["kayit_id"],
+            q["demetler"][i],
+            cocuk["ayar_parmak_izi"],
+            cocuk["strateji"]["ayar_parmak_izi"],
+        ):
+            raise PilotHatasi("MC stres çocuğunun demeti veya seçim bağı uyuşmuyor.")
+        y = dict(
+            yontem="mc_stres_cocuk_v1",
+            tekrar=0,
+            bolum_id=c["bolum"],
+            sembol=c["sembol"],
+            secim_ref=c["secim_ref"],
+            hucre_yontemi=taban["yontem_ayarlari"]["hucre_yontemi"],
+        )
+        if (
+            cocuk["ust_deneme_id"] != d["deneme_id"]
+            or cocuk["baglar"] != dict(izgara_ust_deneme=d["deneme_id"])
+            or cocuk["yontem_ayarlari"] != y
+        ):
+            raise PilotHatasi("MC stres revizyonu üstüne veya planına bağlı değil.")
+        for a in ("donemler", "veri_ayarlari", "risk_ayarlari", "masraf_ayarlari"):
+            if kanonik(cocuk[a]) != kanonik(taban[a]):
+                raise PilotHatasi(f"MC stres revizyonu ayarı değiştirmiş: {a}")
+        _strateji_kaydi(cocuk["strateji"])
+        if _ayar_ozeti(_ayarlar(cocuk)) != cocuk["ayar_parmak_izi"]:
+            raise PilotHatasi("MC stres revizyonu tam ayar özeti uyuşmuyor.")
+        p = {a["ad"]: a["deger"] for a in taban["strateji"]["parametreler"]} | c[
+            "demet"
+        ]
+        if {a["ad"]: a["deger"] for a in cocuk["strateji"]["parametreler"]} != p or (
+            cocuk["strateji"]["varyant"],
+            cocuk["strateji"]["katalog_surumu"],
+        ) != (taban["strateji"]["varyant"], taban["strateji"]["katalog_surumu"]):
+            raise PilotHatasi("MC stres giriş dışındaki ayarları değiştirmiş.")
+
+
+def _mc_sinyal_dogrula(olaylar, d, b, k, *, onek=None):
+    from tansu import motor
+
+    p = _mc_ref(olaylar, k["plan_ref"], "mc_plan", d, b, onek=onek)
+    c = next(
+        (
+            c
+            for c in p["stres_cocuklari"]
+            if (c["secim_ref"], c["deneme_id"], c["bolum"], c["sembol"])
+            == (k["secim_ref"], k["deneme_id"], k["bolum"], k["sembol"])
+        ),
+        None,
+    )
+    if c is None:
+        raise PilotHatasi("MC sinyali planın dondurulmuş stres çocuğuna bağlı değil.")
+    cocuk = _bul(olaylar, k["deneme_id"], "deneme", "deneme_id")
+    sinyal = k["sinyal"]
+    _mc_alanlar(sinyal, "sembol tarih kaynak_sinyal parametreler veri_ref")
+    if (sinyal["sembol"], sinyal["tarih"]) != (k["sembol"], k["tarih"]) or sinyal[
+        "parametreler"
+    ] != motor._duz({a["ad"]: a["deger"] for a in cocuk["strateji"]["parametreler"]}):
+        raise PilotHatasi("MC sinyalinin tam parametresi veya tarihi uyuşmuyor.")
+    donem = cocuk["donemler"][0]
+    if (
+        not donem["baslangic"].isoformat() <= k["tarih"] <= donem["bitis"].isoformat()
+        or not sinyal["veri_ref"]
+        or sinyal["kaynak_sinyal"]["semboller"] != [k["sembol"]]
+        or sinyal["kaynak_sinyal"]["tarih"] != k["tarih"]
+        or sinyal["kaynak_sinyal"]["baglar"]["ayar_parmak_izi"]
+        != cocuk["strateji"]["ayar_parmak_izi"]
+        or sinyal["veri_ref"]["manifest_parmak_izi"] != b["manifest_ozeti"]
+        or sinyal["veri_ref"].get("pay_kimligi")
+        != d["veri_ayarlari"].get("pay_kimligi")
+        or sinyal["kaynak_sinyal"]["baglar"]["veri_ref_id"]
+        != sinyal["veri_ref"]["kayit_id"]
+    ):
+        raise PilotHatasi("MC sinyali dönem/veri/E2 kaynağıyla uyuşmuyor.")
+    if d["veri_ayarlari"].get("ilk_islem") is not None:
+        from tansu import veri
+        from tansu.tansusinama import (
+            _dogal_bekleyis,
+            _donem_uyeligi,
+            _ilk_islem_kayitlari,
+            _isinma_referansi_dogrula,
+        )
+
+        try:
+            bas = _mc_bul(
+                olaylar,
+                d["yontem_ayarlari"]["kaynak"]["kosu_id"],
+                "baslangic",
+                "kosu_id",
+                onek=onek,
+            )
+            kanit = bas["uyelik_kaniti"]
+            v, ref = d["veri_ayarlari"], sinyal["veri_ref"]
+            kayitlar = _ilk_islem_kayitlari(v, uyelik_kaniti=kanit)
+            _, _, uyeler, _, son = _donem_uyeligi(
+                cocuk, dict(donem=donem), uyelik_kaniti=kanit
+            )
+            # Taşıma üyeleri sonuçta kesinleşir; burada bütün verilen bağlar ve üyeler gerekir.
+            gereken = set(uyeler) | set(ref["gecmis_kaniti"])
+            _isinma_referansi_dogrula(v, ref, donem, gereken, kayitlar)
+            gerekli = next(
+                a["deger"]
+                for a in cocuk["strateji"]["parametreler"]
+                if a["ad"] == "isinma"
+            )
+            bag = _dogal_bekleyis(
+                v, ref, k["sembol"], k["tarih"], son, gerekli, kayitlar
+            )
+            if bag is not None and bag[0] < gerekli:
+                raise ValueError(
+                    "kaynaklı ilk 500 gözlem dolmadan sinyal kabul edilemez"
+                )
+        except (veri.VeriHatasi, ValueError, KeyError, TypeError) as hata:
+            raise PilotHatasi(
+                f"MC ilk işlem/ısınma sinyal bağı geçersiz: {hata}"
+            ) from hata
+    if any(
+        o["kayit_turu"] == "mc_sinyal"
+        and o["kosu_id"] == b["kosu_id"]
+        and (o["kayit"]["plan_ref"], o["kayit"]["sembol"], o["kayit"]["tarih"])
+        == (k["plan_ref"], k["sembol"], k["tarih"])
+        for o in olaylar
+    ):
+        raise PilotHatasi("MC sinyal kabulü yinelenmiş.")
+
+
+def _mc_durum_kaniti(olaylar, d, b, k, sembol, durum, yurutme_d):
+    from tansu import motor
+    from tansu.tansusinama import _ileri_yurutme
+
+    motor._durumu_oku(durum, _ileri_yurutme(yurutme_d, b["kosu_id"], sembol))
+    pozisyonlar = [i["pozisyon"] for i in durum["islemler"]]
+    if durum["pozisyon"]:
+        pozisyonlar.append(durum["pozisyon"])
+    for poz in pozisyonlar:
+        risk = poz["risk_girdisi"]
+        sinyal = _bul(olaylar, risk["sinyal_id"], "mc_sinyal")
+        motor.hedef_kaniti_dogrula(poz, sinyal["kayit"]["sinyal"])
+        _mc_ayni_kosu(sinyal, d, b)
+        if (
+            sinyal["kayit"]["plan_ref"] != k["plan_ref"]
+            or poz["ayar"] != sinyal["kayit"]["sinyal"]["parametreler"]
+            or poz["sinyal_tarih"] != sinyal["kayit"]["tarih"]
+            or risk["ayar_parmak_izi"] != motor._iz_kodu(poz["ayar"])
+        ):
+            raise PilotHatasi(
+                "MC yeniden sınama işlemi özgün plan veya sinyal ayarını kaybetmiş."
+            )
+
+
+def _mc_bolum_durumunu_ac(kayit, nihai):
+    """TASARIM 5.15 S13/#178: özgün E3 durumu, ortak ayrıştırıcıdan önce geri kurulur."""
+    _mc_alanlar(kayit, "durum gecmis_onekleri")
+    uzunluklar = kayit["gecmis_onekleri"]
+    _mc_alanlar(uzunluklar, "iz islemler retler")
+    durum = kayit["durum"]
+    if not isinstance(durum, dict) or set(durum) != set(nihai) - set(uzunluklar):
+        raise PilotHatasi("MC bölüm durumunun tam geçmiş dışı alanları gerekli.")
+    sonuc = deepcopy(durum)
+    for alan, n in uzunluklar.items():
+        if type(n) is not int or not 0 <= n <= len(nihai[alan]):
+            raise PilotHatasi("MC bölüm geçmiş öneğinin uzunluğu geçersiz.")
+        sonuc[alan] = deepcopy(nihai[alan][:n])
+    return sonuc
+
+
+def _mc_isinma_bolumleri_dogrula(olaylar, d, b, k, *, donemler, kanit, yurutme_d):
+    """TASARIM 5.15 S13/#178: yalnız kesin üst/kaynak bağından sonraki saf kanıt."""
+    from tansu import veri
+    from tansu.tansusinama import (
+        _donem_uyeligi,
+        _ileri_tasinanlar,
+        _isinma_sonucu_dogrula,
+    )
+
+    tekrar = k["yeniden_sinama"]
+    onceki = {}
+    sinyaller = {
+        o["kayit_id"]: o["kayit"]
+        for o in olaylar
+        if o["kayit_turu"] == "mc_sinyal"
+        and o["kosu_id"] == b["kosu_id"]
+        and o["kayit"]["plan_ref"] == k["plan_ref"]
+    }
+    try:
+        for q, donem in zip(tekrar["bolumler"], donemler, strict=True):
+            _mc_alanlar(q, "bolum durum hatalar donem veri_referansi isinma durumlar")
+            if (
+                q["bolum"] != donem["ad"]
+                or kanonik(q["donem"]) != kanonik(donem)
+                or q["durum"] != "tamamlandi"
+                or q["hatalar"]
+            ):
+                raise ValueError("bölümün kayıtlı dönem veya başarı bağı uyuşmuyor")
+            gunler, _, uyeler, _, son = _donem_uyeligi(
+                d, dict(donem=donem), uyelik_kaniti=kanit
+            )
+            gereken = set(uyeler) | _ileri_tasinanlar(onceki)
+            if set(q["durumlar"]) != gereken:
+                raise ValueError(
+                    "bölümün tarihli üye/taşıma iş kümesi eksik veya fazla"
+                )
+            adaylar = [
+                x["sinyal"]["kaynak_sinyal"]
+                for x in sinyaller.values()
+                if x["bolum"] == q["bolum"]
+            ]
+            _isinma_sonucu_dogrula(d, q | dict(adaylar=adaylar), kanit, gereken)
+            durumlar = {
+                sembol: _mc_bolum_durumunu_ac(kayit, tekrar["durumlar"][sembol])
+                for sembol, kayit in q["durumlar"].items()
+            }
+            for sembol, durum in durumlar.items():
+                _mc_durum_kaniti(olaylar, d, b, k, sembol, durum, yurutme_d)
+                final = tekrar["durumlar"][sembol]
+                if durum["son_tarih"] != gunler[-1]:
+                    raise ValueError("bölüm durumu son kayıtlı seansında değil")
+                gecmis = onceki.get(sembol, {})
+                tarihler = [x["tarih"] for x in gecmis.get("iz", [])] + gunler
+                if [x["tarih"] for x in durum["iz"]] != tarihler:
+                    raise ValueError(
+                        "bölüm geçmişi önceki durum ve tam seans önekini korumuyor"
+                    )
+                for alan in ("iz", "retler", "islemler"):
+                    beklenen = [
+                        x
+                        for x in final[alan]
+                        if (
+                            x["pozisyon"]["cikis_tarih"]
+                            if alan == "islemler"
+                            else x["tarih"]
+                        )
+                        <= son
+                    ]
+                    if durum[alan] != beklenen:
+                        raise ValueError(
+                            "ara bölüm geçmişi nihai durumun özgün öneki değil"
+                        )
+                pozisyonlar = [x["pozisyon"] for x in final["islemler"]]
+                if final["pozisyon"] is not None:
+                    pozisyonlar.append(final["pozisyon"])
+                aktif = [
+                    x
+                    for x in pozisyonlar
+                    if x["sinyal_tarih"] <= son
+                    and (x["cikis_tarih"] is None or x["cikis_tarih"] > son)
+                ]
+                # Sonraki bölümde giriş yapmadan düşen bekleyen sinyal, işlem listesinde yoktur.
+                dusenler = {
+                    x["sinyal_id"]
+                    for x in final["retler"]
+                    if x["tur"] == "dusen_sinyal"
+                    and x["tarih"] > son
+                    and x["sinyal_id"] in sinyaller
+                    and sinyaller[x["sinyal_id"]]["sembol"] == sembol
+                    and sinyaller[x["sinyal_id"]]["tarih"] <= son
+                }
+                poz = durum["pozisyon"]
+                beklenen = len(aktif) + len(dusenler)
+                if beklenen > 1 or (poz is None) != (beklenen == 0):
+                    raise ValueError(
+                        "ara bölüm açık/bekleyen taşıma durumunu kaybetmiş"
+                    )
+                risk = {}
+                bekliyor = False
+                if aktif:
+                    risk = dict(aktif[0]["risk_girdisi"])
+                    giris = aktif[0]["giris_tarih"]
+                    bekliyor = giris is None or giris > son
+                    if bekliyor:
+                        # E3 bu iki alanı ancak giriş dolumunda ekler.
+                        risk.pop("giris_fiyat", None)
+                        risk.pop("ilk_stop", None)
+                if poz is not None and (
+                    (
+                        aktif
+                        and (
+                            any(poz[a] != aktif[0][a] for a in ("ayar", "sinyal_tarih"))
+                            or poz["risk_girdisi"] != risk
+                            or (poz["durum"] == "bekliyor") != bekliyor
+                            or (not bekliyor and poz["giris_tarih"] != giris)
+                        )
+                    )
+                    or (
+                        dusenler
+                        and (
+                            poz["durum"] != "bekliyor"
+                            or poz["risk_girdisi"]["sinyal_id"] not in dusenler
+                        )
+                    )
+                ):
+                    raise ValueError(
+                        "ara bölüm özgün giriş sinyalini veya ayarını kaybetmiş"
+                    )
+                kalan = (durum["sonuc"] or {}).get("kalan_adet", 0)
+                if durum["iz"][-1]["kalan_adet"] != kalan:
+                    raise ValueError(
+                        "ara bölüm pozisyonu ve son gözlem adedi uyuşmuyor"
+                    )
+            onceki.update(durumlar)
+        if kanonik(onceki) != kanonik(tekrar["durumlar"]):
+            raise ValueError("son bölüm gözlemleri nihai durumlarla uyuşmuyor")
+    except (veri.VeriHatasi, ValueError, KeyError, TypeError, IndexError) as hata:
+        raise PilotHatasi(f"MC bölüm/ısınma kanıtı geçersiz: {hata}") from hata
+
+
+def _mc_sonuc_kaniti(olaylar, d, b, p, k, *, onek=None):
+    from tansu.istatistik import mc_senaryo_olculeri
+
+    g = _mc_ref(olaylar, p["girdi_ref"], "mc_girdi", d, b, onek=onek)
+    is_ = next(i for i in g["isler"] if i["anahtar"] == p["anahtar"])
+    if is_["deney"] == "ayar_komsulugu_v1":
+        kaynak = _mc_bul(
+            olaylar, g["kaynak"]["deneme_id"], "deneme", "deneme_id", onek=onek
+        )
+        yurutme_d = d | dict(yontem_ayarlari=kaynak["yontem_ayarlari"])
+        tekrar = k["yeniden_sinama"]
+        _mc_alanlar(tekrar, "durumlar bolumler")
+        alanlar = "bolum durum hatalar"
+        if d["veri_ayarlari"].get("ilk_islem") is not None:
+            alanlar += " donem veri_referansi isinma durumlar"
+        for bolum in tekrar["bolumler"]:
+            if d["veri_ayarlari"].get("ilk_islem") is not None and set(bolum) != set(
+                alanlar.split()
+            ):
+                raise PilotHatasi("MC bölüm/ısınma alanları eksik veya fazla.")
+            _mc_alanlar(bolum, alanlar)
+            if bolum["hatalar"]:
+                raise PilotHatasi("MC yeniden sınama hata taşıyor.")
+        beklenen = {
+            _bul(olaylar, ref, "ileri_kontrol")["sembol"]
+            for ref in g["kontrol_referanslari"]
+        }
+        if set(tekrar["durumlar"]) != beklenen:
+            raise PilotHatasi("MC yeniden sınama gerekli hisseyi eksiltemez.")
+        if [q["bolum"] for q in tekrar["bolumler"]] != [
+            f"{y}Q{q}" for y in range(2022, 2026) for q in range(1, 5)
+        ] or any(q["durum"] != "tamamlandi" for q in tekrar["bolumler"]):
+            raise PilotHatasi("MC gerçek yeniden sınama OOS kapsamı eksik.")
+        if d["veri_ayarlari"].get("ilk_islem") is not None:
+            bas = _mc_bul(
+                olaylar, g["kaynak"]["kosu_id"], "baslangic", "kosu_id", onek=onek
+            )
+            _mc_isinma_bolumleri_dogrula(
+                olaylar,
+                d,
+                b,
+                k,
+                donemler=kaynak["donemler"],
+                kanit=bas["uyelik_kaniti"],
+                yurutme_d=yurutme_d,
+            )
+        for sembol, durum in tekrar["durumlar"].items():
+            _mc_durum_kaniti(olaylar, d, b, k, sembol, durum, yurutme_d)
+        if k["sonuc_referanslari"] != [
+            o["kayit_id"]
+            for o in olaylar
+            if o["kayit_turu"] == "mc_sinyal"
+            and o["kosu_id"] == b["kosu_id"]
+            and o["kayit"]["plan_ref"] == k["plan_ref"]
+        ]:
+            raise PilotHatasi("MC yeniden sınama sinyal başvuruları eksik.")
+    elif k["yeniden_sinama"] or k["sonuc_referanslari"]:
+        raise PilotHatasi("Saf MC örneği yeniden sınama sonucu taşıyamaz.")
+    olculer = mc_senaryo_olculeri(
+        g, is_, p["cekilis"], durumlar=k["yeniden_sinama"].get("durumlar")
+    )
+    if kanonik(olculer) != kanonik(
+        dict(olculer=k["olculer"], sembol_olculeri=k["sembol_olculeri"])
+    ):
+        raise PilotHatasi(
+            "MC ölçüleri kayıtlı örnek veya gerçek yeniden sınamayla uyuşmuyor."
+        )
+
+
+def _mc_kontrol_dogrula(olaylar, d, b, k, *, onek=None):
+    from tansu.istatistik import mc_kontrol
+
+    g = _mc_ref(olaylar, k["girdi_ref"], "mc_girdi", d, b, onek=onek)
+    if k["anahtar"] not in [i["anahtar"] for i in g["isler"]]:
+        raise PilotHatasi("MC kontrol işi kayıtlı değil.")
+    sonuclar = _mc_is_sonuclari(olaylar, b["kosu_id"], k["anahtar"], onek=onek)
+    if k["sonuc_referanslari"] != [o["kayit_id"] for o in sonuclar] or any(
+        o["kayit"]["durum"] != "tamamlandi" for o in sonuclar
+    ):
+        raise PilotHatasi("MC kontrolü tamamlanmış öneğin tümünü gerektirir.")
+    kontroller = _mc_rol_kayitlari(
+        olaylar, "mc_kontrol", b["kosu_id"], anahtar=k["anahtar"], onek=onek
+    )
+    onceki = kontroller[-1] if kontroller else None
+    if k["onceki_ref"] != (onceki["kayit_id"] if onceki else None):
+        raise PilotHatasi("MC önceki kontrol bağı uyuşmuyor.")
+    noktalar = d["yontem_ayarlari"]["kontrol_noktalari"]
+    if len(kontroller) >= len(noktalar) or len(sonuclar) != noktalar[len(kontroller)]:
+        raise PilotHatasi("MC kalıcı kontrolü sonraki kayıtlı noktayı gerektirir.")
+    tani = mc_kontrol(
+        [o["kayit"]["olculer"] for o in sonuclar],
+        onceki=onceki["kayit"]["tani"] if onceki else None,
+    )
+    if kanonik(k["tani"]) != kanonik(tani):
+        raise PilotHatasi(
+            "MC kontrol sayıları veya sayısal tanısı sonuçlarla uyuşmuyor."
+        )
+
+
+def _mc_is_sonuclari(olaylar, kosu_id, anahtar, *, onek=None):
+    if (
+        onek is not None
+        and isinstance(kosu_id, str)
+        and (kosu_id, anahtar) not in onek["sirali_sonuc_isleri"]
+    ):
+        return onek["isler"].get(("mc_senaryo", kosu_id, anahtar), [])
+    planlar = {
+        o["kayit_id"]: o["kayit"]
+        for o in olaylar
+        if o["kayit_turu"] == "mc_plan"
+        and o["kosu_id"] == kosu_id
+        and o["kayit"]["anahtar"] == anahtar
+    }
+    return sorted(
+        [
+            o
+            for o in olaylar
+            if o["kayit_turu"] == "mc_senaryo" and o["kayit"]["plan_ref"] in planlar
+        ],
+        key=lambda o: planlar[o["kayit"]["plan_ref"]]["indeks"],
+    )
+
+
+def _mc_ozet_dogrula_kaydi(olaylar, d, b, k, *, onek=None):
+    g = _mc_ref(olaylar, k["girdi_ref"], "mc_girdi", d, b, onek=onek)
+    if [i["anahtar"] for i in k["isler"]] != b["is_listesi"]:
+        raise PilotHatasi("MC özeti her gerekli işi bir kez içermelidir.")
+    for i, is_ in zip(k["isler"], g["isler"], strict=True):
+        _mc_alanlar(
+            i,
+            "anahtar durum neden istenen denenen tamamlanan hatali baslamayan durma_nedeniyle_istenmedi basarisiz_indeks sonuc_referanslari kontrol_referanslari",
+        )
+        sonuc = _mc_is_sonuclari(olaylar, b["kosu_id"], i["anahtar"], onek=onek)
+        planlar = _mc_rol_kayitlari(
+            olaylar, "mc_plan", b["kosu_id"], anahtar=i["anahtar"], onek=onek
+        )
+        kontrol = _mc_rol_kayitlari(
+            olaylar, "mc_kontrol", b["kosu_id"], anahtar=i["anahtar"], onek=onek
+        )
+        n, h, a = (
+            sum(o["kayit"]["durum"] == "tamamlandi" for o in sonuc),
+            sum(o["kayit"]["durum"] == "hata" for o in sonuc),
+            len(sonuc),
+        )
+        durma = bool(
+            kontrol
+            and kontrol[-1]["kayit"]["tani"]["durum"] == "sayisal_kararlilik_gozlendi"
+        )
+        butce = d["yontem_ayarlari"]["tekrar"]
+        basarisiz = n if h else None
+        durum = (
+            "olculemedi"
+            if is_["durum"] == "olculemedi"
+            else "eksik"
+            if h or n != a or (n < butce and not durma)
+            else "on_gosterim"
+            if butce == 1000
+            else "sayisal_kararlilik_gozlendi"
+            if durma
+            else "sinirda_kararsiz"
+        )
+        beklenen = dict(
+            anahtar=i["anahtar"],
+            durum=durum,
+            neden=is_["neden"]
+            if durum == "olculemedi"
+            else sonuc[-1]["kayit"]["neden"]
+            if h
+            else "tamamlanmamis_butce"
+            if durum == "eksik"
+            else None,
+            istenen=butce,
+            denenen=a,
+            tamamlanan=n,
+            hatali=h,
+            baslamayan=0 if durma else butce - a,
+            durma_nedeniyle_istenmedi=butce - n if durma else 0,
+            basarisiz_indeks=basarisiz,
+            sonuc_referanslari=[o["kayit_id"] for o in sonuc],
+            kontrol_referanslari=[o["kayit_id"] for o in kontrol],
+        )
+        if (
+            i != beklenen
+            or h > 1
+            or (len(planlar) > len(sonuc) and not h)
+            or (n == butce and not kontrol)
+            or (is_["durum"] == "olculemedi" and a)
+        ):
+            raise PilotHatasi(
+                "MC özet durumu veya bütçe sayımı gerçek kayıtlarla uyuşmuyor."
+            )
+
+
+def _mc_isareti(o):
+    return (
+        str(o.get("kayit_turu", "")).startswith("mc_")
+        or str(o.get("surum", "")).startswith("mc_")
+        or str(o.get("yontem_surumu", "")).startswith("kayitli_monte_carlo")
+    )
+
+
+def _mc_kayit_dogrula(olaylar, o, *, onek=None):
+    """S13: okuyucu/yazıcının doğruladığı kesin önekte olay bağını denetle."""
+    if onek is None:
+        onek = _mc_onek(olaylar)
+    tur = o["kayit_turu"]
+    alanlar = "kayit_id sema_surumu olusturma_zamani kayit_turu deneme_id kosu_id ayar_parmak_izi kaynaklar surum yontem_surumu icerik_ozeti kayit"
+    _mc_alanlar(o, alanlar + (" parti_ref" if "parti_ref" in o else ""))
+    if _mc_kimlik_var(olaylar, o["kayit_id"], onek):
+        raise PilotHatasi("MC kayıt kimliği yinelenmiş.")
+    if "parti_ref" in o:
+        parti = _mc_bul(olaylar, o["parti_ref"], "mc_parti", onek=onek)
+        kayitlar = parti["kayit"]["kayitlar"]
+        if (parti["kosu_id"], parti["deneme_id"]) != (
+            o["kosu_id"],
+            o["deneme_id"],
+        ) or not (
+            any(k is o for k in kayitlar)
+            or any(kanonik(k) == kanonik(o) for k in kayitlar)
+        ):
+            raise PilotHatasi("MC iç kaydı başka partiye bağlı.")
+    if (
+        tur not in _MC_ALANLAR
+        or o["sema_surumu"] != SURUM
+        or o["surum"] != f"{tur}_v1"
+        or o["yontem_surumu"] != "kayitli_monte_carlo_v1"
+        or o["icerik_ozeti"] != _mc_ozet(o["kayit"])
+    ):
+        raise PilotHatasi("MC sabit türü, yöntemi veya içerik özeti uyuşmuyor.")
+    k = o["kayit"]
+    _mc_alanlar(k, _MC_ALANLAR[tur])
+    d = _mc_bul(olaylar, o["deneme_id"], "deneme", "deneme_id", onek=onek)
+    b = _mc_bul(olaylar, o["kosu_id"], "baslangic", "kosu_id", onek=onek)
+    _mc_yontemi(d["yontem_ayarlari"])
+    _mc_ayni_kosu(o, d, b)
+    if (
+        b["tohum"] != d["yontem_ayarlari"]["tohum"]
+        or b["ureteci_surumu"] != d["yontem_ayarlari"]["uretec"]
+        or b["manifest_ozeti"] != d["veri_ayarlari"]["manifest_ozeti"]
+        or b["anlik_goruntu"] != d["veri_ayarlari"]["veri_referanslari"][0]
+    ):
+        raise PilotHatasi("MC başlangıcının üreteç veya veri bağı uyuşmuyor.")
+    if o["kaynaklar"] != d["kaynaklar"] or _mc_rol_kayitlari(
+        olaylar, "bitis", b["kosu_id"], onek=onek
+    ):
+        raise PilotHatasi("MC kaynak veya açık koşu bağı uyuşmuyor.")
+    if tur in ("mc_girdi", "mc_ozet") and _mc_rol_kayitlari(
+        olaylar, tur, b["kosu_id"], onek=onek
+    ):
+        raise PilotHatasi("MC girdi veya özet zaten yayımlandı.")
+    {
+        "mc_girdi": _mc_girdi_dogrula,
+        "mc_plan": _mc_plan_dogrula,
+        "mc_sinyal": _mc_sinyal_dogrula,
+        "mc_senaryo": _mc_senaryo_dogrula,
+        "mc_kontrol": _mc_kontrol_dogrula,
+        "mc_ozet": _mc_ozet_dogrula_kaydi,
+        "mc_parti": _mc_parti_dogrula,
+    }[tur](olaylar, d, b, k, onek=onek)
+
+
+def _mc_parti_dogrula(olaylar, d, b, k, *, onek=None):
+    if not isinstance(k["kayitlar"], list) or not 1 <= len(k["kayitlar"]) <= 32:
+        raise PilotHatasi("MC kalıcı partisi 1–32 iç kayıt gerektirir.")
+    if len({o["kayit_turu"] for o in k["kayitlar"]}) != 1 or k["kayitlar"][0][
+        "kayit_turu"
+    ] not in ("mc_plan", "mc_senaryo", "mc_sinyal", "deneme"):
+        raise PilotHatasi("MC partisi yalnız bir dar kayıt rolü içerebilir.")
+    tur = k["kayitlar"][0]["kayit_turu"]
+    if tur == "mc_plan":
+        planlar = [o["kayit"] for o in k["kayitlar"]]
+        ilk = planlar[0]["indeks"]
+        sinir = next(
+            (n for n in d["yontem_ayarlari"]["kontrol_noktalari"] if n > ilk), None
+        )
+        if sinir is None or any(
+            p["anahtar"] != planlar[0]["anahtar"]
+            or p["girdi_ref"] != planlar[0]["girdi_ref"]
+            or p["indeks"] >= sinir
+            for p in planlar
+        ):
+            raise PilotHatasi("MC plan partisi deney veya kontrol sınırını aşamaz.")
+    if tur == "mc_sinyal" and len({o["kayit"]["plan_ref"] for o in k["kayitlar"]}) != 1:
+        raise PilotHatasi("MC sinyal partisi tek plana bağlı olmalıdır.")
+
+
+def _mc_cocuk_dogrula(olaylar, o, parti):
+    _mc_alanlar(
+        o,
+        "kayit_id sema_surumu olusturma_zamani kayit_turu deneme_id kosu_id kimlik_bicimi_surumu olusturan neden strateji donemler veri_ayarlari yontem_ayarlari risk_ayarlari masraf_ayarlari ust_deneme_id eski_referans baglar kaynaklar bos_nedenleri ayar_parmak_izi parti_ref",
+    )
+    if (
+        o["parti_ref"] != parti["kayit_id"]
+        or o["sema_surumu"] != SURUM
+        or o["kimlik_bicimi_surumu"] != SURUM
+        or o["kosu_id"] != parti["kosu_id"]
+        or o["ust_deneme_id"] != parti["deneme_id"]
+        or o["baglar"] != dict(izgara_ust_deneme=parti["deneme_id"])
+        or any(
+            e.get("deneme_id") == o["deneme_id"] and e["kayit_turu"] == "deneme"
+            for e in olaylar
+        )
+    ):
+        raise PilotHatasi(
+            "MC stres revizyonu parti/üst bağını veya tekilliğini kaybetmiş."
+        )
+    g = next(
+        e["kayit"]
+        for e in olaylar
+        if e["kayit_turu"] == "mc_girdi" and e["kosu_id"] == parti["kosu_id"]
+    )
+    y = o["yontem_ayarlari"]
+    _mc_alanlar(y, "yontem tekrar bolum_id sembol secim_ref hucre_yontemi")
+    q = next(
+        (
+            q
+            for q in _mc_komsular(olaylar, g)
+            if q["secim"]["kayit_id"] == y["secim_ref"]
+        ),
+        None,
+    )
+    if q is None or y != dict(
+        yontem="mc_stres_cocuk_v1",
+        tekrar=0,
+        bolum_id=q["secim"]["bolum_id"],
+        sembol=q["secim"]["sembol"],
+        secim_ref=q["secim"]["kayit_id"],
+        hucre_yontemi=q["taban"]["yontem_ayarlari"]["hucre_yontemi"],
+    ):
+        raise PilotHatasi("MC stres revizyonu donmuş WF seçimine bağlı değil.")
+    _strateji_kaydi(o["strateji"])
+    if _ayar_ozeti(_ayarlar(o)) != o["ayar_parmak_izi"]:
+        raise PilotHatasi("MC stres revizyonunun tam ayar özeti geçersiz.")
+    p = {a["ad"]: a["deger"] for a in o["strateji"]["parametreler"]}
+    eski = {a["ad"]: a["deger"] for a in q["taban"]["strateji"]["parametreler"]}
+    if not any(p == eski | v for v in q["demetler"]):
+        raise PilotHatasi("MC stres revizyonu izinli giriş komşuluğu dışında.")
+    if (o["strateji"]["varyant"], o["strateji"]["katalog_surumu"]) != (
+        q["taban"]["strateji"]["varyant"],
+        q["taban"]["strateji"]["katalog_surumu"],
+    ):
+        raise PilotHatasi("MC stres revizyonu başka stratejiye dönüştürülemez.")
+    for a in (
+        "donemler",
+        "veri_ayarlari",
+        "risk_ayarlari",
+        "masraf_ayarlari",
+        "eski_referans",
+    ):
+        if kanonik(o[a]) != kanonik(q["taban"][a]):
+            raise PilotHatasi(f"MC stres revizyonunda değişmez ayar değişmiş: {a}")
+
+
+def _mc_partiyi_ac(olaylar, parti, *, onek=None):
+    if onek is None:
+        onek = _mc_onek(olaylar)
+    _mc_kayit_dogrula(olaylar, parti, onek=onek)
+    sonuc = [parti]
+    _mc_onege_ekle(onek, parti)
+    for o in parti["kayit"]["kayitlar"]:
+        onceki = olaylar + sonuc
+        if o.get("parti_ref") != parti["kayit_id"] or _mc_kimlik_var(
+            onceki, o.get("kayit_id"), onek
+        ):
+            raise PilotHatasi("MC iç kayıt kimliği veya zarf bağı uyuşmuyor.")
+        if o["kayit_turu"] == "deneme":
+            _mc_cocuk_dogrula(onceki, o, parti)
+        else:
+            _mc_kayit_dogrula(onceki, o, onek=onek)
+        _mc_onege_ekle(onek, o)
+        sonuc.append(o)
+    return sonuc
+
+
+def _mc_bitis_dogrula(
+    olaylar,
+    kosu_id,
+    durum,
+    tamamlanan,
+    basarisiz,
+    referanslar,
+    *,
+    yontemler,
+    olculer,
+    ozetler,
+    onek=None,
+):
+    """TASARIM 5.15 S13: bitiş iddiası güncel doğrulanmış öneğe bağlıdır."""
+    if onek is None:
+        onek = _mc_onek(olaylar)
+    b = _mc_bul(olaylar, kosu_id, "baslangic", "kosu_id", onek=onek)
+    d = _mc_bul(olaylar, b["deneme_id"], "deneme", "deneme_id", onek=onek)
+    bildirilen = tamamlanan + basarisiz
+    if (
+        durum not in ("tamamlandi", "hata", "iptal")
+        or len(set(bildirilen)) != len(bildirilen)
+        or set(bildirilen) != set(b["is_listesi"])
+        or any(o["kayit_turu"] == "bitis" and o["kosu_id"] == kosu_id for o in olaylar)
+    ):
+        raise PilotHatasi(
+            "MC bitişinde durum, tekillik veya tam iş muhasebesi geçersiz."
+        )
+    ozet_kayitlari = _mc_rol_kayitlari(olaylar, "mc_ozet", kosu_id, onek=onek)
+    if not ozet_kayitlari:
+        if any(
+            i["deneme_yayin_belirsiz"] for i in _mc_kurtarma(olaylar, kosu_id)["isler"]
+        ):
+            raise PilotHatasi(
+                "MC belirsiz girişim/yayın aralığı varken özetsiz bitiş yapılamaz."
+            )
+        if durum == "tamamlandi" or tamamlanan or referanslar:
+            raise PilotHatasi("MC özeti olmadan iş tamamlanamaz.")
+    else:
+        o = ozet_kayitlari[-1]
+        _mc_ozet_dogrula_kaydi(olaylar, d, b, o["kayit"], onek=onek)
+        biten = [
+            i["anahtar"]
+            for i in o["kayit"]["isler"]
+            if i["durum"]
+            in ("sayisal_kararlilik_gozlendi", "sinirda_kararsiz", "on_gosterim")
+        ]
+        if (
+            tamamlanan != biten
+            or referanslar != [o["kayit_id"]]
+            or (durum == "tamamlandi") != (len(biten) == len(o["kayit"]["isler"]))
+        ):
+            raise PilotHatasi(
+                "MC bitişi gerekli anahtarların gerçek durumuyla uyuşmuyor."
+            )
+    yontem = d["yontem_ayarlari"]["yontem"]
+    calisma = d["yontem_ayarlari"]["calisma_turu"]
+    izinli_yontemler = [[yontem, calisma]]
+    if durum != "tamamlandi":
+        izinli_yontemler.extend([[], [yontem]])
+    tam_alanlar = {"calisma_turu", "yontem_tamamlandi"}
+    alanlar = set(ozetler) if isinstance(ozetler, dict) else None
+    izinli_alanlar = [tam_alanlar]
+    if durum != "tamamlandi":
+        izinli_alanlar.extend([set(), {"hata"}, tam_alanlar | {"hata"}])
+    if (
+        not isinstance(yontemler, list)
+        or yontemler not in izinli_yontemler
+        or olculer != {}
+        or alanlar not in izinli_alanlar
+    ):
+        raise PilotHatasi("MC bitiş yöntemi, ölçüleri veya üstveri alanları geçersiz.")
+    if "hata" in ozetler and not isinstance(ozetler["hata"], str):
+        raise PilotHatasi("MC bitiş hata bilgisi metin olmalıdır.")
+    if tam_alanlar <= alanlar and (
+        ozetler["calisma_turu"] != calisma
+        or type(ozetler["yontem_tamamlandi"]) is not bool
+        or ozetler["yontem_tamamlandi"]
+        != (calisma == "nihai" and durum == "tamamlandi")
+    ):
+        raise PilotHatasi(
+            "MC bitiş üstverisi gerçek çalışma türü ve tamamlanmayla uyuşmuyor."
+        )
+
+
+def _mc_kurtarma(olaylar, kosu_id):
+    b = _bul(olaylar, kosu_id, "baslangic", "kosu_id")
+    d = _bul(olaylar, b["deneme_id"], "deneme", "deneme_id")
+    isler = []
+    for anahtar in b["is_listesi"]:
+        planlar = [
+            o
+            for o in olaylar
+            if o["kayit_turu"] == "mc_plan"
+            and o["kosu_id"] == kosu_id
+            and o["kayit"]["anahtar"] == anahtar
+        ]
+        sonuc = _mc_is_sonuclari(olaylar, kosu_id, anahtar)
+        hata = any(o["kayit"]["durum"] == "hata" for o in sonuc)
+        aralik = (
+            [len(sonuc), len(planlar) - 1]
+            if len(planlar) > len(sonuc) and not hata
+            else None
+        )
+        isler.append(
+            dict(
+                anahtar=anahtar,
+                denenen=None if aralik else len(sonuc),
+                kesin_tamamlanan=sum(
+                    o["kayit"]["durum"] == "tamamlandi" for o in sonuc
+                ),
+                deneme_yayin_belirsiz=aralik,
+                baslamayan_kanitli=d["yontem_ayarlari"]["tekrar"]
+                - (len(sonuc) if hata else len(planlar)),
+            )
+        )
+    return dict(kosu_id=kosu_id, isler=isler)
+
+
 def _kosu_meta_dogrula(kimlikler, ortam, tohum, ureteci_surumu):
     for deger in kimlikler:
         _metin(deger)
@@ -267,7 +1865,76 @@ def _is_listesi_dogrula(is_listesi):
     return list(is_listesi)
 
 
-def _donem_ciktisi_dogrula(durum, birimler, icerik, islem_ref, uyarilar, cikti_ref):
+def _donem_hedef_kaniti_dogrula(icerik, deneme):
+    """TASARIM 5.15: isteğe bağlı yeni kanıt özgün dönem adayına bağlıdır."""
+    from tansu import motor
+
+    try:
+        for durum in icerik.get("durumlar", {}).values():
+            # TASARIM 5.15: eski dönem özeti tam E3 durumu değildir.
+            if isinstance(durum, dict) and not any(
+                a in durum for a in ("surum", "pozisyon", "islemler")
+            ):
+                continue
+            pozisyonlar = [
+                durum["pozisyon"],
+                *(i["pozisyon"] for i in durum["islemler"]),
+            ]
+            pozisyonlar = [
+                p
+                for p in pozisyonlar
+                if p is not None
+                and (
+                    "hedef_yok_kaniti" in p["risk_girdisi"]
+                    or (p["ayar"]["hedef"] == "tansu" and p["hedef"] is None)
+                )
+            ]
+            if not pozisyonlar:
+                continue
+            motor._durumu_oku(durum, durum["yurutme"])
+            for p in pozisyonlar:
+                parametreler = motor._duz(
+                    {a["ad"]: a["deger"] for a in deneme["strateji"]["parametreler"]}
+                )
+                if (
+                    kanonik(p["ayar"]) != kanonik(parametreler)
+                    or durum["yurutme"]["strateji_ayar_parmak_izi"]
+                    != deneme["strateji"]["ayar_parmak_izi"]
+                    or icerik["veri_referansi"]["manifest_parmak_izi"]
+                    != deneme["veri_ayarlari"]["manifest_ozeti"]
+                    or icerik["veri_referansi"]["goruntu_id"]
+                    not in deneme["veri_ayarlari"]["veri_referanslari"]
+                ):
+                    raise ValueError(
+                        "hedef yokluğu kayıtlı denemenin ayar veya verisiyle uyuşmuyor"
+                    )
+                risk = p["risk_girdisi"]
+                adaylar = [
+                    s for s in icerik["adaylar"] if s["kayit_id"] == risk["sinyal_id"]
+                ]
+                if (
+                    len(adaylar) != 1
+                    or adaylar[0]["baglar"]["ayar_parmak_izi"]
+                    != durum["yurutme"]["strateji_ayar_parmak_izi"]
+                ):
+                    raise ValueError("özgün E2 adayı veya ayarı uyuşmuyor")
+                motor.hedef_kaniti_dogrula(
+                    p,
+                    dict(
+                        sembol=risk["sembol"],
+                        tarih=p["sinyal_tarih"],
+                        kaynak_sinyal=adaylar[0],
+                        parametreler=parametreler,
+                        veri_ref=icerik["veri_referansi"],
+                    ),
+                )
+    except (KeyError, TypeError, ValueError) as hata:
+        raise PilotHatasi("Dönem hedef yokluğu kanıtı uyuşmuyor.") from hata
+
+
+def _donem_ciktisi_dogrula(
+    durum, birimler, icerik, islem_ref, uyarilar, cikti_ref, deneme
+):
     if durum not in ("tamamlandi", "hata"):
         raise PilotHatasi("Dönem durumu tanımsız.")
     if not isinstance(birimler, dict) or not birimler or not isinstance(icerik, dict):
@@ -278,6 +1945,7 @@ def _donem_ciktisi_dogrula(durum, birimler, icerik, islem_ref, uyarilar, cikti_r
         _metin(ref)
     if len(set(islem_ref)) != len(islem_ref):
         raise PilotHatasi("İşlem referansı yinelenmiş.")
+    _donem_hedef_kaniti_dogrula(icerik, deneme)
 
 
 def _donem_yayini_dogrula(olaylar, kosu_id, is_id, donem):
@@ -900,6 +2568,15 @@ def _ileri_ust(d):
     _ileri_istek(d)
 
 
+def _ileri_devam_surumu(ortam):
+    if "ileri_devam_surumu" not in ortam:
+        return None
+    surum = ortam["ileri_devam_surumu"]
+    if surum != "ileri_devam_v1":
+        raise PilotHatasi("Bilinmeyen WF devam sürümü.")
+    return surum
+
+
 def _ileri_bolum(d, kimlik):
     b = next((b for b in d["donemler"] if b["ad"] == kimlik), None)
     if b is None:
@@ -926,6 +2603,22 @@ def _ileri_ayni_kosu(o, m):
         raise PilotHatasi("WF başvurusu başka koşuya veya ayara bağlı.")
 
 
+def _ileri_sonucsuz_cocuk_var(olaylar, ust_kosu_id):
+    cocuklar = {
+        o["deneme_id"]
+        for o in olaylar
+        if o["kayit_turu"] == "deneme"
+        and o.get("baglar", {}).get("ileri_ust_kosu") == ust_kosu_id
+    }
+    baslayanlar = {
+        o["kosu_id"]
+        for o in olaylar
+        if o["kayit_turu"] == "baslangic" and o["deneme_id"] in cocuklar
+    }
+    sonuclar = {o["kosu_id"] for o in olaylar if o["kayit_turu"] == "sonuc"}
+    return bool(baslayanlar - sonuclar)
+
+
 def _ileri_cocuk_bagi(olaylar, ust, b, kimlik, rol):
     d = _bul(olaylar, kimlik, "deneme", "deneme_id")
     donem = (
@@ -940,9 +2633,24 @@ def _ileri_cocuk_bagi(olaylar, ust, b, kimlik, rol):
         rol=rol,
         hucre_yontemi=ust["yontem_ayarlari"]["hucre_yontemi"],
     )
+    baslangiclar = [
+        o
+        for o in olaylar
+        if o["kayit_turu"] == "baslangic"
+        and o["deneme_id"] == ust["deneme_id"]
+        and o["kosu_id"] == d["baglar"].get("ileri_ust_kosu")
+    ]
+    yeni = (
+        len(baslangiclar) == 1
+        and _ileri_devam_surumu(baslangiclar[0]["ortam"]) == "ileri_devam_v1"
+    )
     if (
         d["ust_deneme_id"] != ust["deneme_id"]
-        or d["baglar"] != dict(izgara_ust_deneme=ust["deneme_id"])
+        or d["baglar"]
+        != dict(
+            izgara_ust_deneme=ust["deneme_id"],
+            **({"ileri_ust_kosu": baslangiclar[0]["kosu_id"]} if yeni else {}),
+        )
         or kanonik(d["donemler"]) != kanonik([donem])
         or d["yontem_ayarlari"] != y
     ):
@@ -963,6 +2671,213 @@ def _ileri_cocuk_bagi(olaylar, ust, b, kimlik, rol):
     ):
         raise PilotHatasi("WF çocuk stratejisi uyuşmuyor.")
     return d
+
+
+def _ileri_yeni_cocuk_dogrula(olaylar, o):
+    """TASARIM 5.15 S12: çocuk bağı seçimden önce de doğrulanır."""
+    if o["kayit_turu"] not in ("deneme", "baslangic", "sonuc", "bitis"):
+        return
+    if o["kayit_turu"] == "deneme":
+        d = o
+    else:
+        d = next(
+            (
+                x
+                for x in olaylar
+                if x["kayit_turu"] == "deneme" and x["deneme_id"] == o.get("deneme_id")
+            ),
+            None,
+        )
+    if d is None or "ileri_ust_kosu" not in d.get("baglar", {}):
+        return
+    if d["yontem_ayarlari"].get("yontem") not in (
+        "ileri_egitim_v1",
+        "ileri_test_v1",
+    ):
+        raise PilotHatasi("WF çocuk yöntemi geçersiz.")
+    ust_kosu = _bul(olaylar, d["baglar"]["ileri_ust_kosu"], "baslangic", "kosu_id")
+    if _ileri_devam_surumu(ust_kosu["ortam"]) != "ileri_devam_v1":
+        raise PilotHatasi("WF çocuk eski veya başka üst koşuya bağlı.")
+    if any(
+        x["kayit_turu"] == "bitis" and x.get("kosu_id") == ust_kosu["kosu_id"]
+        for x in olaylar
+    ):
+        raise PilotHatasi("Bitmiş WF koşusuna çocuk olayı eklenemez.")
+    ust = _bul(olaylar, ust_kosu["deneme_id"], "deneme", "deneme_id")
+    _ileri_ust(ust)
+    bolum = _ileri_bolum(ust, d["yontem_ayarlari"]["bolum_id"])
+    rol = d["yontem_ayarlari"]["rol"]
+    _ileri_cocuk_bagi(
+        olaylar + ([o] if o["kayit_turu"] == "deneme" else []),
+        ust,
+        bolum,
+        d["deneme_id"],
+        rol,
+    )
+    if o["kayit_turu"] == "deneme":
+        eksenler = ust["yontem_ayarlari"]["eksenler"]
+        p = {a["ad"]: a["deger"] for a in d["strateji"]["parametreler"]}
+        koordinat = tuple(ex["degerler"].index(p[ex["ad"]]) for ex in eksenler)
+        sayisal = {
+            a["ad"]: a["deger"]
+            for a in ust["strateji"]["parametreler"]
+            if a["koken"] == "legacy_izgara"
+        }
+        sayisal.update({ex["ad"]: p[ex["ad"]] for ex in eksenler})
+        strateji = katalog.legacy_coz(
+            ust["strateji"]["varyant"],
+            ust["strateji"]["katalog_surumu"],
+            sayisal_ayarlar=sayisal,
+        )
+        beklenen = _ayarlar(
+            ust
+            | dict(
+                strateji=asdict(strateji),
+                donemler=d["donemler"],
+                yontem_ayarlari=d["yontem_ayarlari"],
+            )
+        )
+        if kanonik(_ayarlar(d)) != kanonik(beklenen):
+            raise PilotHatasi("WF çocuk tam ayarı izinli koordinatla uyuşmuyor.")
+        for eski in olaylar:
+            if (
+                eski["kayit_turu"] != "deneme"
+                or eski.get("baglar", {}).get("ileri_ust_kosu") != ust_kosu["kosu_id"]
+            ):
+                continue
+            ey = eski["yontem_ayarlari"]
+            ep = {a["ad"]: a["deger"] for a in eski["strateji"]["parametreler"]}
+            if (
+                ey["bolum_id"],
+                ey["rol"],
+                tuple(ex["degerler"].index(ep[ex["ad"]]) for ex in eksenler),
+            ) == (bolum["ad"], rol, koordinat):
+                raise PilotHatasi("WF çocuk koordinatı yinelenmiş.")
+    elif o["kayit_turu"] == "baslangic":
+        if any(
+            x["kayit_turu"] == "baslangic" and x["deneme_id"] == d["deneme_id"]
+            for x in olaylar
+        ):
+            raise PilotHatasi("WF çocuk başlangıcı yinelenmiş.")
+        if (
+            o["mod"] != ust_kosu["mod"]
+            or o["kod_kimligi"] != ust_kosu["kod_kimligi"]
+            or o["ortam"]
+            != {k: v for k, v in ust_kosu["ortam"].items() if k != "ileri_devam_surumu"}
+            or o["bagimlilik_ozeti"] != ust_kosu["bagimlilik_ozeti"]
+            or o["is_listesi"] != [f"donem:{d['donemler'][0]['ad']}"]
+        ):
+            raise PilotHatasi("WF çocuk başlangıcı üst yürütmeye bağlı değil.")
+    elif o["kayit_turu"] == "sonuc":
+        from tansu import motor, veri
+        from tansu.tansusinama import _donem_islemleri, _donem_yurutme
+
+        bas = _bul(olaylar, o["kosu_id"], "baslangic", "kosu_id")
+        if (
+            bas["deneme_id"] != d["deneme_id"]
+            or o.get("sonuc_turu") != "donem_v1"
+            or o["is_id"] != f"donem:{d['donemler'][0]['ad']}"
+            or kanonik(o["donem"]) != kanonik(d["donemler"][0])
+            or o["durum"] != o["icerik"]["durum"]
+        ):
+            raise PilotHatasi("WF çocuk sonucu kayıtlı iş ve döneme bağlı değil.")
+        _donem_yayini_dogrula(olaylar, o["kosu_id"], o["is_id"], o["donem"])
+        _donem_ciktisi_dogrula(
+            o["durum"],
+            o["birimler"],
+            o["icerik"],
+            o["islem_referanslari"],
+            o["uyarilar"],
+            o["cikti_referanslari"],
+            d,
+        )
+        icerik = dict(o["icerik"])
+        ozet = icerik.pop("cikti_parmak_izi", None)
+        if ozet != sha256(kanonik(icerik)).hexdigest():
+            raise PilotHatasi("WF çocuk sonuç içeriği değişmiş.")
+        islemler = [
+            x
+            for x in olaylar
+            if x["kayit_turu"] == "islem" and x.get("kosu_id") == o["kosu_id"]
+        ]
+        if [x["kayit_id"] for x in islemler] != o["islem_referanslari"] or o["icerik"][
+            "islem_referanslari"
+        ] != o["islem_referanslari"]:
+            raise PilotHatasi("WF çocuk işlemleri sonuçta eksik veya sırasız.")
+        if len(islemler) != len(list(_donem_islemleri(o["icerik"]))) or any(
+            kanonik(kayit["olaylar"][0]) != kanonik(gercek)
+            for kayit, (_, gercek) in zip(
+                islemler, _donem_islemleri(o["icerik"]), strict=True
+            )
+        ):
+            raise PilotHatasi("WF çocuk işlemleri mühürlü sonuçla uyuşmuyor.")
+        v = d["veri_ayarlari"]
+        ref = o["icerik"].get("veri_referansi")
+        if ref is None:
+            if o["icerik"]["durumlar"]:
+                raise PilotHatasi("WF çocuk E3 durumu E1 referansı olmadan yazılamaz.")
+        elif (
+            not isinstance(ref, dict)
+            or ref.get("kayit_id")
+            != veri._veri_kayit_id(
+                v["veri_referanslari"][0],
+                v["kalite_surumu"],
+                pay_kimligi=v.get("pay_kimligi"),
+                ilk_islem=v.get("ilk_islem"),
+            )
+            or ref.get("goruntu_id") != v["veri_referanslari"][0]
+            or ref.get("manifest_parmak_izi") != v["manifest_ozeti"]
+            or ref.get("pay_kimligi") != v.get("pay_kimligi")
+            or ref.get("ilk_islem") != v.get("ilk_islem")
+        ):
+            raise PilotHatasi("WF çocuk E1 kimliği kayıtlı seçimle uyuşmuyor.")
+        yurutme_d = d | dict(yontem_ayarlari=d["yontem_ayarlari"]["hucre_yontemi"])
+        s = d["strateji"]
+        strateji = katalog.legacy_coz(
+            s["varyant"],
+            s["katalog_surumu"],
+            sayisal_ayarlar={
+                a["ad"]: a["deger"]
+                for a in s["parametreler"]
+                if a["koken"] == "legacy_izgara"
+            },
+        )
+        if (
+            strateji.kayit_id != s["kayit_id"]
+            or strateji.ayar_parmak_izi != s["ayar_parmak_izi"]
+        ):
+            raise PilotHatasi("WF çocuk stratejisi katalogla uyuşmuyor.")
+        for sembol, durum in o["icerik"]["durumlar"].items():
+            motor._durumu_oku(
+                durum,
+                _donem_yurutme(
+                    yurutme_d, o["kosu_id"], sembol, ref["kayit_id"], strateji
+                ),
+            )
+    else:
+        sonuclar = [
+            x
+            for x in olaylar
+            if x["kayit_turu"] == "sonuc" and x.get("kosu_id") == o["kosu_id"]
+        ]
+        if len(sonuclar) != 1 or any(
+            x["kayit_turu"] == "bitis" and x.get("kosu_id") == o["kosu_id"]
+            for x in olaylar
+        ):
+            raise PilotHatasi("WF çocuk bitişi tek sonuç gerektirir.")
+        r = sonuclar[0]
+        bas = _bul(olaylar, o["kosu_id"], "baslangic", "kosu_id")
+        beklenen = dict(
+            durum=r["durum"],
+            tamamlanan=bas["is_listesi"] if r["durum"] == "tamamlandi" else [],
+            basarisiz=[] if r["durum"] == "tamamlandi" else bas["is_listesi"],
+            yontemler=["kayitli_ileri_v1", "bagimsiz_islem_v1"],
+            olculer={},
+            cikti_referanslari=[r["kayit_id"]],
+            ozetler=dict(hatalar=r["icerik"]["hatalar"]),
+        )
+        if kanonik({a: o[a] for a in beklenen}) != kanonik(beklenen):
+            raise PilotHatasi("WF çocuk bitişi gerçek sonuçla uyuşmuyor.")
 
 
 def _ileri_egitim_bagi(olaylar, ust, b, sembol, h):
@@ -1230,6 +3145,7 @@ def _ileri_pozisyon_bagi(olaylar, ust, m, p):
 
     risk = p["risk_girdisi"]
     sinyal = _bul(olaylar, risk["sinyal_id"], "ileri_sinyal")
+    motor.hedef_kaniti_dogrula(p, sinyal["sinyal"])
     _ileri_ayni_kosu(sinyal, m)
     y = _ileri_yurutme(ust, m.kosu_id, sinyal["sembol"])
     if (
@@ -1758,6 +3674,35 @@ def _ileri_bitisini_dogrula(olaylar, ust, m, baslangic, o):
         )
 
 
+def _mc_isinma_kaynagi(olaylar, d):
+    """TASARIM 5.15 S13: saf ayar özeti yerine kesin kayıt önekinde eşleştir."""
+    from tansu.tansusinama import _isinma_secimi_dogrula
+
+    y, v = d["yontem_ayarlari"], d["veri_ayarlari"]
+    _mc_yontemi(y)
+    kaynak = next(
+        (
+            x
+            for x in olaylar
+            if x.get("kayit_turu") == "deneme"
+            and x["deneme_id"] == y["kaynak"]["deneme_id"]
+        ),
+        None,
+    )
+    if "ilk_islem" not in v and (
+        kaynak is None or "ilk_islem" not in kaynak["veri_ayarlari"]
+    ):
+        return None
+    if kaynak is None or kaynak["yontem_ayarlari"].get("yontem") != "kayitli_ileri_v1":
+        raise PilotHatasi("MC ısınma kaynağı önceki kayıtlı WF denemesi olmalıdır.")
+    _ileri_ust(kaynak)
+    if kanonik(v) != kanonik(kaynak["veri_ayarlari"]) or not _isinma_secimi_dogrula(
+        kaynak["veri_ayarlari"], kaynak["yontem_ayarlari"]
+    ):
+        raise PilotHatasi("MC ısınma kaynağının tam veri ve hücre seçimi uyuşmuyor.")
+    return kaynak
+
+
 def _isinma_olayi_dogrula(olaylar, o):
     """TASARIM 5.15 #178: aynı yeni kaynak sınırı ekleme ve taze okumada uygulanır."""
     from tansu import veri
@@ -1783,6 +3728,18 @@ def _isinma_olayi_dogrula(olaylar, o):
             )
         )
         if d is None:
+            return
+        if str(d["yontem_ayarlari"].get("yontem", "")).startswith(
+            "kayitli_monte_carlo"
+        ):
+            if o["kayit_turu"] == "deneme":
+                kaynak = _mc_isinma_kaynagi(olaylar, d)
+                if (
+                    kaynak is not None
+                    and _ayar_ozeti(_ayarlar(d)) != d["ayar_parmak_izi"]
+                ):
+                    raise PilotHatasi("MC ısınma kaydının tam ayar özeti uyuşmuyor.")
+            # Diğer MC rolleri, doğrulanmış üst ve kaynak bağını kendi sahibinde denetler.
             return
         if not _isinma_secimi_dogrula(d["veri_ayarlari"], d["yontem_ayarlari"]):
             return
@@ -1965,6 +3922,34 @@ def _ileri_olayi_dogrula(olaylar, o):
                 for x in olaylar
             ):
                 raise PilotHatasi("WF başlangıç kimliği yinelenmiş.")
+            if _ileri_devam_surumu(o["ortam"]):
+                ortam = o["ortam"]
+                alanlar = {
+                    "git_commit",
+                    "kirli",
+                    "kod_dosyalari",
+                    "lock_sha256",
+                    "bagimliliklar",
+                    "python_uygulamasi",
+                    "python_surumu",
+                    "platform",
+                    "mimari",
+                }
+                if (
+                    not alanlar <= ortam.keys()
+                    or type(ortam["kirli"]) is not bool
+                    or not isinstance(ortam["kod_dosyalari"], dict)
+                    or "__main__.py" not in ortam["kod_dosyalari"]
+                    or not isinstance(ortam["bagimliliklar"], dict)
+                    or not ortam["bagimliliklar"]
+                    or o["bagimlilik_ozeti"] != ortam["lock_sha256"]
+                    or o["kod_kimligi"]
+                    != "kayitli_ileri_v1:sha256:"
+                    + sha256(kanonik(ortam["kod_dosyalari"])).hexdigest()
+                ):
+                    raise PilotHatasi(
+                        "WF devam başlangıcının kimliği eksik veya bozuk."
+                    )
             _kosu_meta_dogrula(
                 (
                     o["mod"],
@@ -2359,6 +4344,33 @@ class PilotKayit:
             raise PilotHatasi("Eski deneme dosyası pilot alanı değildir.")
 
     @contextmanager
+    def _ileri_yurutme_kilidi(self, deneme_id):
+        """TASARIM 5.15 S12: WF işçisi tüm yürütme boyunca OS kilidini tutar."""
+        ad = sha256(kanonik(deneme_id)).hexdigest()
+        kilit = self.yol.with_name(f"{self.yol.name}.wf-{ad}.lock")
+        with kilit.open("a+b") as dosya:
+            dosya.seek(0)
+            try:
+                if os.name == "nt":
+                    import msvcrt
+
+                    msvcrt.locking(dosya.fileno(), msvcrt.LK_NBLCK, 1)
+                else:
+                    import fcntl
+
+                    fcntl.flock(dosya.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except OSError as hata:
+                raise PilotHatasi("WF denemesi başka işçide yürütülüyor.") from hata
+            try:
+                yield
+            finally:
+                dosya.seek(0)
+                if os.name == "nt":
+                    msvcrt.locking(dosya.fileno(), msvcrt.LK_UNLCK, 1)
+                else:
+                    fcntl.flock(dosya.fileno(), fcntl.LOCK_UN)
+
+    @contextmanager
     def _kilit(self):
         self.yol.parent.mkdir(parents=True, exist_ok=True)
         with self.yol.with_suffix(self.yol.suffix + ".lock").open("a+b") as dosya:
@@ -2384,6 +4396,7 @@ class PilotKayit:
         if not self.yol.exists():
             return [], []
         olaylar, uyarilar = [], []
+        mc_onek = _mc_onek()
         for no, satir in enumerate(self.yol.read_bytes().splitlines(keepends=True), 1):
             if not satir.endswith(b"\n") or satir.endswith(_KESIK):
                 uyarilar.append(f"Eksik satır: {no}")
@@ -2392,14 +4405,104 @@ class PilotKayit:
                 olay = _coz(json.loads(satir))
                 if olay["sema_surumu"] != SURUM or kanonik(olay) + b"\n" != satir:
                     raise ValueError("Şema veya kodlama uyuşmuyor.")
+                if olay.get("sonuc_turu") == "donem_v1":
+                    _donem_hedef_kaniti_dogrula(
+                        olay["icerik"],
+                        next(
+                            (
+                                o
+                                for o in olaylar
+                                if o["kayit_turu"] == "deneme"
+                                and o["deneme_id"] == olay["deneme_id"]
+                            ),
+                            None,
+                        ),
+                    )
                 if olay.get("kayit_turu") != "grup_hazirligi":
                     _isinma_olayi_dogrula(olaylar, olay)
                 if olay.get("kayit_turu") == "grup_hazirligi":
                     _grup_olayi_dogrula(olay)
                 elif _ileri_kaydi_mi(olaylar, olay):
                     _ileri_olayi_dogrula(olaylar, olay)
+                _ileri_yeni_cocuk_dogrula(olaylar, olay)
+                if olay["kayit_turu"] == "deneme" and str(
+                    olay["yontem_ayarlari"].get("yontem", "")
+                ).startswith("kayitli_monte_carlo"):
+                    _mc_alanlar(
+                        olay,
+                        "kayit_id sema_surumu olusturma_zamani kayit_turu deneme_id kimlik_bicimi_surumu olusturan neden strateji donemler veri_ayarlari yontem_ayarlari risk_ayarlari masraf_ayarlari ust_deneme_id eski_referans baglar kaynaklar bos_nedenleri ayar_parmak_izi",
+                    )
+                    if (
+                        olay["kimlik_bicimi_surumu"] != SURUM
+                        or olay["kaynaklar"] != olay["strateji"]["kaynaklar"]
+                    ):
+                        raise PilotHatasi(
+                            "MC denemesinin kimlik sürümü veya kaynakları uyuşmuyor."
+                        )
+                    _strateji_kaydi(olay["strateji"])
+                    if _ayar_ozeti(_ayarlar(olay)) != olay["ayar_parmak_izi"]:
+                        raise PilotHatasi(
+                            "MC kayıtlı denemenin tam ayar özeti uyuşmuyor."
+                        )
+                if _mc_baslangic_mi(olaylar, olay):
+                    _mc_baslangic_dogrula(olaylar, olay)
+                if olay["kayit_turu"] == "mc_parti":
+                    olaylar.extend(_mc_partiyi_ac(olaylar, olay, onek=mc_onek))
+                    continue
+                if _mc_isareti(olay):
+                    _mc_kayit_dogrula(olaylar, olay, onek=mc_onek)
+                if olay["kayit_turu"] == "bitis":
+                    baslangic = next(
+                        (
+                            o
+                            for o in olaylar
+                            if o["kayit_turu"] == "baslangic"
+                            and o["kosu_id"] == olay["kosu_id"]
+                        ),
+                        None,
+                    )
+                    d = next(
+                        (
+                            o
+                            for o in olaylar
+                            if o["kayit_turu"] == "deneme"
+                            and o["deneme_id"]
+                            == (
+                                baslangic["deneme_id"]
+                                if baslangic
+                                else olay["deneme_id"]
+                            )
+                        ),
+                        None,
+                    )
+                    if (
+                        d
+                        and d["yontem_ayarlari"].get("yontem")
+                        == "kayitli_monte_carlo_v1"
+                    ):
+                        _mc_alanlar(
+                            olay,
+                            "kayit_id sema_surumu olusturma_zamani kayit_turu deneme_id kosu_id ayar_parmak_izi kaynaklar durum tamamlanan basarisiz yontemler olculer cikti_referanslari ozetler bitis_zamani",
+                        )
+                        b = _bul(olaylar, olay["kosu_id"], "baslangic", "kosu_id")
+                        _mc_ayni_kosu(olay, d, b)
+                        if olay["kaynaklar"] != d["kaynaklar"]:
+                            raise PilotHatasi("MC bitişinin kaynak bağı uyuşmuyor.")
+                        _mc_bitis_dogrula(
+                            olaylar,
+                            olay["kosu_id"],
+                            olay["durum"],
+                            olay["tamamlanan"],
+                            olay["basarisiz"],
+                            olay["cikti_referanslari"],
+                            yontemler=olay["yontemler"],
+                            olculer=olay["olculer"],
+                            ozetler=olay["ozetler"],
+                            onek=mc_onek,
+                        )
             except (ValueError, KeyError, TypeError, IndexError) as hata:
                 raise PilotHatasi(f"Bozuk tam satır: {no}") from hata
+            _mc_onege_ekle(mc_onek, olay)
             olaylar.append(olay)
         return olaylar, uyarilar
 
@@ -2605,37 +4708,157 @@ class PilotKayit:
         }
         if uyelik_kaniti is not None:
             baslangic["uyelik_kaniti"] = uyelik_kaniti
-        makbuz = self._ekle(baslangic)
-        kosu = _Kosu(self, makbuz, deneme, baslangic)
+        wf = deneme["yontem_ayarlari"].get("yontem") == "kayitli_ileri_v1"
+        if not wf and "ileri_devam_surumu" in ortam:
+            raise PilotHatasi("WF devam sürümü yalnız üst koşuya aittir.")
+        surum = _ileri_devam_surumu(ortam) if wf else None
+        kilit = self._ileri_yurutme_kilidi(deneme_id) if surum else nullcontext()
+        with kilit:
+            makbuz = self._ekle(baslangic)
+            kosu = _Kosu(self, makbuz, deneme, baslangic)
+            try:
+                yield kosu
+                if kosu._yazma_hatasi:
+                    raise PilotYazmaHatasi("Koşu kayıt hatasıyla durdu.")
+            except Exception as hata:
+                if isinstance(hata, (PilotBelirsizHatasi, PilotDayaniklilikHatasi)):
+                    raise
+                if "ileri_ust_kosu" in deneme.get("baglar", {}) or (
+                    surum
+                    and (
+                        isinstance(hata, PilotHatasi)
+                        or _ileri_sonucsuz_cocuk_var(self.oku(), kosu.makbuz.kosu_id)
+                    )
+                ):
+                    raise
+                if not kosu._bitti and not kosu._yazma_hatasi:
+                    if deneme["yontem_ayarlari"].get(
+                        "yontem"
+                    ) == "kayitli_monte_carlo_v1" and any(
+                        i["deneme_yayin_belirsiz"]
+                        for i in _mc_kurtarma(self.oku(), kosu.makbuz.kosu_id)["isler"]
+                    ):
+                        raise
+                    if deneme["yontem_ayarlari"].get("yontem") == "kayitli_ileri_v1":
+                        bitis = _ileri_bitis_kaniti(self.oku(), deneme, makbuz)
+                        if not bitis["cikti_referanslari"]:
+                            bitis["ozetler"]["hata"] = str(hata)
+                        kosu.bitir(**bitis)
+                    else:
+                        kosu.bitir(
+                            durum="hata",
+                            tamamlanan=[],
+                            basarisiz=is_listesi,
+                            yontemler=[],
+                            olculer={},
+                            cikti_referanslari=[],
+                            ozetler={"hata": str(hata)},
+                        )
+                raise
+            finally:
+                kosu._etkin = False
+
+    @contextmanager
+    def ileri_devam(self, kosu_id, *, mod, kod_kimligi, ortam, bagimlilik_ozeti):
+        """TASARIM 5.15 S12: aynı üst koşuyu kilit altında taze günlükten bağlar."""
+        baslangic = _bul(self.oku(), kosu_id, "baslangic", "kosu_id")
+        deneme_id = baslangic["deneme_id"]
+        with self._ileri_yurutme_kilidi(deneme_id):
+            with self._kilit():
+                olaylar, uyarilar = self._oku()
+                baslangic = _bul(olaylar, kosu_id, "baslangic", "kosu_id")
+                deneme = _bul(olaylar, deneme_id, "deneme", "deneme_id")
+                _ileri_ust(deneme)
+                if _ileri_devam_surumu(baslangic["ortam"]) != "ileri_devam_v1":
+                    raise PilotHatasi("Eski WF koşusu devam ettirilemez.")
+                if (
+                    baslangic["deneme_id"] != deneme_id
+                    or baslangic["ayar_parmak_izi"] != deneme["ayar_parmak_izi"]
+                    or baslangic["mod"] != mod
+                    or baslangic["kod_kimligi"] != kod_kimligi
+                    or baslangic["ortam"] != ortam
+                    or baslangic["bagimlilik_ozeti"] != bagimlilik_ozeti
+                ):
+                    raise PilotHatasi("WF devam kimliği veya çalışma ortamı değişmiş.")
+                ham = self.yol.read_bytes()
+                satirlar = ham.splitlines(keepends=True)
+                if any(
+                    not s.endswith(b"\n") or (s.endswith(_KESIK) and s == _KESIK)
+                    for s in satirlar[:-1]
+                ):
+                    raise PilotHatasi("WF günlüğünde iç kesik veya belirsiz satır var.")
+                if satirlar and not satirlar[-1].endswith(b"\n"):
+                    if any(
+                        o["kayit_turu"] == "bitis" and o.get("kosu_id") == kosu_id
+                        for o in olaylar
+                    ):
+                        raise PilotHatasi("Bitmiş WF sonrasında belirsiz kuyruk var.")
+                    fd = os.open(
+                        self.yol,
+                        os.O_WRONLY | os.O_APPEND | getattr(os, "O_BINARY", 0),
+                    )
+                    try:
+                        _icerik_yaz(fd, _KESIK)
+                    finally:
+                        os.close(fd)
+                    olaylar, uyarilar = self._oku()
+            makbuz = Makbuz(
+                baslangic["kayit_id"],
+                deneme_id,
+                kosu_id,
+                deneme["ayar_parmak_izi"],
+                list(uyarilar),
+            )
+            kosu = _Kosu(self, makbuz, deneme, baslangic)
+            try:
+                yield kosu
+                if kosu._tekrar_sira != len(kosu._tekrar_adaylari):
+                    raise PilotHatasi("WF yayımlanmış öneği tüketilmedi.")
+            finally:
+                kosu._etkin = False
+
+    @contextmanager
+    def _ileri_cocuk_devam(self, ust_kosu_id, cocuk, baslangic, *, sonuc_hazir=False):
+        """TASARIM 5.15 S12: çocuk başlangıcı ikinci kez yayımlanmaz."""
+        if cocuk["baglar"].get("ileri_ust_kosu") != ust_kosu_id:
+            raise PilotHatasi("WF çocuk başka üst koşuya bağlı.")
+        olaylar = self.oku()
+        adaylar = [
+            o
+            for o in olaylar
+            if o["kayit_turu"] == "baslangic" and o["deneme_id"] == cocuk["deneme_id"]
+        ]
+        if adaylar != [baslangic]:
+            raise PilotHatasi("WF çocuk başlangıcı tekil değil.")
+        makbuz = Makbuz(
+            baslangic["kayit_id"],
+            cocuk["deneme_id"],
+            baslangic["kosu_id"],
+            cocuk["ayar_parmak_izi"],
+        )
+        kosu = _Kosu(self, makbuz, cocuk, baslangic)
+        bas = olaylar.index(baslangic)
+        kosu._tekrar_adaylari = [
+            o
+            for o in olaylar[bas + 1 :]
+            if o.get("kosu_id") == makbuz.kosu_id and o["kayit_turu"] != "bitis"
+        ]
+        if sonuc_hazir:
+            sonuclar = [o for o in kosu._tekrar_adaylari if o["kayit_turu"] == "sonuc"]
+            if len(sonuclar) != 1 or sonuclar[0] != kosu._tekrar_adaylari[-1]:
+                raise PilotHatasi("WF çocuk sonuç öneği geçersiz.")
+            kosu._tekrar_adaylari = []
         try:
             yield kosu
-            if kosu._yazma_hatasi:
-                raise PilotYazmaHatasi("Koşu kayıt hatasıyla durdu.")
-        except Exception as hata:
-            if not kosu._bitti and not kosu._yazma_hatasi:
-                if deneme["yontem_ayarlari"].get("yontem") == "kayitli_ileri_v1":
-                    bitis = _ileri_bitis_kaniti(self.oku(), deneme, makbuz)
-                    if not bitis["cikti_referanslari"]:
-                        bitis["ozetler"]["hata"] = str(hata)
-                    kosu.bitir(**bitis)
-                else:
-                    kosu.bitir(
-                        durum="hata",
-                        tamamlanan=[],
-                        basarisiz=is_listesi,
-                        yontemler=[],
-                        olculer={},
-                        cikti_referanslari=[],
-                        ozetler={"hata": str(hata)},
-                    )
-            raise
+            if kosu._tekrar_sira != len(kosu._tekrar_adaylari):
+                raise PilotHatasi("WF çocuk öneği tüketilmedi.")
         finally:
             kosu._etkin = False
 
     def izle(self, olay_id):
         olaylar = self.oku()
         sonuc = _bul(olaylar, olay_id)
-        if sonuc["kayit_turu"] not in ("sonuc", "islem", "senaryo"):
+        if sonuc["kayit_turu"] not in ("sonuc", "islem", "senaryo", *_MC_ALANLAR):
             raise PilotHatasi("Hesap çıktısı gerekli.")
         baslangic = _bul(olaylar, sonuc["kosu_id"], "baslangic", "kosu_id")
         bitisler = [
@@ -2695,7 +4918,7 @@ class PilotKayit:
         with self._kilit():
             olaylar, uyarilar = self._oku()
         biten = {o["kosu_id"] for o in olaylar if o["kayit_turu"] == "bitis"}
-        return {
+        sonuc = {
             "olaylar": olaylar,
             "uyarilar": uyarilar,
             "cozumsuz_kosular": [
@@ -2704,6 +4927,21 @@ class PilotKayit:
                 if o["kayit_turu"] == "baslangic" and o["kosu_id"] not in biten
             ],
         }
+        mc = [
+            b
+            for b in olaylar
+            if b["kayit_turu"] == "baslangic"
+            and b["kosu_id"] not in biten
+            and _bul(olaylar, b["deneme_id"], "deneme", "deneme_id")[
+                "yontem_ayarlari"
+            ].get("yontem")
+            == "kayitli_monte_carlo_v1"
+        ]
+        if mc:
+            sonuc["mc_belirsiz_kosular"] = [
+                _mc_kurtarma(olaylar, b["kosu_id"]) for b in mc
+            ]
+        return sonuc
 
     def _ekle(self, olay, denetle=None):
         yayinlandi = False
@@ -2723,11 +4961,16 @@ class PilotKayit:
             )
             with self._kilit():
                 olaylar, _ = self._oku()
+                if _mc_baslangic_mi(olaylar, olay):
+                    _mc_baslangic_dogrula(olaylar, olay)
+                if _mc_isareti(olay) and olay["kayit_turu"] not in _MC_ALANLAR:
+                    _mc_kayit_dogrula(olaylar, olay)
                 if denetle:
                     denetle(olaylar)
                 _isinma_olayi_dogrula(olaylar, olay)
                 if _ileri_kaydi_mi(olaylar, olay):
                     _ileri_olayi_dogrula(olaylar, olay)
+                _ileri_yeni_cocuk_dogrula(olaylar, olay)
                 ham = self.yol.read_bytes() if self.yol.exists() else b""
                 if ham and not ham.endswith(b"\n"):
                     satir = _KESIK + satir
@@ -2793,6 +5036,8 @@ class PilotKayit:
         tekrar = yontem_ayarlari.get("tekrar", 0)
         if type(tekrar) is not int or tekrar < 0:
             raise PilotHatasi("Tekrar negatif olmayan tamsayı olmalıdır.")
+        if str(yontem_ayarlari.get("yontem", "")).startswith("kayitli_monte_carlo"):
+            _mc_yontemi(yontem_ayarlari)
         for ad, deger in eski_referans.items():
             if deger is None:
                 _metin(eski_referans.get("bos_nedenleri", {}).get(ad))
@@ -2810,7 +5055,12 @@ class PilotKayit:
         baglar = {} if baglar is None else baglar
         if not isinstance(baglar, dict):
             raise PilotHatasi("Bağlar nesne olmalıdır.")
-        if baglar.keys() - {"izgara_ust_deneme", "egitim_denemeleri", "test_deneme"}:
+        if baglar.keys() - {
+            "izgara_ust_deneme",
+            "egitim_denemeleri",
+            "test_deneme",
+            "ileri_ust_kosu",
+        }:
             raise PilotHatasi("Bilinmeyen deneme bağı.")
         if ("egitim_denemeleri" in baglar or "test_deneme" in baglar) and (
             not isinstance(baglar.get("egitim_denemeleri"), list)
@@ -2861,11 +5111,26 @@ def _bul(olaylar, kimlik, tur=None, alan="kayit_id"):
     raise PilotHatasi(f"Kayıt bağı bulunamadı: {kimlik}")
 
 
+def _ileri_tekrar_anahtari(o):
+    tur = o["kayit_turu"]
+    if tur in ("ileri_secim", "ileri_kontrol"):
+        return tur, o["bolum_id"], o["sembol"]
+    if tur == "ileri_sinyal":
+        return tur, o["secim_ref"], o["sinyal"]["kaynak_sinyal"]["kayit_id"]
+    if tur == "islem":
+        return tur, o["olaylar"][0]["pozisyon"]["risk_girdisi"]["islem_id"]
+    if tur == "sonuc":
+        return tur, o.get("sonuc_turu"), o.get("bolum_id", o.get("is_id"))
+    return (tur,)
+
+
 class _Kosu:
     def __init__(self, depo, makbuz, deneme, baslangic):
         self._depo, self.makbuz = depo, makbuz
         self._deneme, self._baslangic = deneme, baslangic
         self._etkin, self._bitti, self._yazma_hatasi = True, False, False
+        self._tekrar_adaylari = []
+        self._tekrar_sira = 0
 
     def _yaz(self, tur, alanlar, denetle=None):
         if not self._etkin or self._bitti or self._yazma_hatasi:
@@ -2890,10 +5155,51 @@ class _Kosu:
                 denetle(olaylar)
 
         try:
+            if self._tekrar_sira < len(self._tekrar_adaylari):
+                aday = self._tekrar_adaylari[self._tekrar_sira]
+                if _ileri_tekrar_anahtari(aday) != _ileri_tekrar_anahtari(olay):
+                    raise PilotHatasi("WF kayıt öneği sırasız veya eşleşmedi.")
+                meta = {"kayit_id", "sema_surumu", "olusturma_zamani"}
+                if kanonik({k: v for k, v in aday.items() if k not in meta}) != kanonik(
+                    olay
+                ):
+                    raise PilotHatasi("WF eski makbuzunun tam içeriği değişmiş.")
+                _bul(self._depo.oku(), aday["kayit_id"], aday["kayit_turu"])
+                self._tekrar_sira += 1
+                return Makbuz(
+                    aday["kayit_id"],
+                    aday["deneme_id"],
+                    aday["kosu_id"],
+                    aday["ayar_parmak_izi"],
+                )
             return self._depo._ekle(olay, kontrol)
         except PilotYazmaHatasi:
             self._yazma_hatasi = True
             raise
+
+    def ileri_dayaniklastir(self, makbuz):
+        """TASARIM 5.15 S03: WF başlangıç, çeyrek ve bitiş sınırını aktarır."""
+        if self._baslangic["ortam"].get("ileri_devam_surumu") != "ileri_devam_v1":
+            raise PilotHatasi("Dayanıklılık sınırı yalnız yeni WF koşusuna aittir.")
+        with self._depo._kilit():
+            olay = _bul(self._depo._oku()[0], makbuz.olay_id)
+            if (
+                olay["kosu_id"] != self.makbuz.kosu_id
+                or olay["kayit_turu"] not in ("baslangic", "sonuc", "bitis")
+                or (
+                    olay["kayit_turu"] == "sonuc"
+                    and (
+                        olay.get("sonuc_turu") != "ileri_v1"
+                        or olay["kayit"]["tur"] != "bolum"
+                    )
+                )
+            ):
+                raise PilotHatasi("WF dayanıklılık makbuzu geçersiz.")
+            try:
+                with self._depo.yol.open("r+b") as dosya:
+                    os.fsync(dosya.fileno())
+            except OSError as hata:
+                raise PilotDayaniklilikHatasi(makbuz) from hata
 
     def sonuc_kaydet(
         self,
@@ -2962,7 +5268,13 @@ class _Kosu:
             raise PilotHatasi("Dönem kayıtlı denemede yok.")
         _metin(muhasebe_politikasi)
         _donem_ciktisi_dogrula(
-            durum, birimler, icerik, islem_referanslari, uyarilar, cikti_referanslari
+            durum,
+            birimler,
+            icerik,
+            islem_referanslari,
+            uyarilar,
+            cikti_referanslari,
+            self._deneme,
         )
 
         def denetle(olaylar):
@@ -3180,6 +5492,162 @@ class _Kosu:
             "senaryo", {"sira": sira, "sonuc_referansi": sonuc_referansi}, denetle
         )
 
+    def _mc_yaz(self, tur, kayit):
+        alanlar = dict(
+            surum=f"{tur}_v1",
+            yontem_surumu="kayitli_monte_carlo_v1",
+            icerik_ozeti=_mc_ozet(kayit),
+            kayit=kayit,
+        )
+
+        def denetle(olaylar):
+            o = dict(
+                kayit_id="hazirlanan_mc_kaydi",
+                sema_surumu=SURUM,
+                olusturma_zamani=datetime.now(timezone.utc),
+                kayit_turu=tur,
+                deneme_id=self.makbuz.deneme_id,
+                kosu_id=self.makbuz.kosu_id,
+                ayar_parmak_izi=self.makbuz.ayar_ozeti,
+                kaynaklar=self._deneme["kaynaklar"],
+                **alanlar,
+            )
+            _mc_kayit_dogrula(olaylar, o)
+
+        return self._yaz(tur, alanlar, denetle)
+
+    def _mc_parti_yaz(self, tur, kayitlar):
+        """TASARIM 5.15 S13: yalnız MC; kalıcı zarf kesinleşmeden iç makbuz dönmez."""
+        parti_id = f"{SURUM}:{uuid4()}"
+        zaman = datetime.now(timezone.utc)
+        ortak = dict(
+            sema_surumu=SURUM,
+            olusturma_zamani=zaman,
+            deneme_id=self.makbuz.deneme_id,
+            kosu_id=self.makbuz.kosu_id,
+            ayar_parmak_izi=self.makbuz.ayar_ozeti,
+            kaynaklar=self._deneme["kaynaklar"],
+        )
+        ic = []
+        for k in kayitlar:
+            if tur == "deneme":
+                _mc_alanlar(
+                    k,
+                    "strateji donemler veri_ayarlari yontem_ayarlari risk_ayarlari masraf_ayarlari eski_referans",
+                )
+                strateji = _strateji_kaydi(k["strateji"])
+                ayarlar = {
+                    a: k[a]
+                    for a in (
+                        "donemler",
+                        "veri_ayarlari",
+                        "yontem_ayarlari",
+                        "risk_ayarlari",
+                        "masraf_ayarlari",
+                    )
+                }
+                ayarlar["strateji"] = {
+                    a: v for a, v in strateji.items() if a != "olusturma_zamani"
+                }
+                o = dict(
+                    ortak,
+                    kayit_turu="deneme",
+                    deneme_id=f"{SURUM}:d:{uuid4()}",
+                    kimlik_bicimi_surumu=SURUM,
+                    olusturan="S13",
+                    neden="Donmuş WF seçiminin izinli ayar stresi.",
+                    **{a: v for a, v in ayarlar.items() if a != "strateji"},
+                    strateji=strateji,
+                    ust_deneme_id=self.makbuz.deneme_id,
+                    eski_referans=k["eski_referans"],
+                    baglar=dict(izgara_ust_deneme=self.makbuz.deneme_id),
+                    bos_nedenleri={},
+                    ayar_parmak_izi=_ayar_ozeti(ayarlar),
+                    kaynaklar=strateji["kaynaklar"],
+                )
+            else:
+                o = dict(
+                    ortak,
+                    kayit_turu=tur,
+                    surum=f"{tur}_v1",
+                    yontem_surumu="kayitli_monte_carlo_v1",
+                    icerik_ozeti=_mc_ozet(k),
+                    kayit=k,
+                )
+            ic.append(dict(o, kayit_id=f"{SURUM}:{uuid4()}", parti_ref=parti_id))
+        k = dict(kayitlar=ic)
+        parti = dict(
+            ortak,
+            kayit_id=parti_id,
+            kayit_turu="mc_parti",
+            surum="mc_parti_v1",
+            yontem_surumu="kayitli_monte_carlo_v1",
+            icerik_ozeti=_mc_ozet(k),
+            kayit=k,
+        )
+        makbuz = self._yaz(
+            "mc_parti",
+            {
+                a: v
+                for a, v in parti.items()
+                if a
+                not in (
+                    "kayit_turu",
+                    "deneme_id",
+                    "kosu_id",
+                    "ayar_parmak_izi",
+                    "kaynaklar",
+                )
+            },
+            lambda olaylar: _mc_partiyi_ac(olaylar, parti),
+        )
+        return [
+            Makbuz(
+                o["kayit_id"],
+                o["deneme_id"],
+                o["kosu_id"],
+                o["ayar_parmak_izi"],
+                list(makbuz.uyarilar),
+            )
+            for o in ic
+        ]
+
+    def mc_planlari_kaydet(self, *, kayitlar):
+        return self._mc_parti_yaz("mc_plan", kayitlar)
+
+    def mc_sonuclari_kaydet(self, *, kayitlar):
+        return self._mc_parti_yaz("mc_senaryo", kayitlar)
+
+    def mc_sinyalleri_kaydet(self, *, kayitlar):
+        return self._mc_parti_yaz("mc_sinyal", kayitlar)
+
+    def mc_stres_revizyonlari_kaydet(self, *, kayitlar):
+        return self._mc_parti_yaz("deneme", kayitlar)
+
+    def mc_girdi_kaydet(self, *, kayit):
+        """TASARIM 5.15 S13: gerçek WF nüfusu hesap öncesinde kalıcıdır."""
+        return self._mc_yaz("mc_girdi", kayit)
+
+    def mc_plan_kaydet(self, *, kayit):
+        """TASARIM 5.15 S13: tam çekiliş ve stres revizyonları hesap öncesindedir."""
+        return self._mc_yaz("mc_plan", kayit)
+
+    def mc_sinyal_kaydet(self, *, kayit):
+        """TASARIM 5.15 S13: E2 kaydı E3'ün değişmez sinyal sahibidir."""
+        return self._mc_yaz("mc_sinyal", kayit)
+
+    def mc_senaryo_sonucu_kaydet(self, *, kayit):
+        """TASARIM 5.15 S13: bir plana bir kesin sonuç."""
+        return self._mc_yaz("mc_senaryo", kayit)
+
+    def mc_kontrol_kaydet(self, *, kayit):
+        """TASARIM 5.15 S13: gerçek sonuç öneğinin sayısal tanısı."""
+        return self._mc_yaz("mc_kontrol", kayit)
+
+    def mc_ozet_kaydet(self, *, kayit):
+        """TASARIM 5.15 S13: her gerekli anahtar kendi sayılarıyla görünürdür."""
+        return self._mc_yaz("mc_ozet", kayit)
+
     def bitir(
         self,
         *,
@@ -3205,6 +5673,21 @@ class _Kosu:
             if self._deneme["yontem_ayarlari"].get("yontem") == "kayitli_izgara_v1":
                 _arama_bitisini_dogrula(
                     olaylar, self.makbuz.kosu_id, durum, tamamlanan, cikti_referanslari
+                )
+            if (
+                self._deneme["yontem_ayarlari"].get("yontem")
+                == "kayitli_monte_carlo_v1"
+            ):
+                _mc_bitis_dogrula(
+                    olaylar,
+                    self.makbuz.kosu_id,
+                    durum,
+                    tamamlanan,
+                    basarisiz,
+                    cikti_referanslari,
+                    yontemler=yontemler,
+                    olculer=olculer,
+                    ozetler=ozetler,
                 )
 
         makbuz = self._yaz(

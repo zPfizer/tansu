@@ -233,9 +233,20 @@ def _genis_bolge(izgara, hucreler):
 
 
 def ema_hucre_calistir(
-    mumlar, p, *, kurulum, sinyal_konumlari, yurutme=None, onceki_durum=None
+    mumlar,
+    p,
+    *,
+    kurulum,
+    sinyal_konumlari,
+    yurutme=None,
+    onceki_durum=None,
+    kurulum_kanitlari=None,
 ):
     """TASARIM 5.15 S11: her hücrenin gerçek E3 çağrısı ve kendi ayarı."""
+    if kurulum_kanitlari is not None and (
+        yurutme is None or isinstance(yurutme, motor.Zincir)
+    ):
+        raise ValueError("Kurulum kanıtı açık E3 yürütmesi gerektirir.")
     if onceki_durum is not None and (
         yurutme is None or isinstance(yurutme, motor.Zincir)
     ):
@@ -250,7 +261,13 @@ def ema_hucre_calistir(
             raise ValueError("Eski hücre önbelleğinin mum veya çıkış ayarı uyuşmuyor.")
         return yurutme.calistir(sinyal_konumlari, kurulum)
     return motor.tara(
-        mumlar, sinyal_konumlari, p, kurulum, yurutme=yurutme, onceki_durum=onceki_durum
+        mumlar,
+        sinyal_konumlari,
+        p,
+        kurulum,
+        yurutme=yurutme,
+        onceki_durum=onceki_durum,
+        kurulum_kanitlari=kurulum_kanitlari,
     )
 
 

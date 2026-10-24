@@ -6,7 +6,22 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ## [Yayımlanmamış]
 
-- CI testleri, eksiksiz ve çakışmasız iki gruba ayrılır; her grup kendi test kimliklerini çalıştırmadan önce doğrular ve 60 dakikalık süre sınırını korur. (#178)
+- Tam CI'da S12 testleri 60 dakikada tamamlanmadığı için S13 dışı sınama grubu dört bölüme ayrıldı. On bölüm aynı test kimliklerini eksiksiz ve çakışmasız çalıştırır; süre sınırı korunur. (#180, #94, #57)
+
+- CI'da süre sınırına takılan genel ve S13 bölümleri de ayrıldı. Aynı tam koleksiyon sekiz bölümde çakışmasız çalışır; her testin adı ve en uzun testlerin süreleri görünür. 60 dakikalık sınır ve çalışan bölümün kimlik denetimi korunur. (#180, #94, #57)
+
+- WF eğitim çocuğunun E3 durumu, S10 hesabındaki tam E1 veri kimliğiyle denetlenir; kayıtlı seçim bağları bağımsız doğrulanır. Sonuç makbuzu oluşmadan çıkan hata, çocuk kapanışıyla örtülmez. (#180)
+
+- Yeni kayıtlı ileri sınamaya açık koşu kimliğiyle devam eklendi. Tamamlanmış çeyrekler ve özgün makbuzlar korunur; kod/veri bağı, tek yürütme sahibi ve dayanıklı dönem sınırları denetlenir. Gerçek veriyle tamamlanmış kesinti/devam kanıtı ve bağımsız inceleme teslim PR’ında izlenir. (#180)
+
+- Yeni hedef kanıtı denetimi, E3 alanı taşımayan eski kısa dönem özetini tam işlem durumu saymaz. S11 çocuk sonucu yazımı ve yeni okuyucuyla eski kayıt okuması korunur; yeni kanıt, kaynak/ayar bağı ve bozuk E3 durumu retleri korunur. (#57, #94)
+
+- E2'nin izinli `hedef_bulunamadi` nedeni ortak E3 işlemine kaynak, ayar ve kimlik kanıtıyla taşınır; eksik kurulum ve bozuk fiyat retleri korunur. Legacy EMA aynı gün aktarımı aile sahibinin ilk özgün dönem kuralına bağlanır; bütün E2 adayları, aynı girdili kanıtsız E3 kimlikleri, eski kayıt okuması ve native kabul bağları korunur. Yeni uyarlayıcının uygun olmayan gün girdileri yeni hesapta farklı durum özeti üretebilir. Gerçek veriyle yeniden sınama ve bağımsız inceleme bekleniyor. (#57, #94)
+
+- CI'da S13 dışı sınama bölümü 60 dakikalık süre sınırına takıldığı için aynı testler toplama sırasına göre dönüşümlü iki bölüme ayrıldı. Tam koleksiyon, çakışmasız dağılım ve çalışan bölümün test kimlikleri doğrulanır; süre sınırı ve testler korunur. (#94, #57)
+
+- MC kaydı ve ortak yeniden sınaması donmuş WF hücresinin eşleşmiş ısınma seçimine bağlandı. Yeni politikada bölüm durumları özgün mühür ve tam değişen alanlarla saklanır; geçmişler nihai durumun kanonik öneklerinden kayıpsız kurulur. Tam uygun kaynak koşusu kanıtı açık kalır. (#94, #178)
+- CI testleri ayrı #178 dalında eksiksiz ve çakışmasız iki gruba ayrıldı; ortak #94/#57 tesliminde MC dalının dört grubu korunur. Her grup kendi test kimliklerini çalıştırmadan önce doğrular ve 60 dakikalık süre sınırını korur. (#178)
 
 - Isınma seçimi olmayan eski kayıtlardaki hücre metaverisi korunur; yeni seçimde bozuk veya yanlış yerdeki politika kayıt öncesi reddedilir. (#178)
 
@@ -25,6 +40,18 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ### Değişti
 
+- Varyant raporu doğal ısınmanın özgün ilk gün sayımını, gerekli gözlemi ve dönem içindeki tamamlanma kanıtını JSON ve HTML içinde ayrı gösterir; kaynak başvuruları ve eski durumlar korunur. (#57, #178)
+
+
+- CI testleri dört Windows bölümüne ayrıldı; düğümlerin eksiksiz ve çakışmasız dağılımı hesap öncesinde doğrulanır. `ci` kapısı yalnız bütün bölümler başarılıysa geçer; 60 dakikalık sınır ve mevcut denetimler korunur. (#94)
+
+- MC bitişi güncel plan, sonuç ve kontrol öneğini yeniden doğrular; çalışma türü ve tamamlanma üstverisi kayıtlı yöntemle uyuşur. Ham blok tahmini ile girdi özeti saklanır; kalıcı kontrol noktaları sırayla zorunludur. Eksik eski geliştirme girdisi açıkça reddedilir. (#94)
+
+- İleri yürümenin birleşmiş ve bağımsız denetimden geçmiş durumu yöntem kaydına işlendi; tam veriyle sonuç kanıtı ve günlük uygunluk kapıları korundu. (#93, #94)
+
+- MC kayıt aramaları her okumada doğrulanan önceki kayıtlardan kurulan yerel dizini kullanır; deney başına sıra, kaynak ve sayısal denetimler korunur. (#94)
+- Koordinatör hatasında yazılmış gerçek hata bitişi varyant ve S11 raporlarında korunur; dosya olan rapor yolu veya üst yolu hesap başlamadan reddedilir. (#57)
+
 - Saklı ileri yürüme kaynakları, çağıranın özetinden bağımsız yayımlanmış sürüm özetleriyle doğrulanır; tutarlı özetli sahte üyelik ve pay bağları eklemede ve geçmiş okumada reddedilir. (#167)
 - Tam denetimlerin tamamlanması için CI iş süresi 30 dakikadan 60 dakikaya çıkarıldı; testler ve başarı ölçütleri korundu. (#167)
 
@@ -41,6 +68,8 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ### Eklendi
 
+- Mevcut 24 varyantın kayıtlı altı dönem sınaması için açık eşleme alan komut ve destek raporu eklendi; eksik sonuçlar ve gerçek kayıt başvuruları korunur. (#57)
+
 - Kayıtlı sağlayıcı ve görüntüye bağlı, açık seçimli pay kimliği eklendi. Tarihli KOZAA/TRMET ve KOZAL/TRALT kodları fiyat ve olay değerleri değiştirilmeden aynı pay geçmişine bağlanır. Eski etiket davranışı korunur; kaynak, özet ve çakışma hataları reddedilir. Eksik ısınma ve düzeltme kökeninin kanıt sınırı korunur. (#167)
 
 - Pay kimliği başvuruları LF biçiminde sabitlendi; taşınabilir tablo özeti ve gerçek depo eşlemeleri otomatik denetleniyor. (#167)
@@ -49,6 +78,7 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 - Kayıtlı ileri yürüme, her çeyrekten önce eğitim seçimini kaydeder; tek kronolojik akışta açık ve bekleyen işlemlerin özgün ayarını korur. Eğitim dışlamaları, giriş kohortları ve açık ufuk ayrı kayıtlarla izlenir. (#93)
 - Küçük grup hazırlığı ayrı komut ve kayıt olayıyla eklendi. En fazla üç strateji revizyonu ve 60 kesin seans dondurulur; eksik kaynak tanımı, veri, takvim ve üyelik adlandırılmış engel olur. Hazırlık hesap başlatmaz; değişen tanım yeni revizyon ister, eski kayıt tarihçede kalır. İlk kaynak ailesi engelli kalır. (#116)
+- Kayıtlı Monte Carlo yöntemi beş ayrı deney, kapanış yılına göre tanı, ortak tarih blokları ve indeksli rastgele akışla tanımlandı. Kaynak, plan, yeniden sınama sinyali ve sonuç kayıtları koşu ve ayar bağlarıyla doğrulanır; ön gösterim, sayısal kararlılık ve eksik yürütme ayrı gösterilir. (#94)
 
 - Kayıtlı taramanın ölçü hissesi gerçek dönem ve işlem kayıtlarına bağlandı. Seçilen ayarın uygun merkez ve bileşen açıklamasıyla çelişmesi reddedilir; işlemsiz hisse kayıtları korunur. (#92)
 

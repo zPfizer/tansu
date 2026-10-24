@@ -625,3 +625,91 @@ def test_satis_nakdi_ayni_gun_kullanilir_valor_yok():
     # Z tavanı 997 adet; satış ertelenirse nakit yalnız 970 adede yeter.
     z = bolme(t)["islemler"].iloc[-1]
     assert (z.sembol, z.adet, z.bagli) == ("Z", 997, "tavan")
+
+
+def test_varyant_raporu_metinleri_kacirir_olculeri_degistirmez(tmp_path):
+    import json
+    from tansu import rapor
+
+    sonuc = dict(
+        deneme_dosyasi="<script>pilot</script>",
+        varyantlar=[
+            dict(
+                varyant="<img src=x onerror=alert(1)>",
+                deneme_id="deneme-1",
+                kosu_id=None,
+                izin_durumu="izinsiz",
+                donemler=[
+                    dict(
+                        donem=dict(ad="2025"),
+                        durum="eksik",
+                        neden="<script>hata</script>",
+                        kapali_islem_sayisi=None,
+                        acik_islemler=[],
+                        sonuc_ref=None,
+                        semboller=[
+                            dict(
+                                sembol="TEST",
+                                olcu=dict(
+                                    politika="bagimsiz_olcu_v1",
+                                    olculer={
+                                        "net_r": dict(
+                                            deger=None,
+                                            birim="R",
+                                            bos_nedeni="islem_yok",
+                                        ),
+                                    },
+                                ),
+                            )
+                        ],
+                    )
+                ],
+            )
+        ],
+    )
+    sonuc["varyantlar"][0]["donemler"][0]["semboller"].extend(
+        [
+            dict(
+                sembol="ASTOR",
+                olcu=dict(olculer={}),
+                isinma=dict(gozlem=249, gerekli=500, tamam=False),
+                dogal_bekleyis=dict(
+                    neden="dogal_isinma",
+                    ilk_gun="2024-01-01",
+                    ilk_islem_gunu="2023-01-18",
+                    isinma_tamamlanma_gunu="2024-12-17",
+                    kaynak_id="kaynak-astor",
+                    e1_ref="e1-astor",
+                ),
+            ),
+            dict(
+                sembol="DSTKF",
+                olcu=dict(olculer={}),
+                isinma=dict(gozlem=2, gerekli=500, tamam=False),
+                dogal_bekleyis=dict(
+                    neden="dogal_isinma",
+                    ilk_gun="2025-10-01",
+                    ilk_islem_gunu="2025-02-06",
+                    isinma_tamamlanma_gunu=None,
+                    kaynak_id="<script>kaynak</script>",
+                    e1_ref="e1-dstkf",
+                ),
+            ),
+        ]
+    )
+    json_yol, html_yol = rapor.varyant_yaz(sonuc, tmp_path)
+    assert json.loads(json_yol.read_text(encoding="utf-8")) == sonuc
+    html = html_yol.read_text(encoding="utf-8")
+    assert "<script>" not in html and "<img src" not in html
+    assert "&lt;script&gt;hata&lt;/script&gt;" in html
+    assert "Ölçülemedi" in html and "Yazılmadı" in html
+    assert "islem_yok" in html and "net_r" in html, (
+        "HTML birimli ölçü ve boş nedenini göstermeli"
+    )
+    assert "Doğal ısınma kanıtı" in html
+    assert "İlk gün gözlemi" in html and "Gerekli gözlem" in html
+    assert "İlk gün tamam" in html and "Hayır" in html
+    assert "249" in html and "500" in html and "2024-12-17" in html
+    assert "Dönem sonuna kadar tamamlanmadı" in html
+    assert "dogal_isinma" in html and "e1-dstkf" in html
+    assert "&lt;script&gt;kaynak&lt;/script&gt;" in html

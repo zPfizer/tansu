@@ -1946,3 +1946,213 @@ def test_s09_bilinen_limit_desteklenen_skalerle_ayni_dolumu_verir(sayi, politika
     ]
     assert satir == once
     assert sonuc["yurutme"] == y
+
+
+def hedef_yoklugu_ornegi():
+    # Özgün BIMAS adayının fiyatı/kimliği; mum ve E1 bağı sözleşme örneğidir.
+    from dataclasses import asdict
+
+    p = aileler.legacy_coz("ema_50_100_200")
+    ayar = aileler.Parametre(**{a.ad: a.deger for a in p.parametreler})
+    m = s09_mumlar().iloc[:1].copy()
+    m.index = pd.DatetimeIndex(["2021-12-07"])
+    kimlik = "BIMAS:2021-12-07:0:6dd2574b2246145141b94939505ccca00067434f7b5b3165bd26e1b3d9003d16"
+    kaynak = dict(
+        sema_surumu="kurulum_s06_v1",
+        kayit_turu="sinyal",
+        aile="ema_sikisma",
+        kayit_id=kimlik,
+        semboller=["BIMAS"],
+        tarih="2021-12-07",
+        baglar=dict(veri_ref_id="veri-1", ayar_parmak_izi=p.ayar_parmak_izi),
+        kutu_alt=dict(deger=26.15166, birim="TL/adet", bos_nedeni=None),
+        hedef=dict(deger=None, birim="TL/adet", bos_nedeni="hedef_bulunamadi"),
+    )
+    kabul = dict(
+        sembol="BIMAS",
+        tarih="2021-12-07",
+        kaynak_sinyal=kaynak,
+        parametreler=motor._duz(asdict(ayar)),
+        veri_ref=dict(kayit_id="veri-1"),
+    )
+    k = pd.DataFrame({"kutu_alt": [26.15166], "hedef": [float("nan")]}, index=m.index)
+    y = s09_istek(sembol="BIMAS")
+    return m, ayar, k, y, dict(sinyal_id=kimlik, sinyal=kabul)
+
+
+def test_s09_kayitli_bimas_izinli_hedef_yoklugu_gunluk_toplu_ve_kanitsiz_sinir():
+    from copy import deepcopy
+
+    m, p, k, y, kanit = hedef_yoklugu_ornegi()
+    kimlik = kanit["sinyal_id"]
+    sinyal = {m.index[0]: kimlik}
+    eski = motor.tara(m, sinyal, p, k, yurutme=y)
+    assert eski["pozisyon"] is None
+    assert eski["retler"][0]["neden"] == "kurulum_eksik"
+    toplu = motor.tara(
+        m, sinyal, p, k, yurutme=y, kurulum_kanitlari={kimlik: kanit["sinyal"]}
+    )
+    mum = dict(m.iloc[0]) | dict(tarih=m.index[0])
+    gunluk = motor.islem_adimi(
+        None, mum, kimlik, yurutme=y, ayar=p, kutu_alt=26.15166, kurulum_kaniti=kanit
+    )
+    assert gunluk == toplu
+    assert toplu["pozisyon"]["durum"] == "bekliyor"
+    assert toplu["pozisyon"]["kutu_alt"] == 26.15166
+    assert toplu["pozisyon"]["hedef"] is None
+    tekrar = deepcopy(kanit)
+    tekrar["sinyal"]["kaynak_sinyal"]["olusturma_zamani"] = "farkli-zaman"
+    assert (
+        motor.islem_adimi(
+            json.loads(json.dumps(gunluk)),
+            mum,
+            kimlik,
+            yurutme=y,
+            ayar=p,
+            kutu_alt=26.15166,
+            kurulum_kaniti=tekrar,
+        )
+        == gunluk
+    )
+    tekrar["sinyal"]["kaynak_sinyal"]["kayit_id"] = "baska-kaynak"
+    with pytest.raises(ValueError, match="çelişkili"):
+        motor.islem_adimi(
+            gunluk,
+            mum,
+            kimlik,
+            yurutme=y,
+            ayar=p,
+            kutu_alt=26.15166,
+            kurulum_kaniti=tekrar,
+        )
+
+
+@pytest.mark.parametrize(
+    "boz",
+    [
+        "kimlik",
+        "tarih",
+        "sembol",
+        "parametre",
+        "veri",
+        "neden",
+        "kutu",
+        "birim",
+        "hedef",
+    ],
+)
+def test_s09_hedef_yoklugu_kaniti_baska_kuruluma_tasinamaz(boz):
+    m, p, k, y, kanit = hedef_yoklugu_ornegi()
+    kaynak = kanit["sinyal"]["kaynak_sinyal"]
+    if boz == "kimlik":
+        kanit["sinyal_id"] = "baska-kabul"
+    elif boz == "tarih":
+        kaynak["tarih"] = "2021-12-08"
+    elif boz == "sembol":
+        kaynak["semboller"] = ["TEST"]
+    elif boz == "parametre":
+        kanit["sinyal"]["parametreler"]["pencere"] = 20
+    elif boz == "veri":
+        kaynak["baglar"]["veri_ref_id"] = "baska-veri"
+    elif boz == "neden":
+        kaynak["hedef"]["bos_nedeni"] = "eksik_veri"
+    elif boz == "kutu":
+        kaynak["kutu_alt"]["deger"] = 27.0
+    elif boz == "birim":
+        kaynak["hedef"]["birim"] = "oran"
+    else:
+        kaynak["hedef"]["deger"] = float("nan")
+    with pytest.raises(ValueError, match="hedef yokluğu"):
+        motor.islem_adimi(
+            None,
+            dict(m.iloc[0]) | dict(tarih=m.index[0]),
+            hedef_yoklugu_ornegi()[4]["sinyal_id"],
+            yurutme=y,
+            ayar=p,
+            kutu_alt=26.15166,
+            kurulum_kaniti=kanit,
+        )
+
+
+@pytest.mark.parametrize("deger", [None, 0, -1, float("inf"), float("nan"), True])
+def test_s09_izinli_hedef_yoklugu_gerekli_kutuyu_kurtarmaz(deger):
+    m, p, k, y, kanit = hedef_yoklugu_ornegi()
+    kanit["sinyal"]["kaynak_sinyal"]["kutu_alt"]["deger"] = deger
+    with pytest.raises(ValueError, match="hedef yokluğu"):
+        motor.islem_adimi(
+            None,
+            dict(m.iloc[0]) | dict(tarih=m.index[0]),
+            kanit["sinyal_id"],
+            yurutme=y,
+            ayar=p,
+            kutu_alt=deger,
+            kurulum_kaniti=kanit,
+        )
+
+
+@pytest.mark.parametrize("kurulum", [None, pd.DataFrame(columns=["kutu_alt", "hedef"])])
+def test_s09_hedef_yoklugu_kaniti_eksik_satiri_kurtarmaz(kurulum):
+    m, p, _, y, kanit = hedef_yoklugu_ornegi()
+    with pytest.raises(ValueError, match="kurulum satırı eksik"):
+        motor.tara(
+            m,
+            {m.index[0]: kanit["sinyal_id"]},
+            p,
+            kurulum,
+            yurutme=y,
+            kurulum_kanitlari={kanit["sinyal_id"]: kanit["sinyal"]},
+        )
+
+
+def test_s09_eski_kanitsiz_durum_literal_muhur_ve_kimligi_korur():
+    m = s09_mumlar().iloc[:1]
+    s = motor.tara(m, {m.index[0]: "sinyal-1"}, yurutme=s09_istek())
+    assert (
+        s["butunluk"]
+        == "0f384a44ad80c3b4acba8e444d4cde2e73b3e33829b1f4916c904f1e85276bb5"
+    )
+    assert (
+        s["son_girdi"]
+        == "5bb0dac7778af6f8f775f087209132a30ec33b6a58e38f24db85e74941e27000"
+    )
+    assert (
+        s["pozisyon"]["risk_girdisi"]["islem_id"]
+        == "6d7a0b2f484f1fc1a480ff33fa7dd823f84007a7cb63fc047582959875438c55"
+    )
+    assert "hedef_yok_kaniti" not in s["pozisyon"]["risk_girdisi"]
+    assert (
+        motor.islem_adimi(
+            json.loads(json.dumps(s)),
+            dict(m.iloc[0]) | dict(tarih=m.index[0]),
+            "sinyal-1",
+            yurutme=s09_istek(),
+        )
+        == s
+    )
+
+
+@pytest.mark.parametrize("hedef", [float("nan"), float("inf"), True])
+def test_s09_bozuk_sayisal_hedef_izin_kanitiyla_none_olmaz(hedef):
+    m, p, k, y, kanit = hedef_yoklugu_ornegi()
+    with pytest.raises(ValueError, match="hedef yokluğu"):
+        motor.islem_adimi(
+            None,
+            dict(m.iloc[0]) | dict(tarih=m.index[0]),
+            kanit["sinyal_id"],
+            yurutme=y,
+            ayar=p,
+            kutu_alt=26.15166,
+            hedef=hedef,
+            kurulum_kaniti=kanit,
+        )
+    k["hedef"] = hedef
+    if not pd.isna(hedef):
+        with pytest.raises(ValueError, match="hedef yokluğu"):
+            motor.tara(
+                m,
+                {m.index[0]: kanit["sinyal_id"]},
+                p,
+                k,
+                yurutme=y,
+                kurulum_kanitlari={kanit["sinyal_id"]: kanit["sinyal"]},
+            )
