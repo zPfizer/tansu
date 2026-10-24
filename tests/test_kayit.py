@@ -2099,7 +2099,8 @@ def pilot_donem_sonucu(kosu, donem, **degisiklik):
     return kosu.donem_sonucu_kaydet(**(alanlar | degisiklik))
 
 
-def test_s10_donem_makbuzu_kayitli_is_donem_ve_tek_yayin_ister(tmp_path):
+@pytest.mark.parametrize("durumlar", [{}, {"TEST": {"durum": "bekliyor"}}])
+def test_s10_donem_makbuzu_kayitli_is_donem_ve_tek_yayin_ister(tmp_path, durumlar):
     depo = pilot.PilotKayit(tmp_path / "pilot.jsonl")
     deneme = pilot_deneme(depo)
     donem = depo.deneme_oku(deneme.deneme_id)["donemler"][0]
@@ -2108,7 +2109,9 @@ def test_s10_donem_makbuzu_kayitli_is_donem_ve_tek_yayin_ister(tmp_path):
             pilot_donem_sonucu(kosu, donem, is_id="yok")
         with pytest.raises(pilot.PilotHatasi, match="kayıtlı denemede"):
             pilot_donem_sonucu(kosu, donem | dict(baslangic=dt.date(2024, 1, 1)))
-        sonuc = pilot_donem_sonucu(kosu, donem)
+        sonuc = pilot_donem_sonucu(
+            kosu, donem, icerik={"adaylar": [], "durumlar": durumlar}
+        )
         for is_id in ("XXXX", "YYYY"):
             with pytest.raises(pilot.PilotHatasi, match="zaten kayıtlı"):
                 pilot_donem_sonucu(kosu, donem, is_id=is_id)
@@ -2121,7 +2124,10 @@ def test_s10_donem_makbuzu_kayitli_is_donem_ve_tek_yayin_ister(tmp_path):
             cikti_referanslari=[sonuc.olay_id],
             ozetler={},
         )
+    once = depo.yol.read_bytes()
     iz = pilot.PilotKayit(depo.yol).izle(sonuc.olay_id)
+    assert iz["sonuc"]["icerik"]["durumlar"] == durumlar
+    assert depo.yol.read_bytes() == once
     assert iz["sonuc"]["sonuc_turu"] == "donem_v1"
     assert "sinyal_id" not in iz["sonuc"] and iz["sonuc"]["islem_referanslari"] == []
     assert iz["durum"] == "hata"
@@ -5527,7 +5533,15 @@ def test_pilot_secili_isinma_bozuk_politikayi_eski_metaveri_saymaz(
 
 @pytest.mark.parametrize(
     "boz",
-    [None, "kaynak", "kanit", "sil", "sil_yeniden_muhurle", "ayar_yeniden_muhurle"],
+    [
+        None,
+        "kaynak",
+        "kanit",
+        "sil",
+        "sil_yeniden_muhurle",
+        "ayar_yeniden_muhurle",
+        "sil_yapi",
+    ],
 )
 def test_s10_hedef_yoklugu_native_kaynak_bagi_ve_eski_okuma(tmp_path, monkeypatch, boz):
     from tests.test_tansusinama import s10_hedef_yoklugu, s10_calistir
@@ -5558,6 +5572,8 @@ def test_s10_hedef_yoklugu_native_kaynak_bagi_ve_eski_okuma(tmp_path, monkeypatc
         durum["pozisyon"]["risk_girdisi"]["hedef_yok_kaniti"]["kaynak_sinyal_id"] = (
             "baska-kaynak"
         )
+    elif boz == "sil_yapi":
+        del durum["pozisyon"], durum["islemler"]
     else:
         pozisyon = durum["pozisyon"]
         risk = pozisyon["risk_girdisi"]

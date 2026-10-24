@@ -2571,6 +2571,14 @@ olabilir. Eski S10 hesabını bayt düzeyinde aynı üretme veya eski/yeni uyarl
 aynı gün devam etme iddiası yoktur. Eski kayıt yazılmaz veya bu uyarlayıcıyla devam
 ettirilmez. Yeni gerçek sınama, yeni günlükte fiili kaynak/kod kimliğiyle başlar.
 
+**Eski dönem özeti uyumluluğu (24.10.2026).** İsteğe bağlı hedef kanıtı denetimi,
+`surum`, `pozisyon` veya `islemler` taşımayan eski kısa dönem özetini tam E3 durumu
+saymaz. Önceki uygulama S11'in yalnız `durum` etiketli özetinde `pozisyon` aradı;
+CI'da geçerli çocuk sonucu yazılamadı; asıl hata ve yazma hatası sınamaları amaçlanan aşamaya erişemedi.
+Bu özetler değişmeden yazılır ve yeni okuyucuyla okunur. E3 alanı taşıyan durumlarda
+mevcut tam doğrulama korunur; eksik alanlar varsayılan pozisyona çevrilmez. Yeni
+kanıtın, kaynak/ayar bağının ve kanıtı silinmiş hedefsiz kabulün kontrolleri gevşetilmez.
+
 Çift ailesi ayrı kuralını korur; EMA katalog kaydıyla çift hesabı yapılmaz.
 Dayanak: #87 sözleşme sınırı ve `aile-kurallari.md` §3 Modül 1.
 

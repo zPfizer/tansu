@@ -1863,6 +1863,11 @@ def _donem_hedef_kaniti_dogrula(icerik, deneme):
 
     try:
         for durum in icerik.get("durumlar", {}).values():
+            # TASARIM 5.15: eski dönem özeti tam E3 durumu değildir.
+            if isinstance(durum, dict) and not any(
+                a in durum for a in ("surum", "pozisyon", "islemler")
+            ):
+                continue
             pozisyonlar = [
                 durum["pozisyon"],
                 *(i["pozisyon"] for i in durum["islemler"]),
