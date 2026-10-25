@@ -289,6 +289,46 @@ def test_veri_motoru_cift_girdileri_onek_degismez(politika):
             np.testing.assert_array_equal(kesik[ad], tam[ad][:son], err_msg=ad)
 
 
+@pytest.mark.parametrize("son", [254, 255, 256])
+def test_kaynak_gunu_hesap_gorunumu_ve_motor_oneki_degismez(tmp_path, son):
+    from tests.test_kapilar import kaynak_hatasi_verisi
+
+    a, tarihler = kaynak_hatasi_verisi(tmp_path)
+    t = tarihler[son]
+    kisa = replace(a, fiyat=a.fiyat[a.fiyat.tarih <= t])
+    pd.testing.assert_frame_equal(
+        a.hesap_fiyati[a.hesap_fiyati.tarih <= t], kisa.hesap_fiyati
+    )
+    pd.testing.assert_frame_equal(
+        motor.mumlar(a, "S0").loc[:t], motor.mumlar(kisa, "S0")
+    )
+    istek = veri.VeriIstegi(
+        ("S0", "S1"),
+        str(tarihler[0].date()),
+        str(t.date()),
+        "yerel",
+        "legacy_tansu_v1",
+        "legacy_tansu_v1",
+        "is_yatirim",
+        "xu100",
+    )
+    paket = veri.veri_hazirla(istek, a.kimlik, tmp_path)
+    strateji = aileler.legacy_coz("bugun")
+    kisa_e2 = aileler.ortak_donem_kurulumu(paket, strateji)["S0"]
+    uzun = veri.veri_hazirla(
+        replace(istek, bitis=str(tarihler[-1].date())), a.kimlik, tmp_path
+    )
+    uzun_e2 = aileler.ortak_donem_kurulumu(uzun, strateji)["S0"]
+    pd.testing.assert_frame_equal(kisa_e2["mumlar"], uzun_e2["mumlar"].loc[:t])
+    pd.testing.assert_series_equal(kisa_e2["isinma"], uzun_e2["isinma"].loc[:t])
+    cift_strateji = ciftbolme.strateji_coz("S0", "S1")
+    ciftler = [ciftbolme.ortak_kurulum(p, t, cift_strateji) for p in (paket, uzun)]
+    for sonuc in ciftler:
+        for kayit in sonuc["gostergeler"]:
+            kayit.pop("olusturma_zamani")
+    assert ciftler[0] == ciftler[1]
+
+
 @pytest.fixture(scope="module")
 def tam():
     return denetim.dunya(11, hisse=24, gun=900)
@@ -669,7 +709,12 @@ def _karantina_(ham, duz, olay_tarihi, son):
         f[s] = 1.0
     f = f[f["tarih"] <= son]
     olay = pd.DataFrame(
-        {"sembol": ["XXXX"], "tarih": [pd.Timestamp(olay_tarihi)], "carpan": [0.5]}
+        {
+            "sembol": ["XXXX"],
+            "tarih": [pd.Timestamp(olay_tarihi)],
+            "kod": ["02"],
+            "carpan": [0.5],
+        }
     )
     a = veri.Anlik("k", f, olay, pd.DataFrame({"tarih": gun[:1], "faiz": 0.0}), {})
     return a.gun_tablosu.set_index("tarih")["karantina"]

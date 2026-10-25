@@ -221,7 +221,7 @@ def zemin(anlik, evr, days, ekstra, kg) -> dict:
     for s, (_, gun) in kg.items():
         kapanma.setdefault(gun, []).append(s)
     semboller = sorted({s for liste in evr.values() for s in liste} | set(ekstra))
-    f = anlik.fiyat[anlik.fiyat["sembol"].isin(semboller)]
+    f = anlik.hesap_fiyati[anlik.hesap_fiyati["sembol"].isin(semboller)]
     kolon = lambda alan: f.pivot(index="tarih", columns="sembol", values=alan).reindex(  # noqa: E731
         index=gunler, columns=semboller
     )

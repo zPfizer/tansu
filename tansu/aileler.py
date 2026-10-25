@@ -171,6 +171,9 @@ def _piyasa_mumlari(satirlar, sembol, tarih):
         dtype=float,
     )
     f["hacim"] = [r["hacim_tl"]["deger"] for r in satirlar]
+    f.loc[["eksik" in r["kalite_bayraklari"] for r in satirlar], :] = (
+        np.nan
+    )  # TASARIM 5.13
     return f
 
 

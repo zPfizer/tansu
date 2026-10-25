@@ -41,6 +41,9 @@ FIYAT_SUTUNLARI = [
 ]
 KARANTINA_ESIK, DENETIM_ESIK, INMEYEN_ESIK = 0.01, 0.02, 5  # TASARIM 5.13
 KAYNAK_GUNU_EN_AZ = 20  # TASARIM 5.13: kaynak günü hatası için en az satır
+LIMIT_OLAY_KODLARI = frozenset(
+    {"01", "02", "03", "04", "05", "06", "08", "09", "78"}
+)  # TASARIM 5.1
 # TASARIM 5.15 #167: saklı metne yetkiyi çağıranın özeti değil yayımlanmış kaynak verir.
 _YAYIMLANMIS_KAYNAK_OZETLERI = {
     "bist30_2021_2025_v1": "6e9ff3cd4a9ce4f2fe9a9ef9f77c36694f563bebe1ca2ba4f924643ce904ad07",
@@ -496,8 +499,9 @@ def veri_hazirla(istek: VeriIstegi, kimlik, kok) -> dict:
         uyelik = pay_uyeligi(uyelik, politika)
     semboller = list(istek.semboller)
     f = a.fiyat[a.fiyat["sembol"].isin(semboller)]
+    hesap = a.hesap_fiyati[a.hesap_fiyati["sembol"].isin(semboller)]
     C, A = (
-        f.pivot(index="tarih", columns="sembol", values=ad)
+        hesap.pivot(index="tarih", columns="sembol", values=ad)
         .reindex(index=gunler, columns=semboller)
         .to_numpy()
         for ad in ("kapanis", "aof")
@@ -803,6 +807,18 @@ class Anlik:
             ],
         ] = False
         return g
+
+    @cached_property
+    def hesap_fiyati(self) -> pd.DataFrame:
+        """Eksik günün hesap girdisi NaN'dır; gözlenmiş fiyat korunur (TASARIM 5.13)."""
+        f = self.fiyat.copy()
+        eksik = self.gun_tablosu.set_index(["sembol", "tarih"])["eksik"]
+        maske = eksik.reindex(
+            pd.MultiIndex.from_frame(f[["sembol", "tarih"]])
+        ).to_numpy()
+        alanlar = f.columns.intersection([*FIYAT_SUTUNLARI, "ham_acilis", "acilis"])
+        f.loc[maske, alanlar] = np.nan
+        return f
 
     @cached_property
     def kaynak_gunleri(self) -> list:
@@ -1225,6 +1241,9 @@ def _gunler(fiyat, olaylar, takvim):
     islem = var & (f["hacim"] > 0)
     bozuk = var & ~(
         (f[FIYAT_SUTUNLARI[:8]] > 0).all(axis=1)
+        & f[
+            "hacim"
+        ].notna()  # TASARIM 5.13: hacim NaN kısmi satır ihlalidir, 0 değildir.
         & (f["ham_dusuk"] <= f["ham_aof"])
         & (f["ham_aof"] <= f["ham_yuksek"])
         & (f["ham_dusuk"] <= f["ham_kapanis"])
@@ -1241,7 +1260,9 @@ def _gunler(fiyat, olaylar, takvim):
     getiri = (
         f["ham_kapanis"] / onceki
     ).to_numpy()  # günün ham kapanışı / önceki tutarlı kapanış (5.13)
-    for tarih, grup in olaylar.groupby("tarih"):
+    for tarih, grup in olaylar[olaylar["kod"].isin(LIMIT_OLAY_KODLARI)].groupby(
+        "tarih"
+    ):
         if len(gunler) == 0 or tarih < gunler[0]:
             continue
         i = gunler.searchsorted(tarih)  # olay gününe eşit ya da sonraki işlem günü (t)
