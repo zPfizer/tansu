@@ -2,6 +2,7 @@
 
 Bu kayıt, [#187](https://github.com/zPfizer/tansu/issues/187) kapsamında yeni çalışma başlangıcının aday sınırını tanımlar.
 İncelenen ana dal `df30e8a87c8e8249d215a483247011b5ae07a49e` revizyonudur.
+Bu revizyonda doğrulanan on kusurun düzeltmeleri aşağıdaki beş kaynak commit'iyle tek adayda birleştirildi.
 Envanter tamamlandı. Derin davranış, tarihsel kabul kanıtı ve özgün kaynak görsellerinin yeniden denetimi kısmi kaldı.
 Bu kayıt yayımlanmış yeni sürüm, bütün projenin doğruluğu veya günlük kullanım izni anlamına gelmez.
 
@@ -26,27 +27,28 @@ Yeni sütun biçiminde `in_main` yalnız geçmişe dahil olmayı gösterir.
 Boş `closing_issues` veya `diff_lines` hücresi ilgili dilimde ayrı alan tutulmadığını belirtir. Sıfır kabul edilmez.
 Geçici yakalama dosyalarının adları kanıt sütunlarında kalır. Ham API dökümleri ve özel kaynak metinleri bu belge paketine alınmadı.
 
-## Doğrulanan on kusur
+## Başlangıç revizyonunda doğrulanan on kusur
 
 Aşağıdaki karşı örnekler başlangıç revizyonunda çalıştırıldı. Bunlar tarihsel piyasa etkisinin sıklığını veya büyüklüğünü ölçmez.
-Veri kusurları [#188](https://github.com/zPfizer/tansu/issues/188), uygulama kusurları [#189](https://github.com/zPfizer/tansu/issues/189) altında düzeltme bekliyor.
-Ek denetim, kayıt günlüğünde [#190](https://github.com/zPfizer/tansu/issues/190), WF bildiriminde [#191](https://github.com/zPfizer/tansu/issues/191) ve sonuç özetinde [#192](https://github.com/zPfizer/tansu/issues/192) işlerini açtı.
+Veri düzeltmeleri [#188](https://github.com/zPfizer/tansu/issues/188), uygulama düzeltmeleri [#189](https://github.com/zPfizer/tansu/issues/189) kapsamında adaya alındı.
+Ek denetimin kayıt günlüğü [#190](https://github.com/zPfizer/tansu/issues/190), WF bildirimi [#191](https://github.com/zPfizer/tansu/issues/191) ve sonuç özeti [#192](https://github.com/zPfizer/tansu/issues/192) düzeltmeleri de aynı adayda yer alır.
+Gözlenen sonuç sütunu başlangıç revizyonunu, durum sütunu düzeltilmiş adayı gösterir. Adaya alınmak ana dala birleşme veya ürün kabulü değildir.
 
 | Kimlik | Gözlenen sonuç | Kod sahibi ve sözleşme | Durum |
 |---|---|---|---|
-| F1 | Bilinmeyen olay kodunun 0,5 çarpanı, 100'den 50'ye düşüşte karantinayı kaldırdı. | `tansu/veri.py`, `_gunler`; TASARIM 5.1 | #188 açık. Kod kümesinin kaynak eşlemesi ve teknik tasarım kararı kaydedildi. Düzeltme kanıtı bekleniyor. |
-| F2 | Yalnız hacmi NaN olan satır karantinaya girmedi. Veri kapısı sorun bildirmedi. | `tansu/veri.py`, `_gunler`; TASARIM 5.13 | #188 açık. Gözlenen sıfır hacimle eksik hacim ayrımı korunmalı. |
-| F3 | Bütün kaynak için eksik gün işaretlenen fiyat, sonraki günün göstergesine girdi. Tanı amaçlı iki gözlemlik SMA 75 oldu. | `tansu/motor.py`, `_mumlar_kur`; `tansu/veri.py`; TASARIM 5.13 | #188 açık. Bağımsız E1/E2 yolunun tam etkisi ayrıca doğrulanmalı. |
-| A1 | Kesilen sektör tamamlama işlemi başarısızlık mesajına rağmen CLI çıkış kodu 0 döndürdü. | `tansu/__main__.py`, `_sektor_indir` | #189 açık. Kapsam mesajı korunarak hata sonucu taşınmalı. |
-| A2 | Yeni dar görüntü eski geniş görüntünün önüne geçti. Gerçek sentetik evren A, C, D, E iken günlük seçim yalnız A oldu. | `tansu/gunluk.py`, `_semboller`; TASARIM 6.2 | #189 açık. Sembol kapsamı, ardından tarih sırası uygulanmalı. |
-| A3 | Evren dışındaki bozuk B satırları günlük oranı bozdu. Üye kapısı geçerken günlük kapı yüzde 1 karantina sınırını aştı. | `tansu/gunluk.py`, `_kapi_sorunlari`; TASARIM 5.13 ve 6.2 | #189 açık. Pay ve payda aynı tarihli üye hisse-günlerini kullanmalı. |
-| J1 | Genel düzeltme API'si geçerli S12 revizyonuna açıklama eklemeyi reddetti. Aynı açıklama eski pilot revizyonunda geçti. | `tansu/deneme.py`, `PilotKayit.duzelt`; TASARIM ortak kayıt sözleşmesi | #190 açık. Tamamlanmış çıktı düzeltmesindeki benzer ret yalnız kod okumasıyla belirlendi. |
-| J2 | Kaydetme API'si veri referans listesinin yerine verilen metni yayımlayıp makbuz döndürdü. Kendi okuyucusu bu revizyonu reddetti. | `tansu/deneme.py`, `deneme_kaydet` ve `deneme_oku` | #190 açık. Geçersiz veri ayarı yayın öncesinde reddedilmeli. |
-| R1 | WF ilerleme bildirimi hata verince dönen çeyrek durumu hata oldu. Aynı çeyreğin kalıcı makbuzu başarılı kaldı, ikinci yayın girişimini kayıt katmanı reddetti. | `tansu/tansusinama.py`, `kayitli_ileri_calistir`; TASARIM S12 | #191 açık. Bildirim hatası başarılı makbuzu ve çeyrek durumunu değiştirmemeli. |
-| S1 | Aynı nihai işlem iki kez verilince toplam bir işlem ve -1 R, eğri -2 R, derinlik 2 R, kohort iki işlem bildirdi. | `tansu/istatistik.py`, `ileri_ozeti` ve `kapali_r_egrisi`; TASARIM S11 ve S12 | #192 açık. Genel API tutarsızlığı kanıtlandı. Doğrulanmış üretim günlüğünden bu girdinin oluştuğu kanıtlanmadı. |
+| F1 | Bilinmeyen olay kodunun 0,5 çarpanı, 100'den 50'ye düşüşte karantinayı kaldırdı. | `tansu/veri.py`, `_gunler`; TASARIM 5.1 | Adayda uygulandı (#188). Yalnız tanımlı kodlar limit çarpanına girer; bütün ham olaylar korunur. |
+| F2 | Yalnız hacmi NaN olan satır karantinaya girmedi. Veri kapısı sorun bildirmedi. | `tansu/veri.py`, `_gunler`; TASARIM 5.13 | Adayda uygulandı (#188). Eksik hacim karantinaya girer; gözlenen sıfır hacim işlemsiz gün kalır. |
+| F3 | Bütün kaynak için eksik gün işaretlenen fiyat, sonraki günün göstergesine girdi. Tanı amaçlı iki gözlemlik SMA 75 oldu. | `tansu/motor.py`, `_mumlar_kur`; `tansu/veri.py`; TASARIM 5.13 | Adayda uygulandı (#188). Ortak hesap görünümü ve E2 uyarlayıcıları eksik günü dışlar; E1 gözlenen alanlarını korur. |
+| A1 | Kesilen sektör tamamlama işlemi başarısızlık mesajına rağmen CLI çıkış kodu 0 döndürdü. | `tansu/__main__.py`, `_sektor_indir` | Adayda uygulandı (#189). Kesilen komut kapsam mesajıyla çıkış 1 verir. |
+| A2 | Yeni dar görüntü eski geniş görüntünün önüne geçti. Sentetik evren A, C, D, E iken günlük seçim yalnız A oldu. | `tansu/gunluk.py`, `_GunlukTaban`; TASARIM 6.2 | Adayda uygulandı (#189). En geniş farklı sembol kapsamı, eşitlikte en yeni kimlik seçilir. |
+| A3 | Evren dışındaki bozuk B satırları günlük oranı bozdu. Üye kapısı geçerken günlük kapı yüzde 1 karantina sınırını aştı. | `tansu/gunluk.py`, `_kapi_sorunlari`; TASARIM 5.13 ve 6.2 | Adayda uygulandı (#189). Pay ve payda aynı tam tabanın tarihli üye hisse-günlerini kullanır. |
+| J1 | Genel düzeltme API'si geçerli S12 revizyonuna açıklama eklemeyi reddetti. Aynı açıklama eski pilot revizyonunda geçti. | `tansu/deneme.py`, `PilotKayit.duzelt`; TASARIM ortak kayıt sözleşmesi | Adayda uygulandı (#190). Revizyona ve tamamlanmış çıktıya açıklama ayrı olay olarak eklenir; özgün kayıt değişmez. |
+| J2 | Kaydetme API'si veri referans listesinin yerine verilen metni yayımlayıp makbuz döndürdü. Kendi okuyucusu bu revizyonu reddetti. | `tansu/deneme.py`, `deneme_kaydet` ve `deneme_oku` | Adayda uygulandı (#190). Yeni revizyon yayın öncesinde okuyucunun ortak doğrulamasından geçer. |
+| R1 | WF ilerleme bildirimi hata verince dönen çeyrek durumu hata oldu. Aynı çeyreğin kalıcı makbuzu başarılı kaldı, ikinci yayın girişimini kayıt katmanı reddetti. | `tansu/tansusinama.py`, `kayitli_ileri_calistir`; TASARIM S12 | Adayda uygulandı (#191). Bildirim yayın sınırının dışındadır; asıl hata ve tek kesin çeyrek korunur. |
+| S1 | Aynı nihai işlem iki kez verilince toplam bir işlem ve -1 R, eğri -2 R, derinlik 2 R, kohort iki işlem bildirdi. | `tansu/istatistik.py`, `ileri_ozeti` ve `kapali_r_egrisi`; TASARIM S11 ve S12 | Adayda uygulandı (#192). Bütün özet parçaları mevcut kimlik denetiminden geçen tekil diziyi kullanır. Gerçek günlükte tekrarın oluştuğu kanıtlanmadı. |
 
 A3 karşı örneğinde 1.000 indirilen satıra karşı 712 üye hisse-günü vardı. Üye oranı 0, bütün satırların oranı 0,02 idi.
-Evren dışı satırların oranı aşağı çekmesi de paydanın olası sonucudur. Bu ters etki ayrıca çalıştırılmadı.
+Evren dışı satırların oranı aşağı çekmesi ilk denetimde ayrıca çalıştırılmadı. Düzeltmenin testleri pay şişmesini ve payda seyrelmesini ayrı sınadı.
 F3'te kullanılan iki gözlemlik pencere hatayı görünür kılan tanı girdisidir. Üretim parametresi kararı değildir.
 J1 ve J2, genel kayıt API'sinden erişilebilen kusurlardır. Tarihsel kullanım sıklıkları bilinmiyor.
 R1 denemesinde gerçek E2, E3 ve E5 çalıştı. E1 ve üyelik girdileri sentetik test düzeninden geldi.
@@ -55,9 +57,9 @@ S1 finansal tarihçenin yanlış olduğunu göstermez. Aynı kabul edilmiş gird
 F1 için seçilen limit istisnası kümesi `01, 02, 03, 04, 05, 06, 08, 09, 78` oldu.
 Tarihsel sağlayıcı araştırması altı türü, saklanan birincil sağlayıcı başlıkları `05`, `06` ve `08` bileşimlerini destekledi.
 Bileşimlerin mevcut olay kategorileriyle aynı değerlendirilmesi açık bir teknik çıkarımdır. Yeni bir işlem kuralı değildir.
-Bu çıkarım ve A3'ün tarihli üyelik yöntemi seçilen tasarımda çözüldü. Kaynak ve uygulama sözleşmesi düzeltmenin kendi TASARIM değişikliğinde yer alacak.
+Bu çıkarım ve A3'ün tarihli üyelik yöntemi seçilen tasarımda çözüldü. Kaynak eşlemesi ve uygulanmış sözleşmeler TASARIM 5.1, 5.13 ve 6.2'de yer alır.
 
-Küçük düzeltmeler mevcut veri, işlem ve komut sahiplerinde yapılabilir.
+Küçük düzeltmeler mevcut veri, işlem ve komut sahiplerinde yapıldı.
 Modül büyüklüğü tek başına geniş bir refaktör gerekçesi oluşturmadı.
 Eski portföy ve bağımsız işlem yollarının kayıtlı politika farkları birleştirme gerekçesi sayılmadı.
 
@@ -132,7 +134,7 @@ Bu iki gözlem on doğrulanmış kusura eklenmedi.
 Ek kayıt denetimi, okuyucunun olağan S03, S07, S10 ve S11 satırları için bütün yayın zamanı kontrollerini yeniden uygulamadığını gördü.
 Bu doğrulama farkı üçüncü bir kayıt kusuru diye sayılmadı. Eski kayıt uyumluluğu netleşmeden geniş okuma göçü önerilmedi.
 
-## Yapılan kontroller ve sınırları
+## Başlangıç denetiminin kontrolleri ve sınırları
 
 Ana revizyonun [CI koşusu 40150220186](https://github.com/zPfizer/tansu/actions/runs/40150220186) başarılıdır.
 İki test grubu, toplu CI, biçim, lint ve driftlint geçti.
@@ -164,15 +166,56 @@ Kayıtlı sınama denetçisinin daraltılmış üç testi `registered-report.md`
 Üç testin başarısı tam tarihsel gerçek veri akışını veya başarılı WF sonucunu kanıtlamaz.
 Tarihsel çalışma çıktılarının bütün özgün özetleri yeniden kontrol edilmedi.
 
-## Aday tamamlama kaydı
+## Uygulanmış aday ve kanıtları
 
-Bu belge hazırlanırken #188, #189, #190, #191 ve #192 düzeltmeleri, gerçek görüntü kanıtları ve bağımsız incelemeleri tamamlanmış sayılmadı.
-Son aday PR kimlikleri, incelenen commit'ler, ilgili kontrol sonuçları ve kalan koşullar bu bölüme doğrulama sonrası eklenecek.
-Şimdiki sınır, envanteri ve kanıt boşlukları belli bir başlangıç adayıdır. Birleşme veya sürüm yayımı değildir.
+Beş kaynak commit'i, geçmişleri korunarak aynı adayda birleştirildi. Hesap kodunun birleşme revizyonu `916ecf5fc2b7da69d50b8530b4d3a9e338819863` oldu.
+Bu revizyonun ardından yapılan bu belge güncellemesi hesap kodunu değiştirmez.
+
+| İş | Kaynak commit | Kapsam |
+|---|---|---|
+| #188 | `0280b9b533fec0505625a5034775c6e0ccb68f0e` | F1, F2, F3; ortak hesap görünümü ve gözlenen E1 kanıtı |
+| #189 | `6a15de9752bf686109ec9e174ad86504e23bfd75` | A1, A2, A3; komut çıkışı, taban seçimi ve tarihli üyelik |
+| #190 | `6099faba7b5f302e08ebca8b55afbf06e75b6100` | J1, J2; düzeltme olayı ve yayın öncesi revizyon doğrulaması |
+| #191 | `3af1cb620a8abc5c3de06f28330b8a7dc327ccbb` | R1; kesin yayından sonraki bildirim hatası |
+| #192 | `6e2b118f2c7ebce02e591d163e0875ebf905470c` | S1; ortak tekil nihai işlem dizisi |
+
+Birleşik kod üzerinde aşağıdaki kontroller tamamlandı. Komutlar ve çıktılar `integration-report.md` kaydında tutulur.
+
+| Kontrol | Sonuç | Çıktı kaydı |
+|---|---|---|
+| Veri, kapı, motor, gösterge, aile, çift, simülatör, günlük komut, aktarım, evren, istatistik, sağlamlık ve belge modülleri | 977 geçti, dört atlandı; çıkış 0 | `integration-final-modules.txt` |
+| `tests/test_gelecek.py` tamamı | 68 geçti; çıkış 0 | `integration-final-prefix.txt` |
+| Ortak kayıt, WF bildirimi, çift ve sonuç özeti yolları | 37 geçti, 450 seçilmedi; çıkış 0 | `integration-final-overlap.txt` |
+| Değişen 19 Python dosyası | Ruff ve biçim denetimi geçti | `integration-python-filemap.json`, `integration-report.md` |
+
+Üç atlama boş yerel dosya parametre kümeleridir. Bir atlama worktree'de bulunmayan yerel `docs/sorgu` girdisidir.
+Tam yerel test takımı çalıştırılmadı. Windows CI ve bağımsız incelemenin güncel durumu, [#187](https://github.com/zPfizer/tansu/issues/187) ile bağlı aday PR'ın gövdesinde ve kontrollerinde izlenir.
+Bu tarihli kayıt o sonraki aşamaların geçtiğini veya Levent'in birleştirme onayı verdiğini söylemez.
+
+Gerçek kayıtlı veri kanıtları farklı sınırları kapsar. Aşağıdaki sonuçlar kaynak düzeltmelerinin yazar raporlarından gelir.
+
+| İş | Gerçek kayıtlı veride gözlenen sonuç | Sınır |
+|---|---|---|
+| #188 | `20261005-1949` görüntüsünde bir eski motor işlem satırı, iki çift işlem satırı ve 2.070 E1 kaydı üretildi. Üç gözlenen eksik gün kaydının fiyatı korundu, hesap girdisi eksik kaldı. | Tam WF veya günlük etkinleştirme değildir. Ayrı 20 sembollü bozuk kopya deneyi sentetiktir. |
+| #189 | Olağan günlük komut TAMAM ve yalnız başlıklı CSV verdi. Bozuk kopya reddedildi. Sektör kesintisi çıkış 1, tamamlanması çıkış 0 verdi. | Aileler Deneme kaldığı için etkin aile kartı kanıtı değildir. Kaydedilmiş sağlayıcı yanıtları canlı indirme değildir. |
+| #190 | Gerçek görüntü başvurusuyla yazma, taze okuma ve açıklama ekleme geçti. Üç geçersiz başvuru yeni bayt yazılmadan reddedildi. | Kayıt sınırı kanıtıdır; piyasa hesabı veya başarılı WF değildir. |
+| #191 | Gerçek 716 sembollü görüntüde ilk çeyrek, 23 eksik limit kanıtı hatasıyla kesin kaydedildi. Sonraki bildirimin asıl OSError hatası, tek yayın ve gerçek bitiş sayımları korundu. | Sıfır çeyrek tamamlandı, biri başarısız, 15'i başlamadı. Başarılı çeyreğin korunması sentetik E1 ve gerçek E5 kullanan genel testle sınandı. |
+| #192 | Kaydedilmiş fiyatlardan 2.002 E1 satırı işlendi. Doğal sinyal ve kapanmış işlem sayısı sıfır kaldı; özet tamamlandı. | Dolu gerçek işlem listesinde kopya kanıtı değildir. Kopya ve çelişki davranışları genel API'nin sentetik testleriyle kanıtlandı. |
+
+Yazar koşuları çıktıları geçici klasörlere yönlendirdi ve kullandıkları özgün kaynakların parmak izlerini korudu.
+Birleştirme sonundaki ayrı kontrolde beş görüntü dosyası ve iki gerçek kayıt dosyası önceki parmak izi listesiyle eşleşti (`integration-original-source-hashes.json`).
+Dayanaklar `fix-data-report.md`, `fix-application-report.md`, `fix-journal-report.md`, `fix-progress-report.md` ve `fix-summary-report.md` kayıtlarıdır.
+Birleşik adayın daha sonraki gerçek veri koşusu varsa kendi revizyonu ve sonucu aday PR'da ayrıca gösterilir.
+
+Süreçte iki sınırlama kaydedildi. Belge, başarısız test ve kod ayrı commit'ler olarak sıralanmadı; yazarların başarısız ve başarılı çıktılarından sonra birleşik commit'ler oluşturuldu.
+Ek ısınma sonrası sayısal EMA testi üretim düzenlemesinden sonra eklendi. Başlangıç kodunda daha sonra 512 yerine beklenen 511 gözlem karşı örneği gösterildi.
+Bu ek testin ilk üretim değişikliğinden önce çalıştığı iddia edilmez. İlk F1, F2 ve F3 başarısız test kayıtları bundan ayrıdır.
+#188'in eski revizyondaki geniş koşusu kesildi; 746 ilerleme işareti tamamlanmış test sonucu sayılmadı.
+Yazar ve bütünleştirme test sayıları örtüşür. Bu sayılar toplanarak ayrı test sayısı üretilmez.
 
 ## Sonraki işler
 
-1. #188–#192'nin on kusuru için ilgili başarısız test, küçük düzeltme, başarılı test ve gereken gerçek görüntü kanıtı.
+1. Birleşik adayın bağımsız incelemeleri, Windows CI ve kalan gerçek veri kanıtlarının kendi sınırlarıyla değerlendirilmesi. Ana dala birleşme Levent'in ayrı onayını bekler.
 2. Mevcut sahiplerdeki #175, #183 ve #186'nın güncel ana dalla bütünleşmesi ve kendi kabul koşulları.
 3. Güncellenen takip sırasına göre ilerleme. PR #183'ün eski CI cümlesinin kendi sahibi tarafından güncellenmesi.
 4. #55 ve #95 için gösterilebilir kanıt ve açık ürün kararları. Ardından #96 ortak panel ve #97 kalıcı uyumluluk kanıtı.
