@@ -9,6 +9,7 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 - 25.10.2026 başlangıç denetimi, 91 issue ve 95 PR için tarihli envanter ve açık iş kaydıyla belgelendi. WF inceleme durumu #171 kanıtıyla düzeltildi; tam veri, MC ve günlük uygunluk koşulları korundu. (#187)
 - S12 açıklama düzeltmeleri özgün kayıt ve kimlikler korunarak ayrı olay olarak doğrulanır; kapanmış koşunun tamamlanmış çıktısına açıklama eklenebilir. Yeni ayar revizyonu yazılmadan önce okuyucuyla aynı tam doğrulamadan geçer. (#190)
 - İleri sınama özetinin ölçü, eğri, düşüş, başvuru ve giriş kohortu sayımları aynı tekil nihai işlem dizisini kullanır. Eş içerikli kopyalar bir kez sayılır; aynı kimliğin çelişen içeriği semboller arasında da reddedilir. Açık ve kısmi sonuçların muhasebesi korundu. (#192)
+- Günlük koşu en geniş doğrulanmış tabanı, eşitlikte en yeni kimliği seçer; veri kapısının iki oran teriminde aynı tabanın tarihli üyeleri kullanılır ve önceki kart hisseleri indirmede korunur. Kesilen sektör indirmesi kapsam özetiyle başarısız çıkış verir. (#189)
 
 - Claude düzenleme kancasına saf refaktör için oturuma ve çalışma klasörüne bağlı önce/sonra test kanıtı eklendi. Olağan test değişikliği yolu korundu; başarılı son kontrol refaktör iznini kapatır.
 

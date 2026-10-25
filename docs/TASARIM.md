@@ -225,7 +225,9 @@ yükseği/düşüğüne koşullu. Ölçütler kısa kendi kodumuzdur. (A3, M1, S
     Bilet 07'de KAP ilk 100 sembolden sonra boş döndü; neden HTTP 429'dur (yaklaşık 100 sayfa isteği sonra).
     İstekler arası en az 1 sn, User-Agent `tansu-kisisel/0.1`; KAP şirket listesi bir kez, sembol
     başına bir şirket sayfası. Art arda 5 hata olursa durur; tamamlananlar `onbellek/` klasöründe kalır ve
-    yeniden çalıştırınca tekrar istenmez. KAP listesinde olmayan (işlemi kapanmış) kod sektörsüz kalır.
+    yeniden çalıştırınca tekrar istenmez. Kesilen komut kapsam özetini hatayla verir ve çıkış kodu 1 olur;
+    tamamlanan komut yeni kimliği ve kapsamı yazıp 0 döner (`tests/test_komut.py`, #189).
+    KAP listesinde olmayan (işlemi kapanmış) kod sektörsüz kalır.
   - **Anlık görüntü değişmez.** Eksik sektörler tamamlanınca yeni bir anlık görüntü yazılır: fiyat, olay ve
     faiz dosyaları aynen kopyalanır, `sektor.json` birleşir, manifest eski kimliği (`kaynak`) ve kapsamı
     (`sektor_kapsam`: hedef, var, listede olmayan, alınamayan) tutar. Koşu yeni kimlikle yapılır.
@@ -2440,7 +2442,8 @@ izni vermez. Fon/kripto kapsamı ve kalıcı kimlik onayı bu motor sürümünü
    - Tam indirme geçici klasöre yapılır. Kapılar geçerse yeni anlık görüntü olur; geçmezse kart
      üretilmez.
    - (Bilet 14) "Tam" = her sembolün bütün geçmişi (2010'dan); indirilen semboller bugünün evreni (en çok sembollü
-     son tam anlık görüntüden; taban başka aydaysa tabanın son ayının evreni, YORUM) ve dünkü açık kartların
+     son tam anlık görüntüden; manifestteki farklı sembol sayısı en büyük olan seçilir, eşitlikte en yeni
+     kimlik kullanılır; taban başka aydaysa tabanın son ayının evreni, YORUM) ve dünkü açık kartların
      hisseleridir (~100). Dünkü kartın hissesi durumundan bağımsız (AKTİF, STOP, bekleyen çıkış) indirilir; STOP ve bekleyen çıkış dolana kadar pozisyon açıktır ve dolum günün çubuğunu ister. (vekil kararı 15.10, bilet 07c) Sebep: indirilen bütün semboller (716; bilet 03, sözlük denetimi) bilet 07'de ~3 sa 10 dk sürdü; görev sınırı 1 saat. 100 sembol
      ≈ 30 dk; istekler arası 1 sn bekleme aynen kalır. Günlük anlık görüntü `veri/gunluk/ag/` altına yazılır (tam
      anlık görüntüler `veri/ag/`'da kalır; `sinama` onları kullanır), faiz ve sektör içermez (kart bunlara bakmaz;
@@ -2448,6 +2451,15 @@ izni vermez. Fon/kripto kapsamı ve kalıcı kimlik onayı bu motor sürümünü
      (`kurulum/tansu-aylik.xml`).
    - (Bilet 14) Günlük koşunun veri kapıları, evren üyesi hisse-günlerde (5.13) hesaplanır; geçmişteki kaynak günü
      hataları eksik gün olarak zaten işlenir, yalnız bugünün kaynak günü hatası kartı durdurur.
+     Uygulanan #189 düzeltmesinde indirme seçimi ve kapı aynı doğrulanmış tam tabanı kullanır. Her fiyat
+     tarihinin üyeliği bu tabanda `evren(taban, min(tarih, taban.gunler[-1]))` ile belirlenir; dar günlük
+     görüntüden yeniden evren kurulmaz. Üyelik başlangıcı sınamayla aynı tarihtir (§5.13). Önceki kartın
+     evren dışı günleri iki oran terimine de girmez. `gunluk(..., semboller=[...])` test girdisi taban
+     okumaz ve verilen günlük satırların mevcut üyelik davranışını korur; normal komut bu yolu kullanmaz.
+     `tests/test_gunluk.py` taban genişliği, eşitlik, önceki kart, pay şişmesi, payda seyrelmesi,
+     aylık giriş/çıkış, taban sonrasındaki tarih ve açık sembol girdisini komut veya günlük koşu yüzünde sınar.
+     Bozuk veya okunamayan taban manifestinin normal komutta indirmeden önce SORUNLU ve çıkış 1
+     vermesi, başka tabana sessizce geçmemesi de bu dosyada sınanır (§6.7).
    - Koşu 18:15'ten önce başlarsa kart üretilmez (yarım çubuk riski).
    - Kaynak erişilemezse sınama eski anlık görüntülerle sürer; yalnız canlı kart durur.
    - Günlük anlık görüntüler silinmez (`veri/` silinmez; 5.11 silme yasağı). (karar.md:24; İ: 11-061 reddedildi, karar.md:30; bilet 03)
