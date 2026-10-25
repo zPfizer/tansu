@@ -1792,6 +1792,9 @@ Birleşik eğri bağımsız yılları toplamaz. Eğitim sonucu test
 kapsamındaki açığı doldurmaz. Tamamlanan, başarısız ve başlamayan çeyrekler ayrıdır.
 Kayıt hatası bağımlı hesabı durdurur; doğrulanmış önceki makbuzlar korunur;
 belirsiz yayın S03 kurtarma yolunu kullanır.
+İlerleme bildirimi kesin çeyrek yayınından sonra, hesap ve yayın hata sınırının
+dışında çalışır. Bildirim hatası aynı hata olarak çağırana döner; eklenmiş
+çeyrek sonucu ve tek kesin makbuz korunur. Bitiş sayımları gerçek makbuzlardan gelir.
 
 Çeyreğin `sayimlar` alanı o kontrol noktasındaki gözlemdir; sonradan değiştirilmez.
 `kapali_islem`, fiili girişi o çeyrekte olan ve o çeyrek sonunda kapanmış işlem
@@ -1813,7 +1816,9 @@ hatanın metnini gözlem olarak saklayabilir; bu metin sayım veya başarı kan�
 Eğitimde 120, testte 30 kapalı işlem
 altı yalnız örneklem uyarısıdır; ret veya günlük uygunluk eşiği değildir.
 `tests/test_tansusinama.py` genel girişte takvim, makbuz sırası, sürekli durum,
-seçimsiz dönem ve açık ufku; `tests/test_kayit.py` değişmez bağları ve tek yayını;
+seçimsiz dönem, açık ufuk ve yayın sonrası `ValueError`/`OSError` bildiriminde
+asıl hatayı, değişmeyen çeyreği, tek makbuzu ve bitiş sayımlarını;
+`tests/test_kayit.py` değişmez bağları ve tek yayını;
 `tests/test_saglamlik.py` durum aktarımını; `tests/test_gelecek.py` eğitim
 kesiminden sonraki fiyat ve sonuçların eski seçimi değiştirmemesini sınar.
 
