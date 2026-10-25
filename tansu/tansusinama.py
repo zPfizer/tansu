@@ -3075,10 +3075,6 @@ def kayitli_ileri_calistir(depo, ileri_deneme_id, *, veri_koku, mod, ilerleme=pr
                     b.update(kanit)
                     makbuz = kosu.ileri_sonucu_kaydet(kayit=b)
                     b["sonuc_ref"] = makbuz.olay_id
-                    if ilerleme:
-                        ilerleme(f"{b['bolum_id']}: {b['durum']}")
-                    if r["hatalar"]:
-                        break
                 except deneme_.PilotYazmaHatasi:
                     raise
                 except (
@@ -3097,6 +3093,10 @@ def kayitli_ileri_calistir(depo, ileri_deneme_id, *, veri_koku, mod, ilerleme=pr
                     b.update(kanit)
                     makbuz = kosu.ileri_sonucu_kaydet(kayit=b)
                     b["sonuc_ref"] = makbuz.olay_id
+                    break
+                if ilerleme:
+                    ilerleme(f"{b['bolum_id']}: {b['durum']}")
+                if r["hatalar"]:
                     break
             sonuc["islemler"] = list(yayimlanan.values())
             tamamlanan = [b["bolum_id"] for b in bolumler if b["durum"] == "tamamlandi"]
