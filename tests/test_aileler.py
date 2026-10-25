@@ -153,7 +153,8 @@ def test_ortak_kurulum_eski_uyarlayicilarla_eslesir(varyant):
     assert g["atr"] == gostergeler.atr(f.yuksek, f.dusuk, f.kapanis).iloc[-1]
 
 
-def test_ortak_kurulum_eksik_gun_ve_isinma():
+@pytest.mark.parametrize("gozlenen", [None, 50.0])
+def test_ortak_kurulum_eksik_gun_ve_isinma(gozlenen):
     f = _mumlar([100.0] * 512, [101.0] * 512, [99.0] * 512, [100.0] * 512)
     f["aof"] = f["kapanis"]
     paket = _ortak_paket(f)
@@ -165,9 +166,12 @@ def test_ortak_kurulum_eksik_gun_ve_isinma():
     sma = next(g for g in ilk["gostergeler"] if g["ad"] == "sma250")
     assert sma["deger"] is None and sma["bos_nedeni"] == "isinma_veya_tanimsiz"
     for ad in ("kapanis", "yuksek", "dusuk", "aof"):
-        paket["piyasa"][-1][f"duzeltilmis_{ad}"]["deger"] = None
+        paket["piyasa"][-1][f"duzeltilmis_{ad}"]["deger"] = gozlenen
+    if gozlenen is not None:
+        paket["piyasa"][-1]["kalite_bayraklari"] = ["eksik"]
     eksik = aileler.ortak_kurulum(paket, f.index[-1], strateji)
     assert eksik["sinyaller"] == []
+    assert eksik["isinma"]["TEST"] == {"gozlem": 511, "gerekli": 500, "tamam": True}
     sma = next(g for g in eksik["gostergeler"] if g["ad"] == "sma250")
     assert sma["deger"] is None and sma["bos_nedeni"] == "eksik_veri"
 

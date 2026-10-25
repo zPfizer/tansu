@@ -4,12 +4,13 @@ Fiyatlar uydurmadır; beklenen değerler elle hesaplandı (yorumlarda). Olay tar
 """
 
 import datetime as dt
+import hashlib
 
 import numpy as np
 import pandas as pd
 import pytest
 
-from tansu import veri
+from tansu import aileler, ciftbolme, motor, simulator, tansusinama, veri
 from tansu.kaynak import KaynakHatasi
 
 SIMDI = dt.datetime(2026, 10, 5, 19, 30)
@@ -195,6 +196,68 @@ def test_carpani_bir_olan_ya_da_bilinmeyen_kodlu_kayit_istisna_degildir(tmp_path
     assert gun(a, "2024-01-03")["karantina"]
 
 
+@pytest.mark.parametrize(
+    "kod,izinli",
+    [(k, True) for k in ("01", "02", "03", "04", "05", "06", "08", "09", "78")]
+    + [(k, False) for k in ("07", "79", "89", "90", "91", "98", "99", "UNKNOWN")],
+)
+def test_limit_istisnasi_yalniz_tanimli_olay_kodlarina_verilir(tmp_path, kod, izinli):
+    olay = {
+        "A": [
+            dict(
+                SHT_KODU=kod,
+                SHHE_TARIH=epoch(dt.date(2024, 1, 3)),
+                SHHE_FIYAT_AYAR_OR=0.5,
+            )
+        ]
+    }
+    a = anlik(tmp_path, [satir("2024-01-02", 100.0), satir("2024-01-03", 50.0)], olay)
+    g = gun(a, "2024-01-03")
+    assert bool(g.karantina) is not izinli
+    assert g.taban == pytest.approx(45.0 if izinli else 90.0)
+    assert a.olaylar.kod.tolist() == [kod]
+
+
+def test_karma_olaylarda_yalniz_izinli_carpan_limite_girer(tmp_path):
+    olay = {
+        "A": [
+            dict(
+                SHT_KODU=k, SHHE_TARIH=epoch(dt.date(2024, 1, 3)), SHHE_FIYAT_AYAR_OR=c
+            )
+            for k, c in (("02", 0.5), ("UNKNOWN", 0.5))
+        ]
+    }
+    a = anlik(
+        tmp_path,
+        [
+            satir("2024-01-02", 100.0, xu100=1000.0),
+            satir("2024-01-03", 25.0, xu100=1000.0),
+        ],
+        olay,
+    )
+    assert gun(a, "2024-01-03").karantina
+    assert gun(a, "2024-01-03").taban == pytest.approx(45.0)
+    paket = veri.veri_hazirla(
+        veri.VeriIstegi(
+            ("A",),
+            "2024-01-02",
+            "2024-01-03",
+            "yerel",
+            "legacy_tansu_v1",
+            "legacy_tansu_v1",
+            "is_yatirim",
+            "xu100",
+        ),
+        a.kimlik,
+        tmp_path,
+    )
+    assert [r["kod"] for r in paket["olaylar"]] == ["02", "UNKNOWN"]
+    assert paket["piyasa"][1]["olay_ref"].split(",") == [
+        r["olay_ref"] for r in paket["olaylar"]
+    ]
+    assert a.olay_uyarilari.iloc[0].beklenen == 0.25
+
+
 def test_bozuk_satirlar_karantinaya_girer(tmp_path):
     # Düşük 101 > AOF 100; kapanış 103 > yüksek 102 (düzeltilmiş); ham kapanış 0.
     fiyat = [
@@ -238,6 +301,140 @@ def test_satirdaki_kismi_nan_bozuk_satirdir_indirmeyi_durdurmaz(tmp_path):
         tmp_path, [satir("2024-01-02", 100.0), bozuk, satir("2024-01-04", 100.0)]
     ).gun_tablosu
     assert list(g["karantina"]) == [False, True, False]
+
+
+@pytest.mark.parametrize("hacim,karantina", [(np.nan, True), (0.0, False)])
+def test_yalniz_hacim_nan_karantinadir_sifir_hacim_degil(tmp_path, hacim, karantina):
+    a = anlik(
+        tmp_path,
+        [
+            satir("2024-01-02", 100.0),
+            satir("2024-01-03", 100.0, hacim=hacim),
+            satir("2024-01-04", 100.0),
+        ],
+    )
+    g = gun(a, "2024-01-03")
+    assert bool(g.karantina) is karantina
+    assert not g.eksik and not g.islem
+    assert a.oranlar()[0] == (1 / 3 if karantina else 0.0)
+    assert a.sorunlar == (["karantina oranı > %1"] if karantina else [])
+    m = motor.mumlar(a, "A")
+    assert bool(m.loc["2024-01-03", "karantina"]) is karantina
+    assert m.loc["2024-01-03", "kapanis"] == 100.0
+    bugun = {**m.loc["2024-01-03"].to_dict(), "tarih": pd.Timestamp("2024-01-03")}
+    assert motor.adim(motor.bekleyen(1.0), bugun).neden == "iptal"
+    acik = motor.Pozisyon("acik", giris_fiyat=100.0, stop=98.0, son_aof=100.0)
+    sonuc = motor.adim(acik, bugun)
+    assert sonuc.durum == ("kapali" if karantina else "acik")
+    assert sonuc.neden == ("karantina" if karantina else None)
+
+
+@pytest.fixture
+def kaynak_hatasi(tmp_path):
+    return kaynak_hatasi_verisi(tmp_path)
+
+
+def kaynak_hatasi_verisi(tmp_path):
+    tarihler = pd.bdate_range("2024-01-02", periods=260)
+    fiyatlar = [
+        satir(t, 50.0, aof=100.0, ham_aof=100.0, xu100=1000.0)
+        if i == 255
+        else satir(t, 100.0, xu100=1000.0)
+        for i, t in enumerate(tarihler)
+    ]
+    a = anlik(tmp_path, {f"S{i}": fiyatlar for i in range(20)})
+    return a, tarihler
+
+
+def test_e1_cift_kurulumu_kaynak_gununu_gozlem_saymaz(tmp_path, kaynak_hatasi):
+    a, tarihler = kaynak_hatasi
+    istek = veri.VeriIstegi(
+        ("S0", "S1"),
+        str(tarihler[0].date()),
+        str(tarihler[-1].date()),
+        "yerel",
+        "legacy_tansu_v1",
+        "legacy_tansu_v1",
+        "is_yatirim",
+        "xu100",
+    )
+    paket = veri.veri_hazirla(istek, a.kimlik, tmp_path)
+    sonuc = ciftbolme.ortak_kurulum(
+        paket, tarihler[-1], ciftbolme.strateji_coz("S0", "S1")
+    )
+    assert sonuc["isinma"]["S0-S1"]["gozlem"] == 259
+    assert [
+        r["duzeltilmis_kapanis"]["deger"]
+        for r in paket["piyasa"]
+        if r["tarih"] == str(tarihler[255].date())
+    ] == [50.0, 50.0]
+
+
+@pytest.mark.parametrize("yol", ["legacy", "e2", "cift"])
+def test_kaynak_gunu_hesaba_girmez_gozlenen_kanit_korunur(tmp_path, kaynak_hatasi, yol):
+    a, tarihler = kaynak_hatasi
+    hata, sonraki = tarihler[255:257]
+    klasor = tmp_path / "ag" / a.kimlik
+    once = {
+        p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in klasor.iterdir()
+    }
+    ham = a.fiyat.copy(deep=True)
+    hesap = a.hesap_fiyati.copy(deep=True)
+    if yol == "legacy":
+        m = motor.mumlar(a, "S0", aileler.Parametre(sma_n=2))
+        assert pd.isna(m.loc[hata, "kapanis"])
+        assert pd.isna(m.loc[sonraki, "sma250"])
+        assert m.loc[tarihler[257], "sma250"] == 100.0
+    elif yol == "e2":
+        paket = veri.veri_hazirla(
+            veri.VeriIstegi(
+                ("S0",),
+                str(tarihler[0].date()),
+                str(tarihler[-1].date()),
+                "yerel",
+                "legacy_tansu_v1",
+                "legacy_tansu_v1",
+                "is_yatirim",
+                "xu100",
+            ),
+            a.kimlik,
+            tmp_path,
+        )
+        r = paket["piyasa"][255]
+        assert r["ham_kapanis"]["deger"] == r["duzeltilmis_kapanis"]["deger"] == 50.0
+        assert r["hacim_tl"]["deger"] == 1000.0
+        assert "eksik" in r["kalite_bayraklari"]
+        assert r["son_gecerli_fiyat_tarihi"] == str(tarihler[254].date())
+        sonuc = aileler.ortak_donem_kurulumu(paket, aileler.legacy_coz("bugun"))["S0"]
+        assert pd.isna(sonuc["mumlar"].loc[hata, "kapanis"])
+        assert pd.isna(sonuc["mumlar"].loc[sonraki, "sma250"])
+        assert sonuc["mumlar"].loc[sonraki, "ema20"] == 100.0
+        assert sonuc["isinma"].iloc[-1] == 259
+        assert hata not in sonuc["kurulum"].index
+    else:
+        isler, atlanan = tansusinama.cift_isleri(
+            a, {"S0": "sektor", "S1": "sektor"}, ["S0", "S1"], tarihler[0], []
+        )
+        assert not atlanan and len(isler) == 1
+        assert np.isnan(isler[0][6][255]).all()
+        assert np.isnan(isler[0][7][255]).all()
+        evr = {ay: ["S0", "S1"] for ay in tarihler.to_period("M").unique()}
+        a = veri.Anlik(
+            a.kimlik,
+            a.fiyat,
+            a.olaylar,
+            pd.DataFrame({"tarih": [pd.Timestamp("2023-12-01")], "faiz": [10.0]}),
+        )
+        h = ciftbolme.hazirla(a, evr, tarihler[0])
+        assert h["Kc"].loc[hata].isna().all()
+        z = simulator.zemin(a, evr, tarihler, (), {})
+        assert z["A"].loc[hata].isna().all()
+        assert (z["C"].loc[hata] == 100.0).all()
+    pd.testing.assert_frame_equal(a.fiyat, ham)
+    pd.testing.assert_frame_equal(a.hesap_fiyati, hesap)
+    assert {
+        p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in klasor.iterdir()
+    } == once
 
 
 @pytest.mark.parametrize("bozuk", ["tekrar", "sira"])

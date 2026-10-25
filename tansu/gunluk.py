@@ -96,7 +96,7 @@ def _kart(anlik, s, m, p, kanit) -> list | dict:
     # TASARIM 5.15 S08: açık risk isteği eski CSV/kart günlüğünü değiştirmez.
     if getattr(p, "risk_girdisi", None) is not None:
         return {"hisse": s, "kanit": kanit, **islem_riski.hesapla(p.risk_girdisi)}
-    f = anlik.fiyat[anlik.fiyat["sembol"] == s].set_index("tarih")
+    f = anlik.hesap_fiyati[anlik.hesap_fiyati["sembol"] == s].set_index("tarih")
     sinyal = p.sinyal_tarih
     ref, oran = (
         f.at[sinyal, "ham_kapanis"],

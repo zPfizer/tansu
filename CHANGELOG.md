@@ -6,6 +6,8 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ## [Yayımlanmamış]
 
+- Limit istisnası tanımlı şirket olaylarıyla sınırlandı; eksik hacim karantinaya alındı. Kaynak günü hataları ham kanıtı değiştirmeden EMA, çift ve günlük hesap girdilerinden çıkarıldı. (#188)
+
 - Claude düzenleme kancasına saf refaktör için oturuma ve çalışma klasörüne bağlı önce/sonra test kanıtı eklendi. Olağan test değişikliği yolu korundu; başarılı son kontrol refaktör iznini kapatır.
 
 - Belge akışının kapanışı tüm ilgili kontrollerden sonraya taşındı. Davranışı koruyan kod düzenlemelerinin önce ve sonra aynı testlerle doğrulanması ortak test kuralında açıklandı; yeni davranış ve hata düzeltmelerinde önce başarısız, sonra başarılı test şartı korundu.

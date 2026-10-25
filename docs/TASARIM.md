@@ -274,6 +274,13 @@ hatasından** ayırmak.
   - Bozuk satır (satır ihlali, 5.13) baz fiyat olmaz; baz, önceki tutarlı işlem gününün ham kapanışıdır. (vekil kararı 15.10, bilet 07e)
   - Olay çarpanını alan günde (adım günü, aşağıdaki karantina maddesi) baz fiyat = önceki ham kapanış × olay çarpanı. Kilit ve karantina bu baz fiyattan çıkan limitlerle
     yargılanır. Bilinmeyen olay kodu ya da çarpanı 1 olan kayıt istisna sayılmaz.
+  - #188: limit istisnasında yalnız `01, 02, 03, 04, 05, 06, 08, 09, 78` kodları çarpılır.
+    `01, 02, 03, 04, 09, 78` dayanağı, Git'teki `94773211^:docs/arastirma/veri-kaynaklari.md` §1.1–1.2'dir.
+    `20261005-1949/olaylar.json` ham sağlayıcı başlıkları `05` için "Bedelsiz ve Nakit Temettü",
+    `06` için "Bedelli ve Nakit Temettü", `08` için "Bedelli, bedelsiz, nakit temettü" der.
+    Bu birleşik kodların kabulü, mevcut desteklenen olay türlerinden yapılan teknik çıkarımdır.
+    `07, 79, 89, 90, 91, 98, 99` ve bilinmeyen kodlar limit istisnası sağlamaz.
+    Süzme çarpanlar gruplanmadan önce yapılır; ham olaylar, E1 olay bağları ve olay denetimi bütün kodları korur.
   - L = %20 (30.11.2015 – 12.03.2020), %10 (13.03.2020 sonrası). Baz fiyatın önceki ham kapanış olduğu ±%10 döneminde
     veriyle doğrulandı.
   (İ: 01-024, 02-033, 07-060; "baz fiyat" adı: bilet 03, sözlük denetimi)
@@ -920,6 +927,16 @@ Getiri görülmeden yazılır; kural kaydına girer. (B-7, İ: 19-015)
   pozisyonları oynatmamalı. Rapor ve `sorunlar` günü tarihle yazar ("kaynak günü hatası: YYYY-AA-GG"). Gün
   karantina sayısına girmez. Alt sınır 20 satır: tek sembollü sentetik sınama günleri ve çok az sembollü
   erken günler kaynak günü sayılmaz.
+  #188: `Anlik.hesap_fiyati`, kalite tablosunu sembol ve tarihle eşleyen tek önbellekli hesap görünümüdür.
+  Yalnız `eksik` satırların fiyat ve TL hacim alanları NaN olur; sıradan işlemsiz gün ve tekil karantina fiyatları korunur.
+  Ham görüntü ve E1 piyasa kaydındaki gözlenmiş fiyat/hacim alanları değişmez.
+  Eski motor, çift gözlemleri ve E1 hesap matrisleri bu görünümü kullanır; E2, E1'in `eksik` bayrağını hesap girdisine uygular.
+  Son geçerli değerleme fiyatı taşıma ve iki eski kalite politikasının sonsuz fiyat ayrımı değişmez (§5.15).
+  Yalnız hacmi NaN olan satır da kısmi eksiktir ve karantinaya girer; sıfır hacim sıradan işlemsiz gündür.
+  Uygulama ve sınama: `tests/test_kapilar.py`, izinli/izinsiz ve karma olayları, hacim NaN/0 ayrımını,
+  motor giriş/çıkışını, kaynak günü sonrası göstergeyi, E1 kanıtını, E2 ve çift gözlemlerini, ham dosyaları ve hesap görünümünü korumayı denetler.
+  `tests/test_aileler.py`, ısınması tamamlanmış E2 yolunda da sayısal gözlem taşıyan eksik günün sinyal ve SMA üretmediğini denetler.
+  `tests/test_gelecek.py`, kaynak günü öncesi, günü ve sonrası kesimlerde hesap görünümünün, motorun ve E2 EMA/çift hesabının önek değişmezliğini kapsar.
 - **Oran eşikleri:** karantina hisse-gün oranı > %1 ya da olay denetimi farkı olan gün oranı > %2 ise
   koşu "veri sorunlu" olur. Eşik değerleri değişmez.
   - **Payda ve pay yalnız evren üyesi hisse-günlerdir** (bilet 10 kararı): sınama yalnız evren üyelerinde işlem
