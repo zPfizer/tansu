@@ -6,6 +6,8 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ## [Yayımlanmamış]
 
+- Günlük koşu en geniş doğrulanmış tabanı, eşitlikte en yeni kimliği seçer; veri kapısının iki oran teriminde aynı tabanın tarihli üyeleri kullanılır ve önceki kart hisseleri indirmede korunur. Kesilen sektör indirmesi kapsam özetiyle başarısız çıkış verir. (#189)
+
 - Claude düzenleme kancasına saf refaktör için oturuma ve çalışma klasörüne bağlı önce/sonra test kanıtı eklendi. Olağan test değişikliği yolu korundu; başarılı son kontrol refaktör iznini kapatır.
 
 - Belge akışının kapanışı tüm ilgili kontrollerden sonraya taşındı. Davranışı koruyan kod düzenlemelerinin önce ve sonra aynı testlerle doğrulanması ortak test kuralında açıklandı; yeni davranış ve hata düzeltmelerinde önce başarısız, sonra başarılı test şartı korundu.
