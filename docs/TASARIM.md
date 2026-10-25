@@ -1804,8 +1804,15 @@ giriş çeyreğinin her biri ve son kontrolü bulunan her sembol için `kapali_i
 boş hücre sıfırdır. Girişi olmayan bekleyen aday bu sayımda işlem değildir.
 Q2'de girip Q3'te kapanan işlem nihai Q2 kapalı sayımında bir kez yer alır;
 kapanış çeyreğine taşınmaz. Açık ufuk işlemi kapalı sayılmaz.
-Birleşik ölçüler ve bu nihai sayımlar aynı saf hesap sahibini kullanır. Bitişin
-ölçü alanı boştur; tamamlanan, denenen, başarısız ve başlamayan sayıları gerçek
+Birleşik ölçüler ve bu nihai sayımlar aynı saf hesap sahibini kullanır.
+`ileri_ozeti`, mevcut işlem kimliği ve içerik denetimini sembole ayırmadan önce
+uygular. Aynı nihai işlemin eş içerikli kopyaları ilk görülme sırasıyla tek kez
+alınır; ölçüler, eğri, eğri başvuruları, düşüş ve giriş kohortları bu ortak diziyi
+kullanır. Aynı kimliğin çelişen içeriği, sembolü farklı olsa da reddedilir. Açık
+ve kısmi sonuçların muhasebesi değişmez. Bu düzeltme uygulandı (#192).
+`tests/test_istatistik.py` genel özet yüzünde bir ve iki eş kopyayı, mevcut iki
+kimlik konumunu, açık kısmi sonucu ve çelişen kopyanın reddini sınar.
+Bitişin ölçü alanı boştur; tamamlanan, denenen, başarısız ve başlamayan sayıları gerçek
 çeyrek makbuzlarından türetilir. Birleşik sonuç yazılmadan duran hata bitişi de
 yalnız doğrulanmış önceki çeyrekleri muhasebeleştirir.
 Birleşik makbuzu olmayan olağandışı hata bitişi, `ozetler.hata` alanında yakalanan
