@@ -6,6 +6,8 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ## [Yayımlanmamış]
 
+- S12 açıklama düzeltmeleri özgün kayıt ve kimlikler korunarak ayrı olay olarak doğrulanır; kapanmış koşunun tamamlanmış çıktısına açıklama eklenebilir. Yeni ayar revizyonu yazılmadan önce okuyucuyla aynı tam doğrulamadan geçer. (#190)
+
 - Claude düzenleme kancasına saf refaktör için oturuma ve çalışma klasörüne bağlı önce/sonra test kanıtı eklendi. Olağan test değişikliği yolu korundu; başarılı son kontrol refaktör iznini kapatır.
 
 - Belge akışının kapanışı tüm ilgili kontrollerden sonraya taşındı. Davranışı koruyan kod düzenlemelerinin önce ve sonra aynı testlerle doğrulanması ortak test kuralında açıklandı; yeni davranış ve hata düzeltmelerinde önce başarısız, sonra başarılı test şartı korundu.
