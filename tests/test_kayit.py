@@ -545,6 +545,14 @@ def test_pilot_revizyonlar_eklenir_katalog_ve_eski_sayim_korunur(tmp_path):
     }
     assert kayit.kayitla(P, ATR_N)["kural_id"] == once_kural
     assert kayit.deneme_sayisi() == once_sayim
+    son = depo.yol.read_bytes()
+    okuyucu = pilot.PilotKayit(depo.yol)
+    for makbuz in (ilk, ikinci, geri, ayni):
+        revizyon = okuyucu.deneme_oku(makbuz.deneme_id)
+        assert revizyon["kayit_id"] == makbuz.olay_id
+        assert revizyon["ayar_parmak_izi"] == makbuz.ayar_ozeti
+        assert revizyon["veri_ayarlari"]["veri_referanslari"] == ["ag-1"]
+    assert depo.yol.read_bytes() == son
 
 
 def pilot_kosu(depo, deneme_id, **degisiklik):
@@ -1030,6 +1038,29 @@ def test_pilot_gecersiz_revizyon_yazilmaz(tmp_path, degisiklik):
     with pytest.raises(ValueError):
         pilot_deneme(depo, **degisiklik)
     assert depo.oku() == []
+
+
+@pytest.mark.parametrize("referanslar", ["ag-1", [""], ["ag-1", 42]])
+@pytest.mark.parametrize("mevcut", [False, True])
+def test_pilot_veri_referansi_yazma_onayindan_once_dogrulanir(
+    tmp_path, referanslar, mevcut
+):
+    depo = pilot.PilotKayit(tmp_path / "olaylar.jsonl")
+    if mevcut:
+        pilot_deneme(depo)
+    once = depo.yol.read_bytes() if depo.yol.exists() else b""
+    makbuz, hata = None, None
+    try:
+        makbuz = pilot_deneme(
+            depo, veri_ayarlari={"kaynak": "yerel", "veri_referanslari": referanslar}
+        )
+    except pilot.PilotHatasi as exc:
+        hata = exc
+    assert makbuz is None and hata is not None, (
+        "Okuyucunun reddettiği veri referansı yazma makbuzu alamaz"
+    )
+    assert (depo.yol.read_bytes() if depo.yol.exists() else b"") == once
+    assert len(pilot.PilotKayit(depo.yol).oku()) == int(mevcut)
 
 
 def test_pilot_izgara_wf_mc_ve_islem_baglari(tmp_path):
@@ -3067,6 +3098,81 @@ def test_grup_pay_kimligi_gecmisi_guncel_tabloyu_okumaz(tmp_path, monkeypatch):
     depo.yol.write_bytes(pilot.kanonik(olay) + b"\n")
     with pytest.raises(pilot.PilotHatasi, match="Bozuk tam satır"):
         pilot.PilotKayit(depo.yol).oku()
+
+
+@pytest.mark.parametrize("hedef_turu", ["revizyon", "tamamlanan_sonuc"])
+def test_s12_duzeltme_ozgun_kaydi_ve_sahibini_taze_okumada_korur(
+    tmp_path, monkeypatch, hedef_turu
+):
+    from tests.test_tansusinama import s12_kayitli
+    from tansu.tansusinama import kayitli_ileri_calistir
+
+    depo, revizyon, _ = s12_kayitli(tmp_path, monkeypatch)
+    hedef_id = revizyon.olay_id
+    if hedef_turu == "tamamlanan_sonuc":
+
+        def durdur(mesaj):
+            raise RuntimeError("ilk çeyrek yayımlandı")
+
+        with pytest.raises(RuntimeError, match="ilk çeyrek yayımlandı") as kesinti:
+            kayitli_ileri_calistir(
+                depo,
+                revizyon.deneme_id,
+                veri_koku=tmp_path,
+                mod="gelistirme",
+                ilerleme=durdur,
+            )
+        ceyrek = kesinti.value.sonuc["bolumler"][0]
+        assert ceyrek["durum"] == "tamamlandi"
+        hedef_id = ceyrek["sonuc_ref"]
+        assert depo.izle(hedef_id)["durum"] == "hata"
+    onceki = depo.oku()
+    hedef = next(o for o in onceki if o["kayit_id"] == hedef_id)
+    once = depo.yol.read_bytes()
+    makbuz, hata = None, None
+    try:
+        makbuz = depo.duzelt(
+            hedef_id, gerekce="kaynak açıklaması", yeni_degerler={"uyarilar": ["not"]}
+        )
+    except pilot.PilotHatasi as exc:
+        hata = str(exc)
+    assert makbuz is not None, f"Geçerli açıklama düzeltmesi reddedildi: {hata}"
+    assert depo.yol.read_bytes().startswith(once)
+    okuyucu = pilot.PilotKayit(depo.yol)
+    olaylar = okuyucu.oku()
+    assert olaylar[:-1] == onceki
+    duzeltme = olaylar[-1]
+    assert duzeltme["kayit_id"] == makbuz.olay_id
+    assert duzeltme["hedef_olay"] == hedef_id
+    assert duzeltme["yeni_degerler"] == {"uyarilar": ["not"]}
+    for alan in ("deneme_id", "kosu_id", "ayar_parmak_izi"):
+        assert duzeltme[alan] == hedef.get(alan)
+    assert okuyucu.deneme_oku(revizyon.deneme_id)["kayit_id"] == revizyon.olay_id
+    if hedef_turu == "tamamlanan_sonuc":
+        iz = okuyucu.izle(hedef_id)
+        assert iz["durum"] == "hata"
+        assert iz["sonuc"]["kayit"]["durum"] == "tamamlandi"
+        assert iz["sonuc"] == hedef
+        assert iz["duzeltmeler"] == [duzeltme]
+    son = depo.yol.read_bytes()
+    for alan in ("deneme_id", "kosu_id", "ayar_parmak_izi", "strateji", "durum"):
+        with pytest.raises(pilot.PilotHatasi, match="kimlik, ayar veya durum"):
+            depo.duzelt(hedef_id, gerekce="yasak", yeni_degerler={alan: "degisti"})
+        assert depo.yol.read_bytes() == son
+    for alan in ("hedef_olay", "deneme_id", "kosu_id", "ayar_parmak_izi", "kaynaklar"):
+        bozuk = deepcopy(duzeltme)
+        bozuk[alan] = "kayitsiz" if alan != "kaynaklar" else []
+        yol = tmp_path / f"bozuk-duzeltme-{alan}.jsonl"
+        yol.write_bytes(once + pilot.kanonik(bozuk) + b"\n")
+        with pytest.raises(pilot.PilotHatasi):
+            pilot.PilotKayit(yol).oku()
+    bozuk = deepcopy(duzeltme)
+    bozuk["yeni_degerler"] = {"durum": "hata"}
+    yol = tmp_path / "bozuk-duzeltme-durum.jsonl"
+    yol.write_bytes(once + pilot.kanonik(bozuk) + b"\n")
+    with pytest.raises(pilot.PilotHatasi):
+        pilot.PilotKayit(yol).oku()
+    assert depo.yol.read_bytes() == son
 
 
 def test_s12_okuyucu_ust_revizyonu_tek_basina_dogrular(tmp_path, monkeypatch):

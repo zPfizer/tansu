@@ -1754,7 +1754,9 @@ okumada çalışır. Okuyucu yalnız doğrulanmış önceki kayıtları kullanı
 bir kayıt eksik veya yetim bağı tamamlayamaz. WF üst revizyonu tek başına tam yöntem,
 strateji ve ayar özetiyle doğrulanır. Üst revizyon, başlangıç, seçim, sinyal, kontrol, nihai
 işlem, bölüm/birleşik sonuç ve bitiş bağları aynı sınırdan geçer. Bilinmeyen WF
-sürümü/rolü, başka sahip veya bitmiş koşuya ek olay reddedilir. WF türü yalnız olayın
+sürümü/rolü, başka sahip veya bitmiş koşuya yeni yürütme olayı reddedilir.
+S03 açıklama düzeltmesi kendi hedef ve sahip denetiminden geçer; tamamlanmış
+çıktıya eklenebilir ve koşuyu yeniden açmaz. WF türü yalnız olayın
 beyan ettiği üst kimliğinden çıkarılmaz. Doğrulanmış koşu başlangıcı, tam ayar özeti,
 WF kod kimliği, olayın WF yöntem kaydı ve kayıtlı çeyrek iş listesi de türü belirler. Başlangıç veya bitiş başka bir eski denemeye
 yönlendirilerek bu sınır atlanamaz. Aynı kod kimliğini kullanan kayıtlı eğitim
@@ -2166,12 +2168,18 @@ Başlangıç yazılamazsa bağlam gövdesi çalışmaz; süren koşudaki
 yazma hatası görünür hatayla dışarı çıkar. Tamamlanmamış son satır kurtarmada uyarı olarak kalır;
 önceki tam satırlar okunur. Sonraki ekleme eksik kuyruğu tamamlanmış olay yapmaz. Bitişsiz başlangıç
 çözümsüzdür; bağlamdan bitiş bildirmeden çıkmak kendiliğinden başarı üretmez. Düzeltmeler yalnız
-eklenir; düzeltme kimlik ve ayar bağlarını geriye dönük değiştirmez.
+eklenir; düzeltme kimlik ve ayar bağlarını geriye dönük değiştirmez. Düzeltmenin
+hedefi, özgün sahibi ve izinli alanları yazmada ve yeniden okumada aynı denetimden
+geçer. Yeni revizyon tam kurulup okuyucunun ortak ayar doğrulayıcısından geçmeden
+yazılmaz; veri başvuruları boş olmayan metinlerin listesi veya demetidir.
 
 Geri dönüşte pilot yazımı durdurulur ve eski uyarlayıcı kullanılır. Pilot dosyaları ve okuyucuları
 korunur. Pilot tek başına günlük listeyi veya eski sınamayı yeni kayıtlarla bağlamaz; S07 bu aktarımı sağlar. Hesap formülleri
 değişmediğinden `tests/test_gelecek.py` kapsamına yeni hesap eklenmez. Kayıt sınırının davranış
-testleri `tests/test_kayit.py` dosyasındadır.
+testleri `tests/test_kayit.py` dosyasındadır. S12 revizyonuna ve kapanmış koşunun
+tamamlanmış çeyrek çıktısına açıklama ekleme, özgün bayt ve sahiplerin korunması,
+bozuk düzeltmenin taze okumada reddi ve geçersiz veri başvurusunun makbuzdan önce
+reddi bu dosyada genel yüzlerden sınanır (#190).
 
 #### Strateji kataloğu (S02, #83)
 

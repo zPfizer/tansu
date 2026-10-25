@@ -125,6 +125,49 @@ def _metin(deger):
         raise PilotHatasi("Boş olmayan metin gerekli.")
 
 
+def _duzeltme_olayi_dogrula(olaylar, o):
+    """TASARIM 5.15 S03: açıklama düzeltmesi koşuyu yeniden açmaz."""
+    _metin(o["neden"])
+    yeni = o["yeni_degerler"]
+    if not isinstance(yeni, dict) or not yeni:
+        raise PilotHatasi("Yeni değerler gerekli.")
+    if yeni.keys() & {
+        "kayit_id",
+        "kayit_turu",
+        "sema_surumu",
+        "deneme_id",
+        "kosu_id",
+        "ayar_parmak_izi",
+        "baglar",
+        "strateji",
+        "durum",
+    }:
+        raise PilotHatasi("Düzeltme kimlik, ayar veya durum değiştiremez.")
+    hedef = _bul(olaylar, o["hedef_olay"])
+    beklenen = dict(
+        kayit_turu="duzeltme",
+        hedef_olay=hedef["kayit_id"],
+        neden=o["neden"],
+        yeni_degerler=yeni,
+        deneme_id=hedef.get("deneme_id"),
+        kosu_id=hedef.get("kosu_id"),
+        ayar_parmak_izi=hedef.get("ayar_parmak_izi"),
+        kaynaklar=hedef["kaynaklar"],
+        bos_nedenleri={"kosu_id": "Revizyon düzeltmesi."}
+        if not hedef.get("kosu_id")
+        else {},
+    )
+    meta = {"kayit_id", "sema_surumu", "olusturma_zamani"}
+    _metin(o["kayit_id"])
+    if (
+        o["sema_surumu"] != SURUM
+        or type(o["olusturma_zamani"]) is not datetime
+        or any(x["kayit_id"] == o["kayit_id"] for x in olaylar)
+        or kanonik({k: v for k, v in o.items() if k not in meta}) != kanonik(beklenen)
+    ):
+        raise PilotHatasi("Düzeltme hedefi, sahibi veya olay alanları geçersiz.")
+
+
 def _ondaliklar(deger):
     if type(deger) in (int, float):
         raise PilotHatasi("Risk ve masraf sayıları Decimal olmalıdır.")
@@ -210,7 +253,7 @@ def _ayarlar(kayit):
         if not isinstance(kayit[ad], dict):
             raise PilotHatasi(f"{ad} nesne olmalıdır.")
     _veri_kapsamini_dogrula(
-        kayit["donemler"], kayit["veri_ayarlari"]["veri_referanslari"]
+        kayit["donemler"], kayit["veri_ayarlari"].get("veri_referanslari")
     )
     tekrar = kayit["yontem_ayarlari"].get("tekrar", 0)
     if type(tekrar) is not int or tekrar < 0:
@@ -2392,12 +2435,14 @@ class PilotKayit:
                 olay = _coz(json.loads(satir))
                 if olay["sema_surumu"] != SURUM or kanonik(olay) + b"\n" != satir:
                     raise ValueError("Şema veya kodlama uyuşmuyor.")
-                if olay.get("kayit_turu") != "grup_hazirligi":
-                    _isinma_olayi_dogrula(olaylar, olay)
-                if olay.get("kayit_turu") == "grup_hazirligi":
+                if olay.get("kayit_turu") == "duzeltme":
+                    _duzeltme_olayi_dogrula(olaylar, olay)
+                elif olay.get("kayit_turu") == "grup_hazirligi":
                     _grup_olayi_dogrula(olay)
-                elif _ileri_kaydi_mi(olaylar, olay):
-                    _ileri_olayi_dogrula(olaylar, olay)
+                else:
+                    _isinma_olayi_dogrula(olaylar, olay)
+                    if _ileri_kaydi_mi(olaylar, olay):
+                        _ileri_olayi_dogrula(olaylar, olay)
             except (ValueError, KeyError, TypeError, IndexError) as hata:
                 raise PilotHatasi(f"Bozuk tam satır: {no}") from hata
             olaylar.append(olay)
@@ -2656,21 +2701,6 @@ class PilotKayit:
         }
 
     def duzelt(self, hedef_olay, *, gerekce, yeni_degerler):
-        _metin(gerekce)
-        if not isinstance(yeni_degerler, dict) or not yeni_degerler:
-            raise PilotHatasi("Yeni değerler gerekli.")
-        if yeni_degerler.keys() & {
-            "kayit_id",
-            "kayit_turu",
-            "sema_surumu",
-            "deneme_id",
-            "kosu_id",
-            "ayar_parmak_izi",
-            "baglar",
-            "strateji",
-            "durum",
-        }:
-            raise PilotHatasi("Düzeltme kimlik, ayar veya durum değiştiremez.")
         try:
             hedef = _bul(self.oku(), hedef_olay)
         except OSError as hata:
@@ -2725,9 +2755,12 @@ class PilotKayit:
                 olaylar, _ = self._oku()
                 if denetle:
                     denetle(olaylar)
-                _isinma_olayi_dogrula(olaylar, olay)
-                if _ileri_kaydi_mi(olaylar, olay):
-                    _ileri_olayi_dogrula(olaylar, olay)
+                if olay.get("kayit_turu") == "duzeltme":
+                    _duzeltme_olayi_dogrula(olaylar, olay)
+                else:
+                    _isinma_olayi_dogrula(olaylar, olay)
+                    if _ileri_kaydi_mi(olaylar, olay):
+                        _ileri_olayi_dogrula(olaylar, olay)
                 ham = self.yol.read_bytes() if self.yol.exists() else b""
                 if ham and not ham.endswith(b"\n"):
                     satir = _KESIK + satir
@@ -2773,40 +2806,7 @@ class PilotKayit:
     ):
         _metin(aktor)
         _metin(gerekce)
-        for ayar in (
-            veri_ayarlari,
-            yontem_ayarlari,
-            risk_ayarlari,
-            masraf_ayarlari,
-            eski_referans,
-        ):
-            if not isinstance(ayar, dict):
-                raise PilotHatasi("Ayarlar nesne olmalıdır.")
-        if (
-            not isinstance(donemler, list)
-            or not donemler
-            or not veri_ayarlari.get("veri_referanslari")
-        ):
-            raise PilotHatasi("Dönem ve veri referansı gerekli.")
-        for donem in donemler:
-            _donem(donem)
-        tekrar = yontem_ayarlari.get("tekrar", 0)
-        if type(tekrar) is not int or tekrar < 0:
-            raise PilotHatasi("Tekrar negatif olmayan tamsayı olmalıdır.")
-        for ad, deger in eski_referans.items():
-            if deger is None:
-                _metin(eski_referans.get("bos_nedenleri", {}).get(ad))
-        _ondaliklar(risk_ayarlari)
-        _ondaliklar(masraf_ayarlari)
         strateji = _strateji_kaydi(varyant)
-        ayarlar = {
-            "strateji": {k: v for k, v in strateji.items() if k != "olusturma_zamani"},
-            "donemler": donemler,
-            "veri_ayarlari": veri_ayarlari,
-            "yontem_ayarlari": yontem_ayarlari,
-            "risk_ayarlari": risk_ayarlari,
-            "masraf_ayarlari": masraf_ayarlari,
-        }
         baglar = {} if baglar is None else baglar
         if not isinstance(baglar, dict):
             raise PilotHatasi("Bağlar nesne olmalıdır.")
@@ -2832,26 +2832,29 @@ class PilotKayit:
             if any(r not in idler for r in referanslar):
                 raise PilotHatasi("Deneme bağı bulunamadı.")
 
-        return self._ekle(
-            {
-                "kayit_turu": "deneme",
-                "deneme_id": f"{SURUM}:d:{uuid4()}",
-                "kimlik_bicimi_surumu": SURUM,
-                "olusturan": aktor,
-                "neden": gerekce,
-                **ayarlar,
-                "strateji": strateji,
-                "ust_deneme_id": ust_deneme,
-                "eski_referans": eski_referans,
-                "baglar": baglar,
-                "kaynaklar": strateji["kaynaklar"],
-                "bos_nedenleri": {"ust_deneme_id": "Kök deneme."}
-                if ust_deneme is None
-                else {},
-                "ayar_parmak_izi": _ayar_ozeti(ayarlar),
-            },
-            denetle,
-        )
+        olay = {
+            "kayit_turu": "deneme",
+            "deneme_id": f"{SURUM}:d:{uuid4()}",
+            "kimlik_bicimi_surumu": SURUM,
+            "olusturan": aktor,
+            "neden": gerekce,
+            "strateji": strateji,
+            "donemler": donemler,
+            "veri_ayarlari": veri_ayarlari,
+            "yontem_ayarlari": yontem_ayarlari,
+            "risk_ayarlari": risk_ayarlari,
+            "masraf_ayarlari": masraf_ayarlari,
+            "ust_deneme_id": ust_deneme,
+            "eski_referans": eski_referans,
+            "baglar": baglar,
+            "kaynaklar": strateji["kaynaklar"],
+            "bos_nedenleri": {"ust_deneme_id": "Kök deneme."}
+            if ust_deneme is None
+            else {},
+        }
+        # TASARIM 5.15 S03: yazma ve taze okuma aynı tam ayarı kabul eder.
+        olay["ayar_parmak_izi"] = _ayar_ozeti(_ayarlar(olay))
+        return self._ekle(olay, denetle)
 
 
 def _bul(olaylar, kimlik, tur=None, alan="kayit_id"):
