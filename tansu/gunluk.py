@@ -6,6 +6,7 @@ import json
 import math
 import os
 import shutil
+from dataclasses import dataclass
 from pathlib import Path
 
 import pandas as pd
@@ -96,7 +97,7 @@ def _kart(anlik, s, m, p, kanit) -> list | dict:
     # TASARIM 5.15 S08: açık risk isteği eski CSV/kart günlüğünü değiştirmez.
     if getattr(p, "risk_girdisi", None) is not None:
         return {"hisse": s, "kanit": kanit, **islem_riski.hesapla(p.risk_girdisi)}
-    f = anlik.fiyat[anlik.fiyat["sembol"] == s].set_index("tarih")
+    f = anlik.hesap_fiyati[anlik.hesap_fiyati["sembol"] == s].set_index("tarih")
     sinyal = p.sinyal_tarih
     ref, oran = (
         f.at[sinyal, "ham_kapanis"],
@@ -231,16 +232,42 @@ def _acik_hisseler() -> set:
     )
 
 
-def _semboller(kok: Path, tarih) -> list:
-    """Bugünkü evren (en çok sembollü son tam anlık görüntüden) ve açık kartların hisseleri (TASARIM 6.2)."""
-    klasorler = sorted((kok / "ag").glob("2*"))
-    if not klasorler:
-        raise veri.VeriHatasi(
-            "evren için tam anlık görüntü yok: önce `python -m tansu evren-indir` çalıştır"
+@dataclass(frozen=True)
+class _GunlukTaban:
+    """İndirme ve tarihli kapı üyeliğinin ortak tam tabanı (TASARIM 5.13, 6.2)."""
+
+    anlik: veri.Anlik
+
+    @classmethod
+    def oku(cls, kok: Path):
+        adaylar = []
+        for klasor in (kok / "ag").glob("2*"):
+            manifest = json.loads(
+                (klasor / "manifest.json").read_text(encoding="utf-8")
+            )
+            adaylar.append((len(set(manifest["semboller"])), klasor.name))
+        if not adaylar:
+            raise veri.VeriHatasi(
+                "evren için tam anlık görüntü yok: önce `python -m tansu evren-indir` çalıştır"
+            )
+        return cls(veri.oku(max(adaylar)[1], kok))
+
+    def semboller(self, tarih) -> list:
+        ay = min(tarih, self.anlik.gunler[-1])
+        return sorted(set(evren.evren(self.anlik, ay)) | _acik_hisseler())
+
+    def uyeler(self, anlik) -> pd.DataFrame:
+        f = anlik.fiyat
+        aylar = (
+            f.loc[f["tarih"] >= pd.Timestamp(simulator.BASLANGIC), "tarih"]
+            .dt.to_period("M")
+            .unique()
         )
-    taban = veri.oku(klasorler[-1].name, kok)
-    ay = min(tarih, taban.gunler[-1])  # taban eskiyse tabanın son ayının evreni (YORUM)
-    return sorted(set(evren.evren(taban, ay)) | _acik_hisseler())
+        evrenler = {
+            ay: evren.evren(self.anlik, min(ay.to_timestamp(), self.anlik.gunler[-1]))
+            for ay in aylar
+        }
+        return simulator.uyeler(anlik, evrenler, pd.Timestamp(simulator.BASLANGIC))
 
 
 def _temizle(kok: Path) -> None:
@@ -253,11 +280,15 @@ def _temizle(kok: Path) -> None:
             shutil.rmtree(d, ignore_errors=True)
 
 
-def _kapi_sorunlari(anlik, son) -> list:
+def _kapi_sorunlari(anlik, son, taban=None) -> list:
     """Veri kapıları evren üyesi hisse-günlerde (TASARIM 5.13). Geçmişteki kaynak günleri eksik gün olarak zaten
     işlenir; yalnız bugünün kaynak günü hatası kartı durdurur."""
     f = anlik.fiyat
-    uye = f.loc[f["tarih"] >= pd.Timestamp(simulator.BASLANGIC), ["sembol", "tarih"]]
+    uye = (
+        taban.uyeler(anlik)
+        if taban is not None
+        else f.loc[f["tarih"] >= pd.Timestamp(simulator.BASLANGIC), ["sembol", "tarih"]]
+    )
     bugun = f"kaynak günü hatası: {son.date()}"
     return [
         x
@@ -325,7 +356,8 @@ def gunluk(
                 "Koşu 18:15'ten önce başladı, kart üretilmedi (çubuk yarım olabilir). 18:15'ten sonra yeniden çalıştır.",
             )
         _temizle(kok)
-        semboller = semboller or _semboller(kok, tarih)
+        taban = None if semboller else _GunlukTaban.oku(kok)
+        semboller = semboller or taban.semboller(tarih)
         kimlik = veri.indir(
             semboller, kok / "gunluk", kaynak or kaynak_modulu.IsYatirim(), simdi=simdi
         )
@@ -341,7 +373,7 @@ def gunluk(
                 "Bugün işlem günü değil ya da çubuk yok; bir şey yapma.",
                 **bilgi,
             )
-        sorunlar = _kapi_sorunlari(anlik, son)
+        sorunlar = _kapi_sorunlari(anlik, son, taban)
         if sorunlar:
             return bitir(
                 "SORUNLU",

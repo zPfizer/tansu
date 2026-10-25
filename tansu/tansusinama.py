@@ -485,7 +485,7 @@ def cift_isleri(anlik, sektor, semboller, bas, izgara) -> tuple:
     olanı. Dönem başı: `bas` ve 252. ortak kapanış gününden geç olanından başlayarak (o gün dahil) iki bacağın da geçerli
     fiyat günü olduğu ilk gün; son güne dek yoksa, ya da 252 ortak gün yoksa çift sınanmaz."""
     gunler = anlik.gunler
-    f = anlik.fiyat[anlik.fiyat["sembol"].isin(semboller)]
+    f = anlik.hesap_fiyati[anlik.hesap_fiyati["sembol"].isin(semboller)]
     C = f.pivot(index="tarih", columns="sembol", values="kapanis").reindex(gunler)
     A = f.pivot(index="tarih", columns="sembol", values="aof").reindex(gunler)
     g = anlik.gun_tablosu
@@ -3075,10 +3075,6 @@ def kayitli_ileri_calistir(depo, ileri_deneme_id, *, veri_koku, mod, ilerleme=pr
                     b.update(kanit)
                     makbuz = kosu.ileri_sonucu_kaydet(kayit=b)
                     b["sonuc_ref"] = makbuz.olay_id
-                    if ilerleme:
-                        ilerleme(f"{b['bolum_id']}: {b['durum']}")
-                    if r["hatalar"]:
-                        break
                 except deneme_.PilotYazmaHatasi:
                     raise
                 except (
@@ -3097,6 +3093,10 @@ def kayitli_ileri_calistir(depo, ileri_deneme_id, *, veri_koku, mod, ilerleme=pr
                     b.update(kanit)
                     makbuz = kosu.ileri_sonucu_kaydet(kayit=b)
                     b["sonuc_ref"] = makbuz.olay_id
+                    break
+                if ilerleme:
+                    ilerleme(f"{b['bolum_id']}: {b['durum']}")
+                if r["hatalar"]:
                     break
             sonuc["islemler"] = list(yayimlanan.values())
             tamamlanan = [b["bolum_id"] for b in bolumler if b["durum"] == "tamamlandi"]

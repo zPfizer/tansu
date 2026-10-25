@@ -225,7 +225,9 @@ yükseği/düşüğüne koşullu. Ölçütler kısa kendi kodumuzdur. (A3, M1, S
     Bilet 07'de KAP ilk 100 sembolden sonra boş döndü; neden HTTP 429'dur (yaklaşık 100 sayfa isteği sonra).
     İstekler arası en az 1 sn, User-Agent `tansu-kisisel/0.1`; KAP şirket listesi bir kez, sembol
     başına bir şirket sayfası. Art arda 5 hata olursa durur; tamamlananlar `onbellek/` klasöründe kalır ve
-    yeniden çalıştırınca tekrar istenmez. KAP listesinde olmayan (işlemi kapanmış) kod sektörsüz kalır.
+    yeniden çalıştırınca tekrar istenmez. Kesilen komut kapsam özetini hatayla verir ve çıkış kodu 1 olur;
+    tamamlanan komut yeni kimliği ve kapsamı yazıp 0 döner (`tests/test_komut.py`, #189).
+    KAP listesinde olmayan (işlemi kapanmış) kod sektörsüz kalır.
   - **Anlık görüntü değişmez.** Eksik sektörler tamamlanınca yeni bir anlık görüntü yazılır: fiyat, olay ve
     faiz dosyaları aynen kopyalanır, `sektor.json` birleşir, manifest eski kimliği (`kaynak`) ve kapsamı
     (`sektor_kapsam`: hedef, var, listede olmayan, alınamayan) tutar. Koşu yeni kimlikle yapılır.
@@ -274,6 +276,13 @@ hatasından** ayırmak.
   - Bozuk satır (satır ihlali, 5.13) baz fiyat olmaz; baz, önceki tutarlı işlem gününün ham kapanışıdır. (vekil kararı 15.10, bilet 07e)
   - Olay çarpanını alan günde (adım günü, aşağıdaki karantina maddesi) baz fiyat = önceki ham kapanış × olay çarpanı. Kilit ve karantina bu baz fiyattan çıkan limitlerle
     yargılanır. Bilinmeyen olay kodu ya da çarpanı 1 olan kayıt istisna sayılmaz.
+  - #188: limit istisnasında yalnız `01, 02, 03, 04, 05, 06, 08, 09, 78` kodları çarpılır.
+    `01, 02, 03, 04, 09, 78` dayanağı, Git'teki `94773211^:docs/arastirma/veri-kaynaklari.md` §1.1–1.2'dir.
+    `20261005-1949/olaylar.json` ham sağlayıcı başlıkları `05` için "Bedelsiz ve Nakit Temettü",
+    `06` için "Bedelli ve Nakit Temettü", `08` için "Bedelli, bedelsiz, nakit temettü" der.
+    Bu birleşik kodların kabulü, mevcut desteklenen olay türlerinden yapılan teknik çıkarımdır.
+    `07, 79, 89, 90, 91, 98, 99` ve bilinmeyen kodlar limit istisnası sağlamaz.
+    Süzme çarpanlar gruplanmadan önce yapılır; ham olaylar, E1 olay bağları ve olay denetimi bütün kodları korur.
   - L = %20 (30.11.2015 – 12.03.2020), %10 (13.03.2020 sonrası). Baz fiyatın önceki ham kapanış olduğu ±%10 döneminde
     veriyle doğrulandı.
   (İ: 01-024, 02-033, 07-060; "baz fiyat" adı: bilet 03, sözlük denetimi)
@@ -920,6 +929,16 @@ Getiri görülmeden yazılır; kural kaydına girer. (B-7, İ: 19-015)
   pozisyonları oynatmamalı. Rapor ve `sorunlar` günü tarihle yazar ("kaynak günü hatası: YYYY-AA-GG"). Gün
   karantina sayısına girmez. Alt sınır 20 satır: tek sembollü sentetik sınama günleri ve çok az sembollü
   erken günler kaynak günü sayılmaz.
+  #188: `Anlik.hesap_fiyati`, kalite tablosunu sembol ve tarihle eşleyen tek önbellekli hesap görünümüdür.
+  Yalnız `eksik` satırların fiyat ve TL hacim alanları NaN olur; sıradan işlemsiz gün ve tekil karantina fiyatları korunur.
+  Ham görüntü ve E1 piyasa kaydındaki gözlenmiş fiyat/hacim alanları değişmez.
+  Eski motor, çift gözlemleri ve E1 hesap matrisleri bu görünümü kullanır; E2, E1'in `eksik` bayrağını hesap girdisine uygular.
+  Son geçerli değerleme fiyatı taşıma ve iki eski kalite politikasının sonsuz fiyat ayrımı değişmez (§5.15).
+  Yalnız hacmi NaN olan satır da kısmi eksiktir ve karantinaya girer; sıfır hacim sıradan işlemsiz gündür.
+  Uygulama ve sınama: `tests/test_kapilar.py`, izinli/izinsiz ve karma olayları, hacim NaN/0 ayrımını,
+  motor giriş/çıkışını, kaynak günü sonrası göstergeyi, E1 kanıtını, E2 ve çift gözlemlerini, ham dosyaları ve hesap görünümünü korumayı denetler.
+  `tests/test_aileler.py`, ısınması tamamlanmış E2 yolunda da sayısal gözlem taşıyan eksik günün sinyal ve SMA üretmediğini denetler.
+  `tests/test_gelecek.py`, kaynak günü öncesi, günü ve sonrası kesimlerde hesap görünümünün, motorun ve E2 EMA/çift hesabının önek değişmezliğini kapsar.
 - **Oran eşikleri:** karantina hisse-gün oranı > %1 ya da olay denetimi farkı olan gün oranı > %2 ise
   koşu "veri sorunlu" olur. Eşik değerleri değişmez.
   - **Payda ve pay yalnız evren üyesi hisse-günlerdir** (bilet 10 kararı): sınama yalnız evren üyelerinde işlem
@@ -1674,7 +1693,7 @@ kanıtlayabilir; başarılı dolum, kârlılık veya tam dönem getiri kanıtı 
 #### S12 kayıtlı ileri yürüme (#93)
 
 **Durum: dağıtıcı 21.10.2026 tarihinde `kayitli_ileri_v1` teknik yöntemini
-benimsedi; uygulandı. Bağımsız denetim ve tam veriyle sonuç kanıtı bekleniyor.** Dayanak [L3]–[L5], [W1], S11 ve
+benimsedi; uygulandı. Bu uygulamanın bağımsız incelemesi [#171](https://github.com/zPfizer/tansu/pull/171) kapsamında tamamlandı. Tam veriyle sonuç kanıtı bekleniyor.** Dayanak [L3]–[L5], [W1], S11 ve
 #93'tür. Kesin pencere ve kayıt biçimi proje yorumudur; strateji kabulü veya
 günlük etkinleştirme kararı değildir. Eski §5.14 genişleyen yıllık yöntem korunur.
 
@@ -1754,7 +1773,9 @@ okumada çalışır. Okuyucu yalnız doğrulanmış önceki kayıtları kullanı
 bir kayıt eksik veya yetim bağı tamamlayamaz. WF üst revizyonu tek başına tam yöntem,
 strateji ve ayar özetiyle doğrulanır. Üst revizyon, başlangıç, seçim, sinyal, kontrol, nihai
 işlem, bölüm/birleşik sonuç ve bitiş bağları aynı sınırdan geçer. Bilinmeyen WF
-sürümü/rolü, başka sahip veya bitmiş koşuya ek olay reddedilir. WF türü yalnız olayın
+sürümü/rolü, başka sahip veya bitmiş koşuya yeni yürütme olayı reddedilir.
+S03 açıklama düzeltmesi kendi hedef ve sahip denetiminden geçer; tamamlanmış
+çıktıya eklenebilir ve koşuyu yeniden açmaz. WF türü yalnız olayın
 beyan ettiği üst kimliğinden çıkarılmaz. Doğrulanmış koşu başlangıcı, tam ayar özeti,
 WF kod kimliği, olayın WF yöntem kaydı ve kayıtlı çeyrek iş listesi de türü belirler. Başlangıç veya bitiş başka bir eski denemeye
 yönlendirilerek bu sınır atlanamaz. Aynı kod kimliğini kullanan kayıtlı eğitim
@@ -1792,6 +1813,9 @@ Birleşik eğri bağımsız yılları toplamaz. Eğitim sonucu test
 kapsamındaki açığı doldurmaz. Tamamlanan, başarısız ve başlamayan çeyrekler ayrıdır.
 Kayıt hatası bağımlı hesabı durdurur; doğrulanmış önceki makbuzlar korunur;
 belirsiz yayın S03 kurtarma yolunu kullanır.
+İlerleme bildirimi kesin çeyrek yayınından sonra, hesap ve yayın hata sınırının
+dışında çalışır. Bildirim hatası aynı hata olarak çağırana döner; eklenmiş
+çeyrek sonucu ve tek kesin makbuz korunur. Bitiş sayımları gerçek makbuzlardan gelir.
 
 Çeyreğin `sayimlar` alanı o kontrol noktasındaki gözlemdir; sonradan değiştirilmez.
 `kapali_islem`, fiili girişi o çeyrekte olan ve o çeyrek sonunda kapanmış işlem
@@ -1804,8 +1828,15 @@ giriş çeyreğinin her biri ve son kontrolü bulunan her sembol için `kapali_i
 boş hücre sıfırdır. Girişi olmayan bekleyen aday bu sayımda işlem değildir.
 Q2'de girip Q3'te kapanan işlem nihai Q2 kapalı sayımında bir kez yer alır;
 kapanış çeyreğine taşınmaz. Açık ufuk işlemi kapalı sayılmaz.
-Birleşik ölçüler ve bu nihai sayımlar aynı saf hesap sahibini kullanır. Bitişin
-ölçü alanı boştur; tamamlanan, denenen, başarısız ve başlamayan sayıları gerçek
+Birleşik ölçüler ve bu nihai sayımlar aynı saf hesap sahibini kullanır.
+`ileri_ozeti`, mevcut işlem kimliği ve içerik denetimini sembole ayırmadan önce
+uygular. Aynı nihai işlemin eş içerikli kopyaları ilk görülme sırasıyla tek kez
+alınır; ölçüler, eğri, eğri başvuruları, düşüş ve giriş kohortları bu ortak diziyi
+kullanır. Aynı kimliğin çelişen içeriği, sembolü farklı olsa da reddedilir. Açık
+ve kısmi sonuçların muhasebesi değişmez. Bu düzeltme uygulandı (#192).
+`tests/test_istatistik.py` genel özet yüzünde bir ve iki eş kopyayı, mevcut iki
+kimlik konumunu, açık kısmi sonucu ve çelişen kopyanın reddini sınar.
+Bitişin ölçü alanı boştur; tamamlanan, denenen, başarısız ve başlamayan sayıları gerçek
 çeyrek makbuzlarından türetilir. Birleşik sonuç yazılmadan duran hata bitişi de
 yalnız doğrulanmış önceki çeyrekleri muhasebeleştirir.
 Birleşik makbuzu olmayan olağandışı hata bitişi, `ozetler.hata` alanında yakalanan
@@ -1813,7 +1844,9 @@ hatanın metnini gözlem olarak saklayabilir; bu metin sayım veya başarı kan�
 Eğitimde 120, testte 30 kapalı işlem
 altı yalnız örneklem uyarısıdır; ret veya günlük uygunluk eşiği değildir.
 `tests/test_tansusinama.py` genel girişte takvim, makbuz sırası, sürekli durum,
-seçimsiz dönem ve açık ufku; `tests/test_kayit.py` değişmez bağları ve tek yayını;
+seçimsiz dönem, açık ufuk ve yayın sonrası `ValueError`/`OSError` bildiriminde
+asıl hatayı, değişmeyen çeyreği, tek makbuzu ve bitiş sayımlarını;
+`tests/test_kayit.py` değişmez bağları ve tek yayını;
 `tests/test_saglamlik.py` durum aktarımını; `tests/test_gelecek.py` eğitim
 kesiminden sonraki fiyat ve sonuçların eski seçimi değiştirmemesini sınar.
 
@@ -2166,12 +2199,18 @@ Başlangıç yazılamazsa bağlam gövdesi çalışmaz; süren koşudaki
 yazma hatası görünür hatayla dışarı çıkar. Tamamlanmamış son satır kurtarmada uyarı olarak kalır;
 önceki tam satırlar okunur. Sonraki ekleme eksik kuyruğu tamamlanmış olay yapmaz. Bitişsiz başlangıç
 çözümsüzdür; bağlamdan bitiş bildirmeden çıkmak kendiliğinden başarı üretmez. Düzeltmeler yalnız
-eklenir; düzeltme kimlik ve ayar bağlarını geriye dönük değiştirmez.
+eklenir; düzeltme kimlik ve ayar bağlarını geriye dönük değiştirmez. Düzeltmenin
+hedefi, özgün sahibi ve izinli alanları yazmada ve yeniden okumada aynı denetimden
+geçer. Yeni revizyon tam kurulup okuyucunun ortak ayar doğrulayıcısından geçmeden
+yazılmaz; veri başvuruları boş olmayan metinlerin listesi veya demetidir.
 
 Geri dönüşte pilot yazımı durdurulur ve eski uyarlayıcı kullanılır. Pilot dosyaları ve okuyucuları
 korunur. Pilot tek başına günlük listeyi veya eski sınamayı yeni kayıtlarla bağlamaz; S07 bu aktarımı sağlar. Hesap formülleri
 değişmediğinden `tests/test_gelecek.py` kapsamına yeni hesap eklenmez. Kayıt sınırının davranış
-testleri `tests/test_kayit.py` dosyasındadır.
+testleri `tests/test_kayit.py` dosyasındadır. S12 revizyonuna ve kapanmış koşunun
+tamamlanmış çeyrek çıktısına açıklama ekleme, özgün bayt ve sahiplerin korunması,
+bozuk düzeltmenin taze okumada reddi ve geçersiz veri başvurusunun makbuzdan önce
+reddi bu dosyada genel yüzlerden sınanır (#190).
 
 #### Strateji kataloğu (S02, #83)
 
@@ -2396,7 +2435,7 @@ değiştiremez. Kaynaksız birleşime seçim veya günlük etkinleştirme izni v
 
 | Kayıt / durum | İçerik, çelişki ve kapanış kanıtı | Engellediği iş | Dayanak |
 |---|---|---|---|
-| WF — TEKNİK YÖNTEM UYGULANDI / denetim ve tam veri kanıtı bekliyor | Dağıtıcı 21.10.2026 `kayitli_ileri_v1` yöntemini benimsedi. Tam pencere, seçim, taşıma, ufuk ve kayıt sözleşmesinin sahibi S12 bölümüdür. Eski §5.14 yöntemi legacy kalır. | #93 bağımsız denetim ve tam veriyle sonuç kanıtı bekliyor; MC ve günlük uygunluk kapıları sürer. | [L3]–[L5], [W1]; D §2; dağıtıcı 21.10.2026. |
+| WF — TEKNİK YÖNTEM UYGULANDI / tam veri kanıtı bekliyor | Dağıtıcı 21.10.2026 `kayitli_ileri_v1` yöntemini benimsedi. Tam pencere, seçim, taşıma, ufuk ve kayıt sözleşmesinin sahibi S12 bölümüdür. Eski §5.14 yöntemi legacy kalır. | #93 uygulaması [#171](https://github.com/zPfizer/tansu/pull/171) ile incelenip birleştirildi; tam veriyle sonuç kanıtı, MC ve günlük uygunluk kapıları sürer. | [L3]–[L5], [W1]; D §2; dağıtıcı 21.10.2026. |
 | MC — ARAŞTIRMA UYUŞMAZLIĞI / açık | C Q81: 10.000, ardından 20.000/40.000/80.000/100.000 ve yakınsama açıklaması. D §4: varyant başına 1.000. İkisi aynı protokol değildir; biri sessizce üstün sayılmaz. Kesin tekrar ve yakınsama sözleşmesini dağıtıcı tek yöntem sürümünde bağlamalıdır. | **#94 ENGELLİ:** tekrar, örnekleme ve muhasebe dahil tam MC yöntem kaydı olmadan uygulama başlamaz. | [L5], [W2], [W9]; C Q81, D §4. |
 | MC örnekleme — kontrol edilmiş teknik girdi | D §4: net R sırasını yerine koymadan karıştırma; N işlemi N kez yerine koymalı çekme; hisselerde ortak tarih bloklarını yeniden örnekleme; %10 işlem kaçırma stresi; sayısal ayarda ±1 ızgara adımı/aynı değerden eşit olasılıklı tam yeniden sınama. Bunlar ayrı deneylerdir; %10 kalibre edilmiş hata oranı değildir. Sabit 42 tohum önerisi, üreteç/sürüm ve ayrı akış kimliğiyle kaydedilir. Ana girdi dondurulmuş WF OOS, 2021 için keşif etiketi. Her deney örnek birimi, ufuk, gerçekleşen tekrar sayısı, çıktı yüzdelikleri ve bağımlılık varsayımını taşır. | #94; önce WF, ROBUST ve RISK kayıtları gerekir. | [W2], [W9]; D §4, `mc-wf/arastirma.md` yöntem tablosu. |
 | ROBUST — LEVENT ONAYI / uygulandı | B Q75: çaprazlar dahil tek indeks adımı komşuluk, kenarda eksik komşuluk bayrağı; otomatik kabul/ret yok. C Q77: en küçük komşu skorunu en büyüt; Q95: kanonik demetle eşitlik. D §3: tam iç komşuluk, kenarı merkez seçme; en geniş bileşen, medyan, iç uzaklık, sonra en kötü komşu net R ve sözlüksel sıra. Eski §5.14 eksen komşusu ayrı legacy'dir. Tek seçim ve kenar politikası onaylanmadan hiçbiri yeni varsayılan yapılmaz. Izgara sınırları ve adımlar strateji manifestinde dondurulur. Levent 21.10.2026 bu işte S11 bölümündeki geniş bölge ve iç merkez yöntemini onayladı; araştırmaların eski uyuşmazlığı bu kayıtla çözülür. Uygulanan açıklayıcı taramanın sözleşmesi S11 bölümündedir. | #92 seçici kısmı; #93/#94 diğer yöntem kayıtlarını bekler. | [T1], [W3]; B Q75, C Q76/Q77/Q95, D §3. |
@@ -2425,7 +2464,8 @@ izni vermez. Fon/kripto kapsamı ve kalıcı kimlik onayı bu motor sürümünü
    - Tam indirme geçici klasöre yapılır. Kapılar geçerse yeni anlık görüntü olur; geçmezse kart
      üretilmez.
    - (Bilet 14) "Tam" = her sembolün bütün geçmişi (2010'dan); indirilen semboller bugünün evreni (en çok sembollü
-     son tam anlık görüntüden; taban başka aydaysa tabanın son ayının evreni, YORUM) ve dünkü açık kartların
+     son tam anlık görüntüden; manifestteki farklı sembol sayısı en büyük olan seçilir, eşitlikte en yeni
+     kimlik kullanılır; taban başka aydaysa tabanın son ayının evreni, YORUM) ve dünkü açık kartların
      hisseleridir (~100). Dünkü kartın hissesi durumundan bağımsız (AKTİF, STOP, bekleyen çıkış) indirilir; STOP ve bekleyen çıkış dolana kadar pozisyon açıktır ve dolum günün çubuğunu ister. (vekil kararı 15.10, bilet 07c) Sebep: indirilen bütün semboller (716; bilet 03, sözlük denetimi) bilet 07'de ~3 sa 10 dk sürdü; görev sınırı 1 saat. 100 sembol
      ≈ 30 dk; istekler arası 1 sn bekleme aynen kalır. Günlük anlık görüntü `veri/gunluk/ag/` altına yazılır (tam
      anlık görüntüler `veri/ag/`'da kalır; `sinama` onları kullanır), faiz ve sektör içermez (kart bunlara bakmaz;
@@ -2433,6 +2473,15 @@ izni vermez. Fon/kripto kapsamı ve kalıcı kimlik onayı bu motor sürümünü
      (`kurulum/tansu-aylik.xml`).
    - (Bilet 14) Günlük koşunun veri kapıları, evren üyesi hisse-günlerde (5.13) hesaplanır; geçmişteki kaynak günü
      hataları eksik gün olarak zaten işlenir, yalnız bugünün kaynak günü hatası kartı durdurur.
+     Uygulanan #189 düzeltmesinde indirme seçimi ve kapı aynı doğrulanmış tam tabanı kullanır. Her fiyat
+     tarihinin üyeliği bu tabanda `evren(taban, min(tarih, taban.gunler[-1]))` ile belirlenir; dar günlük
+     görüntüden yeniden evren kurulmaz. Üyelik başlangıcı sınamayla aynı tarihtir (§5.13). Önceki kartın
+     evren dışı günleri iki oran terimine de girmez. `gunluk(..., semboller=[...])` test girdisi taban
+     okumaz ve verilen günlük satırların mevcut üyelik davranışını korur; normal komut bu yolu kullanmaz.
+     `tests/test_gunluk.py` taban genişliği, eşitlik, önceki kart, pay şişmesi, payda seyrelmesi,
+     aylık giriş/çıkış, taban sonrasındaki tarih ve açık sembol girdisini komut veya günlük koşu yüzünde sınar.
+     Bozuk veya okunamayan taban manifestinin normal komutta indirmeden önce SORUNLU ve çıkış 1
+     vermesi, başka tabana sessizce geçmemesi de bu dosyada sınanır (§6.7).
    - Koşu 18:15'ten önce başlarsa kart üretilmez (yarım çubuk riski).
    - Kaynak erişilemezse sınama eski anlık görüntülerle sürer; yalnız canlı kart durur.
    - Günlük anlık görüntüler silinmez (`veri/` silinmez; 5.11 silme yasağı). (karar.md:24; İ: 11-061 reddedildi, karar.md:30; bilet 03)

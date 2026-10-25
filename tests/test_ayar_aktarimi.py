@@ -156,7 +156,7 @@ def test_gunluk_komutu_secilen_ayarla_stop_durumunu_yazar(tmp_path, monkeypatch)
     anlik = anlik_hazirla(tmp_path / "gunluk", {"A": fiyatlar()[:-1]})
     kagit_aile()
     monkeypatch.setitem(aileler.VARYANTLAR, "stop_atr15", replace(P, stop="atr15"))
-    monkeypatch.setattr(gunluk, "_semboller", lambda *a: ["A"])
+    anlik_hazirla(tmp_path, {"A": fiyatlar()[:-1]})
     # Yalnız veri indirme sınırı: saklı sentetik görüntü okunur, hesap değiştirilmez.
     monkeypatch.setattr(gunluk.veri, "indir", lambda *a, **k: anlik.kimlik)
     tarih = str(anlik.gunler[-1].date())
@@ -316,7 +316,7 @@ def test_kayitli_gunluk_komutu_kayit_ayarindan_stop_durumu_uretir(
     anlik = anlik_hazirla(tmp_path / "gunluk", {"A": fiyatlar()[:-1]})
     depo, m = kayitli(tmp_path, monkeypatch)
     kagit_aile()
-    monkeypatch.setattr(gunluk, "_semboller", lambda *a: ["A"])
+    anlik_hazirla(tmp_path, {"A": fiyatlar()[:-1]})
     monkeypatch.setattr(gunluk.veri, "indir", lambda *a, **k: anlik.kimlik)
     kod, hata = komutu_kos(
         [
@@ -391,7 +391,7 @@ def test_kayitli_gunluk_eski_gunluk_basarisini_ayar_kaniti_saymaz(
     depo, m = kayitli(tmp_path, monkeypatch)
     kagit_aile()
     monkeypatch.setitem(aileler.VARYANTLAR, "bugun", P)
-    monkeypatch.setattr(gunluk, "_semboller", lambda *a: ["A"])
+    anlik_hazirla(tmp_path, {"A": fiyatlar()[:-1]})
     monkeypatch.setattr(gunluk.veri, "indir", lambda *a, **k: anlik.kimlik)
     argv = ["gunluk", str(anlik.gunler[-1].date()), "--kok", str(tmp_path)]
     assert komutu_kos(argv, capsys)[0] == 0
@@ -617,7 +617,7 @@ def test_kayitli_onizleme_normal_gunlugun_durumunu_ve_hesabini_degistirmez(
     anlik = anlik_hazirla(tmp_path / "gunluk", {"A": fiyatlar()[:-1]})
     depo, m = kayitli(tmp_path, monkeypatch)
     kagit_aile()
-    monkeypatch.setattr(gunluk, "_semboller", lambda *a: ["A"])
+    anlik_hazirla(tmp_path, {"A": fiyatlar()[:-1]})
     monkeypatch.setattr(gunluk.veri, "indir", lambda *a, **k: anlik.kimlik)
     tarih = anlik.gunler[-1].date()
     simdi = dt.datetime.combine(tarih, dt.time(19, 30))

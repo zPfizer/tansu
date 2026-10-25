@@ -931,7 +931,7 @@ def mumlar(
 
 def _mumlar_kur(anlik, sembol, p, atr_n) -> pd.DataFrame:
     f = (
-        anlik.fiyat[anlik.fiyat["sembol"] == sembol]
+        anlik.hesap_fiyati[anlik.hesap_fiyati["sembol"] == sembol]
         .sort_values("tarih")
         .set_index("tarih")
     )

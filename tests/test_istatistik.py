@@ -285,6 +285,94 @@ def test_s11_bilinmeyen_r_ve_tekrar_islem_riski_degistirmez():
         istatistik.olc([i, farkli], politika="bagimsiz_olcu_v1")
 
 
+@pytest.mark.parametrize("kopya", [1, 2])
+@pytest.mark.parametrize("kimlik_pozisyonda", [False, True])
+def test_s12_nihai_ozet_ayni_islemi_butun_ciktilarda_bir_kez_sayar(
+    kopya, kimlik_pozisyonda
+):
+    from copy import deepcopy
+    from datetime import date
+
+    kapali = dict(
+        islem_id="T1",
+        islem_ref="sonuc:T1",
+        pozisyon=dict(
+            giris_tarih="2024-01-02",
+            cikis_tarih="2024-01-03",
+            risk_girdisi=dict(sembol="AAA", islem_id="T1"),
+        ),
+        sonuc=dict(
+            alinan_adet=1,
+            kalan_adet=0,
+            net_r=-1.0,
+            net_sonuc=-10.0,
+            gerceklesen_maliyet=1.0,
+            net_fiyat_getirisi=-0.1,
+            referans_getirisi=-0.1,
+            ilk_risk=10.0,
+            nominal_tutar=100.0,
+        ),
+    )
+    if kimlik_pozisyonda:
+        kapali.pop("islem_id")
+    acik = s11_islem(acik=True)
+    acik.update(
+        islem_ref="sonuc:acik",
+        pozisyon=dict(giris_tarih="2024-01-02", risk_girdisi=dict(sembol="AAA")),
+    )
+    donem = dict(baslangic=date(2024, 1, 1), bitis=date(2024, 12, 31))
+    sonuc = istatistik.ileri_ozeti(
+        [deepcopy(i) for i in (kapali, acik) for _ in range(kopya)],
+        semboller=["AAA", "BBB"],
+        donem=donem,
+        bolumler=[dict(ad="Y", **donem)],
+    )
+    o = sonuc["olculer"]["AAA"]
+    assert o["olculer"]["islem"]["deger"] == 1
+    assert o["olculer"]["net_r"] == dict(deger=-1.0, birim="R", bos_nedeni=None)
+    assert o["egri_tanimi"]["satirlar"] == [dict(an="2024-01-03", deger=-1.0)]
+    assert o["egri_tanimi"]["referanslar"] == ["sonuc:T1"]
+    assert o["egri_olculeri"]["derinlik"] == dict(deger=1.0, birim="R", bos_nedeni=None)
+    assert len(o["acik_kismi"]) == 1
+    assert o["acik_kismi"][0]["olculer"]["kalan_adet"]["deger"] == 50
+    assert o["acik_kismi"][0]["olculer"]["net_sonuc"]["deger"] == pytest.approx(
+        483.4625
+    )
+    assert sonuc["giris_kohort_sayimlari"]["Y"] == dict(
+        AAA=dict(kapali_islem=1, ayri_giris_gunu=1, acik_islem=1),
+        BBB=dict(kapali_islem=0, ayri_giris_gunu=0, acik_islem=0),
+    )
+    assert sonuc["olculer"]["BBB"]["olculer"]["islem"]["deger"] == 0
+
+
+@pytest.mark.parametrize("alan", ["net_sonuc", "sembol"])
+def test_s12_nihai_ozet_ayni_kimligin_celisen_icerigini_reddeder(alan):
+    from copy import deepcopy
+    from datetime import date
+
+    i = s11_islem()
+    i.update(
+        islem_ref="sonuc:kapali",
+        pozisyon=dict(
+            giris_tarih="2024-01-02",
+            cikis_tarih="2024-01-03",
+            risk_girdisi=dict(sembol="AAA"),
+        ),
+    )
+    farkli = deepcopy(i)
+    if alan == "sembol":
+        farkli["pozisyon"]["risk_girdisi"]["sembol"] = "BBB"
+    else:
+        farkli["sonuc"]["net_sonuc"] = 123.0
+    with pytest.raises(ValueError, match="Çelişkili işlem sonucu"):
+        istatistik.ileri_ozeti(
+            [i, farkli],
+            semboller=["AAA", "BBB"],
+            donem=dict(baslangic=date(2024, 1, 1), bitis=date(2024, 12, 31)),
+            bolumler=[],
+        )
+
+
 @pytest.mark.parametrize("gun", ["2025-02-30", "bilinmiyor", 1, None])
 def test_s11_sharpe_gecersiz_tarih_icin_yilliklastirma_yapmaz(gun):
     karsilastirma = dict(

@@ -857,6 +857,7 @@ def ileri_kontrol_sayimi(durum, bolum):
 
 def ileri_ozeti(islemler, *, semboller, donem, bolumler):
     """TASARIM 5.15 S12: değişmez nihai işlemlerin ölçü ve giriş kohortu sayımı."""
+    islemler = [i for _, i in _tek_islemler(islemler)]
     semboller = sorted(semboller)
     kaynaklar = {s: [] for s in semboller}
     for i in islemler:
