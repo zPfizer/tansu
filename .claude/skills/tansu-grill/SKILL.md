@@ -9,7 +9,7 @@ The text of the rules is in their owner files. This skill only tells when to che
 
 ## 1. Tansu comes first
 
-Before you propose a rule, a value, or a behavior, apply KURALLAR "Okuma kuralları". Search the Tansu pool and the rule
+Before you propose a rule, a value, or a behavior, apply `docs/aile-kurallari.md` "Okuma kuralları". Search the Tansu pool and the rule
 files for his view on that subject, and show the result in the proposal.
 
 ## 2. Risk scan

@@ -6,6 +6,14 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 
 ## [Yayımlanmamış]
 
+- Claude düzenleme kancasına saf refaktör için oturuma ve çalışma klasörüne bağlı önce/sonra test kanıtı eklendi. Olağan test değişikliği yolu korundu; başarılı son kontrol refaktör iznini kapatır.
+
+- Belge akışının kapanışı tüm ilgili kontrollerden sonraya taşındı. Davranışı koruyan kod düzenlemelerinin önce ve sonra aynı testlerle doğrulanması ortak test kuralında açıklandı; yeni davranış ve hata düzeltmelerinde önce başarısız, sonra başarılı test şartı korundu.
+
+- Ortak girişe bağlı iş akışları sadeleştirildi. Yerel düzenleme ile yayım adımları ayrıldı; kaynak, test, bağımsız inceleme ve onay koşulları kendi belgelerinde korundu.
+
+- AGENTS.md ve CLAUDE.md sıfırdan yazıldı. Ortak giriş genel çalışma yöntemini pstack'e, proje kurallarını mevcut sahiplerine yönlendirir. Yerel yönergelerdeki çakışan yöntemler ve eski başvurular uyarlandı.
+
 - Claude ve Codex'te aynı sözleşmeyi ve pstack kaynağını kullanan TANSU yönetici ajanı uygulamanın görünür yerel ajan arayüzünden çalışır; sürüm hazır olduğunda onay bekler, Windows Görev Zamanlayıcı kullanılmaz. (#181)
 
 - CI testleri, eksiksiz ve çakışmasız iki gruba ayrılır; her grup kendi test kimliklerini çalıştırmadan önce doğrular ve 60 dakikalık süre sınırını korur. (#178)

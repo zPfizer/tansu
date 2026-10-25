@@ -5,24 +5,15 @@ description: "Use for a Tansu defect, including a bug, error, failing test, cras
 
 # Bug fix (Hata düzeltme), flow B
 
-Run AGENTS.md "Every job" first. Run the steps in order. Run an "If" row only when its condition is true. Call each skill by the exact name in backticks.
-The shared steps are in [Job rules](../../../docs/agents/is-kurallari.md#branch).
+Use AGENTS.md "Work flow" for diagnosis methods and required agent roles. This flow keeps the TANSU fault evidence.
+Apply [Scope](../../../docs/agents/is-kurallari.md#scope) before delivery. Run the applicable steps in order.
 Before creating an issue, follow [Issue body](../../../docs/agents/issue-tracker.md#issue-body).
 
 1. **Diagnose:** Reproduce the fault. Trace its cause from the observed failure. Check the cause before a fix.
 2. **Red test:** Apply `CODING_STANDARDS.md` "Test first". Run the test and keep the failure output.
-3. **Fix:** Choose the delivery path from docs/agents/issue-tracker.md "Issue and PR rule". For a large job, a subagent writes the minimum code. Apply `tansu-yeni-is` "Branch" for the issue and branch steps.
-4. **Check and evidence:** As `tansu-yeni-is` "Check and evidence", before review.
-5. **Review:** As `tansu-yeni-is` "Review".
-6. **Pull request, merge, and close:** As `tansu-yeni-is` "Pull request", `tansu-yeni-is` "Merge", and `tansu-yeni-is` "Close".
+3. **Fix:** Write the minimum correction. For authorized publication, follow [Branch](../../../docs/agents/is-kurallari.md#branch).
+4. **Check and evidence:** Run [Check and evidence](../../../docs/agents/is-kurallari.md#check-and-evidence) before review.
+5. **Review:** Apply [Review](../../../docs/agents/is-kurallari.md#review) when risk requires it.
+6. **Pull request, merge, and close:** Apply the authorized delivery steps in [Job rules](../../../docs/agents/is-kurallari.md#pull-request).
+   Apply [Close](../../../docs/agents/is-kurallari.md#close) within the job scope.
 7. **Lesson:** Review the cause and the fix. Record the mistake as the "Mistakes" section of the general standards file says. `CODING_STANDARDS.md` points to that file.
-
-| If | Then |
-|---|---|
-| a document and the real state disagree | `thinking-map-territory`. |
-| the fault repeats | `thinking-five-whys-plus`. |
-| there are several possible causes | `thinking-scientific-method`. |
-| a defect is selective | `thinking-kepner-tregoe`. |
-| the problem is slowness | `thinking-theory-of-constraints`. |
-| a fix breaks another part | `thinking-systems`. |
-| the problem changes while you work | `thinking-ooda`. |

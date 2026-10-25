@@ -19,7 +19,8 @@ Ne zaman issue açılacağı ve küçük belge düzeltmelerinin hangi PR yolunu 
 
 ## Ana belgeler
 
-- [AGENTS.md](AGENTS.md): proje girişi ve çalışma kuralları.
+- [AGENTS.md](AGENTS.md): Claude ve Codex için ortak proje girişi ve çalışma kuralları.
+- [CLAUDE.md](CLAUDE.md): ortak yönergeleri içeri alan Claude girişi.
 - [Tasarım](docs/TASARIM.md): davranış, kararlar ve uygulama sırası (§7).
 - [İş akışı](docs/agents/is-kurallari.md): kapsam, ortak adımlar, inceleme ve teslim.
 - [Kod ve test kuralları](CODING_STANDARDS.md), [bitti ölçütleri](DEFINITION_OF_DONE.md).

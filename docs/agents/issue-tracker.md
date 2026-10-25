@@ -2,7 +2,9 @@
 
 Specs and tickets of this repo are GitHub issues in `zPfizer/tansu` (remote `origin`). Use the `gh` CLI for all operations. `gh` finds the repo from `git remote -v`.
 
-`.scratch/` is the local, gitignored temporary job folder. The old ticket archive exists only in git history. Read a file with `git show 8c5f06c^:.scratch/<path>`. GitHub and CI do not require local archive files. An open ticket has one place: its issue.
+An open ticket has one place, its issue. [Job rules](is-kurallari.md#scope) distinguishes local work from publication.
+This file defines the publication paths and tracker format. It does not authorize external actions for a bounded local task.
+For the old ticket archive, use "Status field" below.
 
 ## Issue and PR rule
 
@@ -11,7 +13,10 @@ Source: Levent 18.10: "Issue ve PR kuralını onaylıyorum." This section owns t
 2. **PR without an issue:** Use this path for a document fix that needs no decision, including a clear small fix. If its files are excluded below, use path 3. Put the reason in a separate body line: `Issue yok: <reason>`. Use the title `Belge · <short title>`. CI accepts this path only when every changed file is `*.md`, outside `.claude/`, `.github/`, `docs/kurallar/`, and `docs/agents/`. It also excludes `docs/TASARIM.md`, `docs/KURALLAR.md`, `CODING_STANDARDS.md`, `DEFINITION_OF_DONE.md`, and `GLOSSARY.md` because they own rules. Files named `AGENTS.md` or `CLAUDE.md` at any level are excluded because they carry agent rules. An empty or unknown file list fails this check. An issue exemption for document fixes also exists in [S4](https://devguide.python.org/getting-started/pull-request-lifecycle/) and [S6](https://docs.djangoproject.com/en/dev/internals/contributing/writing-code/submitting-patches/).
 3. **Issue + PR:** Use this path for code, tests, CI, hooks, settings, refactoring that keeps behavior, and any change of a rule's meaning. Use a branch for the issue. The existing `Closes #N` and `#<N> · <short title>` checks still apply. Reviewed refactoring is part of [S11](https://google.github.io/eng-practices/review/developer/small-cls.html). GitHub documents issue links in [S3](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/linking-a-pull-request-to-an-issue).
 4. **Issue only:** Use this path for deferred work. Never defer a small document error. Immediate correction is a TANSU choice. Issues can track future work ([S2](https://docs.github.com/en/issues/tracking-your-work-with-issues/learning-about-issues/about-issues)).
-5. **Direct push owner and CI:** Only the dağıtıcı (the dispatcher) pushes directly to main. The dağıtıcı says "done" only after green CI. On red CI, the dağıtıcı reverts at once. This actor restriction and the immediate revert are TANSU choices. Trunk guidance requires a green build and fast recovery ([S13](https://trunkbaseddevelopment.com/committing-straight-to-the-trunk/)).
+5. **Direct push owner and CI:** Only the dağıtıcı (the dispatcher) pushes directly to main. Say "done" only after green CI.
+   On red CI, prepare the revert at once. Before any destructive or irreversible action, get the specific approval required by AGENTS.md "Every job".
+   Apply an already approved revert immediately. This actor restriction and prompt recovery are TANSU choices.
+   Trunk guidance requires a green build and fast recovery ([S13](https://trunkbaseddevelopment.com/committing-straight-to-the-trunk/)).
 
 ## Conventions
 
@@ -23,7 +28,8 @@ Source: Levent 18.10: "Issue ve PR kuralını onaylıyorum." This section owns t
 - **Close**: `gh issue close <number> --comment "..."`.
 - **Spec**: for independent deliveries or dependencies, use one issue titled `Spec: <name>`. The tickets name it in a `Parent: #N` line. For one delivery, keep the brief and acceptance criteria in one issue.
 - **Issue body**: follow "Issue body" below. Each issue also has one triage label and a milestone. Every open issue belongs to one open milestone. Name each open milestone `v0.<n>.0 — <short Turkish benefit>`, in work order. Its description states the benefit, then `Sıra: #a, #b, #c`. Source: Levent 18.10.
-- **Branch**: for the issue + PR path, use `<N>-<ad>`, made by `gh issue develop <N> --name <N>-<ad> --base main` (`tansu-yeni-is` "Branch"). For a PR without an issue, use `belge-<ad>`.
+- **Branch**: for the issue + PR path, use `<N>-<ad>`. Use lower case ASCII letters, digits, and hyphens for `<ad>`.
+  For a PR without an issue, use `belge-<ad>`. Run the operations in [Branch](is-kurallari.md#branch).
 - **PR**: use the body and title forms in "Issue and PR rule". GitHub shares one number sequence for issues and PRs. A merge with `Closes #N` closes that issue.
 
 ## Issue body
@@ -50,14 +56,14 @@ Keep acceptance criteria independently testable. State the affected tests to run
 
 An open ticket has exactly one triage-role label ("Triage labels" owns the label strings). The state comes from the label, the assignee, the PR link, and the issue state:
 
-| Old `Status:` value | GitHub |
+| Current state | GitHub |
 |---|---|
-| a triage role string | the label of that role ("Triage labels") |
-| `claimed` | an assignee: `gh issue edit <n> --add-assignee @me` (the first write before any work). The role label stays. |
-| `in-review` | an open PR with `Closes #N` in its body. The issue stays open. |
-| `done (PR #N, hash)` | the issue is closed by the merge of the PR. |
-| `done (kısa not)` | the issue is closed by hand with `gh issue close <n> --comment "<short note>"`. The comment says what is delivered and what moved elsewhere. |
-| `resolved` | the issue is closed after the answer comment (a wayfinder child). |
+| Triage | The label of that role ("Triage labels"). |
+| Claimed | An assignee. Run `gh issue edit <n> --add-assignee @me` before work. Keep the role label. |
+| In review | An open PR with `Closes #N` in its body. Keep the issue open. |
+| Merged | The PR merge closes the issue. |
+| Delivered without merge | Close with `gh issue close <n> --comment "<short note>"`. State the delivered result and work moved elsewhere. |
+| Answered | Close a wayfinder child after its answer comment. |
 
 A ticket is closed when the issue state is closed. A ticket is claimed when it has an assignee.
 
