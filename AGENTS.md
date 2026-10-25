@@ -1,115 +1,108 @@
-# TANSU
+# TANSU agent instructions
 
-TANSU is a daily signal and backtest (sınama) system for BIST. Follow the documents.
-If they conflict with code or omit a case, stop. Fix the document first. Write the reason before the code.
+This file owns the shared entry for Codex and Claude. Read the relevant owner documents below before work.
 
-## Current state (Şimdiki durum)
-This section holds temporary states only. Each line has a date and an owner. Delete a line when its end condition is true.
+## Every job
 
-- 2026-10-24, owner: coordinator. Preserve the setup worktree until both installed native entries point to the merged contract and fresh startup checks pass.
+- Start replies to Levent with "Patron,". Use plain Turkish. State the result first and name the remaining work.
+- Keep updates short. Answer every question. Explain technical terms only when needed.
+- Write delegated reports in English ASD-STE100. Give the owner, changed files, commands, results, skipped checks, and open questions.
+- Follow Levent's chosen tool and direction. Make routine technical decisions within the approved scope.
+- **Ask Levent:** Ask about money, scope, direction, taste, and product decisions when authoritative sources do not settle them.
+- Honor explicit file lists and read-only limits. Otherwise, change only files needed for the requested result.
+- Get specific approval before deletion, reset, destructive actions, or irreversible writes. General autonomy does not grant this approval.
+- Send external messages only with explicit authorization. Keep secrets out of files and output. Honor privacy and network limits.
+- Add no dependency without Levent's approval. Leave third-party tools and plugins unchanged.
+- Read current files before edits. Preserve other sessions' changes. Give each file one writer and keep edits small and reversible.
+- Use primary sources first, then official sources. Separate facts, inference, and unknowns. Never invent evidence.
+- Complete authorized work. If repeated reads or edits make no progress, report the obstacle.
+
+## Work flow
+
+Use the skill Levent names. For nontrivial work without a narrower named workflow, use the installed `pstack:poteto-mode` skill.
+Simple questions need no full playbook. Read the selected skill and its required references before use.
+Read `C:/Users/levent/.cursor/rules/pstack-models.mdc` when pstack requires model selection. If absent, use the installed skill defaults.
+Use native tools for the skill's method. Preserve required roles and review independence. Report unavailable capabilities and checks.
+When the workflow requires agents, pass the full scope and restrictions. Read and check their work before reporting it.
+
+For normal project sessions, follow [Standing project coordinator](docs/agents/yonetici.md).
+An explicit delegated job keeps its assigned role and scope. A bounded request does not start unrelated release work.
+Use Orchestrate for the standing project program. Select the matching pstack playbook for a bounded task.
+
+The local flows add TANSU safeguards to the selected method. Read only the applicable flow.
+
+| Task | Local owner |
+|---|---|
+| New behavior | `.claude/skills/tansu-yeni-is/SKILL.md` |
+| Fault diagnosis and correction | `.claude/skills/tansu-hata/SKILL.md` |
+| Documents and instructions | `.claude/skills/tansu-belge/SKILL.md` |
+| Plans and decisions | `.claude/skills/tansu-karar/SKILL.md` |
+| Source-based design questions | `.claude/skills/tansu-grill/SKILL.md` |
+| Agent and prompt evaluation | `.claude/skills/tansu-eval/SKILL.md` |
+| Source research, questions, and sessions | `docs/agents/is-kurallari.md` "Short flows and skill naming" |
+
+Project sources own product rules. Project delivery rules own evidence, Git, and approval gates. pstack owns general work methods.
+Task scope and explicit user restrictions apply to every step. Optional helpers apply only when relevant.
+For source context and recorded decisions, use the brain search procedure in `docs/agents/yonetici.md` "Sources and procedures".
 
 ## Documents and owners (Belgeler ve sahipleri)
-Each fact has one owner file. Other files refer to that owner. Read the files in the order of the table.
-Evidence may repeat a source quote with its reference. The quote does not create another rule owner.
+
+Keep each fact in its owner. Link to it instead of copying its rule into another document.
+Before changing behavior, read its source and approved contract. Record approved changes before implementation, as the local new-work flow requires.
+If code and a document disagree, identify the authoritative source and the implementation status before changing either.
+Ask Levent when that evidence leaves a product decision unresolved.
 
 | File | Fact that the file owns |
 |---|---|
-| `GLOSSARY.md` | the meaning of the terms |
-| `docs/TASARIM.md` | shared execution, system formulas, and Levent's product decisions. §7 is the order of implementation |
-| `docs/KURALLAR.md` | the rule directory and links to the owner documents |
-| `docs/aile-kurallari.md` | family (aile) rules, family parameters, and YORUM entries (§3–4) |
-| `docs/kaynak-dokumu.md` | the pool inventory, exclusion reasons, and short source names |
-| brain (beyin): `kisisel/300-Projects/Tansu X Veri Havuzu/` (outside the repository) | the raw posts of Tansu: notes and images. This is a raw source. Do not change it |
-| `docs/kurallar/A-yapi-bolge.md` … `E-risk-cikis-surec.md` | the reading of the pool (havuz): what Tansu said. Rule: each note in the pool must have a reference here or must be in the "kural içermez" list in `docs/kaynak-dokumu.md` |
-| `docs/sadakat.md` | the fidelity (sadakat) measurement |
-| `AGENTS.md` | the entry, the environment, the current state, "Every job", and the work flow table |
-| `docs/agents/` | job rules, shared delivery, git, short flows E, H, I, and skill naming (`is-kurallari.md`). Task Scheduler (`zamanlayici.md`). Issues and triage labels (`issue-tracker.md`). driftlint does not scan this folder. `tests/test_sahipler.py` checks its paths |
-| `.codex/` | Codex entry configuration and native agent definitions. `docs/agents/yonetici.md` owns the standing coordinator assignment |
-| `.claude/skills/` | the work flow procedures, one skill per job type |
-| `docs/strateji-taslak/`, `docs/strateji-modulleri-taslak.md` (local, not in git) | proposals that wait for approval. They own no fact. They are outside the drift check. These local files need not exist <!-- driftlint-ignore: local-only, gitignored, absent in CI --> |
-| `CODING_STANDARDS.md`, `DEFINITION_OF_DONE.md` | the Tansu code rules (`## Tansu`; the general rules are in the file that `CODING_STANDARDS.md` points to) and the done criteria (`## Tansu`) |
-| `docs/sorgu/sonuc-3-4.md`, `docs/sorgu/izleme/karar.md` (local, not in git) | the reasons for the decisions (read them when necessary and when they exist) <!-- driftlint-ignore: local-only, gitignored, absent in CI --> |
+| `AGENTS.md` | Shared agent entry, communication, scope, and workflow routing. |
+| `CLAUDE.md` | Claude entry that imports the shared instructions. |
+| `GLOSSARY.md` | Terms and source evidence labels. |
+| `docs/TASARIM.md` | Product behavior, approved decisions, and implementation status. |
+| `docs/KURALLAR.md` | Rule-family index. |
+| `docs/aile-kurallari.md` | Family definitions, formulas, and source reading rules. |
+| `docs/kaynak-dokumu.md` | Source identities and exclusion reasons. |
+| `docs/sadakat.md` | Fidelity measurements and their evidence. |
+| `docs/kurallar/A-yapi-bolge.md` | Structure and price-zone sources. |
+| `docs/kurallar/B-momentum-sikisma.md` | Momentum and compression sources. |
+| `docs/kurallar/C-harmonik-geometri.md` | Harmonic and geometry sources. |
+| `docs/kurallar/D-cift-portfoy-nabiz.md` | Pair, portfolio, and market-pulse sources. |
+| `docs/kurallar/E-risk-cikis-surec.md` | Risk, exit, and process sources. |
+| brain pool: `kisisel/300-Projects/Tansu X Veri Havuzu/` | Original notes and images under the external YONETIM brain root. |
+| `CODING_STANDARDS.md` | TANSU code, test, and source-proof requirements. |
+| `DEFINITION_OF_DONE.md` | Completion criteria and required evidence. |
+| `docs/agents/is-kurallari.md` | Delivery, checks, review, Git, and release procedure. |
+| `docs/agents/issue-tracker.md` | Issue and PR format, scope, and work tracking. |
+| `docs/agents/yonetici.md` | Standing coordinator authority, shared checkpoint, brain search, and release approval. |
+| `docs/agents/zamanlayici.md` | Task Scheduler definitions and operations. |
+| `CHANGELOG.md` | Published and unpublished changes. |
 
-The drift check covers all these files. The drift check is your review, not only driftlint (see the `docs/agents/` row). Correct a file when it contradicts another file, contains old information,
-or copies a fact of another file.
+## Environment
 
-## Domain documentation
+Use PowerShell on Windows. Read and write text as UTF-8. Run Python with `-X utf8`.
+Use the existing main virtual environment, including from a worktree. Its path is in `docs/agents/is-kurallari.md` "Branch".
+Put temporary output in the system temporary folder. Do not create a script file for one operation.
+Read `pyproject.toml`, `requirements.lock.txt`, and the workflows for current versions.
+A CI tool outside Python is pinned to an exact version in the workflow file.
 
-### Before exploring, read these
+- **Names (Adlar):** Use Turkish ASCII for CSV headers. Use the approved names in `docs/TASARIM.md`.
+- **Dependency:** Read TASARIM §4 before proposing a new package. Follow the approval rule in "Every job".
 
-- `GLOSSARY.md` at the repo root: the meaning of every term (single context, no `GLOSSARY-MAP.md`). <!-- driftlint-ignore: intentionally absent glossary map, not a file reference -->
-- `docs/TASARIM.md`: the decision record. Tansu has no ADR folder and no ADR files.
-- `docs/sorgu/`: the reasons behind the decisions (local, not in git). <!-- driftlint-ignore: local-only decision notes, absent in CI -->
+The Claude edit hook in `kurulum/kanca.py` checks for test changes through selected edit events.
+For a pure refactor with unchanged tests, its `refactor-before` and `refactor-after` commands record actual test runs.
+Read `kurulum/kanca.py --help` for that path. Its file fingerprints exclude Git-ignored files and external inputs.
+Passing tests do not prove behavior equivalence.
+It cannot prove a red test run. It does not cover shell edits or other clients. Follow the test rules in every client.
 
-Do not create an ADR folder. `tansu-yeni-is` "Document first" owns where settled terms and decisions go.
+## Current state
 
-### Use the glossary's vocabulary
+Read current state when needed. Use `git status --short`, `git log -1`, and the relevant source files.
+Read `docs/TASARIM.md` for implementation status and `CHANGELOG.md` for recorded changes.
+For delivery status, read the current issue, PR, and coordinator checkpoint under the coordinator contract.
+Do not treat a historical report or an approved pending contract as proof of current behavior.
 
-When your output names a domain concept (an issue title, a refactor proposal, a hypothesis, a test name), use the
-term as `GLOSSARY.md` defines it. Do not drift to synonyms the glossary avoids. A missing term is a signal: you
-invent language the project does not use, or there is a real gap. Record the gap for `tansu-yeni-is` "Document first".
+## Check and deliver
 
-### Flag decision conflicts
-
-If your output contradicts a decision in `docs/TASARIM.md`, say so explicitly instead of overriding it:
-
-> _Contradicts TASARIM §5.1 (empty value stays empty), but worth reopening because…_
-
-## Environment (Ortam)
-- Windows, PowerShell. Python is `.venv\Scripts\python.exe`. The main branch is `main`. The remote repository is `origin` (GitHub `zPfizer/tansu`, public). There is no other backup.
-- **Current rules (Güncel kurallar):** The current rules are on `origin/main`. Before a job, run `git fetch origin`. Read the rules from `origin/main`. A checkout that is behind `origin/main` gives old rules.
-- Setup: `py -3.14 -m venv .venv`, then `.venv\Scripts\python.exe -m pip install -r requirements.lock.txt -e ".[dev]"`.
-- **Names (Adlar):** Code, file, column, and CSV header names are Turkish ASCII (`aile`, `adim`, `evren`). Report and card
-  text uses Turkish characters. Use `pathlib` for paths. Open each file with an explicit `encoding="utf-8"` (for CSV,
-  `utf-8-sig`).
-- **Line ends (Satır sonları):** Preserve each file's existing line ends. `.gitattributes` defines the repository policy.
-- **File tools (Dosya araçları):** Use the active agent's file tools or PowerShell commands with explicit UTF-8 encoding. Respect its permissions. Claude-specific denials are in `.claude/settings.json`.
-- **Hooks (Kancalar):** `.claude/settings.json` registers `kurulum/kanca.py` for Claude edit events. It checks for a changed test file. It does not prove a failing test run or protect other agents' edit tools.
-- **Waiting (Bekleme):** Claude Code blocks `sleep` and `Start-Sleep`. Run long commands alone. Run only affected pytest tests and `ruff check`/`ruff format --check` on changed files. CI runs the full suite.
-  Use the active tool's foreground or background execution with a timeout of at most 600000 ms. Track each background process with one waiter. Do not start duplicate watchers. Git Bash `pgrep` cannot see PowerShell processes.
-- **Temporary files (Geçici dosyalar):** Write them under `$TEMP` or under `.scratch/<job>/tmp/` of the main checkout. Never write one to a tracked path.
-  The permission system refuses a recursive delete (`rm -rf`, `Remove-Item -Recurse`). Do not try it. List the leftover paths in a code block of the report. Levent deletes them.
-- **Shell state (Kabuk durumu):** Each shell call starts new. A `cd`, a variable, or an `export` does not carry over. `$CLAUDE_PROJECT_DIR` exists only in hooks. Use full paths.
-- **Copied values (Kopya değerler):** Copy an id, a path, a sha, or a number from a command output of this session. Do not write it from memory or from the report of another agent.
-  Search a Markdown heading with `^#+ <text>`, because its level can differ.
-- **Dependency (Bağımlılık):** Before you add a new package, check TASARIM §4 and the stdlib. Write an added package in `pyproject.toml`
-  with `==`. A CI tool outside Python is pinned to an exact version in the workflow file.
-
-## Every job
-1. Write the intent of Levent and the flow letter in one line at the top of the first reply only. After that line, the result comes first. All text that Levent can see is Turkish, also the wrap_up text.
-2. Unknown error or missing fact: run `py -3 -X utf8 C:\Users\levent\Desktop\YONETIM\beyin\beyin.py context "<q>" --harness <active-harness> --project TANSU --no-sync` first. Use `codex` or `claude` for the active agent. Report a failed lookup and continue from original sources. Do not invent the missing fact. <!-- driftlint-ignore: local-only path of the brain tool, absent in CI -->
-3. If the work type is unclear, compare the request with the work flow table. Before you write an instruction or prompt: `asd-ste100`.
-4. The main session resolves technical questions from sources. It may use `vekil` for recorded decisions and recommendations. It may use `okuyucu` for broad source searches. Both helpers are optional. For the standing coordinator, `docs/agents/yonetici.md` owns authority and communication. For other jobs, Levent gets money, scope, direction, taste, and product decisions absent from Tansu notes. Also ask him about secrets, any deletion, outgoing work, Task Scheduler changes, and work that cannot be undone.
-5. If a claim has no source: `thinking-circle-of-competence`. If the problem type is unclear: `thinking-cynefin`. If the method is unclear: `thinking-model-router`.
-6. Choose the flow and the scope (`docs/agents/is-kurallari.md` "Scope").
-7. Unless this is an explicitly delegated job, act as the standing coordinator under `docs/agents/yonetici.md`. A delegated job keeps its assigned role and scope.
-
-## Work flow (İş akışı)
-The `mattpocock-skills` package is optional. Follow the written steps without it. Source: Levent, 19.10.2026.
-The project flows and their evidence requirements remain mandatory. Other skills help execute the applicable steps.
-If a helper is unavailable, use the active tools to complete the same step and checks. Report any check you cannot complete.
-
-Choose the flow by the work type. Open its file before the first step. Run the steps in order.
-Run an "If" row only when its condition is true. Load a helper only when that step needs it.
-
-| Work type | Flow | Skill |
-|---|---|---|
-| new work (Yeni geliştirme) | A | `tansu-yeni-is` |
-| bug fix (Hata düzeltme) | B | `tansu-hata` |
-| rule, document, instruction | C | `tansu-belge` |
-| plan or decision | D | `tansu-karar` |
-| eval | J | `tansu-eval` |
-
-Each project skill lives in `.claude/skills/<name>/SKILL.md` and owns its flow steps. Open that file directly if the active tool does not list it. Keep one copy. Source (E), question (H), and session (I) are in [Short flows and skill naming](docs/agents/is-kurallari.md#short-flows-and-skill-naming).
-
-## Read before you act (Okuma işaretçileri)
-- Before you choose a scope, write a locked file, or start an audit: `docs/agents/is-kurallari.md`.
-- Before you write or change code, a test, or a rule parameter: `CODING_STANDARDS.md` "Code and test rules".
-- Before you commit or run a git command that changes the repository: `docs/agents/is-kurallari.md` "Git".
-- Before you touch a Task Scheduler task or a file in `kurulum/`: `docs/agents/zamanlayici.md`.
-- Before a source, question, or session job: read `docs/agents/is-kurallari.md` "Short flows and skill naming". Also read it before naming a skill or a document step.
-- Issue tracker and triage labels: `docs/agents/issue-tracker.md`. Domain reading rules are in "Domain documentation" above.
-
-## Standards (Standartlar)
-`CODING_STANDARDS.md` points to the shared general rules. Its `## Tansu` section and that of `DEFINITION_OF_DONE.md` hold the project rules.
-Review reads both files and the shared general rules.
+Follow `docs/agents/is-kurallari.md` for affected checks, evidence, review, commits, PRs, and merge.
+Apply `DEFINITION_OF_DONE.md` before claiming completion. Inspect the actual output and identify skipped checks.
+Merge only with Levent's explicit approval. Preserve branches and worktrees unless he approves their cleanup.
+Report what changed, how you checked it, and any remaining work or approval gate.

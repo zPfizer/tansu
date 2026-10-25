@@ -19,7 +19,10 @@ Ne zaman issue açılacağı ve küçük belge düzeltmelerinin hangi PR yolunu 
 
 ## Ana belgeler
 
-- [AGENTS.md](AGENTS.md): proje girişi ve çalışma kuralları.
+- [25.10.2026 denetim başlangıcı](docs/baslangic-20261025.md): kayıt envanteri, doğrulanan kusurlar, kanıt sınırları ve açık işler.
+
+- [AGENTS.md](AGENTS.md): Claude ve Codex için ortak proje girişi ve çalışma kuralları.
+- [CLAUDE.md](CLAUDE.md): ortak yönergeleri içeri alan Claude girişi.
 - [Tasarım](docs/TASARIM.md): davranış, kararlar ve uygulama sırası (§7).
 - [İş akışı](docs/agents/is-kurallari.md): kapsam, ortak adımlar, inceleme ve teslim.
 - [Kod ve test kuralları](CODING_STANDARDS.md), [bitti ölçütleri](DEFINITION_OF_DONE.md).

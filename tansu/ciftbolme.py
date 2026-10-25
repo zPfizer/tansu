@@ -193,7 +193,12 @@ def _piyasa_kapanislari(paket, tarih, semboller):
         if not indeks.is_monotonic_increasing or indeks.has_duplicates:
             raise ValueError("Piyasa tarihleri sıralı ve tekil olmalı")
         Kc[sembol] = pd.Series(
-            [r["duzeltilmis_kapanis"]["deger"] for r in satirlar],
+            [
+                np.nan
+                if "eksik" in r.get("kalite_bayraklari", ())
+                else r["duzeltilmis_kapanis"]["deger"]
+                for r in satirlar
+            ],  # TASARIM 5.13: E1 gözlemi hesapta eksik gün olarak kalır.
             index=indeks,
             dtype=float,
         )
@@ -545,7 +550,7 @@ def hazirla(anlik, evr, bas=simulator.BASLANGIC, p=Parametre(), aday_esik=None) 
     sektor = anlik.sektor or {}
     uye = {h for liste in evr.values() for h in liste}
     sabit = tuple(p.sabit) if set(p.sabit) <= set(anlik.fiyat["sembol"]) else ()
-    f = anlik.fiyat[anlik.fiyat["sembol"].isin(uye | set(sabit))]
+    f = anlik.hesap_fiyati[anlik.hesap_fiyati["sembol"].isin(uye | set(sabit))]
     Kc = f.pivot(index="tarih", columns="sembol", values="kapanis").reindex(gunler)
     yillar = secim_gunleri(gunler, ilk_konum)
     genis = replace(p, p_esik=max(p.p_esik, aday_esik or 0.0))

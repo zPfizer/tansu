@@ -503,3 +503,154 @@ def test_dunku_kartin_hissesi_durumundan_bagimsiz_indirilir(tmp_path, durum):
     yol.write_text(json.dumps(satir_) + "\n", encoding="utf-8")
     gunluk.gunluk(TARIH, tmp_path, simdi=SIMDI, kaynak=k, p=P, atr_n=2)
     assert "YYYY" in k.istenen
+
+
+def taban_fiyatlari(semboller, son="2026-10-05", degisen=False):
+    fiyat = {}
+    for s in semboller:
+        fiyat[s] = []
+        for tarih in pd.bdate_range("2026-08-03", son):
+            r = satir(tarih, 100.0, 100.0)
+            hacim = 10.0 if s == "B" else 100.0
+            if degisen and tarih.month >= 9:
+                hacim = 10.0 if s == "A" else 100.0
+            r.update(hacim=hacim)
+            fiyat[s].append(r)
+    return fiyat
+
+
+def taban_yaz(kok, fiyat, dakika=0):
+    return veri.indir(
+        list(fiyat),
+        kok,
+        SahteKaynak(fiyat, {s: [] for s in fiyat}),
+        simdi=dt.datetime(2026, 10, 5, 18, dakika),
+    )
+
+
+def onceki_kart(hisse):
+    yol = kayit.KAYIT_DIZINI / "kartlar.jsonl"
+    yol.parent.mkdir(parents=True, exist_ok=True)
+    yol.write_text(
+        json.dumps(
+            {"tarih": "2026-10-02", "kartlar": [{"hisse": hisse, "durum": "STOP"}]}
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+
+@pytest.mark.parametrize(
+    "yeni,tekrar,beklenen",
+    [
+        ("Z", False, {"A", "C", "D", "E", "KART"}),
+        ("Z", True, {"A", "C", "D", "E", "KART"}),
+        ("UVWXY", False, {"V", "W", "X", "Y", "KART"}),
+    ],
+    ids=["yeni_dar", "tekrar_sembol", "esit_genislikte_yeni"],
+)
+def test_gunluk_en_genis_taban_ve_esitlikte_yeniyi_kullanir(
+    tmp_path, yeni, tekrar, beklenen
+):
+    taban_yaz(tmp_path, taban_fiyatlari("ABCDE"))
+    kimlik = taban_yaz(tmp_path, taban_fiyatlari(yeni), dakika=1)
+    if tekrar:
+        yol = tmp_path / "ag" / kimlik / "manifest.json"
+        manifest = json.loads(yol.read_text(encoding="utf-8"))
+        manifest["semboller"] = ["Z"] * 6
+        yol.write_text(json.dumps(manifest), encoding="utf-8")
+    onceki_kart("KART")
+    fiyat = taban_fiyatlari([*"ABCDE", *yeni, "KART"])
+    k = Kayitli(fiyat, {s: [] for s in fiyat})
+    assert gunluk.gunluk(TARIH, tmp_path, simdi=SIMDI, kaynak=k) == 0
+    assert set(k.istenen) == beklenen
+
+
+@pytest.mark.parametrize(
+    "durum,bozuk_hisse,bozuk_gunler,beklenen",
+    [
+        ("pay", "B", ["2026-09-01", "2026-09-02", "2026-09-03"], 0),
+        ("payda", "A", ["2026-09-01", "2026-09-02"], 1),
+        ("ay_degisti", "B", ["2026-09-01", "2026-09-02", "2026-09-03"], 0),
+        ("taban_sonrasi", "A", ["2026-10-01", "2026-10-02"], 1),
+    ],
+)
+def test_normal_gunluk_komutunda_kapi_tarihli_taban_uyelerini_sayar(
+    tmp_path, monkeypatch, durum, bozuk_hisse, bozuk_gunler, beklenen
+):
+    from tansu import __main__ as komut
+
+    degisen = durum in ("ay_degisti", "taban_sonrasi")
+    taban_yaz(
+        tmp_path,
+        taban_fiyatlari(
+            "ABCDE",
+            son="2026-09-30" if durum == "taban_sonrasi" else "2026-10-05",
+            degisen=degisen,
+        ),
+    )
+    fiyat = taban_fiyatlari("ABCDE", degisen=degisen)
+    for r in fiyat[bozuk_hisse]:
+        if r["tarih"].date().isoformat() in bozuk_gunler:
+            r.update(dusuk=200.0, ham_dusuk=200.0)
+    if durum == "ay_degisti":
+        for r in fiyat["A"]:
+            if r["tarih"].date().isoformat() in (
+                "2026-10-01",
+                "2026-10-02",
+                "2026-10-05",
+            ):
+                r.update(dusuk=200.0, ham_dusuk=200.0)
+    onceki_kart("A" if durum == "ay_degisti" else "B")
+    k = Kayitli(fiyat, {s: [] for s in fiyat})
+    monkeypatch.setattr(komut.kaynak, "IsYatirim", lambda: k)
+    assert komut.main(["gunluk", "2026-10-05", "--kok", str(tmp_path)]) == beklenen
+    assert set(k.istenen) == set("ABCDE")
+    d = durum_satirlari()
+    assert d[0] == ("SORUNLU" if beklenen else "TAMAM")
+    assert ("karantina oranı > %1" in d[-1]) == bool(beklenen)
+
+
+def test_acik_sembol_girdisi_taban_okumaz(tmp_path, monkeypatch):
+    gercek = veri.oku
+
+    def oku(kimlik, kok):
+        assert kok == tmp_path / "gunluk", "Açık sembol girdisi taban istemez."
+        return gercek(kimlik, kok)
+
+    monkeypatch.setattr(veri, "oku", oku)
+    assert kos(tmp_path) == 0
+    assert durum_satirlari()[0] == "TAMAM"
+
+
+@pytest.mark.parametrize("bozuk", ["json", "okunamayan"])
+def test_normal_gunluk_komutunda_bozuk_taban_metadata_sorunlu_olur(
+    tmp_path, monkeypatch, bozuk
+):
+    from tansu import __main__ as komut
+
+    fiyat = taban_fiyatlari("ABCDE")
+    taban_yaz(tmp_path, fiyat)
+    manifest = tmp_path / "ag" / "20261006-1800" / "manifest.json"
+    manifest.parent.mkdir()
+    if bozuk == "json":
+        manifest.write_text("{", encoding="utf-8")
+    else:
+        manifest.mkdir()
+    k = Kayitli(fiyat, {s: [] for s in fiyat})
+    monkeypatch.setattr(komut.kaynak, "IsYatirim", lambda: k)
+
+    assert komut.main(["gunluk", "2026-10-05", "--kok", str(tmp_path)]) == 1
+    assert k.istenen == []
+    d = durum_satirlari()
+    assert d[:5] == [
+        "SORUNLU",
+        "Son başarılı koşu: yok",
+        "Anlık görüntü: yok",
+        "Son çubuk: yok",
+        "Sembol sayısı: yok",
+    ]
+    assert d[-1].startswith("Eylem: Kart üretilmedi: ")
+    assert d[-1].endswith("Hatayı oku ve yeniden çalıştır.")
+    assert not list(rapor.RAPOR_DIZINI.glob("kartlar-*.csv"))
+    assert not (kayit.KAYIT_DIZINI / "kartlar.jsonl").exists()

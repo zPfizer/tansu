@@ -7,6 +7,20 @@ sürüm numaraları [Semantic Versioning](https://semver.org/spec/v2.0.0.html) b
 ## [Yayımlanmamış]
 
 - Yönetici güncel durumu kısa kayıttan sürdürür; eski kayıt ve kanıtlar korunur, yalnız gerekli geçmiş açılır. Beyin araması mevcut proje girişini kullanır. (#185)
+- 25.10.2026 başlangıç denetimi, 91 issue ve 95 PR için tarihli envanter ve açık iş kaydıyla belgelendi. WF inceleme durumu #171 kanıtıyla düzeltildi; tam veri, MC ve günlük uygunluk koşulları korundu. (#187)
+- S12 açıklama düzeltmeleri özgün kayıt ve kimlikler korunarak ayrı olay olarak doğrulanır; kapanmış koşunun tamamlanmış çıktısına açıklama eklenebilir. Yeni ayar revizyonu yazılmadan önce okuyucuyla aynı tam doğrulamadan geçer. (#190)
+- İleri sınama özetinin ölçü, eğri, düşüş, başvuru ve giriş kohortu sayımları aynı tekil nihai işlem dizisini kullanır. Eş içerikli kopyalar bir kez sayılır; aynı kimliğin çelişen içeriği semboller arasında da reddedilir. Açık ve kısmi sonuçların muhasebesi korundu. (#192)
+- Günlük koşu en geniş doğrulanmış tabanı, eşitlikte en yeni kimliği seçer; veri kapısının iki oran teriminde aynı tabanın tarihli üyeleri kullanılır ve önceki kart hisseleri indirmede korunur. Kesilen sektör indirmesi kapsam özetiyle başarısız çıkış verir. (#189)
+- Kayıtlı ileri sınamada yayın sonrası ilerleme bildirimi hatası kesin çeyrek sonucunu değiştirmez; tek makbuz, asıl hata ve gerçek bitiş sayımları korunur. (#191)
+- Limit istisnası tanımlı şirket olaylarıyla sınırlandı; eksik hacim karantinaya alındı. Kaynak günü hataları ham kanıtı değiştirmeden EMA, çift ve günlük hesap girdilerinden çıkarıldı. (#188)
+
+- Claude düzenleme kancasına saf refaktör için oturuma ve çalışma klasörüne bağlı önce/sonra test kanıtı eklendi. Olağan test değişikliği yolu korundu; başarılı son kontrol refaktör iznini kapatır.
+
+- Belge akışının kapanışı tüm ilgili kontrollerden sonraya taşındı. Davranışı koruyan kod düzenlemelerinin önce ve sonra aynı testlerle doğrulanması ortak test kuralında açıklandı; yeni davranış ve hata düzeltmelerinde önce başarısız, sonra başarılı test şartı korundu.
+
+- Ortak girişe bağlı iş akışları sadeleştirildi. Yerel düzenleme ile yayım adımları ayrıldı; kaynak, test, bağımsız inceleme ve onay koşulları kendi belgelerinde korundu.
+
+- AGENTS.md ve CLAUDE.md sıfırdan yazıldı. Ortak giriş genel çalışma yöntemini pstack'e, proje kurallarını mevcut sahiplerine yönlendirir. Yerel yönergelerdeki çakışan yöntemler ve eski başvurular uyarlandı.
 
 - Claude ve Codex'te aynı sözleşmeyi ve pstack kaynağını kullanan TANSU yönetici ajanı uygulamanın görünür yerel ajan arayüzünden çalışır; sürüm hazır olduğunda onay bekler, Windows Görev Zamanlayıcı kullanılmaz. (#181)
 

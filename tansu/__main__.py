@@ -51,7 +51,7 @@ def _evren_indir(kok: Path) -> str:
 
 
 def _sektor_indir(kok: Path, kimlik: str) -> str:
-    """Eksik KAP sektörlerini yavaş ve devam edilebilir okur; hedef evren üyeleridir (TASARIM 4). Yeni kimlik ya da uyarı."""
+    """Eksik KAP sektörlerini tamamlar; kesilirse VeriHatasi verir (TASARIM 4)."""
     anlik = veri.oku(kimlik, kok)
     uye = sorted(
         {
@@ -64,11 +64,9 @@ def _sektor_indir(kok: Path, kimlik: str) -> str:
     )
     yeni, kapsam = veri.sektor_tamamla(kimlik, kok, kaynak.KapSektor(), uye)
     ozet = f"hedef {kapsam['hedef']}, var {kapsam['var']}, listede yok {len(kapsam['listede_yok'])}, alınamayan {len(kapsam['alinamayan'])}"
-    return (
-        f"Yeni anlık görüntü {yeni}: {ozet}"
-        if yeni
-        else f"Art arda hata, durdu (yeniden çalıştır): {ozet}"
-    )
+    if yeni is None:
+        raise veri.VeriHatasi(f"Art arda hata, durdu (yeniden çalıştır): {ozet}")
+    return f"Yeni anlık görüntü {yeni}: {ozet}"
 
 
 def _en_yeni(kok: Path) -> str:

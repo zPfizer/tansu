@@ -2924,6 +2924,56 @@ def test_s12_onalti_secimsiz_ceyrek_ve_gercek_makbuzlar(tmp_path, monkeypatch):
     assert bitis["basarisiz"] == []
 
 
+@pytest.mark.parametrize("hata_turu", [ValueError, OSError])
+def test_s12_ilerleme_hatasi_kesin_ceyregi_ve_asil_hatayi_korur(
+    tmp_path, monkeypatch, hata_turu
+):
+    from tansu import deneme
+
+    depo, m, _ = s12_kayitli(tmp_path, monkeypatch)
+    asil_hata = hata_turu("ilerleme arızası")
+    bildirimler, kesin_baytlar = [], []
+
+    def durdur(mesaj):
+        bildirimler.append(mesaj)
+        kesin_baytlar.append(depo.yol.read_bytes())
+        raise asil_hata
+
+    with pytest.raises(Exception) as hata:
+        ts.kayitli_ileri_calistir(
+            depo, m.deneme_id, veri_koku=tmp_path, mod="gelistirme", ilerleme=durdur
+        )
+
+    assert hata.value is asil_hata, "Bildirim hatası ikinci yayın hatasıyla örtülemez"
+    assert bildirimler == ["2022Q1: tamamlandi"]
+    assert depo.yol.read_bytes().startswith(kesin_baytlar[0])
+    sonuc = hata.value.sonuc
+    ilk = sonuc["bolumler"][0]
+    assert ilk["durum"] == "tamamlandi" and ilk["neden"] is None
+    assert ilk["hatalar"] == []
+    assert all(b["durum"] == "baslamadi" for b in sonuc["bolumler"][1:])
+    olaylar = depo.oku()
+    yayinlar = [
+        o
+        for o in olaylar
+        if o.get("sonuc_turu") == "ileri_v1" and o["kosu_id"] == sonuc["kosu_id"]
+    ]
+    assert len(yayinlar) == 1
+    assert yayinlar[0]["kayit_id"] == ilk["sonuc_ref"]
+    assert deneme.kanonik(yayinlar[0]["kayit"]) == deneme.kanonik(
+        {k: v for k, v in ilk.items() if k != "sonuc_ref"}
+    )
+    bitis = olaylar[-1]
+    assert bitis["kayit_turu"] == "bitis" and bitis["durum"] == "hata"
+    assert bitis["tamamlanan"] == ["2022Q1"]
+    assert bitis["basarisiz"] == [b["bolum_id"] for b in sonuc["bolumler"][1:]] + [
+        "birlesik"
+    ]
+    assert bitis["ozetler"] == dict(
+        tamamlanan=1, denenen=1, basarisiz=0, baslamayan=15, hata="ilerleme arızası"
+    )
+
+
 def test_s12_secim_kayit_hatasi_test_hesabini_baslatmaz(tmp_path, monkeypatch):
     from tansu import deneme
 
