@@ -47,6 +47,7 @@ LIMIT_OLAY_KODLARI = frozenset(
 # TASARIM 5.15 #167: saklı metne yetkiyi çağıranın özeti değil yayımlanmış kaynak verir.
 _YAYIMLANMIS_KAYNAK_OZETLERI = {
     "bist30_2021_2025_v1": "6e9ff3cd4a9ce4f2fe9a9ef9f77c36694f563bebe1ca2ba4f924643ce904ad07",
+    "bist30_2026_v1": "1768ebf77b9dc4ac180962848782a92b9c6b7885e9a5e3132fd0f00ebbfd8274",
     "pay_kimligi_v1": "128cb4fdd2f310b3703d1e90dd6d83718b3a14185cd22c9a4bee6fd1190ea45d",
     "ilk_islem_v1": "8a678750c0ebfbfebe730fc8b4f53eaeaac0f622111d1dcf095cfa054589f4f1",
 }
@@ -80,7 +81,14 @@ class UyelikKapsamHatasi(VeriHatasi):
         )
 
 
-def _uyelik_tablosu(yol):
+# Her üyelik sürümü kendi tarih aralığını taşır; boş `bitis` aralığın son günü demektir (SPEC 3.2).
+UYELIK_SURUMLERI = {
+    "bist30_2021_2025_v1": (pd.Timestamp("2021-01-01"), pd.Timestamp("2025-12-31")),
+    "bist30_2026_v1": (pd.Timestamp("2026-01-01"), pd.Timestamp("2026-12-31")),
+}
+
+
+def _uyelik_tablosu(yol, son):
     tablo = pd.read_csv(yol, encoding="utf-8-sig", dtype=str, keep_default_na=False)
     if set(tablo.columns) != {"sembol", "baslangic", "bitis", "kaynak_id"}:
         raise VeriHatasi("üyelik tablosu sütunları geçersiz")
@@ -89,7 +97,8 @@ def _uyelik_tablosu(yol):
     try:
         tablo["bas"] = pd.to_datetime(tablo["baslangic"], format="%Y-%m-%d")
         tablo["son"] = pd.to_datetime(
-            tablo["bitis"].replace("", "2026-01-01"), format="%Y-%m-%d"
+            tablo["bitis"].replace("", str((son + pd.Timedelta(days=1)).date())),
+            format="%Y-%m-%d",
         ) - pd.Timedelta(days=1)
     except ValueError as hata:
         raise VeriHatasi("üyelik tablosunda tarih geçersiz") from hata
@@ -103,11 +112,12 @@ def _uyelik_tablosu(yol):
 
 def uyelik_hazirla(istek: UyelikIstegi, *, tablo_metni=None) -> dict:
     """Tarihli üyelik yanıtı (TASARIM 5.15)."""
-    if (istek.evren_politikasi, istek.uyelik_surumu) != (
-        "donemsel_bist30_v1",
-        "bist30_2021_2025_v1",
+    if (
+        istek.evren_politikasi != "donemsel_bist30_v1"
+        or istek.uyelik_surumu not in UYELIK_SURUMLERI
     ):
         raise VeriHatasi("bilinmeyen evren politikası/üyelik sürümü")
+    kapsam_bas, kapsam_son = UYELIK_SURUMLERI[istek.uyelik_surumu]
     yol = Path(__file__).parent / "referans" / istek.uyelik_surumu / "uyelik.csv"
     if tablo_metni is not None and hashlib.sha256(
         tablo_metni.encode("utf-8")
@@ -115,7 +125,8 @@ def uyelik_hazirla(istek: UyelikIstegi, *, tablo_metni=None) -> dict:
         raise VeriHatasi("üyelik sürümünün onaylı kaynak özeti uyuşmuyor")
     # TASARIM 5.15 #167: kayıtlı kaynak aynı parserdan dosyasız geçer.
     tablo = _uyelik_tablosu(
-        yol if tablo_metni is None else BytesIO(tablo_metni.encode("utf-8"))
+        yol if tablo_metni is None else BytesIO(tablo_metni.encode("utf-8")),
+        kapsam_son,
     )
     gunler, eksik = {}, []
     for tarih in istek.tarihler:
@@ -157,10 +168,7 @@ def uyelik_hazirla(istek: UyelikIstegi, *, tablo_metni=None) -> dict:
             "semboller": sorted(r["sembol"] for r in kayitlar),
             "kanitlar": kayitlar,
         }
-        if (
-            not pd.Timestamp("2021-01-01") <= t <= pd.Timestamp("2025-12-31")
-            or len(kayitlar) != 30
-        ):
+        if not kapsam_bas <= t <= kapsam_son or len(kayitlar) != 30:
             eksik.append(t.date().isoformat())
     if eksik:
         raise UyelikKapsamHatasi(istek.uyelik_surumu, eksik)
@@ -1111,6 +1119,73 @@ def oku(kimlik, kok) -> Anlik:
 
 def _sha256(yol: Path) -> str:
     return hashlib.sha256(yol.read_bytes()).hexdigest()
+
+
+def uyelik_araliklari() -> pd.DataFrame:
+    """Bütün sürümlerin BIST 30 aralıkları: sembol (İş Yatırım kodu), bas, son (dahil).
+
+    Borsa kodu `pay_kimligi_v1` ile şirketin tek koduna çevrilir: KOZAL → TRALT, KOZAA → TRMET (SPEC 3.3)."""
+    esleme = pd.read_csv(
+        PAY_KIMLIGI_KOKU / "pay_kimligi_v1" / "eslemeler.csv",
+        dtype=str,
+        keep_default_na=False,
+    )
+    kod = dict(zip(esleme["borsa_kodu"], esleme["kaynak_sembolu"], strict=True))
+    parcalar = [
+        _uyelik_tablosu(Path(__file__).parent / "referans" / surum / "uyelik.csv", son)
+        for surum, (_, son) in UYELIK_SURUMLERI.items()
+    ]
+    t = pd.concat(parcalar, ignore_index=True)
+    return t.assign(sembol=t["sembol"].map(lambda s: kod.get(s, s)))[
+        ["sembol", "bas", "son"]
+    ]
+
+
+def uyelik_bitisi() -> pd.Timestamp:
+    """Üyelik tablosunun son günü (SPEC 3.2)."""
+    return max(son for _, son in UYELIK_SURUMLERI.values())
+
+
+def gunluk(anlik: Anlik, sembol: str) -> pd.DataFrame:
+    """Bir sembolün günlük tablosu; stratejiler ve motor yalnız bunu okur (SPEC 3.7).
+
+    Fiyatlar düzeltilmiş (`ham_*` hariç); eksik gün NaN. `kilit_*` yüksek = düşük olan limit günleri,
+    `tavan_kapanis` tavanda kapanış. `karantina`: karantina gününden sonraki `KARANTINA_GUN` gün yeni sinyal yok."""
+    g = anlik.gun_tablosu
+    g = g[g["sembol"] == sembol].set_index("tarih").sort_index()
+    if g.empty:
+        raise VeriHatasi(f"{sembol}: anlık görüntüde yok")
+    f = anlik.hesap_fiyati
+    f = f[f["sembol"] == sembol].set_index("tarih").reindex(g.index)
+    uye = np.zeros(len(g), dtype=bool)
+    for r in uyelik_araliklari().query("sembol == @sembol").itertuples():
+        uye |= (g.index >= r.bas) & (g.index <= r.son)
+    karantina = (
+        g["karantina"]
+        .astype(float)
+        .rolling(KARANTINA_GUN, min_periods=1)
+        .max()
+        .astype(bool)
+    )
+    return pd.DataFrame(
+        {
+            "aof": f["aof"],
+            "yuksek": f["yuksek"],
+            "dusuk": f["dusuk"],
+            "kapanis": f["kapanis"],
+            "hacim": f["hacim"],
+            "ham_yuksek": f["ham_yuksek"],
+            "ham_dusuk": f["ham_dusuk"],
+            "ham_kapanis": f["ham_kapanis"],
+            "kilit_tavan": g["kilit_tavan_duyarli"].astype(bool),
+            "kilit_taban": g["kilit_taban_duyarli"].astype(bool),
+            "tavan_kapanis": g["kilit_tavan"].astype(bool),
+            "karantina": karantina,
+            "uye": uye,
+            "xu100": f["xu100"],
+        },
+        index=g.index.rename("tarih"),
+    )
 
 
 def cift_girdileri(gunler, C, A, F, kalite_surumu) -> dict:
