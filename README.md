@@ -1,31 +1,33 @@
 # TANSU
 
-TANSU, BIST için günlük sinyal ve geçmiş sınama sistemidir. Tansu'nun kaynaklarından
-esinlenen kuralları, para koymadan önce sınar. Sistem emir vermez; hangi kuralın
-sağlandığını gösterir. Kararı ve parayı Levent yönetir.
+TANSU, X'teki analist Tansu'nun işlem stratejilerini koda çevirir. Bulduğu her kurulum için yalnız
+Tansu'nun kuralının tanımladığı giriş, stop ve hedef seviyelerini verir. Geçmiş veride bu seviyelerin
+ne sıklıkla çalıştığını ölçer. Alım-satım talimatı, adet veya para tutarı vermez; kararı Levent verir.
 
-## GitHub'da ilerleme
+## Kurulum
 
-Issue, yapılacak işin kaydıdır. PR, değişikliklerin ana projeye girmeden önce kontrol edildiği pakettir.
+```
+python -m venv .venv
+.venv\Scripts\python.exe -m pip install -r requirements.lock.txt -e ".[dev]"
+```
 
-- [Issues](../../issues) ve [milestone'lar](../../milestones): işler ve hedef sürümler.
-- [Açık pull request'ler](../../pulls): süren değişiklikler.
-- [Birleşen pull request'ler](../../pulls?q=is%3Apr+is%3Amerged): main dalına giren işler.
-- [Releases — v0.1](../../releases/tag/v0.1): yayımlanan sürüm.
-- Actions: [ci](../../actions/workflows/ci.yml) testleri, biçimi ve lint'i;
-  [dod](../../actions/workflows/dod.yml) PR gövdesini denetler.
+## Kullanım
 
-Ne zaman issue açılacağı ve küçük belge düzeltmelerinin hangi PR yolunu kullanacağı [issue ve PR kuralında](docs/agents/issue-tracker.md#issue-and-pr-rule) yazılıdır.
+| Komut | Ne yapar |
+|---|---|
+| `tansu veri` | Veriyi indirir veya günceller. |
+| `tansu sina <ad> [--ac]` | Stratejiyi yıllara göre sınar ve `rapor/<ad>/sinama.html` yazar. |
+| `tansu ayarla <ad>` | 2021-2025 üzerinde parametre ayarlar. |
+| `tansu onayla <ad>` | Stratejiyi akşam seviye listesine alır (yalnız Levent). |
+| `tansu tara` | Akşam taraması: `rapor/sinyal/<tarih>.md`. |
+| `tansu durum` | Stratejilerin sınıfı ve durumu. |
 
-## Ana belgeler
+Komutlar `python -X utf8 -m tansu <komut>` biçiminde de çalışır.
 
-- [25.10.2026 denetim başlangıcı](docs/baslangic-20261025.md): kayıt envanteri, doğrulanan kusurlar, kanıt sınırları ve açık işler.
+## Testler
 
-- [AGENTS.md](AGENTS.md): Claude ve Codex için ortak proje girişi ve çalışma kuralları.
-- [CLAUDE.md](CLAUDE.md): ortak yönergeleri içeri alan Claude girişi.
-- [Tasarım](docs/TASARIM.md): davranış, kararlar ve uygulama sırası (§7).
-- [İş akışı](docs/agents/is-kurallari.md): kapsam, ortak adımlar, inceleme ve teslim.
-- [Kod ve test kuralları](CODING_STANDARDS.md), [bitti ölçütleri](DEFINITION_OF_DONE.md).
-- [İş takibi](docs/agents/issue-tracker.md): issue biçimi, durumlar ve etiketler.
-- [Kural dizini](docs/KURALLAR.md): aile tanımlarına ve Tansu kaynaklarına giriş.
-- [Değişiklik günlüğü](CHANGELOG.md): önemli değişiklikler.
+```
+.venv\Scripts\python.exe -X utf8 -m pytest -q
+```
+
+Testler yalnız yapay fiyat serisi kullanır. İş Yatırım verisi depoya girmez.

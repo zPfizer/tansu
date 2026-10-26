@@ -1,19 +1,31 @@
 .venv/
 /veri/
-/rapor/
 /gunluk/
 *.egg-info/
 __pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
 .claude/worktrees/
 /.scratch/
 /arsiv/
-*.pyc
-.pytest_cache/
-/docs/strateji-taslak/x-arsiv/medya/
-/docs/strateji-taslak/x-arsiv/siniflama/baglanti/*
-!/docs/strateji-taslak/x-arsiv/siniflama/baglanti/baglanti-sonuc.jsonl
 
-# Tansu kaynak içeriği: yalnız yerelde ve gizli tansu deposunda
+# Raporlar: yalnız rapor/<ad>/ozet.md Git'te (docs/SPEC.md bölüm 4).
+/rapor/*
+!/rapor/*/
+/rapor/*/*
+!/rapor/*/ozet.md
+/rapor/sinyal/
+/kayit/sinyaller.csv
+/kayit/tara.log
+
+# Tansu kaynak içeriği yalnız yerelde. Kamu deposu kararı açık (docs/SPEC.md Ek B #12); geri alınabilir ara kural.
+/docs/SPEC.md
+/docs/PLAN.md
+/docs/eksik-denetim.md
+/stratejiler/*.md
+!/stratejiler/sahip-kararlari.md
+/tests/altin/
 /docs/strateji-taslak/
 /docs/sorgu/
 /docs/strateji-modulleri-taslak.md

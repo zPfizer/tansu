@@ -1,4 +1,2 @@
 * text=auto eol=lf
 *.parquet binary
-CHANGELOG.md merge=union
-docs/denetimler/20261025-issues.tsv -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
