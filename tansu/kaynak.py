@@ -1,5 +1,6 @@
 """Ağa çıkan tek modül: İş Yatırım (TASARIM 4; kullanım kararı `docs/arastirma/kullanim-kosullari-fiyat-adimi.md`)."""
 
+import datetime as dt
 import io
 import json
 import re
@@ -66,6 +67,26 @@ class IsYatirim:
         self._cerez = oturum is not None  # sahte oturumda çerez adımı yok
 
     def fiyat(self, sembol, bas, son) -> pd.DataFrame:
+        """Tek istek; başarısızsa yıl yıl. Kaynak bazı sembollerde uzun aralığa boş yanıt verir (ALARK, 26.10.2026)."""
+        try:
+            return self._fiyat(sembol, bas, son)
+        except KaynakHatasi:
+            if bas.year == son.year:
+                raise
+        parcalar = [
+            self._fiyat(
+                sembol, max(bas, dt.date(y, 1, 1)), min(son, dt.date(y, 12, 31))
+            )
+            for y in range(bas.year, son.year + 1)
+        ]
+        return (
+            pd.concat([p for p in parcalar if not p.empty] or parcalar[:1])
+            .drop_duplicates("tarih")
+            .sort_values("tarih", kind="stable")
+            .reset_index(drop=True)
+        )
+
+    def _fiyat(self, sembol, bas, son) -> pd.DataFrame:
         govde = self._iste(
             "get",
             FIYAT_URL,
