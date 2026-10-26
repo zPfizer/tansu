@@ -371,3 +371,23 @@ def test_sirket_kodlari_borsapy_sirket_listesinden_ticker_sutununu_dondurur(
         borsapy, "companies", lambda: pd.DataFrame({"ticker": ["AAA", "BBB"]})
     )
     assert list(kaynak.sirket_kodlari()) == ["AAA", "BBB"]
+
+
+class BosGovde(Yanit):
+    def json(self):
+        raise ValueError("Expecting value: line 1 column 1 (char 0)")
+
+
+def test_uzun_aralik_bos_yanit_verirse_yil_yil_ister():
+    # 26.10.2026: ALARK için 2019-2026 tek isteği boş gövde döndürdü, yıllık istekler geldi.
+    gun = {**HAM, "HGDG_TARIH": "02-01-2025"}
+    k = kaynak.IsYatirim(
+        oturum=SahteOturum(
+            [BosGovde(200), Yanit(200, {"value": [HAM]}), Yanit(200, {"value": [gun]})]
+        ),
+        bekleme=0,
+        deneme_bekleme=(),
+    )
+    f = k.fiyat("ALARK", dt.date(2024, 6, 1), dt.date(2025, 3, 1))
+    assert list(f["tarih"].dt.strftime("%Y-%m-%d")) == ["2024-08-13", "2025-01-02"]
+    assert k.oturum.cagri == 3
