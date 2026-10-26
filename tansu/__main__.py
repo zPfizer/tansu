@@ -1,17 +1,21 @@
 """Komut girişi: `python -m tansu <komut>` (docs/SPEC.md bölüm 7)."""
 
 import argparse
+import csv
 import datetime as dt
 import shutil
 import sys
+import webbrowser
 from pathlib import Path
 
-from tansu import kaynak, veri
+from tansu import kaynak, rapor, sinama, veri
+from tansu.stratejiler import STRATEJILER
 
 VERI_KOKU = Path("veri")
 VERI_BASLANGIC = dt.date(2019, 1, 1)  # 2019-2020 yalnız ısınma (SPEC 3.4)
 ALTIN_SEMBOLLER = ("SOKE",)  # BIST 30 dışı, yalnız altın testler için (SPEC 10)
 SAKLANAN_GORUNTU = 10
+DURUM_DOSYASI = Path("stratejiler/durum.csv")
 
 
 def son_anlik(kok: Path = VERI_KOKU) -> veri.Anlik:
@@ -52,6 +56,47 @@ def _veri(a) -> int:
     return 0
 
 
+def durum_gecisi(ad: str, eski: str, yeni: str, yol: Path = DURUM_DOSYASI) -> str:
+    """`durum.csv` satırını `eski` durumdaysa `yeni` yapar; son durumu döndürür (SPEC 4)."""
+    with yol.open(encoding="utf-8", newline="") as f:
+        satirlar = list(csv.DictReader(f))
+    satir = next((r for r in satirlar if r["ad"] == ad), None)
+    if satir is None:
+        raise veri.VeriHatasi(f"{ad}: durum.csv içinde yok")
+    if satir["durum"] == eski:
+        satir.update(durum=yeni, tarih=dt.date.today().isoformat())
+        with yol.open("w", encoding="utf-8", newline="") as f:
+            yazici = csv.DictWriter(
+                f, ["ad", "durum", "tarih", "not"], lineterminator="\n"
+            )
+            yazici.writeheader()
+            yazici.writerows(satirlar)
+    return satir["durum"]
+
+
+def _sina(a) -> int:
+    strateji = STRATEJILER.get(a.ad)
+    if strateji is None:
+        print(f"tansu sina: bilinmeyen strateji {a.ad}", file=sys.stderr)
+        return 2
+    try:
+        anlik = son_anlik(a.kok)
+        islemler, sinyaller, sayac = sinama.calistir(strateji, anlik)
+        yol = rapor.yaz(strateji, islemler, sinyaller, sayac, kimlik=anlik.kimlik)
+        durum = durum_gecisi(a.ad, "taslak", "sinandi")
+    except veri.VeriHatasi as hata:
+        print(f"tansu sina: {hata}", file=sys.stderr)
+        return 1
+    toplam = islemler["R"].sum() if len(islemler) else 0.0
+    print(
+        f"{a.ad}: {len(sinyaller)} sinyal, {len(islemler)} dolum, toplam {toplam:.2f} R"
+    )
+    print(f"rapor: {yol}; durum: {durum}")
+    if a.ac:
+        webbrowser.open(yol.resolve().as_uri())
+    return 0
+
+
 def _henuz_yok(a) -> int:
     print(f"tansu {a.komut}: henüz yapılmadı (docs/SPEC.md bölüm 12).", file=sys.stderr)
     return 2
@@ -71,7 +116,8 @@ def ayristirici() -> argparse.ArgumentParser:
     p = alt.add_parser("sina", help="stratejiyi geçmiş veride sına, rapor yaz")
     p.add_argument("ad")
     p.add_argument("--ac", action="store_true", help="raporu tarayıcıda aç")
-    p.set_defaults(calistir=_henuz_yok)
+    p.add_argument("--kok", type=Path, default=VERI_KOKU, help=argparse.SUPPRESS)
+    p.set_defaults(calistir=_sina)
 
     p = alt.add_parser("ayarla", help="2021-2025 üzerinde parametre ayarla")
     p.add_argument("ad")

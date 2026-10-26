@@ -278,3 +278,13 @@ def test_adx_eksi_di_arti_di_den_buyukse_dx_mutlak_degerdir():
     )
     assert sonuc.isna().tolist() == [True, True, True, False, False]
     assert sonuc.iloc[3:].tolist() == pytest.approx([100.0, 50.0], abs=1e-9)
+
+
+def test_atr_basit_gercek_araligin_basit_ortalamasi():
+    # TR: 2 (ilk gün y-d), sonra max(y-d, |y-k_1|, |d-k_1|) = 3, 4 → 3 günlük ortalama 3.
+    y = pd.Series([12.0, 14.0, 16.0])
+    d = pd.Series([10.0, 11.0, 12.0])
+    k = pd.Series([11.0, 13.0, 15.0])
+    a = gostergeler.atr_basit(y, d, k, n=3)
+    assert a.iloc[:2].isna().all()
+    assert a.iloc[-1] == pytest.approx(3.0)
