@@ -31,7 +31,7 @@ gartley: 17 sinyal, 3 dolum, toplam 2.55 R
 rapor: rapor\gartley\sinama.html; durum: sinandi
 ```
 
-Altın test (yerel veri, görüntü 20261026-2018): varsayılan dedektör SOKE'de X 10.20 (29.12.2025), A 21.20 (06.05.2026), B 14.10, C 19.63 buluyor; C onayı 10.08.2026, `limit` seviye 12.554, stop 10.20, durum AKTIF. Tansu'nun taraması: 0.786 = 12.55, D = 12.53, durum AKTIF. Fark %1 toleransın içinde.
+Altın test (yerel veri, görüntü 20261026-2108, 48 sembolün hepsi tam): varsayılan dedektör SOKE'de X 10.20 (29.12.2025), A 21.20 (06.05.2026), B 14.10, C 19.63 buluyor; C onayı 10.08.2026, `limit` seviye 12.554, stop 10.20, durum AKTIF. Tansu'nun taraması: 0.786 = 12.55, D = 12.53, durum AKTIF. Fark %1 toleransın içinde.
 
 Dönem tablosu (sinyal tarihi 2021-2025, varsayılan parametreler, ayarsız):
 

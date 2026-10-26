@@ -2,7 +2,7 @@
 
 Bu rapor seviye ölçümüdür; alım-satım talimatı değildir.
 
-Veri görüntüsü: 20261026-2018. Dönem: 2021-2025. Parametreler varsayılan.
+Veri görüntüsü: 20261026-2108. Dönem: 2021-2025. Parametreler varsayılan.
 
 | Dönem | Sinyal | Dolum | Beklenti R | Toplam R | Kazanma |
 |---|---|---|---|---|---|
