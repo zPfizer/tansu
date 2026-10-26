@@ -17,7 +17,7 @@ Tarih: 26.10.2026. Dal: `faz-3-gartley` → `yeniden-kurulus`.
 
 ```
 $ .venv\Scripts\python.exe -X utf8 -m pytest -q
-151 passed in 4.67s
+152 passed in 4.52s  (faz 2 birleştikten sonra; altın test dahil)
 $ .venv\Scripts\python.exe -m ruff check tansu tests
 All checks passed!
 $ .venv\Scripts\python.exe -m ruff format --check tansu tests
