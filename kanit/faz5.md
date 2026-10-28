@@ -77,3 +77,28 @@ Düzeltmelerden sonra gerçek veri sayıları değişmedi (yukarıdaki çıktı,
 
 - Al-tut referansları (SPEC 5.6): bu gecenin kapsamında değil.
 - Rastgele giriş kıyası çift ve kesit listeleri için yok (henüz böyle strateji yok; faz 8).
+
+## Düzeltme: alt limit kilidinde dokunuş stopu (28.10.2026)
+
+Hata: dokunuş stoplu açık işlemde alt limit kilitli günün fiyatı stopa ulaşınca motor bekleyen çıkış kaydetmiyordu. Ertesi gün fiyat stopun üstüne dönerse işlem açık kalıyordu. Düzeltme: bu durumda çıkış bekleyen stop olur ve ilk kilitsiz günün AOF'sinden yapılır (SPEC 5.4 adım 1 ve 3).
+
+```
+$ .venv\Scripts\python.exe -X utf8 -m pytest -q tests/test_islem.py -k dokunulan_stop     (düzeltmeden önce)
+E   AssertionError: assert (Timestamp('2022-01-07 00:00:00') == Timestamp('2022-01-06 00:00:00'))
+1 failed, 27 deselected in 0.14s
+$ .venv\Scripts\python.exe -X utf8 -m pytest -q     (düzeltmeden sonra)
+224 passed, 1 skipped in 19.77s
+$ .venv\Scripts\python.exe -X utf8 -m tansu ayarla gartley            (25.7 s)
+$ .venv\Scripts\python.exe -X utf8 -m tansu ayarla ortalama-kesisim   (28.3 s)
+```
+
+Gerçek veri (görüntü 20261026-2108): iki stratejide de bütün sayılar aynı kaldı; `ozet.md` değişmedi, yalnız json `kod_surumu` yeni koda geçti.
+
+| | önce | sonra |
+|---|---|---|
+| `gartley` örneklem dışı | N 38, toplam 2.74 R | N 38, toplam 2.74 R |
+| `gartley` rastgele giriş yüzdeliği | 82.3 | 82.3 |
+| `ortalama-kesisim` örneklem dışı | N 130, ortalama %5.96 | N 130, ortalama %5.96 |
+| `ortalama-kesisim` rastgele giriş yüzdeliği | 18.1 | 18.1 |
+
+Neden değişmedi: veride 78 alt limit kilitli gün var, 37'si üyelik günü. `gartley` son parametreleriyle 36 işlemin hiçbiri açıkken kilitli güne denk gelmiyor. `ortalama-kesisim` stopsuzdur; dokunuş stopu yoktur.
