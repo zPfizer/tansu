@@ -191,3 +191,21 @@ Levent: "Bu Gartley sağlam bir temele oturmadan, geçmiş verilerle desteklenme
 - İleri yürüme (ızgara: yalnız `sag_bar_10/15/20`, stop X, kapı 1,4; 2021-2025): bütün BIST'te örneklem dışı N 40, toplam 26.76 R, ortalama 0.669 R, kazanan %57, yüzdelik 98.5 (rastgele 0.209), bootstrap p5 11.66: üç bayrak geçer. Seçim: `sag_bar_10`, tolerans 0.05, geçerlilik 5. Aynı ızgara BIST 30'da N 2 verir. Ürün ızgarası (zigzag dahil) bütün BIST'te −0.172 R verir.
 - 2026 saklı dönem (bilgi; Levent'in onayıyla, seçimden sonra): ilk aday 3 işlem, 2.54 R; son aday 4 işlem, 0.04 R. Dördüncü işlemde (−2.50 R) eksik bir günden sonra ATR 14 gün NaN kalır ve risk tabanı sessizce düşer; 2021-2025'in 40 işleminin hiçbirinde bu durum yok.
 - Ölçümde bulunan üçüncü eksik: `gostergeler.atr_basit` tek eksik günden sonra 14 gün NaN verir; `islem` risk tabanını `max(risk, NaN)` ile alır ve tabanı kaybeder. Bütün BIST'te günlerin %3.6'sında ATR NaN'dır.
+
+### Kapı 1,30-1,42 ve evren basamakları (28.10.2026)
+
+Levent: "1,30-1,42 arasında deniyelim bir de evreni genişletelim sistematik şekilde". Ayar: yalnız `sag_bar` ızgarası, stop X, D 0,786; 2021-2025 ileri yürüme.
+
+- Kapı 1,30, 1,35 ve 1,40 aynı sonucu verir (N 40, 0.669 R, yüzdelik 98.5); 1,41 ve 1,42 hiç sinyal vermez. Stop X ile oran her kurulumda 1,403'tür.
+- Evren basamağı: her gün, önceki 60 işlem gününün ortanca TL hacmine göre sıra (geleceği görmez; ilk 30, BIST 30 ile 25-26 sembolde örtüşür).
+
+| Evren | Örneklem dışı N | Ortalama |
+|---|---|---|
+| ilk 30 | 1 | −1.034 R |
+| ilk 50 | 2 | 0.375 R |
+| ilk 100 | 6 | −0.396 R |
+| ilk 200 | 10 | 0.530 R |
+| ilk 300 | 18 | 0.658 R |
+| bütün BIST | 40 | 0.669 R (üç bayrak geçer) |
+
+- Sabit nokta (`sag_bar_10`, 0.05, 5), 2020-2025, 42 işlemin sinyal günündeki likidite sırasına göre: 1-100 N 10, 0.728 R; 101-200 N 10, 0.237 R; 201-300 N 7, 1.755 R; 300 sonrası N 15, 0.914 R. Kazanç her basamakta artıdır; sığ hisselere yığılmaz. Formasyon seyrek olduğu için yalnız bütün BIST 30 işlem eşiğini geçer.
