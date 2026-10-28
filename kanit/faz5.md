@@ -252,3 +252,5 @@ rapor: rapor\gartley\sinama.html; durum: yetersiz-ornek
 | durum | yetersiz-ornek | yetersiz-ornek |
 
 BIST 30'da örnek yetmez; bütün BIST'te aynı ızgara üç bayrağı geçer (yukarıdaki tablo, ilk satır). Ürün evreni bütün BIST'e ayrı işte açılır.
+
+Saklı dönem: son ayarlar (pivot 12'nin eklenmesi, ızgarada yalnız stop X) "Sağlam ayar" bölümündeki 2026 bakışlarından sonra seçildiği için 2026 saklı dönemi `gartley` için artık dokunulmamış bir sınav değildir; sonraki temiz sınav 30.09.2026 sonrasının yeni verisidir.
