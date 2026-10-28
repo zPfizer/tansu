@@ -7,6 +7,9 @@ Ajan bu dosyaya yazar; Levent'in kararı gereken sorular "Levent" ile işaretlid
 1. Levent, Ek B #12 (kamu deposu içeriği): kural kartları, Tansu alıntıları, tweet kimlikleri ve `docs/SPEC.md` yerelde kalıyor. Seçenekler: (a) yerelde kalsın, (b) depo gizli olsun ve bunlar commit edilsin.
 2. Levent, Git geçmişi: PR 197'nin bir commit'i `tansu/gostergeler.py` içinde Tansu kodundan kısa bir parça taşıyor; bugünkü dosya temiz. Geçmişi temizlemek ortak dalda zorla itme (force-push) ister; Levent'in ayrı onayı gerekir.
 3. Levent, `stratejiler/sahip-kararlari.md` 13. satır hâlâ "AÇIK" diyor; ajan bu dosyayı değiştirmez. Ek B #13 kararı aşağıdaki "Verilen kararlar" bölümündedir.
+4. Levent, likidite tabanı: bütün BIST'te çok az işlem gören hisseler de sınanır. Varsayılan: taban yok (Tansu bütün BIST'i tarar). Seçenek: önceki 60 günün ortanca TL hacmi bir tutarın altındaysa hisse o gün evren dışı. Gartley ölçümünde kazanç her likidite basamağında artıydı (`kanit/faz5.md`). Cevap gelene kadar taban yok.
+5. Levent, akşam sinyali kapsamı (SPEC 6 adım 2): bütün BIST (varsayılan, sınanan evrenle aynı) ya da yalnız BIST 30. `tansu tara` henüz yok; cevap 9. faza kadar bekleyebilir.
+6. Levent, `stratejiler/sahip-kararlari.md` 6. satır "Çift evreni: BIST 30" diyor; 28.10 evren kararından sonra bütün BIST olmalı. Ajan bu dosyayı değiştirmez.
 
 ## Gece 1 kayıtları (karar gerekmez)
 
@@ -22,6 +25,8 @@ Ajan bu dosyaya yazar; Levent'in kararı gereken sorular "Levent" ile işaretlid
 - Al-tut referansları (SPEC 5.6) henüz yapılmadı; SPEC 12'de bunlara sahip bir faz yok.
 
 ## Verilen kararlar
+
+- Evren, Levent 28.10.2026: "Zaten tüm stratejilerimizi bütün bir evreninde deneyeceğiz." Bütün stratejiler bütün BIST'te sınanır: bugünkü KAP şirket listesi ve verinin başladığı 01.01.2019'dan beri işlemi kapanan kodlar; kapanan hisseler sınamada kalır (hayatta kalan yanlılığı yok). Kaynakta fiyatı olmayan kod işlem gören pay değildir, düşer. Bir sembol kaynakta satırı olan her gün evrendedir (`uye`). BIST 30 üyelik tablosu adlı katman olarak kalır. Sıra: (1) evren tanımı, (2) artımlı `tansu veri`, (3) ayrı işteki veri yolu kusurları, (4) bütün stratejilerde `tansu ayarla` yeniden, eski ve yeni sayılar `kanit/evren.md`. Saklı dönem ayara girmez. Durum: yapılıyor. SPEC (yerel) yaması SPEC sahibine verildi.
 
 - Ek B #13 (`gartley` R/R kapısı), Levent 28.10.2026: "tansunun dediği gibi yap". Kapı Tansu'nun yazılı kuralıyla uygulanır: ödül hedef1'e, risk stopa göre ölçülür; oran 1,5'in altındaysa kurulum alınmaz. `rr_min` varsayılanı 1,5; elle verilebilen değerler kapalı, 1,5, 2 (ızgarada değil). Stop X iken oran her Gartley'de ≈ 1,40, X − 2 ATR iken daha düşüktür; bu yüzden `gartley` varsayılan ayarla hiç kurulum üretmez. Tansu'nun tarama tablolarında bu kurala uymayan kurulumlar var; kural metni esas alındı. Durum: uygulandı (kanıt `kanit/faz5.md`).
 
