@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pandas as pd
 import pytest
+import requests
 
 from tansu import kaynak
 
@@ -42,7 +43,10 @@ class SahteOturum:
 
     def get(self, url, params=None, json=None, timeout=None):
         self.cagri += 1
-        return self.yanitlar.pop(0)
+        y = self.yanitlar.pop(0)
+        if isinstance(y, Exception):
+            raise y
+        return y
 
     post = get
 
@@ -105,6 +109,15 @@ def test_sunucu_hatasinda_yeniden_dener():
     k = kaynak.IsYatirim(oturum=oturum, bekleme=0, deneme_bekleme=(0, 0, 0))
     assert len(k.fiyat("CCOLA", dt.date(2024, 8, 13), dt.date(2024, 8, 13))) == 1
     assert oturum.cagri == 3
+
+
+def test_kopan_baglantida_yeniden_dener():
+    # Bütün BIST indirmesi A1CAP'ta yanıt gövdesi yarıda kopunca durdu (28.10.2026).
+    kopan = requests.exceptions.ChunkedEncodingError("Connection broken")
+    oturum = SahteOturum([kopan, Yanit(200, {"value": [HAM]})])
+    k = kaynak.IsYatirim(oturum=oturum, bekleme=0, deneme_bekleme=(0, 0, 0))
+    assert len(k.fiyat("CCOLA", dt.date(2024, 8, 13), dt.date(2024, 8, 13))) == 1
+    assert oturum.cagri == 2
 
 
 def test_kalici_hatada_yeniden_denemez():

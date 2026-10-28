@@ -25,6 +25,7 @@ STOP_KAPANISI = "dolumdan önce stop altında kapanış"
 VERI_SONU = "veri sonunda bekleyen emir"
 AYNI_GUN = "aynı gün tekrar"
 TAVAN_KILIDI = "üst limit kilidi (piyasa dolumu yok)"
+ATR_YOK = "ATR tanımsız (risk tabanı yok)"
 
 CIKIS_SINYALI = "çıkış sinyali"
 
@@ -165,6 +166,8 @@ def _red_nedeni(satir, gun_satiri, acik_var: bool, cikis: Cikis) -> str | None:
     )
     if not np.isnan(satir["stop"]) and not satir["stop"] < referans:
         return STOP_USTTE
+    if not np.isnan(satir["stop"]) and np.isnan(gun_satiri["atr"]):  # SPEC 5.2 taban
+        return ATR_YOK
     if cikis.hedef and all(np.isnan(satir[h]) for h, _ in cikis.hedef):
         return HEDEF_YOK
     return None

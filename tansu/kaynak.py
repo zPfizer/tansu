@@ -155,6 +155,7 @@ class IsYatirim:
                 requests.ConnectionError,
                 requests.Timeout,
                 requests.HTTPError,
+                requests.exceptions.ChunkedEncodingError,  # gövde yarıda koptu
                 ValueError,
             ) as hata:  # ValueError: JSON değil
                 son_hata = hata

@@ -106,6 +106,18 @@ def test_gunluk_sozlesmesi_eksik_gun_kilit_karantina_ve_uyelik():
         veri.gunluk(sentetik_anlik(), "YOK")
 
 
+def test_bozuk_gunun_fiyati_hesaba_girmez_karantina_kalir():
+    # Bütün BIST'te 287 sembolde 8.311 bozuk gün (fiyat 0 ya da tutarsız OHLC): motor AOF 0'dan dolum yapıyordu.
+    a = sentetik_anlik()
+    a.fiyat.loc[
+        (a.fiyat["sembol"] == "AAA") & (a.fiyat["tarih"] == "2024-01-04"), "aof"
+    ] = 0.0
+    g = veri.gunluk(a, "AAA")
+    assert g.loc["2024-01-04", ["aof", "yuksek", "dusuk", "kapanis"]].isna().all()
+    assert g.loc["2024-01-04", "karantina"]
+    assert g.loc["2024-01-05", "kapanis"] == 10.0
+
+
 def test_sinama_evreni_goruntudeki_butun_paylardir():
     assert set(sinama.gunler(sentetik_anlik())) == {"AAA", "TRALT"}
 

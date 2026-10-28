@@ -233,6 +233,16 @@ def test_red_nedenleri_sayilir():
     assert kos(g, s)[1][islem.HEDEF_YOK] == 1
 
 
+def test_atr_tanimsizsa_stoplu_kurulum_reddedilir_stopsuz_kurulum_kalir():
+    # Risk tabanı sinyal gününün ATR'sidir (SPEC 5.2); NaN ATR tabanı sessizce düşürüyordu.
+    g = gun_tablosu([11, 10.2, 12.2, 13.2, 13.2], dusuk=[10.9, 9.8, 12.1, 13.1, 13.1])
+    g.iloc[0, g.columns.get_loc("atr")] = np.nan
+    kayit, sayac = kos(g, sinyal(g))
+    assert kayit == [] and sayac[islem.ATR_YOK] == 1
+    kayit, sayac = kos(g, sinyal(g, stop=np.nan))
+    assert len(kayit) == 1 and not sayac[islem.ATR_YOK]
+
+
 def test_taban_kilidinde_kapanis_stopu_ilk_kilitsiz_gune_kalir():
     g = gun_tablosu(
         [11, 10.2, 8.5, 9.5, 9.6],
