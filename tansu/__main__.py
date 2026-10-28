@@ -10,13 +10,13 @@ from collections.abc import Collection
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 
 from tansu import ayar, kaynak, montecarlo, rapor, sinama, veri
 from tansu.stratejiler import STRATEJILER
 
 VERI_KOKU = Path("veri")
 VERI_BASLANGIC = dt.date(2019, 1, 1)  # 2019-2020 yalnız ısınma (SPEC 3.4)
-ALTIN_SEMBOLLER = ("SOKE",)  # BIST 30 dışı, yalnız altın testler için (SPEC 10)
 SAKLANAN_GORUNTU = 10
 DURUM_DOSYASI = Path("stratejiler/durum.csv")
 DURUMLAR = (
@@ -44,9 +44,20 @@ def goruntuleri_buda(kok: Path, saklanan: int = SAKLANAN_GORUNTU) -> list[str]:
 
 
 def _veri(a) -> int:
-    semboller = sorted({*veri.uyelik_araliklari()["sembol"], *ALTIN_SEMBOLLER})
     try:
-        kimlik = veri.indir(semboller, a.kok, kaynak.IsYatirim(), bas=VERI_BASLANGIC)
+        # Evren bütün BIST: bugünkü KAP listesi ve veri başlangıcından beri kapanan kodlar (SPEC 2, 3.4)
+        kapanan = kaynak.kapanan_kodlar()
+        kapanan = kapanan[~(kapanan["tarih"] < pd.Timestamp(VERI_BASLANGIC))]
+        semboller = sorted(
+            {*kaynak.sirket_kodlari().astype(str).str.strip(), *kapanan["kod"]}
+        )
+        kimlik = veri.indir(
+            semboller,
+            a.kok,
+            kaynak.IsYatirim(),
+            bas=VERI_BASLANGIC,
+            kapanan=kapanan,
+        )
     except (veri.VeriHatasi, kaynak.KaynakHatasi) as hata:
         print(f"tansu veri: {hata}", file=sys.stderr)
         return 1
