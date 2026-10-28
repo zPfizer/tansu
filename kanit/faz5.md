@@ -4,7 +4,7 @@ Tarih: 28.10.2026. Dal: `faz-5-montecarlo` → `yeniden-kurulus`.
 
 ## Yapılanlar
 
-- `tansu/islem.py`: tek kurulum yürütücüsü (`oyna`), tek R ve net % hesabı (`sonuc`), rastgele giriş için tek kurulum girişi (`rastgele`). `simule` aynı yürütücü üzerine kuruldu; davranış değişmedi (eski ve yeni motor, rastgele sentetik tablolarda 3 tohum, yaklaşık 42.000 kayıt, 0 fark).
+- `tansu/islem.py`: tek kurulum yürütücüsü (`oyna`), tek R ve net % hesabı (`sonuc`), rastgele giriş için tek kurulum girişi (`rastgele`). `simule` aynı yürütücü üzerine kuruldu; bu yeniden düzende davranış değişmedi (eski ve yeni motor, rastgele sentetik tablolarda 3 tohum, yaklaşık 42.000 kayıt, 0 fark). Sonraki davranış düzeltmesi son bölümde.
 - `tansu/montecarlo.py` (SPEC 5.8): dikişli örneklem dışı kurulumlar üzerinde (çıkış tarihi sırasıyla) bootstrap (1.000 koşu; toplam ve en büyük düşüş için 5/50/95. yüzdelik; sınıf a için batma riski = düşüşü 25 R ve üstü olan koşuların payı, varsayım), sıra karıştırma (1.000 koşu, düşüş yüzdelikleri), rastgele giriş kıyası (1.000 koşu; her ileri yürüme adımında o adımın gerçek kurulum sayısı kadar rastgele üye gün, `piyasa` girişi, bir gerçek kurulumun stop ve hedef uzaklıkları ATR(14) cinsinden kopyalanır, aynı çıkış kuralları, fiyat 31.12.2025'te kesik; istatistik: koşu başına ortalama R ya da net %). Sabit tohum 20261028; her koşunun kendi akışı var. 30 kurulumun altında tablolar `n/a (N = x)`.
 - `tansu/sinama.py`: tek düşüş tanımı (`dusus`), dizi de alır.
 - Rapor: "Monte Carlo" bölümü (tohum, üç tablo, sınıf a için batma riski) ve "Bayraklar" bölümü (SPEC 5.9, her bayrak N ile; program stratejiyi kendisi onaylamaz).
@@ -80,7 +80,7 @@ Düzeltmelerden sonra gerçek veri sayıları değişmedi (yukarıdaki çıktı,
 
 ## Düzeltme: alt limit kilidinde dokunuş stopu (28.10.2026)
 
-Hata: dokunuş stoplu açık işlemde alt limit kilitli günün fiyatı stopa ulaşınca motor bekleyen çıkış kaydetmiyordu. Ertesi gün fiyat stopun üstüne dönerse işlem açık kalıyordu. Düzeltme: bu durumda çıkış bekleyen stop olur ve ilk kilitsiz günün AOF'sinden yapılır (SPEC 5.4 adım 1 ve 3).
+Hata: dokunuş stoplu açık işlemde alt limit kilitli günün fiyatı stopa ulaşınca motor bekleyen çıkış kaydetmiyordu. Ertesi gün fiyat stopun üstüne dönerse işlem açık kalıyordu. Düzeltme: bu durumda çıkış bekleyen stop olur ve ilk kilitsiz günün AOF'sinden yapılır. Dayanak: SPEC 1 limit kilidi satırı (alt limitte satış dolmaz, çıkış kilitsiz ilk güne kayar) ve SPEC 5.4 adım 1-3; kayan çıkış adım 2'deki gibi AOF'den dolar. Kilitten önce bekleyen bir çıkış varsa o korunur.
 
 ```
 $ .venv\Scripts\python.exe -X utf8 -m pytest -q tests/test_islem.py -k dokunulan_stop     (düzeltmeden önce)
@@ -88,9 +88,11 @@ E   AssertionError: assert (Timestamp('2022-01-07 00:00:00') == Timestamp('2022-
 1 failed, 27 deselected in 0.14s
 $ .venv\Scripts\python.exe -X utf8 -m pytest -q     (düzeltmeden sonra)
 224 passed, 1 skipped in 19.77s
-$ .venv\Scripts\python.exe -X utf8 -m tansu ayarla gartley            (25.7 s)
-$ .venv\Scripts\python.exe -X utf8 -m tansu ayarla ortalama-kesisim   (28.3 s)
+$ .venv\Scripts\python.exe -X utf8 -m tansu ayarla gartley --kok <ana çalışma kopyası>\veri            (25.7 s)
+$ .venv\Scripts\python.exe -X utf8 -m tansu ayarla ortalama-kesisim --kok <ana çalışma kopyası>\veri   (28.3 s)
 ```
+
+Bağımsız inceleme (NOTLU GEÇTİ): eski ve yeni motor 20.000 rastgele sentetik tabloda karşılaştırıldı; 2.670 tablodaki her fark kilitli günde dokunulan dokunuş stopundan geliyor, açıklanamayan fark 0. Kapanış stopu, stopsuz kurulum ve kilitten önce bekleyen çıkış değişmedi. Gerçek veride iki stratejinin işlem kayıtları, sayaçları ve rastgele giriş kıyası aynı. İncelemeden sonra çok günlü kilit ve bekleyen çıkışın önceliği için iki test eklendi.
 
 Gerçek veri (görüntü 20261026-2108): iki stratejide de bütün sayılar aynı kaldı; `ozet.md` değişmedi, yalnız json `kod_surumu` yeni koda geçti.
 
