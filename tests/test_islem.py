@@ -236,6 +236,13 @@ def test_stopsuz_kurulum_reddedilmez_stop_cikisi_yok_r_nan():
         assert np.isnan(k["stop_gun"])
 
 
+def test_bekleyen_piyasa_emri_varken_gelen_ikinci_sinyal_acik_var_sayilir():
+    g = gun_tablosu([11, 11, 11, 11])
+    (k,), sayac = kos_b(g, piyasa(g, giris=(0, 1)))
+    assert k["sinyal_tarihi"] == g.index[0] and k["dolum_tarihi"] == g.index[1]
+    assert sayac[islem.ACIK_VAR] == 1
+
+
 def test_hedef_yok_yalniz_hedef_listesi_doluysa_sayilir():
     g = gun_tablosu([11, 11, 11])
     assert kos_b(g, piyasa(g))[1][islem.HEDEF_YOK] == 0
