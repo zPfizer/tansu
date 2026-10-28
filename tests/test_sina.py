@@ -3,11 +3,11 @@ import pandas as pd
 from tansu import __main__ as komut
 from tansu import veri
 from tansu.__main__ import main
-from tests.sentetik import gartley_yolu, gun_tablosu
+from tests.sentetik import gartley_yolu, gun_tablosu, ortalama_yolu
 
 
-def sentetik_anlik():
-    g = gun_tablosu(gartley_yolu(), bas="2022-01-03")
+def sentetik_anlik(yol=None):
+    g = gun_tablosu(gartley_yolu() if yol is None else yol, bas="2022-01-03")
     fiyat = g[["aof", "yuksek", "dusuk", "kapanis", "hacim", "xu100"]].copy()
     fiyat["ham_aof"], fiyat["ham_yuksek"] = g["aof"], g["yuksek"]
     fiyat["ham_dusuk"], fiyat["ham_kapanis"] = g["dusuk"], g["kapanis"]
@@ -34,3 +34,26 @@ def test_sina_raporu_yazar_ve_durumu_sinandi_yapar(monkeypatch, tmp_path, capsys
     assert (tmp_path / "rapor" / "gartley" / "ozet.md").exists()
     durum = (tmp_path / "stratejiler" / "durum.csv").read_text(encoding="utf-8")
     assert "gartley,sinandi," in durum
+
+
+def test_sina_sinif_b_ileri_getiri_tablosu_ve_yuzde_birimi_yazar(
+    monkeypatch, tmp_path, capsys
+):
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(komut, "son_anlik", lambda kok: sentetik_anlik(ortalama_yolu()))
+    (tmp_path / "stratejiler").mkdir()
+    (tmp_path / "stratejiler" / "durum.csv").write_text(
+        "ad,durum,tarih,not\nortalama-kesisim,taslak,2026-10-28,\n", encoding="utf-8"
+    )
+    assert main(["sina", "ortalama-kesisim"]) == 0
+    cikti = capsys.readouterr().out
+    assert "1 sinyal, 1 dolum, toplam " in cikti and " %\n" in cikti
+    klasor = tmp_path / "rapor" / "ortalama-kesisim"
+    html = (klasor / "sinama.html").read_text(encoding="utf-8")
+    for baslik in ("İleri getiri", "Ufuk (gün)", "Kümülatif %", "Toplam %"):
+        assert baslik in html
+    assert "Seviyelerin isabeti" not in html and "n/a (N = 1)" in html
+    islemler = pd.read_csv(klasor / "islemler.csv")
+    assert islemler.loc[0, "cikis_nedeni"] == "çıkış sinyali"
+    assert pd.isna(islemler.loc[0, "R"])
+    assert "Toplam %" in (klasor / "ozet.md").read_text(encoding="utf-8")
