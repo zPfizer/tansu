@@ -137,3 +137,36 @@ Gerçek veri (görüntü 20261026-2108):
 | durum | ayarlandi | yetersiz-ornek |
 
 Kapı açıkken 108 ızgara noktasının hiçbiri kurulum üretmez (toplam 0). Kapı kapalıyken aynı noktalarda 13.086 kurulum var: stop X ile hedef1 oranı her birinde 1,403; X − 2 ATR ile 0,152-1,118. Kapı kapalı sonuç `rr_min` = kapalı ile yeniden alınabilir; ayar ve komut testleri bu yolu kullanır.
+
+## Ölçüm: Gartley PRZ girişi ve geniş evren (28.10.2026)
+
+Soru: Gartley, Tansu'nun yazılı kurallarından çıkmadan ölçülebilir işlem üretir mi? Levent 28.10.2026: "Gatleyi çalıştırmamız lazım planlı ve proglamlı bir şekilde gerekli aksiyonları al." Kapı (hedef1'e göre 1,5) açık kaldı; barajlar ve saklı dönem değişmedi. Kod değişmedi; ölçüm geçici bir kopyada yapıldı.
+
+Denenen giriş: Tansu'nun 02.12.2025 tanımındaki PRZ, yani XA 0,786 seviyesi ile BC 1,272/1,618 uzantısının buluştuğu aralık. Seçenekler: `prz_orta` (0,786 ile en yakın uzantının ortası), `prz_alt` (ikisinin derini), `prz_derin` (0,786 ile 1,618 uzantısının derini). Hedefler ve kapı giriş seviyesine göre hesaplandı; ızgara ve ileri yürüme ürünle aynı.
+
+Evren: önce BIST 30 (görüntü 20261026-2108). Sonra Levent'in onayıyla yalnız bu ölçüm için bütün BIST: bugünkü 805 kod ve 2019'dan beri kapanan 34 kod, mevcut İş Yatırım kaynağıyla bir kez indirildi (655 kodda fiyat var, 2025 sonuna kadar verisi olan 619 sembol). Bu veri depoya ve `veri/`ye girmedi; ürün evreni BIST 30 kalır. Fiyat 31.12.2025'te kesildi, 2026 sonucu hesaplanmadı.
+
+| Giriş (kapı açık) | BIST 30 örneklem dışı | Bütün BIST örneklem dışı: N / toplam / ortalama | Bütün BIST rastgele giriş yüzdeliği |
+|---|---|---|---|
+| 0,786 (bugünkü) | N 0 | 0 / 0.00 R / n/a | n/a (N = 0) |
+| `prz_orta` | N 1, −1.04 R | 172 / −20.94 R / −0.122 R | 99.1 |
+| `prz_alt` | N 1, −1.04 R | 149 / −18.80 R / −0.126 R | 98.6 |
+| `prz_derin` | N 18, −3.93 R | 436 / −75.51 R / −0.173 R | 100.0 |
+| 0,786, kapı kapalı (yalnız kıyas) | N 38, 2.74 R | 233 / 3.09 R / 0.013 R | 23.0 |
+
+Okuma:
+
+- BIST 30'da PRZ girişi ölçülebilir örnek vermez (N 1 ile 18). Bütün BIST'te örnek yeter (N 149-436), ama her seçenek örneklem dışında kaybeder. "Örneklem dışı beklenti 0'ın üstünde" bayrağı geçmez.
+- Yüksek yüzdelik bir üstünlük değildir. Aynı stop ve hedef şekliyle rastgele girişler bu evrende daha çok kaybeder; strateji daha az kaybeder ama yine kaybeder.
+- `prz_derin` son seçimle 2021-2025'te 33 dolum ve 31.52 R verir, ama her pencerede seçilen parametreler sonraki pencerede kaybeder. Bu aşırı uyumdur.
+- Kapısız çekirdek kural bütün BIST'te üstünlük göstermez (işlem başına 0.013 R, yüzdelik 23.0).
+- Kayıp yaygındır: 127-304 sembol, en kötü işlem −3.6 R; en kötü yıllar 2023 ve 2024.
+
+Karar: PRZ girişi koda eklenmedi. Tansu'nun yazılı kurallarıyla Gartley, BIST günlük verisinde 2021-2025'te pozitif beklenti vermez. `gartley` durumu `yetersiz-ornek` kalır.
+
+Ölçüm düzeneği denetimi: aynı düzenek BIST 30 sembolleri ve üyelik günleriyle eski sayıları birebir verir (`prz_derin` 55 sinyal, 34 dolum, −7.21 R; örneklem dışı N 18, −3.93 R). Fark evrenden gelir.
+
+Ölçüm sırasında bulunan iki eksik (bu kayıtta düzeltilmedi):
+
+- `kaynak.IsYatirim._iste` kopan bağlantıyı (`ChunkedEncodingError`) yeniden denemez; ilk indirme bununla durdu.
+- Motor, `veri._gunler`'in bozuk saydığı günde (fiyat 0 ya da tutarsız OHLC) limit emri AOF'den doldurur; AOF 0 ise giriş 0 olur ve `islem.sonuc` sıfıra böler. Geniş evrende 287 sembolde 8.311 bozuk gün var; BIST 30 üyelik günlerinde 2. Ölçümde bozuk gün eksik gün sayıldı.
