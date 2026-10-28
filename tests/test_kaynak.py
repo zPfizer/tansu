@@ -175,6 +175,71 @@ def test_onbellekli_kaynak_tamamlanan_sembolu_yeniden_istemez(tmp_path):
     assert ikinci.cagri == 0
 
 
+class Akan:
+    """Sahte kaynak: `tablo` kaynağın bugünkü bütün geçmişidir; istenen aralığı verir, istekleri yazar."""
+
+    def __init__(self, tablo):
+        self.tablo, self.istekler, self.olay_istegi = tablo, [], 0
+
+    def fiyat(self, sembol, bas, son):
+        self.istekler.append(bas)
+        t = self.tablo
+        return t[t["tarih"].between(pd.Timestamp(bas), pd.Timestamp(son))].reset_index(
+            drop=True
+        )
+
+    def olaylar(self, sembol):
+        self.olay_istegi += 1
+        return [{"SHT_KODU": "02", "n": self.olay_istegi}]
+
+
+def gecmis(n, carpan=1.0):
+    t = pd.bdate_range("2024-01-01", periods=n)
+    return pd.DataFrame(
+        {"tarih": t, "ham_kapanis": 10.0 + pd.RangeIndex(n), "kapanis": carpan * 10.0}
+    )
+
+
+BAS, SON = dt.date(2019, 1, 1), dt.date(2030, 1, 1)
+
+
+def test_artimli_kaynak_ikinci_kosuda_yalniz_son_gunleri_ister(tmp_path):
+    ilk = Akan(gecmis(30))
+    i = kaynak.Artimli(ilk, tmp_path)
+    ilk_f, _ = i.fiyat("AKBNK", BAS, SON), i.olaylar("AKBNK")
+    assert ilk.istekler == [BAS] and len(ilk_f) == 30 and i.sayac == {"tam": 1}
+
+    yeni = gecmis(32)
+    yeni.loc[29, "ham_kapanis"] = (
+        99.0  # önbelleğin son günü seans içiydi; kaynak düzeltti
+    )
+    ikinci = Akan(yeni)
+    a = kaynak.Artimli(ikinci, tmp_path)
+    f = a.fiyat("AKBNK", BAS, SON)
+    assert ikinci.istekler == [ilk_f["tarih"].iloc[-kaynak.Artimli.ORTUSME].date()]
+    pd.testing.assert_frame_equal(f, yeni)
+    assert a.olaylar("AKBNK") == [{"SHT_KODU": "02", "n": 1}]  # önbellekten
+    assert ikinci.olay_istegi == 0 and a.sayac == {"artimli": 1}
+
+
+def test_artimli_kaynak_gecmis_degisince_butun_gecmisi_ve_olaylari_yeniden_ister(
+    tmp_path,
+):
+    kaynak.Artimli(Akan(gecmis(30)), tmp_path).fiyat("AKBNK", BAS, SON)
+    duzeltilmis = Akan(
+        gecmis(31, carpan=0.9)
+    )  # yeni temettü düzeltilmiş geçmişi değiştirir
+    a = kaynak.Artimli(duzeltilmis, tmp_path)
+    f = a.fiyat("AKBNK", BAS, SON)
+    assert duzeltilmis.istekler[-1] == BAS
+    pd.testing.assert_frame_equal(f, gecmis(31, carpan=0.9))
+    assert a.olaylar("AKBNK") == [{"SHT_KODU": "02", "n": 1}]
+    assert duzeltilmis.olay_istegi == 1 and a.sayac == {"tam": 1}
+    b = kaynak.Artimli(Akan(gecmis(31, carpan=0.9)), tmp_path)
+    pd.testing.assert_frame_equal(b.fiyat("AKBNK", BAS, SON), f)  # önbellek güncellendi
+    assert b.sayac == {"artimli": 1}
+
+
 def test_kapanan_tablo_yalniz_pay_kodlarini_2010_ve_sonrasini_alir():
     # Borsa İstanbul IslemSirasiKapananSirketler.xls düzeni: 4 başlık satırı, sonra kod/ad/tarih/açıklama.
     ham = pd.DataFrame(

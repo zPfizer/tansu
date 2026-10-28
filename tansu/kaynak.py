@@ -5,8 +5,10 @@ import io
 import json
 import re
 import time
+from collections import Counter
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import requests
 
@@ -209,6 +211,52 @@ class Onbellekli:
     def olaylar(self, sembol) -> list:
         yol = self._klasor / f"{sembol}.olaylar.json"
         if yol.exists():
+            return json.loads(yol.read_text(encoding="utf-8"))
+        o = self._kaynak.olaylar(sembol)
+        yol.write_text(json.dumps(o, ensure_ascii=False), encoding="utf-8")
+        return o
+
+
+class Artimli:
+    """Günlük güncelleme (SPEC 3.8): sembol başına son yanıtı saklar, kaynaktan yalnız son `ORTUSME` günü ister.
+
+    Örtüşen günler önbellekle aynı değilse (yeni bölünme ya da temettü düzeltilmiş geçmişi değiştirir) sembolün
+    bütün geçmişi ve olayları yeniden istenir. Önbelleğin son günü seans içi olabilir; karşılaştırılmaz, yenisi alınır.
+    `sayac`: bu koşuda kaç sembol artımlı, kaç sembol tam indi. Klasör başlangıç tarihine göre ayrı tutulur."""
+
+    ORTUSME = 10  # işlem günü
+
+    def __init__(self, kaynak, klasor):
+        self._kaynak, self._klasor = kaynak, Path(klasor)
+        self._klasor.mkdir(parents=True, exist_ok=True)
+        self._tam = set()
+        self.sayac = Counter()
+
+    def fiyat(self, sembol, bas, son) -> pd.DataFrame:
+        yol = self._klasor / f"{sembol}.fiyat.parquet"
+        eski = pd.read_parquet(yol) if yol.exists() else None
+        if eski is not None and len(eski) > self.ORTUSME:
+            kes = eski["tarih"].iloc[-self.ORTUSME]
+            yeni = self._kaynak.fiyat(sembol, kes.date(), son)
+            ortak = eski[eski["tarih"] >= kes].iloc[:-1].set_index("tarih")
+            gelen = yeni.drop_duplicates("tarih").set_index("tarih")
+            gelen = gelen.reindex(ortak.index)[ortak.columns]
+            if np.allclose(ortak, gelen, rtol=1e-6, atol=0, equal_nan=True):
+                f = pd.concat([eski[eski["tarih"] < kes], yeni], ignore_index=True)
+                f.to_parquet(yol, index=False)
+                self.sayac["artimli"] += 1
+                return f
+        f = self._kaynak.fiyat(sembol, bas, son)
+        f.to_parquet(yol, index=False)
+        self._tam.add(sembol)
+        self.sayac["tam"] += 1
+        return f
+
+    def olaylar(self, sembol) -> list:
+        # ponytail: olaylar yalnız tam inişte yenilenir. Kaynak düzeltmeyi geç yansıtırsa o günün görüntüsü eski
+        # olayla kurulur, ertesi koşu düzeltir. Sorun olursa olayları her koşuda iste (koşu ≈ iki katı sürer).
+        yol = self._klasor / f"{sembol}.olaylar.json"
+        if sembol not in self._tam and yol.exists():
             return json.loads(yol.read_text(encoding="utf-8"))
         o = self._kaynak.olaylar(sembol)
         yol.write_text(json.dumps(o, ensure_ascii=False), encoding="utf-8")

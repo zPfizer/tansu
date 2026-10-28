@@ -51,20 +51,20 @@ def _veri(a) -> int:
         semboller = sorted(
             {*kaynak.sirket_kodlari().astype(str).str.strip(), *kapanan["kod"]}
         )
-        kimlik = veri.indir(
-            semboller,
-            a.kok,
-            kaynak.IsYatirim(),
-            bas=VERI_BASLANGIC,
-            kapanan=kapanan,
+        k = kaynak.Artimli(
+            kaynak.IsYatirim(), a.kok / "onbellek" / f"fiyat-{VERI_BASLANGIC:%Y%m%d}"
         )
+        kimlik = veri.indir(semboller, a.kok, k, bas=VERI_BASLANGIC, kapanan=kapanan)
     except (veri.VeriHatasi, kaynak.KaynakHatasi) as hata:
         print(f"tansu veri: {hata}", file=sys.stderr)
         return 1
     silinen = goruntuleri_buda(a.kok)
     anlik = veri.oku(kimlik, a.kok)
     son_seans = anlik.gunler[-1]
-    print(f"anlık görüntü {kimlik}; silinen eski görüntü: {len(silinen)}")
+    print(
+        f"anlık görüntü {kimlik}; silinen eski görüntü: {len(silinen)}; "
+        f"önbellek: {k.sayac['artimli']} artımlı, {k.sayac['tam']} tam"
+    )
     print("sembol  ilk_tarih   son_tarih   satir  durum")
     tarihler = anlik.fiyat.groupby("sembol")["tarih"].agg(["min", "max", "size"])
     for s in semboller:
