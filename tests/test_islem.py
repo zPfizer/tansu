@@ -1,3 +1,5 @@
+from collections import Counter
+
 import numpy as np
 import pytest
 
@@ -64,6 +66,38 @@ def test_limit_seviyede_dolar_iki_hedef_paylariyla_kapanir():
     assert k["net_yuzde"] == pytest.approx(beklenen / 10 * 100)
     assert (k["hedef1_gun"], k["hedef2_gun"]) == (1, 2)
     assert not sayac[islem.SURE_DOLDU]
+
+
+def test_oyna_tek_sinyalde_simule_ile_ayni_islemi_verir():
+    g = gun_tablosu(
+        [11, 10.2, 12.2, 13.2, 13.2],
+        yuksek=[11.1, 10.5, 12.5, 13.5, 13.3],
+        dusuk=[10.9, 9.8, 10.3, 12.3, 13.1],
+    )
+    s = sinyal(g)
+    (k,), _ = kos(g, s)
+    taban = islem.RISK_TABANI * 0.1
+    e, son = islem.oyna(islem.Gun(g, s), 0, s.iloc[0], CIKIS, taban, Counter())
+    assert g.index[e.dolum_i] == k["dolum_tarihi"] and g.index[son] == k["cikis_tarihi"]
+    assert islem.sonuc(e) == (k["R"], k["net_yuzde"])
+
+
+def test_islemin_kapandigi_gun_yeni_sinyal_kabul_edilir():
+    g = gun_tablosu(
+        [11, 10.2, 12.2, 13.2, 13.2],
+        yuksek=[11.1, 10.5, 12.5, 13.5, 13.3],
+        dusuk=[10.9, 9.8, 10.3, 12.3, 13.1],
+    )
+    (k,), sayac = kos(g, sinyal(g, gunler=(0, 2, 3)))
+    assert k["cikis_tarihi"] == g.index[3]
+    assert sayac[islem.ACIK_VAR] == 1 and sayac[islem.VERI_SONU] == 1
+
+
+def test_emrin_dustugu_gun_yeni_sinyal_kabul_edilir():
+    g = gun_tablosu([11, 10.5, 10.6, 10.7, 10.7])
+    kayit, sayac = kos(g, sinyal(g, gunler=(0, 2, 3), gecerlilik=2))
+    assert kayit == [] and sayac[islem.SURE_DOLDU] == 1
+    assert sayac[islem.ACIK_VAR] == 1 and sayac[islem.VERI_SONU] == 1
 
 
 def test_seviyenin_altinda_acilan_gun_aofdan_dolar():
