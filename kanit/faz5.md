@@ -209,3 +209,19 @@ Levent: "1,30-1,42 arasında deniyelim bir de evreni genişletelim sistematik ş
 | bütün BIST | 40 | 0.669 R (üç bayrak geçer) |
 
 - Sabit nokta (`sag_bar_10`, 0.05, 5), 2020-2025, 42 işlemin sinyal günündeki likidite sırasına göre: 1-100 N 10, 0.728 R; 101-200 N 10, 0.237 R; 201-300 N 7, 1.755 R; 300 sonrası N 15, 0.914 R. Kazanç her basamakta artıdır; sığ hisselere yığılmaz. Formasyon seyrek olduğu için yalnız bütün BIST 30 işlem eşiğini geçer.
+
+### Tansu'ya bağlı ayar düğmeleri ve Monte Carlo (28.10.2026)
+
+Levent: "Gartley'nin setup'ını oturtmaya çalışıyoruz, ayarları ... tansu'dan kopmayarak". Her düğme bir Tansu metnine bağlıdır: D'nin PRZ içindeki yeri (0,786 / 0,80 / 0,82), stop (X; yazılı seçenek X − 2 ATR ve ara değerler; kapı D − X ile), ikinci hedef (AD 0,618 ya da KUYAS grafiğindeki C), stop biçimi (dokunuş / kapanış), pivot n (5-20 gün). Harita: 8 yapı × 54 nokta, 2020-2025. Seçim ileri yürüme ve Monte Carlo ile yapıldı (bütün BIST, kapı 1,40, 2021-2025; örneklem dışı 2023-2025; Monte Carlo 1.000 koşu, tohum 20261028).
+
+| Varyant | N | Ortalama | Kazanan | Yüzdelik | Bootstrap p5 | Gerçek düşüş | Bayraklar |
+|---|---|---|---|---|---|---|---|
+| Stop X, pivot `sag_bar` 10/12/15/20 | 34 | 0.886 R | %65 | 99.4 | 16.29 R | 3.13 R | geçer |
+| Stop ızgarada (X ... X − 2 ATR), kapı D − X | 32 | 0.791 R | %75 | 99.5 | 15.52 R | 2.05 R | geçer (son seçim X) |
+| Stop kapanış | 41 | 0.619 R | %61 | 91.8 | 8.61 R | 8.29 R | yüzdelik geçmez |
+| Stop X − 2 ATR, kapı D − X | 37 | 0.408 R | %73 | 84.0 | 5.65 R | 3.93 R | yüzdelik geçmez |
+| Stop X − 2 ATR, ikinci hedef C | 37 | 0.411 R | %70 | 79.8 | 5.43 R | 3.93 R | yüzdelik geçmez |
+
+- D 0,80 ve 0,82 (1,5 kapısıyla) haritada tabandan zayıftır. Pivot 5 ve 7 gün ≈ 0'dır.
+- İlk satırın Monte Carlo'su: bootstrap toplam p5 16.29 R, bootstrap düşüş p95 5.79 R, karıştırma düşüş p95 5.15 R, batma (25 R) %0. `sag_bar` 10/15/20 ızgarasında gerçek düşüş 8.30 R, bootstrap p95'in (7.24 R) üstündeydi; kayıplar 2024'te kümelenir.
+- Sonuç ayarı: X son n günün en düşüğü (`sag_bar`, n 10/12/15/20), AB 0,618, BC 0,382-0,886, CD 1,272-1,618 (tolerans 0,04-0,05), D 0,786'da alış limiti, 5 gün geçerli, stop X (dokunuş), hedefler AD'nin 0,382 ve 0,618'inde 50/50, kapı hedef1'e göre 1,40, evren bütün BIST.
