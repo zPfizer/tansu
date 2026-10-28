@@ -128,6 +128,24 @@ def test_ayarla_puanli_secimle_ayarlandi_yapar_sinyaldeyse_onay_ister(
     assert "Parametreler (ayarlı" in html and "saklı döneme ulaşmıyor" not in html
 
 
+def test_sina_bozuk_jsonu_izgaradan_once_reddeder(ortam, tmp_path, monkeypatch):
+    ortam("gartley")
+    (tmp_path / "stratejiler" / "ayarlar").mkdir()
+    (tmp_path / "stratejiler" / "ayarlar" / "gartley.json").write_text("[]", "utf-8")
+    monkeypatch.setattr(ayar, "yuru", lambda *a, **k: pytest.fail("ızgara koştu"))
+    assert main(["sina", "gartley"]) == 1
+    assert not (tmp_path / "rapor").exists()
+
+
+def test_sinanan_strateji_sayisi_beklemedekini_saymaz(ortam, tmp_path):
+    ortam("gartley")
+    with (tmp_path / "stratejiler" / "durum.csv").open("a", encoding="utf-8") as f:
+        f.write("eski,beklemede,2026-10-26,\nbaska,sinandi,2026-10-26,\n")
+    assert main(["sina", "gartley"]) == 0
+    html = (tmp_path / "rapor" / "gartley" / "sinama.html").read_text(encoding="utf-8")
+    assert "Şimdiye kadar sınanan strateji: 2." in html
+
+
 def test_ayarla_beklemedeki_stratejiyi_reddeder(ortam, tmp_path):
     ortam("gartley", durum="beklemede")
     assert main(["ayarla", "gartley"]) == 1

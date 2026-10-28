@@ -191,6 +191,12 @@ def test_oku_bilinmeyen_anahtari_ve_izgara_disi_degeri_reddeder(tmp_path, parame
         ayar.oku(KESISIM, tmp_path)
 
 
+def test_oku_nesne_olmayan_jsonu_reddeder(tmp_path):
+    json_yaz(tmp_path, [])
+    with pytest.raises(veri.VeriHatasi):
+        ayar.oku(KESISIM, tmp_path)
+
+
 def test_yaz_suzgecleri_ve_liste_cikisini_korur_oku_varsayilanlarin_ustune_koyar(
     tmp_path,
 ):

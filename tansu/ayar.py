@@ -243,9 +243,12 @@ class Okunan(NamedTuple):
 
 def _json(yol: Path) -> dict:
     try:
-        return json.loads(yol.read_text(encoding="utf-8"))
+        icerik = json.loads(yol.read_text(encoding="utf-8"))
     except json.JSONDecodeError as hata:
         raise veri.VeriHatasi(f"{yol}: geçersiz JSON ({hata})") from hata
+    if not isinstance(icerik, dict):
+        raise veri.VeriHatasi(f"{yol}: JSON nesnesi değil")
+    return icerik
 
 
 def oku(strateji: Strateji, kok: Path = AYAR_KOKU) -> Okunan | None:
