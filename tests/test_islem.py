@@ -150,6 +150,19 @@ def test_taban_kilidinde_satis_olmaz_sonraki_gun_aofdan_cikar():
     assert k["cikis_tarihi"] == g.index[3] and k["cikis_fiyati"] == 8.55
 
 
+def test_taban_kilidinde_dokunulan_stop_toparlanan_ilk_kilitsiz_gun_aofdan_cikar():
+    g = gun_tablosu(
+        [11, 10.2, 8.5, 9.5, 9.6],
+        yuksek=[11.1, 10.5, 8.5, 9.6, 9.7],
+        dusuk=[10.9, 9.9, 8.5, 9.4, 9.5],
+        aof=[11, 10.2, 8.5, 9.45, 9.6],
+    )
+    g.iloc[2, g.columns.get_loc("kilit_taban")] = True
+    (k,), _ = kos(g, sinyal(g))
+    assert k["cikis_tarihi"] == g.index[3] and k["cikis_fiyati"] == 9.45
+    assert k["cikis_nedeni"] == "stop"
+
+
 def test_kapanis_stopu_ertesi_gun_aofdan_cikar():
     g = gun_tablosu(
         [11, 10.2, 8.9, 9.5], yuksek=[11.1, 10.5, 9.6, 9.6], dusuk=[10.9, 9.9, 8.8, 9.4]
