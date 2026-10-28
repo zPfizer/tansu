@@ -384,7 +384,7 @@ td,th{{border:1px solid #ccc;padding:3px 6px;font-size:13px;text-align:right}}th
 <p>Sınıf: {sinif}. Zaman: {strateji.zaman}. Kural kartı: {", ".join(strateji.kaynaklar)} (yerel). Veri görüntüsü: {html.escape(s.kimlik)}.</p>
 <p>{html.escape(parametre_satiri(s))}</p>
 <p>{VARSAYIM}</p>
-<p>Dönem: sinyal tarihi 04.01.2021-31.12.2025, BIST 30 üyesi günler. {TARIH_TABANI}</p>
+<p>Dönem: sinyal tarihi 04.01.2021-31.12.2025. Evren: bütün BIST, kapanan paylar dahil; pay işlem gördüğü günlerde evrendedir. {TARIH_TABANI}</p>
 <p>{html.escape(aciklama(strateji, s.sakli_son))}</p>
 <p>Denenen parametre seti: {len(y.izgara)}. Şimdiye kadar sınanan strateji: {s.sinanan}.</p>
 <h2>Dönem tablosu</h2>{_donem_tablosu(donem)}

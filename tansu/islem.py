@@ -15,7 +15,7 @@ ILERI_GUNLER = (1, 3, 5, 10)
 HEDEFLER = ("hedef1", "hedef2", "hedef3", "hedef4")
 
 # Düşen sinyal nedenleri (SPEC 5.5).
-UYE_DEGIL = "BIST 30 üyesi değil"
+UYE_DEGIL = "evren dışı"
 KALITE = "kalite kuralı (karantina)"
 ACIK_VAR = "açık işlem veya bekleyen emir"
 STOP_USTTE = "stop girişin altında değil"
