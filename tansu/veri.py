@@ -818,9 +818,11 @@ class Anlik:
 
     @cached_property
     def hesap_fiyati(self) -> pd.DataFrame:
-        """Eksik günün hesap girdisi NaN'dır; gözlenmiş fiyat korunur (TASARIM 5.13)."""
+        """Eksik ya da bozuk (fiyat 0, tutarsız OHLC) günün hesap girdisi NaN'dır; gözlenmiş fiyat korunur
+        (TASARIM 5.13). Bozuk gün karantinada kalır; motor ve göstergeler onun fiyatını görmez."""
         f = self.fiyat.copy()
-        eksik = self.gun_tablosu.set_index(["sembol", "tarih"])["eksik"]
+        g = self.gun_tablosu.set_index(["sembol", "tarih"])
+        eksik = g["eksik"] | g["bozuk"]
         maske = eksik.reindex(
             pd.MultiIndex.from_frame(f[["sembol", "tarih"]])
         ).to_numpy()
@@ -1374,5 +1376,6 @@ def _gunler(fiyat, olaylar, takvim):
             "kilit_tavan_duyarli": kilit_tavan & duyarli,
             "kilit_taban_duyarli": kilit_taban & duyarli,
             "karantina": karantina,
+            "bozuk": bozuk,
         }
     )
