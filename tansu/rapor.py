@@ -243,7 +243,9 @@ def bayraklar(
         ),
         (
             "Strateji rastgele girişlerin 95. yüzdeliğinde ya da üstünde",
-            yok if r is None else _evet(r.yuzdelik >= 95, f"yüzdelik {r.yuzdelik:.1f}"),
+            _rastgele_yok(mc)
+            if r is None
+            else _evet(r.yuzdelik >= 95, f"yüzdelik {r.yuzdelik:.1f}"),
             mc.n,
         ),
         (
@@ -253,7 +255,9 @@ def bayraklar(
         ),
         (
             "Saklı dönem toplamı 0'ın üstünde (bilgi)",
-            _evet(sakli_toplam > 0, f"{sakli_toplam:.2f} {b}"),
+            _evet(sakli_toplam > 0, f"{sakli_toplam:.2f} {b}")
+            if len(sakli)
+            else "n/a (N = 0)",
             len(sakli),
         ),
         (
@@ -278,6 +282,12 @@ def bayraklar(
         ),
     ]
     return [{"Bayrak": ad, "Değer": deger, "N": adet} for ad, deger, adet in satirlar]
+
+
+def _rastgele_yok(mc: montecarlo.MonteCarlo) -> str:
+    if mc.n < sinama.EN_AZ:
+        return f"n/a (N = {mc.n})"
+    return "n/a (uygun rastgele gün ya da şablon yok)"
 
 
 def _uclu(y: montecarlo.Yuzdelik | None, n: int) -> str:
@@ -320,7 +330,7 @@ def _mc_bolumu(mc: montecarlo.MonteCarlo, sinif: str) -> str:
     )
     metin += f"<h3>Rastgele giriş kıyası</h3><p>{RASTGELE}</p>"
     if r is None:
-        return metin + f"<p>n/a (N = {mc.n})</p>"
+        return metin + f"<p>{_rastgele_yok(mc)}</p>"
     return (
         metin
         + _mc_tablosu(mc, {f"Koşu ortalaması {b}": r.ortalamalar})
@@ -442,7 +452,7 @@ td,th{{border:1px solid #ccc;padding:3px 6px;font-size:13px;text-align:right}}th
         f"- Sıra karıştırma en büyük düşüş {b}: {_uclu(mc.karistirma_dusus, mc.n)}",
         f"- Rastgele giriş koşu ortalaması {b}: "
         + (
-            f"n/a (N = {mc.n})"
+            _rastgele_yok(mc)
             if mc.rastgele is None
             else f"{_uclu(mc.rastgele.ortalamalar, mc.n)}; strateji ortalaması "
             f"{mc.rastgele.strateji_ort:.2f} {b}, yüzdelik {mc.rastgele.yuzdelik:.1f}"

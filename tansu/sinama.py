@@ -114,8 +114,8 @@ def _oran(deger: float, n: int, bicim: str = "{:.2f}") -> str:
 
 def dusus(r: ArrayLike) -> float | np.ndarray:
     """Son eksende kümülatif eğrinin en büyük düşüşü; tepe 0'dan başlar. 1-B girdi float, 2-B girdi satır başına bir değer
-    verir; rapor ve Monte Carlo aynı tanımı kullanır (SPEC 5.6, 5.8)."""
-    birikim = np.cumsum(np.asarray(r, float), axis=-1)
+    verir; NaN değer atlanır (SPEC 5.6, 5.8)."""
+    birikim = np.nancumsum(np.asarray(r, float), axis=-1)
     tepe = np.maximum.accumulate(np.maximum(birikim, 0.0), axis=-1)
     d = (tepe - birikim).max(axis=-1, initial=0.0)
     return float(d) if d.ndim == 0 else d

@@ -231,9 +231,14 @@ def test_bayraklar_ornek_az_ve_tanimsiz_degerler():
         az,
         ("n/a (N = 10)", 10),
         ("n/a (N = 10)", 10),
-        ("hayır (0.00 R)", 0),
+        ("n/a (N = 0)", 0),
         az,
         az,
         ("puanlı nokta yok", 77),
         ("n/a (toplam 0 ya da altında, pay tanımsız)", 1),
     ]
+
+
+def test_bayrak_rastgele_kiyas_yapilamadiysa_nedeni_yazar():
+    satir = bayrak_tablosu([1.0] * 40, p5=1.0, semboller={"S0": 1.0})[1]
+    assert satir == ("n/a (uygun rastgele gün ya da şablon yok)", 40)

@@ -3,7 +3,7 @@
 from collections import Counter
 from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import Literal
+from typing import Literal, NamedTuple
 
 import numpy as np
 import pandas as pd
@@ -35,6 +35,13 @@ class Cikis:
 
     stop_mod: Literal["dokunus", "kapanis"] = "dokunus"
     hedef: tuple[tuple[str, float], ...] = ()
+
+
+class Sonuc(NamedTuple):
+    """Alan adları işlem kaydının sütunlarıdır; `Strateji.olcu` birini seçer."""
+
+    R: float
+    net_yuzde: float
 
 
 def maliyet(giris: float, cikis: float) -> float:
@@ -85,16 +92,18 @@ def simule(
     sayac: Counter = Counter()
     sayac[AYNI_GUN] += int(sinyal["tekrar"].sum())
     kayitlar: list[dict] = []
-    bitis = -1  # önceki kurulumun kapandığı ya da düştüğü gün; o gün yeni sinyale açık
+    serbest_gun = -1
     for i in np.flatnonzero(sinyal["giris"].to_numpy(bool)):
         satir = sinyal.iloc[i]
-        neden = _red_nedeni(satir, gun.iloc[i], i < bitis, cikis)
+        neden = _red_nedeni(satir, gun.iloc[i], i < serbest_gun, cikis)
         if neden:
             sayac[neden] += 1
             continue
         if satir["giris_tur"] not in ("limit", "piyasa"):
             raise ValueError(f"giriş türü henüz yok: {satir['giris_tur']}")
-        e, bitis = oyna(g, int(i), satir, cikis, risk_tabani * float(g.atr[i]), sayac)
+        e, serbest_gun = oyna(
+            g, int(i), satir, cikis, risk_tabani * float(g.atr[i]), sayac
+        )
         if e is not None:
             kayitlar.append(_kayit(e, gun, cikis, sembol, strateji, sinif))
     return kayitlar, sayac
@@ -131,7 +140,7 @@ def rastgele(
     hedefler: tuple[float, float, float, float],
     cikis: Cikis,
     risk_tabani: float = RISK_TABANI,
-) -> tuple[float, float] | None:
+) -> Sonuc | None:
     """Rastgele giriş kıyası (SPEC 5.8 madde 3): t günü sinyal veren `piyasa` kurulumunun (R, net %) değeri.
 
     Seviyeler mutlak, NaN = yok; sinyal anı reddi ve çakışma kuralı yok. Dolmazsa None."""
@@ -249,12 +258,12 @@ def _kapat(e: _Islem, i: int, fiyat: float, neden: str) -> bool:
     return True
 
 
-def sonuc(e: _Islem) -> tuple[float, float]:
-    """Kapanmış ya da `açık` işlemin (R, net %) değeri; kısmi çıkışlar payıyla (SPEC 5.2, 5.3)."""
+def sonuc(e: _Islem) -> Sonuc:
+    """Kapanmış ya da `açık` işlemin değeri; kısmi çıkışlar payıyla (SPEC 5.2, 5.3)."""
     giris, p = e.giris, e.parcalar
     r = sum(pay * (f - giris - maliyet(giris, f)) / e.risk for _, f, pay, _ in p)
     yuzde = sum(pay * (f - giris - maliyet(giris, f)) / giris for _, f, pay, _ in p)
-    return r, yuzde * 100
+    return Sonuc(r, yuzde * 100)
 
 
 def _kayit(e: _Islem, gun: pd.DataFrame, cikis: Cikis, sembol, strateji, sinif) -> dict:
