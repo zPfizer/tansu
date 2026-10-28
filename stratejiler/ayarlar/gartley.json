@@ -1,0 +1,18 @@
+{
+  "kod_surumu": "84df495f91a5c107d260598cbb2ff3689d27c549",
+  "liste_cikisi": false,
+  "n": 36,
+  "parametreler": {
+    "gecerlilik": 5,
+    "pivot": "zigzag_1.5",
+    "rr_min": "kapali",
+    "stop": "X-2ATR",
+    "tolerans": 0.03
+  },
+  "puan": 0.03288084620566012,
+  "puanli": true,
+  "saglam_puan": -0.02140991007439835,
+  "suzgecler": [],
+  "tarih": "2026-10-28",
+  "veri_kimligi": "20261026-2108"
+}
