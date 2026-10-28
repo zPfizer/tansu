@@ -41,7 +41,7 @@ def sma(seri: pd.Series, periyot: int) -> pd.Series:
 
 
 def wma(seri: pd.Series, periyot: int) -> pd.Series:
-    """Doğrusal ağırlıklı ortalama: ağırlıklar 1..n, en yeni en ağır (Tansu'nun kodu: `np.arange(1, period + 1)`).
+    """Doğrusal ağırlıklı ortalama: ağırlıklar 1..n, en yeni en ağır (kaynak yerel kural kartında).
     İlk n-1 değer ve içinde NaN olan her pencere NaN."""
     agirlik = np.arange(1, periyot + 1)
     sonuc = np.full(len(seri), np.nan)
