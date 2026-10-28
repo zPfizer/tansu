@@ -66,7 +66,7 @@ def hesapla(gun: pd.DataFrame, p: Mapping[str, float | str]) -> pd.DataFrame:
             continue
         stop = X.fiyat if p["stop"] == "X" else X.fiyat - 2 * atr[t]
         h1, h2 = (d + r * (A.fiyat - d) for r in HEDEF_ORAN)
-        if p["rr_min"] != "kapali" and (h2 - d) / (d - stop) < float(p["rr_min"]):
+        if p["rr_min"] != "kapali" and (h1 - d) / (d - stop) < float(p["rr_min"]):
             continue
         if s.iat[t, s.columns.get_loc("giris")]:
             s.iat[t, s.columns.get_loc("tekrar")] += 1
@@ -103,7 +103,7 @@ STRATEJI = Strateji(
         "tolerans": 0.05,
         "gecerlilik": 10,
         "stop": "X",
-        "rr_min": "kapali",
+        "rr_min": 1.5,  # Ek B #13: stop X iken hedef1 oranı ≈ 1.40, her kurulum elenir
     },
     aralik={
         "pivot": (
