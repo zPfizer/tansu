@@ -124,10 +124,10 @@ class Adim:
 class Yuruyus:
     izgara: Izgara
     adimlar: tuple[Adim, ...]
-    dis_ornek: sinama.Kosu  # altı test diliminin birleşimi, `pencere` sütunuyla
+    dis_ornek: sinama.Kosu
     verim: float | None
     verim_adim: int
-    son: Secim  # 04.01.2021-31.12.2025 üzerindeki son ayar
+    son: Secim
 
 
 def egitim(islemler: pd.DataFrame, son: pd.Timestamp) -> pd.DataFrame:
@@ -186,7 +186,7 @@ def _adim(
     return Adim(pencere, secim, len(ic), ic_yillik, test, dis_yillik, verim)
 
 
-_GUNLER: sinama.Gunler | None = None  # işçi sürecinin kopyası; başlatıcı bir kez kurar
+_GUNLER: sinama.Gunler | None = None
 
 
 def _hazirla(gunler: sinama.Gunler) -> None:
@@ -237,7 +237,7 @@ def yuru(strateji: Strateji, gunler: sinama.Gunler, isci: int | None = None) -> 
 
 
 class Okunan(NamedTuple):
-    parametreler: dict[str, float | str]  # varsayılanların üstüne
+    parametreler: dict[str, float | str]
     tarih: str
 
 
@@ -266,7 +266,7 @@ def oku(strateji: Strateji, kok: Path = AYAR_KOKU) -> Okunan | None:
 
 
 def kod_surumu() -> str:
-    """`git rev-parse HEAD`; `tansu/` değişmişse `-kirli` eki."""
+    """Kod sürümü; `tansu/` değişmişse `-kirli` ekli."""
 
     def git(*arg: str) -> str:
         return subprocess.run(

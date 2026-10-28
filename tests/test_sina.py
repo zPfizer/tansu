@@ -23,7 +23,6 @@ def sentetik_anlik(yol=None):
 
 @pytest.fixture
 def ortam(monkeypatch, tmp_path):
-    """Geçici kök, durum.csv ve tek noktalı ızgara (testler hızlı kalsın)."""
     monkeypatch.chdir(tmp_path)
     (tmp_path / "stratejiler").mkdir()
 

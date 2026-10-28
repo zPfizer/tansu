@@ -12,7 +12,7 @@ from tansu import sinama
     [
         ("2026-10-26", "2026-09-30"),
         ("2026-10-31", "2026-10-31"),
-        ("2026-10-30", "2026-10-30"),  # cuma, ayın son iş günü
+        ("2026-10-30", "2026-10-30"),
     ],
 )
 def test_sakli_son_verinin_son_tam_ayinin_son_gunu(veri_sonu, sakli_son):

@@ -12,14 +12,13 @@ from tansu import gostergeler, islem, veri
 from tansu.strateji import Strateji
 
 ILK_GIRIS = pd.Timestamp("2021-01-04")  # 2019-2020 yalnız ısınma (SPEC 3.4)
-# yıl tabloları, ayar ve ileri yürüme bu günden sonraki fiyatı görmez (SPEC 5.7)
 KESIM = pd.Timestamp("2025-12-31")
 SAKLI_BAS = pd.Timestamp("2026-01-01")
 YILLAR = (2021, 2022, 2023, 2024, 2025)
 EN_AZ = 30  # oranlar için en az kurulum (SPEC 5.6)
 BIRIM = {"R": "R", "net_yuzde": "%"}  # ölçü sütunu -> etiket birimi
 
-Gunler = Mapping[str, pd.DataFrame]  # sembol -> `veri.gunluk` tablosu ve `atr`
+Gunler = Mapping[str, pd.DataFrame]
 
 
 @dataclass(frozen=True)
