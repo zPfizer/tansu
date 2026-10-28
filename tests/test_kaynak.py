@@ -225,10 +225,10 @@ def test_artimli_kaynak_ikinci_kosuda_yalniz_son_gunleri_ister(tmp_path):
 def test_artimli_kaynak_gecmis_degisince_butun_gecmisi_ve_olaylari_yeniden_ister(
     tmp_path,
 ):
-    kaynak.Artimli(Akan(gecmis(30)), tmp_path).fiyat("AKBNK", BAS, SON)
-    duzeltilmis = Akan(
-        gecmis(31, carpan=0.9)
-    )  # yeni temettü düzeltilmiş geçmişi değiştirir
+    ilk = kaynak.Artimli(Akan(gecmis(30)), tmp_path)
+    ilk.fiyat("AKBNK", BAS, SON), ilk.olaylar("AKBNK")
+    # yeni temettü düzeltilmiş geçmişi değiştirir
+    duzeltilmis = Akan(gecmis(31, carpan=0.9))
     a = kaynak.Artimli(duzeltilmis, tmp_path)
     f = a.fiyat("AKBNK", BAS, SON)
     assert duzeltilmis.istekler[-1] == BAS
@@ -238,6 +238,49 @@ def test_artimli_kaynak_gecmis_degisince_butun_gecmisi_ve_olaylari_yeniden_ister
     b = kaynak.Artimli(Akan(gecmis(31, carpan=0.9)), tmp_path)
     pd.testing.assert_frame_equal(b.fiyat("AKBNK", BAS, SON), f)  # önbellek güncellendi
     assert b.sayac == {"artimli": 1}
+
+
+def onbellekle(tmp_path, tablo):
+    a = kaynak.Artimli(Akan(tablo), tmp_path)
+    a.fiyat("AKBNK", BAS, SON), a.olaylar("AKBNK")
+
+
+class KisaBos(Akan):
+    """Kısa aralığa boş yanıt (ALARK benzeri kaynak aksaklığı); bütün geçmiş isteği çalışır."""
+
+    def fiyat(self, sembol, bas, son):
+        f = super().fiyat(sembol, bas, son)
+        return f if bas == BAS else f.iloc[:0]
+
+
+def test_artimli_kaynak_bos_yanitta_tam_iner_bos_sutunda_artimli_kalir(tmp_path):
+    onbellekle(tmp_path, gecmis(30))
+    a = kaynak.Artimli(KisaBos(gecmis(31)), tmp_path)
+    assert len(a.fiyat("AKBNK", BAS, SON)) == 31 and a.sayac == {"tam": 1}
+
+    onbellekle(
+        tmp_path / "b", gecmis(30).assign(pd=None)
+    )  # ince hissede bütünüyle boş alan
+    b = kaynak.Artimli(Akan(gecmis(31).assign(pd=None)), tmp_path / "b")
+    assert len(b.fiyat("AKBNK", BAS, SON)) == 31 and b.sayac == {"artimli": 1}
+
+
+class OlaySiz(Akan):
+    def olaylar(self, sembol):
+        raise kaynak.KaynakHatasi(f"{sembol}: olay yok")
+
+
+def test_artimli_kaynak_olay_alinamazsa_fiyat_onbellegi_eskide_kalir(tmp_path):
+    onbellekle(tmp_path, gecmis(30))
+    a = kaynak.Artimli(OlaySiz(gecmis(31, carpan=0.9)), tmp_path)
+    a.fiyat("AKBNK", BAS, SON)
+    with pytest.raises(kaynak.KaynakHatasi):
+        a.olaylar("AKBNK")
+    b = kaynak.Artimli(Akan(gecmis(31, carpan=0.9)), tmp_path)
+    b.fiyat("AKBNK", BAS, SON)
+    assert b.sayac == {"tam": 1}  # bölünme olayı yeniden istenir, eski olay kalmaz
+    assert b.olaylar("AKBNK") == [{"SHT_KODU": "02", "n": 1}]
+    assert not list(tmp_path.glob("*.gecici"))
 
 
 def test_kapanan_tablo_yalniz_pay_kodlarini_2010_ve_sonrasini_alir():
