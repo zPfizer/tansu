@@ -3,7 +3,7 @@ import pandas as pd
 import pytest
 
 from tansu import __main__ as komut
-from tansu import kaynak, veri
+from tansu import kaynak, sinama, veri
 from tansu.__main__ import main
 
 
@@ -99,16 +99,22 @@ def test_gunluk_sozlesmesi_eksik_gun_kilit_karantina_ve_uyelik():
     assert g["tavan_kapanis"].tolist() == [False, True, False, False, False]
     assert g["karantina"].tolist() == [False, False, False, False, True]
     assert g["uye"].all()
-    assert not veri.gunluk(sentetik_anlik(), "AAA")["uye"].any()
+    assert veri.gunluk(sentetik_anlik(), "AAA")[
+        "uye"
+    ].all()  # BIST 30 dışı pay da evrende
     with pytest.raises(veri.VeriHatasi):
         veri.gunluk(sentetik_anlik(), "YOK")
+
+
+def test_sinama_evreni_goruntudeki_butun_paylardir():
+    assert set(sinama.gunler(sentetik_anlik())) == {"AAA", "TRALT"}
 
 
 class SahteKaynak:
     def fiyat(self, sembol, bas, son):
         if sembol == "SOKE":
             raise kaynak.KaynakHatasi("SOKE: alınamadı")
-        if sembol not in ("AKBNK", "TRALT"):
+        if sembol not in ("AKBNK", "TRALT", "ESKI"):
             return pd.DataFrame(columns=["tarih", *kaynak.ALANLAR.values()])
         satirlar = [fiyat_satiri(sembol, t, 10.0) for t in ("2019-01-02", "2019-01-03")]
         if sembol == "AKBNK":
@@ -126,12 +132,32 @@ def test_veri_komutu_sembol_tablosu_yazar_ve_on_goruntu_tutar(
     for i in range(11):
         (tmp_path / "ag" / f"2020010{i // 10}-00{i:02d}").mkdir(parents=True)
     monkeypatch.setattr(kaynak, "IsYatirim", SahteKaynak)
+    monkeypatch.setattr(
+        kaynak, "sirket_kodlari", lambda: pd.Series(["AKBNK", "GARAN", "SOKE", "TRALT"])
+    )
+    kapanan = pd.DataFrame(
+        {
+            "kod": ["ESKI", "COKESKI"],
+            "ad": ["", ""],
+            "tarih": pd.to_datetime(["2020-05-04", "2015-01-05"]),
+            "aciklama": ["", ""],
+        }
+    )
+    monkeypatch.setattr(kaynak, "kapanan_kodlar", lambda: kapanan)
     assert main(["veri", "--kok", str(tmp_path)]) == 0
     cikti = capsys.readouterr().out
     assert "silinen eski görüntü: 2" in cikti
-    assert len(list((tmp_path / "ag").glob("2*"))) == komut.SAKLANAN_GORUNTU
+    goruntuler = sorted((tmp_path / "ag").glob("2*"))
+    assert len(goruntuler) == komut.SAKLANAN_GORUNTU
     satirlar = {s.split()[0]: s for s in cikti.splitlines()[2:]}
     assert satirlar["AKBNK"].split()[1:] == ["2019-01-02", "2019-01-04", "3", "tamam"]
     assert satirlar["TRALT"].endswith("son gün eksik")
     assert satirlar["SOKE"].endswith("inmedi")
     assert satirlar["GARAN"].endswith("kaynak boş")
+    assert (
+        "ESKI" in satirlar
+    )  # 2019'dan sonra kapanan pay evrende (hayatta kalan yanlılığı yok)
+    assert (
+        "COKESKI" not in satirlar
+    )  # veri başlangıcından önce kapanan pay evrende değil
+    assert (goruntuler[-1] / "kapanan.csv").exists()

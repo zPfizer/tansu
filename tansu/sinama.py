@@ -1,4 +1,4 @@
-"""Geçmiş sınama: bütün BIST 30 sembollerinde strateji, motor ve dönem ölçüleri (SPEC 5.1-5.7)."""
+"""Geçmiş sınama: evrenin bütün sembollerinde strateji, motor ve dönem ölçüleri (SPEC 2, 5.1-5.7)."""
 
 from collections import Counter
 from collections.abc import Mapping
@@ -51,12 +51,9 @@ class Kosu(NamedTuple):
 
 
 def gunler(anlik: veri.Anlik) -> dict[str, pd.DataFrame]:
-    """Anlık görüntüdeki her BIST 30 sembolünün günlük tablosu ve `atr`'si; komut başına bir kez."""
-    semboller = sorted(
-        set(veri.uyelik_araliklari()["sembol"]) & set(anlik.fiyat["sembol"])
-    )
+    """Anlık görüntüdeki her sembolün (bütün BIST evreni) günlük tablosu ve `atr`'si; komut başına bir kez."""
     sonuc = {}
-    for sembol in semboller:
+    for sembol in sorted(anlik.fiyat["sembol"].unique()):
         gun = veri.gunluk(anlik, sembol)
         gun["atr"] = gostergeler.atr_basit(gun["yuksek"], gun["dusuk"], gun["kapanis"])
         sonuc[sembol] = gun
