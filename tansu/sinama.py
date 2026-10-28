@@ -7,6 +7,7 @@ from typing import NamedTuple
 
 import numpy as np
 import pandas as pd
+from numpy.typing import ArrayLike
 
 from tansu import gostergeler, islem, veri
 from tansu.strateji import Strateji
@@ -111,10 +112,13 @@ def _oran(deger: float, n: int, bicim: str = "{:.2f}") -> str:
     return "n/a" if not np.isfinite(deger) else bicim.format(deger)
 
 
-def dusus(r: pd.Series) -> float:
-    """Kümülatif R eğrisinde en büyük düşüş (çıkış tarihi sırasıyla)."""
-    birikim = r.cumsum()
-    return float((birikim.cummax().clip(lower=0) - birikim).max()) if len(r) else 0.0
+def dusus(r: ArrayLike) -> float | np.ndarray:
+    """Son eksende kümülatif eğrinin en büyük düşüşü; tepe 0'dan başlar. 1-B girdi float, 2-B girdi satır başına bir değer
+    verir; rapor ve Monte Carlo aynı tanımı kullanır (SPEC 5.6, 5.8)."""
+    birikim = np.cumsum(np.asarray(r, float), axis=-1)
+    tepe = np.maximum.accumulate(np.maximum(birikim, 0.0), axis=-1)
+    d = (tepe - birikim).max(axis=-1, initial=0.0)
+    return float(d) if d.ndim == 0 else d
 
 
 def en_uzun_kayip(r: pd.Series) -> int:
