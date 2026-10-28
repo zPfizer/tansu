@@ -59,6 +59,16 @@ STRATEJI = Strateji(
     sinif="b",
     zaman="gunluk",
     kaynaklar=("stratejiler/ortalama-kesisim.md",),
+    kaynak_tarihleri=(
+        "2024-02-23",
+        "2024-03-03",
+        "2024-03-23",
+        "2024-08-31",
+        "2024-09-21",
+        "2024-10-16",
+        "2024-10-18",
+        "2024-10-30",
+    ),
     varsayilan={"ortalama": "EMA", "cift": "50/200", "teyit_gun": 0},
     aralik={
         "ortalama": ("EMA", "SMA", "WMA"),

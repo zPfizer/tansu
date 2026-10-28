@@ -19,6 +19,9 @@ class Strateji:
     kaynaklar: tuple[
         str, ...
     ]  # Tansu notları yerel kural kartında (SPEC Ek B #12 açık)
+    kaynak_tarihleri: tuple[
+        str, ...
+    ]  # kaynak gönderilerin ISO tarihleri, açıklama satırı için (SPEC 5.6)
     varsayilan: Mapping[str, float | str]
     aralik: Mapping[str, tuple[float | str, ...]]
     seviye_param: tuple[str, ...]
