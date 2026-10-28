@@ -5,8 +5,7 @@ Ajan bu dosyaya yazar; Levent'in kararı gereken sorular "Levent" ile işaretlid
 ## Levent kararı bekleyenler
 
 1. Levent, Ek B #12 (kamu deposu içeriği): kural kartları, Tansu alıntıları, tweet kimlikleri ve `docs/SPEC.md` yerelde kalıyor. Seçenekler: (a) yerelde kalsın, (b) depo gizli olsun ve bunlar commit edilsin.
-2. Levent, Ek B #13 (`gartley` R/R kapısı): koşu `rr_min = kapalı` kullanıyor. Stop X iken Tansu'nun 1,5 kapısı hedef1'e göre her Gartley'i reddeder (≈ 1,40); hedef2'ye göre ≈ 2,27. 28.10.2026: Levent kararı Tansu'nun kaynaklarına bıraktı. Kaynaklar çelişiyor: yazılı kural ödülü hedef1'e göre ölçer ve 1,5 altını reddeder; daha sonraki tarama tablosu ise bir alış satırında girişi D'de, stopu X'te verir (D 0,786 seviyesindeyse oran 1,40). Kapı kapalı kaldı; soru yeniden Levent'te.
-3. Levent, Git geçmişi: PR 197'nin bir commit'i `tansu/gostergeler.py` içinde Tansu kodundan kısa bir parça taşıyor; bugünkü dosya temiz. Geçmişi temizlemek ortak dalda zorla itme (force-push) ister; Levent'in ayrı onayı gerekir.
+2. Levent, Git geçmişi: PR 197'nin bir commit'i `tansu/gostergeler.py` içinde Tansu kodundan kısa bir parça taşıyor; bugünkü dosya temiz. Geçmişi temizlemek ortak dalda zorla itme (force-push) ister; Levent'in ayrı onayı gerekir.
 
 ## Gece 1 kayıtları (karar gerekmez)
 
@@ -20,3 +19,8 @@ Ajan bu dosyaya yazar; Levent'in kararı gereken sorular "Levent" ile işaretlid
 - İleri yürüme pencereleri sinyal tarihine göredir. SPEC 5.7 "giriş tarihi" der ama terimi tanımlamaz; SPEC 5.5 yalnız sinyal ve dolum tarihini tanımlar. Tansu'nun kaynaklarında pencere ataması yok. Sinyal tarihi kaldı (28.10.2026).
 - 2021-2025 koşularında fiyat 31.12.2025'te kesilir; o gün açık kalan kurulum son kapanışta `açık` işaretlenir. SPEC 5.7 hem "kendi çıkışına kadar açık kalır" hem "saklı dönem ileri yürümede kullanılmaz" der; bu iki cümle 2025H2 için çelişir. Tansu'nun kaynaklarında dönem sonundaki açık işlem kuralı yok. Kesim kaldı (28.10.2026).
 - Al-tut referansları (SPEC 5.6) henüz yapılmadı; SPEC 12'de bunlara sahip bir faz yok.
+
+## Verilen kararlar
+
+- Ek B #13 (`gartley` R/R kapısı), Levent 28.10.2026: "tansunun dediği gibi yap". Kapı Tansu'nun yazılı kuralıyla uygulanır: ödül hedef1'e, risk stopa göre ölçülür; oran 1,5'in altındaysa kurulum alınmaz. `rr_min` varsayılanı 1,5; seçenekler kapalı, 1,5, 2. Stop X iken oran her Gartley'de ≈ 1,40, X − 2 ATR iken daha düşüktür; bu yüzden `gartley` varsayılan ayarla hiç kurulum üretmez. Tansu'nun tarama tablolarında bu kurala uymayan kurulumlar var; kural metni esas alındı. Durum: uygulanıyor.
+- Genel R/R kapısı (Levent'in 16.10 tarihli "en az 1:2" kararı, eski site issue'su #164), aynı karar: Tansu'nun genel sözü uygun oranı tercih etmektir, her stratejiye sert eşik koymaz. Genel `rr-kapisi` süzgeci SPEC'teki gibi kalır: hedef1'e göre, 0 / 1,5 / 2 / 3, varsayılan kapalı, 12+. aşamada sınanır.
