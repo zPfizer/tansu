@@ -3,7 +3,8 @@ import pytest
 from tansu.stratejiler import gartley
 from tests.sentetik import gartley_yolu, gun_tablosu
 
-P = dict(gartley.STRATEJI.varsayilan)
+# Varsayılan R/R kapısı her kurulumu eler; seviye testleri kapısız koşar.
+P = {**gartley.STRATEJI.varsayilan, "rr_min": "kapali"}
 
 
 def test_d_formulu_tansu_tarama_ornegi():
@@ -39,7 +40,8 @@ def test_stop_secenegi_x_eksi_iki_atr():
     assert r["stop"] < 10.0 - 0.05
 
 
-def test_rr_kapisi_hedef2_ile_olculur():
+def test_rr_kapisi_hedef1_ile_olculur_varsayilan_kurulumu_eler():
+    # Stop X: hedef1 oranı 0.382 × 0.786 ÷ 0.214 ≈ 1.403, Tansu'nun 1.5 eşiğinin altı.
     gun = gun_tablosu(gartley_yolu())
-    assert gartley.STRATEJI.sinyal(gun, {**P, "rr_min": 2.0})["giris"].any()
-    assert not gartley.STRATEJI.sinyal(gun, {**P, "rr_min": 3.0})["giris"].any()
+    assert not gartley.STRATEJI.sinyal(gun, {})["giris"].any()
+    assert gartley.STRATEJI.sinyal(gun, {"rr_min": 1.4})["giris"].any()
