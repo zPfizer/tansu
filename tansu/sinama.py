@@ -12,6 +12,7 @@ ILK_GIRIS = pd.Timestamp("2021-01-04")  # 2019-2020 yalnız ısınma (SPEC 3.4)
 SAKLI_BAS = pd.Timestamp("2026-01-01")  # saklı dönem faz 4'te (SPEC 5.7)
 YILLAR = (2021, 2022, 2023, 2024, 2025)
 EN_AZ = 30  # oranlar için en az kurulum (SPEC 5.6)
+BIRIM = {"R": "R", "net_yuzde": "%"}  # ölçü sütunu -> etiket birimi
 
 
 def calistir(
@@ -71,10 +72,11 @@ def en_uzun_kayip(r: pd.Series) -> int:
     return en_uzun
 
 
-def donem_ozeti(islemler: pd.DataFrame, sinyal_n: int) -> dict:
-    """SPEC 5.6 sınıf (a) ölçüleri; 30 kurulumun altında oranlar `n/a (N = x)`."""
+def donem_ozeti(islemler: pd.DataFrame, sinyal_n: int, olcu: str) -> dict:
+    """SPEC 5.6 ölçüleri, yalnız `olcu` sütunundan ("R" ya da "net_yuzde"); 30 kurulumun altında oranlar `n/a (N = x)`."""
+    b = BIRIM[olcu]
     n = len(islemler)
-    r = sirala(islemler)["R"] if n else pd.Series(dtype=float)
+    r = sirala(islemler)[olcu] if n else pd.Series(dtype=float)
     kazanc, kayip = r[r > 0], r[r <= 0]
     asagi = np.sqrt((np.minimum(r, 0) ** 2).mean()) if n else np.nan
     dd = dusus(r)
@@ -86,17 +88,17 @@ def donem_ozeti(islemler: pd.DataFrame, sinyal_n: int) -> dict:
         if sinyal_n
         else "0",
         "Kazanma oranı": _oran(len(kazanc) / n if n else np.nan, n, "{:.0%}"),
-        "Ortalama kazanç R": _oran(kazanc.mean(), n),
-        "Ortalama kayıp R": _oran(kayip.mean(), n),
-        "Beklenti (ortalama R)": _oran(r.mean(), n),
-        "Medyan R": _oran(r.median(), n),
-        "Toplam R": f"{toplam:.2f}",
+        f"Ortalama kazanç {b}": _oran(kazanc.mean(), n),
+        f"Ortalama kayıp {b}": _oran(kayip.mean(), n),
+        f"Beklenti (ortalama {b})": _oran(r.mean(), n),
+        f"Medyan {b}": _oran(r.median(), n),
+        f"Toplam {b}": f"{toplam:.2f}",
         "Kâr faktörü": _oran(
             kazanc.sum() / -kayip.sum() if kayip.sum() < 0 else np.inf, n
         ),
         "Sharpe (kurulum başı)": _oran(r.mean() / r.std() if n > 1 else np.nan, n),
         "Sortino (kurulum başı)": _oran(r.mean() / asagi if asagi else np.nan, n),
-        "En büyük düşüş R": f"{dd:.2f}",
+        f"En büyük düşüş {b}": f"{dd:.2f}",
         "Toplam / düşüş": _oran(toplam / dd if dd else np.nan, n),
         "Ortalama tutma günü": f"{islemler['tutma_gun'].mean():.1f}" if n else "-",
         "En uzun kayıp serisi": str(en_uzun_kayip(r)),
@@ -106,7 +108,9 @@ def donem_ozeti(islemler: pd.DataFrame, sinyal_n: int) -> dict:
     }
 
 
-def donemler(islemler: pd.DataFrame, sinyaller: pd.DataFrame) -> dict[str, dict]:
+def donemler(
+    islemler: pd.DataFrame, sinyaller: pd.DataFrame, olcu: str
+) -> dict[str, dict]:
     """Her yıl ve bütün yıllar; yıl sinyal tarihine göre."""
     yil_i = (
         pd.DatetimeIndex(islemler["sinyal_tarihi"]).year
@@ -115,14 +119,14 @@ def donemler(islemler: pd.DataFrame, sinyaller: pd.DataFrame) -> dict[str, dict]
     )
     yil_s = pd.DatetimeIndex(sinyaller["tarih"]).year
     sonuc = {
-        str(y): donem_ozeti(islemler[yil_i == y], int((yil_s == y).sum()))
+        str(y): donem_ozeti(islemler[yil_i == y], int((yil_s == y).sum()), olcu)
         for y in YILLAR
     }
-    sonuc["Bütün yıllar"] = donem_ozeti(islemler, len(sinyaller))
+    sonuc["Bütün yıllar"] = donem_ozeti(islemler, len(sinyaller), olcu)
     if len(islemler):  # tavanda kapanan sinyal günleri çıkarılmış hali (SPEC 5.1)
         tavansiz = islemler[~islemler["tavan_kapanis"].astype(bool)]
         sonuc["Bütün yıllar, tavan kapanışsız"] = donem_ozeti(
-            tavansiz, len(sinyaller) - (len(islemler) - len(tavansiz))
+            tavansiz, len(sinyaller) - (len(islemler) - len(tavansiz)), olcu
         )
     return sonuc
 
@@ -154,16 +158,51 @@ def isabet(islemler: pd.DataFrame, hedefler: tuple[str, ...]) -> list[dict]:
     return satirlar
 
 
-def sembol_tablosu(islemler: pd.DataFrame) -> pd.DataFrame:
-    """Sembol başına kurulum ve toplam R; toplamın %40'ından fazlası işaretlenir (varsayım)."""
+def sembol_tablosu(islemler: pd.DataFrame, olcu: str) -> pd.DataFrame:
+    """Sembol başına kurulum ve toplam `olcu`; toplamın %40'ından fazlası işaretlenir (varsayım)."""
+    sutun = f"toplam_{olcu}"
     if not len(islemler):
-        return pd.DataFrame(columns=["sembol", "kurulum", "toplam_R", "pay", "isaret"])
+        return pd.DataFrame(columns=["sembol", "kurulum", sutun, "pay", "isaret"])
     t = (
-        islemler.groupby("sembol")["R"]
-        .agg(kurulum="size", toplam_R="sum")
+        islemler.groupby("sembol")[olcu]
+        .agg(kurulum="size", **{sutun: "sum"})
         .reset_index()
     )
-    toplam = t["toplam_R"].sum()
-    t["pay"] = t["toplam_R"] / toplam if toplam > 0 else np.nan
+    toplam = t[sutun].sum()
+    t["pay"] = t[sutun] / toplam if toplam > 0 else np.nan
     t["isaret"] = t["pay"] > 0.4
-    return t.sort_values("toplam_R", ascending=False)
+    return t.sort_values(sutun, ascending=False)
+
+
+def ileri_tablo(islemler: pd.DataFrame) -> list[dict]:
+    """Sınıf (b) ileri getiri tablosu (SPEC 5.2, 5.6): 1, 3, 5, 10 gün net % ve 10 günlük MFE/MAE medyanı.
+    Her ufuk kendi N'siyle sayılır (veri sonuna yakın dolumların ufku boştur); 30'un altında oranlar `n/a (N = x)`."""
+
+    def sutun(ad: str) -> pd.Series:
+        return islemler[ad].dropna() if len(islemler) else pd.Series(dtype=float)
+
+    satirlar = []
+    for gun in islem.ILERI_GUNLER:
+        x = sutun(f"getiri_{gun}")
+        n = len(x)
+        satirlar.append(
+            {
+                "Ufuk (gün)": gun,
+                "N": n,
+                "Ortalama net %": _oran(x.mean(), n),
+                "Medyan net %": _oran(x.median(), n),
+                "Pozitif payı": _oran((x > 0).mean() if n else np.nan, n, "{:.0%}"),
+            }
+        )
+    for ad, etiket in (("mfe_yuzde", "Medyan MFE %"), ("mae_yuzde", "Medyan MAE %")):
+        x = sutun(ad)
+        satirlar.append(
+            {
+                "Ufuk (gün)": f"{etiket} (10 gün)",
+                "N": len(x),
+                "Ortalama net %": "-",
+                "Medyan net %": _oran(x.median(), len(x)),
+                "Pozitif payı": "-",
+            }
+        )
+    return satirlar
