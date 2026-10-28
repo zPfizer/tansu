@@ -170,3 +170,13 @@ Karar: PRZ girişi koda eklenmedi. Tansu'nun yazılı kurallarıyla Gartley, BIS
 
 - `kaynak.IsYatirim._iste` kopan bağlantıyı (`ChunkedEncodingError`) yeniden denemez; ilk indirme bununla durdu.
 - Motor, `veri._gunler`'in bozuk saydığı günde (fiyat 0 ya da tutarsız OHLC) limit emri AOF'den doldurur; AOF 0 ise giriş 0 olur ve `islem.sonuc` sıfıra böler. Geniş evrende 287 sembolde 8.311 bozuk gün var; BIST 30 üyelik günlerinde 2. Ölçümde bozuk gün eksik gün sayıldı.
+
+### Neden analizi (28.10.2026)
+
+Levent: "Bu kadar işlem sayısına eksi yazmak mantıksız ... normal değil." Aynı geçici evrende, yalnız 2021-2025, altı neden denetlendi. Üç ayrı bakış açısıyla salt okunur inceleme yapıldı.
+
+- Motor hatası yok: dört işlem günlük fiyatla elle denetlendi; denetim koşusu −75.51 R'yi birebir verir.
+- Kök neden geometridir. Kapı stop X ile yalnız giriş X'e çok yakınken geçer: giriş-stop arası ortanca %1.0, ATR %4.8. Stopların %52'si dolum günü olur; maliyet işlem başına ≈ 0.11 R alır.
+- Kapı açıkken hiçbir varyant rastgele girişi geçmez: kapı D − X ile ölçülüp stop X − 2 ATR olunca 381 işlem, 0.006 R, yüzdelik 21.0; dönüş teyitli giriş −0.037 R; C'yi gecikmesiz bilen teşhis koşusu bile −0.086 R.
+- Tek artı bölge: çekirdek kural (D 0,786, stop X ya da X − 2 ATR, hedefler AD'de), kapı kapalı, yalnız büyük formasyon (XA ≥ 5 ATR; Tansu'dan değil). Örneklem dışı 34 işlem, ortalama 0.623 R, yüzdelik 97.6, bootstrap p5 10.84. 6 ve 7,5 ATR de ≈ 0.62 R verir; 4 ATR 0.167 R, 3 ATR 0.028 R. 34 işlemin 5'i BIST 30 sembolü.
+- Bu bölge ≈ 20 varyant denendikten sonra bulundu; ileri yürüme parametre seçimini korur, varyant aramasını korumaz. Dürüst sınav dokunulmamış 2026 saklı dönemidir; kullanımı Levent'in kararıdır. Kapı kapalı aday 28.10.2026 kapı kararıyla çelişir.
