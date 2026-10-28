@@ -30,15 +30,17 @@ def test_karistirma_degerleri_korur_dususu_degistirir():
     assert np.ptp(mc.karistir(karisik, mc.akis(0))) > 0
 
 
-def test_dususler_iki_boyutta_satir_satir_sinama_dusus_ile_ayni():
+def test_dusus_iki_boyutta_satir_satir_seriyle_ayni():
     m = np.random.default_rng(3).normal(0.0, 1.0, (50, 30))
     m[0] = np.abs(m[0])
-    iki = mc.dususler(m)
+    iki = sinama.dusus(m)
     assert iki.shape == (50,)
     for satir, d in zip(m, iki, strict=True):
-        assert mc.dususler(satir) == d
         assert sinama.dusus(pd.Series(satir)) == d
+        assert isinstance(sinama.dusus(satir), float)
     assert iki[0] == 0.0
+    assert sinama.dusus([]) == 0.0
+    assert sinama.dusus([2.0, -1.0, -3.0, 1.0]) == 4.0
 
 
 def test_batma_payi_hep_dusen_seride_1_yukselen_seride_0():
