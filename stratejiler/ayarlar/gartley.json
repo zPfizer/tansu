@@ -1,17 +1,17 @@
 {
-  "kod_surumu": "4a7a6a3fefb98083b8662c5b895422598acfbdd2",
+  "kod_surumu": "bc01e77e32cb06b85ee17457fe38ecdfba7f06e6",
   "liste_cikisi": false,
-  "n": 36,
+  "n": 0,
   "parametreler": {
-    "gecerlilik": 5,
-    "pivot": "zigzag_1.5",
-    "rr_min": "kapali",
-    "stop": "X-2ATR",
-    "tolerans": 0.03
+    "gecerlilik": 10,
+    "pivot": "sag_bar_15",
+    "rr_min": 1.5,
+    "stop": "X",
+    "tolerans": 0.05
   },
-  "puan": 0.03288084620566012,
-  "puanli": true,
-  "saglam_puan": -0.02140991007439835,
+  "puan": null,
+  "puanli": false,
+  "saglam_puan": null,
   "suzgecler": [],
   "tarih": "2026-10-28",
   "veri_kimligi": "20261026-2108"

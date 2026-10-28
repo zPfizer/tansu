@@ -44,7 +44,14 @@ def durum(tmp_path):
 
 
 def test_sina_raporu_yazar_ve_durumu_sinandi_yapar(ortam, tmp_path, capsys):
-    ortam("gartley")
+    g = STRATEJILER["gartley"]
+    v = {**g.varsayilan, "rr_min": "kapali"}  # varsayılan R/R kapısı her Gartley'i eler
+    ortam(
+        "gartley",
+        strateji=dataclasses.replace(
+            g, varsayilan=v, aralik={k: (v[k],) for k in g.aralik}
+        ),
+    )
     assert main(["sina", "gartley"]) == 0
     assert "1 sinyal, 1 dolum" in capsys.readouterr().out
     html = (tmp_path / "rapor" / "gartley" / "sinama.html").read_text(encoding="utf-8")

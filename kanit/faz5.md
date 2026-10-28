@@ -104,3 +104,36 @@ Gerçek veri (görüntü 20261026-2108): iki stratejide de bütün sayılar ayn�
 | `ortalama-kesisim` rastgele giriş yüzdeliği | 18.1 | 18.1 |
 
 Neden değişmedi: veride 78 alt limit kilitli gün var, 37'si üyelik günü. `gartley` son parametreleriyle 36 işlemin hiçbiri açıkken kilitli güne denk gelmiyor. `ortalama-kesisim` stopsuzdur; dokunuş stopu yoktur.
+
+## Karar: Gartley R/R kapısı (Ek B #13, 28.10.2026)
+
+Levent'in kararı: kapı Tansu'nun yazdığı gibi uygulanır. Ödül hedef1'e, risk stopa göre ölçülür; oran 1,5'in altındaysa kurulum alınmaz. Eski kod kapıyı hedef2'ye göre ölçüyordu ve varsayılanı kapalıydı. Yeni varsayılan `rr_min` = 1,5; elle verilebilen değerler kapalı, 1,5 ve 2 (ızgarada değil).
+
+Kaynak taraması (yerel havuz, 28.10.2026): X arşivinde Gartley geçen 53 gönderi var; 23'ünün notu var, notu olmayan 30 gönderide seviye ya da kural yok. Tansu'nun Gartley için yazdığı tek R/R kuralı 02.12.2025 gönderisindedir. Aynı gönderideki giriş (XA'nın 0,786 geri çekilmesi), stop (X; seçenek X − 2 ATR, XA 1,13) ve hedef1 (AD'nin 0,382'si) tanımlarıyla oran her Gartley'de ≈ 1,40, X − 2 ATR ve XA 1,13 ile daha düşüktür. 23.08.2026 tarama tablolarındaki kurulumların hesaplanan oranları 1,30-1,42'dir; Tansu bunları kapısız listeler. 20.08.2026 tarihli bir görselde başka bir şema var (D gerçek dipte, hedefler CD bacağına göre, stop X; hesaplanan oran ≈ 2,04); bu şema kural olarak yazılmamıştır ve kodlanmadı.
+
+```
+$ .venv\Scripts\python.exe -X utf8 -m pytest -q tests/test_gartley.py     (değişiklikten önce)
+FAILED tests/test_gartley.py::test_rr_kapisi_hedef1_ile_olculur_varsayilan_kurulumu_eler
+1 failed, 4 passed in 0.14s
+$ .venv\Scripts\python.exe -X utf8 -m pytest -q     (değişiklikten sonra)
+227 passed in 20.19s
+$ .venv\Scripts\python.exe -X utf8 -m tansu ayarla gartley     (14.2 s)
+gartley: 0 sinyal, 0 dolum, toplam 0.00 R
+gartley: ızgara 108 nokta, puanlı 0; puanlı nokta yok, varsayılanlar
+ileri yürüme: örneklem dışı N = 0, ortalama verim n/a (0/6 adım)
+saklı dönem 01.01.2026-30.09.2026: N = 0
+Monte Carlo: tohum 20261028, N = 0, rastgele giriş yüzdeliği n/a (N = 0)
+rapor: rapor\gartley\sinama.html; durum: yetersiz-ornek
+```
+
+Gerçek veri (görüntü 20261026-2108):
+
+| `gartley` | kapı kapalı (önce) | kapı hedef1'e göre 1,5 (sonra) |
+|---|---|---|
+| 2021-2025 sinyal / dolum | 63 / 36 | 0 / 0 |
+| 2021-2025 toplam | 1.18 R | 0.00 R |
+| örneklem dışı | N 38, toplam 2.74 R | N 0 |
+| rastgele giriş yüzdeliği | 82.3 | n/a (N = 0) |
+| durum | ayarlandi | yetersiz-ornek |
+
+Kapı açıkken 108 ızgara noktasının hiçbiri kurulum üretmez (toplam 0). Kapı kapalıyken aynı noktalarda 13.086 kurulum var: stop X ile hedef1 oranı her birinde 1,403; X − 2 ATR ile 0,152-1,118. Kapı kapalı sonuç `rr_min` = kapalı ile yeniden alınabilir; ayar ve komut testleri bu yolu kullanır.
