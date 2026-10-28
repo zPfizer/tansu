@@ -11,7 +11,7 @@ from pathlib import Path
 
 import numpy as np
 
-from tansu import ayar, kaynak, rapor, sinama, veri
+from tansu import ayar, kaynak, montecarlo, rapor, sinama, veri
 from tansu.stratejiler import STRATEJILER
 
 VERI_KOKU = Path("veri")
@@ -115,6 +115,7 @@ def _kos(a, *, ayarla: bool) -> int:
         anlik = son_anlik(a.kok)
         gunler = sinama.gunler(anlik)
         yuruyus = ayar.yuru(strateji, gunler)
+        mc = montecarlo.hesapla(strateji, gunler, yuruyus)
         if ayarla:
             p, ayar_tarihi = yuruyus.son.parametre, dt.date.today().isoformat()
         elif okunan:
@@ -140,6 +141,7 @@ def _kos(a, *, ayarla: bool) -> int:
                     r["durum"] not in ("taslak", "beklemede") or r["ad"] == a.ad
                     for r in satirlar
                 ),
+                mc=mc,
             )
         )
         json_yolu = None
@@ -178,6 +180,12 @@ def _kos(a, *, ayarla: bool) -> int:
         f"saklı dönem {sinama.SAKLI_BAS:%d.%m.%Y}-{sakli_son:%d.%m.%Y}: N = {len(sakli.islemler)}"
         if sakli_son >= sinama.SAKLI_BAS
         else "saklı dönem: veri saklı döneme ulaşmıyor"
+    )
+    rastgele = (
+        f"n/a (N = {mc.n})" if mc.rastgele is None else f"{mc.rastgele.yuzdelik:.1f}"
+    )
+    print(
+        f"Monte Carlo: tohum {mc.tohum}, N = {mc.n}, rastgele giriş yüzdeliği {rastgele}"
     )
     if json_yolu:
         print(f"ayar: {json_yolu}")

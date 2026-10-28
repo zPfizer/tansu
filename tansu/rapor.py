@@ -7,7 +7,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from tansu import ayar, sinama
+from tansu import ayar, montecarlo, sinama
 from tansu.strateji import Strateji
 
 RAPOR_KOKU = Path("rapor")
@@ -22,6 +22,11 @@ TARIH_TABANI = (
 )
 ORNEK_AZ = "Örnek az; bu strateji için onay bayrağı çıkmayabilir."
 ACIKLAMA = "Kural ve varsayılanlar, test ve saklı dönem içinde tarihli Tansu gönderilerinden alındı"
+ONAY_YOK = "Program hiçbir stratejiyi kendisi onaylamaz; bu bayraklar yalnız Levent'in kararına yardım eder."
+RASTGELE = (
+    "Her koşu, her test penceresinde gerçek kurulum sayısı kadar rastgele üye günde piyasa girişi açar; "
+    "stop ve hedef uzaklıkları gerçek bir kurulumdan sinyal günü ATR(14) katı olarak kopyalanır, çıkış kuralları aynıdır."
+)
 
 
 @dataclass(frozen=True)
@@ -37,6 +42,7 @@ class Sinama:
     sakli: sinama.Kosu
     sakli_son: pd.Timestamp
     sinanan: int
+    mc: montecarlo.MonteCarlo
 
 
 def _tablo(satirlar: list[dict] | pd.DataFrame) -> str:
@@ -197,6 +203,142 @@ def _yuruyus_tablosu(y: ayar.Yuruyus, b: str) -> str:
     )
 
 
+def _evet(kosul: bool, deger: str) -> str:
+    return f"{'evet' if kosul else 'hayır'} ({deger})"
+
+
+def bayraklar(
+    mc: montecarlo.MonteCarlo,
+    dis: pd.DataFrame,
+    sakli: pd.DataFrame,
+    gecmis: pd.DataFrame,
+    son: ayar.Secim,
+) -> list[dict]:
+    """SPEC 5.9 bayrakları, her biri kendi N'siyle. `dis`: dikişli örneklem dışı, `sakli`: saklı dönem,
+    `gecmis`: yıl tablolarının koşusu (işlem kayıtları); `son`: 31.12.2025 ayar seçimi."""
+    olcu = mc.olcu
+    b = sinama.BIRIM[olcu]
+    x = dis[olcu] if len(dis) else pd.Series(dtype=float)
+    n = len(x)
+
+    def oran(kosul: bool, deger: str) -> str:
+        return f"örnek az (N = {n})" if n < sinama.EN_AZ else _evet(kosul, deger)
+
+    yok = f"n/a (N = {mc.n})"
+    r, bt = mc.rastgele, mc.bootstrap_toplam
+    kazanma = (x > 0).mean() if n else np.nan
+    sakli_toplam = float(sakli[olcu].sum()) if len(sakli) else 0.0
+    puan = son.puan[son.nokta]
+    semboller = sinama.sembol_tablosu(gecmis, olcu)
+    if semboller["pay"].isna().all():
+        sembol = "n/a (toplam 0 ya da altında, pay tanımsız)"
+    else:
+        ilk = semboller.iloc[0]
+        sembol = _evet(bool(ilk["isaret"]), f"{ilk['sembol']} {ilk['pay']:.0%}")
+    satirlar = [
+        (
+            f"Örneklem dışı beklenti 0'ın üstünde ({b})",
+            oran(x.mean() > 0, f"{x.mean():.2f} {b}"),
+            n,
+        ),
+        (
+            "Strateji rastgele girişlerin 95. yüzdeliğinde ya da üstünde",
+            _rastgele_yok(mc)
+            if r is None
+            else _evet(r.yuzdelik >= 95, f"yüzdelik {r.yuzdelik:.1f}"),
+            mc.n,
+        ),
+        (
+            "Bootstrap toplamının 5. yüzdeliği 0'ın üstünde",
+            yok if bt is None else _evet(bt[0] > 0, f"{bt[0]:.2f} {b}"),
+            mc.n,
+        ),
+        (
+            "Saklı dönem toplamı 0'ın üstünde (bilgi)",
+            _evet(sakli_toplam > 0, f"{sakli_toplam:.2f} {b}")
+            if len(sakli)
+            else "n/a (N = 0)",
+            len(sakli),
+        ),
+        (
+            "Uyarı: kazanma oranı %90 ya da üstü (örneklem dışı)",
+            oran(kazanma >= 0.9, f"{kazanma:.0%}"),
+            n,
+        ),
+        (
+            "Uyarı: kazanma payı %40-60 dışında (örneklem dışı, varsayım)",
+            oran(not 0.4 <= kazanma <= 0.6, f"{kazanma:.0%}"),
+            n,
+        ),
+        (
+            "Uyarı: seçilen ızgara noktasının kendi puanı 0 ya da altında",
+            _evet(puan <= 0, f"{puan:.2f} {b}") if son.puanli else "puanlı nokta yok",
+            int(son.n[son.nokta]),
+        ),
+        (
+            "Uyarı: bir sembol toplamın %40'ından fazlasını veriyor (2021-2025)",
+            sembol,
+            len(gecmis),
+        ),
+    ]
+    return [{"Bayrak": ad, "Değer": deger, "N": adet} for ad, deger, adet in satirlar]
+
+
+def _rastgele_yok(mc: montecarlo.MonteCarlo) -> str:
+    if mc.n < sinama.EN_AZ:
+        return f"n/a (N = {mc.n})"
+    return "n/a (uygun rastgele gün ya da şablon yok)"
+
+
+def _uclu(y: montecarlo.Yuzdelik | None, n: int) -> str:
+    return f"n/a (N = {n})" if y is None else " / ".join(f"{v:.2f}" for v in y)
+
+
+def _mc_tablosu(mc: montecarlo.MonteCarlo, sutunlar: dict) -> str:
+    if any(v is None for v in sutunlar.values()):
+        return f"<p>n/a (N = {mc.n})</p>"
+    return _tablo(
+        [
+            {"Yüzdelik": ad, **{k: f"{v[i]:.2f}" for k, v in sutunlar.items()}}
+            for i, ad in enumerate(("p5", "p50", "p95"))
+        ]
+    )
+
+
+def _mc_bolumu(mc: montecarlo.MonteCarlo, sinif: str) -> str:
+    b = sinama.BIRIM[mc.olcu]
+    r = mc.rastgele
+    metin = (
+        f"<p>Tohum: {mc.tohum}. Koşu: {mc.tekrar}. Girdi: dikişli örneklem dışı kurulumlar, "
+        f"N = {mc.n}, çıkış tarihi sırasıyla.</p>"
+        "<h3>Bootstrap (yerine koyarak çekiliş)</h3>"
+        + _mc_tablosu(
+            mc,
+            {
+                f"Toplam {b}": mc.bootstrap_toplam,
+                f"En büyük düşüş {b}": mc.bootstrap_dusus,
+            },
+        )
+    )
+    if sinif == "a":
+        batma = f"n/a (N = {mc.n})" if mc.batma is None else f"{mc.batma:.1%}"
+        metin += (
+            f"<p>Batma riski (düşüş ≥ {montecarlo.BATMA_R:g} R, varsayım): {batma}.</p>"
+        )
+    metin += "<h3>Sıra karıştırma</h3>" + _mc_tablosu(
+        mc, {f"En büyük düşüş {b}": mc.karistirma_dusus}
+    )
+    metin += f"<h3>Rastgele giriş kıyası</h3><p>{RASTGELE}</p>"
+    if r is None:
+        return metin + f"<p>{_rastgele_yok(mc)}</p>"
+    return (
+        metin
+        + _mc_tablosu(mc, {f"Koşu ortalaması {b}": r.ortalamalar})
+        + f"<p>Strateji ortalaması {r.strateji_ort:.2f} {b}; rastgele koşu ortalamaları içinde "
+        f"yüzdelik {r.yuzdelik:.1f}.</p>"
+    )
+
+
 def yaz(s: Sinama, kok: Path = RAPOR_KOKU) -> Path:
     strateji, y = s.strateji, s.yuruyus
     klasor = kok / strateji.ad
@@ -227,6 +369,8 @@ def yaz(s: Sinama, kok: Path = RAPOR_KOKU) -> Path:
     islemler.to_csv(
         klasor / "islemler.csv", index=False, encoding="utf-8", lineterminator="\n"
     )
+    mc = s.mc
+    bayrak = bayraklar(mc, y.dis_ornek.islemler, s.sakli.islemler, islemler, y.son)
     sinif = "a (tam seviye)" if strateji.sinif == "a" else "b (giriş taraması)"
     sakli_notu = (
         "" if s.sakli_son >= sinama.SAKLI_BAS else " Veri saklı döneme ulaşmıyor."
@@ -253,6 +397,8 @@ td,th{{border:1px solid #ccc;padding:3px 6px;font-size:13px;text-align:right}}th
 <h2>Saklı dönem</h2><p>Sinyal tarihi {sakli_tarih}, yukarıdaki parametrelerle tek kesintisiz koşu.{sakli_notu}</p>
 {_donem_tablosu({"Saklı dönem": _ozet(s.sakli, olcu)})}
 {ileri({"Saklı dönem": s.sakli})}
+<h2>Monte Carlo</h2>{_mc_bolumu(mc, strateji.sinif)}
+<h2>Bayraklar</h2><p><b>{ONAY_YOK}</b></p>{_tablo(bayrak)}
 <h2>Kümülatif {b}</h2>{egri_svg(islemler, olcu)}
 <h2>Düşen sinyaller</h2>{_tablo(nedenler)}
 <h2>Sembol tablosu</h2>{_tablo(semboller)}
@@ -293,6 +439,28 @@ td,th{{border:1px solid #ccc;padding:3px 6px;font-size:13px;text-align:right}}th
         f"toplam {_toplam(s.sakli, olcu):.2f} {b}."
         if s.sakli_son >= sinama.SAKLI_BAS
         else "Saklı dönem: veri saklı döneme ulaşmıyor.",
+        "",
+        f"Monte Carlo (tohum {mc.tohum}, {mc.tekrar} koşu, örneklem dışı N = {mc.n}), p5 / p50 / p95:",
+        "",
+        f"- Bootstrap toplam {b}: {_uclu(mc.bootstrap_toplam, mc.n)}; "
+        f"en büyük düşüş {b}: {_uclu(mc.bootstrap_dusus, mc.n)}"
+        + (
+            f"; batma riski {'n/a' if mc.batma is None else f'{mc.batma:.1%}'}"
+            if strateji.sinif == "a"
+            else ""
+        ),
+        f"- Sıra karıştırma en büyük düşüş {b}: {_uclu(mc.karistirma_dusus, mc.n)}",
+        f"- Rastgele giriş koşu ortalaması {b}: "
+        + (
+            _rastgele_yok(mc)
+            if mc.rastgele is None
+            else f"{_uclu(mc.rastgele.ortalamalar, mc.n)}; strateji ortalaması "
+            f"{mc.rastgele.strateji_ort:.2f} {b}, yüzdelik {mc.rastgele.yuzdelik:.1f}"
+        ),
+        "",
+        f"Bayraklar. {ONAY_YOK}",
+        "",
+        *(f"- {r['Bayrak']}: {r['Değer']} (N = {r['N']})" for r in bayrak),
         "",
         VARSAYIM,
         "",
