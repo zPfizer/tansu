@@ -301,3 +301,15 @@ def test_atr_basit_gercek_araligin_basit_ortalamasi():
     a = gostergeler.atr_basit(y, d, k, n=3)
     assert a.iloc[:2].isna().all()
     assert a.iloc[-1] == pytest.approx(3.0)
+
+
+def test_atr_basit_eksik_gunu_atlar_sonraki_gunler_tanimli_kalir():
+    # Tek eksik gün eskiden n gün NaN veriyordu; ATR işlem görülen n çubuğun ortalamasıdır.
+    nan = float("nan")
+    y = pd.Series([12.0, 14.0, nan, 16.0, 17.0])
+    d = pd.Series([10.0, 11.0, nan, 12.0, 15.0])
+    k = pd.Series([11.0, 13.0, nan, 15.0, 16.0])
+    a = gostergeler.atr_basit(y, d, k, n=3)
+    assert a.isna().tolist() == [True, True, True, False, False]
+    assert a.iloc[3] == pytest.approx(3.0)  # eksik gün yokmuş gibi: 2, 3, 4
+    assert a.iloc[4] == pytest.approx((3.0 + 4.0 + 2.0) / 3)

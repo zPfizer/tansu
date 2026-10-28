@@ -71,8 +71,12 @@ def _gercek_aralik(
 def atr_basit(
     yuksek: pd.Series, dusuk: pd.Series, kapanis: pd.Series, n: int = 14
 ) -> pd.Series:
-    """Tansu'nun ATR'si: gerçek aralığın n günlük basit ortalaması (SPEC 3.12). Wilder için `atr`."""
-    return _gercek_aralik(yuksek, dusuk, kapanis).rolling(n).mean()
+    """Tansu'nun ATR'si: gerçek aralığın n günlük basit ortalaması (SPEC 3.12). Wilder için `atr`.
+
+    Ortalama fiyatlı n çubuktur: eksik gün atlanır (o günün kendisi NaN), sonraki günler tanımlı kalır."""
+    var = yuksek.notna() & dusuk.notna() & kapanis.notna()
+    tr = _gercek_aralik(yuksek[var], dusuk[var], kapanis[var])
+    return tr.rolling(n).mean().reindex(yuksek.index)
 
 
 def atr(
