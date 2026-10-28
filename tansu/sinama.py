@@ -1,6 +1,9 @@
-"""Geçmiş sınama: bütün BIST 30 sembollerinde strateji, motor ve dönem ölçüleri (SPEC 5.1-5.6)."""
+"""Geçmiş sınama: bütün BIST 30 sembollerinde strateji, motor ve dönem ölçüleri (SPEC 5.1-5.7)."""
 
 from collections import Counter
+from collections.abc import Mapping
+from dataclasses import dataclass
+from typing import NamedTuple
 
 import numpy as np
 import pandas as pd
@@ -9,25 +12,74 @@ from tansu import gostergeler, islem, veri
 from tansu.strateji import Strateji
 
 ILK_GIRIS = pd.Timestamp("2021-01-04")  # 2019-2020 yalnız ısınma (SPEC 3.4)
-SAKLI_BAS = pd.Timestamp("2026-01-01")  # saklı dönem faz 4'te (SPEC 5.7)
+# yıl tabloları, ayar ve ileri yürüme bu günden sonraki fiyatı görmez (SPEC 5.7)
+KESIM = pd.Timestamp("2025-12-31")
+SAKLI_BAS = pd.Timestamp("2026-01-01")
 YILLAR = (2021, 2022, 2023, 2024, 2025)
 EN_AZ = 30  # oranlar için en az kurulum (SPEC 5.6)
 BIRIM = {"R": "R", "net_yuzde": "%"}  # ölçü sütunu -> etiket birimi
 
+Gunler = Mapping[str, pd.DataFrame]  # sembol -> `veri.gunluk` tablosu ve `atr`
 
-def calistir(
-    strateji: Strateji, anlik: veri.Anlik, p=None
-) -> tuple[pd.DataFrame, pd.Series, Counter]:
-    """(işlem kaydı, sinyal günleri, düşen sinyal sayaçları). Yalnız üye günlerin sinyalleri sayılır."""
-    kayitlar, sinyal_gunleri, sayac = [], [], Counter()
+
+@dataclass(frozen=True)
+class Donem:
+    """Bir koşunun sınırı: sinyal yalnız [bas, son] içindeki üye günlerde sayılır; motor `son`dan sonraki fiyatı görmez,
+    o gün açık kalan kurulum o günün kapanışıyla `acik` işaretlenir."""
+
+    bas: pd.Timestamp
+    son: pd.Timestamp
+
+
+GECMIS = Donem(ILK_GIRIS, KESIM)
+
+
+class Kosu(NamedTuple):
+    """Bir parametre setinin bir koşusu: işlem kaydı, sinyal günleri, düşen sinyal sayaçları."""
+
+    islemler: pd.DataFrame
+    sinyaller: pd.DataFrame
+    sayac: Counter
+
+    def kes(self, bas: pd.Timestamp, son: pd.Timestamp) -> "Kosu":
+        """Sinyal tarihi [bas, son] içinde olan kurulumlar ve sinyaller; kurulum kendi çıkışını korur.
+        Sayaçlar tarihsiz olduğu için dilimde boştur."""
+        i, s = self.islemler, self.sinyaller
+        if len(i):
+            i = i[i["sinyal_tarihi"].between(bas, son)]
+        return Kosu(i, s[s["tarih"].between(bas, son)], Counter())
+
+
+def gunler(anlik: veri.Anlik) -> dict[str, pd.DataFrame]:
+    """Anlık görüntüdeki her BIST 30 sembolünün günlük tablosu ve `atr`'si; komut başına bir kez."""
     semboller = sorted(
         set(veri.uyelik_araliklari()["sembol"]) & set(anlik.fiyat["sembol"])
     )
+    sonuc = {}
     for sembol in semboller:
         gun = veri.gunluk(anlik, sembol)
         gun["atr"] = gostergeler.atr_basit(gun["yuksek"], gun["dusuk"], gun["kapanis"])
-        s = strateji.sinyal(gun, p or {})
-        disarida = (gun.index < ILK_GIRIS) | (gun.index >= SAKLI_BAS) | ~gun["uye"]
+        sonuc[sembol] = gun
+    return sonuc
+
+
+def sakli_son(gunler: Gunler) -> pd.Timestamp:
+    """Saklı dönemin sonu: verinin son tam takvim ayının son günü (SPEC 5.7)."""
+    son = max(g.index[-1] for g in gunler.values()).normalize()
+    return son if son.is_month_end else son - pd.offsets.MonthEnd(1)
+
+
+def calistir(
+    strateji: Strateji, gunler: Gunler, p: Mapping[str, float | str], donem: Donem
+) -> Kosu:
+    """Fiyat `donem.son`da kesilir, sonra sinyal hesaplanır; giriş yalnız dönem içindeki üye günlerde sayılır."""
+    kayitlar, sinyal_gunleri, sayac = [], [], Counter()
+    for sembol in sorted(gunler):
+        gun = gunler[sembol].loc[: donem.son]
+        if gun.empty:
+            continue
+        s = strateji.sinyal(gun, p)
+        disarida = (gun.index < donem.bas) | ~gun["uye"]
         s.loc[disarida, ["giris", "tekrar"]] = [False, 0]
         sinyal_gunleri += [(sembol, t) for t in s.index[s["giris"]]]
         k, c = islem.simule(
@@ -42,7 +94,7 @@ def calistir(
         sayac += c
     islemler = pd.DataFrame(kayitlar)
     sinyaller = pd.DataFrame(sinyal_gunleri, columns=["sembol", "tarih"])
-    return islemler, sinyaller, sayac
+    return Kosu(islemler, sinyaller, sayac)
 
 
 def sirala(islemler: pd.DataFrame) -> pd.DataFrame:
@@ -111,7 +163,7 @@ def donem_ozeti(islemler: pd.DataFrame, sinyal_n: int, olcu: str) -> dict:
 def donemler(
     islemler: pd.DataFrame, sinyaller: pd.DataFrame, olcu: str
 ) -> dict[str, dict]:
-    """Her yıl ve bütün yıllar; yıl sinyal tarihine göre."""
+    """Her yıl ve bütün yıllar; yıl sinyal tarihine göre (`GECMIS` koşusu)."""
     yil_i = (
         pd.DatetimeIndex(islemler["sinyal_tarihi"]).year
         if len(islemler)
