@@ -87,9 +87,10 @@ def _sina(a) -> int:
     except veri.VeriHatasi as hata:
         print(f"tansu sina: {hata}", file=sys.stderr)
         return 1
-    toplam = islemler["R"].sum() if len(islemler) else 0.0
+    toplam = islemler[strateji.olcu].sum() if len(islemler) else 0.0
     print(
-        f"{a.ad}: {len(sinyaller)} sinyal, {len(islemler)} dolum, toplam {toplam:.2f} R"
+        f"{a.ad}: {len(sinyaller)} sinyal, {len(islemler)} dolum, "
+        f"toplam {toplam:.2f} {sinama.BIRIM[strateji.olcu]}"
     )
     print(f"rapor: {yol}; durum: {durum}")
     if a.ac:

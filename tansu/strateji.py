@@ -28,6 +28,15 @@ class Strateji:
     def sinyal(self, gun: pd.DataFrame, p: Mapping[str, float | str]) -> pd.DataFrame:
         return self.hesapla(gun, {**self.varsayilan, **p})
 
+    @property
+    def olcu(self) -> Literal["R", "net_yuzde"]:
+        """Bir kurulumun sonucunu tutan işlem kaydı sütunu (SPEC 5.2)."""
+        if self.sinif == "a":
+            return "R"
+        if self.cikis is None:
+            raise NotImplementedError(f"{self.ad}: çıkışsız sınıf (b) faz 8'de")
+        return "net_yuzde"
+
 
 def bos_sinyal(index: pd.Index) -> pd.DataFrame:
     """Her gün bir satır; giriş yok (SPEC 4 sütunları)."""
@@ -42,4 +51,5 @@ def bos_sinyal(index: pd.Index) -> pd.DataFrame:
     s["durum"] = ""
     s["kural_durumu"] = ""
     s["tekrar"] = 0
+    s["cikis_sinyali"] = False
     return s
