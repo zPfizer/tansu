@@ -228,7 +228,7 @@ Levent: "Gartley'nin setup'ını oturtmaya çalışıyoruz, ayarları ... tansu'
 
 ## Karar: Gartley kapı 1,40 ve n günlük salınım pivotları (Ek B #13, 28.10.2026)
 
-Levent: "Evet, işle" (bu ayarı koda işle; evren genişletmesi ayrı iş). Değişiklik: `rr_min` varsayılanı 1,5 → 1,4 (seçenek kapalı, 1,4, 1,5, 2); pivot ekseni `sag_bar_10/12/15/20` (zigzag çıktı); ızgarada stop yalnız X (X − 2 ATR elle verilebilir). Izgara 108 → 36 nokta. Varsayılan pivot 15 ve geçerlilik 10 kaldı: 12, 15 ve 20 günlük pivotlar Tansu'nun SOKE taramasını (X 10.20, A 21.20, D 12.554) birebir bulur, 10 bulmaz.
+Levent: "Evet, işle" (bu ayarı koda işle; evren genişletmesi ayrı iş). Değişiklik: `rr_min` varsayılanı 1,5 → 1,4 (seçenek kapalı, 1,4, 1,5, 2); pivot ekseni `sag_bar_10/12/15/20` (zigzag çıktı); ızgarada stop yalnız X (X − 2 ATR `hesapla`'da kalır; ayar dosyası ızgara dışı değeri reddeder). Izgara 108 → 36 nokta. Varsayılan pivot 15 ve geçerlilik 10 kaldı: 12, 15 ve 20 günlük pivotlar Tansu'nun SOKE taramasını (X 10.20, A 21.20, D 12.554) birebir bulur, 10 bulmaz.
 
 ```
 $ .venv\Scripts\python.exe -X utf8 -m pytest -q tests/test_gartley.py     (değişiklikten önce)

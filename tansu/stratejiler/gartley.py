@@ -109,7 +109,7 @@ STRATEJI = Strateji(
         "pivot": ("sag_bar_10", "sag_bar_12", "sag_bar_15", "sag_bar_20"),
         "tolerans": (0.03, 0.04, 0.05),
         "gecerlilik": (5, 10, 20),
-        "stop": ("X",),  # X-2ATR elle verilebilir; kapı 1.4 onu her kurulumda eler
+        "stop": ("X",),  # X-2ATR hesapla'da kalır; kapı 1.4 onu her kurulumda eler
     },
     seviye_param=("stop",),
     cikis=Cikis("dokunus", (("hedef1", 0.5), ("hedef2", 0.5))),
