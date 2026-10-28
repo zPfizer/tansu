@@ -29,7 +29,6 @@ T = pd.Timestamp
 
 
 def kosu(puan: float) -> sinama.Kosu:
-    """Puan NaN ise 29 kurulum (puansız), değilse 30 kurulumun hepsi `puan`."""
     n = sinama.EN_AZ - 1 if np.isnan(puan) else sinama.EN_AZ
     islemler = pd.DataFrame(
         {

@@ -29,16 +29,14 @@ class Sinama:
     """Bir raporun bütün girdisi; `sina` ve `ayarla` aynı değeri kurar."""
 
     strateji: Strateji
-    parametre: dict[
-        str, float | str
-    ]  # yıl tabloları ve saklı dönem: json ya da varsayılan
-    ayar_tarihi: str | None  # None: json yok, varsayılanlar
+    parametre: dict[str, float | str]
+    ayar_tarihi: str | None
     kimlik: str
     gecmis: sinama.Kosu
     yuruyus: ayar.Yuruyus
     sakli: sinama.Kosu
     sakli_son: pd.Timestamp
-    sinanan: int  # durum.csv'de `taslak` olmayan strateji sayısı (SPEC 5.6)
+    sinanan: int
 
 
 def _tablo(satirlar: list[dict] | pd.DataFrame) -> str:

@@ -35,7 +35,6 @@ def gun_tablosu(kapanis, yuksek=None, dusuk=None, aof=None, bas="2022-01-03"):
 
 
 def piyasa(sembol=16, donem=40, bas="2019-01-02", son="2026-09-30"):
-    """`sinama.Gunler` biçiminde yapay pazar: kaydırılmış sinüs kapanışları, her gün üye, kilit yok."""
     t = np.arange(len(pd.bdate_range(bas, son)))
     return {
         f"S{j:02d}": gun_tablosu(
