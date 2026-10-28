@@ -1,6 +1,7 @@
 """Dolum, çıkış, maliyet ve R (SPEC 5.1-5.5). Para ve adet yok: her kurulum kendi başına ölçülür."""
 
 from collections import Counter
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Literal
 
@@ -43,7 +44,7 @@ def maliyet(giris: float, cikis: float) -> float:
 @dataclass
 class _Islem:
     sinyal_i: int
-    satir: pd.Series
+    satir: Mapping
     stop: float
     risk_tabani: float
     dolum_i: int = -1
@@ -54,10 +55,12 @@ class _Islem:
     parcalar: list = field(default_factory=list)  # (gün, fiyat, pay, neden)
 
 
-class _Gun:
+class Gun:
+    """Bir sembolün motor dizileri; sembol başına bir kez kurulur."""
+
     def __init__(self, gun: pd.DataFrame, sinyal: pd.DataFrame):
-        self.aof, self.yuk, self.dus, self.kap = (
-            gun[a].to_numpy(float) for a in ("aof", "yuksek", "dusuk", "kapanis")
+        self.aof, self.yuk, self.dus, self.kap, self.atr = (
+            gun[a].to_numpy(float) for a in ("aof", "yuksek", "dusuk", "kapanis", "atr")
         )
         self.tavan_kilit = gun["kilit_tavan"].to_numpy(bool)
         self.taban_kilit = gun["kilit_taban"].to_numpy(bool)
@@ -78,36 +81,47 @@ def simule(
 
     `gun`: `veri.gunluk` ve `atr` sütunu. `sinyal`: stratejinin çıktısı, aynı indeks.
     Dönen: işlem kayıtları ve düşen sinyal sayaçları."""
-    g = _Gun(gun, sinyal)
+    g = Gun(gun, sinyal)
     sayac: Counter = Counter()
     sayac[AYNI_GUN] += int(sinyal["tekrar"].sum())
     kayitlar: list[dict] = []
-    aktif: _Islem | None = None
-    girisler = set(np.flatnonzero(sinyal["giris"].to_numpy(bool)))
-    for i in range(len(gun)):
-        if aktif is not None and aktif.dolum_i < 0:
-            aktif = _emir_gunu(aktif, i, g, sayac)
-        if aktif is not None and aktif.dolum_i >= 0 and np.isfinite(g.kap[i]):
-            if _acik_gun(aktif, i, g, cikis):
-                kayitlar.append(_kayit(aktif, gun, cikis, sembol, strateji, sinif))
-                aktif = None
-        if i in girisler:
-            satir = sinyal.iloc[i]
-            neden = _red_nedeni(satir, gun.iloc[i], aktif is not None, cikis)
-            if neden:
-                sayac[neden] += 1
-                continue
-            if satir["giris_tur"] not in ("limit", "piyasa"):
-                raise ValueError(f"giriş türü henüz yok: {satir['giris_tur']}")
-            taban = risk_tabani * float(gun["atr"].iloc[i])
-            aktif = _Islem(i, satir, float(satir["stop"]), taban)
-    if aktif is not None and aktif.dolum_i >= 0:
-        son = int(np.flatnonzero(np.isfinite(g.kap))[-1])
-        aktif.parcalar.append((son, g.kap[son], aktif.kalan, "açık"))
-        kayitlar.append(_kayit(aktif, gun, cikis, sembol, strateji, sinif))
-    elif aktif is not None:
-        sayac[VERI_SONU] += 1
+    bitis = -1  # önceki kurulumun kapandığı ya da düştüğü gün; o gün yeni sinyale açık
+    for i in np.flatnonzero(sinyal["giris"].to_numpy(bool)):
+        satir = sinyal.iloc[i]
+        neden = _red_nedeni(satir, gun.iloc[i], i < bitis, cikis)
+        if neden:
+            sayac[neden] += 1
+            continue
+        if satir["giris_tur"] not in ("limit", "piyasa"):
+            raise ValueError(f"giriş türü henüz yok: {satir['giris_tur']}")
+        e, bitis = oyna(g, int(i), satir, cikis, risk_tabani * float(g.atr[i]), sayac)
+        if e is not None:
+            kayitlar.append(_kayit(e, gun, cikis, sembol, strateji, sinif))
     return kayitlar, sayac
+
+
+def oyna(
+    g: Gun, i: int, satir: Mapping, cikis: Cikis, taban: float, sayac: Counter
+) -> tuple[_Islem | None, int]:
+    """i. gün sinyal veren tek kurulumu i+1'den kapanana, emir düşene ya da veri bitene dek işletir.
+
+    Dönen: dolan işlem (yoksa None) ve son gün; veri biterse `len(g.kap)`, yani sonraki her sinyali kapatır.
+    Veri sonunda açık işlem son fiyatlı kapanışta `açık` işaretlenir (SPEC 5.4)."""
+    e: _Islem | None = _Islem(i, satir, float(satir["stop"]), taban)
+    n = len(g.kap)
+    for j in range(i + 1, n):
+        if e.dolum_i < 0:
+            e = _emir_gunu(e, j, g, sayac)
+            if e is None:
+                return None, j
+        if e.dolum_i >= 0 and np.isfinite(g.kap[j]) and _acik_gun(e, j, g, cikis):
+            return e, j
+    if e.dolum_i < 0:
+        sayac[VERI_SONU] += 1
+        return None, n
+    son = int(np.flatnonzero(np.isfinite(g.kap))[-1])
+    e.parcalar.append((son, g.kap[son], e.kalan, "açık"))
+    return e, n
 
 
 def _red_nedeni(satir, gun_satiri, acik_var: bool, cikis: Cikis) -> str | None:
@@ -127,7 +141,7 @@ def _red_nedeni(satir, gun_satiri, acik_var: bool, cikis: Cikis) -> str | None:
     return None
 
 
-def _emir_gunu(e: _Islem, i: int, g: _Gun, sayac: Counter) -> _Islem | None:
+def _emir_gunu(e: _Islem, i: int, g: Gun, sayac: Counter) -> _Islem | None:
     """Bekleyen emir (SPEC 5.1): `limit` t+1'den `gecerlilik` gün; `piyasa` t+1'den sonraki ilk fiyatlı gün."""
     piyasa = e.satir["giris_tur"] == "piyasa"
     if not piyasa and i - e.sinyal_i > int(e.satir["gecerlilik"]):
@@ -158,14 +172,14 @@ def _emir_gunu(e: _Islem, i: int, g: _Gun, sayac: Counter) -> _Islem | None:
     return e
 
 
-def _kapanis_nedeni(e: _Islem, i: int, g: _Gun, cikis: Cikis) -> str | None:
+def _kapanis_nedeni(e: _Islem, i: int, g: Gun, cikis: Cikis) -> str | None:
     """i. günün kapanışından sonra yarın için bekleyen kapanışa bağlı çıkış (SPEC 5.4 adım 6): önce stop, sonra çıkış sinyali."""
     if cikis.stop_mod == "kapanis" and g.kap[i] < e.stop:
         return "stop (kapanış)"
     return CIKIS_SINYALI if g.cikis_sinyali[i] else None
 
 
-def _acik_gun(e: _Islem, i: int, g: _Gun, cikis: Cikis) -> bool:
+def _acik_gun(e: _Islem, i: int, g: Gun, cikis: Cikis) -> bool:
     """Açık işlemin bir günü, SPEC 5.4 sırasıyla. İşlem kapanınca True."""
     nedeni = _kapanis_nedeni(e, i, g, cikis)
     dolumda_stop = i == e.dolum_i and e.giris <= e.stop
@@ -215,10 +229,17 @@ def _kapat(e: _Islem, i: int, fiyat: float, neden: str) -> bool:
     return True
 
 
+def sonuc(e: _Islem) -> tuple[float, float]:
+    """Kapanmış ya da `açık` işlemin (R, net %) değeri; kısmi çıkışlar payıyla (SPEC 5.2, 5.3)."""
+    giris, p = e.giris, e.parcalar
+    r = sum(pay * (f - giris - maliyet(giris, f)) / e.risk for _, f, pay, _ in p)
+    yuzde = sum(pay * (f - giris - maliyet(giris, f)) / giris for _, f, pay, _ in p)
+    return r, yuzde * 100
+
+
 def _kayit(e: _Islem, gun: pd.DataFrame, cikis: Cikis, sembol, strateji, sinif) -> dict:
     tarih, giris, risk, p = gun.index, e.giris, e.risk, e.parcalar
-    r = sum(pay * (f - giris - maliyet(giris, f)) / risk for _, f, pay, _ in p)
-    yuzde = sum(pay * (f - giris - maliyet(giris, f)) / giris for _, f, pay, _ in p)
+    r, net_yuzde = sonuc(e)
     son_i, son_fiyat, _, son_neden = p[-1]
     kap = gun["kapanis"].to_numpy(float)
     ileri = {
@@ -263,7 +284,7 @@ def _kayit(e: _Islem, gun: pd.DataFrame, cikis: Cikis, sembol, strateji, sinif) 
         "cikis_tarihi": tarih[son_i],
         "cikis_fiyati": son_fiyat,
         "cikis_nedeni": son_neden,
-        "net_yuzde": yuzde * 100,
+        "net_yuzde": net_yuzde,
         "R": r,
         "tutma_gun": son_i - e.dolum_i,
         **ileri,
