@@ -99,6 +99,7 @@ STRATEJI = Strateji(
     sinif="a",
     zaman="gunluk",
     kaynaklar=("stratejiler/gartley.md",),
+    kaynak_tarihleri=("2025-12-02", "2025-12-13", "2026-08-20", "2026-08-23"),
     varsayilan={
         "pivot_mod": "sag_bar",
         "pivot_pencere": 15,
