@@ -110,17 +110,18 @@ def test_2026_fiyati_monte_carloyu_degistirmez(pazar):
     assert a == b
 
 
-def test_rastgele_giris_seviyeleri_sablonun_atr_uzakligi():
-    """Tek uygun gün t ve tek şablon: her koşu aynı kurulumu açar.
-    Şablon: dolum 50, stop 48, hedef1 54, sinyal günü ATR 2; yani stop 1 ATR altta, hedef1 2 ATR üstte.
-    Rastgele: dolum AOF(t+1) = 101, stop 101 - 2 = 99, hedef1 101 + 4 = 105; t+2 günü yüksek 106 hedefi alır."""
+def _tek_gun_kiyasi(atr_sifir_sablon: int = 0, kilit: bool = False):
+    """Tek uygun gün t; şablonlar dolum 50, stop 48, hedef1 54, sinyal günü t (ATR 2) ya da ATR'si 0 olan bir gün."""
     kapanis = np.full(10, 100.0)
     yuksek, dusuk, aof = kapanis + 0.5, kapanis - 0.5, kapanis.copy()
     aof[6], yuksek[6], dusuk[6] = 101.0, 101.5, 100.5
     yuksek[7], dusuk[7] = 106.0, 100.0
     g = gun_tablosu(kapanis, yuksek, dusuk, aof, bas="2022-12-26").assign(atr=2.0)
-    t = pd.Timestamp("2023-01-02")
+    t, sifir = pd.Timestamp("2023-01-02"), pd.Timestamp("2022-12-29")
+    g.loc[sifir, "atr"] = 0.0
     g["uye"] = g.index == t
+    if kilit:
+        g.loc[g.index > t, "kilit_tavan"] = True
     oyuncak = dataclasses.replace(
         KESISIM,
         sinif="a",
@@ -132,7 +133,8 @@ def test_rastgele_giris_seviyeleri_sablonun_atr_uzakligi():
     gercek = pd.DataFrame(
         {
             "sembol": "S00",
-            "sinyal_tarihi": t,
+            "sinyal_tarihi": [sifir] * atr_sifir_sablon
+            + [t] * (sinama.EN_AZ - atr_sifir_sablon),
             "dolum_tarihi": t,
             "cikis_tarihi": t,
             "dolum_fiyati": 50.0,
@@ -148,8 +150,21 @@ def test_rastgele_giris_seviyeleri_sablonun_atr_uzakligi():
     )
     adim = ayar.Adim(ayar.PENCERELER[0], secim, 0, 0.0, kosu, 0.0, None)
     y = ayar.Yuruyus(ayar.Izgara(oyuncak), (adim,), kosu, None, 0, secim)
-    a = mc.hesapla(oyuncak, {"S00": g}, y, tekrar=TEKRAR)
-    beklenen = (105 - 101 - islem.maliyet(101, 105)) / 2  # risk = 101 - 99
+    return mc.hesapla(oyuncak, {"S00": g}, y, tekrar=TEKRAR), aof[6]
+
+
+@pytest.mark.parametrize("atr_sifir_sablon", [0, 5])
+def test_rastgele_giris_seviyeleri_sablonun_atr_uzakligi(atr_sifir_sablon):
+    """ATR'si 0 olan günün şablonu uzaklık veremez, çekilmez; kalan tek şablonla her koşu aynı kurulumu açar."""
+    a, dolum = _tek_gun_kiyasi(atr_sifir_sablon)
+    stop, hedef1 = dolum - (50.0 - 48.0), dolum + (54.0 - 50.0)
+    beklenen = (hedef1 - dolum - islem.maliyet(dolum, hedef1)) / (dolum - stop)
     assert a.rastgele.ortalamalar == pytest.approx((beklenen,) * 3)
     assert a.rastgele.strateji_ort == 1.0 and a.rastgele.yuzdelik == 0.0
     assert a.batma == 0.0
+
+
+def test_uygun_rastgele_gun_yoksa_kiyas_na_diger_tablolar_var():
+    a, _ = _tek_gun_kiyasi(kilit=True)
+    assert a.rastgele is None
+    assert a.bootstrap_toplam is not None and a.karistirma_dusus is not None
