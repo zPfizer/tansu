@@ -234,8 +234,9 @@ def _kayit(e: _Islem, gun: pd.DataFrame, cikis: Cikis, sembol, strateji, sinif) 
         gun["yuksek"].to_numpy(float)[pencere],
         gun["dusuk"].to_numpy(float)[pencere],
     )
-    mfe = np.nanmax(yuk) - giris if np.isfinite(yuk).any() else np.nan
-    mae = giris - np.nanmin(dus) if np.isfinite(dus).any() else np.nan
+    tam = e.dolum_i + 10 < len(kap)  # veri sonunda yarım pencere ölçülmez
+    mfe = np.nanmax(yuk) - giris if tam and np.isfinite(yuk).any() else np.nan
+    mae = giris - np.nanmin(dus) if tam and np.isfinite(dus).any() else np.nan
     s = e.satir
     return {
         "strateji": strateji,

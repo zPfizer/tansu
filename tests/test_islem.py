@@ -286,3 +286,12 @@ def test_kapanis_stopu_ve_cikis_sinyali_ayni_gun_stop_once_gelir():
     s.iloc[2, s.columns.get_loc("cikis_sinyali")] = True
     (k,), _ = kos(g, s, cikis)
     assert k["cikis_nedeni"] == "stop (kapanış)" and k["cikis_fiyati"] == 9.5
+
+
+def test_mfe_mae_yalniz_tam_10_gunluk_pencerede_olculur():
+    g = gun_tablosu([11.0] * 5)
+    (k,), _ = kos_b(g, piyasa(g))
+    assert np.isnan(k["mfe_yuzde"]) and np.isnan(k["mae_yuzde"])
+    g = gun_tablosu([11.0] * 12)
+    (k,), _ = kos_b(g, piyasa(g))
+    assert np.isfinite(k["mfe_yuzde"]) and np.isfinite(k["mae_yuzde"])
