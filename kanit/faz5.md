@@ -180,3 +180,14 @@ Levent: "Bu kadar işlem sayısına eksi yazmak mantıksız ... normal değil." 
 - Kapı açıkken hiçbir varyant rastgele girişi geçmez: kapı D − X ile ölçülüp stop X − 2 ATR olunca 381 işlem, 0.006 R, yüzdelik 21.0; dönüş teyitli giriş −0.037 R; C'yi gecikmesiz bilen teşhis koşusu bile −0.086 R.
 - Tek artı bölge: çekirdek kural (D 0,786, stop X ya da X − 2 ATR, hedefler AD'de), kapı kapalı, yalnız büyük formasyon (XA ≥ 5 ATR; Tansu'dan değil). Örneklem dışı 34 işlem, ortalama 0.623 R, yüzdelik 97.6, bootstrap p5 10.84. 6 ve 7,5 ATR de ≈ 0.62 R verir; 4 ATR 0.167 R, 3 ATR 0.028 R. 34 işlemin 5'i BIST 30 sembolü.
 - Bu bölge ≈ 20 varyant denendikten sonra bulundu; ileri yürüme parametre seçimini korur, varyant aramasını korumaz. Dürüst sınav dokunulmamış 2026 saklı dönemidir; kullanımı Levent'in kararıdır. Kapı kapalı aday 28.10.2026 kapı kararıyla çelişir.
+
+### Sağlam ayar (28.10.2026)
+
+Levent: "Bu Gartley sağlam bir temele oturmadan, geçmiş verilerle desteklenmeden, doğru setup ayarlar bulunmadan bu iş bitmiş sayılmayacak." Kapı için Levent: Tansu 1,5'i kendisi uygulamıyorsa esnetilebilir. Eldeki veri: bütün BIST, 2020-2025 (2019 ısınma).
+
+- Motor ve araç denetimi: sinyal gününden sonraki veri silinince 900 örnek sinyalin hiçbiri değişmez; 6 sembol 2020-2025 gün gün oynatılınca sonradan beliren ya da kaybolan sinyal yok. SPEC 5.1-5.5'ten, motor koduna bakılmadan yazılan bağımsız motor 1.386 işlemin 1.384'ünde birebir aynı sonucu verir; tek fark sınıfı, bekleyen emrin bittiği gün gelen sinyaldir (SPEC yazmaz; motor almaz, 5 işlem).
+- Kapı: stop X ile hedef1 oranı her kurulumda 1,403'tür. 1,0-1,4 arası her eşik aynı sonucu verir; 1,5 ve üstü her kurulumu eler. Tansu'nun kendi kurulumları 1,30-1,42'dir.
+- Ayar haritası (432 sabit nokta, kapı 1,4, yıl yıl): `sag_bar_10` pivotunun 9 noktasının 9'u da artıdadır (işlem başına 0.31-0.85 R; 2020-2022 ve 2023-2025 ayrı ayrı artı). Zigzag pivotları ≈ 0'dır. Büyüklük süzgeci `sag_bar` ile gerekmez. Tansu X'i son n günün en düşüğü olarak tanımlar; bu `sag_bar` pivotudur.
+- İleri yürüme (ızgara: yalnız `sag_bar_10/15/20`, stop X, kapı 1,4; 2021-2025): bütün BIST'te örneklem dışı N 40, toplam 26.76 R, ortalama 0.669 R, kazanan %57, yüzdelik 98.5 (rastgele 0.209), bootstrap p5 11.66: üç bayrak geçer. Seçim: `sag_bar_10`, tolerans 0.05, geçerlilik 5. Aynı ızgara BIST 30'da N 2 verir. Ürün ızgarası (zigzag dahil) bütün BIST'te −0.172 R verir.
+- 2026 saklı dönem (bilgi; Levent'in onayıyla, seçimden sonra): ilk aday 3 işlem, 2.54 R; son aday 4 işlem, 0.04 R. Dördüncü işlemde (−2.50 R) eksik bir günden sonra ATR 14 gün NaN kalır ve risk tabanı sessizce düşer; 2021-2025'in 40 işleminin hiçbirinde bu durum yok.
+- Ölçümde bulunan üçüncü eksik: `gostergeler.atr_basit` tek eksik günden sonra 14 gün NaN verir; `islem` risk tabanını `max(risk, NaN)` ile alır ve tabanı kaybeder. Bütün BIST'te günlerin %3.6'sında ATR NaN'dır.
