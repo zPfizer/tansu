@@ -11,17 +11,6 @@ MALIYET = KOMISYON * (1 + BSMV)  # taraf başına, fiyatın payı (SPEC 5.3)
 RISK_TABANI = 0.5  # ATR(14) katı, varsayım (SPEC 5.2)
 ILERI_GUNLER = (1, 3, 5, 10)
 HEDEFLER = ("hedef1", "hedef2", "hedef3", "hedef4")
-SINYAL_SUTUNLARI = (
-    "giris",
-    "giris_tur",
-    "seviye",
-    "gecerlilik",
-    "stop",
-    *HEDEFLER,
-    "durum",
-    "kural_durumu",
-    "tekrar",
-)
 
 # Düşen sinyal nedenleri (SPEC 5.5).
 UYE_DEGIL = "BIST 30 üyesi değil"
@@ -33,14 +22,17 @@ SURE_DOLDU = "emir süresi doldu"
 STOP_KAPANISI = "dolumdan önce stop altında kapanış"
 VERI_SONU = "veri sonunda bekleyen emir"
 AYNI_GUN = "aynı gün tekrar"
+TAVAN_KILIDI = "üst limit kilidi (piyasa dolumu yok)"
+
+CIKIS_SINYALI = "çıkış sinyali"
 
 
 @dataclass(frozen=True)
 class Cikis:
-    """SPEC 5.4 çıkış verisi. Faz 3 yalnız stop biçimini ve hedef paylarını kurar."""
+    """SPEC 5.4 çıkış verisi. Yalnız stop biçimini ve hedef paylarını kurar; `hedef` boşsa motor hedefi yoktur."""
 
-    stop_mod: str  # "dokunus" | "kapanis"
-    hedef: tuple[tuple[str, float], ...]  # (hedef sütunu, pay), sırayla
+    stop_mod: str = "dokunus"  # "dokunus" | "kapanis"
+    hedef: tuple[tuple[str, float], ...] = ()  # (hedef sütunu, pay), sırayla
 
 
 def maliyet(giris: float, cikis: float) -> float:
@@ -62,12 +54,13 @@ class _Islem:
 
 
 class _Gun:
-    def __init__(self, gun: pd.DataFrame):
+    def __init__(self, gun: pd.DataFrame, sinyal: pd.DataFrame):
         self.aof, self.yuk, self.dus, self.kap = (
             gun[a].to_numpy(float) for a in ("aof", "yuksek", "dusuk", "kapanis")
         )
         self.tavan_kilit = gun["kilit_tavan"].to_numpy(bool)
         self.taban_kilit = gun["kilit_taban"].to_numpy(bool)
+        self.cikis_sinyali = sinyal["cikis_sinyali"].to_numpy(bool)
 
 
 def simule(
@@ -84,7 +77,7 @@ def simule(
 
     `gun`: `veri.gunluk` ve `atr` sütunu. `sinyal`: stratejinin çıktısı, aynı indeks.
     Dönen: işlem kayıtları ve düşen sinyal sayaçları."""
-    g = _Gun(gun)
+    g = _Gun(gun, sinyal)
     sayac: Counter = Counter()
     sayac[AYNI_GUN] += int(sinyal["tekrar"].sum())
     kayitlar: list[dict] = []
@@ -103,7 +96,7 @@ def simule(
             if neden:
                 sayac[neden] += 1
                 continue
-            if satir["giris_tur"] != "limit":
+            if satir["giris_tur"] not in ("limit", "piyasa"):
                 raise ValueError(f"giriş türü henüz yok: {satir['giris_tur']}")
             taban = risk_tabani * float(gun["atr"].iloc[i])
             aktif = _Islem(i, satir, float(satir["stop"]), taban)
@@ -126,54 +119,69 @@ def _red_nedeni(satir, gun_satiri, acik_var: bool, cikis: Cikis) -> str | None:
     referans = (
         satir["seviye"] if satir["giris_tur"] != "piyasa" else gun_satiri["kapanis"]
     )
-    if not satir["stop"] < referans:
+    if (
+        not np.isnan(satir["stop"]) and not satir["stop"] < referans
+    ):  # sınıf (b): stop yok
         return STOP_USTTE
-    if all(np.isnan(satir[h]) for h, _ in cikis.hedef):
+    if cikis.hedef and all(np.isnan(satir[h]) for h, _ in cikis.hedef):
         return HEDEF_YOK
     return None
 
 
 def _emir_gunu(e: _Islem, i: int, g: _Gun, sayac: Counter) -> _Islem | None:
-    """Bekleyen `limit` emri, t+1'den `gecerlilik` gün (SPEC 5.1)."""
-    if i - e.sinyal_i > int(e.satir["gecerlilik"]):
+    """Bekleyen emir (SPEC 5.1): `limit` t+1'den `gecerlilik` gün; `piyasa` t+1'den sonraki ilk fiyatlı gün."""
+    piyasa = e.satir["giris_tur"] == "piyasa"
+    if not piyasa and i - e.sinyal_i > int(e.satir["gecerlilik"]):
         sayac[SURE_DOLDU] += 1
         return None
-    if not np.isfinite(g.kap[i]):
+    if not np.isfinite(g.kap[i]) or (piyasa and np.isnan(g.aof[i])):
         return e
-    seviye = float(e.satir["seviye"])
-    dolum = np.nan
-    if not g.tavan_kilit[i]:
-        if g.yuk[i] < seviye:
-            dolum = g.aof[i]
-        elif g.dus[i] <= seviye:
-            dolum = seviye
-    if np.isnan(dolum):
-        if g.kap[i] < e.stop:
-            sayac[STOP_KAPANISI] += 1
+    if piyasa:
+        if g.tavan_kilit[i]:
+            sayac[TAVAN_KILIDI] += 1
             return None
-        return e
+        dolum = g.aof[i]
+    else:
+        seviye = float(e.satir["seviye"])
+        dolum = np.nan
+        if not g.tavan_kilit[i]:
+            if g.yuk[i] < seviye:
+                dolum = g.aof[i]
+            elif g.dus[i] <= seviye:
+                dolum = seviye
+        if np.isnan(dolum):
+            if g.kap[i] < e.stop:
+                sayac[STOP_KAPANISI] += 1
+                return None
+            return e
     e.dolum_i, e.giris = i, float(dolum)
-    e.risk = max(e.giris - e.stop, e.risk_tabani)
+    e.risk = np.nan if np.isnan(e.stop) else max(e.giris - e.stop, e.risk_tabani)
     return e
+
+
+def _kapanis_nedeni(e: _Islem, i: int, g: _Gun, cikis: Cikis) -> str | None:
+    """i. günün kapanışından sonra yarın için bekleyen kapanışa bağlı çıkış (SPEC 5.4 adım 6): önce stop, sonra çıkış sinyali."""
+    if cikis.stop_mod == "kapanis" and g.kap[i] < e.stop:
+        return "stop (kapanış)"
+    return CIKIS_SINYALI if g.cikis_sinyali[i] else None
 
 
 def _acik_gun(e: _Islem, i: int, g: _Gun, cikis: Cikis) -> bool:
     """Açık işlemin bir günü, SPEC 5.4 sırasıyla. İşlem kapanınca True."""
-    kapanis_stopu = cikis.stop_mod == "kapanis" and g.kap[i] < e.stop
+    nedeni = _kapanis_nedeni(e, i, g, cikis)
     dolumda_stop = i == e.dolum_i and e.giris <= e.stop
     if g.taban_kilit[i]:  # satış yok; çıkış ilk kilitsiz güne kalır (adım 1)
         if dolumda_stop:
             e.bekleyen = "stop (dolumda)"
-        elif kapanis_stopu and e.bekleyen is None:
-            e.bekleyen = "stop (kapanış)"
+        elif nedeni and e.bekleyen is None:
+            e.bekleyen = nedeni
         return False
     if dolumda_stop:
         return _kapat(e, i, e.giris, "stop (dolumda)")
     if i == e.dolum_i:  # dolum günü yalnız stop
         if cikis.stop_mod == "dokunus" and g.dus[i] <= e.stop:
             return _kapat(e, i, e.stop, "stop")
-        if kapanis_stopu:
-            e.bekleyen = "stop (kapanış)"
+        e.bekleyen = nedeni
         return False
     if e.bekleyen:
         return _kapat(e, i, g.aof[i], e.bekleyen)
@@ -198,8 +206,7 @@ def _acik_gun(e: _Islem, i: int, g: _Gun, cikis: Cikis) -> bool:
         e.parcalar.append((i, float(fiyat), pay, ad))
         if e.kalan <= 1e-12:
             return True
-    if kapanis_stopu:
-        e.bekleyen = "stop (kapanış)"
+    e.bekleyen = nedeni
     return False
 
 
