@@ -124,6 +124,26 @@ def oyna(
     return e, n
 
 
+def rastgele(
+    g: Gun,
+    t: int,
+    stop: float,
+    hedefler: tuple[float, float, float, float],
+    cikis: Cikis,
+    risk_tabani: float = RISK_TABANI,
+) -> tuple[float, float] | None:
+    """Rastgele giriş kıyası (SPEC 5.8 madde 3): t günü sinyal veren `piyasa` kurulumunun (R, net %) değeri.
+
+    Seviyeler mutlak, NaN = yok; sinyal anı reddi ve çakışma kuralı yok. Dolmazsa None."""
+    satir = {
+        "giris_tur": "piyasa",
+        "stop": stop,
+        **dict(zip(HEDEFLER, hedefler, strict=True)),
+    }
+    e, _ = oyna(g, t, satir, cikis, risk_tabani * float(g.atr[t]), Counter())
+    return None if e is None else sonuc(e)
+
+
 def _red_nedeni(satir, gun_satiri, acik_var: bool, cikis: Cikis) -> str | None:
     if not gun_satiri["uye"]:
         return UYE_DEGIL

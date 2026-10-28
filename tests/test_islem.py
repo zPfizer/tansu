@@ -277,6 +277,23 @@ def test_bekleyen_piyasa_emri_varken_gelen_ikinci_sinyal_acik_var_sayilir():
     assert sayac[islem.ACIK_VAR] == 1
 
 
+def test_rastgele_ayni_piyasa_kurulumunda_simule_ile_ayni():
+    g = gun_tablosu(
+        [11, 11, 11.5, 12, 12.6, 13.2, 13.2], aof=[11, 11.1, 11.5, 12, 12.6, 13.2, 13.2]
+    )
+    s = piyasa(g, stop=10.0)
+    s.iloc[0, s.columns.get_indexer(["hedef1", "hedef2"])] = [12.5, 13.0]
+    (k,), _ = kos(g, s)
+    assert k["kismi"] and k["cikis_nedeni"] == "hedef2"
+    hedefler = (12.5, 13.0, np.nan, np.nan)
+    assert islem.rastgele(islem.Gun(g, s), 0, 10.0, hedefler, CIKIS) == (
+        k["R"],
+        k["net_yuzde"],
+    )
+    g.iloc[1, g.columns.get_loc("kilit_tavan")] = True
+    assert islem.rastgele(islem.Gun(g, s), 0, 10.0, hedefler, CIKIS) is None
+
+
 def test_hedef_yok_yalniz_hedef_listesi_doluysa_sayilir():
     g = gun_tablosu([11, 11, 11])
     assert kos_b(g, piyasa(g))[1][islem.HEDEF_YOK] == 0
