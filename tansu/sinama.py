@@ -64,9 +64,11 @@ def gunler(anlik: veri.Anlik) -> dict[str, pd.DataFrame]:
 
 
 def sakli_son(gunler: Gunler) -> pd.Timestamp:
-    """Saklı dönemin sonu: verinin son tam takvim ayının son günü (SPEC 5.7)."""
+    """Saklı dönemin sonu: verinin son tam ayının son günü (SPEC 5.7). Veri ayın son iş gününe ulaştıysa ay tamdır."""
     son = max(g.index[-1] for g in gunler.values()).normalize()
-    return son if son.is_month_end else son - pd.offsets.MonthEnd(1)
+    if son.is_month_end or pd.offsets.BMonthEnd().is_on_offset(son):
+        return son
+    return son - pd.offsets.MonthEnd(1)
 
 
 def calistir(
