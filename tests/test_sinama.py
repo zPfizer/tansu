@@ -85,3 +85,7 @@ def test_donem_ozeti_yalniz_olcu_sutununu_okur_ve_birimi_etikete_koyar():
     )
     assert d["Toplam %"] == "1.00" and "Toplam R" not in d
     assert d["Beklenti (ortalama %)"] == "n/a (N = 3)"
+
+
+def test_dusus_nan_degeri_atlar():
+    assert sinama.dusus([1.0, -2.0, np.nan, -1.0]) == 3.0

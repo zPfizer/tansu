@@ -1,11 +1,12 @@
 import dataclasses
 import json
 
+import numpy as np
 import pandas as pd
 import pytest
 
 from tansu import __main__ as komut
-from tansu import ayar, rapor, sinama, veri
+from tansu import ayar, montecarlo, rapor, sinama, veri
 from tansu.__main__ import main
 from tansu.stratejiler import STRATEJILER
 from tests.sentetik import gartley_yolu, gun_tablosu, ortalama_yolu, piyasa
@@ -60,6 +61,11 @@ def test_sina_raporu_yazar_ve_durumu_sinandi_yapar(ortam, tmp_path, capsys):
     )
     assert "gartley,sinandi," in durum(tmp_path)
     assert not (tmp_path / "stratejiler" / "ayarlar").exists()
+    tohum = str(montecarlo.TOHUM)
+    for baslik in ("Monte Carlo", tohum, "Batma riski", "Bayraklar", rapor.ONAY_YOK):
+        assert baslik in html
+    ozet = (tmp_path / "rapor" / "gartley" / "ozet.md").read_text(encoding="utf-8")
+    assert tohum in ozet and "örnek az (N = 0)" in ozet
 
 
 def test_sina_sinif_b_ileri_getiri_tablosu_ve_yuzde_birimi_yazar(
@@ -74,6 +80,7 @@ def test_sina_sinif_b_ileri_getiri_tablosu_ve_yuzde_birimi_yazar(
     for baslik in ("İleri getiri", "Ufuk (gün)", "Kümülatif %", "Toplam %"):
         assert baslik in html
     assert "Seviyelerin isabeti" not in html and "n/a (N = 1)" in html
+    assert "Monte Carlo" in html and "Batma riski" not in html
     islemler = pd.read_csv(klasor / "islemler.csv")
     assert islemler.loc[0, "cikis_nedeni"] == "çıkış sinyali"
     assert pd.isna(islemler.loc[0, "R"])
@@ -126,6 +133,8 @@ def test_ayarla_puanli_secimle_ayarlandi_yapar_sinyaldeyse_onay_ister(
         encoding="utf-8"
     )
     assert "Parametreler (ayarlı" in html and "saklı döneme ulaşmıyor" not in html
+    assert "Rastgele giriş kıyası" in html and "yüzdelik" in html
+    assert "rastgele giriş yüzdeliği n/a" not in capsys.readouterr().out
 
 
 def test_sina_bozuk_jsonu_izgaradan_once_reddeder(ortam, tmp_path, monkeypatch):
@@ -151,3 +160,85 @@ def test_ayarla_beklemedeki_stratejiyi_reddeder(ortam, tmp_path):
     assert main(["ayarla", "gartley"]) == 1
     assert not (tmp_path / "stratejiler" / "ayarlar").exists()
     assert "gartley,beklemede," in durum(tmp_path)
+
+
+def bayrak_tablosu(r, *, rastgele=None, p5=None, sakli=(), puan=None, semboller):
+    """Elle kurulmuş girdilerle `rapor.bayraklar`; {bayrak: (değer, N)}."""
+    n = len(r)
+    mc = montecarlo.MonteCarlo(
+        montecarlo.TOHUM,
+        montecarlo.TEKRAR,
+        n,
+        "R",
+        None if p5 is None else (p5, p5 + 1, p5 + 2),
+        None,
+        None,
+        None,
+        None if rastgele is None else montecarlo.Rastgele(0.0, (0, 0, 0), rastgele),
+    )
+    p = np.array([np.nan if puan is None else puan])
+    secim = ayar.Secim(0, {}, p, p, np.array([77]), puan is not None)
+    gecmis = pd.DataFrame({"sembol": list(semboller), "R": list(semboller.values())})
+    satirlar = rapor.bayraklar(
+        mc, pd.DataFrame({"R": r}), pd.DataFrame({"R": list(sakli)}), gecmis, secim
+    )
+    return [(r["Değer"], r["N"]) for r in satirlar]
+
+
+def test_bayraklar_olumlu_strateji():
+    assert bayrak_tablosu(
+        [2.0] * 22 + [-1.0] * 18,
+        rastgele=97.0,
+        p5=3.0,
+        sakli=(1.0, -0.5),
+        puan=0.4,
+        semboller={"S0": 3.0, "S1": 3.0, "S2": 4.0},
+    ) == [
+        ("evet (0.65 R)", 40),
+        ("evet (yüzdelik 97.0)", 40),
+        ("evet (3.00 R)", 40),
+        ("evet (0.50 R)", 2),
+        ("hayır (55%)", 40),
+        ("hayır (55%)", 40),
+        ("hayır (0.40 R)", 77),
+        ("hayır (S2 40%)", 3),
+    ]
+
+
+def test_bayraklar_uyarilari():
+    assert bayrak_tablosu(
+        [1.0] * 38 + [-1.0] * 2,
+        rastgele=50.0,
+        p5=-1.0,
+        sakli=(-0.5,),
+        puan=-0.2,
+        semboller={"S0": 5.0, "S1": 1.0},
+    ) == [
+        ("evet (0.90 R)", 40),
+        ("hayır (yüzdelik 50.0)", 40),
+        ("hayır (-1.00 R)", 40),
+        ("hayır (-0.50 R)", 1),
+        ("evet (95%)", 40),
+        ("evet (95%)", 40),
+        ("evet (-0.20 R)", 77),
+        ("evet (S0 83%)", 2),
+    ]
+
+
+def test_bayraklar_ornek_az_ve_tanimsiz_degerler():
+    az = ("örnek az (N = 10)", 10)
+    assert bayrak_tablosu([1.0] * 10, semboller={"S0": -1.0}) == [
+        az,
+        ("n/a (N = 10)", 10),
+        ("n/a (N = 10)", 10),
+        ("n/a (N = 0)", 0),
+        az,
+        az,
+        ("puanlı nokta yok", 77),
+        ("n/a (toplam 0 ya da altında, pay tanımsız)", 1),
+    ]
+
+
+def test_bayrak_rastgele_kiyas_yapilamadiysa_nedeni_yazar():
+    satir = bayrak_tablosu([1.0] * 40, p5=1.0, semboller={"S0": 1.0})[1]
+    assert satir == ("n/a (uygun rastgele gün ya da şablon yok)", 40)
