@@ -64,7 +64,7 @@ Bağımsız inceleme (ayrı ajan):
 
 - Motor: eski (`f7c022e`) ve yeni `simule`, 1.500 rastgele tablo × 4 çıkış ayarı = 6.000 durumda aynı işlem kaydı ve sayaçları verdi.
 - `dusus`: 3.000 rastgele 1-B girdide eski pandas sürümüyle aynı.
-- Rastgele giriş kıyasında yanlılık yok: rastgele girişli oyuncak stratejide 6 pazarda yüzdelik 6-87.
+- Rastgele giriş kıyasında yanlılık için sınırlı bir sınama: rastgele girişli oyuncak strateji 6 sentetik pazarda yüzdelik 6-87 verdi; belirgin yanlılık görülmedi. Bu sınama yanlılık olmadığını kanıtlamaz.
 - Bulunan iki kenar hatası düzeltildi: kurulumu olan adımda uygun gün yoksa çökme (artık `n/a`, rapor nedenini yazar); sinyal günü ATR'si 0 olan şablon koşu ortalamasını NaN yapıp yüzdeliği sessizce 0 gösteriyordu (artık ATR > 0 şartı). İkisi için önce kırmızı test yazıldı.
 - Notlar: `dusus` NaN değeri eskisi gibi atlar; saklı dönemde kurulum yoksa bayrak `n/a (N = 0)` yazar.
 - Açık not: `sina` kayıtlı ayarla raporlarken "seçilen ızgara noktası" bayrağı yeni ızgaranın son seçimini gösterir; veri ve kod aynıysa ikisi aynı noktadır.
