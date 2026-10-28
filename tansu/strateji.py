@@ -30,7 +30,7 @@ class Strateji:
 
     @property
     def olcu(self) -> Literal["R", "net_yuzde"]:
-        """Bir kurulumun sonucunu tutan işlem kaydı sütunu (SPEC 5.2). Çıkışsız sınıf (b) faz 8'dedir."""
+        """Bir kurulumun sonucunu tutan işlem kaydı sütunu (SPEC 5.2)."""
         if self.sinif == "a":
             return "R"
         if self.cikis is None:

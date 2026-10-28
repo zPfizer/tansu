@@ -2,6 +2,7 @@
 
 from collections import Counter
 from dataclasses import dataclass, field
+from typing import Literal
 
 import numpy as np
 import pandas as pd
@@ -31,8 +32,8 @@ CIKIS_SINYALI = "çıkış sinyali"
 class Cikis:
     """SPEC 5.4 çıkış verisi. Yalnız stop biçimini ve hedef paylarını kurar; `hedef` boşsa motor hedefi yoktur."""
 
-    stop_mod: str = "dokunus"  # "dokunus" | "kapanis"
-    hedef: tuple[tuple[str, float], ...] = ()  # (hedef sütunu, pay), sırayla
+    stop_mod: Literal["dokunus", "kapanis"] = "dokunus"
+    hedef: tuple[tuple[str, float], ...] = ()
 
 
 def maliyet(giris: float, cikis: float) -> float:
@@ -119,9 +120,7 @@ def _red_nedeni(satir, gun_satiri, acik_var: bool, cikis: Cikis) -> str | None:
     referans = (
         satir["seviye"] if satir["giris_tur"] != "piyasa" else gun_satiri["kapanis"]
     )
-    if (
-        not np.isnan(satir["stop"]) and not satir["stop"] < referans
-    ):  # sınıf (b): stop yok
+    if not np.isnan(satir["stop"]) and not satir["stop"] < referans:
         return STOP_USTTE
     if cikis.hedef and all(np.isnan(satir[h]) for h, _ in cikis.hedef):
         return HEDEF_YOK

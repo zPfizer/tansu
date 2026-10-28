@@ -2,14 +2,12 @@
 
 from collections.abc import Mapping
 
-import numpy as np
 import pandas as pd
 
 from tansu import gostergeler
 from tansu.islem import Cikis
 from tansu.strateji import Strateji, bos_sinyal
 
-# EMA, uzun dönemin 2,5 katı geçerli kapanıştan sonra geçerli (SPEC 3.4)
 ISINMA_KATI = 2.5
 
 
@@ -27,28 +25,30 @@ def ortalama(kapanis: pd.Series, tur: str, n: int) -> pd.Series:
 
 
 def hesapla(gun: pd.DataFrame, p: Mapping[str, float | str]) -> pd.DataFrame:
-    """Yukarı kesişimde `piyasa` girişi, aşağı kesişimde `cikis_sinyali`. Gün t yalnız t'ye kadar olan satırlara bağlıdır."""
+    """Yukarı kesişimde `piyasa` girişi, aşağı kesişimde `cikis_sinyali`. Gün t yalnız t'ye kadar olan satırlara bağlıdır.
+    Kesişim ve teyit hissenin fiyatlı günlerinde sayılır; fiyatsız satır kesişimi bölmez."""
     s = bos_sinyal(gun.index)
-    kapanis = gun["kapanis"]
+    kapanis = gun["kapanis"].dropna()
     tur, cift, k = p["ortalama"], str(p["cift"]), int(p["teyit_gun"])
     kisa, uzun = (ortalama(kapanis, tur, int(n)) for n in cift.split("/"))
-    gecerli = kisa.notna() & uzun.notna() & kapanis.notna()
+    gecerli = kisa.notna() & uzun.notna()
     ust = (kisa > uzun) & gecerli
-    onceki_ust = ust.shift(1, fill_value=False)
-    # kesişim günü c: ust[c] ve c-1'de kısa <= uzun (iki ortalama da geçerli)
     kesisim = ust & (gecerli & ~ust).shift(1, fill_value=False)
-    tutuyor = ust.astype(float).rolling(k + 1).min() == 1  # c..t
+    tutuyor = ust.astype(float).rolling(k + 1).min() == 1
     kapanis_ustte = (kapanis > uzun).astype(float).rolling(k).min() == 1 if k else True
     giris = kesisim.shift(k, fill_value=False) & tutuyor & kapanis_ustte
-    s["giris"] = giris
-    s["cikis_sinyali"] = gecerli & ~ust & onceki_ust
-    s.loc[giris, "giris_tur"] = "piyasa"
-    s.loc[giris, "gecerlilik"] = 1
-    s.loc[giris, "durum"] = "TETIKLENDI"
-    tarih = gun.index
-    for t in np.flatnonzero(giris):
-        s.iloc[t, s.columns.get_loc("kural_durumu")] = (
-            f"{tur} {cift} yukarı kesişim {tarih[t - k].date()}, teyit_gun {k}"
+    cikis = gecerli & ~ust & ust.shift(1, fill_value=False)
+    s["giris"] = giris.reindex(gun.index, fill_value=False)
+    s["cikis_sinyali"] = cikis.reindex(gun.index, fill_value=False)
+    s.loc[s["giris"], ["giris_tur", "gecerlilik", "durum"]] = [
+        "piyasa",
+        1,
+        "TETIKLENDI",
+    ]
+    kesisim_gunu = pd.Series(kapanis.index, index=kapanis.index).shift(k)
+    for t in giris.index[giris]:
+        s.loc[t, "kural_durumu"] = (
+            f"{tur} {cift} yukarı kesişim {kesisim_gunu[t].date()}, teyit_gun {k}"
         )
     return s
 
@@ -62,7 +62,6 @@ STRATEJI = Strateji(
     varsayilan={"ortalama": "EMA", "cift": "50/200", "teyit_gun": 0},
     aralik={
         "ortalama": ("EMA", "SMA", "WMA"),
-        # sıra komşuluğu belirler (SPEC 5.7): bir adım = listedeki sonraki değer
         "cift": (
             "50/200",
             "30/100",

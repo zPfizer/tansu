@@ -37,12 +37,13 @@ def test_duz_cizgide_sinyal_yok():
 
 def test_isinma_bitmeden_sinyal_yok_ve_ema_2_5_kati_gun_ister():
     yol = ortalama_yolu(80, 30)
+    ilk = int(ok.ISINMA_KATI * 20) - 1
     s = sinyal(yol, ortalama="EMA")
-    assert gunler(s)  # ısınma sonrası kesişim var
-    assert min(gunler(s) + gunler(s, "cikis_sinyali")) >= 51  # ilk geçerli gün 49
+    assert gunler(s)
+    assert min(gunler(s) + gunler(s, "cikis_sinyali")) > ilk
     assert (
         ok.ortalama(gun_tablosu(yol)["kapanis"], "EMA", 20).first_valid_index()
-        == (gun_tablosu(yol).index[49])
+        == (gun_tablosu(yol).index[ilk])
     )
 
 
@@ -71,7 +72,7 @@ def test_cikis_sinyali_yalniz_karsi_kesisimde():
     kapanis = pd.Series(yol)
     kisa, uzun = kapanis.rolling(5).mean(), kapanis.rolling(20).mean()
     (cikis,) = gunler(s, "cikis_sinyali")
-    assert cikis >= 60  # yükselişte değil, düşüşte (zirve 59. gün)
+    assert cikis > len(yukselis()) - 1
     assert kisa[cikis] <= uzun[cikis] and kisa[cikis - 1] > uzun[cikis - 1]
     assert not s["giris"].iloc[cikis]
 
@@ -79,3 +80,16 @@ def test_cikis_sinyali_yalniz_karsi_kesisimde():
 def test_bilinmeyen_ortalama_turu_hata_verir():
     with pytest.raises(ValueError):
         sinyal([100.0] * 30, ortalama="HMA")
+
+
+def test_fiyatsiz_satir_kesisimi_bolmez():
+    yol = [100.0] * 60 + [100.0 + i for i in range(1, 31)]
+    yol += [130.0 - 3 * i for i in range(1, 30)] + [43.0] * 30
+    p = {"ortalama": "EMA", "cift": "5/20"}
+    temiz = sinyal(yol, **p)
+    giris, (cikis,) = gunler(temiz), gunler(temiz, "cikis_sinyali")
+    for bos in (giris[0] - 1, cikis - 1):
+        eksik = list(yol)
+        eksik[bos] = np.nan
+        s = sinyal(eksik, **p)
+        assert gunler(s) == giris and len(gunler(s, "cikis_sinyali")) == 1
