@@ -1122,7 +1122,8 @@ def _sha256(yol: Path) -> str:
 
 
 def uyelik_araliklari() -> pd.DataFrame:
-    """Bütün sürümlerin BIST 30 aralıkları: sembol (İş Yatırım kodu), bas, son (dahil).
+    """Bütün sürümlerin BIST 30 aralıkları: sembol (İş Yatırım kodu), bas, son (dahil). Adlı katmandır; sınama
+    evreni bütün BIST'tir (SPEC 2).
 
     Borsa kodu `pay_kimligi_v1` ile şirketin tek koduna çevrilir: KOZAL → TRALT, KOZAA → TRMET (SPEC 3.3)."""
     esleme = pd.read_csv(
@@ -1150,16 +1151,14 @@ def gunluk(anlik: Anlik, sembol: str) -> pd.DataFrame:
     """Bir sembolün günlük tablosu; stratejiler ve motor yalnız bunu okur (SPEC 3.7).
 
     Fiyatlar düzeltilmiş (`ham_*` hariç); eksik gün NaN. `kilit_*` yüksek = düşük olan limit günleri,
-    `tavan_kapanis` tavanda kapanış. `karantina`: karantina gününden sonraki `KARANTINA_GUN` gün yeni sinyal yok."""
+    `tavan_kapanis` tavanda kapanış. `karantina`: karantina gününden sonraki `KARANTINA_GUN` gün yeni sinyal yok.
+    `uye`: evren bütün BIST'tir; sembol ilk ve son satırı arasındaki her gün evrendedir (SPEC 2, 3.7)."""
     g = anlik.gun_tablosu
     g = g[g["sembol"] == sembol].set_index("tarih").sort_index()
     if g.empty:
         raise VeriHatasi(f"{sembol}: anlık görüntüde yok")
     f = anlik.hesap_fiyati
     f = f[f["sembol"] == sembol].set_index("tarih").reindex(g.index)
-    uye = np.zeros(len(g), dtype=bool)
-    for r in uyelik_araliklari().query("sembol == @sembol").itertuples():
-        uye |= (g.index >= r.bas) & (g.index <= r.son)
     karantina = (
         g["karantina"]
         .astype(float)
@@ -1181,7 +1180,7 @@ def gunluk(anlik: Anlik, sembol: str) -> pd.DataFrame:
             "kilit_taban": g["kilit_taban_duyarli"].astype(bool),
             "tavan_kapanis": g["kilit_tavan"].astype(bool),
             "karantina": karantina,
-            "uye": uye,
+            "uye": True,
             "xu100": f["xu100"],
         },
         index=g.index.rename("tarih"),
