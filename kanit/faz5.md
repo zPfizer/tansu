@@ -279,3 +279,30 @@ sonra (96b5107 kodu, yeni veri yolu):       secim {'pivot': 'sag_bar_10', 'toler
 - ATR: fiyatı olan ama ATR'si olmayan gün 29.465'ten 8.032'ye iner; 687 günün ATR değeri değişir. 34 işlemin hiçbirinde sinyal günü ATR'si eksik değildi ya da değişmedi. Risk tabanı (0,5 ATR) hiçbir işlemde bağlamaz: D − X en az 0,96 ATR'dir.
 
 PR 204 tablosundaki geçici varyant kopyası 2021-2025'te 233 sinyal saydı; ürünün `hesapla`'sı iki ölçümde de 235 sayar. Dolum ve işlemler aynıdır.
+
+### Ürün komutuyla aynı ölçüm (29.10.2026)
+
+`tansu ayarla gartley`: 96b5107 kodu, aynı görüntü (20261028-1723), ürün evreni bütün BIST (#205). Komut geçici bir kopyada koştu. Bu yüzden depodaki ayar, durum ve rapor dosyaları bu PR'da değişmez; onları evren işi yazar. Saklı dönem satırı burada gösterilmez ve okunmadı.
+
+```
+$ .venv\Scripts\python.exe -X utf8 -m tansu ayarla gartley
+gartley: 235 sinyal, 35 dolum, toplam 27.83 R
+gartley: ızgara 36 nokta, puanlı 15; seçim pivot=sag_bar_10 tolerans=0.04 gecerlilik=5 stop=X (sağlam 0.84 R, N = 34)
+ileri yürüme: örneklem dışı N = 34, ortalama verim 1.49 (5/6 adım)
+Monte Carlo: tohum 20261028, N = 34, rastgele giriş yüzdeliği 99.4
+ayar: stratejiler\ayarlar\gartley.json
+rapor: rapor\gartley\sinama.html; durum: ayarlandi
+```
+
+| Bütün BIST, kapı 1,40 | Geçici ölçüm | Ürün komutu |
+|---|---|---|
+| Seçim | `sag_bar_10`, 0.04, 5, X | aynı |
+| 2021-2025 sinyal / dolum / toplam | 235 / 35 / 27.83 R | 235 / 35 / 27.83 R |
+| Örneklem dışı N / toplam | 34 / 30.12 R | 34 / 30.12 R |
+| Ortalama | 0.886 R | 0.886 R (raporda 0.89) |
+| Rastgele giriş yüzdeliği | 99.4 | 99.4 |
+| Bootstrap toplam p5 | 16.29 R | 16.29 R |
+| Bootstrap düşüş p95 / karıştırma düşüş p95 | 5.79 / 5.15 R | 5.79 / 5.15 R |
+| Batma (25 R) | %0 | %0 |
+
+Ürün komutu geçici ölçümle aynı sonucu verir. Raporda üç bayrak "evet"tir. `gartley` durumu `yetersiz-ornek`ten `ayarlandi`ya geçer: ileri yürümenin son adımında puanlı nokta vardır (N 34, sağlam puan 0.84 R). BIST 30'da aynı nokta yoktu (N 2). `ayarlandi` onay değildir; akşam sinyaline almak Levent'in `onayla` kararıdır.
