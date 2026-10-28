@@ -6,6 +6,8 @@ Ajan bu dosyaya yazar; Levent'in kararı gereken sorular "Levent" ile işaretlid
 
 1. Levent, Ek B #12 (kamu deposu içeriği): kural kartları, Tansu alıntıları, tweet kimlikleri ve `docs/SPEC.md` yerelde kalıyor. Seçenekler: (a) yerelde kalsın, (b) depo gizli olsun ve bunlar commit edilsin.
 2. Levent, Git geçmişi: PR 197'nin bir commit'i `tansu/gostergeler.py` içinde Tansu kodundan kısa bir parça taşıyor; bugünkü dosya temiz. Geçmişi temizlemek ortak dalda zorla itme (force-push) ister; Levent'in ayrı onayı gerekir.
+3. Levent, genel R/R kapısı (16.10 tarihli "en az 1:2" kararı, eski site issue'su #164): 28.10 cevabı ("tansunun dediği gibi yap") ajan tarafından şöyle okundu: Tansu'nun genel sözü uygun oranı tercih etmektir, her stratejiye sert eşik koymaz; genel `rr-kapisi` süzgeci SPEC'teki gibi kalır (hedef1'e göre, 0 / 1,5 / 2 / 3, varsayılan kapalı, 12+. aşamada sınanır). Onay bekliyor.
+4. Levent, `stratejiler/sahip-kararlari.md` 13. satır hâlâ "AÇIK" diyor; ajan bu dosyayı değiştirmez. Ek B #13 kararı aşağıdaki "Verilen kararlar" bölümündedir.
 
 ## Gece 1 kayıtları (karar gerekmez)
 
@@ -22,5 +24,4 @@ Ajan bu dosyaya yazar; Levent'in kararı gereken sorular "Levent" ile işaretlid
 
 ## Verilen kararlar
 
-- Ek B #13 (`gartley` R/R kapısı), Levent 28.10.2026: "tansunun dediği gibi yap". Kapı Tansu'nun yazılı kuralıyla uygulanır: ödül hedef1'e, risk stopa göre ölçülür; oran 1,5'in altındaysa kurulum alınmaz. `rr_min` varsayılanı 1,5; seçenekler kapalı, 1,5, 2. Stop X iken oran her Gartley'de ≈ 1,40, X − 2 ATR iken daha düşüktür; bu yüzden `gartley` varsayılan ayarla hiç kurulum üretmez. Tansu'nun tarama tablolarında bu kurala uymayan kurulumlar var; kural metni esas alındı. Durum: uygulandı (kanıt `kanit/faz5.md`).
-- Genel R/R kapısı (Levent'in 16.10 tarihli "en az 1:2" kararı, eski site issue'su #164), aynı karar: Tansu'nun genel sözü uygun oranı tercih etmektir, her stratejiye sert eşik koymaz. Genel `rr-kapisi` süzgeci SPEC'teki gibi kalır: hedef1'e göre, 0 / 1,5 / 2 / 3, varsayılan kapalı, 12+. aşamada sınanır.
+- Ek B #13 (`gartley` R/R kapısı), Levent 28.10.2026: "tansunun dediği gibi yap". Kapı Tansu'nun yazılı kuralıyla uygulanır: ödül hedef1'e, risk stopa göre ölçülür; oran 1,5'in altındaysa kurulum alınmaz. `rr_min` varsayılanı 1,5; elle verilebilen değerler kapalı, 1,5, 2 (ızgarada değil). Stop X iken oran her Gartley'de ≈ 1,40, X − 2 ATR iken daha düşüktür; bu yüzden `gartley` varsayılan ayarla hiç kurulum üretmez. Tansu'nun tarama tablolarında bu kurala uymayan kurulumlar var; kural metni esas alındı. Durum: uygulandı (kanıt `kanit/faz5.md`).

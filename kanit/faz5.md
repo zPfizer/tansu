@@ -107,7 +107,7 @@ Neden değişmedi: veride 78 alt limit kilitli gün var, 37'si üyelik günü. `
 
 ## Karar: Gartley R/R kapısı (Ek B #13, 28.10.2026)
 
-Levent'in kararı: kapı Tansu'nun yazdığı gibi uygulanır. Ödül hedef1'e, risk stopa göre ölçülür; oran 1,5'in altındaysa kurulum alınmaz. Eski kod kapıyı hedef2'ye göre ölçüyordu ve varsayılanı kapalıydı. Yeni varsayılan `rr_min` = 1,5; seçenekler kapalı, 1,5 ve 2.
+Levent'in kararı: kapı Tansu'nun yazdığı gibi uygulanır. Ödül hedef1'e, risk stopa göre ölçülür; oran 1,5'in altındaysa kurulum alınmaz. Eski kod kapıyı hedef2'ye göre ölçüyordu ve varsayılanı kapalıydı. Yeni varsayılan `rr_min` = 1,5; elle verilebilen değerler kapalı, 1,5 ve 2 (ızgarada değil).
 
 Kaynak taraması (yerel havuz, 28.10.2026): X arşivinde Gartley geçen 53 gönderi var; 23'ünün notu var, notu olmayan 30 gönderide seviye ya da kural yok. Tansu'nun Gartley için yazdığı tek R/R kuralı 02.12.2025 gönderisindedir. Aynı gönderideki giriş (XA'nın 0,786 geri çekilmesi), stop (X; seçenek X − 2 ATR, XA 1,13) ve hedef1 (AD'nin 0,382'si) tanımlarıyla oran her Gartley'de ≈ 1,40, X − 2 ATR ve XA 1,13 ile daha düşüktür. 23.08.2026 tarama tablolarındaki kurulumların hesaplanan oranları 1,30-1,42'dir; Tansu bunları kapısız listeler. 20.08.2026 tarihli bir görselde başka bir şema var (D gerçek dipte, hedefler CD bacağına göre, stop X; hesaplanan oran ≈ 2,04); bu şema kural olarak yazılmamıştır ve kodlanmadı.
 
