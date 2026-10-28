@@ -17,15 +17,13 @@ HEDEF_ORAN = (0.382, 0.618)  # A-D hareketinin payı
 
 
 def _pivotlar(gun: pd.DataFrame, p) -> list[yapi.Pivot]:
-    if p["pivot_mod"] == "sag_bar":
-        return yapi.sag_bar_pivotlari(
-            gun["yuksek"], gun["dusuk"], int(p["pivot_pencere"])
-        )
-    if p["pivot_mod"] == "zigzag":
-        return yapi.zigzag_pivotlari(
-            gun["yuksek"], gun["dusuk"], float(p["zigzag_yuzde"])
-        )
-    raise ValueError(f"bilinmeyen pivot_mod: {p['pivot_mod']}")
+    """`pivot` = "<mod>_<değer>": tek eksen, böylece etkisiz eksen ızgarada aynı noktaları çoğaltmaz (SPEC 5.7)."""
+    mod, deger = str(p["pivot"]).rsplit("_", 1)
+    if mod == "sag_bar":
+        return yapi.sag_bar_pivotlari(gun["yuksek"], gun["dusuk"], int(deger))
+    if mod == "zigzag":
+        return yapi.zigzag_pivotlari(gun["yuksek"], gun["dusuk"], float(deger))
+    raise ValueError(f"bilinmeyen pivot: {p['pivot']}")
 
 
 def oranlar(
@@ -101,18 +99,21 @@ STRATEJI = Strateji(
     kaynaklar=("stratejiler/gartley.md",),
     kaynak_tarihleri=("2025-12-02", "2025-12-13", "2026-08-20", "2026-08-23"),
     varsayilan={
-        "pivot_mod": "sag_bar",
-        "pivot_pencere": 15,
-        "zigzag_yuzde": 2.5,
+        "pivot": "sag_bar_15",
         "tolerans": 0.05,
         "gecerlilik": 10,
         "stop": "X",
         "rr_min": "kapali",
     },
     aralik={
-        "pivot_mod": ("sag_bar", "zigzag"),
-        "pivot_pencere": (10, 15, 20),
-        "zigzag_yuzde": (1.5, 2.0, 2.5),
+        "pivot": (
+            "sag_bar_10",
+            "sag_bar_15",
+            "sag_bar_20",
+            "zigzag_1.5",
+            "zigzag_2.0",
+            "zigzag_2.5",
+        ),
         "tolerans": (0.03, 0.04, 0.05),
         "gecerlilik": (5, 10, 20),
         "stop": ("X", "X-2ATR"),

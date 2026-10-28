@@ -290,7 +290,9 @@ td,th{{border:1px solid #ccc;padding:3px 6px;font-size:13px;text-align:right}}th
         f"ortalama verim {_deger(y.verim)} ({y.verim_adim}/{len(y.adimlar)} adım).",
         "",
         f"Saklı dönem {sakli_tarih}: N = {len(s.sakli.islemler)}, "
-        f"toplam {_toplam(s.sakli, olcu):.2f} {b}.",
+        f"toplam {_toplam(s.sakli, olcu):.2f} {b}."
+        if s.sakli_son >= sinama.SAKLI_BAS
+        else "Saklı dönem: veri saklı döneme ulaşmıyor.",
         "",
         VARSAYIM,
         "",

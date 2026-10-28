@@ -111,16 +111,16 @@ def _kos(a, *, ayarla: bool) -> int:
                 f"tansu ayarla: {a.ad} beklemede; önce taslak olmalı", file=sys.stderr
             )
             return 1
+        okunan = None if ayarla else ayar.oku(strateji)  # bozuk json ızgaradan önce
         anlik = son_anlik(a.kok)
         gunler = sinama.gunler(anlik)
         yuruyus = ayar.yuru(strateji, gunler)
-        json_yolu = (
-            ayar.yaz(strateji, yuruyus.son, veri_kimligi=anlik.kimlik)
-            if ayarla
-            else None
-        )
-        okunan = ayar.oku(strateji)
-        p = okunan.parametreler if okunan else dict(strateji.varsayilan)
+        if ayarla:
+            p, ayar_tarihi = yuruyus.son.parametre, dt.date.today().isoformat()
+        elif okunan:
+            p, ayar_tarihi = okunan.parametreler, okunan.tarih
+        else:
+            p, ayar_tarihi = dict(strateji.varsayilan), None
         gecmis = sinama.calistir(strateji, gunler, p, sinama.GECMIS)
         sakli_son = sinama.sakli_son(gunler)
         sakli = sinama.calistir(
@@ -130,18 +130,21 @@ def _kos(a, *, ayarla: bool) -> int:
             rapor.Sinama(
                 strateji=strateji,
                 parametre=p,
-                ayar_tarihi=okunan.tarih if okunan else None,
+                ayar_tarihi=ayar_tarihi,
                 kimlik=anlik.kimlik,
                 gecmis=gecmis,
                 yuruyus=yuruyus,
                 sakli=sakli,
                 sakli_son=sakli_son,
                 sinanan=sum(
-                    r["durum"] != "taslak" or r["ad"] == a.ad for r in satirlar
+                    r["durum"] not in ("taslak", "beklemede") or r["ad"] == a.ad
+                    for r in satirlar
                 ),
             )
         )
-        if ayarla:
+        json_yolu = None
+        if ayarla:  # json rapordan sonra: yarıda kalan koşu onaysız parametre bırakmaz
+            json_yolu = ayar.yaz(strateji, yuruyus.son, veri_kimligi=anlik.kimlik)
             yeni = "ayarlandi" if yuruyus.son.puanli else "yetersiz-ornek"
             durum = durum_gecisi(a.ad, set(DURUMLAR) - {"beklemede"}, yeni)
         else:
@@ -173,6 +176,8 @@ def _kos(a, *, ayarla: bool) -> int:
     )
     print(
         f"saklı dönem {sinama.SAKLI_BAS:%d.%m.%Y}-{sakli_son:%d.%m.%Y}: N = {len(sakli.islemler)}"
+        if sakli_son >= sinama.SAKLI_BAS
+        else "saklı dönem: veri saklı döneme ulaşmıyor"
     )
     if json_yolu:
         print(f"ayar: {json_yolu}")
