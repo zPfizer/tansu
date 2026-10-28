@@ -1,7 +1,37 @@
+from collections import Counter
+
 import numpy as np
 import pandas as pd
+import pytest
 
 from tansu import sinama
+
+
+@pytest.mark.parametrize(
+    ("veri_sonu", "sakli_son"),
+    [("2026-10-26", "2026-09-30"), ("2026-10-31", "2026-10-31")],
+)
+def test_sakli_son_verinin_son_tam_ayinin_son_gunu(veri_sonu, sakli_son):
+    gunler = {
+        "A": pd.DataFrame(index=pd.date_range("2026-01-01", veri_sonu)),
+        "B": pd.DataFrame(index=pd.date_range("2025-01-01", "2026-03-31")),
+    }
+    assert sinama.sakli_son(gunler) == pd.Timestamp(sakli_son)
+
+
+def test_kes_sinyal_tarihine_gore_dilimler_kurulum_kendi_cikisini_korur():
+    islemler = pd.DataFrame(
+        {
+            "sinyal_tarihi": pd.to_datetime(["2023-06-29", "2023-07-03"]),
+            "cikis_tarihi": pd.to_datetime(["2023-08-15", "2023-07-10"]),
+        }
+    )
+    sinyaller = pd.DataFrame({"sembol": ["A", "A"], "tarih": islemler["sinyal_tarihi"]})
+    dilim = sinama.Kosu(islemler, sinyaller, Counter(a=1)).kes(
+        pd.Timestamp("2023-01-01"), pd.Timestamp("2023-06-30")
+    )
+    assert list(dilim.islemler["cikis_tarihi"]) == [pd.Timestamp("2023-08-15")]
+    assert len(dilim.sinyaller) == 1 and dilim.sayac == Counter()
 
 
 def kayitlar(n):
