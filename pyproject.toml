@@ -21,7 +21,7 @@ tansu = "tansu.__main__:main"
 dev = ["pytest==9.1.1", "ruff==0.17.0"]
 
 [tool.setuptools]
-packages = ["tansu"]
+packages = ["tansu", "tansu.stratejiler"]
 
 [tool.setuptools.package-data]
 tansu = ["referans/*/*.csv", "referans/*/*.md"]
