@@ -254,3 +254,28 @@ rapor: rapor\gartley\sinama.html; durum: yetersiz-ornek
 BIST 30'da örnek yetmez; bütün BIST'te aynı ızgara üç bayrağı geçer (yukarıdaki tablo, ilk satır). Ürün evreni bütün BIST'e ayrı işte açılır.
 
 Saklı dönem: son ayarlar (pivot 12'nin eklenmesi, ızgarada yalnız stop X) "Sağlam ayar" bölümündeki 2026 bakışlarından sonra seçildiği için 2026 saklı dönemi `gartley` için artık dokunulmamış bir sınav değildir; sonraki temiz sınav 30.09.2026 sonrasının yeni verisidir.
+
+## Yeniden ölçüm: veri yolu düzeltmelerinden sonra Gartley (29.10.2026)
+
+#207 üç düzeltmeyi birleştirdi: kopan bağlantıda yeniden deneme; bozuk gün eksik gün sayılır; ATR eksik günü atlar ve ATR'siz stoplu kurulum girmez. Yukarıdaki tablonun ilk satırı aynı ayarla yeniden ölçüldü: bütün BIST, görüntü 20261028-1723, 2021-2025 ileri yürüme (örneklem dışı 2023-2025), kapı 1,40, `sag_bar` 10/12/15/20 ızgarası, stop X, ürünün `gartley.hesapla`'sı; Monte Carlo 1.000 koşu, tohum 20261028. "Sonra" kodu `yeniden-kurulus` 96b5107'nin `tansu/` paketidir (ölçülen kopyayla dosya dosya aynı). 2026 saklı dönemine bakılmadı.
+
+```
+önce  (PR 204 kodu, eski veri yolu):         secim {'pivot': 'sag_bar_10', 'tolerans': 0.04, 'gecerlilik': 5, 'stop': 'X'}; 2021-2025 sinyal 235, dolum 35, toplam 27.83 R; ileri yurume N 34, toplam 30.12 R, ortalama 0.886 R, kazanan %65; yuzdelik 99.4 (rastgele ort 0.216); bootstrap p5 16.29; dusus p95 5.79, karistirma p95 5.15, gercek dusus 3.13, batma %0.0
+sonra (96b5107 kodu, yeni veri yolu):       secim {'pivot': 'sag_bar_10', 'tolerans': 0.04, 'gecerlilik': 5, 'stop': 'X'}; 2021-2025 sinyal 235, dolum 35, toplam 27.83 R; ileri yurume N 34, toplam 30.12 R, ortalama 0.886 R, kazanan %65; yuzdelik 99.4 (rastgele ort 0.216); bootstrap p5 16.29; dusus p95 5.79, karistirma p95 5.15, gercek dusus 3.13, batma %0.0
+```
+
+| Bütün BIST, kapı 1,40 | Önce | Sonra |
+|---|---|---|
+| Örneklem dışı N | 34 | 34 |
+| Ortalama | 0.886 R | 0.886 R |
+| Rastgele giriş yüzdeliği | 99.4 | 99.4 |
+| Bootstrap toplam p5 | 16.29 R | 16.29 R |
+| Gerçek düşüş / bootstrap düşüş p95 | 3.13 / 5.79 R | 3.13 / 5.79 R |
+
+34 örneklem dışı işlem sütun sütun aynıdır. Hiçbir sayı değişmedi; nedenleri:
+
+- Yeniden deneme yalnız indirmeyi etkiler; iki ölçüm aynı görüntüyü okur.
+- Bozuk gün: önceki ölçüm bozuk günü zaten eksik gün saymıştı. Yeni veri yolu aynı günleri eksik sayar; tek ek gün GWIND 10.10.2025'tir ve bir Gartley işlemine girmez.
+- ATR: fiyatı olan ama ATR'si olmayan gün 29.465'ten 8.032'ye iner; 687 günün ATR değeri değişir. 34 işlemin hiçbirinde sinyal günü ATR'si eksik değildi ya da değişmedi. Risk tabanı (0,5 ATR) hiçbir işlemde bağlamaz: D − X en az 0,96 ATR'dir.
+
+PR 204 tablosundaki geçici varyant kopyası 2021-2025'te 233 sinyal saydı; ürünün `hesapla`'sı iki ölçümde de 235 sayar. Dolum ve işlemler aynıdır.
