@@ -161,3 +161,5 @@ def test_veri_komutu_sembol_tablosu_yazar_ve_on_goruntu_tutar(
         "COKESKI" not in satirlar
     )  # veri başlangıcından önce kapanan pay evrende değil
     assert (goruntuler[-1] / "kapanan.csv").exists()
+    assert "önbellek: 0 artımlı, 4 tam" in cikti  # boş kaynak da tam iniş sayılır
+    assert (tmp_path / "onbellek" / "fiyat-20190101" / "AKBNK.fiyat.parquet").exists()
