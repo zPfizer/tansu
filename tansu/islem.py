@@ -215,8 +215,9 @@ def _acik_gun(e: _Islem, i: int, g: Gun, cikis: Cikis) -> bool:
     if g.taban_kilit[i]:  # satış yok; çıkış ilk kilitsiz güne kalır (adım 1)
         if dolumda_stop:
             e.bekleyen = "stop (dolumda)"
-        elif nedeni and e.bekleyen is None:
-            e.bekleyen = nedeni
+        elif e.bekleyen is None:
+            dokundu = cikis.stop_mod == "dokunus" and g.dus[i] <= e.stop
+            e.bekleyen = "stop" if dokundu else nedeni
         return False
     if dolumda_stop:
         return _kapat(e, i, e.giris, "stop (dolumda)")
