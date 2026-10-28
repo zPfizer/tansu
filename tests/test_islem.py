@@ -182,3 +182,116 @@ def test_taban_kilitli_gunde_stop_altinda_dolum_ertesi_gun_cikar():
     assert k["dolum_tarihi"] == g.index[1] and k["dolum_fiyati"] == 8.5
     assert k["cikis_tarihi"] == g.index[2] and k["cikis_fiyati"] == 8.65
     assert k["dolumda_stop"]
+
+
+CIKIS_B = islem.Cikis()
+
+
+def piyasa(gun, giris=(0,), cikis_sinyali=(), stop=np.nan, gecerlilik=0):
+    s = bos_sinyal(gun.index)
+    for i in giris:
+        s.iloc[i, s.columns.get_indexer(["giris", "giris_tur", "gecerlilik"])] = [
+            True,
+            "piyasa",
+            gecerlilik,
+        ]
+        s.iloc[i, s.columns.get_loc("stop")] = stop
+    for i in cikis_sinyali:
+        s.iloc[i, s.columns.get_loc("cikis_sinyali")] = True
+    return s
+
+
+def kos_b(gun, s, cikis=CIKIS_B):
+    return islem.simule(gun, s, cikis, sembol="AAA", strateji="t", sinif="b")
+
+
+def test_piyasa_ilk_fiyatli_gunun_aofundan_dolar_gecerlilik_yok_sayilir():
+    g = gun_tablosu(
+        [11, np.nan, np.nan, 12, 12, 12], aof=[11, np.nan, np.nan, 11.5, 12, 12]
+    )
+    (k,), sayac = kos_b(g, piyasa(g))
+    assert k["dolum_tarihi"] == g.index[3] and k["dolum_fiyati"] == 11.5
+    assert k["giris_tur"] == "piyasa" and k["acik"]
+    assert not sayac[islem.SURE_DOLDU] and not sayac[islem.HEDEF_YOK]
+
+
+def test_piyasa_ust_limit_kilidinde_dolmaz_sinyal_dusur():
+    g = gun_tablosu([11, 12, 12, 12])
+    g.iloc[1, g.columns.get_loc("kilit_tavan")] = True
+    kayit, sayac = kos_b(g, piyasa(g))
+    assert kayit == [] and sayac[islem.TAVAN_KILIDI] == 1
+    assert not sayac[islem.VERI_SONU]
+
+
+def test_stopsuz_kurulum_reddedilmez_stop_cikisi_yok_r_nan():
+    g = gun_tablosu([11, 11, 5, 4, 4], aof=[11, 11.2, 5, 4, 4])
+    s = piyasa(g)
+    for cikis in (CIKIS_B, islem.Cikis("kapanis")):
+        (k,), sayac = kos_b(g, s, cikis)
+        assert not sayac[islem.STOP_USTTE]
+        assert k["cikis_nedeni"] == "açık" and k["acik"]
+        assert k["net_yuzde"] == pytest.approx(maliyetli(11.2, 4) / 11.2 * 100)
+        assert np.isnan([k["R"], k["mfe_R"], k["mae_R"], k["stop"]]).all()
+        assert not k["risk_tabanli"] and not k["dolumda_stop"]
+        assert np.isnan(k["stop_gun"])
+
+
+def test_bekleyen_piyasa_emri_varken_gelen_ikinci_sinyal_acik_var_sayilir():
+    g = gun_tablosu([11, 11, 11, 11])
+    (k,), sayac = kos_b(g, piyasa(g, giris=(0, 1)))
+    assert k["sinyal_tarihi"] == g.index[0] and k["dolum_tarihi"] == g.index[1]
+    assert sayac[islem.ACIK_VAR] == 1
+
+
+def test_hedef_yok_yalniz_hedef_listesi_doluysa_sayilir():
+    g = gun_tablosu([11, 11, 11])
+    assert kos_b(g, piyasa(g))[1][islem.HEDEF_YOK] == 0
+    s = sinyal(g, h1=np.nan, h2=np.nan)
+    assert kos(g, s)[1][islem.HEDEF_YOK] == 1
+
+
+def test_cikis_sinyali_ertesi_gun_aofdan_cikar():
+    g = gun_tablosu(
+        [11, 11, 11.5, 12, 12, 12.5, 12.5], aof=[11, 11.2, 11.5, 12, 12.2, 12.4, 12.5]
+    )
+    (k,), _ = kos_b(g, piyasa(g, cikis_sinyali=(3,)))
+    assert k["cikis_nedeni"] == "çıkış sinyali" and not k["acik"]
+    assert k["cikis_tarihi"] == g.index[4] and k["cikis_fiyati"] == 12.2
+    assert k["net_yuzde"] == pytest.approx(maliyetli(11.2, 12.2) / 11.2 * 100)
+    assert k["tutma_gun"] == 3
+
+
+def test_cikis_sinyali_alt_limit_kilitli_gunden_sonraki_serbest_gune_kalir():
+    g = gun_tablosu([11, 11, 11, 10, 10, 10], aof=[11, 11, 11, 10, 9.9, 9.8])
+    g.iloc[3, g.columns.get_loc("kilit_taban")] = True
+    (k,), _ = kos_b(g, piyasa(g, cikis_sinyali=(2,)))
+    assert k["cikis_tarihi"] == g.index[4] and k["cikis_fiyati"] == 9.9
+
+
+def test_dolum_gunu_gelen_cikis_sinyali_ertesi_gun_cikar():
+    g = gun_tablosu([11, 11, 11, 11], aof=[11, 11, 10.9, 11])
+    (k,), _ = kos_b(g, piyasa(g, cikis_sinyali=(1,)))
+    assert k["dolum_tarihi"] == g.index[1] and k["cikis_tarihi"] == g.index[2]
+    assert k["cikis_fiyati"] == 10.9
+
+
+def test_kapanis_stopu_ve_cikis_sinyali_ayni_gun_stop_once_gelir():
+    g = gun_tablosu(
+        [11, 10.2, 8.9, 9.5, 9.5],
+        yuksek=[11.1, 10.5, 9.6, 9.6, 9.6],
+        dusuk=[10.9, 9.9, 8.8, 9.4, 9.4],
+    )
+    cikis = islem.Cikis("kapanis", CIKIS.hedef)
+    s = sinyal(g)
+    s.iloc[2, s.columns.get_loc("cikis_sinyali")] = True
+    (k,), _ = kos(g, s, cikis)
+    assert k["cikis_nedeni"] == "stop (kapanış)" and k["cikis_fiyati"] == 9.5
+
+
+def test_mfe_mae_yalniz_tam_10_gunluk_pencerede_olculur():
+    g = gun_tablosu([11.0] * 5)
+    (k,), _ = kos_b(g, piyasa(g))
+    assert np.isnan(k["mfe_yuzde"]) and np.isnan(k["mae_yuzde"])
+    g = gun_tablosu([11.0] * 12)
+    (k,), _ = kos_b(g, piyasa(g))
+    assert np.isfinite(k["mfe_yuzde"]) and np.isfinite(k["mae_yuzde"])

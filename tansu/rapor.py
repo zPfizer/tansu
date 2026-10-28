@@ -29,11 +29,12 @@ def _tablo(satirlar: list[dict] | pd.DataFrame) -> str:
     return f"<table><tr>{bas}</tr>{govde}</table>"
 
 
-def egri_svg(islemler: pd.DataFrame, gen: int = 760, yuk: int = 240) -> str:
-    """Çıkış tarihine göre kümülatif R ve düşüş."""
+def egri_svg(islemler: pd.DataFrame, olcu: str, gen: int = 760, yuk: int = 240) -> str:
+    """Çıkış tarihine göre kümülatif `olcu` ve düşüş."""
     if not len(islemler):
         return "<p>Eğri yok.</p>"
-    r = sinama.sirala(islemler)["R"].cumsum().to_numpy()
+    b = sinama.BIRIM[olcu]
+    r = sinama.sirala(islemler)[olcu].cumsum().to_numpy()
     tepe = pd.Series(r).cummax().clip(lower=0).to_numpy()
     alt, ust = min(0.0, r.min()), max(0.0, r.max(), tepe.max())
     olcek = (yuk - 20) / ((ust - alt) or 1)
@@ -50,7 +51,7 @@ def egri_svg(islemler: pd.DataFrame, gen: int = 760, yuk: int = 240) -> str:
         f'<line x1="10" x2="{gen - 10}" y1="{sifir:.1f}" y2="{sifir:.1f}" stroke="#999"/>'
         f'<polyline points="{dusus}" fill="none" stroke="#d88" stroke-dasharray="4 3"/>'
         f'<polyline points="{egri}" fill="none" stroke="#1f5fa8" stroke-width="2"/>'
-        f'<text x="12" y="14" font-size="12">Kümülatif R (mavi), önceki tepe (kesikli); son {r[-1]:.2f} R</text>'
+        f'<text x="12" y="14" font-size="12">Kümülatif {b} (mavi), önceki tepe (kesikli); son {r[-1]:.2f} {b}</text>'
         "</svg>"
     )
 
@@ -66,11 +67,20 @@ def yaz(
 ) -> Path:
     klasor = kok / strateji.ad
     klasor.mkdir(parents=True, exist_ok=True)
-    donem = sinama.donemler(islemler, sinyaller)
+    olcu = strateji.olcu
+    b = sinama.BIRIM[olcu]
+    donem = sinama.donemler(islemler, sinyaller, olcu)
     hedefler = tuple(h for h, _ in strateji.cikis.hedef)
     donem_tablo = pd.DataFrame(donem).rename_axis("Ölçü").reset_index()
     nedenler = [{"Neden": k, "Adet": v} for k, v in sorted(sayac.items()) if v]
-    semboller = sinama.sembol_tablosu(islemler)
+    semboller = sinama.sembol_tablosu(islemler, olcu)
+    isabet_bolumu = ""
+    if hedefler:
+        isabet_bolumu += (
+            f"<h2>Seviyelerin isabeti</h2>{_tablo(sinama.isabet(islemler, hedefler))}"
+        )
+    if strateji.sinif == "b":
+        isabet_bolumu += f"<h2>İleri getiri (dolumdan sonra, net %)</h2>{_tablo(sinama.ileri_tablo(islemler))}"
     islemler.to_csv(klasor / "islemler.csv", index=False, encoding="utf-8")
     sinif = "a (tam seviye)" if strateji.sinif == "a" else "b (giriş taraması)"
     parametre = ", ".join(f"{k} = {v}" for k, v in strateji.varsayilan.items())
@@ -85,8 +95,8 @@ td,th{{border:1px solid #ccc;padding:3px 6px;font-size:13px;text-align:right}}th
 <p>{VARSAYIM}</p>
 <p>Dönem: sinyal tarihi 04.01.2021-31.12.2025, BIST 30 üyesi günler. 2026 saklı dönemdir ve bu rapora girmez.</p>
 <h2>Dönem tablosu</h2>{_tablo(donem_tablo)}
-<h2>Seviyelerin isabeti</h2>{_tablo(sinama.isabet(islemler, hedefler))}
-<h2>Kümülatif R</h2>{egri_svg(islemler)}
+{isabet_bolumu}
+<h2>Kümülatif {b}</h2>{egri_svg(islemler, olcu)}
 <h2>Düşen sinyaller</h2>{_tablo(nedenler)}
 <h2>Sembol tablosu</h2>{_tablo(semboller)}
 <p>İşlem kaydı: islemler.csv ({len(islemler)} satır).</p>
@@ -100,14 +110,14 @@ td,th{{border:1px solid #ccc;padding:3px 6px;font-size:13px;text-align:right}}th
         "",
         f"Veri görüntüsü: {kimlik}. Dönem: 2021-2025. Parametreler varsayılan.",
         "",
-        "| Dönem | Sinyal | Dolum | Beklenti R | Toplam R | Kazanma |",
+        f"| Dönem | Sinyal | Dolum | Beklenti {b} | Toplam {b} | Kazanma |",
         "|---|---|---|---|---|---|",
         *(
-            f"| {ad} | {d['Sinyal']} | {d['Dolum']} | {d['Beklenti (ortalama R)']} | {d['Toplam R']} | {d['Kazanma oranı']} |"
+            f"| {ad} | {d['Sinyal']} | {d['Dolum']} | {d[f'Beklenti (ortalama {b})']} | {d[f'Toplam {b}']} | {d['Kazanma oranı']} |"
             for ad, d in donem.items()
         ),
         "",
-        f"Bütün yıllar: en büyük düşüş {tum['En büyük düşüş R']} R, açık işlem {tum['Açık işlem']}.",
+        f"Bütün yıllar: en büyük düşüş {tum[f'En büyük düşüş {b}']} {b}, açık işlem {tum['Açık işlem']}.",
         "",
         VARSAYIM,
         "",

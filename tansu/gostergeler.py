@@ -40,6 +40,19 @@ def sma(seri: pd.Series, periyot: int) -> pd.Series:
     return seri.rolling(periyot).mean()
 
 
+def wma(seri: pd.Series, periyot: int) -> pd.Series:
+    """Doğrusal ağırlıklı ortalama: ağırlıklar 1..n, en yeni en ağır (kaynak yerel kural kartında).
+    İlk n-1 değer ve içinde NaN olan her pencere NaN."""
+    agirlik = np.arange(1, periyot + 1)
+    sonuc = np.full(len(seri), np.nan)
+    if len(seri) >= periyot:
+        pencere = np.lib.stride_tricks.sliding_window_view(
+            seri.to_numpy(float), periyot
+        )
+        sonuc[periyot - 1 :] = pencere @ agirlik / agirlik.sum()
+    return pd.Series(sonuc, index=seri.index)
+
+
 def piyasa_durumu(xu100: pd.Series, n: int = 50) -> pd.Series:
     """Piyasa durumu: XU100 kapanış > SMA(n) (YORUM, TASARIM 6.3). SMA yoksa yanlış."""
     return xu100 > sma(xu100, n)

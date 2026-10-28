@@ -34,6 +34,11 @@ def gun_tablosu(kapanis, yuksek=None, dusuk=None, aof=None, bas="2022-01-03"):
     return g
 
 
+def ortalama_yolu(gun=720, periyot=120, genlik=10.0):
+    """Sinüs dalgası: EMA 50/200 ısınmadan (500 gün) sonra yukarı ve aşağı kesişir."""
+    return 100 + genlik * np.sin(2 * np.pi * np.arange(gun) / periyot)
+
+
 def gartley_yolu(x=10.0, a=20.0, ab=0.618, bc=0.618, adim=20, bas=15.0):
     """Doğrusal bacaklar: başlangıç → X → A → B → C → D'nin biraz altı → A. Her bacak `adim` gün."""
     b = a - ab * (a - x)
