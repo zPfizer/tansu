@@ -103,20 +103,13 @@ STRATEJI = Strateji(
         "tolerans": 0.05,
         "gecerlilik": 10,
         "stop": "X",
-        "rr_min": 1.5,  # Ek B #13: stop X iken hedef1 oranı ≈ 1.40, her kurulum elenir
+        "rr_min": 1.4,  # Ek B #13: stop X iken hedef1 oranı 1.403; 1.403 üstü her kurulumu eler
     },
     aralik={
-        "pivot": (
-            "sag_bar_10",
-            "sag_bar_15",
-            "sag_bar_20",
-            "zigzag_1.5",
-            "zigzag_2.0",
-            "zigzag_2.5",
-        ),
+        "pivot": ("sag_bar_10", "sag_bar_12", "sag_bar_15", "sag_bar_20"),
         "tolerans": (0.03, 0.04, 0.05),
         "gecerlilik": (5, 10, 20),
-        "stop": ("X", "X-2ATR"),
+        "stop": ("X",),  # X-2ATR elle verilebilir; kapı 1.4 onu her kurulumda eler
     },
     seviye_param=("stop",),
     cikis=Cikis("dokunus", (("hedef1", 0.5), ("hedef2", 0.5))),
