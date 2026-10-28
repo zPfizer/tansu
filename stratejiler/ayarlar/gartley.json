@@ -1,11 +1,11 @@
 {
-  "kod_surumu": "bc01e77e32cb06b85ee17457fe38ecdfba7f06e6",
+  "kod_surumu": "32e1ae1e42a85ae204cd7e710790cbcc513bca10",
   "liste_cikisi": false,
-  "n": 0,
+  "n": 3,
   "parametreler": {
     "gecerlilik": 10,
     "pivot": "sag_bar_15",
-    "rr_min": 1.5,
+    "rr_min": 1.4,
     "stop": "X",
     "tolerans": 0.05
   },

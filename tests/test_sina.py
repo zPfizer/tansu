@@ -45,7 +45,7 @@ def durum(tmp_path):
 
 def test_sina_raporu_yazar_ve_durumu_sinandi_yapar(ortam, tmp_path, capsys):
     g = STRATEJILER["gartley"]
-    v = {**g.varsayilan, "rr_min": "kapali"}  # varsayılan R/R kapısı her Gartley'i eler
+    v = {**g.varsayilan, "rr_min": "kapali"}
     ortam(
         "gartley",
         strateji=dataclasses.replace(
