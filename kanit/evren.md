@@ -31,7 +31,17 @@ Liste: 805 bugünkü kod ve 2019'dan beri kapanan 34 kod, toplam 839. 655 kodda 
 - Bağımsız inceleme üç hata buldu, üçü de önce kırmızı testle düzeltildi: bütünüyle boş alan ya da boş yanıtta çökme, olay isteği düşünce eski olayların kalması, yarım dosya.
 - Önbellek ilk kez Gartley ölçümünün aynı kaynaktan aynı kodla yaptığı indirmeyle (28.10.2026 17:23, 836 sembol) dolduruldu; ilk tam iniş ≈ 2 sa 15 dk sürmüştü.
 
-Günlük koşu süresi: ölçülüyor (29.10.2026, ilk artımlı koşu).
+İlk artımlı günlük koşu (28.10.2026 23:53, `python -X utf8 -m tansu veri --kok veri`):
+
+```
+anlık görüntü 20261028-2353; silinen eski görüntü: 0; önbellek: 655 artımlı, 181 tam
+cikis 0; sure 4338 sn
+sembol durumu: tamam 627, son gün eksik 28 (kapanan paylar), inmedi 3 (CITAS, LRSHO, LYDHO), kaynak boş 181
+```
+
+- Süre 72 dk 18 sn; tam iniş ≈ 2 sa 15 dk. Geçmişi değişip yeniden tam inen pay yok; 181 "tam" iniş kaynakta boş kodlardır (önbellekleri boş).
+- Darboğaz kaynağın yanıt süresidir, kod değil. Ölçüm (29.10.2026 01:00-01:15): aynı kısa aralık isteği bir an 0.0 sn, bir an 10.3 sn yanıt verir (HTTP 200, yeniden deneme yok). 80 istekte 32'si yavaş, 398 sn. İstek arası bekleme 2 sn olunca 80 istekte 16'sı yavaş, 327 sn. Aynı semboller 10 dk sonra yine 2-11 sn: yavaşlık sembole bağlı önbellek değil, kaynağın o anki yüküdür. Bekleme 1 sn kaldı (kaynağa saygı; kazanç küçük ve değişken).
+- Kaynakta boş 181 kod her koşuda iki istek yer (fiyat ve olay): koşunun ≈ 1.018 isteğinin 362'si (%36). Süre payı ölçülmedi.
 
 ## 3. Veri yolu hataları ve kalite (PR 207)
 
