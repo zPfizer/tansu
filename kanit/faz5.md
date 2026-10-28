@@ -306,3 +306,107 @@ rapor: rapor\gartley\sinama.html; durum: ayarlandi
 | Batma (25 R) | %0 | %0 |
 
 Ürün komutu geçici ölçümle aynı sonucu verir. Raporda üç bayrak "evet"tir. `gartley` durumu `yetersiz-ornek`ten `ayarlandi`ya geçer: ileri yürümenin son adımında puanlı nokta vardır (N 34, sağlam puan 0.84 R). BIST 30'da aynı nokta yoktu (N 2). `ayarlandi` onay değildir; akşam sinyaline almak Levent'in `onayla` kararıdır.
+
+## Sağlamlık denetimi: dondurulmuş Gartley ayarı (29.10.2026)
+
+Levent (29.10.2026): "Buna sen karar ver. Gartley işi bitti mi, bitmedi mi, daha iyi olabilir mi? Bu soruları bir cevapla. Daha iyi olabilecekse daha iyi olsun." Karar (bu yetkiyle): ayar tamamdır. "Daha iyi" burada 2021-2025'te daha yüksek sayı değil, daha güvenilir sonuç demektir. Tansu'ya bağlı düğmeler zaten arandı; aynı geçmişte daha çok ayar seçim yanlılığı ekler ve temiz saklı dönem kalmadı. Bu yüzden yeni düğme, yeni varyant ve Gartley kod değişikliği yok.
+
+Denetim PR 204 ayarıyla yapıldı: kod 1bd7b15, veri yolu 96b5107, görüntü 20261028-1723, bütün BIST, 2021-2025 (örneklem dışı 2023-2025). 2026 verisine bakılmadı.
+
+Karar kuralı (sonuçlardan önce yazıldı). Gartley şu dört şartla "bitti" sayılır:
+
+1. Ürün komutu geçici ölçümle aynı sonucu verir.
+2. Varyant aramasına göre düzeltilmiş rastgele giriş testi 95'i geçer.
+3. İki streste de örneklem dışı ortalama R 0'ın üstünde kalır.
+4. En iyi 3 işlem çıkınca ortalama R 0'ın üstünde kalır.
+
+Bir şart tutmazsa ayar düzeltilmez; sonuç olduğu gibi yazılır.
+
+### 1. Ürün komutu
+
+Yukarıdaki bölüm: `tansu ayarla gartley` N 34, toplam 30.12 R, yüzdelik 99.4, bootstrap p5 16.29 R verir; 34 işlem geçici ölçümle aynıdır. Evren işinin PR'ı (#209) aynı görüntüde aynı seçimi yazar. **Şart 1: geçer.**
+
+### 2. Varyant aramasına göre düzeltilmiş rastgele giriş testi
+
+Yöntem (sonuçtan önce seçildi):
+
+- Aile: 28.10.2026'da bütün BIST'te ileri yürümesine bakılan 42 koşu. Alt evren koşuları (BIST 30, likidite ilk 30-300) bu sayıya girmez, çünkü hepsi N 30'un altındadır ve seçilemezdi. 42 koşunun 38'i 96b5107 koduyla, denendikleri ızgarayla yeniden koştu. Ürün ızgarasıyla denenenler PR 204 öncesi ızgarayla (6 pivot, stop X ve X − 2 ATR) koştu. Kalan 4 koşu yeniden koşmadı: üçü hiç işlem vermedi (kapı 1,41, 1,42 ve stop X ile 1,5), biri varsayılan koşunun kopyasıdır.
+- Stop X'li 0,786 varyantları eski sonuçları birebir verir (ör. kapı 1,0, ölçek 5: N 34, 0.888 R). PRZ ve zigzag varyantlarının bir kısmı veri yolu düzeltmelerinden sonra değişir (ör. varsayılan PRZ: N 436, −0.173 R → N 341, −0.151 R). Bu farkın nedeni ayrıştırılmadı; bu varyantlar sonucu etkilemez (aşağıda F = 1.000).
+- Seçilebilir varyant: örneklem dışı N ≥ 30 (Monte Carlo alt sınırı). 32 koşu bu şartı tutar. Aynı işlemleri aynı R ile veren koşular birdir; 26 ayrı varyant kalır.
+- Karar değeri: her ayrı varyantın kendi rastgele giriş dağılımı (1.000 koşu, tohum 20261028) ile, varyantlar bağımsız sayılarak, "en iyi varyant 0.886 R'ye rastgele ulaşmaz" olasılığı: Π F_v(0.886). Bağımsızlık en kötümser varsayımdır, çünkü gerçek varyantlar işlemlerinin çoğunu paylaşır. Eşik 95.
+- Duyarlılık: her rastgele koşuda aynı tohumla 26 varyantın en iyisi seçilir ("en iyi varyant" seçimi rastgele girişlere de uygulanır).
+
+| Varyant (rastgele dağılımı 0.886'ya ulaşabilenler) | N | Ortalama | Kendi yüzdeliği | Rastgele p95 | F(0.886) |
+|---|---|---|---|---|---|
+| Seçilen: `sag_bar` 10/12/15/20, stop X | 34 | 0.886 R | 99.4 | 0.634 R | 0.994 |
+| Ürün ızgarası, kapı 1,0-1,4, ölçek 5 (3 koşu) | 34 | 0.888 R | 99.1 | 0.633 R | 0.991 |
+| Stop kapanış, kapı kapalı, ölçek 5 | 39 | 0.600 R | 89.7 | 0.682 R | 0.992 |
+| Stop kapanış, `sag_bar` 10/12/15/20 | 41 | 0.619 R | 91.8 | 0.674 R | 0.993 |
+| Kapı kapalı, ölçek 7,5 | 31 | 0.616 R | 94.7 | 0.631 R | 0.997 |
+| Stop ızgarada (X ... X − 2 ATR) | 32 | 0.791 R | 99.5 | 0.562 R | 0.997 |
+| Kapı kapalı, ölçek 4 | 34 | 0.167 R | 60.7 | 0.363 R | 0.999 |
+
+Kalan 19 varyantın rastgele dağılımı 0.886'ya hiç ulaşmaz (F = 1.000). Bunların çoğu N 50-490 olan PRZ ve zigzag varyantlarıdır; rastgele ortalamaları dar ve düşüktür.
+
+| Test | Yüzdelik | Eşik | Sonuç |
+|---|---|---|---|
+| Tek test (düzeltmesiz) | 99.4 | 95 | geçer |
+| En iyi varyant, aynı tohum (duyarlılık) | 97.3 | 95 | geçer |
+| En iyi varyant, bağımsız varyantlar (karar değeri) | 96.4 | 95 | geçer |
+| Bonferroni, 26 test (bilgi) | 99.4 | 99.81 | geçmez |
+
+Karar değeri 96.4'tür; 1.000 koşunun örnekleme payıyla yaklaşık ±0.7. Bonferroni, 0.886'ya hiç ulaşamayan 19 varyantı da tam test sayar; bu yüzden en kötümser sınırdır ve bilgi olarak yazıldı. 28.10'daki 432 ve 8 × 54 noktalı sabit nokta haritaları ayrı test sayılmadı: gösterdikleri yapılar ileri yürümeyle ailede ölçüldü. Bir yapının içindeki nokta seçimini ileri yürümenin kendisi örneklem dışında yapar. **Şart 2: geçer.**
+
+### 3. Maliyet ve dolum stresi
+
+Ürünün maliyet modeli: taraf başına %0,15 komisyon ve komisyonun %5'i BSMV, toplam %0,1575 (`islem.MALIYET`, SPEC 5.3). Limit emir seviyeden, boşlukta AOF'den dolar; kayma yok. Stres geçici kopyada modül sabitiyle yapıldı; ürün kodu değişmedi. İleri yürüme seçimi her streste yeniden yapıldı. Rastgele girişler de aynı maliyeti öder.
+
+| Durum | Seçim | N | Ortalama | Yüzdelik | Bootstrap p5 |
+|---|---|---|---|---|---|
+| Temel | `sag_bar_10`, 0.04, 5, X | 34 | 0.886 R | 99.4 | 16.29 R |
+| Maliyet × 2 (%0,315) | aynı | 34 | 0.848 R | 99.4 | 15.08 R |
+| Giriş %0,1 kötü (risk aynı) | aynı | 34 | 0.874 R | 99.4 | 15.88 R |
+
+Etki küçüktür, çünkü stop girişten uzaktır: stop mesafesi girişin ortanca %10,1'idir (en az %3,5). Bu mesafeyle beklenen kayıp −0.037 R ve −0.012 R'dir; ölçülen −0.038 R ve −0.012 R. **Şart 3: geçer.**
+
+### 4. Yoğunlaşma
+
+34 örneklem dışı işlem 34 ayrı semboldedir. En iyi 3 işlem (3.33, 2.50 ve 2.11 R) toplamın %26,4'üdür. Her sembolde tek işlem olduğu için en iyi 3 sembolün payı da %26,4'tür. En iyi 3 işlem çıkınca: N 31, toplam 22.18 R, ortalama 0.716 R. En iyi 5 işlem çıkınca ortalama 0.639 R'dir. **Şart 4: geçer.**
+
+### 5. Kararlılık (bilgi; karar kuralında yok)
+
+- Seçilen nokta (`sag_bar_10`, 0.04, 5), 2021-2025, ürün raporu (sinyal yılı, açık işlem dahil): 2021 2.22 R (4 dolum), 2022 3.55 R (2), 2023 8.89 R (16), 2024 1.49 R (4), 2025 11.68 R (9). Her yıl artıdır, ama 2021, 2022 ve 2024'te dolum 2-4'tür.
+- Örneklem dışı, sinyal yılına göre: 2023 16 işlem 16.55 R; 2024 6 işlem −0.57 R; 2025 12 işlem 14.14 R. 2024 eksidir.
+- Komşular (tek eksende bir adım, SPEC 5.7), 2021-2025 kapanan işlemler: pivot 12 N 26, 0.507 R; tolerans 0.03 N 23, 0.471 R; tolerans 0.05 N 39, 0.905 R; geçerlilik 10 N 53, 0.733 R. 4 komşunun 4'ü artıdır.
+- Bütün ızgara (36 nokta): 32'si artıdır. N ≥ 30 olan 15 noktanın 15'i artıdır. Eksi 4 nokta `sag_bar_20`'dedir ve N 3-8'dir.
+- Zayıf yıllar: ızgara noktalarının 2024'te %8'i, 2021'de %36'sı artıdır (2022 %89, 2023 %94, 2025 %78).
+
+### 6. Dondurma kaydı ve ileri sınama kuralı
+
+Dondurulan ayar (29.10.2026):
+
+- Kod: 1bd7b15 (`tansu/stratejiler/gartley.py`). Kapı hedef1'e göre 1,40. Pivot `sag_bar` 10/12/15/20, tolerans 0.03-0.05, geçerlilik 5/10/20, stop X. Veri yolu 96b5107.
+- İleri yürüme seçimi: `sag_bar_10`, tolerans 0.04, geçerlilik 5, stop X, `rr_min` 1.4. Görüntü 20261028-1723; ayar dosyası #209'dadır.
+- Kural: AB 0,618; BC 0,382-0,886; CD 1,272-1,618. D, XA'nın 0,786 geri çekilmesinde alış limitidir ve 5 gün geçerlidir. Stop X (dokunuş). Hedefler AD'nin 0,382 ve 0,618'i, 50/50. Evren bütün BIST. Maliyet taraf başına %0,1575.
+
+İleri sınama kuralı:
+
+- 01.10.2026 ve sonrasının verisi bu ayarla, hiçbir şey değiştirilmeden ölçülür. Parametre, ızgara, kapı ve kod değişmez.
+- Örneklem dışı N 30 olunca aynı üç bayrak okunur: ortalama > 0, rastgele giriş yüzdeliği ≥ 95, bootstrap p5 > 0.
+- Beklenen işlem hızı (seçilen nokta): 2021-2025'te 35 dolum, ayda 0,58; 2023-2025'te 29 dolum, ayda 0,81. Bu hızla N 30 37-52 ayda dolar. Yani yaklaşık Kasım 2029 ile Şubat 2031 arasında.
+
+### Sonuç
+
+| Şart | Değer | Sonuç |
+|---|---|---|
+| 1. Ürün = geçici ölçüm | N 34, 0.886 R, 99.4, 16.29 R; 34 işlem aynı | geçer |
+| 2. Düzeltilmiş rastgele giriş testi ≥ 95 | 96.4 (aynı tohum 97.3) | geçer |
+| 3. Stres altında ortalama > 0 | 0.848 R ve 0.874 R | geçer |
+| 4. En iyi 3 işlem olmadan ortalama > 0 | 0.716 R | geçer |
+
+Karar kuralına göre Gartley ayarı bitmiştir ve dondurulur. Açık kalan riskler:
+
+- Düzeltilmiş test eşiğin yalnız 1,4 puan üstündedir.
+- Bonferroni sınırını geçmez.
+- Örneklem dışında 2024 eksidir.
+- Temiz ileri sınama için N 30, 2029-2031'den önce dolmaz.
