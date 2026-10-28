@@ -225,3 +225,30 @@ Levent: "Gartley'nin setup'ını oturtmaya çalışıyoruz, ayarları ... tansu'
 - D 0,80 ve 0,82 (1,5 kapısıyla) haritada tabandan zayıftır. Pivot 5 ve 7 gün ≈ 0'dır.
 - İlk satırın Monte Carlo'su: bootstrap toplam p5 16.29 R, bootstrap düşüş p95 5.79 R, karıştırma düşüş p95 5.15 R, batma (25 R) %0. `sag_bar` 10/15/20 ızgarasında gerçek düşüş 8.30 R, bootstrap p95'in (7.24 R) üstündeydi; kayıplar 2024'te kümelenir.
 - Sonuç ayarı: X son n günün en düşüğü (`sag_bar`, n 10/12/15/20), AB 0,618, BC 0,382-0,886, CD 1,272-1,618 (tolerans 0,04-0,05), D 0,786'da alış limiti, 5 gün geçerli, stop X (dokunuş), hedefler AD'nin 0,382 ve 0,618'inde 50/50, kapı hedef1'e göre 1,40, evren bütün BIST.
+
+## Karar: Gartley kapı 1,40 ve n günlük salınım pivotları (Ek B #13, 28.10.2026)
+
+Levent: "Evet, işle" (bu ayarı koda işle; evren genişletmesi ayrı iş). Değişiklik: `rr_min` varsayılanı 1,5 → 1,4 (seçenek kapalı, 1,4, 1,5, 2); pivot ekseni `sag_bar_10/12/15/20` (zigzag çıktı); ızgarada stop yalnız X (X − 2 ATR elle verilebilir). Izgara 108 → 36 nokta. Varsayılan pivot 15 ve geçerlilik 10 kaldı: 12, 15 ve 20 günlük pivotlar Tansu'nun SOKE taramasını (X 10.20, A 21.20, D 12.554) birebir bulur, 10 bulmaz.
+
+```
+$ .venv\Scripts\python.exe -X utf8 -m pytest -q tests/test_gartley.py     (değişiklikten önce)
+FAILED tests/test_gartley.py::test_rr_kapisi_hedef1_ile_olculur_varsayilan_1_4_gecirir_1_5_eler
+1 failed, 4 passed in 0.18s
+$ .venv\Scripts\python.exe -X utf8 -m pytest -q     (değişiklikten sonra)
+227 passed in 19.60s
+$ .venv\Scripts\python.exe -X utf8 -m tansu ayarla gartley
+gartley: 17 sinyal, 3 dolum, toplam 2.55 R
+gartley: ızgara 36 nokta, puanlı 0; puanlı nokta yok, varsayılanlar
+ileri yürüme: örneklem dışı N = 2, ortalama verim n/a (0/6 adım)
+saklı dönem 01.01.2026-30.09.2026: N = 1
+Monte Carlo: tohum 20261028, N = 2, rastgele giriş yüzdeliği n/a (N = 2)
+rapor: rapor\gartley\sinama.html; durum: yetersiz-ornek
+```
+
+| `gartley` (BIST 30, görüntü 20261026-2108) | kapı 1,5, eski ızgara (önce) | kapı 1,4, `sag_bar` ızgarası (sonra) |
+|---|---|---|
+| 2021-2025 sinyal / dolum / toplam | 0 / 0 / 0.00 R | 17 / 3 / 2.55 R |
+| örneklem dışı | N 0 | N 2 |
+| durum | yetersiz-ornek | yetersiz-ornek |
+
+BIST 30'da örnek yetmez; bütün BIST'te aynı ızgara üç bayrağı geçer (yukarıdaki tablo, ilk satır). Ürün evreni bütün BIST'e ayrı işte açılır.
