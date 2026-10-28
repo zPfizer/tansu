@@ -52,6 +52,21 @@ def test_sma_hareketli_ortalama():
     )
 
 
+def test_wma_agirliklar_bir_den_n_ye_en_yeni_en_agir():
+    # n=3, ağırlıklar 1, 2, 3 (toplam 6): (1+4+9)/6=14/6; (2+6+12)/6=20/6; (3+8+18)/6=29/6.
+    sonuc = gostergeler.wma(pd.Series([1.0, 2.0, 3.0, 4.0, 6.0]), 3)
+    assert sonuc.isna().tolist() == [True, True, False, False, False]
+    assert sonuc.iloc[2:].tolist() == pytest.approx([14 / 6, 20 / 6, 29 / 6], abs=1e-12)
+
+
+def test_wma_nan_iceren_pencere_nan_ve_kisa_seri_hep_nan():
+    # NaN'ın girdiği üç pencere NaN; [4; 6; 8] penceresi (4+12+24)/6=40/6.
+    sonuc = gostergeler.wma(pd.Series([1.0, 2.0, float("nan"), 4.0, 6.0, 8.0]), 3)
+    assert sonuc.isna().tolist() == [True] * 5 + [False]
+    assert sonuc.iloc[5] == pytest.approx(40 / 6, abs=1e-12)
+    assert gostergeler.wma(pd.Series([1.0, 2.0]), 3).isna().all()
+
+
 def test_atr_wilder_ilk_deger_ilk_n_tr_ortalamasi():
     # n=3. yüksek [12;13;14;12;15], düşük [10;11;12;10;11], kapanış [11;12;13;11;14].
     # TR0 = 12-10 = 2 (önceki kapanış yok). TR1 = max(2; |13-11|; |11-11|) = 2.
