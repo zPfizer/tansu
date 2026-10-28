@@ -34,6 +34,17 @@ def gun_tablosu(kapanis, yuksek=None, dusuk=None, aof=None, bas="2022-01-03"):
     return g
 
 
+def piyasa(sembol=16, donem=40, bas="2019-01-02", son="2026-09-30"):
+    """`sinama.Gunler` biçiminde yapay pazar: kaydırılmış sinüs kapanışları, her gün üye, kilit yok."""
+    t = np.arange(len(pd.bdate_range(bas, son)))
+    return {
+        f"S{j:02d}": gun_tablosu(
+            100 * (1 + 0.15 * np.sin(2 * np.pi * (t + 2.5 * j) / donem)), bas=bas
+        )
+        for j in range(sembol)
+    }
+
+
 def ortalama_yolu(gun=720, periyot=120, genlik=10.0):
     """Sinüs dalgası: EMA 50/200 ısınmadan (500 gün) sonra yukarı ve aşağı kesişir."""
     return 100 + genlik * np.sin(2 * np.pi * np.arange(gun) / periyot)
