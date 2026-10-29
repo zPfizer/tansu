@@ -349,7 +349,6 @@ def test_sablon_oyna_gercek_kurulumun_sablonuyla_simule_ile_ayni():
 
 
 def test_piyasa_gunleri_motorun_piyasa_dolum_kuraliyla_ayni():
-    """Uygun gün = sinyal anı reddi yok, ATR > 0 ve `oyna` doluyor; dolum günü `oyna`nınki."""
     rng = np.random.default_rng(7)
     for _ in range(50):
         n = 12

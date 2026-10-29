@@ -129,7 +129,6 @@ def oyna(
 
 
 def _tut(e: _Islem, g: Gun, cikis: Cikis) -> tuple[_Islem, int]:
-    """Dolan işlemi dolum gününden kapanana ya da veri bitene dek işletir; dönüş `oyna` gibi."""
     n = len(g.kap)
     for j in range(e.dolum_i, n):
         if np.isfinite(g.kap[j]) and _acik_gun(e, j, g, cikis):
@@ -196,7 +195,7 @@ def _doldur(e: _Islem, i: int, fiyat: float) -> _Islem:
 def piyasa_gunleri(gun: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
     """(uygun, dolum_gunu): t rastgele `piyasa` sinyal günü olabilir mi; t'den sonraki ilk fiyatlı gün, yoksa len(gun).
 
-    `_red_nedeni` ve `_emir_gunu` piyasa kuralının vektörel kopyası: üye, karantinasız, ATR > 0, dolum günü tavan kilitsiz."""
+    `_emir_gunu` piyasa kuralının vektörel kopyası."""
     yok = len(gun)
     fiyatli = np.append(
         np.flatnonzero(gun["kapanis"].notna() & gun["aof"].notna()), yok
