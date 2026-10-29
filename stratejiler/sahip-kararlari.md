@@ -14,4 +14,4 @@ Levent'in Ek B seçimleri (docs/SPEC.md). Bir satır: numara, seçim, tarih. Aja
 10. main dal koruması: zorunlu PR, 1 onay, yöneticiler dahil. 26.10.2026 (Levent açtı)
 11. Açılış fiyatı kaynağı: yok, AOF ile dolum (varsayım). 26.10.2026 (varsayılan)
 12. Kamu deposu içeriği: AÇIK. Ara kural: kural kartları, alıntılar ve bu belgeler yalnız yerelde. 26.10.2026
-13. gartley R/R kapısı: AÇIK. Koşu rr_min = kapalı kullanır. 26.10.2026
+13. gartley R/R kapısı: hedef1'e göre 1,40 (Ek B #13); Levent 28.10.2026: "o da uygulamıyorsa zaten esnedebilirsin", "1,30-1,42 arasında deniyelim". 29.10.2026 (Levent)
