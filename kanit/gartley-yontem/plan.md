@@ -85,6 +85,21 @@ k = ayrık grupta koşan aday sayısı. Bir aday için EVET üç şartın üçü
 
 En az bir aday EVET ise cevap EVET; yoksa HAYIR.
 
+## Değişiklik 1 (30.10.2026, ayar grubu koşularından sonra, ayrık grupta hiçbir koşudan önce)
+
+Neden: ayar grubunda teyit fiyatı D'nin üstünde olduğu için 1,40 R/R kapısı neredeyse hiç geçilmiyor (G-T'de 13
+teyitli kurulumun 13'ü, ABCD'de 159'un 157'si elendi). Levent'in talimatı "kapıyı gerçek süzgeç yap ya da kaldır".
+Yeni bir kapı değeri seçmek ayar olur; bu yüzden kapı kaldırıldı. Bu değişiklikler deneme sayılır.
+
+1. `gt-k`: G-T, R/R kapısı yok (teyit penceresi, süre stopu, stop X, iz stop aynı). Ayar grubunda `gt-teyit-sure`
+   adıyla koştu.
+2. `abcd-k`: ABCD, R/R kapısı yok; diğer kurallar Adım 3 ile aynı.
+3. Sahte oran sınaması: kapı bütün çekilişlerde kapalı. Gerçek Gartley'de kapı hiçbir kurulumu elemez (oran hep
+   1,403); gerçek sonuç değişmez. 100 çekiliş, tohum 20261031, en az 30 dolum şartı aynı.
+4. Sınav adayları: karar için `gt-k` ve `abcd-k`; bilgi için dondurulmuş `gartley` (ayrık grupta tam temiz değil).
+   Geçme şartındaki k = 3 (üçü de sayılır; baraj p < 0,0167).
+5. Kelebek: `abcd-k` ayar grubunda üç şartı geçerse ayrı ön kayıtla; geçmezse yok.
+
 ## İleri izleme
 
 Dondurulmuş `kanit/gartley-para/ayar.json` ve `para.py` para katmanı, 01.10.2026'dan başlayarak 100.000 TL ile kâğıt
