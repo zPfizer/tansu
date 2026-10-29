@@ -223,13 +223,9 @@ def sembol_tablosu(islemler: pd.DataFrame, olcu: str) -> pd.DataFrame:
 def ileri_tablo(islemler: pd.DataFrame) -> list[dict]:
     """Sınıf (b) ileri getiri tablosu (SPEC 5.2, 5.6): 1, 3, 5, 10 gün net % ve 10 günlük MFE/MAE medyanı.
     Her ufuk kendi N'siyle sayılır (veri sonuna yakın dolumların ufku boştur); 30'un altında oranlar `n/a (N = x)`."""
-
-    def sutun(ad: str) -> pd.Series:
-        return islemler[ad].dropna() if len(islemler) else pd.Series(dtype=float)
-
     satirlar = []
     for gun in islem.ILERI_GUNLER:
-        x = sutun(f"getiri_{gun}")
+        x = islemler[f"getiri_{gun}"].dropna()
         n = len(x)
         satirlar.append(
             {
@@ -241,7 +237,7 @@ def ileri_tablo(islemler: pd.DataFrame) -> list[dict]:
             }
         )
     for ad, etiket in (("mfe_yuzde", "Medyan MFE %"), ("mae_yuzde", "Medyan MAE %")):
-        x = sutun(ad)
+        x = islemler[ad].dropna()
         satirlar.append(
             {
                 "Ufuk (gün)": f"{etiket} (10 gün)",
