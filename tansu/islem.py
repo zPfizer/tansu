@@ -332,7 +332,7 @@ def _kayit(e: _Islem, gun: pd.DataFrame, cikis: Cikis, sembol, strateji, sinif) 
 
 
 def kayit_sutunlari(cikis: Cikis) -> dict[str, str]:
-    """İşlem kaydı sütunu -> boş kaydın dtype'ı, `_kayit` sırasıyla; `{hedef}_gun` sütunları `cikis.hedef`i izler."""
+    """Boş işlem kaydının sütunları ve dtype'ları."""
     yazi, tarih, sayi, mantik = "str", "datetime64[us]", "float64", "bool"
     return {
         "strateji": yazi,
@@ -369,8 +369,7 @@ def kayit_sutunlari(cikis: Cikis) -> dict[str, str]:
 
 
 def kayit_tablosu(kayitlar: list[dict], cikis: Cikis) -> pd.DataFrame:
-    """İşlem kaydı, her zaman bütün sütunlarla. Satırlarda dtype'ı pandas çıkarır: gün sütunları NaN yoksa int64'tür,
-    zorlanırsa csv "3" yerine "3.0" yazar. Boş kayıtta `kayit_sutunlari` dtype'ları."""
+    """İşlem kaydı; kayıt yokken de `kayit_sutunlari(cikis)` sütunlarıyla."""
     if kayitlar:
         return pd.DataFrame(kayitlar)
     return pd.DataFrame(
