@@ -96,17 +96,77 @@ def _eksen(izgara: ayar.Izgara, i: int) -> str:
     return ", ".join(f"{k} = {v}" for k, v in izgara.eksenler(i).items())
 
 
+def _oran(deger: float, n: int, bicim: str = "{:.2f}") -> str:
+    """`sinama.EN_AZ` kurulumun altında `n/a (N = n)`; tanımsız değer `n/a`."""
+    if n < sinama.EN_AZ:
+        return f"n/a (N = {n})"
+    return "n/a" if not np.isfinite(deger) else bicim.format(deger)
+
+
+def _ozet_satiri(o: sinama.Ozet, b: str) -> dict[str, str | int]:
+    """Dönem tablosunun bir sütunu; anahtar sırası satır sırasıdır."""
+    n = o.dolum
+    dusen = o.sinyal - n
+    return {
+        "Sinyal": o.sinyal,
+        "Dolum": n,
+        "Düşen": f"{dusen} ({dusen / o.sinyal:.0%})" if o.sinyal else "0",
+        "Kazanma oranı": _oran(o.kazanma, n, "{:.0%}"),
+        f"Ortalama kazanç {b}": _oran(o.ort_kazanc, n),
+        f"Ortalama kayıp {b}": _oran(o.ort_kayip, n),
+        f"Beklenti (ortalama {b})": _oran(o.beklenti, n),
+        f"Medyan {b}": _oran(o.medyan, n),
+        f"Toplam {b}": f"{o.toplam:.2f}",
+        "Kâr faktörü": _oran(o.kar_faktoru, n),
+        "Sharpe (kurulum başı)": _oran(o.sharpe, n),
+        "Sortino (kurulum başı)": _oran(o.sortino, n),
+        f"En büyük düşüş {b}": f"{o.dusus:.2f}",
+        "Toplam / düşüş": _oran(o.toplam_dusus, n),
+        "Ortalama tutma günü": f"{o.tutma:.1f}" if n else "-",
+        "En uzun kayıp serisi": str(o.kayip_serisi),
+        "Açık işlem": o.acik,
+        "Dolumda stop": o.dolumda_stop,
+        "Risk tabanı uygulanan": o.risk_tabanli,
+    }
+
+
 def _donem_tablosu(donem: dict[str, dict]) -> str:
     return _tablo(pd.DataFrame(donem).rename_axis("Ölçü").reset_index())
+
+
+def _gun(x: float | None) -> str:
+    return "-" if x is None else f"{x:.0f}"
+
+
+def _isabet_satiri(i: sinama.Isabet) -> dict[str, str]:
+    return {
+        "Hedef": i.hedef,
+        "Stoptan önce ulaştı": _oran(i.ulasti, i.n, "{:.0%}"),
+        "Önce stop": _oran(i.stop_once, i.n, "{:.0%}"),
+        "Medyan gün (hedef)": _gun(i.gun_hedef),
+        "Medyan gün (stop)": _gun(i.gun_stop),
+    }
+
+
+def _ileri_satiri(i: sinama.Ileri) -> dict[str, str | int]:
+    return {
+        "Ufuk (gün)": f"Medyan {i.ufuk} % (10 gün)"
+        if isinstance(i.ufuk, str)
+        else i.ufuk,
+        "N": i.n,
+        "Ortalama net %": "-" if i.ortalama is None else _oran(i.ortalama, i.n),
+        "Medyan net %": _oran(i.medyan, i.n),
+        "Pozitif payı": "-" if i.pozitif is None else _oran(i.pozitif, i.n, "{:.0%}"),
+    }
 
 
 def _ileri_tablosu(kosular: dict[str, sinama.Kosu]) -> str:
     """Sınıf (b) ileri getiri tablosu, dönem başına (SPEC 5.6)."""
     return _tablo(
         [
-            {"Dönem": ad, **satir}
+            {"Dönem": ad, **_ileri_satiri(i)}
             for ad, k in kosular.items()
-            for satir in sinama.ileri_tablo(k.islemler)
+            for i in sinama.ileri_tablo(k.islemler)
         ]
     )
 
@@ -338,7 +398,7 @@ def yaz(s: Sinama, kok: Path = RAPOR_KOKU) -> Path:
     olcu = strateji.olcu
     b = sinama.BIRIM[olcu]
     islemler = s.gecmis.islemler
-    donem = sinama.donemler(s.gecmis)
+    donem = {ad: _ozet_satiri(o, b) for ad, o in sinama.donemler(s.gecmis).items()}
     hedefler = tuple(h for h, _ in strateji.cikis.hedef)
     nedenler = [{"Neden": k, "Adet": v} for k, v in sorted(s.gecmis.sayac.items()) if v]
     semboller = sinama.sembol_tablosu(islemler, olcu)
@@ -352,9 +412,8 @@ def yaz(s: Sinama, kok: Path = RAPOR_KOKU) -> Path:
 
     isabet_bolumu = ""
     if hedefler:
-        isabet_bolumu = (
-            f"<h2>Seviyelerin isabeti</h2>{_tablo(sinama.isabet(islemler, hedefler))}"
-        )
+        isabet = [_isabet_satiri(i) for i in sinama.isabet(islemler, hedefler)]
+        isabet_bolumu = f"<h2>Seviyelerin isabeti</h2>{_tablo(isabet)}"
     # Sütunlu boş kayıt başlık satırı yazardı; kurulumsuz koşunun dosyası tek satır sonu kalır.
     (islemler if len(islemler) else pd.DataFrame()).to_csv(
         klasor / "islemler.csv", index=False, encoding="utf-8", lineterminator="\n"
@@ -382,10 +441,10 @@ td,th{{border:1px solid #ccc;padding:3px 6px;font-size:13px;text-align:right}}th
 {isabet_bolumu}
 <h2>Izgara sonucu</h2>{_izgara_bolumu(y, b)}
 <h2>İleri yürüme</h2>{_yuruyus_tablosu(y, b)}
-<h2>Dikişli örneklem dışı (2023H1-2025H2)</h2>{_donem_tablosu({"Örneklem dışı": y.dis_ornek.ozet()})}
+<h2>Dikişli örneklem dışı (2023H1-2025H2)</h2>{_donem_tablosu({"Örneklem dışı": _ozet_satiri(y.dis_ornek.ozet(), b)})}
 {ileri({"Örneklem dışı": y.dis_ornek})}
 <h2>Saklı dönem</h2><p>Sinyal tarihi {sakli_tarih}, yukarıdaki parametrelerle tek kesintisiz koşu.{sakli_notu}</p>
-{_donem_tablosu({"Saklı dönem": s.sakli.ozet()})}
+{_donem_tablosu({"Saklı dönem": _ozet_satiri(s.sakli.ozet(), b)})}
 {ileri({"Saklı dönem": s.sakli})}
 <h2>Monte Carlo</h2>{_mc_bolumu(mc, strateji.sinif)}
 <h2>Bayraklar</h2><p><b>{ONAY_YOK}</b></p>{_tablo(bayrak)}
