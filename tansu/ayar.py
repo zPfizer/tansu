@@ -178,7 +178,7 @@ def _adim(
     ic = egitim(kosu.islemler, pencere.egitim_son)
     test = kosu.kes(pencere.test_bas, pencere.test_son)
     ic_yillik = float(ic[olcu].sum()) / pencere.egitim_yil
-    dis_yillik = float(test.islemler[olcu].sum()) / TEST_YIL
+    dis_yillik = test.toplam / TEST_YIL
     verim = dis_yillik / ic_yillik if secim.puanli and ic_yillik > 0 else None
     return Adim(pencere, secim, len(ic), ic_yillik, test, dis_yillik, verim)
 
@@ -221,6 +221,7 @@ def yuru(strateji: Strateji, gunler: sinama.Gunler, isci: int | None = None) -> 
         ),
         pd.concat([a.test.sinyaller for a in adimlar], ignore_index=True),
         Counter(),
+        olcu,
     )
     verimler = [a.verim for a in adimlar if a.verim is not None]
     return Yuruyus(

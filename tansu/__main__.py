@@ -168,7 +168,7 @@ def _kos(a, *, ayarla: bool) -> int:
     olcu = strateji.olcu
     b = sinama.BIRIM[olcu]
     son, iz = yuruyus.son, yuruyus.izgara
-    toplam = gecmis.islemler[olcu].sum() if len(gecmis.islemler) else 0.0
+    toplam = gecmis.toplam
     secim = (
         f"seçim {' '.join(f'{k}={v}' for k, v in iz.eksenler(son.nokta).items())} "
         f"(sağlam {son.saglam[son.nokta]:.2f} {b}, N = {son.n[son.nokta]})"

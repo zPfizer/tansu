@@ -111,14 +111,6 @@ def _ileri_tablosu(kosular: dict[str, sinama.Kosu]) -> str:
     )
 
 
-def _ozet(k: sinama.Kosu, olcu: str) -> dict:
-    return sinama.donem_ozeti(k.islemler, len(k.sinyaller), olcu)
-
-
-def _toplam(k: sinama.Kosu, olcu: str) -> float:
-    return float(k.islemler[olcu].sum())
-
-
 def parametre_satiri(s: Sinama) -> str:
     """Seviye parametresi Tansu'nun değerinden farklıysa ikisi birlikte; ayarlı olan `varsayım` (SPEC 1)."""
     st = s.strateji
@@ -210,7 +202,7 @@ def _evet(kosul: bool, deger: str) -> str:
 def bayraklar(
     mc: montecarlo.MonteCarlo,
     dis: pd.DataFrame,
-    sakli: pd.DataFrame,
+    sakli: sinama.Kosu,
     gecmis: pd.DataFrame,
     son: ayar.Secim,
 ) -> list[dict]:
@@ -227,7 +219,7 @@ def bayraklar(
     yok = f"n/a (N = {mc.n})"
     r, bt = mc.rastgele, mc.bootstrap_toplam
     kazanma = (x > 0).mean()
-    sakli_toplam = float(sakli[olcu].sum())
+    sakli_toplam = sakli.toplam
     puan = son.puan[son.nokta]
     semboller = sinama.sembol_tablosu(gecmis, olcu)
     if semboller["pay"].isna().all():
@@ -256,9 +248,9 @@ def bayraklar(
         (
             "Saklı dönem toplamı 0'ın üstünde (bilgi)",
             _evet(sakli_toplam > 0, f"{sakli_toplam:.2f} {b}")
-            if len(sakli)
+            if len(sakli.islemler)
             else "n/a (N = 0)",
-            len(sakli),
+            len(sakli.islemler),
         ),
         (
             "Uyarı: kazanma oranı %90 ya da üstü (örneklem dışı)",
@@ -346,15 +338,12 @@ def yaz(s: Sinama, kok: Path = RAPOR_KOKU) -> Path:
     olcu = strateji.olcu
     b = sinama.BIRIM[olcu]
     islemler = s.gecmis.islemler
-    donem = sinama.donemler(islemler, s.gecmis.sinyaller, olcu)
+    donem = sinama.donemler(s.gecmis)
     hedefler = tuple(h for h, _ in strateji.cikis.hedef)
     nedenler = [{"Neden": k, "Adet": v} for k, v in sorted(s.gecmis.sayac.items()) if v]
     semboller = sinama.sembol_tablosu(islemler, olcu)
     sakli_tarih = f"{_tarih(sinama.SAKLI_BAS)}-{_tarih(s.sakli_son)}"
-    yillar = {
-        str(yil): s.gecmis.kes(pd.Timestamp(yil, 1, 1), pd.Timestamp(yil, 12, 31))
-        for yil in sinama.YILLAR
-    }
+    yillar = {str(yil): s.gecmis.yil(yil) for yil in sinama.YILLAR}
 
     def ileri(kosular: dict[str, sinama.Kosu]) -> str:
         if strateji.sinif != "b":
@@ -371,7 +360,7 @@ def yaz(s: Sinama, kok: Path = RAPOR_KOKU) -> Path:
         klasor / "islemler.csv", index=False, encoding="utf-8", lineterminator="\n"
     )
     mc = s.mc
-    bayrak = bayraklar(mc, y.dis_ornek.islemler, s.sakli.islemler, islemler, y.son)
+    bayrak = bayraklar(mc, y.dis_ornek.islemler, s.sakli, islemler, y.son)
     sinif = "a (tam seviye)" if strateji.sinif == "a" else "b (giriş taraması)"
     sakli_notu = (
         "" if s.sakli_son >= sinama.SAKLI_BAS else " Veri saklı döneme ulaşmıyor."
@@ -393,10 +382,10 @@ td,th{{border:1px solid #ccc;padding:3px 6px;font-size:13px;text-align:right}}th
 {isabet_bolumu}
 <h2>Izgara sonucu</h2>{_izgara_bolumu(y, b)}
 <h2>İleri yürüme</h2>{_yuruyus_tablosu(y, b)}
-<h2>Dikişli örneklem dışı (2023H1-2025H2)</h2>{_donem_tablosu({"Örneklem dışı": _ozet(y.dis_ornek, olcu)})}
+<h2>Dikişli örneklem dışı (2023H1-2025H2)</h2>{_donem_tablosu({"Örneklem dışı": y.dis_ornek.ozet()})}
 {ileri({"Örneklem dışı": y.dis_ornek})}
 <h2>Saklı dönem</h2><p>Sinyal tarihi {sakli_tarih}, yukarıdaki parametrelerle tek kesintisiz koşu.{sakli_notu}</p>
-{_donem_tablosu({"Saklı dönem": _ozet(s.sakli, olcu)})}
+{_donem_tablosu({"Saklı dönem": s.sakli.ozet()})}
 {ileri({"Saklı dönem": s.sakli})}
 <h2>Monte Carlo</h2>{_mc_bolumu(mc, strateji.sinif)}
 <h2>Bayraklar</h2><p><b>{ONAY_YOK}</b></p>{_tablo(bayrak)}
@@ -433,11 +422,11 @@ td,th{{border:1px solid #ccc;padding:3px 6px;font-size:13px;text-align:right}}th
         f"Izgara: {len(y.izgara)} nokta; son ayar seçimi: {secim}",
         "",
         f"Örneklem dışı (2023H1-2025H2): N = {len(y.dis_ornek.islemler)}, "
-        f"toplam {_toplam(y.dis_ornek, olcu):.2f} {b}; "
+        f"toplam {y.dis_ornek.toplam:.2f} {b}; "
         f"ortalama verim {_deger(y.verim)} ({y.verim_adim}/{len(y.adimlar)} adım).",
         "",
         f"Saklı dönem {sakli_tarih}: N = {len(s.sakli.islemler)}, "
-        f"toplam {_toplam(s.sakli, olcu):.2f} {b}."
+        f"toplam {s.sakli.toplam:.2f} {b}."
         if s.sakli_son >= sinama.SAKLI_BAS
         else "Saklı dönem: veri saklı döneme ulaşmıyor.",
         "",
