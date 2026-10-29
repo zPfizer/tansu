@@ -11,6 +11,28 @@ Ayar yalnız 2015-2022'de yapılır. 2023-2025 sonda bir kez koşar; sonuçtan s
 biliniyordu. Bu iş desen ayarını 2015-2022'de yeniden seçti; ama denenen seçenek ailesi (pivot 10/12/15/20, tolerans
 0,03-0,05, geçerlilik 5/10/20, stop X) 2021-2025 görülerek kurulmuştu.
 
+## Sonuç: 2023-2025 testi (tek koşu)
+
+Dondurma commit'i a81286e (GitHub'a test öncesi gönderildi), ayar SHA-256 `118ad754…32e6`. Test bu commit'ten sonra
+bir kez koştu; ayar değişmedi. Çıktı: `kanit/gartley-para/test-sonuc.json`.
+
+| 100.000 TL, 2023-2025 | Son | Yıllık bileşik | En büyük düşüş |
+|---|---|---|---|
+| Gartley, dondurulmuş ayar, bütün maliyetlerden sonra | **344.900 TL** | %51,0 | **−%23,0** (06.12.2023 → 04.11.2024) |
+| Faiz (brüt politika faizi) | 301.954 TL | | |
+| Aynı kesintili faiz (%15), yalnız nakit | 255.871 TL | | |
+| BIST 100 al-tut (fiyat endeksi) | 204.414 TL | | −%22,9 |
+
+- Hedefin üç şartı tutar: faizi 42.946 TL, BIST 100'ü 140.486 TL geçer; düşüş %25'in altındadır (%23,0, sınıra
+  yakın).
+- 42 işlem; 13 kazanan, 29 kaybeden (%31). İşlem kârı 85.660 TL, nakit faizi 159.239 TL. Kasanın ortalama %37,8'i
+  hissededir.
+- Yıllar: 2023 %123,9; 2024 %4,2; 2025 %47,9. Faiz aynı yıllarda %20,1 / %63,2 / %54,0 verdi. 2024 faizin çok altındadır.
+- Kazanç üç işleme bağlıdır: EGPRO (05.2023, +60.358 TL), ORGE (05.2023, +50.833 TL), HURGZ (04.2025, +43.740 TL). Bu
+  üçü olmasa işlem kârı −69.271 TL olur; kaba tahminle kasa 170-190 bin TL'ye, iki kıyasın da altına iner (koşulmadı:
+  test tek koşudur).
+- Ortalama 0,744 R (motor), toplam 31,23 R.
+
 ## Adım 1: teşhis
 
 Kaynak: paper trade (risk %1, 2023-2025 yürüyen örneklem dışı 34 işlem) ve az-işlem raporu (29.10.2026).

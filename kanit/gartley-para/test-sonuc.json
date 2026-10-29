@@ -1,0 +1,41 @@
+{
+ "son": 344900,
+ "yillik_bilesik_yuzde": 51.02,
+ "en_kotu_dusus_yuzde": -22.98,
+ "dusus_tepe": "2023-12-06",
+ "dusus_dip": "2024-11-04",
+ "islem": 42,
+ "kazanan_yuzde": 31.0,
+ "islem_kari_tl": 85660,
+ "kaybeden_islemler_tl": -141809,
+ "faiz_geliri_tl": 159239,
+ "atlanan": {},
+ "acik_gun_payi_yuzde": 57.4,
+ "ort_hissede_pay_yuzde": 37.8,
+ "yillik_getiri_yuzde": {
+  "2023": 123.89,
+  "2024": 4.15,
+  "2025": 47.92
+ },
+ "motor": {
+  "dolum": 42,
+  "ortalama_R": 0.744,
+  "toplam_R": 31.23
+ },
+ "kiyas": {
+  "xu100_son": 204414,
+  "faiz_son": 301954,
+  "xu100_dusus_yuzde": -22.86
+ },
+ "ayar_sha256": "118ad754930a67cb70f4ace06de0981142e1a5539dcdfe15ca6e2eb0d43e32e6",
+ "kod_sha256": {
+  "gartley.py": "00196b33682ded0bcf76542357593dc83434547e7cab07c4d8ffb4233132d7e4",
+  "gostergeler.py": "3cd5029d2258fa4607e2498c89b8ec9e0cf12788799380d2d3e08d3ff9324716",
+  "islem.py": "183efd6195f3ecd21e069fe3da95d8ee9f77695df3767d39be9e17032dc4309b",
+  "para.py": "95dfd8a9774e61a4be56087b3d106b7de56483c81ae67fb4a0e9dc51a130dd83",
+  "sinama.py": "1f969e5e63e188cf010cc552cab0e16b67e3f70078e3e996b522037e8d22fc1e",
+  "strateji.py": "abed8048dc90a66b0ed013ed7f40ae84c905234470bdcb56e572d011ad13608c",
+  "veri.py": "4d21f6489cf06e6208e226d66aa2bff129054ef9275320b981efe5d75eb04676",
+  "yapi.py": "9fbcf1b92f3c4ddf74c085aa63297dbdb7f89a79377a9423db0bb0547e5bef42"
+ }
+}
