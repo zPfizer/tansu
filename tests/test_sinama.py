@@ -5,6 +5,8 @@ import pandas as pd
 import pytest
 
 from tansu import ayar, islem, montecarlo, rapor, sinama
+from tansu.strateji import Strateji, bos_sinyal
+from tests.sentetik import gun_tablosu
 
 
 @pytest.mark.parametrize(
@@ -55,6 +57,45 @@ def test_toplam_olcu_sutununun_toplami_bos_kosuda_sifir():
     assert sinama.Kosu(islemler, bos, Counter(), "net_yuzde").toplam == 30.0
     kayit = islem.kayit_tablosu([], islem.Cikis())
     assert sinama.Kosu(kayit, bos, Counter(), "R").toplam == 0.0
+
+
+def tavansiz_satir_icin_piyasa():
+    """Üç sembol, birer sinyal: A tavanda kapanan ve dolan, B tavanda kapanan ve süresi dolan, C sıradan ve dolan."""
+    dolan = gun_tablosu(
+        [11, 10.2, 12.2, 13.2, 13.2],
+        yuksek=[11.1, 10.5, 12.5, 13.5, 13.3],
+        dusuk=[10.9, 9.8, 10.3, 12.3, 13.1],
+    )
+    dolmayan = gun_tablosu([11, 10.5, 10.6, 10.7, 10.7])
+    piyasa = {"A": dolan.copy(), "B": dolmayan, "C": dolan.copy()}
+    for sembol in ("A", "B"):
+        piyasa[sembol].iloc[0, piyasa[sembol].columns.get_loc("tavan_kapanis")] = True
+    return piyasa
+
+
+def test_tavansiz_satir_dolmayan_tavan_sinyalini_de_dusurur():
+    cikis = islem.Cikis("dokunus", (("hedef1", 0.5), ("hedef2", 0.5)))
+
+    def hesapla(gun, p):
+        s = bos_sinyal(gun.index)
+        s.iloc[
+            0, s.columns.get_indexer(["giris", "giris_tur", "seviye", "gecerlilik"])
+        ] = [True, "limit", 10.0, 2]
+        s.iloc[0, s.columns.get_indexer(["stop", "hedef1", "hedef2"])] = [
+            9.0,
+            12.0,
+            13.0,
+        ]
+        return s
+
+    strateji = Strateji("t", "giris", "a", "gunluk", (), (), {}, {}, (), cikis, hesapla)
+    k = sinama.calistir(strateji, tavansiz_satir_icin_piyasa(), {}, sinama.GECMIS)
+    donem = sinama.donemler(k)
+
+    assert (donem["Bütün yıllar"].sinyal, donem["Bütün yıllar"].dolum) == (3, 2)
+    tavansiz = donem["Bütün yıllar, tavan kapanışsız"]
+    assert (tavansiz.sinyal, tavansiz.dolum) == (1, 1)
+    assert rapor._ozet_sutunu(tavansiz, "R")["Düşen"] == "0"
 
 
 def kayitlar(n):
