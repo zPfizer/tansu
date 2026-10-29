@@ -60,15 +60,18 @@ def test_toplam_olcu_sutununun_toplami_bos_kosuda_sifir():
 
 
 def tavansiz_satir_icin_piyasa():
-    """Üç sembol, birer sinyal: A tavanda kapanan ve dolan, B tavanda kapanan ve süresi dolan, C sıradan ve dolan."""
     dolan = gun_tablosu(
         [11, 10.2, 12.2, 13.2, 13.2],
         yuksek=[11.1, 10.5, 12.5, 13.5, 13.3],
         dusuk=[10.9, 9.8, 10.3, 12.3, 13.1],
     )
     dolmayan = gun_tablosu([11, 10.5, 10.6, 10.7, 10.7])
-    piyasa = {"A": dolan.copy(), "B": dolmayan, "C": dolan.copy()}
-    for sembol in ("A", "B"):
+    piyasa = {
+        "tavan_dolan": dolan.copy(),
+        "tavan_dolmayan": dolmayan,
+        "siradan": dolan.copy(),
+    }
+    for sembol in ("tavan_dolan", "tavan_dolmayan"):
         piyasa[sembol].iloc[0, piyasa[sembol].columns.get_loc("tavan_kapanis")] = True
     return piyasa
 

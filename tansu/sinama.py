@@ -196,7 +196,6 @@ def donemler(k: Kosu) -> dict[str, Ozet]:
     """Her yıl ve bütün yıllar; yıl sinyal tarihine göre (`GECMIS` koşusu)."""
     sonuc = {str(y): k.yil(y).ozet() for y in YILLAR}
     sonuc["Bütün yıllar"] = k.ozet()
-    # Tavanda kapanan sinyal günleri, dolsun ya da dolmasın, çıkarılmış hali (SPEC 5.1)
     if len(k.islemler):
         tavansiz = k.islemler[~k.islemler["tavan_kapanis"].astype(bool)]
         tavansiz_sinyal = (~k.sinyaller["tavan_kapanis"]).sum()
