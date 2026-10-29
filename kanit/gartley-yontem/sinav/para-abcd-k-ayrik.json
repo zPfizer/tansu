@@ -1,0 +1,43 @@
+{
+ "aday": "abcd-k",
+ "grup": "ayrik",
+ "sembol": 185,
+ "son": 347022,
+ "yillik_bilesik_yuzde": 16.83,
+ "en_kotu_dusus_yuzde": -10.86,
+ "dusus_tepe": "2021-01-19",
+ "dusus_dip": "2021-04-21",
+ "islem": 52,
+ "kazanan_yuzde": 32.7,
+ "islem_kari_tl": 123788,
+ "kaybeden_islemler_tl": -86488,
+ "faiz_geliri_tl": 123234,
+ "atlanan": {
+  "atlandı: nakit yetmedi": "2"
+ },
+ "acik_gun_payi_yuzde": 32.4,
+ "ort_hissede_pay_yuzde": 11.7,
+ "yillik_getiri_yuzde": {
+  "2015": 3.99,
+  "2016": 44.78,
+  "2017": 1.3,
+  "2018": 3.91,
+  "2019": 7.05,
+  "2020": 15.91,
+  "2021": 2.24,
+  "2022": 72.62
+ },
+ "uc_parca": {
+  "faiz_geliri_tl": 123233.81,
+  "islem_kari_tl": 123788.07,
+  "en_iyi_uc_olmadan_islem_kari_tl": -20468.79,
+  "son_kasa_tl": 347021.88,
+  "yalniz_nakit_kasasi_tl": 234178.97,
+  "fark_tl": 112842.91
+ },
+ "motor": {
+  "dolum": 54,
+  "ortalama_R": 0.247
+ },
+ "sure_sn": 2.2
+}

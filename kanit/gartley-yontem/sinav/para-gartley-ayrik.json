@@ -1,0 +1,41 @@
+{
+ "aday": "gartley",
+ "grup": "ayrik",
+ "sembol": 185,
+ "son": 264771,
+ "yillik_bilesik_yuzde": 12.95,
+ "en_kotu_dusus_yuzde": -5.11,
+ "dusus_tepe": "2022-09-15",
+ "dusus_dip": "2022-09-29",
+ "islem": 12,
+ "kazanan_yuzde": 58.3,
+ "islem_kari_tl": 35628,
+ "kaybeden_islemler_tl": -6002,
+ "faiz_geliri_tl": 129143,
+ "atlanan": {},
+ "acik_gun_payi_yuzde": 12.0,
+ "ort_hissede_pay_yuzde": 3.7,
+ "yillik_getiri_yuzde": {
+  "2015": 6.02,
+  "2016": 6.83,
+  "2017": 10.61,
+  "2018": 9.77,
+  "2019": 19.59,
+  "2020": 9.05,
+  "2021": 21.45,
+  "2022": 21.54
+ },
+ "uc_parca": {
+  "faiz_geliri_tl": 129142.59,
+  "islem_kari_tl": 35628.37,
+  "en_iyi_uc_olmadan_islem_kari_tl": -496.82,
+  "son_kasa_tl": 264770.96,
+  "yalniz_nakit_kasasi_tl": 234178.97,
+  "fark_tl": 30591.99
+ },
+ "motor": {
+  "dolum": 12,
+  "ortalama_R": 0.469
+ },
+ "sure_sn": 2.2
+}

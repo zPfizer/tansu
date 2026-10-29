@@ -1,0 +1,87 @@
+{
+ "aday": "gt-k",
+ "grup": "ayrik",
+ "gecme": {
+  "1_ortR_pozitif_ve_p": false,
+  "2_en_iyi_uc_olmadan_islem_kari_pozitif": false,
+  "3_son_kasa_nakit_ustu": false,
+  "k": 3,
+  "baraj_p": 0.016666666666666666,
+  "EVET": false
+ },
+ "sinyal": {
+  "aday": "gt-k",
+  "grup": "ayrik",
+  "sembol": 185,
+  "huni": {
+   "kurulum": 123,
+   "dokundu": 20,
+   "teyit": 3,
+   "teyitten_once_bozuldu": 4
+  },
+  "sinyal": 3,
+  "sonuc": {
+   "dolum": 2,
+   "kalite kuralı (karantina)": 1
+  },
+  "n": 2,
+  "hafta": 2,
+  "ort_R": -0.20839714748847185,
+  "ortanca_R": -0.20839714748847185,
+  "p_tek_yonlu": 1.0,
+  "ort_R_yuzde_5_95": [
+   -0.4069665865123041,
+   -0.009827708464639593
+  ],
+  "cikis_nedeni": {
+   "stop": 2
+  },
+  "taban_bagladi": 0,
+  "ort_R_ham": -0.20839714748847185,
+  "ort_R_motor_kaymasiz": -0.195051243441938,
+  "sure_sn": 2.1,
+  "defter": "sinyal 3, dolum 2, ort R -0.208, ortanca -0.208, p 1.0000"
+ },
+ "para": {
+  "aday": "gt-k",
+  "grup": "ayrik",
+  "sembol": 185,
+  "son": 227168,
+  "yillik_bilesik_yuzde": 10.8,
+  "en_kotu_dusus_yuzde": -2.92,
+  "dusus_tepe": "2021-08-24",
+  "dusus_dip": "2021-08-27",
+  "islem": 2,
+  "kazanan_yuzde": 0.0,
+  "islem_kari_tl": -5353,
+  "kaybeden_islemler_tl": -5353,
+  "faiz_geliri_tl": 132521,
+  "atlanan": {},
+  "acik_gun_payi_yuzde": 1.0,
+  "ort_hissede_pay_yuzde": 0.2,
+  "yillik_getiri_yuzde": {
+   "2015": 6.64,
+   "2016": 6.62,
+   "2017": 7.02,
+   "2018": 14.13,
+   "2019": 19.16,
+   "2020": 9.05,
+   "2021": 12.81,
+   "2022": 11.58
+  },
+  "uc_parca": {
+   "faiz_geliri_tl": 132521.49,
+   "islem_kari_tl": -5353.38,
+   "en_iyi_uc_olmadan_islem_kari_tl": 0.0,
+   "son_kasa_tl": 227168.11,
+   "yalniz_nakit_kasasi_tl": 234178.97,
+   "fark_tl": -7010.86
+  },
+  "motor": {
+   "dolum": 2,
+   "ortalama_R": -0.195
+  },
+  "sure_sn": 2.2,
+  "defter": "son 227168.11, nakit 234178.97, fark -7010.86, faiz 132521.49, işlem kârı -5353.38, en iyi 3 hariç 0.00, işlem 2"
+ }
+}
