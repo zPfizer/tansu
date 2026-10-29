@@ -54,7 +54,7 @@ class Kosu(NamedTuple):
         )
 
     def yil(self, y: int) -> "Kosu":
-        """Sinyal günü `y` takvim yılında olan dilim; yıl kuralının tek yeri."""
+        """Sinyal günü `y` takvim yılında olan dilim."""
         return self.kes(pd.Timestamp(y, 1, 1), pd.Timestamp(y, 12, 31))
 
     @property
