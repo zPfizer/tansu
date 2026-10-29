@@ -171,7 +171,7 @@ def test_ayarla_beklemedeki_stratejiyi_reddeder(ortam, tmp_path):
 
 
 def bayrak_tablosu(r, *, rastgele=None, p5=None, sakli=(), puan=None, semboller):
-    """Elle kurulmuş girdilerle `rapor.bayraklar`; {bayrak: (değer, N)}."""
+    """Elle kurulmuş girdilerle `rapor.bayrak_olc` ve `rapor.bayrak_satirlari`; [(değer, N)]."""
     n = len(r)
     mc = montecarlo.MonteCarlo(
         montecarlo.TOHUM,
@@ -187,14 +187,20 @@ def bayrak_tablosu(r, *, rastgele=None, p5=None, sakli=(), puan=None, semboller)
     p = np.array([np.nan if puan is None else puan])
     secim = ayar.Secim(0, {}, p, p, np.array([77]), puan is not None)
     gecmis = pd.DataFrame({"sembol": list(semboller), "R": list(semboller.values())})
-    sakli_kosu = sinama.Kosu(
-        pd.DataFrame({"R": list(sakli)}),
-        pd.DataFrame(columns=["sembol", "tarih"]),
-        Counter(),
-        "R",
+
+    def kosu(islemler):
+        return sinama.Kosu(
+            islemler, pd.DataFrame(columns=["sembol", "tarih"]), Counter(), "R"
+        )
+
+    olcum = rapor.bayrak_olc(
+        mc,
+        kosu(pd.DataFrame({"R": r})),
+        kosu(pd.DataFrame({"R": list(sakli)})),
+        kosu(gecmis),
+        secim,
     )
-    satirlar = rapor.bayraklar(mc, pd.DataFrame({"R": r}), sakli_kosu, gecmis, secim)
-    return [(r["Değer"], r["N"]) for r in satirlar]
+    return [(r["Değer"], r["N"]) for r in rapor.bayrak_satirlari(olcum, "R")]
 
 
 def test_bayraklar_olumlu_strateji():
