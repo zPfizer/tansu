@@ -3,6 +3,7 @@
 import datetime as dt
 import io
 import json
+import logging
 import os
 import re
 import time
@@ -22,6 +23,8 @@ OLAY_URL = (
 CEREZ_URL = KOK + "/tr-tr/analiz/hisse/Sayfalar/sirket-karti.aspx"
 KAPANAN_URL = "https://www.borsaistanbul.com/datum/IslemSirasiKapananSirketler.xls"
 USER_AGENT = "tansu-kisisel/0.1"
+ATLANAN_ESIK = 10  # bir sembolde en çok bu kadar gün atlanır
+LOG = logging.getLogger(__name__)
 
 # İş Yatırım alanı → proje adı. ham_* düzeltmesiz (HG), diğerleri düzeltilmiş (HGDG).
 ALANLAR = {
@@ -50,10 +53,14 @@ class KaynakHatasi(Exception):
     pass
 
 
+class SemaHatasi(KaynakHatasi):
+    pass
+
+
 def _sema(sembol, kayitlar, alanlar):
     eksik = set().union(*(alanlar - set(k) for k in kayitlar))
     if eksik:
-        raise KaynakHatasi(f"{sembol}: eksik alan {sorted(eksik)}")
+        raise SemaHatasi(f"{sembol}: eksik alan {sorted(eksik)}")
 
 
 class IsYatirim:
@@ -70,24 +77,57 @@ class IsYatirim:
         self._cerez = oturum is not None  # sahte oturumda çerez adımı yok
 
     def fiyat(self, sembol, bas, son) -> pd.DataFrame:
-        """Tek istek; başarısızsa yıl yıl. Kaynak bazı sembollerde uzun aralığa boş yanıt verir (ALARK, 26.10.2026)."""
-        try:
-            return self._fiyat(sembol, bas, son)
-        except KaynakHatasi:
-            if bas.year == son.year:
-                raise
-        parcalar = [
-            self._fiyat(
-                sembol, max(bas, dt.date(y, 1, 1)), min(son, dt.date(y, 12, 31))
+        """Tek istek; başarısızsa pencereyi önce yıllara, sonra yarıya böler, tek güne kadar.
+
+        Kaynak bazı sembollerde uzun aralığa boş yanıt verir (ALARK, 26.10.2026) ve penceresinde bozuk gün varsa
+        'value' vermez (INTEK, LRSHO, LYDHO, 29.10.2026). Yine alınamayan tek gün atlanır: gün `f.attrs["atlanan_gunler"]`
+        (ISO metin) ve uyarı kaydında bildirilir. `ATLANAN_ESIK`ten çok gün atlanırsa ya da hiç pencere alınamazsa
+        KaynakHatasi: ölü sembol binlerce istek yapmaz."""
+        atlanan, parcalar = [], []
+        self._topla(sembol, bas, son, atlanan, parcalar)
+        if not parcalar:
+            raise atlanan[0][1]
+        if len(parcalar) == 1:
+            f = parcalar[0]
+        else:
+            f = (
+                pd.concat([p for p in parcalar if not p.empty] or parcalar[:1])
+                .drop_duplicates("tarih")
+                .sort_values("tarih", kind="stable")
+                .reset_index(drop=True)
             )
-            for y in range(bas.year, son.year + 1)
-        ]
-        return (
-            pd.concat([p for p in parcalar if not p.empty] or parcalar[:1])
-            .drop_duplicates("tarih")
-            .sort_values("tarih", kind="stable")
-            .reset_index(drop=True)
-        )
+        if atlanan:
+            gunler = [g.isoformat() for g, _ in atlanan]
+            f.attrs["atlanan_gunler"] = gunler
+            LOG.warning(
+                "%s: kaynak %d günü vermedi, atlandı: %s", sembol, len(gunler), gunler
+            )
+        return f
+
+    def _topla(self, sembol, bas, son, atlanan, parcalar):
+        try:
+            parcalar.append(self._fiyat(sembol, bas, son))
+            return
+        except SemaHatasi:  # kaynak sözleşmesi bozuk: bozuk gün değil, bölünmez
+            raise
+        except KaynakHatasi as hata:
+            if bas >= son:
+                atlanan.append((bas, hata))
+                if len(atlanan) > ATLANAN_ESIK:
+                    raise KaynakHatasi(
+                        f"{sembol}: {ATLANAN_ESIK} günden çok gün alınamadı"
+                    ) from hata
+                return
+        if bas.year != son.year:
+            parca = [
+                (max(bas, dt.date(y, 1, 1)), min(son, dt.date(y, 12, 31)))
+                for y in range(bas.year, son.year + 1)
+            ]
+        else:
+            orta = bas + (son - bas) // 2
+            parca = [(bas, orta), (orta + dt.timedelta(1), son)]
+        for b, s in parca:
+            self._topla(sembol, b, s, atlanan, parcalar)
 
     def _fiyat(self, sembol, bas, son) -> pd.DataFrame:
         govde = self._iste(

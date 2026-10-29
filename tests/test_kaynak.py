@@ -2,6 +2,7 @@
 
 import ast
 import datetime as dt
+import logging
 import re
 from pathlib import Path
 
@@ -512,3 +513,70 @@ def test_uzun_aralik_bos_yanit_verirse_yil_yil_ister():
     f = k.fiyat("ALARK", dt.date(2024, 6, 1), dt.date(2025, 3, 1))
     assert list(f["tarih"].dt.strftime("%Y-%m-%d")) == ["2024-08-13", "2025-01-02"]
     assert k.oturum.cagri == 3
+
+
+class PencereOturum(SahteOturum):
+    """Pencerede bozuk gün varsa 'value' yok; yoksa her takvim günü için bir satır (29.10.2026: INTEK, LRSHO, LYDHO)."""
+
+    def __init__(self, bozuk):
+        super().__init__([])
+        self.bozuk = {dt.date.fromisoformat(g) for g in bozuk}
+
+    def get(self, url, params=None, json=None, timeout=None):
+        self.cagri += 1
+        bas, son = (
+            dt.datetime.strptime(params[a], "%d-%m-%Y").date()
+            for a in ("startdate", "enddate")
+        )
+        gunler = [bas + dt.timedelta(n) for n in range((son - bas).days + 1)]
+        if self.bozuk & set(gunler):
+            return Yanit(200, {})
+        return Yanit(
+            200,
+            {"value": [{**HAM, "HGDG_TARIH": g.strftime("%d-%m-%Y")} for g in gunler]},
+        )
+
+
+def _bozuk_gun_kaynagi(bozuk):
+    return kaynak.IsYatirim(
+        oturum=PencereOturum(bozuk), bekleme=0, deneme_bekleme=(0, 0, 0)
+    )
+
+
+def test_bozuk_gun_pencereyi_boler_gunu_atlar_ve_bildirir(caplog):
+    k = _bozuk_gun_kaynagi(["2023-03-15"])
+    with caplog.at_level(logging.WARNING, logger=kaynak.__name__):
+        f = k.fiyat("LRSHO", dt.date(2022, 12, 30), dt.date(2024, 1, 2))
+    # 2022'den 2 gün, 2023'ten 365 - 1 gün, 2024'ten 2 gün
+    assert len(f) == 368 and pd.Timestamp("2023-03-15") not in set(f["tarih"])
+    assert f["tarih"].is_monotonic_increasing and f["tarih"].is_unique
+    assert f.attrs["atlanan_gunler"] == ["2023-03-15"]
+    assert "LRSHO" in caplog.text and "2023-03-15" in caplog.text
+
+
+def test_bozuk_gunsuz_pencere_tek_istektir_ve_atlanan_yoktur():
+    k = _bozuk_gun_kaynagi([])
+    f = k.fiyat("THYAO", dt.date(2023, 3, 1), dt.date(2023, 3, 31))
+    assert len(f) == 31 and k.oturum.cagri == 1 and "atlanan_gunler" not in f.attrs
+
+
+def test_on_bozuk_gun_atlanir_on_birinci_sembolu_dusurur():
+    on = [f"2023-03-{g:02d}" for g in range(1, 11)]
+    f = _bozuk_gun_kaynagi(on).fiyat("X", dt.date(2023, 3, 1), dt.date(2023, 3, 31))
+    assert len(f) == 21 and len(f.attrs["atlanan_gunler"]) == 10
+    k = _bozuk_gun_kaynagi([*on, "2023-03-20"])
+    with pytest.raises(kaynak.KaynakHatasi):
+        k.fiyat("X", dt.date(2023, 3, 1), dt.date(2023, 3, 31))
+    assert k.oturum.cagri < 100  # ölü sembol binlerce istek yapmaz
+
+
+def test_butun_gunler_bozuksa_hata_verir():
+    gunler = [f"2023-03-{g:02d}" for g in range(1, 32)]
+    with pytest.raises(kaynak.KaynakHatasi):
+        _bozuk_gun_kaynagi(gunler).fiyat("X", dt.date(2023, 3, 1), dt.date(2023, 3, 31))
+
+
+def test_atlanan_gunler_onbellege_yazilip_okununca_korunur(tmp_path):
+    o = kaynak.Onbellekli(_bozuk_gun_kaynagi(["2023-03-15"]), tmp_path)
+    o.fiyat("LRSHO", dt.date(2023, 3, 1), dt.date(2023, 3, 31))
+    assert o.fiyat("LRSHO", None, None).attrs["atlanan_gunler"] == ["2023-03-15"]
