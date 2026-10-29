@@ -329,3 +329,50 @@ def _kayit(e: _Islem, gun: pd.DataFrame, cikis: Cikis, sembol, strateji, sinif) 
         "dolumda_stop": son_neden == "stop (dolumda)",
         "acik": son_neden == "açık",
     }
+
+
+def kayit_sutunlari(cikis: Cikis) -> dict[str, str]:
+    """İşlem kaydı sütunu -> boş kaydın dtype'ı, `_kayit` sırasıyla; `{hedef}_gun` sütunları `cikis.hedef`i izler."""
+    yazi, tarih, sayi, mantik = "str", "datetime64[us]", "float64", "bool"
+    return {
+        "strateji": yazi,
+        "sinif": yazi,
+        "sembol": yazi,
+        "sinyal_tarihi": tarih,
+        "giris_tur": yazi,
+        "seviye": sayi,
+        "dolum_tarihi": tarih,
+        "dolum_fiyati": sayi,
+        "durum": yazi,
+        "kural_durumu": yazi,
+        "tavan_kapanis": mantik,
+        "stop": sayi,
+        **dict.fromkeys(HEDEFLER, sayi),
+        "kismi": yazi,
+        **{f"{ad}_gun": sayi for ad, _ in cikis.hedef},
+        "stop_gun": sayi,
+        "cikis_tarihi": tarih,
+        "cikis_fiyati": sayi,
+        "cikis_nedeni": yazi,
+        "net_yuzde": sayi,
+        "R": sayi,
+        "tutma_gun": "int64",
+        **{f"getiri_{n}": sayi for n in ILERI_GUNLER},
+        "mfe_yuzde": sayi,
+        "mae_yuzde": sayi,
+        "mfe_R": sayi,
+        "mae_R": sayi,
+        "risk_tabanli": mantik,
+        "dolumda_stop": mantik,
+        "acik": mantik,
+    }
+
+
+def kayit_tablosu(kayitlar: list[dict], cikis: Cikis) -> pd.DataFrame:
+    """İşlem kaydı, her zaman bütün sütunlarla. Satırlarda dtype'ı pandas çıkarır: gün sütunları NaN yoksa int64'tür,
+    zorlanırsa csv "3" yerine "3.0" yazar. Boş kayıtta `kayit_sutunlari` dtype'ları."""
+    if kayitlar:
+        return pd.DataFrame(kayitlar)
+    return pd.DataFrame(
+        {c: pd.Series(dtype=t) for c, t in kayit_sutunlari(cikis).items()}
+    )

@@ -132,8 +132,6 @@ class Yuruyus:
 
 def egitim(islemler: pd.DataFrame, son: pd.Timestamp) -> pd.DataFrame:
     """İçeride kapanan kurulumlar (SPEC 5.7): sinyal ve çıkış `son`a kadar ve `acik` değil."""
-    if not len(islemler):
-        return islemler
     return islemler[
         (islemler["sinyal_tarihi"] <= son)
         & ~islemler["acik"].astype(bool)
@@ -179,9 +177,8 @@ def _adim(
     kosu = kosular[secim.nokta]
     ic = egitim(kosu.islemler, pencere.egitim_son)
     test = kosu.kes(pencere.test_bas, pencere.test_son)
-    ic_yillik = float(ic[olcu].sum()) / pencere.egitim_yil if len(ic) else 0.0
-    dis = test.islemler
-    dis_yillik = float(dis[olcu].sum()) / TEST_YIL if len(dis) else 0.0
+    ic_yillik = float(ic[olcu].sum()) / pencere.egitim_yil
+    dis_yillik = float(test.islemler[olcu].sum()) / TEST_YIL
     verim = dis_yillik / ic_yillik if secim.puanli and ic_yillik > 0 else None
     return Adim(pencere, secim, len(ic), ic_yillik, test, dis_yillik, verim)
 
