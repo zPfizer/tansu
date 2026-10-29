@@ -1,0 +1,23 @@
+{
+ "desen": {"pivotlar": ["sag_bar_12"], "tolerans": 0.05, "okuma": "oran", "gecerlilik": 20, "stop": "X", "rr_min": 1.4},
+ "cikis": {"tur": "iz", "iz_atr": 3, "acilis_stopu": true},
+ "boyut": {"risk": 0.05, "poz_ust": 0.33, "toplam_ust": 1.0, "nakit_yetmezse": "kucult", "likidite_pay": 0.1},
+ "nakit": {"faiz": true, "kesinti": 0.15},
+ "maliyet": {"komisyon": 0.001575, "kayma_tik": 1, "kayma_en_az": 0.001},
+ "kayit": {
+  "ad": "Gartley para ayarı (dondurulmuş, 29.10.2026)",
+  "ayar_donemi": "2015-01-01 - 2022-12-31 (2014 ısınma)",
+  "test_donemi": "2023-01-01 - 2025-12-31, bir kez",
+  "sermaye_tl": 100000,
+  "veri": "İş Yatırım günlük fiyat, bütün BIST (bugünkü kodlar + 2014'ten beri kapananlar), görüntü 20260101-0000, indirme 29.10.2026, 670 sembol, 2025-12-31'de kesik",
+  "veri_sha256": "33d6fd7e5f613209bc47a7d6d3d677e3742dbb807b603d924cd6dbc8d9f1c11e",
+  "faiz": "TCMB politika faizi değişim günleri, projedeki veri/ag/20261005-1949/faiz.parquet",
+  "faiz_sha256": "d1c45da232e620359a317a12e38536824d8f235fac13218a532f576e7d5f9168",
+  "motor": "yeniden-kurulus b9f6107, tansu/ paketi değişmeden",
+  "secim_kurali": "2015-2022 dönem sonu özkaynağı en yüksek, günlük düşüş %25'ten az; fark %0,5'ten azsa basit seçenek",
+  "denenen_ayar": 154,
+  "kosu": 252,
+  "ayar_sonucu_2015_2022_tl": 517831,
+  "ayar_dususu_2015_2022_yuzde": -12.03
+ }
+}
