@@ -7,7 +7,7 @@ Levent'in Ek B seçimleri (docs/SPEC.md). Bir satır: numara, seçim, tarih. Aja
 3. Akşam listesinde sınıf b: evet, ayrı "Aday listesi" bölümü. 26.10.2026 (varsayılan)
 4. Sınıf b liste çıkışı: raporda hesaplanır; sinyalde yalnız `tansu onayla --liste-cikisi` ile. 26.10.2026 (varsayılan)
 5. 30 dakika, saatlik, 4 saatlik kurallar: yalnız günlük sürümü olanlar; diğerleri beklemede. 26.10.2026 (varsayılan)
-6. Çift evreni: BIST 30, tarihine göre. 26.10.2026 (varsayılan)
+6. Çift evreni: bütün BIST; Levent 28.10.2026: "Zaten tüm stratejilerimizi bütün bir evreninde deneyeceğiz", "bir de evreni genişletelim sistematik şekilde". 29.10.2026 (Levent)
 7. Sinyal kanalı: Telegram. 26.10.2026 (varsayılan)
 8. Sadakat: seviyeler yalnız Tansu'nun kuralından; tespit değerleri varsayım. 26.10.2026 (varsayılan)
 9. Depo: etiketle ve dalda yeniden kur. 26.10.2026 (varsayılan)
