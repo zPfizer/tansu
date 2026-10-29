@@ -1,5 +1,6 @@
 import dataclasses
 import json
+from collections import Counter
 
 import numpy as np
 import pandas as pd
@@ -186,9 +187,13 @@ def bayrak_tablosu(r, *, rastgele=None, p5=None, sakli=(), puan=None, semboller)
     p = np.array([np.nan if puan is None else puan])
     secim = ayar.Secim(0, {}, p, p, np.array([77]), puan is not None)
     gecmis = pd.DataFrame({"sembol": list(semboller), "R": list(semboller.values())})
-    satirlar = rapor.bayraklar(
-        mc, pd.DataFrame({"R": r}), pd.DataFrame({"R": list(sakli)}), gecmis, secim
+    sakli_kosu = sinama.Kosu(
+        pd.DataFrame({"R": list(sakli)}),
+        pd.DataFrame(columns=["sembol", "tarih"]),
+        Counter(),
+        "R",
     )
+    satirlar = rapor.bayraklar(mc, pd.DataFrame({"R": r}), sakli_kosu, gecmis, secim)
     return [(r["Değer"], r["N"]) for r in satirlar]
 
 

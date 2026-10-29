@@ -144,7 +144,9 @@ def _tek_gun_kiyasi(atr_sifir_sablon: int = 0, kilit: bool = False):
             "R": np.full(sinama.EN_AZ, 1.0),
         }
     )
-    kosu = sinama.Kosu(gercek, pd.DataFrame(columns=["sembol", "tarih"]), Counter())
+    kosu = sinama.Kosu(
+        gercek, pd.DataFrame(columns=["sembol", "tarih"]), Counter(), "R"
+    )
     secim = ayar.Secim(
         0, {}, np.full(1, np.nan), np.full(1, np.nan), np.zeros(1), False
     )
