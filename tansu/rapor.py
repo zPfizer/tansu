@@ -99,14 +99,12 @@ def _eksen(izgara: ayar.Izgara, i: int) -> str:
 
 
 def _oran(deger: float, n: int, bicim: str = "{:.2f}") -> str:
-    """`sinama.EN_AZ` kurulumun altında `n/a (N = n)`; tanımsız değer `n/a`."""
     if n < sinama.EN_AZ:
         return f"n/a (N = {n})"
     return "n/a" if not np.isfinite(deger) else bicim.format(deger)
 
 
-def _ozet_satiri(o: sinama.Ozet, b: str) -> dict[str, str | int]:
-    """Dönem tablosunun bir sütunu; anahtar sırası satır sırasıdır."""
+def _ozet_sutunu(o: sinama.Ozet, b: str) -> dict[str, str | int]:
     n = o.dolum
     dusen = o.sinyal - n
     return {
@@ -262,7 +260,7 @@ def _evet(kosul: bool, deger: str) -> str:
 
 
 class Bayrak(enum.Enum):
-    """SPEC 5.9 bayrakları; tanım sırası tablo sırasıdır."""
+    """SPEC 5.9 bayrakları."""
 
     DIS_BEKLENTI = enum.auto()
     RASTGELE = enum.auto()
@@ -275,8 +273,6 @@ class Bayrak(enum.Enum):
 
 
 class Olcum(NamedTuple):
-    """Bir bayrağın kuralı, değeri ve N'si. `kosul` None: karar verilemez; metin bayraktan ve N'den gelir."""
-
     kosul: bool | None
     deger: float | None
     n: int
@@ -290,8 +286,8 @@ def bayrak_olc(
     gecmis: sinama.Kosu,
     son: ayar.Secim,
 ) -> dict[Bayrak, Olcum]:
-    """SPEC 5.9 bayrakları, her biri kendi N'siyle ve kendi koşusunun `olcu`suyla. `dis`: dikişli örneklem dışı,
-    `sakli`: saklı dönem, `gecmis`: yıl tablolarının koşusu; `son`: 31.12.2025 ayar seçimi."""
+    """SPEC 5.9 bayrakları. `dis`: dikişli örneklem dışı, `sakli`: saklı dönem, `gecmis`: yıl tablolarının koşusu;
+    `son`: 31.12.2025 ayar seçimi."""
     x = dis.islemler[dis.olcu]
     n = len(x)
 
@@ -330,7 +326,6 @@ def bayrak_olc(
 
 
 def bayrak_satirlari(olcum: dict[Bayrak, Olcum], b: str) -> list[dict]:
-    """Bayrak tablosu, `Bayrak` sırasıyla: {"Bayrak", "Değer", "N"}. Karar verilemeyen bayrak nedenini yazar."""
     satirlar = []
     for bayrak in Bayrak:
         o = olcum[bayrak]
@@ -436,7 +431,7 @@ def yaz(s: Sinama, kok: Path = RAPOR_KOKU) -> Path:
     olcu = strateji.olcu
     b = sinama.BIRIM[olcu]
     islemler = s.gecmis.islemler
-    donem = {ad: _ozet_satiri(o, b) for ad, o in sinama.donemler(s.gecmis).items()}
+    donem = {ad: _ozet_sutunu(o, b) for ad, o in sinama.donemler(s.gecmis).items()}
     hedefler = tuple(h for h, _ in strateji.cikis.hedef)
     nedenler = [{"Neden": k, "Adet": v} for k, v in sorted(s.gecmis.sayac.items()) if v]
     semboller = sinama.sembol_tablosu(islemler, olcu)
@@ -479,10 +474,10 @@ td,th{{border:1px solid #ccc;padding:3px 6px;font-size:13px;text-align:right}}th
 {isabet_bolumu}
 <h2>Izgara sonucu</h2>{_izgara_bolumu(y, b)}
 <h2>İleri yürüme</h2>{_yuruyus_tablosu(y, b)}
-<h2>Dikişli örneklem dışı (2023H1-2025H2)</h2>{_donem_tablosu({"Örneklem dışı": _ozet_satiri(y.dis_ornek.ozet(), b)})}
+<h2>Dikişli örneklem dışı (2023H1-2025H2)</h2>{_donem_tablosu({"Örneklem dışı": _ozet_sutunu(y.dis_ornek.ozet(), b)})}
 {ileri({"Örneklem dışı": y.dis_ornek})}
 <h2>Saklı dönem</h2><p>Sinyal tarihi {sakli_tarih}, yukarıdaki parametrelerle tek kesintisiz koşu.{sakli_notu}</p>
-{_donem_tablosu({"Saklı dönem": _ozet_satiri(s.sakli.ozet(), b)})}
+{_donem_tablosu({"Saklı dönem": _ozet_sutunu(s.sakli.ozet(), b)})}
 {ileri({"Saklı dönem": s.sakli})}
 <h2>Monte Carlo</h2>{_mc_bolumu(mc, strateji.sinif)}
 <h2>Bayraklar</h2><p><b>{ONAY_YOK}</b></p>{_tablo(bayrak)}

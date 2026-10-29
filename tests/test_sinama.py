@@ -74,7 +74,6 @@ def kayitlar(n):
 
 
 def kurulumlar(n):
-    """`kayitlar(n)` ve dönem özetinin okuduğu sütunlar."""
     return kayitlar(n).assign(
         tutma_gun=1,
         acik=False,
@@ -106,13 +105,13 @@ def test_ozet_yalniz_olcu_sutununu_okur():
 
 
 def test_rapor_satirlari_olcuyu_bugunku_metinle_yazar():
-    d = rapor._ozet_satiri(sinama.ozet(kurulumlar(3), 3, "net_yuzde"), "%")
+    d = rapor._ozet_sutunu(sinama.ozet(kurulumlar(3), 3, "net_yuzde"), "%")
     assert d["Toplam %"] == "1.00" and "Toplam R" not in d
     assert d["Beklenti (ortalama %)"] == "n/a (N = 3)"
     kayipsiz = kurulumlar(30).assign(R=np.arange(1.0, 31.0))
-    kazanc = rapor._ozet_satiri(sinama.ozet(kayipsiz, 30, "R"), "R")
+    kazanc = rapor._ozet_sutunu(sinama.ozet(kayipsiz, 30, "R"), "R")
     assert kazanc["Kâr faktörü"] == "n/a" and kazanc["Toplam R"] == "465.00"
-    bos = rapor._ozet_satiri(
+    bos = rapor._ozet_sutunu(
         sinama.ozet(islem.kayit_tablosu([], islem.Cikis()), 0, "R"), "R"
     )
     assert bos["Düşen"] == "0" and bos["Ortalama tutma günü"] == "-"
@@ -128,7 +127,6 @@ def test_rapor_satirlari_olcuyu_bugunku_metinle_yazar():
 
 
 def bayrak_olcumu(r, *, rastgele=None, p5=None, sakli=(), puan=None, semboller):
-    """Elle kurulmuş girdilerle `rapor.bayrak_olc`; ölçü R."""
     bos = pd.DataFrame(columns=["sembol", "tarih"])
 
     def kosu(islemler):

@@ -171,7 +171,6 @@ def test_ayarla_beklemedeki_stratejiyi_reddeder(ortam, tmp_path):
 
 
 def bayrak_tablosu(r, *, rastgele=None, p5=None, sakli=(), puan=None, semboller):
-    """Elle kurulmuş girdilerle `rapor.bayrak_olc` ve `rapor.bayrak_satirlari`; [(değer, N)]."""
     n = len(r)
     mc = montecarlo.MonteCarlo(
         montecarlo.TOHUM,

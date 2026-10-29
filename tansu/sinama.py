@@ -35,7 +35,7 @@ GECMIS = Donem(ILK_GIRIS, KESIM)
 
 
 class Ozet(NamedTuple):
-    """Bir dönemin SPEC 5.6 sayıları, `olcu` biriminde; N = `dolum`. NaN ya da inf: tanımsız."""
+    """Bir dönemin SPEC 5.6 sayıları."""
 
     sinyal: int
     dolum: int
@@ -160,7 +160,7 @@ def en_uzun_kayip(r: pd.Series) -> int:
 
 
 def ozet(islemler: pd.DataFrame, sinyal_n: int, olcu: str) -> Ozet:
-    """SPEC 5.6 ölçüleri, yalnız `olcu` sütunundan ("R" ya da "net_yuzde")."""
+    """SPEC 5.6 ölçüleri."""
     n = len(islemler)
     r = sirala(islemler)[olcu]
     kazanc, kayip = r[r > 0], r[r <= 0]
@@ -204,8 +204,6 @@ def donemler(k: Kosu) -> dict[str, Ozet]:
 
 
 class Isabet(NamedTuple):
-    """Bir hedefin isabeti; N = kurulum. Medyan gün, o sonuç hiç olmadıysa None."""
-
     hedef: str
     n: int
     ulasti: float
@@ -252,8 +250,6 @@ def sembol_tablosu(islemler: pd.DataFrame, olcu: str) -> pd.DataFrame:
 
 
 class Ileri(NamedTuple):
-    """Bir ileri getiri ufku (gün) ya da 10 günlük MFE/MAE; ikincisinde ortalama ve pozitif pay None."""
-
     ufuk: int | Literal["MFE", "MAE"]
     n: int
     ortalama: float | None
@@ -262,8 +258,7 @@ class Ileri(NamedTuple):
 
 
 def ileri_tablo(islemler: pd.DataFrame) -> list[Ileri]:
-    """Sınıf (b) ileri getiri tablosu (SPEC 5.2, 5.6): 1, 3, 5, 10 gün net % ve 10 günlük MFE/MAE medyanı.
-    Her ufuk kendi N'siyle sayılır (veri sonuna yakın dolumların ufku boştur)."""
+    """Sınıf (b) ileri getiri tablosu (SPEC 5.2, 5.6): 1, 3, 5, 10 gün net % ve 10 günlük MFE/MAE medyanı."""
     satirlar = []
     for gun in islem.ILERI_GUNLER:
         x = islemler[f"getiri_{gun}"].dropna()
