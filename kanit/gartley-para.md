@@ -33,9 +33,10 @@ bir kez koştu; ayar değişmedi. Çıktı: `kanit/gartley-para/test-sonuc.json`
   test tek koşudur).
 - Ortalama 0,744 R (motor), toplam 31,23 R.
 
-## Adım 1: teşhis
+## Adım 1: teşhis (huni 2021-2025, para hesabı 2023-2025)
 
-Kaynak: paper trade (risk %1, 2023-2025 yürüyen örneklem dışı 34 işlem) ve az-işlem raporu (29.10.2026).
+Kaynak: paper trade (risk %1, 2023-2025 yürüyen örneklem dışı 34 işlem) ve az-işlem raporu (29.10.2026). İlk madde
+2021-2025 hunisidir (35 işlem); kalan maddeler 2023-2025 paper trade'idir.
 
 - Neden az işlem: 2021-2025'te 4.050 X<B<C<A şeklinden AB/XA 0,618 ± %4 adımında 308'i kalır (%7,6). 235 sinyalin 176
   emri 5 günde dolmaz, 24'ü karantinadadır; 35 işlem kalır. Motor hatası yoktur.
@@ -79,7 +80,8 @@ fiyatıyla hesaplanıyordu (39 işlemin 2'si). Adet artık emir fiyatıyla hesap
 işlem kümesinin 51'i eşleşti), ama ızgaranın birincisi değişti. Bu yüzden seçim zinciri düzeltilmiş betikle baştan
 kuruldu. Sayılar ikinci turdandır.
 
-- Denenen ayrı varyant: 154; koşu: 252. İkinci tur ilk turun 92 koşusunu yeniden koştu ve 62 yeni koşu yaptı. Belge yazılırken bir kusur daha bulundu: çıkış TP seçilince ayarda kalan iz değeri de çalışıyordu. Etkilenen 6 kıyas koşusu düzeltilmiş betikle yeniden koştu; seçilen ayar iz stoplu olduğu için etkilenmedi (dondurma doğrulaması iki betikle de 517.831 TL).
+- Denenen ayrı varyant: 148; koşu: 252 (düzeltme 30.10.2026: önceki metin ve `ayar.json` içindeki
+  `kayit.denenen_ayar` 154 der; program 148 yazdırmıştı; `ayar.json` SHA ile dondurulduğu için değiştirilmedi). İkinci tur ilk turun 92 koşusunu yeniden koştu ve 62 yeni koşu yaptı. Belge yazılırken bir kusur daha bulundu: çıkış TP seçilince ayarda kalan iz değeri de çalışıyordu. Etkilenen 6 kıyas koşusu düzeltilmiş betikle yeniden koştu; seçilen ayar iz stoplu olduğu için etkilenmedi (dondurma doğrulaması iki betikle de 517.831 TL).
 - Son turda kalan farklar %1-2'dir; komşu ayarların oynaklığı (risk %3 / %4 / %5: 476.846 / 504.646 / 512.934 TL)
   bundan büyüktür. Arama burada durdu.
 
@@ -92,7 +94,7 @@ kuruldu. Sayılar ikinci turdandır.
 | Taban | dondurulmuş ayar (pivot 10, tolerans 0,04, 5 gün), risk %1, faiz yok, TP1/TP2 | 103.869 TL, 19 işlem, düşüş −%5,0 | |
 | Desen | 36 noktalı ürün ızgarası | pivot 12, tolerans 0,05, 20 gün: 121.102 TL, 50 işlem | tutuldu |
 | Kol 1 | dört pivot birleşimi | 120.838 TL (düşüş −%14,4) | bırakıldı |
-| Kol 1 | 7 günlük pivot da | 77.673 TL (düşüş −%41,2) | bırakıldı |
+| Kol 1 | 7 günlük pivot da (desen adımının 121.102 TL ayarına eklendi; son ayarda ölçülmedi) | 77.673 TL (düşüş −%41,2) | bırakıldı |
 | Kol 1 | oranın mutlak okunuşu | 122.235 TL; son turda 504.646 → 258.780 TL | ilk turda tutuldu, son turda bırakıldı |
 | Kol 1 | 4 saatlik grafik | veri yok | atlandı (engel) |
 | Kol 2 | risk %2-5, pozisyon üst sınırı %15-100, nakit yetmezse küçült | risk %4, poz %20, küçült: 161.747 TL (düşüş −%23,1); yalnız risk %2 bile −%27,2 | tutuldu |
@@ -143,10 +145,11 @@ $ python -X utf8 kanit/gartley-para/para.py ayar <gunler-2014-2025.pkl> <faiz.pa
 
 ## Denetim
 
-- Betik ilk hâliyle paper trade'in 2021-2025 sonucunu verdi: 130.720 TL (paper 130.729 TL; 9 TL fark açık pozisyonun
-  satış maliyeti düşülerek değerlenmesinden). Adet kuralı düzeltilince aynı koşu 128.258 TL verir: paper trade'in
+- Betik ilk hâliyle paper trade'in 2021-2025 sonucunu verdi: 130.720 TL (paper 130.729 TL; 9 TL farkın nedeni
+  dosyayla gösterilmedi). Adet kuralı düzeltilince aynı koşu 128.258 TL verir: paper trade'in
   boşluk dolumlarındaki adet hesabı küçük bir ileriye bakma içeriyordu.
-- Bağımsız inceleme (ayrı ajan, salt okuma, yalnız 2022 sonuna kadar veri): 39 işlemin her biri dolum, çıkış ve
+- Bağımsız inceleme (ayrı ajan, salt okuma, yalnız 2022 sonuna kadar veri; sonucu yalnız ajan mesajında kaldı, dosya
+  kanıtı yok; 30.10.2026 doğrulamasında altı kesim tarihinde 12 koşunun 12'si aynı çıktı): 39 işlemin her biri dolum, çıkış ve
   çıkıştan önceki gün kesilen veriyle aynı sonucu verdi; bütün evren 2016, 2018 ve 2020 sonunda kesilince kapanan
   işlemler aynı kaldı. Maliyet, kayma, nakit, düşüş ve süreç yamaları doğru bulundu. Bulunan iki kusur düzeltildi:
   boşluk dolumunda adet ve tek koşu kilidi (SHA sabiti, `open(..., "x")`, kod özeti). Önbellek anahtarına kod özeti
@@ -154,7 +157,7 @@ $ python -X utf8 kanit/gartley-para/para.py ayar <gunler-2014-2025.pkl> <faiz.pa
 
 ## Sınırlar
 
-- Aşırı uyum riski yüksektir: 154 varyant denendi; son ayar 8 yılda 50 işlemle seçildi. Komşu ayarlar arasında %5-50
+- Aşırı uyum riski yüksektir: 148 varyant denendi; son ayar 8 yılda 50 işlemle seçildi. Komşu ayarlar arasında %5-50
   fark var (ör. pozisyon üst sınırı %33 → 504.646 TL, %40 → 430.210 TL).
 - 2015-2022 sonucunun büyük kısmı 2022'den gelir (%135).
 - 50 işlemin bir kısmı fiyat düzeltmesi (temettü, bedelsiz) gününü kapsar; emir düzeltilmiş fiyatla modellendi.
