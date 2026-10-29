@@ -95,7 +95,7 @@ def test_tavansiz_satir_dolmayan_tavan_sinyalini_de_dusurur():
     assert (donem["Bütün yıllar"].sinyal, donem["Bütün yıllar"].dolum) == (3, 2)
     tavansiz = donem["Bütün yıllar, tavan kapanışsız"]
     assert (tavansiz.sinyal, tavansiz.dolum) == (1, 1)
-    assert rapor._ozet_sutunu(tavansiz, "R")["Düşen"] == "0"
+    assert rapor._ozet_sutunu(tavansiz, "R")["Düşen"] == "0 (0%)"
 
 
 def kayitlar(n):
