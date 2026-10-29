@@ -5,7 +5,6 @@ Ajan bu dosyaya yazar; Levent'in kararı gereken sorular "Levent" ile işaretlid
 ## Levent kararı bekleyenler
 
 1. Levent, Ek B #12 (kamu deposu içeriği): kural kartları, Tansu alıntıları, tweet kimlikleri ve `docs/SPEC.md` yerelde kalıyor. Seçenekler: (a) yerelde kalsın, (b) depo gizli olsun ve bunlar commit edilsin.
-2. Levent, Git geçmişi: PR 197'nin bir commit'i `tansu/gostergeler.py` içinde Tansu kodundan kısa bir parça taşıyor; bugünkü dosya temiz. Geçmişi temizlemek ortak dalda zorla itme (force-push) ister; Levent'in ayrı onayı gerekir.
 
 ## Gece 1 kayıtları (karar gerekmez)
 
@@ -32,6 +31,7 @@ Levent 29.10.2026: "bana olan soruların en mantıklı ve global olarak kabul ed
 - Likidite tabanı: yok. Gerekçe: Levent'in 28.10 kararı bütün evreni ister ve Tansu bütün BIST'i tarar. Endekslerin likidite elemesi (MSCI ve benzerleri) büyük tutarın alınıp satılabilmesi içindir; program adet ve tutar vermez. Sığ hisse riski SPEC 5.6 sembol tablosu ve %40 uyarısında görünür. Gartley ölçümünde kazanç her likidite basamağında artıydı (`kanit/faz5.md`).
 
 - Ek B #13 (`gartley` R/R kapısı), Levent 28.10.2026: "tansunun dediği gibi yap". Kapı Tansu'nun yazılı kuralıyla uygulanır: ödül hedef1'e, risk stopa göre ölçülür; oran 1,5'in altındaysa kurulum alınmaz. `rr_min` varsayılanı 1,5; elle verilebilen değerler kapalı, 1,5, 2 (ızgarada değil). Stop X iken oran her Gartley'de ≈ 1,40, X − 2 ATR iken daha düşüktür; bu yüzden `gartley` varsayılan ayarla hiç kurulum üretmez. Tansu'nun tarama tablolarında bu kurala uymayan kurulumlar var; kural metni esas alındı. Durum: aynı gün değişti (sonraki madde).
+- Git geçmişi, Levent 29.10.2026: "Kayıt geçmişinde kalan bir kod parçası varsa sil, kullanmıyorsak." PR 197'nin bir commit'i (e1bdb7d) `tansu/gostergeler.py` içinde Tansu kodundan kısa bir parça taşıyordu; parçayı hiçbir kod kullanmıyordu. `yeniden-kurulus` geçmişi yeniden yazıldı: 46 commit yeni SHA aldı, son ağaç aynı kaldı, parçayı taşıyan commit daldan çıktı. Zorla itmeyi (force-push) Levent 29.10.2026'da kendisi yaptı. Eski ve yeni SHA eşlemesi `kanit/sha-esleme.md`. GitHub eski commit'leri PR başlarında (`refs/pull/*`) tutar; bunları yalnız GitHub Destek silebilir, başvurulmadı. Durum: yapıldı.
 - Ek B #13 güncel karar, Levent 28.10.2026: "o da uygulamıyorsa zaten esnedebilirsin", "1,30-1,42 arasında deniyelim". Kapı hedef1'e göre 1,40; Tansu'nun kendi kurulumları 1,30-1,42'dir. `rr_min` varsayılanı 1,4; seçenekler kapalı, 1,4, 1,5, 2. Durum: uygulandı (#204, kanıt `kanit/faz5.md`). Levent 29.10.2026'da `stratejiler/sahip-kararlari.md` 13. satırının bu kararla güncellenmesini istedi; satır güncellendi.
 
 Levent 28.10.2026: "Tansuya göre cevaplanması gerekiyor bu soruların". Gartley teşhisindeki sorular Tansu'nun kendi metinleriyle cevaplandı (alıntılar yerel kayıtta, Ek B #12 ara kuralı):
