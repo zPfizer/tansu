@@ -76,7 +76,7 @@ def tavansiz_satir_icin_piyasa():
     return piyasa
 
 
-def test_tavansiz_satir_dolmayan_tavan_sinyalini_de_dusurur():
+def ilk_gun_limit_stratejisi():
     cikis = islem.Cikis("dokunus", (("hedef1", 0.5), ("hedef2", 0.5)))
 
     def hesapla(gun, p):
@@ -91,8 +91,25 @@ def test_tavansiz_satir_dolmayan_tavan_sinyalini_de_dusurur():
         ]
         return s
 
-    strateji = Strateji("t", "giris", "a", "gunluk", (), (), {}, {}, (), cikis, hesapla)
-    k = sinama.calistir(strateji, tavansiz_satir_icin_piyasa(), {}, sinama.GECMIS)
+    return Strateji("t", "giris", "a", "gunluk", (), (), {}, {}, (), cikis, hesapla)
+
+
+def test_uye_olmayan_gundeki_sinyal_ne_sinyal_ne_islem_olur():
+    dolan = tavansiz_satir_icin_piyasa()["siradan"]
+    piyasa = {"uye": dolan.copy(), "disari": dolan.copy()}
+    piyasa["disari"].iloc[0, piyasa["disari"].columns.get_loc("uye")] = False
+
+    k = sinama.calistir(ilk_gun_limit_stratejisi(), piyasa, {}, sinama.GECMIS)
+
+    assert list(k.sinyaller["sembol"]) == ["uye"]
+    assert list(k.islemler["sembol"]) == ["uye"]
+    assert sum(k.sayac.values()) == 0
+
+
+def test_tavansiz_satir_dolmayan_tavan_sinyalini_de_dusurur():
+    k = sinama.calistir(
+        ilk_gun_limit_stratejisi(), tavansiz_satir_icin_piyasa(), {}, sinama.GECMIS
+    )
     donem = sinama.donemler(k)
 
     assert (donem["Bütün yıllar"].sinyal, donem["Bütün yıllar"].dolum) == (3, 2)
