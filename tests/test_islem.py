@@ -381,7 +381,27 @@ def test_sablon_oyna_fiyatsiz_ertesi_gun_atlanir_ilk_fiyatli_gunun_aofundan_dola
         )
 
 
-def test_gun_uygun_ve_dolum_gunu_motorun_piyasa_dolum_kuraliyla_ayni():
+@pytest.mark.parametrize(
+    ("kapanis", "aof", "beklenen"),
+    [
+        (
+            [11, np.nan, 11, 11, np.nan, 11],
+            [11, 11, np.nan, 11, 11, 11],
+            [3, 3, 3, 5, 5, 6],
+        ),
+        ([11, np.inf, 11], [11, 11, 11], [2, 2, 3]),
+    ],
+    ids=["nan", "inf"],
+)
+def test_dolum_gunu_sonraki_ilk_sonlu_kapanisli_ve_aofli_gun(kapanis, aof, beklenen):
+    g = gun_tablosu(kapanis, aof=aof)
+    s = piyasa(g)
+    assert islem.Gun(g, s).dolum_gunu.tolist() == beklenen
+    (k,), _ = kos_b(g, s)
+    assert k["dolum_tarihi"] == g.index[beklenen[0]]
+
+
+def test_gun_uygun_motorun_piyasa_dolum_kuraliyla_ayni():
     rng = np.random.default_rng(7)
     for _ in range(50):
         n = 12
@@ -393,7 +413,7 @@ def test_gun_uygun_ve_dolum_gunu_motorun_piyasa_dolum_kuraliyla_ayni():
         g["atr"] = rng.choice([0.1, 0.0, np.nan], n, p=[0.8, 0.1, 0.1])
         s = piyasa(g, giris=range(n))
         motor = islem.Gun(g, s)
-        uygun, dolum_gunu = motor.uygun, motor.dolum_gunu
+        uygun = motor.uygun
         for t in range(n):
             e, _ = islem.oyna(motor, t, s.iloc[t], CIKIS_B, 0.0, Counter())
             red = islem._red_nedeni(s.iloc[t], g.iloc[t], False, CIKIS_B)
@@ -403,8 +423,6 @@ def test_gun_uygun_ve_dolum_gunu_motorun_piyasa_dolum_kuraliyla_ayni():
                 and g["atr"].iat[t] > 0
                 and e is not None
             )
-            if uygun[t]:
-                assert e.dolum_i == dolum_gunu[t]
 
 
 def test_hedef_yok_yalniz_hedef_listesi_doluysa_sayilir():
