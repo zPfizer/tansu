@@ -1,0 +1,77 @@
+{
+ "etiket": "Y1",
+ "pkl": "gunler-2014-2025-A.pkl",
+ "pdf_sha256": "3e8f2dc61aa124ba55c1eec781b13f691747ef4f1577601d277b96df570ab955",
+ "sembol": 321,
+ "huni": {
+  "desen": 1196,
+  "onaydan önce X ya da C aşıldı": 44,
+  "onayda 100 mum": 93
+ },
+ "sinyal": 1002,
+ "sonuc": {
+  "dolumdan önce yüksek > C (emir düştü)": 347,
+  "dolum": 279,
+  "X'ten 100 mumdan fazla (emir düştü)": 67,
+  "kalite kuralı (karantina)": 301,
+  "veri sonunda bekleyen emir": 8
+ },
+ "n": 279,
+ "hafta": 135,
+ "ort_R": 0.4198204645289431,
+ "ortanca_R": -1.0327508855481602,
+ "p_tek_yonlu": 0.0055,
+ "ort_R_yuzde_5_95": [
+  0.1398531020385706,
+  0.6944747733389035
+ ],
+ "cikis_nedeni": {
+  "hedef1": 117,
+  "stop (açılış)": 36,
+  "stop": 118,
+  "açık": 4,
+  "stop (dolumda)": 4
+ },
+ "taban_bagladi": 6,
+ "ort_R_ham": 0.4303287665764222,
+ "ort_R_motor_kaymasiz": 0.5000169864912862,
+ "para": {
+  "son": 552975,
+  "yillik_bilesik_yuzde": 23.84,
+  "en_kotu_dusus_yuzde": -41.75,
+  "dusus_tepe": "2017-11-01",
+  "dusus_dip": "2019-08-16",
+  "islem": 199,
+  "kazanan_yuzde": 42.2,
+  "islem_kari_tl": 398597,
+  "kaybeden_islemler_tl": -313690,
+  "faiz_geliri_tl": 54378,
+  "atlanan": {
+   "atlandı: adet 0": "71"
+  },
+  "acik_gun_payi_yuzde": 93.9,
+  "ort_hissede_pay_yuzde": 54.2,
+  "yillik_getiri_yuzde": {
+   "2015": -14.38,
+   "2016": 37.12,
+   "2017": 31.29,
+   "2018": -27.63,
+   "2019": 22.61,
+   "2020": 94.5,
+   "2021": 4.88,
+   "2022": 98.2
+  },
+  "uc_parca": {
+   "faiz_geliri_tl": 54377.73,
+   "islem_kari_tl": 398597.32,
+   "en_iyi_uc_olmadan_islem_kari_tl": 297431.62,
+   "son_kasa_tl": 552975.04,
+   "yalniz_nakit_kasasi_tl": 234178.97,
+   "fark_tl": 318796.07
+  },
+  "motor": {
+   "dolum": 270,
+   "ortalama_R": 0.46
+  }
+ }
+}

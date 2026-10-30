@@ -1,0 +1,88 @@
+{
+ "aday": "S2-Z",
+ "grup": "ayrik",
+ "pdf_sha256": "3e8f2dc61aa124ba55c1eec781b13f691747ef4f1577601d277b96df570ab955",
+ "gecme": {
+  "1_ortR_pozitif_ve_p": true,
+  "2_en_iyi_uc_olmadan_islem_kari_pozitif": false,
+  "3_son_kasa_nakit_ustu": false,
+  "k": 5,
+  "baraj_p": 0.01,
+  "EVET": false
+ },
+ "ozet": {
+  "aday": "S2-Z",
+  "grup": "ayrik",
+  "sembol": 185,
+  "huni": {
+   "desen": 386,
+   "onaydan önce X ya da C aşıldı": 12,
+   "onayda 100 mum": 20
+  },
+  "sinyal": 331,
+  "sonuc": {
+   "dolumdan önce yüksek > C (emir düştü)": 121,
+   "dolum": 101,
+   "kalite kuralı (karantina)": 78,
+   "X'ten 100 mumdan fazla (emir düştü)": 29,
+   "veri sonunda bekleyen emir": 2
+  },
+  "n": 101,
+  "hafta": 69,
+  "ort_R": 0.7895366657975826,
+  "ortanca_R": -1.1179773377871494,
+  "p_tek_yonlu": 0.0076,
+  "ort_R_yuzde_5_95": [
+   0.2480376357217695,
+   1.350070157323197
+  ],
+  "cikis_nedeni": {
+   "hedef1": 31,
+   "stop": 51,
+   "stop (açılış)": 19
+  },
+  "taban_bagladi": 4,
+  "ort_R_ham": 0.7633382441416225,
+  "ort_R_motor_kaymasiz": 0.8820788912470773,
+  "para": {
+   "son": 217314,
+   "yillik_bilesik_yuzde": 10.19,
+   "en_kotu_dusus_yuzde": -28.5,
+   "dusus_tepe": "2021-01-20",
+   "dusus_dip": "2021-10-06",
+   "islem": 89,
+   "kazanan_yuzde": 28.1,
+   "islem_kari_tl": 52025,
+   "kaybeden_islemler_tl": -144920,
+   "faiz_geliri_tl": 65289,
+   "atlanan": {
+    "atlandı: adet 0": "9"
+   },
+   "acik_gun_payi_yuzde": 78.1,
+   "ort_hissede_pay_yuzde": 32.1,
+   "yillik_getiri_yuzde": {
+    "2015": -7.62,
+    "2016": 6.87,
+    "2017": 14.57,
+    "2018": -1.71,
+    "2019": 18.35,
+    "2020": -1.69,
+    "2021": -2.57,
+    "2022": 72.43
+   },
+   "uc_parca": {
+    "faiz_geliri_tl": 65288.57,
+    "islem_kari_tl": 52025.11,
+    "en_iyi_uc_olmadan_islem_kari_tl": -22351.7,
+    "son_kasa_tl": 217313.69,
+    "yalniz_nakit_kasasi_tl": 234178.97,
+    "fark_tl": -16865.28
+   },
+   "motor": {
+    "dolum": 98,
+    "ortalama_R": 0.882
+   }
+  },
+  "sure_sn": 2.2
+ }
+}
