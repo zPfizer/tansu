@@ -431,6 +431,24 @@ def test_limit_bazi_onceki_gunun_ham_kapanisidir_karantinali_gun_de_baz_olur(tmp
     assert a.gun_tablosu["tavan"].iloc[2] == pytest.approx(165.0)
 
 
+@pytest.mark.parametrize(
+    "ilk_gun, iki_seans", [("2015-11-23", True), ("2015-11-30", False)]
+)
+def test_tek_seans_oncesi_seans_basina_yuzde_on(tmp_path, ilk_gun, iki_seans):
+    # 30.11.2015 öncesi iki seans, seans başına ±%10 (BİST duyurusu 11699; SPEC 3.9 istisnası, Levent 30.10.2026).
+    # 11 → 13,31 (+%21, iki tavan üst üste) aşım değildir; ±%10'da H = L kapanış kilittir; +%25 yine aşımdır.
+    # Tek seansta (±%20) aynı yol: +%21 aşım, ±%10 kilit değil.
+    tarihler = pd.bdate_range(ilk_gun, periods=5)
+    fiyat = [
+        satir(t, p, p)
+        for t, p in zip(tarihler, [10.0, 11.0, 13.31, 11.98, 14.975], strict=True)
+    ]
+    g = anlik(tmp_path, fiyat=fiyat, olay=[]).gun_tablosu
+    assert g["karantina"].tolist() == [False, False, not iki_seans, False, True]
+    assert g["kilit_tavan_duyarli"].tolist() == [False, iki_seans, False, False, False]
+    assert g["kilit_taban_duyarli"].tolist() == [False, False, False, iki_seans, False]
+
+
 def test_dort_ondaliga_yuvarli_dusuk_fiyatli_kapanis_bozuk_sayilmaz(tmp_path):
     # TASARIM 5.13: HGDG_KAPANIS 4 ondalığa yuvarlı, HGDG_MIN ve HGDG_MAX değil. Gerçek veri AKFGY 17.01.2014: ham
     # kapanış = ham düşük = 1,19; düzeltilmiş kapanış 0,4082 < düzeltilmiş düşük 0,408246 (fark 0,000046). Bağıl
