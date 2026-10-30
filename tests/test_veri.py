@@ -436,13 +436,14 @@ def test_limit_bazi_onceki_gunun_ham_kapanisidir_karantinali_gun_de_baz_olur(tmp
 )
 def test_tek_seans_oncesi_seans_basina_yuzde_on(tmp_path, ilk_gun, iki_seans):
     # 30.11.2015 öncesi iki seans, seans başına ±%10 (BİST duyurusu 11699; SPEC 3.9 istisnası, Levent 30.10.2026).
-    # 11 → 13,31 (+%21, iki tavan üst üste) aşım değildir; ±%10'da H = L kapanış kilittir; +%25 yine aşımdır.
-    # Tek seansta (±%20) aynı yol: +%21 aşım, ±%10 kilit değil.
+    # 11 → 13,31 (+%21: ilk seans 12,10 tavanında, ikinci seans onun +%10'unda) aşım değildir; ±%10'da H = L kapanış
+    # kilittir; +%25 yine aşımdır. Tek seansta (±%20) aynı yol: +%21 aşım, ±%10 kilit değil.
     tarihler = pd.bdate_range(ilk_gun, periods=5)
     fiyat = [
         satir(t, p, p)
         for t, p in zip(tarihler, [10.0, 11.0, 13.31, 11.98, 14.975], strict=True)
     ]
+    fiyat[2] |= {"ham_dusuk": 12.10, "dusuk": 12.10}
     g = anlik(tmp_path, fiyat=fiyat, olay=[]).gun_tablosu
     assert g["karantina"].tolist() == [False, False, not iki_seans, False, True]
     assert g["kilit_tavan_duyarli"].tolist() == [False, iki_seans, False, False, False]
