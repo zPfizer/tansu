@@ -106,9 +106,7 @@ def test_atr_bas_nan_satirlar_tohum_n_1_konumunda_nan_atlanarak():
 
 def test_piyasa_durumu_kapanis_sma_ustunde_mi():
     # SMA(2): [nan, 1,5, 2,5, 2,5, 1,5]; 2 > 1,5 evet; 3 > 2,5 evet; 2 > 2,5 hayır; 1 > 1,5 hayır; ilk gün SMA yok -> hayır.
-    from tansu.gostergeler import piyasa_durumu
-
-    assert list(piyasa_durumu(pd.Series([1.0, 2.0, 3.0, 2.0, 1.0]), 2)) == [
+    assert list(gostergeler.piyasa_durumu(pd.Series([1.0, 2.0, 3.0, 2.0, 1.0]), 2)) == [
         False,
         True,
         True,

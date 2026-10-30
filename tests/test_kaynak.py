@@ -6,6 +6,7 @@ import logging
 import re
 from pathlib import Path
 
+import borsapy
 import pandas as pd
 import pytest
 import requests
@@ -519,8 +520,6 @@ def test_hicbir_modul_yahoo_yfinance_tradingview_ithal_etmez_ve_cagirmaz():
 def test_sirket_kodlari_borsapy_sirket_listesinden_ticker_sutununu_dondurur(
     monkeypatch,
 ):
-    import borsapy
-
     monkeypatch.setattr(
         borsapy, "companies", lambda: pd.DataFrame({"ticker": ["AAA", "BBB"]})
     )
