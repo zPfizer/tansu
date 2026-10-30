@@ -64,6 +64,27 @@ def boz(a: veri.Anlik, k, tohum) -> veri.Anlik:
     return veri.Anlik(a.kimlik, f, a.olaylar)
 
 
+def test_yukleyici_kesilen_ya_da_bozulan_gelecekte_gecmis_gun_tablosunu_degistirmez():
+    # Olay karşılaştırması kilit, tavan kapanışı ve ATR sütunlarını ancak bir işlem o güne denk gelirse görür.
+    tablolar = {f"R{j}": rastgele_tablo(j, n=400, bas=BAS) for j in (1, 2)}
+    a = anlik(tablolar)
+    tam = sinama.gunler(a)
+    takvim = pd.DatetimeIndex(sorted(a.fiyat["tarih"].unique()))
+    kilit_oncesi = {
+        takvim[max(takvim.get_loc(d) - 1, 0)]
+        for g in tablolar.values()
+        for d in g.index[g["kilit_tavan"] | g["kilit_taban"]]
+    }
+    assert kilit_oncesi
+    for j, k in enumerate(sorted(kilit_oncesi | set(takvim[40::50]))):
+        for tur, kesik_anlik in (("silme", sil(a, k)), ("çöp", boz(a, k, j))):
+            kesik = sinama.gunler(kesik_anlik)
+            for s in tam:
+                pd.testing.assert_frame_equal(
+                    kesik[s].loc[:k], tam[s].loc[:k], obj=f"{s} {k.date()} {tur}"
+                )
+
+
 def olaylar(kosu: sinama.Kosu, k) -> tuple[list, set]:
     """k'ye kadarki sinyaller ve dolum, kısmi çıkış ve çıkış olayları. Kesik koşunun `açık` işareti olay değildir."""
     s = kosu.sinyaller

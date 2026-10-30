@@ -9,7 +9,10 @@ Kullanım:
 taban ve baş aynı girdiyi görür. Ürün yolu: `veri.Anlik` -> `tansu.__main__.main`; kendi yükleyicisi yoktur. Senaryo
 başına çıktı: her adımın argv'si, dönüş kodu, stdout, stderr ve senaryonun yazdığı bütün dosyalar. `ayarla` json'undaki
 kod sürümü sabitlenir (git SHA'sı kökten köke değişir); json ve rapordaki tarih o günün tarihidir, iki koşu aynı gün
-yapılmalıdır."""
+yapılmalıdır.
+
+Ağ yalnız 15 senaryonun çalıştırdığı yolları görür. Eşit dokunuş ve dolum günü hedefi gibi kenar kurallarda fark vermez
+(30.10 inceleme); onları tests/test_referans_motor.py korur."""
 
 import contextlib
 import dataclasses
@@ -43,6 +46,9 @@ def yukle(kok: Path):
     sentetik = importlib.util.module_from_spec(tanim)
     tanim.loader.exec_module(sentetik)
     ayar = importlib.import_module("tansu.ayar")
+    for ad in ("ISCI", "kod_surumu"):
+        if not hasattr(ayar, ad):  # ad değişirse sabitleme sessizce boşa düşmesin
+            raise SystemExit(f"tansu.ayar.{ad} yok: kurulum/esdeger.py güncellenmeli")
     ayar.ISCI = 1
     ayar.kod_surumu = lambda: "esdeger"
     return komut, sentetik

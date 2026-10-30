@@ -128,7 +128,30 @@ def referans_motor(gun: pd.DataFrame, sinyal: pd.DataFrame, cikis: islem.Cikis):
             pay * (f - giris - (giris + f) * MALIYET) for _, f, pay, _ in parcalar
         )
         son_gun, son_fiyat, _, neden = parcalar[-1]
+        dolum = poz["dolum"]
+        ileri = {}
+        for n in (1, 3, 5, 10):  # SPEC 5.2: dolumdan sonraki n. günün kapanışına net %
+            c = kap[dolum + n] if dolum + n < len(kap) else math.nan
+            ileri[f"getiri_{n}"] = (c - giris - (giris + c) * MALIYET) / giris * 100
+        tam = dolum + 10 < len(kap)  # MFE/MAE yalnız dolumdan sonraki tam 10 günde
+        tepe = uc(yuk, dolum + 1, dolum + 11, max) if tam else None
+        dip = uc(dus, dolum + 1, dolum + 11, min) if tam else None
+        mfe = math.nan if tepe is None else tepe - giris
+        mae = math.nan if dip is None else giris - dip
         return {
+            **ileri,
+            "mfe_yuzde": mfe / giris * 100,
+            "mae_yuzde": mae / giris * 100,
+            "mfe_R": mfe / risk,
+            "mae_R": mae / risk,
+            "tutma_gun": son_gun - dolum,
+            "stop_gun": son_gun - dolum if neden.startswith("stop") else math.nan,
+            **{
+                f"{ad}_gun": next(
+                    (g - dolum for g, _, _, n in parcalar if n == ad), math.nan
+                )
+                for ad, _ in cikis.hedef
+            },
             "sinyal_tarihi": tarih[t],
             "dolum_tarihi": tarih[poz["dolum"]],
             "dolum_fiyati": giris,
@@ -274,6 +297,17 @@ TAM_ALANLAR = [
     "risk_tabanli",
     "dolumda_stop",
     "acik",
+    "tutma_gun",
+]
+YAKIN_ALANLAR = [
+    "R",
+    "net_yuzde",
+    *(f"getiri_{n}" for n in (1, 3, 5, 10)),
+    "mfe_yuzde",
+    "mae_yuzde",
+    "mfe_R",
+    "mae_R",
+    "stop_gun",
 ]
 
 
@@ -293,7 +327,7 @@ def test_motor_bagimsiz_dolum_referansiyla_ayni_islemleri_ve_red_sayilarini_veri
                 assert {a: m[a] for a in TAM_ALANLAR} == {
                     a: r[a] for a in TAM_ALANLAR
                 }, durum
-                for a in ("R", "net_yuzde"):
+                for a in YAKIN_ALANLAR + [f"{ad}_gun" for ad, _ in cikis.hedef]:
                     assert m[a] == pytest.approx(
                         r[a], rel=1e-12, abs=1e-12, nan_ok=True
                     ), durum
@@ -431,14 +465,10 @@ def referans_gartley(gun: pd.DataFrame, p, kapsam: Counter) -> dict[int, dict]:
     return sonuc
 
 
-def gartley_tablosu(tohum):
-    return rastgele_tablo(tohum, n=1500)
-
-
 @pytest.mark.parametrize("k", [3, 5, 15])
 def test_sag_bar_pivotlari_kaba_kuvvet_pencere_taramasiyla_ayni(k):
     for tohum in GARTLEY_TOHUMLARI:
-        g = gartley_tablosu(tohum)
+        g = rastgele_tablo(tohum, n=1500)
         motor = [
             (p.tur, p.pivot_gun, p.onay_gun, p.fiyat)
             for p in yapi.sag_bar_pivotlari(g["yuksek"], g["dusuk"], k)
@@ -468,7 +498,7 @@ def test_gartley_bagimsiz_bulucuyla_ayni_gun_ve_seviyeleri_verir(
     p = {**SABIT["gartley"], "pivot": pivot, "rr_min": rr_min, "stop": stop}
     sayi, kapsam = 0, Counter()
     for tohum in GARTLEY_TOHUMLARI:
-        g = gartley_tablosu(tohum)
+        g = rastgele_tablo(tohum, n=1500)
         s = gartley.STRATEJI.sinyal(g, p)
         motor = {
             int(t): {

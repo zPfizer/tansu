@@ -4,14 +4,14 @@ Tarih: 30.10.2026. Dal: `retro-motor-testleri` (taban `origin/yeniden-kurulus` 1
 
 ## Neden
 
-28.10'da Gartley varsayılanı (rr_min 1.5) 13.068 sinyalden 0 kurulum verdi; dört test dosyası düzeltilerek geçirildi ve sıfır kurulumu kimse görmedi. Motor riskini bulan denetimler yalnız `%TEMP%` altındaydı. Bu çalışma onları tohumlu, sentetik testlere taşır. `tansu/` değişmedi.
+28.10'da Gartley varsayılanı (rr_min 1.5) her kurulumu eledi (stop X ile hedef1 oranı her kurulumda 1,403; `kanit/faz5.md` "Kapı"); dört test dosyası düzeltilerek geçirildi (PR 202, b99aef7) ve sıfır kurulumu kimse görmedi. Motor riskini bulan denetimler yalnız `%TEMP%` altındaydı. Bu çalışma onları tohumlu, sentetik testlere taşır. `tansu/` değişmedi.
 
 ## Yapılanlar
 
 - `tests/sentetik.py`: `SABIT` (her stratejinin `varsayilan` anahtarlarıyla sabit test parametreleri), `YOLLAR`, `rastgele_tablo` (kuruşa yuvarlı yürüyüş, fiyatsız günler, tavan ve taban kilidi; `veri` yükleyicisi kilitleri aynı görür), `gartley_tekrar`, `anlik` (gün tablolarından `veri.Anlik`).
 - `tests/test_varsayilan.py`: varsayılanlara bakan tek test. Varsayılan okuyan testler artık `SABIT` okur (test_gartley, test_gelecek_kesim, test_sina, test_altin_gartley, test_motor_yuzeyi).
 - `tests/test_referans_motor.py`: SPEC 5.1-5.4'ten yazılmış dolum ve çıkış referansı (günleri bir kez yürüyen durum makinesi) ile `islem.simule`, bağımsız Gartley bulucusu ile `gartley.STRATEJI.sinyal`, kaba kuvvet pivot taraması ile `yapi.sag_bar_pivotlari`, 2^k fiyat ölçeği.
-- `tests/test_gelecek_kesim.py` (eski `test_gelecek.py`, `git mv`): strateji düzeyinde kesme ve ürün yükleyicisinden geçen kesme ve çöp kontrolü.
+- `tests/test_gelecek_kesim.py` (eski `test_gelecek.py`; içerik çok değiştiği için Git bunu silme ve ekleme gösterir): strateji düzeyinde kesme, ürün yükleyicisinden geçen olay kontrolü (kesme ve çöp) ve `sinama.gunler` gün tablosunun bütün sütunlarıyla kesme ve çöp kontrolü.
 - `kurulum/esdeger.py`: iki kod kökünün `sina` ve `ayarla` çıktısını 15 senaryoda karşılaştırmak için eşdeğerlik ağı.
 
 ## Kırmızı ve yeşil kanıt
@@ -125,13 +125,48 @@ tamam: 15 senaryo -> C:\Users\levent\AppData\Local\Temp\esdeger-deneme-w7cuvys0\
 deneme: iki koşu aynı (74 dosya)
 ```
 
-Süre 52 s.
+Süre 52 s (inceleyicinin koşusunda 66 s).
+
+## İnceleme turu (PR 273)
+
+Bağımsız inceleme iki engelleyici eksik buldu; ikisi de düzeltildi, ekimler yeniden koşuldu.
+
+Gelecek kontrolü yalnız olayları karşılaştırıyordu; `veri.gunluk` `kilit_taban` ve `tavan_kapanis` için `| ....shift(-1)` ve `sinama.gunler` ATR'si için `.shift(-1)` yeşil kalıyordu. Yeni test `test_yukleyici_kesilen_ya_da_bozulan_gelecekte_gecmis_gun_tablosunu_degistirmez`, `sinama.gunler` çıktısını bütün sütunlarıyla, her kilit gününden bir önceki günde ve 50 günde bir kesip bozarak karşılaştırır (1,7 s). Üç ekim:
+
+```
+E           AssertionError: R1 2021-02-22 silme.iloc[:, 9] (column name="kilit_taban") are different
+E           AssertionError: R1 2021-01-14 silme.iloc[:, 10] (column name="tavan_kapanis") are different
+E   AssertionError: R1 2021-02-22 silme.iloc[:, 14] (column name="atr") are different
+```
+
+Referans motor `getiri_*`, MFE/MAE (% ve R), `tutma_gun`, `stop_gun` ve hedef günlerini karşılaştırmıyordu; artık karşılaştırır. `islem.py` ekimleri:
+
+```
+getiri günü bir kaydı (e.dolum_i + n + 1):
+E                       assert np.float64(1.5366021017927025) == 0.6519477642695216 ± 1.0e-12
+MFE/MAE penceresi bir gün geç başladı (e.dolum_i + 2):
+E                       assert np.float64(-1...9254069647686) == 1.5454358128992376 ± 1.5e-12
+```
+
+`kurulum/esdeger.py` için kırma kanıtı yoktu (eşit dokunuş ve dolum günü hedefi ekimleri fark vermedi; sınır betiğin açıklamasına yazıldı). Kopya kökte limit dolumu ertesi günün dibine baktırıldı; temiz ve ekimli kök ayrı koşuldu (iki koşu 50 s):
+
+```
+$ diff -rq temiz ekim | wc -l
+27
+Files .../temiz/01-gartley-sina/adim0.txt and .../ekim/01-gartley-sina/adim0.txt differ
+Files .../temiz/01-gartley-sina/dosyalar/rapor/gartley/islemler.csv and .../ekim/01-gartley-sina/dosyalar/rapor/gartley/islemler.csv differ
+```
+
+`esdeger.py` artık `tansu.ayar.ISCI` ya da `kod_surumu` yoksa durur (ad değişirse sabitleme sessizce boşa düşmesin).
+
+Kapanmayan boşluk: `gartley.py` CD üst toleransı `(1 + tol)` → `(1 + tol / 2)` ekimi yeşil kalır (inceleyicinin koşusu); rastgele yürüyüş CD kenarına nadiren düşer. BC kenarı yakalanır.
 
 ## Bütün takım
 
 ```
 Önce (112bb4a):  368 passed, 1 skipped, 2 warnings in 27.39s
 Sonra:           388 passed, 1 skipped, 2 warnings in 53.43s
+İnceleme turu:   389 passed, 1 skipped, 2 warnings in 48.61s (yerel koşular 46-72 s arasında oynar)
 $ .venv\Scripts\python.exe -X utf8 -m ruff check tansu tests kurulum
 All checks passed!
 $ .venv\Scripts\python.exe -X utf8 -m ruff format --check tansu tests kurulum
@@ -142,7 +177,7 @@ Atlanan: `test_altin_gartley` (bu çalışma kopyasında yerel veri yok). En yav
 
 ## Gözlemler
 
-- Ürün SPEC'ten ayrılmadı: dolum referansı 12 tohum x 3 çıkış biçiminde, Gartley referansı 20 yürüyüş x 8 parametre setinde ürünle aynı.
+- Referanslar ürünle aynı sonucu verdi: dolum referansı 12 tohum x 3 çıkış biçiminde, Gartley referansı 20 yürüyüş x 8 parametre setinde. SPEC'in sustuğu yerlerde referans ürünün kayıtlı kararlarını izler: dolum ve çıkış için `tests/test_islem.py` test adları; Gartley'de A, B ve C'nin kendi bacağının ucu olması (`yapi.bacak_uclari`). Yerel kural kartı yalnız X kırılmasını yazar. Bu kurallarda farkın olmaması, ürünün SPEC'e uyduğunu değil iki yazımın aynı kararı uyguladığını gösterir.
 - `dolumdan önce stop altında kapanış` limit emrinde oluşamaz: stop seviyenin altındadır, kilitsiz günde stopun altındaki kapanış emri önce doldurur. Kapsam iddiası bu nedeni istemez.
 - `sag_bar` pivotlarında aynı gün tekrarı (`tekrar`) oluşmaz: her onay gününde en çok bir tepe onaylanır. Referans kuralı taşır; sayı sıfırda eşittir.
 - Stop X iken hedef1 oranı her kurulumda yaklaşık 1.403'tür; rr_min 1.4 hiçbir kurulumu elemez. Kapı yalnız X-2ATR ile kurulum eler; testin o seti kapı reddini ister.
