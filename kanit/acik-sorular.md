@@ -4,7 +4,7 @@ Ajan bu dosyaya yazar; Levent'in kararı gereken sorular "Levent" ile işaretlid
 
 ## Levent kararı bekleyenler
 
-1. Levent, Ek B #12 (kamu deposu içeriği): kural kartları, Tansu alıntıları, tweet kimlikleri ve `docs/SPEC.md` yerelde kalıyor. Seçenekler: (a) yerelde kalsın, (b) depo gizli olsun ve bunlar commit edilsin.
+1. Levent, Ek B #12 (kamu deposu içeriği): kural kartları, Tansu alıntıları, tweet kimlikleri ve `docs/SPEC.md` yerelde kalıyor. Seçenekler: (a) yerelde kalsın, (b) depo gizli olsun ve bunlar commit edilsin. Ek bilgi (30.10.2026): varsayılan dal `main` açık ve izlenen 38 dosyası aynı içeriği taşır (tweet kimlikleri `docs/kurallar/`, kasa yolları `docs/agents/`; `git grep`, 30.10.2026). Bu yüzden `tests/test_acik_depo.py` yalnız bu daldadır; (a) seçilirse `main` de temizlenmeli.
 
 ## Gece 1 kayıtları (karar gerekmez)
 
@@ -31,7 +31,14 @@ Ajan bu dosyaya yazar; Levent'in kararı gereken sorular "Levent" ile işaretlid
 - Fonksiyon içi import CI'da yasak (ruff `PLC0415`). `borsapy` artık `tansu/kaynak.py`'nin başında içe aktarılır; bozuk bir borsapy kurulumu artık yalnız `tansu veri`'yi değil her komutu ve `tansu.veri`'yi içe aktaran her betiği durdurur. Açılış süresi iki kez ölçüldü (`import tansu.__main__`, 3 koşunun ortancası): 0,70 sn'den 0,77 sn'ye ve 0,57 sn'den 0,71 sn'ye; borsapy'nin payı 0,17-0,21 sn.
 - Veri kalite kapıları (`Anlik.sorunlar`: karantina payı, olay denetimi, eksik sembol sayısı) `veri.py`'de duruyor, ama bugün hiçbir komut bunları değerlendirmiyor. SPEC 3.9 kuralların değişmeden kalmasını ister, hangi komutun değerlendireceğini söylemez; SPEC 6 adım 1 akşam taramasında eksik sembolleri "veri eksik" diye listeler. `tansu tara` (9. faz) yazılırken bakılacak.
 
-## Verilen kararlar
+## Ortam kayıtları (karar gerekmez)
+
+Retro 30.10.2026 (2), Levent: "12 bulgunun hepsinin çözülmesini ve bir daha yaşanmamasını istiyorum." Ajan kararları:
+
+- "Ortam ve teslim" bloğu kasa yolunu yazmaz. `AGENTS.md` açık depodadır; Ek B #12 ara kuralı ve `tests/test_acik_depo.py` kullanıcı klasörünü ve kasa adını yasaklar. Mutlak havuz yolu `docs/SPEC.md` 17. satırda kalır; blok o satırı gösterir.
+- Uzun kimlik deseni: 15 ve daha uzun rakam dizisi yalnız tek başına durursa kimliktir. Ondalık kesir ve SHA içindeki rakamlar sayılmaz; düz desen bugünkü ağaçta 5 dosyada yanlış bulgu veriyordu (`git grep`, 30.10.2026). Bulgu satırı değeri yazmaz, çünkü CI günlüğü de açıktır.
+- `ci` yalnız `.md` değişen PR'da atlanır. `testler` hiçbir dalda zorunlu durum denetimi değil (`gh api repos/zPfizer/tansu/branches/main/protection`: `required_status_checks` yok; `yeniden-kurulus` korumasız; 30.10.2026). Açık depo taraması ve PR iddia denetimi `denetim` iş akışında her PR'da koşar. `main`'e bu atlama eklenmedi: orada `tests/` altında 17 dosya `.md` adını anar (`grep -l`, 30.10.2026) ve `test_sahipler.py`, `test_atif.py`, `test_havuz.py` belgeleri okuyup denetler.
+- `main`'in eski belgeleri 1.877 eski havuz adı taşır (kasa 30.10.2026'da notları başlığa göre yeniden adlandırdı). `main` testleri bu adları beynin yeniden adlandırma kaydıyla çözer; belge metni değişmedi, çünkü `main` eski projedir ve eski belge kanıt değildir (Evidence rules 2).
 
 - Evren, Levent 28.10.2026: "Zaten tüm stratejilerimizi bütün bir evreninde deneyeceğiz." Bütün stratejiler bütün BIST'te sınanır: bugünkü KAP şirket listesi ve verinin başladığı 01.01.2019'dan beri işlemi kapanan kodlar; kapanan hisseler sınamada kalır (hayatta kalan yanlılığı yok). Kaynakta fiyatı olmayan kod işlem gören pay değildir, düşer. Bir sembol kaynakta satırı olan her gün evrendedir (`uye`). BIST 30 üyelik tablosu adlı katman olarak kalır. Sıra: (1) evren tanımı, (2) artımlı `tansu veri`, (3) ayrı işteki veri yolu kusurları, (4) bütün stratejilerde `tansu ayarla` yeniden, eski ve yeni sayılar `kanit/evren.md`. Saklı dönem ayara girmez. Durum: yapılıyor. SPEC (yerel) yaması SPEC sahibine verildi. Levent 29.10.2026'da `stratejiler/sahip-kararlari.md` 6. satırının (çift evreni) bütün BIST diye düzeltilmesini istedi ("Evet, düzelt"); satır güncellendi.
 
