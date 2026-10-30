@@ -1,5 +1,6 @@
 """Sınama raporu: `rapor/<ad>/sinama.html`, `ozet.md`, `islemler.csv` (SPEC 5.6, 5.10). Grafikler satır içi SVG."""
 
+import datetime as dt
 import enum
 import html
 from dataclasses import dataclass
@@ -45,6 +46,43 @@ class Sinama:
     sakli_son: pd.Timestamp
     sinanan: int
     mc: montecarlo.MonteCarlo
+
+
+def hazirla(
+    strateji: Strateji,
+    gunler: sinama.Gunler,
+    *,
+    kimlik: str,
+    sinanan: int,
+    ayarla: bool,
+    okunan: ayar.Okunan | None,
+) -> Sinama:
+    """Izgara, Monte Carlo, parametre seçimi, geçmiş ve saklı dönem koşusu. Dosya yazmaz."""
+    yuruyus = ayar.yuru(strateji, gunler)
+    mc = montecarlo.hesapla(strateji, gunler, yuruyus)
+    if ayarla:
+        p, ayar_tarihi = yuruyus.son.parametre, dt.date.today().isoformat()
+    elif okunan:
+        p, ayar_tarihi = okunan.parametreler, okunan.tarih
+    else:
+        p, ayar_tarihi = dict(strateji.varsayilan), None
+    gecmis = sinama.calistir(strateji, gunler, p, sinama.GECMIS)
+    sakli_son = sinama.sakli_son(gunler)
+    sakli = sinama.calistir(
+        strateji, gunler, p, sinama.Donem(sinama.ILK_GIRIS, sakli_son)
+    ).kes(sinama.SAKLI_BAS, sakli_son)
+    return Sinama(
+        strateji=strateji,
+        parametre=p,
+        ayar_tarihi=ayar_tarihi,
+        kimlik=kimlik,
+        gecmis=gecmis,
+        yuruyus=yuruyus,
+        sakli=sakli,
+        sakli_son=sakli_son,
+        sinanan=sinanan,
+        mc=mc,
+    )
 
 
 def _tablo(satirlar: list[dict] | pd.DataFrame) -> str:
