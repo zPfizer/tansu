@@ -1,4 +1,5 @@
 import dataclasses
+import datetime as dt
 import json
 from collections import Counter
 
@@ -143,6 +144,38 @@ def test_ayarla_puanli_secimle_ayarlandi_yapar_sinyaldeyse_onay_ister(
     assert "Parametreler (ayarlı" in html and "saklı döneme ulaşmıyor" not in html
     assert "Rastgele giriş kıyası" in html and "yüzdelik" in html
     assert "rastgele giriş yüzdeliği n/a" not in capsys.readouterr().out
+
+
+def test_hazirla_parametreyi_kaynagina_gore_secer_ve_dosya_yazmaz(
+    tmp_path, monkeypatch
+):
+    monkeypatch.chdir(tmp_path)
+    kesisim = dataclasses.replace(
+        STRATEJILER["ortalama-kesisim"],
+        varsayilan={"ortalama": "SMA", "cift": "9/21", "teyit_gun": 0},
+        aralik={"teyit_gun": (0, 2)},
+    )
+    gunler = piyasa(sembol=2)
+    ortak = {"kimlik": "t", "sinanan": 1}
+
+    ayarli = rapor.hazirla(kesisim, gunler, ayarla=True, okunan=None, **ortak)
+    assert ayarli.parametre == ayarli.yuruyus.son.parametre
+    assert ayarli.ayar_tarihi == dt.date.today().isoformat()
+    assert (ayarli.kimlik, ayarli.sinanan) == ("t", 1)
+
+    okunan = ayar.Okunan(
+        {"ortalama": "SMA", "cift": "9/21", "teyit_gun": 2}, "2026-01-02"
+    )
+    kayitli = rapor.hazirla(kesisim, gunler, ayarla=False, okunan=okunan, **ortak)
+    assert (kayitli.parametre, kayitli.ayar_tarihi) == (
+        okunan.parametreler,
+        "2026-01-02",
+    )
+
+    varsayilan = rapor.hazirla(kesisim, gunler, ayarla=False, okunan=None, **ortak)
+    assert varsayilan.parametre == kesisim.varsayilan
+    assert varsayilan.ayar_tarihi is None
+    assert not list(tmp_path.iterdir())
 
 
 def test_sina_bozuk_jsonu_izgaradan_once_reddeder(ortam, tmp_path, monkeypatch):

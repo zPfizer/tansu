@@ -12,7 +12,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from tansu import ayar, kaynak, montecarlo, rapor, sinama, veri
+from tansu import ayar, kaynak, rapor, sinama, veri
 from tansu.stratejiler import STRATEJILER
 
 VERI_KOKU = Path("veri")
@@ -122,49 +122,37 @@ def _kos(a, *, ayarla: bool) -> int:
                 f"tansu ayarla: {a.ad} beklemede; önce taslak olmalı", file=sys.stderr
             )
             return 1
-        okunan = None if ayarla else ayar.oku(strateji)  # bozuk json ızgaradan önce
+        okunan = None if ayarla else ayar.oku(strateji)
         anlik = son_anlik(a.kok)
-        gunler = sinama.gunler(anlik)
-        yuruyus = ayar.yuru(strateji, gunler)
-        mc = montecarlo.hesapla(strateji, gunler, yuruyus)
-        if ayarla:
-            p, ayar_tarihi = yuruyus.son.parametre, dt.date.today().isoformat()
-        elif okunan:
-            p, ayar_tarihi = okunan.parametreler, okunan.tarih
-        else:
-            p, ayar_tarihi = dict(strateji.varsayilan), None
-        gecmis = sinama.calistir(strateji, gunler, p, sinama.GECMIS)
-        sakli_son = sinama.sakli_son(gunler)
-        sakli = sinama.calistir(
-            strateji, gunler, p, sinama.Donem(sinama.ILK_GIRIS, sakli_son)
-        ).kes(sinama.SAKLI_BAS, sakli_son)
-        yol = rapor.yaz(
-            rapor.Sinama(
-                strateji=strateji,
-                parametre=p,
-                ayar_tarihi=ayar_tarihi,
-                kimlik=anlik.kimlik,
-                gecmis=gecmis,
-                yuruyus=yuruyus,
-                sakli=sakli,
-                sakli_son=sakli_son,
-                sinanan=sum(
-                    r["durum"] not in ("taslak", "beklemede") or r["ad"] == a.ad
-                    for r in satirlar
-                ),
-                mc=mc,
-            )
+        s = rapor.hazirla(
+            strateji,
+            sinama.gunler(anlik),
+            kimlik=anlik.kimlik,
+            sinanan=sum(
+                r["durum"] not in ("taslak", "beklemede") or r["ad"] == a.ad
+                for r in satirlar
+            ),
+            ayarla=ayarla,
+            okunan=okunan,
         )
+        yol = rapor.yaz(s)
         json_yolu = None
         if ayarla:  # json rapordan sonra: yarıda kalan koşu onaysız parametre bırakmaz
-            json_yolu = ayar.yaz(strateji, yuruyus.son, veri_kimligi=anlik.kimlik)
-            yeni = "ayarlandi" if yuruyus.son.puanli else "yetersiz-ornek"
+            json_yolu = ayar.yaz(strateji, s.yuruyus.son, veri_kimligi=s.kimlik)
+            yeni = "ayarlandi" if s.yuruyus.son.puanli else "yetersiz-ornek"
             durum = durum_gecisi(a.ad, set(DURUMLAR) - {"beklemede"}, yeni)
         else:
             durum = durum_gecisi(a.ad, {"taslak"}, "sinandi")
     except veri.VeriHatasi as hata:
         print(f"tansu {komut}: {hata}", file=sys.stderr)
         return 1
+    gecmis, yuruyus, sakli, sakli_son, mc = (
+        s.gecmis,
+        s.yuruyus,
+        s.sakli,
+        s.sakli_son,
+        s.mc,
+    )
     olcu = strateji.olcu
     b = sinama.BIRIM[olcu]
     son, iz = yuruyus.son, yuruyus.izgara
