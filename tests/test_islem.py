@@ -352,17 +352,17 @@ def test_sablon_oyna_gercek_kurulumun_sablonuyla_simule_ile_ayni():
     (k,), _ = kos(g, s)
     assert k["kismi"] and k["cikis_nedeni"] == "hedef2"
     (sablon,) = islem.sablonlar(pd.DataFrame([k]), g["atr"].to_numpy()[:1])
-    uygun, dolum_gunu = islem.piyasa_gunleri(g)
-    assert uygun[0] and dolum_gunu[0] == 1
+    motor = islem.Gun(g, s)
+    assert motor.uygun[0] and motor.dolum_gunu[0] == 1
     for olcu in ("R", "net_yuzde"):
-        assert islem.sablon_oyna(
-            islem.Gun(g, s), 0, 1, sablon, CIKIS, olcu
-        ) == pytest.approx(k[olcu])
+        assert islem.sablon_oyna(motor, 0, sablon, CIKIS, olcu) == pytest.approx(
+            k[olcu]
+        )
     g.iloc[1, g.columns.get_loc("kilit_tavan")] = True
-    assert not islem.piyasa_gunleri(g)[0][0]
+    assert not islem.Gun(g, s).uygun[0]
 
 
-def test_piyasa_gunleri_motorun_piyasa_dolum_kuraliyla_ayni():
+def test_gun_uygun_ve_dolum_gunu_motorun_piyasa_dolum_kuraliyla_ayni():
     rng = np.random.default_rng(7)
     for _ in range(50):
         n = 12
@@ -374,7 +374,7 @@ def test_piyasa_gunleri_motorun_piyasa_dolum_kuraliyla_ayni():
         g["atr"] = rng.choice([0.1, 0.0, np.nan], n, p=[0.8, 0.1, 0.1])
         s = piyasa(g, giris=range(n))
         motor = islem.Gun(g, s)
-        uygun, dolum_gunu = islem.piyasa_gunleri(g)
+        uygun, dolum_gunu = motor.uygun, motor.dolum_gunu
         for t in range(n):
             e, _ = islem.oyna(motor, t, s.iloc[t], CIKIS_B, 0.0, Counter())
             red = islem._red_nedeni(s.iloc[t], g.iloc[t], False, CIKIS_B)

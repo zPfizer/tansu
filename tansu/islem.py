@@ -210,25 +210,6 @@ def _doldur(e: _Islem, i: int, fiyat: float) -> _Islem:
     return e
 
 
-def piyasa_gunleri(gun: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
-    """(uygun, dolum_gunu): t rastgele `piyasa` sinyal günü olabilir mi; t'den sonraki ilk fiyatlı gün, yoksa len(gun).
-
-    `_emir_gunu` piyasa kuralının vektörel kopyası."""
-    yok = len(gun)
-    fiyatli = np.append(
-        np.flatnonzero(gun["kapanis"].notna() & gun["aof"].notna()), yok
-    )
-    dolum_gunu = fiyatli[np.searchsorted(fiyatli, np.arange(yok), side="right")]
-    kilit = np.append(gun["kilit_tavan"].to_numpy(bool), True)
-    uygun = (
-        gun["uye"].to_numpy(bool)
-        & ~gun["karantina"].to_numpy(bool)
-        & (gun["atr"].to_numpy(float) > 0)
-        & ~kilit[dolum_gunu]
-    )
-    return uygun, dolum_gunu
-
-
 def sablonlar(kurulumlar: pd.DataFrame, atr: np.ndarray) -> np.ndarray:
     """(m, 5) ATR katı uzaklıklar [stop, hedef1..hedef4], satır sırasıyla; `atr` satırların sinyal günü ATR'si. NaN hedef = yok."""
     dolum = kurulumlar["dolum_fiyati"].to_numpy(float)
@@ -240,12 +221,11 @@ def sablonlar(kurulumlar: pd.DataFrame, atr: np.ndarray) -> np.ndarray:
     )
 
 
-def sablon_oyna(
-    g: Gun, t: int, j: int, sablon: np.ndarray, cikis: Cikis, olcu: str
-) -> float:
-    """Rastgele giriş kıyası (SPEC 5.8 madde 3): t günü sinyal veren, j günü AOF'den dolan `piyasa` kurulumunun `olcu` değeri.
+def sablon_oyna(g: Gun, t: int, sablon: np.ndarray, cikis: Cikis, olcu: str) -> float:
+    """Rastgele giriş kıyası (SPEC 5.8 madde 3): t günü sinyal veren, dolum gününün AOF'sinden dolan `piyasa` kurulumunun `olcu` değeri.
 
-    Stop ve hedefler dolumdan `sablon` x ATR(t) uzakta. Ön koşul: `piyasa_gunleri` t'yi uygun bulur, j onun dolum günüdür."""
+    Stop ve hedefler dolumdan `sablon` x ATR(t) uzakta. Ön koşul: `g.uygun[t]`."""
+    j = int(g.dolum_gunu[t])
     d = sablon * g.atr[t]
     dolum = g.aof[j]
     satir = {

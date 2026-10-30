@@ -122,10 +122,7 @@ def _rastgele(
                 motor[anahtar] = islem.Gun(g, strateji.sinyal(g, p))
             m = motor[anahtar]
             pencere = (g.index >= a.pencere.test_bas) & (g.index <= a.pencere.test_son)
-            secenekler += [
-                (m, int(t), int(m.dolum_gunu[t]))
-                for t in np.flatnonzero(m.uygun & pencere)
-            ]
+            secenekler += [(m, int(t)) for t in np.flatnonzero(m.uygun & pencere)]
         atr = np.array(
             [
                 gunler[s].at[t, "atr"]
@@ -148,9 +145,9 @@ def _rastgele(
                 rng.integers(0, len(sablonlar), m),
                 strict=True,
             ):
-                g, t, dolum_i = secenekler[i]
+                g, t = secenekler[i]
                 toplam += islem.sablon_oyna(
-                    g, t, dolum_i, sablonlar[j], strateji.cikis, strateji.olcu
+                    g, t, sablonlar[j], strateji.cikis, strateji.olcu
                 )
         ortalamalar[kosu] = toplam / n
     alti = (ortalamalar < strateji_ort).sum() + 0.5 * (
