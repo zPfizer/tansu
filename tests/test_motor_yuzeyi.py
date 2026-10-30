@@ -1,4 +1,4 @@
-"""`kanit/` altındaki Gartley betikleri motorun bu adlarını kullanır; adlar, imzalar ve çağrı düzeni bozulursa bu testler kırılır."""
+"""`kanit/` altındaki Gartley betikleri motorun bu adlarını kullanır."""
 
 from collections import Counter
 
@@ -12,7 +12,6 @@ from tests.test_islem import CIKIS, maliyetli, sinyal
 
 
 def tablo(gunler=(0,), uye_degil=()):
-    """Gün 0 sinyali gün 1'de dolar ve gün 3'te kapanır; sonra üç sakin gün gelir."""
     g = gun_tablosu(
         [11, 10.2, 12.2, 13.2, 13.2, 11, 11, 11],
         yuksek=[11.1, 10.5, 12.5, 13.5, 13.3, 11.05, 11.05, 11.05],
