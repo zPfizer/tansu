@@ -2,6 +2,7 @@ import dataclasses
 import datetime as dt
 import json
 import os
+from html import escape as html_kacis
 from pathlib import Path
 
 import pandas as pd
@@ -20,6 +21,9 @@ from tests.sentetik import (
     ortalama_yolu,
     piyasa,
 )
+
+
+TEMIZ = sinama.VeriKapisi(0.0, 0.0, 0, (), ())
 
 
 def sentetik_anlik(yol=None):
@@ -74,6 +78,31 @@ def test_sina_raporu_yazar_ve_durumu_sinandi_yapar(ortam, tmp_path, capsys):
         assert baslik in html
     ozet = (tmp_path / "rapor" / "gartley" / "ozet.md").read_text(encoding="utf-8")
     assert tohum in ozet and "örnek az (N = 0)" in ozet
+
+
+@pytest.mark.parametrize(
+    ("bozuk", "beklenen"),
+    [
+        (0, "Veri kapısı: temiz. Karantina oranı 0.00% (eşik 1%)"),
+        (2, "Veri kapısı: SORUNLU (karantina oranı > %1). Karantina oranı 1.65%"),
+    ],
+)
+def test_sina_veri_kapisi_kalsa_da_raporu_yazar_ve_sorunlu_der(
+    ortam, tmp_path, monkeypatch, capsys, bozuk, beklenen
+):
+    """TASARIM 5.13: karantina hisse-gün oranı %1'i aşarsa koşu yine yazılır, rapor SORUNLU der ve oranları yazar.
+    Retro 30.10 bulgu 2: kapı `veri.py`'de vardı ama hiçbir komut onu çağırmıyordu."""
+    ortam("gartley")
+    g = gun_tablosu(gartley_yolu(), bas="2022-01-03")
+    kotu = g.index[100 : 100 + bozuk]
+    g.loc[kotu, "kapanis"] = g.loc[kotu, "yuksek"] + 1  # kapanış > yüksek: satır ihlali
+    monkeypatch.setattr(komut, "son_anlik", lambda kok: anlik({"AKBNK": g}))
+    assert main(["sina", "gartley"]) == 0
+    assert beklenen in capsys.readouterr().out
+    klasor = tmp_path / "rapor" / "gartley"
+    assert beklenen in (klasor / "ozet.md").read_text(encoding="utf-8")
+    html = (klasor / "sinama.html").read_text(encoding="utf-8")
+    assert html_kacis(beklenen) in html
 
 
 def test_sina_sinif_b_ileri_getiri_tablosu_ve_yuzde_birimi_yazar(
@@ -261,7 +290,7 @@ def test_hazirla_parametreyi_kaynagina_gore_secer_ve_dosya_yazmaz(
         aralik={"teyit_gun": (0, 2)},
     )
     gunler = piyasa(sembol=2)
-    ortak = {"kimlik": "t", "sinanan": 1}
+    ortak = {"kimlik": "t", "kapi": TEMIZ, "sinanan": 1}
 
     ayarli = rapor.hazirla(kesisim, gunler, ayarla=True, okunan=None, **ortak)
     assert ayarli.parametre == ayarli.yuruyus.son.parametre
@@ -294,6 +323,7 @@ def kesisim_sinamasi(tmp_path, monkeypatch):
         kesisim,
         piyasa(sembol=2),
         kimlik="t",
+        kapi=TEMIZ,
         sinanan=1,
         ayarla=True,
         okunan=None,
@@ -320,7 +350,7 @@ def test_konsol_rastgele_giris_yoksa_raporla_ayni_nedeni_yazar(
 def test_konsol_olcu_satirlarini_sinamadan_uretir(tmp_path, monkeypatch):
     s = kesisim_sinamasi(tmp_path, monkeypatch)
     satirlar = rapor.konsol(s)
-    assert len(satirlar) == 5
+    assert len(satirlar) == 6
     assert "ızgara 2 nokta, puanlı 2" in satirlar[1]
     assert s.sakli_var and satirlar[3].startswith("saklı dönem ")
     assert satirlar[4].startswith("Monte Carlo: tohum ")
