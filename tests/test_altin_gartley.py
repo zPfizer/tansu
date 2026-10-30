@@ -8,6 +8,7 @@ import pytest
 from tansu import veri
 from tansu.__main__ import son_anlik
 from tansu.stratejiler import gartley
+from tests.sentetik import SABIT
 
 ALTIN = Path("tests/altin/gartley.csv")
 VERI = Path("veri")
@@ -20,7 +21,7 @@ def test_soke_gartley_seviyeleri_yerel_veride_bulunur():
     olgu = pd.read_csv(ALTIN).set_index("nokta")["fiyat"]
     gonderi = pd.Timestamp(pd.read_csv(ALTIN)["gonderi_tarihi"].iloc[0])
     gun = veri.gunluk(son_anlik(VERI), "SOKE")
-    s = gartley.STRATEJI.sinyal(gun, {"rr_min": "kapali"})  # seviye olgusu; kapı ayrı
+    s = gartley.STRATEJI.sinyal(gun, SABIT["gartley"])  # seviye olgusu; kapı ayrı
     once = s[s["giris"] & (s.index <= gonderi)]
     assert len(once), "gönderi tarihine kadar SOKE kurulumu yok"
     r = once.iloc[-1]

@@ -31,6 +31,18 @@ Ajan bu dosyaya yazar; Levent'in kararı gereken sorular "Levent" ile işaretlid
 - Fonksiyon içi import CI'da yasak (ruff `PLC0415`). `borsapy` artık `tansu/kaynak.py`'nin başında içe aktarılır; bozuk bir borsapy kurulumu artık yalnız `tansu veri`'yi değil her komutu ve `tansu.veri`'yi içe aktaran her betiği durdurur. Açılış süresi iki kez ölçüldü (`import tansu.__main__`, 3 koşunun ortancası): 0,70 sn'den 0,77 sn'ye ve 0,57 sn'den 0,71 sn'ye; borsapy'nin payı 0,17-0,21 sn.
 - Veri kalite kapıları (`Anlik.sorunlar`: karantina payı, olay denetimi, eksik sembol sayısı) `veri.py`'de duruyor, ama bugün hiçbir komut bunları değerlendirmiyor. SPEC 3.9 kuralların değişmeden kalmasını ister, hangi komutun değerlendireceğini söylemez; SPEC 6 adım 1 akşam taramasında eksik sembolleri "veri eksik" diye listeler. `tansu tara` (9. faz) yazılırken bakılacak.
 
+## Retro 30.10.2026 motor testleri kayıtları (karar gerekmez)
+
+Levent 30.10.2026: "12 bulgunun hepsinin çözülmesini ve bir daha yaşanmamasını istiyorum." Retro bulgu 1, 8 ve 11 ile proje kuralları şunları verdi:
+
+- Testler sabit parametreyle koşar: `tests/sentetik.py` `SABIT`, her stratejinin bütün parametre anahtarlarını taşır. Varsayılanı yalnız `tests/test_varsayilan.py` korur: her kayıtlı stratejinin varsayılanı kendi sentetik yolunda en az bir sinyal ve bir dolum vermelidir. Gerekçe: 28.10'da varsayılan R/R kapısı 1,5 her kurulumu eledi (`kanit/faz5.md` "Kapı"), test dosyaları buna göre düzenlendi ve sıfır kurulum görünmedi (PR 202, b99aef7). Artık varsayılan değişikliği yalnız bu testi kırar (kanıt `kanit/motor-testleri.md`).
+- Gelecek verisi kontrolü tek dosyadır: `tests/test_gelecek.py` `tests/test_gelecek_kesim.py` oldu; ürün yükleyicisinden (`veri.Anlik` → `sinama.gunler` → `sinama.calistir`) geçerek sinyal, dolum, kısmi çıkış ve çıkışları da karşılaştırır.
+- Bağımsız dolum motoru, bağımsız Gartley bulucu ve kaba kuvvet bacak ucu denetimi `tests/test_referans_motor.py` içindedir; çıktı eşdeğerliği aracı `kurulum/esdeger.py`'dir. Kaynakları `%TEMP%` betikleriydi (`referans.py` 28.10, `bagimsiz.py` ve `dogrula.py` 29.10, `esdeger.py` 30.10). Takım süresi 27-29 sn'den yaklaşık 46-72 sn'ye çıktı (yerel ölçümler, 30.10).
+- `tansu veri` her 25 sembolde ölçülen hızı ve kalan süreyi yazar (PR 269). 28.10'da indirme "30-50 dakika" denip 3 sa 39 dk sürmüştü.
+- Gartley'de A, B ve C'nin kendi bacağının ucu olması (`yapi.bacak_uclari`) yerel kural kartında yazılı değil; kart yalnız X kırılmasını yazar. Kural ürünün kararıdır; bağımsız Gartley referansı onu izler, yani bu kuralı SPEC'e karşı sınamaz.
+- Limit emrinde "dolumdan önce stop altında kapanış" nedeni oluşamaz: stop seviyenin altındadır, kilitsiz günde stopun altındaki kapanış emri önce doldurur. Neden `tetik` emri (henüz yok) için kalır.
+- Taşınmayan risk: 29.10 veri denetimi (`%TEMP%\tansu-gartley-dogrulama-20261029\kod-inceleme-a\rapor.md` satır 193-199) 2014 satırlarının %51,2'sinde ve 2015 satırlarının %48,7'sinde düzeltilmiş yüksek ya da düşüğün ham değer × çarpanla uyuşmadığını yazar. `veri.py`'de bu denetim yok. Motor işinin dışındadır; ayrı bir veri işi olarak önerildi.
+
 ## Ortam kayıtları (karar gerekmez)
 
 Retro 30.10.2026 (2), Levent: "12 bulgunun hepsinin çözülmesini ve bir daha yaşanmamasını istiyorum." Ajan kararları:
@@ -39,6 +51,8 @@ Retro 30.10.2026 (2), Levent: "12 bulgunun hepsinin çözülmesini ve bir daha y
 - Uzun kimlik deseni: 15 ve daha uzun rakam dizisi yalnız tek başına durursa kimliktir. Ondalık kesir ve SHA içindeki rakamlar sayılmaz; düz desen bugünkü ağaçta 5 dosyada yanlış bulgu veriyordu (`git grep`, 30.10.2026). Bulgu satırı değeri yazmaz, çünkü CI günlüğü de açıktır.
 - `ci` yalnız `.md` değişen PR'da atlanır. `testler` hiçbir dalda zorunlu durum denetimi değil (`gh api repos/zPfizer/tansu/branches/main/protection`: `required_status_checks` yok; `yeniden-kurulus` korumasız; 30.10.2026). Açık depo taraması ve PR iddia denetimi `denetim` iş akışında her PR'da koşar. `main`'e bu atlama eklenmedi: orada `tests/` altında 17 dosya `.md` adını anar (`grep -l`, 30.10.2026) ve `test_sahipler.py`, `test_atif.py`, `test_havuz.py` belgeleri okuyup denetler.
 - `main`'in eski belgeleri 1.877 eski havuz adı taşır (kasa 30.10.2026'da notları başlığa göre yeniden adlandırdı). `main` testleri bu adları beynin yeniden adlandırma kaydıyla çözer; belge metni değişmedi, çünkü `main` eski projedir ve eski belge kanıt değildir (Evidence rules 2).
+
+## Verilen kararlar
 
 - Evren, Levent 28.10.2026: "Zaten tüm stratejilerimizi bütün bir evreninde deneyeceğiz." Bütün stratejiler bütün BIST'te sınanır: bugünkü KAP şirket listesi ve verinin başladığı 01.01.2019'dan beri işlemi kapanan kodlar; kapanan hisseler sınamada kalır (hayatta kalan yanlılığı yok). Kaynakta fiyatı olmayan kod işlem gören pay değildir, düşer. Bir sembol kaynakta satırı olan her gün evrendedir (`uye`). BIST 30 üyelik tablosu adlı katman olarak kalır. Sıra: (1) evren tanımı, (2) artımlı `tansu veri`, (3) ayrı işteki veri yolu kusurları, (4) bütün stratejilerde `tansu ayarla` yeniden, eski ve yeni sayılar `kanit/evren.md`. Saklı dönem ayara girmez. Durum: yapılıyor. SPEC (yerel) yaması SPEC sahibine verildi. Levent 29.10.2026'da `stratejiler/sahip-kararlari.md` 6. satırının (çift evreni) bütün BIST diye düzeltilmesini istedi ("Evet, düzelt"); satır güncellendi.
 

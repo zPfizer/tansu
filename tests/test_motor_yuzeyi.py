@@ -13,7 +13,7 @@ import pytest
 
 from tansu import gostergeler, islem, kaynak, sinama, strateji, veri, yapi
 from tansu.stratejiler import gartley
-from tests.sentetik import gartley_yolu, gun_tablosu
+from tests.sentetik import SABIT, gartley_yolu, gun_tablosu
 from tests.test_islem import CIKIS, maliyetli, sinyal
 from tests.test_veri_gunluk import sentetik_anlik
 
@@ -45,7 +45,7 @@ BETIK_CAGRILARI = [
     ("gartley.STRATEJI.sinyal", 2, ()),
     ("gartley.uyar", 4, ()),
 ]
-GARTLEY_P = {**gartley.STRATEJI.varsayilan, "rr_min": "kapali"}
+GARTLEY_P = SABIT["gartley"]
 GUN_SUTUNLARI = {
     "atr",
     "uye",
