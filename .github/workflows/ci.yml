@@ -22,9 +22,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          dosyalar=$(git diff --name-only HEAD^1 HEAD)
+          # --no-renames: .py'den .md'ye adı değişen dosya eski adıyla da görünür.
+          dosyalar=$(git diff --name-only --no-renames HEAD^1 HEAD)
           printf '%s\n' "$dosyalar"
-          if [ -n "$dosyalar" ] && ! printf '%s\n' "$dosyalar" | grep -qv '\.md$'; then
+          # Boru yok: grep -q erken çıkınca büyük listede printf SIGPIPE alır ve pipefail sonucu tersine çevirir.
+          if [ -n "$dosyalar" ] && ! grep -qv '\.md$' <<< "$dosyalar"; then
             echo "Yalnız .md değişti; testler atlanır."
             echo "kod=hayir" >> "$GITHUB_OUTPUT"
           else
