@@ -104,8 +104,8 @@ def _rastgele(
 ) -> Rastgele | None:
     """Rastgele giriş kıyası (SPEC 5.8 madde 3). Şablon, sinyal günü ATR'si 0'dan büyük gerçek kurulumdur.
     Kurulumu olan bir adımda uygun gün ya da şablon yoksa kıyas yapılamaz: None."""
-    kesik = {s: g.loc[: sinama.KESIM] for s, g in sorted(gunler.items())}
-    kesik = {s: g for s, g in kesik.items() if not g.empty}
+    kesik = {s: gun.loc[: sinama.KESIM] for s, gun in sorted(gunler.items())}
+    kesik = {s: gun for s, gun in kesik.items() if not gun.empty}
     motor: dict[tuple, islem.Gun] = {}
     plan = []
     for a in yuruyus.adimlar:
@@ -114,13 +114,15 @@ def _rastgele(
             continue
         p = a.secim.parametre
         secenekler = []
-        for s, g in kesik.items():
+        for s, gun in kesik.items():
             anahtar = (s, frozenset(p.items()))
             if anahtar not in motor:
-                motor[anahtar] = islem.Gun(g, strateji.sinyal(g, p))
-            m = motor[anahtar]
-            pencere = (g.index >= a.pencere.test_bas) & (g.index <= a.pencere.test_son)
-            secenekler += [(m, int(t)) for t in np.flatnonzero(m.uygun & pencere)]
+                motor[anahtar] = islem.Gun(gun, strateji.sinyal(gun, p))
+            g = motor[anahtar]
+            pencere = (gun.index >= a.pencere.test_bas) & (
+                gun.index <= a.pencere.test_son
+            )
+            secenekler += [(g, int(t)) for t in np.flatnonzero(g.uygun & pencere)]
         atr = np.array(
             [
                 gunler[s].at[t, "atr"]
@@ -132,20 +134,20 @@ def _rastgele(
         if not secenekler or not len(sablonlar):
             return None
         plan.append((secenekler, sablonlar, len(test)))
-    n = sum(m for *_, m in plan)
+    n = sum(adet for *_, adet in plan)
     ortalamalar = np.empty(tekrar)
     for kosu in range(tekrar):
         rng = akis(2, kosu)
         toplam = 0.0
-        for secenekler, sablonlar, m in plan:
-            for i, j in zip(
-                rng.integers(0, len(secenekler), m),
-                rng.integers(0, len(sablonlar), m),
+        for secenekler, sablonlar, adet in plan:
+            for gun_no, sablon_no in zip(
+                rng.integers(0, len(secenekler), adet),
+                rng.integers(0, len(sablonlar), adet),
                 strict=True,
             ):
-                g, t = secenekler[i]
+                g, t = secenekler[gun_no]
                 toplam += islem.sablon_oyna(
-                    g, t, sablonlar[j], strateji.cikis, strateji.olcu
+                    g, t, sablonlar[sablon_no], strateji.cikis, strateji.olcu
                 )
         ortalamalar[kosu] = toplam / n
     alti = (ortalamalar < strateji_ort).sum() + 0.5 * (
