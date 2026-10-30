@@ -742,11 +742,13 @@ def test_dort_ondaliga_yuvarli_dusuk_fiyatli_kapanis_bozuk_sayilmaz(tmp_path):
             gun("2024-01-02", 0.408246),
             gun("2024-01-03", 0.4082),
             gun("2024-01-04", 0.4076),
+            # Üst sınır: ham kapanış = ham yüksek; düzeltilmiş kapanış 0,4083 > düzeltilmiş yüksek 0,408254 (fark 0,000046).
+            {**gun("2024-01-05", 0.4083), "ham_yuksek": 1.19, "yuksek": 0.408254},
         ],
         olay=[],
     )
-    assert a.gun_tablosu["bozuk"].tolist() == [False, False, True]
-    assert _karantina(a) == [False, False, True]
+    assert a.gun_tablosu["bozuk"].tolist() == [False, False, True, False]
+    assert _karantina(a) == [False, False, True, False]
 
 
 # Ham 100, 101, 102, 51, 52; düzeltilmiş 50, 50,5, 51, 51, 52 (çarpan 0,5 gerçekte 05.01.2024'te işler).
