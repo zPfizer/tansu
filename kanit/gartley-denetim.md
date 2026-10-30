@@ -45,7 +45,7 @@ etiket ya da etkisiz.
 | PR 250 | Veri | S1 | Düzeltilmiş fiyat 0,5 TL altında 4 ondalık yuvarlama yüzünden tutarlı satır bozuk sayılıyor, 250 gün karantina | Birleşti (5736335) |
 | V1 | Veri | S1 | İşlemsiz gün (hacim 0, ham AOF, yüksek, düşük 0) bozuk sayılıp 250 gün karantina açıyor; kalan karantinanın %97,7'si | Levent onayı (SPEC 3.9 istisnası); PR 254 birleşti (499f925) |
 | V2 | Veri | S2 | 30.04.2018'de 73/411 hissede düzeltilmiş düşük 0; %50 kaynak günü eşiği yakalamıyor | Levent onayı; PR 255 birleşti (2000e45). Yan etki: 2015-2022 dışında 8 gün daha bütün hisselerde eksik gün olur |
-| V3 | Veri | S2 | 30.11.2015 öncesi iki seans, seans başına ±%10; kod ±%20 günlük sanıyor: kilit günleri kaçıyor, +%21 günler bozuk sayılıyor | Levent onayı; PR 256 (baz önceki kapanış ya da AOF: aşım uzak sınırdan, pay %1; kilit yakın sınırdan) |
+| V3 | Veri | S2 | 30.11.2015 öncesi iki seans, seans başına ±%10; kod ±%20 günlük sanıyor: kilit günleri kaçıyor, +%21 günler bozuk sayılıyor | Levent onayı; PR 256 birleşti (86cd0c2): baz önceki kapanış ya da AOF; aşım uzak sınırdan, pay %1; kilit yakın sınırdan |
 | T1 | Veri | S2 | Düzeltilmiş yüksek/düşük, günlerin %3,9'unda ham × gün çarpanından hep daha geniş; etki < 0,02 R | Düzeltilmedi: veri kuralı (SPEC 3.9), açık soru |
 | D1 | Desen | S1 | X, A, B, C kendi bacağının ucu değil (sabit pivot penceresi, PDF'te eşit uçlar pivot olmuyor); oranlar yanlış noktadan | Motor: PR 253 birleşti (bd7193a); betikler: `D1t` |
 | D2 | Desen | S2 | PDF betiğinde X kırılmasına yalnız C'den sonra bakılıyor | `D1t` |
