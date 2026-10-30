@@ -41,6 +41,9 @@ FIYAT_SUTUNLARI = [
 ]
 KARANTINA_ESIK, DENETIM_ESIK, INMEYEN_ESIK = 0.01, 0.02, 5  # TASARIM 5.13
 KAYNAK_GUNU_EN_AZ = 20  # TASARIM 5.13: kaynak günü hatası için en az satır
+# Günün satırlarının en az %10'u bozuksa kaynak günüdür (SPEC 3.9 istisnası, Levent 30.10.2026;
+# 30.04.2018'de 73/411 hissede düzeltilmiş düşük 0 geldi, %50 eşiği bunu hisse hatası sayıyordu).
+KAYNAK_GUNU_PAYI = 0.10
 LIMIT_OLAY_KODLARI = frozenset(
     {"01", "02", "03", "04", "05", "06", "08", "09", "78"}
 )  # TASARIM 5.1
@@ -206,7 +209,10 @@ class Anlik:
         g = pd.concat(parcalar).rename_axis("tarih").reset_index()
         d = g[~g["eksik"]].groupby("tarih")["karantina"].agg(["sum", "size"])
         kaynak = g["tarih"].isin(
-            d.index[(d["size"] >= KAYNAK_GUNU_EN_AZ) & (d["sum"] * 2 >= d["size"])]
+            d.index[
+                (d["size"] >= KAYNAK_GUNU_EN_AZ)
+                & (d["sum"] >= KAYNAK_GUNU_PAYI * d["size"])
+            ]
         )
         g.loc[kaynak, ["eksik", "karantina"]] = [
             True,
