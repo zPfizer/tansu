@@ -167,7 +167,7 @@ def _red_nedeni(satir, gun_satiri, acik_var: bool, cikis: Cikis) -> str | None:
     )
     if not np.isnan(satir["stop"]) and not satir["stop"] < referans:
         return STOP_USTTE
-    if not np.isnan(satir["stop"]) and np.isnan(gun_satiri["atr"]):  # SPEC 5.2 taban
+    if not np.isnan(satir["stop"]) and not gun_satiri["atr"] > 0:
         return ATR_YOK
     if cikis.hedef and all(np.isnan(satir[h]) for h, _ in cikis.hedef):
         return HEDEF_YOK
