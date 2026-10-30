@@ -5,6 +5,7 @@ from collections import Counter
 from datetime import tzinfo
 from functools import reduce
 from pathlib import Path
+from types import SimpleNamespace
 
 import numpy as np
 import pandas as pd
@@ -44,6 +45,44 @@ BETIK_CAGRILARI = [
     ("gartley.uyar", 4, ()),
 ]
 GARTLEY_P = {**gartley.STRATEJI.varsayilan, "rr_min": "kapali"}
+GUN_SUTUNLARI = {
+    "atr",
+    "uye",
+    "kapanis",
+    "yuksek",
+    "dusuk",
+    "hacim",
+    "ham_kapanis",
+    "xu100",
+}
+SINYAL_SUTUNLARI = {
+    "giris",
+    "giris_tur",
+    "seviye",
+    "gecerlilik",
+    "stop",
+    "hedef1",
+    "hedef2",
+    "hedef3",
+    "kural_durumu",
+    "tekrar",
+}
+ADIM_BEKLENEN = [
+    (19.99, 0.01, 0.01),
+    (20.0, 0.02, 0.02),
+    (49.99, 0.02, 0.02),
+    (50.0, 0.05, 0.05),
+    (99.99, 0.05, 0.05),
+    (100.0, 0.1, 0.1),
+    (249.99, 0.1, 0.1),
+    (250.0, 0.25, 0.1),
+    (499.99, 0.25, 0.1),
+    (500.0, 0.5, 0.1),
+    (999.99, 0.5, 0.1),
+    (1000.0, 1.0, 0.1),
+    (2499.99, 1.0, 0.1),
+    (2500.0, 2.5, 0.1),
+]
 
 
 def nesne(ad):
@@ -275,8 +314,63 @@ def test_anlik_ve_gun_tablolari_betiklerin_okudugu_alanlari_verir():
     assert set(tablolar) == {"AAA", "TRALT"}
     son = a.gunler[1]
     for t in tablolar.values():
-        assert {"atr", "uye", "kapanis"} <= set(t.columns)
+        assert GUN_SUTUNLARI <= set(t.columns)
+        assert t["uye"].dtype == bool
+        assert all(pd.api.types.is_float_dtype(t[a]) for a in GUN_SUTUNLARI - {"uye"})
         assert t.loc[:son].index[-1] == son
         assert np.isscalar(t.at[son, "atr"])
     donem = sinama.Donem(a.gunler[0], son)
     assert (donem.bas, donem.son) == (a.gunler[0], son)
+
+
+def test_adim_esikleri_artan_sirada():
+    assert veri.ADIM_ESIK == sorted(set(veri.ADIM_ESIK))
+
+
+@pytest.mark.parametrize(("ham", "yeni", "eski"), ADIM_BEKLENEN)
+def test_fiyat_adimi_para_katmaninin_aramasinda_esikte_ust_dilime_girer(
+    ham, yeni, eski
+):
+    for tablo, beklenen in ((veri.ADIM_YENI, yeni), (veri.ADIM_ESKI, eski)):
+        tik = tablo[np.searchsorted(veri.ADIM_ESIK, ham, side="right")]
+        assert tik == beklenen
+
+
+def test_gartley_sinyali_betiklerin_okudugu_sutunlari_verir():
+    gun = gun_tablosu(gartley_yolu())
+    s = gartley.STRATEJI.sinyal(gun, GARTLEY_P)
+    for kare in (strateji.bos_sinyal(gun.index), s):
+        assert SINYAL_SUTUNLARI <= set(kare.columns) and kare.index.equals(gun.index)
+    assert s["giris"].dtype == bool
+    (t,) = np.flatnonzero(s["giris"])
+    assert s["giris_tur"].iat[t] == "limit"
+    for a in ("seviye", "stop", "hedef1", "hedef2", "hedef3"):
+        assert np.isfinite(float(s[a].iat[t]))
+    assert isinstance(s["kural_durumu"].iat[t], str) and s["kural_durumu"].iat[t]
+    s.loc[s["giris"], ["giris", "tekrar"]] = [False, 0]
+    assert not s["giris"].any()
+
+
+def test_kapanan_kodlar_kod_ve_tarih_sutunlarini_verir(monkeypatch):
+    ham = pd.DataFrame(
+        [
+            ["BASLIK", None, None, None],
+            ["TITLE", None, None, None],
+            ["PAY KODU", "PAY ADI", "KAPANMA TARİHİ", "AÇIKLAMA"],
+            ["CODE", "EQUITY NAME", "DELISTING DATE", "EXPLANATION"],
+            ["ROYAL.E", "ROYAL", pd.Timestamp("2026-04-17"), None],
+            ["TARIHSIZ", "TARIHSIZ SIRKET", pd.NaT, None],
+        ]
+    )
+
+    class Oturum:
+        def get(self, url, timeout=None, headers=None):
+            return SimpleNamespace(status_code=200, content=b"")
+
+    monkeypatch.setattr(pd, "read_excel", lambda *arg, **kw: ham)
+    kapanan = kaynak.kapanan_kodlar(Oturum())
+    assert {"kod", "tarih"} <= set(kapanan.columns)
+    assert kapanan["kod"].tolist() == ["ROYAL", "TARIHSIZ"]
+    assert pd.api.types.is_datetime64_any_dtype(kapanan["tarih"])
+    sonra = kapanan[~(kapanan["tarih"] < pd.Timestamp("2024-01-01"))]
+    assert sonra["kod"].tolist() == ["ROYAL", "TARIHSIZ"]
