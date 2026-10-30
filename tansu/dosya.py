@@ -1,5 +1,3 @@
-"""Yarım dosya bırakmayan yazım: aynı klasörde geçici dosya, sonra `os.replace`."""
-
 import os
 from collections.abc import Iterator
 from contextlib import contextmanager, suppress
