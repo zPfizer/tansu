@@ -178,6 +178,31 @@ def test_hazirla_parametreyi_kaynagina_gore_secer_ve_dosya_yazmaz(
     assert not list(tmp_path.iterdir())
 
 
+def test_konsol_olcu_satirlarini_sinamadan_uretir(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    kesisim = dataclasses.replace(
+        STRATEJILER["ortalama-kesisim"],
+        varsayilan={"ortalama": "SMA", "cift": "9/21", "teyit_gun": 0},
+        aralik={"teyit_gun": (0, 2)},
+    )
+    s = rapor.hazirla(
+        kesisim,
+        piyasa(sembol=2),
+        kimlik="t",
+        sinanan=1,
+        ayarla=True,
+        okunan=None,
+    )
+    satirlar = rapor.konsol(s)
+    assert len(satirlar) == 5
+    assert "ızgara 2 nokta, puanlı 2" in satirlar[1]
+    assert s.sakli_var and satirlar[3].startswith("saklı dönem ")
+    assert satirlar[4].startswith("Monte Carlo: tohum ")
+    erken = dataclasses.replace(s, sakli_son=sinama.SAKLI_BAS - pd.Timedelta(days=1))
+    assert not erken.sakli_var
+    assert rapor.konsol(erken)[3] == "saklı dönem: veri saklı döneme ulaşmıyor"
+
+
 def test_sina_bozuk_jsonu_izgaradan_once_reddeder(ortam, tmp_path, monkeypatch):
     ortam("gartley")
     (tmp_path / "stratejiler" / "ayarlar").mkdir()
