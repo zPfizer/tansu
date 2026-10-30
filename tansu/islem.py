@@ -3,6 +3,7 @@
 from collections import Counter
 from collections.abc import Mapping
 from dataclasses import dataclass, field
+from functools import cached_property
 from typing import Literal, NamedTuple
 
 import numpy as np
@@ -63,15 +64,34 @@ class _Islem:
 
 
 class Gun:
-    """Bir sembolün motor dizileri; sembol başına bir kez kurulur."""
+    """Bir sembolün motor dizileri; sembol başına bir kez kurulur. Motor gün tablosunun sütunlarını yalnız burada okur (`_red_nedeni` gün satırını alır)."""
 
     def __init__(self, gun: pd.DataFrame, sinyal: pd.DataFrame):
+        self.tarih = gun.index
         self.aof, self.yuk, self.dus, self.kap, self.atr = (
             gun[a].to_numpy(float) for a in ("aof", "yuksek", "dusuk", "kapanis", "atr")
         )
         self.tavan_kilit = gun["kilit_tavan"].to_numpy(bool)
         self.taban_kilit = gun["kilit_taban"].to_numpy(bool)
+        self.tavan_kapanis = gun["tavan_kapanis"].to_numpy(bool)
+        self._uye = gun["uye"].to_numpy(bool)
+        self._karantina = gun["karantina"].to_numpy(bool)
         self.cikis_sinyali = sinyal["cikis_sinyali"].to_numpy(bool)
+
+    @cached_property
+    def dolum_gunu(self) -> np.ndarray:
+        """t'den sonraki ilk fiyatlı gün (kapanış ve AOF var), yoksa len(kap). `_emir_gunu` piyasa kuralının vektörel kopyası."""
+        yok = len(self.kap)
+        fiyatli = np.append(
+            np.flatnonzero(~np.isnan(self.kap) & ~np.isnan(self.aof)), yok
+        )
+        return fiyatli[np.searchsorted(fiyatli, np.arange(yok), side="right")]
+
+    @cached_property
+    def uygun(self) -> np.ndarray:
+        """t rastgele `piyasa` sinyal günü olabilir mi (SPEC 5.8 madde 3): üye, karantinasız, ATR > 0, dolum günü kilitsiz."""
+        kilit = np.append(self.tavan_kilit, True)
+        return self._uye & ~self._karantina & (self.atr > 0) & ~kilit[self.dolum_gunu]
 
 
 def simule(
@@ -106,7 +126,7 @@ def simule(
             g, int(i), satir, cikis, risk_tabani * float(g.atr[i]), sayac
         )
         if e is not None:
-            kayitlar.append(_kayit(e, gun, cikis, sembol, strateji, sinif))
+            kayitlar.append(_kayit(e, g, cikis, sembol, strateji, sinif))
     return kayitlar, sayac
 
 
@@ -303,11 +323,11 @@ def sonuc(e: _Islem) -> Sonuc:
     return Sonuc(r, yuzde * 100)
 
 
-def _kayit(e: _Islem, gun: pd.DataFrame, cikis: Cikis, sembol, strateji, sinif) -> dict:
-    tarih, giris, risk, p = gun.index, e.giris, e.risk, e.parcalar
+def _kayit(e: _Islem, g: Gun, cikis: Cikis, sembol, strateji, sinif) -> dict:
+    tarih, giris, risk, p = g.tarih, e.giris, e.risk, e.parcalar
     r, net_yuzde = sonuc(e)
     son_i, son_fiyat, _, son_neden = p[-1]
-    kap = gun["kapanis"].to_numpy(float)
+    kap = g.kap
     ileri = {
         f"getiri_{n}": (kap[j] - giris - maliyet(giris, kap[j])) / giris * 100
         if (j := e.dolum_i + n) < len(kap)
@@ -317,10 +337,7 @@ def _kayit(e: _Islem, gun: pd.DataFrame, cikis: Cikis, sembol, strateji, sinif) 
     pencere = slice(
         e.dolum_i + 1, e.dolum_i + 11
     )  # dolum günü yüksek/düşük dolumdan önce olabilir
-    yuk, dus = (
-        gun["yuksek"].to_numpy(float)[pencere],
-        gun["dusuk"].to_numpy(float)[pencere],
-    )
+    yuk, dus = g.yuk[pencere], g.dus[pencere]
     tam = e.dolum_i + 10 < len(kap)  # veri sonunda yarım pencere ölçülmez
     mfe = np.nanmax(yuk) - giris if tam and np.isfinite(yuk).any() else np.nan
     mae = giris - np.nanmin(dus) if tam and np.isfinite(dus).any() else np.nan
@@ -336,7 +353,7 @@ def _kayit(e: _Islem, gun: pd.DataFrame, cikis: Cikis, sembol, strateji, sinif) 
         "dolum_fiyati": giris,
         "durum": s["durum"],
         "kural_durumu": s["kural_durumu"],
-        "tavan_kapanis": bool(gun["tavan_kapanis"].iloc[e.sinyal_i]),
+        "tavan_kapanis": bool(g.tavan_kapanis[e.sinyal_i]),
         "stop": e.stop,
         **{h: s[h] for h in HEDEFLER},
         "kismi": "; ".join(
