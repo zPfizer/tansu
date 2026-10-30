@@ -58,6 +58,13 @@ Denenmeyenler: bütün satış yönleri; S1-V2'nin "kapanış > açılış" okum
 - En iyi: en az 30 dolumlu denemeler içinde sinyal düzeyi ortalama R'si en yüksek olan. Eşitlikte daha az kurallı.
 - Aile için Deflated Sharpe ve PBO (günlük nakit üstü getiri, para katmanı, N = 13).
 
+## Değişiklik 1 (30.10.2026, ayar grubu koşularından sonra, ayrık grupta hiçbir koşudan önce)
+
+Kurala göre en iyi S2-Z'dir (ortalama 0,525 R, 136 dolum, p 0,044). Ama ortanca R −1,10'dur ve sonuç birkaç büyük
+işlemden gelir. S3 ayar grubunda en düşük p'yi (0,004, 295 dolum, ortalama 0,411 R) ve en yüksek işlem kârını verdi.
+Seçim yalnız ayar grubu sonuçlarıyla yapıldığı için S3 de sınava eklenir. Bu bir değişikliktir ve deneme sayılır:
+iki aday sınava girer, k = 5 (önceki 3 + 2), baraj p < 0,01. Kurallar ve değerler değişmez.
+
 ## Sınav (ayrık grup, yalnız en iyi deneme, bir kez)
 
 - Geçme şartı `plan.md` ile aynı üç şart. k = 4 (önceki sınavın 3 adayı + bu): baraj p < 0,0125.
