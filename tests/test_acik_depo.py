@@ -12,18 +12,23 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 KOK = Path(__file__).resolve().parents[1]
 
 # Karakter sınıfları bu dosyanın kendi taramasında takılmasını önler.
 YASAK = re.compile(
-    r"(?P<kullanici_klasoru>C:[\\/]Users)|(?P<app_data>App[D]ata)|(?P<kasa>YON[E]TIM)"
-    r"|(?P<tansu_kodu>Tansu['’]nun kodu)"
+    # Windows, JSON kaçışlı (çift ters bölü) ve Git Bash (sürücü harfi başta) biçimi.
+    r"(?P<kullanici_klasoru>[A-Z]:[\\/]+Users|/[A-Z]/Users/)"
+    r"|(?P<app_data>App[D]ata)|(?P<kasa>YON[E]TIM)|(?P<tansu_kodu>Tansu['’]nun kodu)"
     # 15+ haneli kimlik; ondalık kesrin ve SHA'nın içindeki rakam dizisi kimlik değildir.
-    r"|(?P<uzun_kimlik>(?<![\w.])\d{15,}(?!\w|\.\d))",
+    r"|(?P<uzun_kimlik>(?<![A-Z0-9.])\d{15,}(?![A-Z0-9]|\.\d))",
     re.IGNORECASE,
 )
 # `-EncodedCommand` ve PowerShell'in kabul ettiği kısaltmaları (`-enc`, `-e`, `-ec`).
-KODLU = re.compile(r"(?<![\w-])-e\w*\s+([A-Za-z0-9+/]{20,}={0,2})", re.IGNORECASE)
+KODLU = re.compile(
+    r"(?<![\w-])-e\w*(?:\s+|:)[\"']?([A-Za-z0-9+/]{20,}={0,2})", re.IGNORECASE
+)
 
 
 def _satir(metin, yer):
@@ -37,11 +42,18 @@ def dosya_bulgulari(ad, metin):
     ]
     for kod in KODLU.finditer(metin):
         try:
-            acik = base64.b64decode(kod.group(1), validate=True).decode("utf-16-le")
-        except ValueError:  # base64 ya da UTF-16 değil: komut değildir
+            ham = base64.b64decode(kod.group(1), validate=True)
+        except ValueError:  # base64 değil: komut değildir
             continue
         satir = _satir(metin, kod.start())
-        bulgu += [f"{ad}:{satir}: kodlu {m.lastgroup}" for m in YASAK.finditer(acik)]
+        for kodlama in (
+            "utf-16-le",
+            "utf-8",
+        ):  # PowerShell UTF-16LE ister; UTF-8 de taranır
+            acik = ham.decode(kodlama, "ignore")
+            bulgu += [
+                f"{ad}:{satir}: kodlu {m.lastgroup}" for m in YASAK.finditer(acik)
+            ]
     return bulgu
 
 
@@ -55,6 +67,7 @@ def bulgular():
     ).stdout.split("\0")
     bulgu = []
     for ad in filter(None, adlar):
+        bulgu += [f"{ad}: dosya adı {m.lastgroup}" for m in YASAK.finditer(ad)]
         yol = KOK / ad
         if yol.is_file():
             bulgu += dosya_bulgulari(ad, yol.read_bytes().decode("utf-8", "ignore"))
@@ -65,10 +78,36 @@ def test_izlenen_dosyalarda_ozel_bilgi_yok():
     assert bulgular() == []
 
 
-def test_kodlu_komut_acilip_taranir():
+# Örnekler parçalardan kurulur; bu dosya kendi taramasında takılmaz.
+@pytest.mark.parametrize(
+    ("ornek", "desen"),
+    [
+        ("C:" + "\\Users\\x", "kullanici_klasoru"),
+        ('"C:' + '\\\\Users\\\\x"', "kullanici_klasoru"),
+        ("/c/" + "Users/x", "kullanici_klasoru"),
+        ("App" + "Data", "app_data"),
+        ("YON" + "ETIM", "kasa"),
+        ("Tansu'nun " + "kodu", "tansu_kodu"),
+        ("tweet_" + "1" * 19, "uzun_kimlik"),
+    ],
+)
+def test_her_desen_bulunur(ornek, desen):
+    assert dosya_bulgulari("a.md", ornek) == [f"a.md:1: {desen}"]
+
+
+@pytest.mark.parametrize(
+    ("bicim", "kodlama"),
+    [
+        ("-EncodedCommand {}", "utf-16-le"),
+        ('-EncodedCommand "{}"', "utf-16-le"),
+        ("-enc:{}", "utf-16-le"),
+        ("-e {}", "utf-8"),
+    ],
+)
+def test_kodlu_komut_acilip_taranir(bicim, kodlama):
     gizli = "& 'C:" + "\\Users\\x\\a.py'"
-    kod = base64.b64encode(gizli.encode("utf-16-le")).decode()
-    metin = f'{{\n  "command": "powershell -NoProfile -EncodedCommand {kod}"\n}}'
+    kod = base64.b64encode(gizli.encode(kodlama)).decode()
+    metin = f'{{\n  "command": "powershell -NoProfile {bicim.format(kod)}"\n}}'
     assert dosya_bulgulari("a.json", metin) == ["a.json:2: kodlu kullanici_klasoru"]
 
 

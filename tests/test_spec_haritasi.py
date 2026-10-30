@@ -51,3 +51,14 @@ def test_agents_spec_haritasi_gercek_basliklari_gosterir():
         if not satirlar[int(no) - 1].startswith(f"## {etiket}")
     ]
     assert yanlis == []
+
+
+def test_agents_havuz_yolu_satiri_gercek_satiri_gosterir():
+    spec = _spec()
+    if spec is None:
+        pytest.skip("docs/SPEC.md yerel; bu makinede yok.")
+    no = re.search(
+        r"`docs/SPEC\.md` line (\d+)", (KOK / "AGENTS.md").read_text(encoding="utf-8")
+    )
+    satir = spec.read_text(encoding="utf-8").splitlines()[int(no.group(1)) - 1]
+    assert "Tansu X Veri Havuzu" in satir and "beyin-arama" in satir

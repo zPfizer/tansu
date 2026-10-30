@@ -2,10 +2,13 @@
 
 Denetim:
 - Değişen her dosya gövdede backtick içinde geçer: tam yol, `klasor/` ya da `tests/test_*.py` gibi bir desen.
+  Adı değişen dosyalar arasında tek olan dosya klasörsüz adıyla da yazılabilir.
 - Dosya adının hemen ardındaki `+E -S` o dosyanın eklenen ve silinen satırıdır.
-- Dosya adına bağlı olmayan `N dosya`, `N files changed`, `+E -S` PR toplamıdır.
-- `pytest` geçen satırdaki test sayılarının toplamı, baş commit'in `ci` koşusundaki pytest toplamıdır.
-  Satırda `tests/`, `::` ya da `-k` varsa kısmi koşudur, denetlenmez. CI bitmediyse test sayısı denetlenmez.
+- Dosya adına bağlı olmayan `+E -S` ve `N files changed` PR toplamıdır. `N dosya` yalnız aynı satırda
+  `+E -S` ya da `Toplam` varsa dosya sayısıdır.
+- `pytest` geçen satırdaki test sayılarının toplamı, baş commit'in `ci` koşusundaki geçen ya da bütün test
+  sayısıdır (yerelde koşan altın test CI'da atlanır). Satırda `tests/`, `test_x`, `::` ya da `-k` varsa
+  kısmi koşudur, denetlenmez. CI bitmediyse ya da günlüğü okunamadıysa test sayısı denetlenmez.
 
 Kullanım: python -X utf8 kurulum/pr_iddia_kontrol.py <PR> [--repo sahip/ad]
 Çıkış kodu: 0 iddialar uyuşuyor, 1 uyuşmazlık var.
@@ -17,6 +20,7 @@ import json
 import re
 import subprocess
 import sys
+from pathlib import PurePosixPath
 
 _SAYI = r"(\d[\d.]*)"
 _ARTI_EKSI = rf"\+{_SAYI}\s*[,/]?\s*[-−–]{_SAYI}"
@@ -24,19 +28,24 @@ YOLLU = re.compile(rf"`([^`\n]+)`[\s:]*\(?\s*{_ARTI_EKSI}")
 TOPLAM = re.compile(_ARTI_EKSI)
 GIT_STAT = re.compile(r"(\d+) insertions?\(\+\)|(\d+) deletions?\(-\)")
 DOSYA_SAYISI = re.compile(r"(?<![\w.])(\d+) (?:dosya|files? changed)(?!\w)", re.I)
+DEGISEN_DOSYA = re.compile(r"(?<![\w.])(\d+) files? changed", re.I)
 BACKTICK = re.compile(r"`([^`\n]+)`")
 TEST_IDDIASI = re.compile(
-    r"(\d[\d.]*) (?:geçti|passed|atlandı|skipped|kaldı|başarısız|failed|hata|errors?)\b",
+    r"(\d[\d.]*) (?:tests? )?"
+    r"(?:geçti|passed|atlandı|skipped|kaldı|başarısız|failed|hata|errors?)\b",
     re.I,
 )
-PYTEST_OZET = re.compile(r"(\d+) (?:passed|failed|skipped|errors?|xfailed|xpassed)\b")
+KISMI = re.compile(r"tests/|\btest_\w+|::|\s-k\s")
+PYTEST_OZET = re.compile(r"(\d+) (passed|failed|skipped|errors?|xfailed|xpassed)\b")
 
 
 def _sayi(metin):
     return int(metin.replace(".", ""))
 
 
-def _kapsar(aday, yol):
+def _kapsar(aday, yol, tek_adlar):
+    if "/" not in aday and aday in tek_adlar:
+        return PurePosixPath(yol).name == aday
     if aday.endswith("/"):
         return yol.startswith(aday)
     if any(isaret in aday for isaret in "*?["):
@@ -44,8 +53,8 @@ def _kapsar(aday, yol):
     return aday == yol
 
 
-def denetle(govde, pr, ci_toplami):
-    """(sorunlar, notlar). `pr`: gh pr view JSON'u; `ci_toplami`: CI pytest toplamı ya da None."""
+def denetle(govde, pr, ci):
+    """(sorunlar, notlar). `pr`: gh pr view JSON'u; `ci`: CI (geçen, bütün) test sayısı ya da None."""
     dosyalar = {d["path"]: d for d in pr["files"]}
     sorunlar, notlar = [], []
     if len(dosyalar) != pr["changedFiles"]:
@@ -53,8 +62,10 @@ def denetle(govde, pr, ci_toplami):
             f"gh {len(dosyalar)} dosya verdi, PR {pr['changedFiles']}; liste denetlenemedi"
         )
     adaylar = [re.split(r"::|:\d|\s", t.strip())[0] for t in BACKTICK.findall(govde)]
+    adlar = [PurePosixPath(yol).name for yol in dosyalar]
+    tek_adlar = {ad for ad in adlar if adlar.count(ad) == 1}
     for yol in dosyalar:
-        if not any(_kapsar(a, yol) for a in adaylar if a):
+        if not any(_kapsar(a, yol, tek_adlar) for a in adaylar if a):
             sorunlar.append(f"`{yol}` değişti ama gövdede adı yok")
     test_satiri = False
     for satir in govde.splitlines():
@@ -84,7 +95,9 @@ def denetle(govde, pr, ci_toplami):
                 )
             if sil and _sayi(sil) != pr["deletions"]:
                 sorunlar.append(f"toplam: gövde {sil} silme, gerçek {pr['deletions']}")
-        for sayi in DOSYA_SAYISI.findall(kalan):
+        toplam_satiri = TOPLAM.search(kalan) or re.search(r"toplam", kalan, re.I)
+        sayilar = DOSYA_SAYISI if toplam_satiri else DEGISEN_DOSYA
+        for sayi in sayilar.findall(kalan):
             if int(sayi) != pr["changedFiles"]:
                 sorunlar.append(
                     f"dosya sayısı: gövde {sayi}, gerçek {pr['changedFiles']}"
@@ -92,16 +105,18 @@ def denetle(govde, pr, ci_toplami):
         iddia = TEST_IDDIASI.findall(satir)
         if "pytest" not in satir.lower() or not iddia:
             continue
-        if re.search(r"tests/|::|\s-k\s", satir):
+        if KISMI.search(satir):
             notlar.append(f"kısmi pytest satırı denetlenmedi: {satir.strip()}")
             continue
         test_satiri = True
         toplam = sum(map(_sayi, iddia))
-        if ci_toplami is not None and toplam != ci_toplami:
-            sorunlar.append(f"pytest: gövde {toplam} test, CI {ci_toplami} test")
-    if test_satiri and ci_toplami is None:
+        if ci is not None and toplam not in ci:
+            sorunlar.append(
+                f"pytest: gövde {toplam} test, CI {ci[0]} geçti ({ci[1]} test)"
+            )
+    if test_satiri and ci is None:
         notlar.append(
-            "pytest sayısı denetlenmedi: baş commit'in ci koşusu yok ya da bitmedi"
+            "pytest sayısı denetlenmedi: baş commit'in ci koşusu yok, bitmedi ya da okunamadı"
         )
     return sorunlar, notlar
 
@@ -112,32 +127,39 @@ def _gh(*arglar):
     ).stdout
 
 
-def ci_toplami(sha, depo):
-    """Baş commit'in bitmiş `ci` koşusunda her işin son pytest özet satırının toplamı."""
-    kosu = json.loads(
-        _gh(
-            "run",
-            "list",
-            "--commit",
-            sha,
-            "--workflow",
-            "ci.yml",
-            "--limit",
-            "1",
-            "--json",
-            "databaseId,status",
-            *depo,
+def ci_sayilari(sha, depo):
+    """Baş commit'in bitmiş `ci` koşusunda (geçen, bütün) test sayısı: her işin son pytest özet satırı."""
+    try:
+        kosu = json.loads(
+            _gh(
+                "run",
+                "list",
+                "--commit",
+                sha,
+                "--workflow",
+                "ci.yml",
+                "--limit",
+                "1",
+                "--json",
+                "databaseId,status",
+                *depo,
+            )
         )
-    )
-    if not kosu or kosu[0]["status"] != "completed":
+        if not kosu or kosu[0]["status"] != "completed":
+            return None
+        gunluk = _gh("run", "view", str(kosu[0]["databaseId"]), "--log", *depo)
+    except (
+        subprocess.CalledProcessError
+    ):  # gh geçici hata verdi: test sayısı denetlenmez
         return None
     son = {}
-    for satir in _gh(
-        "run", "view", str(kosu[0]["databaseId"]), "--log", *depo
-    ).splitlines():
+    for satir in gunluk.splitlines():
         if re.search(r" in [\d.]+s\b", satir) and PYTEST_OZET.search(satir):
-            son[satir.split("\t", 1)[0]] = sum(map(int, PYTEST_OZET.findall(satir)))
-    return sum(son.values()) if son else None
+            sonuc = {tur: int(n) for n, tur in PYTEST_OZET.findall(satir)}
+            son[satir.split("\t", 1)[0]] = (sonuc.get("passed", 0), sum(sonuc.values()))
+    if not son:
+        return None
+    return tuple(sum(sayilar) for sayilar in zip(*son.values(), strict=True))
 
 
 def main():
@@ -148,7 +170,7 @@ def main():
     depo = ["--repo", arg.repo] if arg.repo else []
     alanlar = "body,files,additions,deletions,changedFiles,headRefOid"
     pr = json.loads(_gh("pr", "view", arg.pr, "--json", alanlar, *depo))
-    sorunlar, notlar = denetle(pr["body"], pr, ci_toplami(pr["headRefOid"], depo))
+    sorunlar, notlar = denetle(pr["body"], pr, ci_sayilari(pr["headRefOid"], depo))
     for satir in notlar:
         print(f"Not: {satir}")
     for satir in sorunlar:
