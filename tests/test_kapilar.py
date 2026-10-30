@@ -308,6 +308,33 @@ def test_dort_ondaliga_yuvarli_dusuk_fiyatli_kapanis_bozuk_sayilmaz(tmp_path):
     assert list(g["karantina"]) == [False, False, True, False]
 
 
+@pytest.mark.parametrize("alan", ["kapanis", "aof"])
+@pytest.mark.parametrize(
+    "deger,bozuk",
+    [(0.40816, False), (0.40815, True), (0.42206, False), (0.42207, True)],
+)
+def test_yarim_birim_payi_iki_sinirda_kapanis_ve_aofa_uygulanir(
+    tmp_path, alan, deger, bozuk
+):
+    # TASARIM 5.13 (#267): alt sınır 0,408246 × (1 − 1e-4) − 5e-5 = 0,4081551754, üst sınır 0,421968 × (1 + 1e-4)
+    # + 5e-5 = 0,4220601968. 0,40816 ve 0,42206 yalnız mutlak yarım birimle geçerlidir; 0,40815 ve 0,42207 dışarıdadır.
+    def gun(tarih, **ek):
+        duz = {
+            "aof": 0.408246,
+            "dusuk": 0.408246,
+            "yuksek": 0.421968,
+            "kapanis": 0.408246,
+        }
+        return {**satir(tarih, 1.19, dusuk=1.19, yuksek=1.23), **duz, **ek}
+
+    fiyat = [gun("2024-01-02"), gun("2024-01-03", **{alan: deger}), gun("2024-01-04")]
+    assert list(anlik(tmp_path, fiyat).gun_tablosu["karantina"]) == [
+        False,
+        bozuk,
+        False,
+    ]
+
+
 def test_satirdaki_kismi_nan_bozuk_satirdir_indirmeyi_durdurmaz(tmp_path):
     # Gerçek IZINV 13.11.2013: yüksek 634210 (saçma), AOF ve hacim NaN. Satır karantinaya girer.
     bozuk = {
