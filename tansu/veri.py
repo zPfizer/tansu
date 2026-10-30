@@ -632,7 +632,12 @@ def _gunler(fiyat, olaylar, takvim):
         & (f["kapanis"] <= ust)
     )
     ok = islem & ~bozuk
-    onceki = f["ham_kapanis"].where(ok).ffill().shift(1)
+    # Limit bazı son işlem gününün ham kapanışıdır. AOF'si ya da düzeltilmiş alanı bozuk satırın kapanışı ham düşük-yüksek
+    # aralığındaysa gerçektir; borsa ertesi günün sınırını ondan hesaplar (17.09.2026: 55 sahte aşım; SPEC 3.9 istisnası,
+    # Levent 30.10.2026). Ham kapanışı tutarsız satır baz olmaz.
+    baz = islem & (f["ham_dusuk"] > 0)
+    baz &= (f["ham_dusuk"] <= f["ham_kapanis"]) & (f["ham_kapanis"] <= f["ham_yuksek"])
+    onceki = f["ham_kapanis"].where(baz).ffill().shift(1)
     carpan = pd.Series(1.0, index=f.index)
     gunler = f.index[islem.to_numpy()]
     getiri = (
