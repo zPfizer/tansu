@@ -5,7 +5,7 @@ from collections.abc import Mapping
 import numpy as np
 import pandas as pd
 
-from tansu import gostergeler, yapi
+from tansu import yapi
 from tansu.islem import Cikis
 from tansu.strateji import Strateji, bos_sinyal
 
@@ -44,8 +44,8 @@ def uyar(ab: float, bc: float, cd: float, tol: float) -> bool:
 
 
 def hesapla(gun: pd.DataFrame, p: Mapping[str, float | str]) -> pd.DataFrame:
+    """`gun`, `stop == "X-2ATR"` iken `sinama.gunler`in `atr` sütununu taşımalıdır."""
     s = bos_sinyal(gun.index)
-    atr = gostergeler.atr_basit(gun["yuksek"], gun["dusuk"], gun["kapanis"]).to_numpy()
     dusuk = gun["dusuk"].to_numpy(float)
     tarih = gun.index
     tol = float(p["tolerans"])
@@ -64,7 +64,7 @@ def hesapla(gun: pd.DataFrame, p: Mapping[str, float | str]) -> pd.DataFrame:
         en_dusuk = np.nanmin(sonra) if np.isfinite(sonra).any() else np.inf
         if en_dusuk <= X.fiyat:  # BOZULDU: onaydan önce X kırıldı
             continue
-        stop = X.fiyat if p["stop"] == "X" else X.fiyat - 2 * atr[t]
+        stop = X.fiyat if p["stop"] == "X" else X.fiyat - 2 * float(gun["atr"].iat[t])
         h1, h2 = (d + r * (A.fiyat - d) for r in HEDEF_ORAN)
         if p["rr_min"] != "kapali" and (h1 - d) / (d - stop) < float(p["rr_min"]):
             continue
