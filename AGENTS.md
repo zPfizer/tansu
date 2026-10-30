@@ -37,9 +37,9 @@ The specification is `docs/SPEC.md` (local file, Git-ignored until the public-re
 
 ## Engineering rules
 
-- Work on branch `yeniden-kurulus`. One PR moves one phase or one strategy one step. Never push to `main`; only Levent merges into `main`.
+- Work on branch `yeniden-kurulus`. Open one PR per job, not one PR per item. The evidence and document updates of the job go into the same PR as its code. Never push to `main`; only Levent merges into `main`.
 - Change no GitHub issue, label, milestone or setting other than the run's own PRs.
-- CI on Windows: `ci` runs `ruff check`, `ruff format --check` and `pytest`; it skips a PR that changes only `.md` files. `denetim` runs the public-repository scan and the PR claim check on every PR.
+- CI on Windows: the `testler` job of `ci` runs `ruff check`, `ruff format --check` and `pytest`. `testler` is a required check on `yeniden-kurulus`. On a PR that changes only `.md` files, its steps skip and the check passes. `denetim` runs the public-repository scan and the PR claim check on every PR.
 - If a literal Tansu rule gives zero setups on real data, put the count in the first line and offer a tuning range. Do not merge a default that gives zero setups.
 - Committed tests use synthetic price series only. Never commit İş Yatırım data. Golden tests read local `veri/` and skip when it is absent.
 - Keep Tansu quotes, tweet ids, brain paths and local paths out of Git until Appendix B #12 is decided. `tests/test_acik_depo.py` scans every tracked file, also encoded PowerShell commands.
