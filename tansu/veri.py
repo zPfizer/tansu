@@ -5,6 +5,7 @@ import hashlib
 import json
 import os
 import shutil
+import time
 from io import BytesIO
 from dataclasses import dataclass
 from functools import cached_property
@@ -339,6 +340,22 @@ class Anlik:
         return pd.concat(parcalar, ignore_index=True) if parcalar else pd.DataFrame()
 
 
+def _ilerleme(semboller):
+    """Sembolleri verir; her 25 sembolden sonra ölçülen hızı ve kalan süreyi yazar.
+
+    Üreteç olarak yazıldı: döngü gövdesindeki `continue` (inmeyen, boş) de sayılır."""
+    bas, toplam = time.monotonic(), len(semboller)
+    for n, s in enumerate(semboller, 1):
+        yield s
+        if n % 25 == 0:
+            sn = (time.monotonic() - bas) / n
+            print(
+                f"indirme: {n}/{toplam} sembol, {sn:.1f} sn/sembol, "
+                f"kalan ~{round((toplam - n) * sn / 60)} dk",
+                flush=True,
+            )
+
+
 def indir(
     semboller,
     kok,
@@ -360,7 +377,7 @@ def indir(
     if hedef.exists():
         raise VeriHatasi(f"anlık görüntü zaten var: {kimlik}")
     fiyatlar, ham_olaylar, inmeyen, bos = [], {}, [], []
-    for s in semboller:
+    for s in _ilerleme(semboller):
         try:
             f, ham_olaylar[s] = (
                 kaynak.fiyat(s, bas, simdi.date()).assign(sembol=s),

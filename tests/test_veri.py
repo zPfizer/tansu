@@ -7,6 +7,7 @@ Fiyatlar CCOLA'nın İş Yatırım'daki gerçek değerleridir (08–15.08.2024).
 import datetime as dt
 import hashlib
 import json
+from types import SimpleNamespace
 
 import pandas as pd
 import pytest
@@ -413,6 +414,30 @@ def test_sektoru_alinamayan_ya_da_bos_sembol_indirmeyi_durdurmaz(tmp_path):
     )
     a = veri.oku(kimlik, tmp_path)
     assert (a.sektor, a.bos) == ({"CCOLA": "GIDA"}, ("BOS",))
+
+
+def test_indirme_her_25_sembolde_hiz_ve_kalan_sureyi_yazar(
+    tmp_path, monkeypatch, capsys
+):
+    class Kaynak(SahteKaynak):
+        def fiyat(self, sembol, bas, son):
+            if sembol == "HATA":
+                raise KaynakHatasi(sembol)
+            return super().fiyat(sembol, bas, son)
+
+    # Boş ve inmeyen sembol de sayılır: 48 inen sembolle 50/50 satırı ancak böyle gelir.
+    semboller = ["BOS", "HATA"] + [f"S{i:02}" for i in range(48)]
+    k = Kaynak(
+        {**dict.fromkeys(semboller, CCOLA_FIYAT), "BOS": []},
+        dict.fromkeys(semboller, CCOLA_OLAY),
+    )
+    saat = iter([0.0, 100.0, 160.0])  # başlangıç, 25. ve 50. sembol
+    monkeypatch.setattr(veri, "time", SimpleNamespace(monotonic=lambda: next(saat)))
+    veri.indir(semboller, tmp_path, k, simdi=SIMDI)
+    assert capsys.readouterr().out.splitlines() == [
+        "indirme: 25/50 sembol, 4.0 sn/sembol, kalan ~2 dk",
+        "indirme: 50/50 sembol, 3.2 sn/sembol, kalan ~0 dk",
+    ]
 
 
 def test_tarihsiz_ya_da_carpansiz_olay_kaydi_okumada_atilir(tmp_path):
