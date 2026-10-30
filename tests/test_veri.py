@@ -645,6 +645,45 @@ def test_bozuk_satir_baz_fiyat_olmaz_baz_onceki_tutarli_gunun_ham_kapanisidir(tm
     assert a.gun_tablosu["tavan"].iloc[2] == pytest.approx(110.0)
 
 
+def test_yalniz_aofsi_bozuk_satirin_kapanisi_ertesi_gunun_limit_bazidir(tmp_path):
+    # 16.09.2026'da 126 satırın ham AOF'si [düşük, yüksek] dışında, kapanışı tutarlı; 17.09'da bunların 55'i iki günlük
+    # hareketle (54 düşüş, 1 yükseliş) sahte aşım oldu. d2 bozuk (AOF 95 > yüksek 93) ama ham kapanış 92 düşük-yüksek aralığında: d3 tabanı
+    # 92 × 0,90 = 82,8; d3 kapanışı 84 limit içinde, karantina yok (d1'den ölçülse taban 90 olur, 84 aşım sayılırdı).
+    bozuk = {**satir("2024-01-03", 92.0, 92.0), "ham_aof": 95.0, "aof": 95.0}
+    bozuk |= {"ham_yuksek": 93.0, "yuksek": 93.0, "ham_dusuk": 91.0, "dusuk": 91.0}
+    a = anlik(
+        tmp_path,
+        fiyat=[
+            satir("2024-01-02", 100.0, 100.0),
+            bozuk,
+            satir("2024-01-04", 84.0, 84.0),
+        ],
+        olay=[],
+    )
+    assert a.gun_tablosu["bozuk"].tolist() == [False, True, False]
+    assert _karantina(a) == [False, True, False]
+    assert a.gun_tablosu["taban"].iloc[2] == pytest.approx(82.8)
+
+
+@pytest.mark.parametrize(
+    "ihlal", [{"ham_yuksek": 140.0}, {"ham_dusuk": 0.0, "dusuk": 0.0}]
+)
+def test_ham_kapanisi_tutarsiz_bozuk_satir_limit_bazi_olmaz(tmp_path, ihlal):
+    # Ham kapanış yüksekten büyük (150 > 140) ya da ham düşük 0: kapanış güvenilmez, baz d1'in 100'üdür. d3 tavanı
+    # 100 × 1,10 = 110; d3 kapanışı 160 > 110 × 1,005, karantina (d2 baz olsaydı tavan 165 olur, 160 temiz kalırdı).
+    a = anlik(
+        tmp_path,
+        fiyat=[
+            satir("2024-01-02", 100.0, 100.0),
+            {**satir("2024-01-03", 150.0, 150.0), **ihlal},
+            satir("2024-01-04", 160.0, 160.0),
+        ],
+        olay=[],
+    )
+    assert _karantina(a) == [False, True, True]
+    assert a.gun_tablosu["tavan"].iloc[2] == pytest.approx(110.0)
+
+
 def test_adim_orani_onceki_tutarli_kapanisa_bakar_bozuk_satir_atlanir(tmp_path):
     # TASARIM 5.1 adım (bilet 07e-b, 5.13): kapanışlar 100, 50, 50; 2. gün bozuk (ham düşük 200 > kapanış), 3. gün olay
     # (çarpan 0,5). Oran 50 / 100 (önceki tutarlı kapanış) = 0,5: adım. Baz 100 × 0,5 = 50, taban 50 × 0,9 = 45,
