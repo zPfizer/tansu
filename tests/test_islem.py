@@ -97,6 +97,23 @@ def test_oyna_tek_sinyalde_simule_ile_ayni_islemi_verir():
     assert islem.sonuc(e) == (k["R"], k["net_yuzde"])
 
 
+def test_risk_tabani_etiketi_dolumdaki_riskten_iz_stopu_degistirmez():
+    # SPEC 5.5: taban R'nin riskidir, max(giriş - ilk stop, 0,5 ATR). Dolum 10, stop 9, taban 0,05: risk 1, tabansız.
+    # Sarmalayıcı stopu dolumun üstüne taşısa da (iz stop 10,5) etiket değişmez. Stop 9,99 iken risk tabandır.
+    g = gun_tablosu(
+        [11, 10.2, 12.2, 13.2, 13.2],
+        yuksek=[11.1, 10.5, 12.5, 13.5, 13.3],
+        dusuk=[10.9, 9.8, 10.3, 12.3, 13.1],
+    )
+    for stop, tabanli in [(9.0, False), (9.99, True)]:
+        s = sinyal(g, stop=stop)
+        gun = islem.Gun(g, s)
+        taban = islem.RISK_TABANI * 0.1
+        e, _ = islem.oyna(gun, 0, s.iloc[0], CIKIS, taban, Counter())
+        e.stop = 10.5
+        assert islem._kayit(e, gun, CIKIS, "AAA", "t", "a")["risk_tabanli"] == tabanli
+
+
 def test_islemin_kapandigi_gun_yeni_sinyal_kabul_edilir():
     g = gun_tablosu(
         [11, 10.2, 12.2, 13.2, 13.2],
