@@ -260,7 +260,6 @@ def test_red_nedenleri_sayilir():
 
 @pytest.mark.parametrize("atr", [np.nan, 0.0], ids=["nan", "sifir"])
 def test_atr_tanimsizsa_stoplu_kurulum_reddedilir_stopsuz_kurulum_kalir(atr):
-    # Risk tabanı sinyal gününün ATR'sidir (SPEC 5.2); NaN ATR tabanı sessizce düşürüyordu, 0 ATR tabanı sıfırlıyordu.
     g = gun_tablosu([11, 10.2, 12.2, 13.2, 13.2], dusuk=[10.9, 9.8, 12.1, 13.1, 13.1])
     g.iloc[0, g.columns.get_loc("atr")] = atr
     kayit, sayac = kos(g, sinyal(g))
