@@ -35,6 +35,18 @@ def test_sag_bar_fiyatsiz_gunu_bar_saymaz():
     ] == [("T", 2, 5)]
 
 
+def test_sag_bar_fiyatsiz_gunlu_seride_gelecege_bakmaz():
+    # Onay günü t olan her pivot, yalnız t'ye kadarki veriyle de aynı bulunur (baş ve sondaki boşluk dahil).
+    r = np.random.default_rng(7)
+    y = np.round(r.normal(0, 1, 120).cumsum(), 1)
+    y[r.random(120) < 0.15] = np.nan
+    s = pd.Series(y)
+    tam = yapi.sag_bar_pivotlari(s, s, 3)
+    for t in range(len(s)):
+        once = [p for p in tam if p.onay_gun <= t]
+        assert [p for p in yapi.sag_bar_pivotlari(s[: t + 1], s[: t + 1], 3)] == once
+
+
 def test_bacak_uclari_pencereleri():
     # X dip 0. gün 10, A tepe 3. gün 20, B dip 6. gün 14, C tepe 9. gün 17, t = 11.
     sira = (
