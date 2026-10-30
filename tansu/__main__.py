@@ -102,7 +102,7 @@ def _kos(a, *, ayarla: bool) -> int:
     except PermissionError as hata:
         hedef = hata.filename2 or hata.filename or hata
         print(
-            f"tansu {komut}: {hedef} yazılamadı; dosya başka bir programda açıksa kapatıp yeniden çalıştır. durum.csv değişmedi.",
+            f"tansu {komut}: {hedef} için erişim engellendi; dosya başka bir programda açıksa kapatıp yeniden çalıştır. durum.csv değişmedi.",
             file=sys.stderr,
         )
         return 1

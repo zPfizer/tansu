@@ -131,25 +131,46 @@ def baska_programda_acik(monkeypatch, hedef):
 
 
 @pytest.mark.parametrize(
-    ("komut_adi", "baslangic", "hedef"),
+    ("komut_adi", "baslangic", "yol"),
     [
-        ("sina", "taslak", "durum.csv"),
-        ("sina", "taslak", "islemler.csv"),
-        ("ayarla", "sinandi", "gartley.json"),
+        ("sina", "taslak", Path("stratejiler", "durum.csv")),
+        ("sina", "taslak", Path("rapor", "gartley", "islemler.csv")),
+        ("ayarla", "sinandi", Path("stratejiler", "ayarlar", "gartley.json")),
     ],
 )
 def test_yazilacak_dosya_baska_programda_aciksa_acik_mesaj_ve_cikis_1(
-    ortam, tmp_path, monkeypatch, capsys, komut_adi, baslangic, hedef
+    ortam, tmp_path, monkeypatch, capsys, komut_adi, baslangic, yol
 ):
     ortam("gartley", durum=baslangic)
     once = (tmp_path / "stratejiler" / "durum.csv").read_bytes()
-    baska_programda_acik(monkeypatch, hedef)
+    baska_programda_acik(monkeypatch, yol.name)
     assert main([komut_adi, "gartley"]) == 1
     hata = capsys.readouterr().err
-    assert f"tansu {komut_adi}: " in hata
-    assert hedef in hata and "durum.csv değişmedi" in hata
+    assert f"tansu {komut_adi}: {yol} " in hata and "durum.csv değişmedi" in hata
     assert (tmp_path / "stratejiler" / "durum.csv").read_bytes() == once
     assert not list(tmp_path.rglob("*.tmp"))
+
+
+def test_okunacak_durum_dosyasi_kilitliyse_yazilamadi_demez(
+    ortam, tmp_path, monkeypatch, capsys
+):
+    ortam("gartley")
+    yol = Path("stratejiler", "durum.csv")
+    once = (tmp_path / yol).read_bytes()
+    gercek_open = Path.open
+
+    def open_(self, mode="r", *a, **k):
+        if mode == "r" and self.name == yol.name:
+            raise PermissionError(13, "Erişim engellendi", str(self))
+        return gercek_open(self, mode, *a, **k)
+
+    monkeypatch.setattr(Path, "open", open_)
+    assert main(["sina", "gartley"]) == 1
+    hata = capsys.readouterr().err
+    assert f"tansu sina: {yol} " in hata and "durum.csv değişmedi" in hata
+    assert "yazılamadı" not in hata
+    assert (tmp_path / yol).read_bytes() == once
+    assert not (tmp_path / "rapor").exists()
 
 
 def test_ayarla_puanli_nokta_yoksa_varsayilanlari_yazar_suzgeci_korur(
