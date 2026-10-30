@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from tansu import islem, sinama
+from tansu import ayar, islem, montecarlo, rapor, sinama
 
 
 @pytest.mark.parametrize(
@@ -73,37 +73,123 @@ def kayitlar(n):
     return t
 
 
+def kurulumlar(n):
+    return kayitlar(n).assign(
+        tutma_gun=1,
+        acik=False,
+        dolumda_stop=False,
+        risk_tabanli=False,
+        cikis_tarihi=pd.date_range("2022-01-03", periods=n),
+        dolum_tarihi=pd.date_range("2022-01-03", periods=n),
+        sembol="A",
+    )
+
+
 def test_ileri_tablo_ufuk_basina_ortalama_medyan_pozitif_pay_ve_n():
-    satir = {s["Ufuk (gün)"]: s for s in sinama.ileri_tablo(kayitlar(31))}
-    assert satir[1]["N"] == 31 and satir[10]["N"] == 30
+    satir = {i.ufuk: i for i in sinama.ileri_tablo(kayitlar(31))}
+    assert satir[1].n == 31 and satir[10].n == 30
+    assert satir[3].ortalama == pytest.approx(3 / 31)
+    assert satir[1].medyan == 1.0 and satir[1].pozitif == pytest.approx(16 / 31)
+    assert satir["MFE"].medyan == 4.0 and satir["MAE"].medyan == 2.0
+    assert satir["MFE"].ortalama is None and satir["MFE"].pozitif is None
+
+
+def test_ileri_tablo_n_ufku_dolu_kurulum_sayisi():
+    assert sinama.ileri_tablo(kayitlar(5))[0].n == 5
+    assert sinama.ileri_tablo(islem.kayit_tablosu([], islem.Cikis()))[0].n == 0
+
+
+def test_ozet_yalniz_olcu_sutununu_okur():
+    o = sinama.ozet(kurulumlar(3), 3, "net_yuzde")
+    assert o.dolum == 3 and o.toplam == 1.0 and o.beklenti == pytest.approx(1 / 3)
+
+
+def test_rapor_satirlari_olcuyu_bugunku_metinle_yazar():
+    d = rapor._ozet_sutunu(sinama.ozet(kurulumlar(3), 3, "net_yuzde"), "%")
+    assert d["Toplam %"] == "1.00" and "Toplam R" not in d
+    assert d["Beklenti (ortalama %)"] == "n/a (N = 3)"
+    kayipsiz = kurulumlar(30).assign(R=np.arange(1.0, 31.0))
+    kazanc = rapor._ozet_sutunu(sinama.ozet(kayipsiz, 30, "R"), "R")
+    assert kazanc["Kâr faktörü"] == "n/a" and kazanc["Toplam R"] == "465.00"
+    bos = rapor._ozet_sutunu(
+        sinama.ozet(islem.kayit_tablosu([], islem.Cikis()), 0, "R"), "R"
+    )
+    assert bos["Düşen"] == "0" and bos["Ortalama tutma günü"] == "-"
+    assert bos["Sinyal"] == 0 and type(bos["Açık işlem"]) is int
+    ileri = map(rapor._ileri_satiri, sinama.ileri_tablo(kayitlar(31)))
+    satir = {s["Ufuk (gün)"]: s for s in ileri}
     assert satir[3]["Ortalama net %"] == f"{3 / 31:.2f}"
     assert satir[1]["Medyan net %"] == "1.00" and satir[1]["Pozitif payı"] == "52%"
     assert satir["Medyan MFE % (10 gün)"]["Medyan net %"] == "4.00"
-    assert satir["Medyan MAE % (10 gün)"]["Medyan net %"] == "2.00"
+    assert satir["Medyan MAE % (10 gün)"]["Pozitif payı"] == "-"
+    az = rapor._ileri_satiri(sinama.ileri_tablo(kayitlar(5))[0])
+    assert az["Ortalama net %"] == "n/a (N = 5)"
 
 
-def test_ileri_tablo_30_kurulumun_altinda_oranlar_n_a():
-    satir = sinama.ileri_tablo(kayitlar(5))
-    assert satir[0]["N"] == 5 and satir[0]["Ortalama net %"] == "n/a (N = 5)"
-    assert sinama.ileri_tablo(islem.kayit_tablosu([], islem.Cikis()))[0]["N"] == 0
+def bayrak_olcumu(r, *, rastgele=None, p5=None, sakli=(), puan=None, semboller):
+    bos = pd.DataFrame(columns=["sembol", "tarih"])
 
+    def kosu(islemler):
+        return sinama.Kosu(islemler, bos, Counter(), "R")
 
-def test_donem_ozeti_yalniz_olcu_sutununu_okur_ve_birimi_etikete_koyar():
-    d = sinama.donem_ozeti(
-        kayitlar(3).assign(
-            tutma_gun=1,
-            acik=False,
-            dolumda_stop=False,
-            risk_tabanli=False,
-            cikis_tarihi=pd.date_range("2022-01-03", periods=3),
-            dolum_tarihi=pd.date_range("2022-01-03", periods=3),
-            sembol="A",
-        ),
-        3,
-        "net_yuzde",
+    mc = montecarlo.MonteCarlo(
+        montecarlo.TOHUM,
+        montecarlo.TEKRAR,
+        len(r),
+        "R",
+        None if p5 is None else (p5, p5 + 1, p5 + 2),
+        None,
+        None,
+        None,
+        None if rastgele is None else montecarlo.Rastgele(0.0, (0, 0, 0), rastgele),
     )
-    assert d["Toplam %"] == "1.00" and "Toplam R" not in d
-    assert d["Beklenti (ortalama %)"] == "n/a (N = 3)"
+    p = np.array([np.nan if puan is None else puan])
+    secim = ayar.Secim(0, {}, p, p, np.array([77]), puan is not None)
+    gecmis = pd.DataFrame({"sembol": list(semboller), "R": list(semboller.values())})
+    return rapor.bayrak_olc(
+        mc,
+        kosu(pd.DataFrame({"R": r})),
+        kosu(pd.DataFrame({"R": list(sakli)})),
+        kosu(gecmis),
+        secim,
+    )
+
+
+OLUMLU = bayrak_olcumu(
+    [2.0] * 22 + [-1.0] * 18,
+    rastgele=97.0,
+    p5=3.0,
+    sakli=(1.0, -0.5),
+    puan=0.4,
+    semboller={"S0": 3.0, "S1": 3.0, "S2": 4.0},
+)
+UYARI = bayrak_olcumu(
+    [1.0] * 38 + [-1.0] * 2,
+    rastgele=50.0,
+    p5=-1.0,
+    sakli=(-0.5,),
+    puan=-0.2,
+    semboller={"S0": 5.0, "S1": 1.0},
+)
+AZ = bayrak_olcumu([1.0] * 10, semboller={"S0": -1.0})
+
+
+@pytest.mark.parametrize(
+    ("bayrak", "olumlu", "uyari"),
+    [
+        (rapor.Bayrak.DIS_BEKLENTI, True, True),
+        (rapor.Bayrak.RASTGELE, True, False),
+        (rapor.Bayrak.BOOTSTRAP, True, False),
+        (rapor.Bayrak.SAKLI, True, False),
+        (rapor.Bayrak.KAZANMA_90, False, True),
+        (rapor.Bayrak.KAZANMA_BANT, False, True),
+        (rapor.Bayrak.SECIM_PUANI, False, True),
+        (rapor.Bayrak.SEMBOL, False, True),
+    ],
+)
+def test_bayrak_kurali_karar_verir_ya_da_karar_verilemez(bayrak, olumlu, uyari):
+    assert OLUMLU[bayrak].kosul is olumlu and UYARI[bayrak].kosul is uyari
+    assert AZ[bayrak].kosul is None
 
 
 def test_dusus_nan_degeri_atlar():
