@@ -23,6 +23,18 @@ def test_sag_bar_esitlikte_ilk_gunu_alir():
     assert [q.pivot_gun for q in yapi.sag_bar_pivotlari(y, d, 1) if q.tur == "T"] == [1]
 
 
+def test_sag_bar_fiyatsiz_gunu_bar_saymaz():
+    # Fiyatsız gün (NaN: eksik ya da bozuk) bar değildir. 5'in sağındaki iki bar 6 ve 4'tür: 5 tepe olmaz.
+    y, d = seri([1, 2, 5, np.nan, np.nan, 6, 4, 3])
+    p = yapi.sag_bar_pivotlari(y, d, 2)
+    assert [(q.pivot_gun, q.onay_gun) for q in p if q.tur == "T"] == [(5, 7)]
+    # Onay günü pivottan sonraki k. fiyatlı gündür, takvim günü değil.
+    y, d = seri([1, 2, 5, np.nan, 2, 1])
+    assert [
+        (q.tur, q.pivot_gun, q.onay_gun) for q in yapi.sag_bar_pivotlari(y, d, 2)
+    ] == [("T", 2, 5)]
+
+
 def test_bacak_uclari_pencereleri():
     # X dip 0. gün 10, A tepe 3. gün 20, B dip 6. gün 14, C tepe 9. gün 17, t = 11.
     sira = (
