@@ -1,3 +1,4 @@
+import numpy as np
 import pytest
 
 from tansu.stratejiler import gartley
@@ -30,6 +31,33 @@ def test_gartley_c_onayinda_limit_d_stop_x_ve_hedefler_verir():
 
 def test_ab_orani_tutmazsa_sinyal_yok():
     gun = gun_tablosu(gartley_yolu(ab=0.5))
+    assert not gartley.STRATEJI.sinyal(gun, P)["giris"].any()
+
+
+def yol(duraklar):
+    """(gün, fiyat) duraklarını doğrusal bacaklarla birleştirir."""
+    fiyat = [duraklar[0][1]]
+    for (g0, f0), (g1, f1) in zip(duraklar, duraklar[1:], strict=False):
+        fiyat += list(np.linspace(f0, f1, g1 - g0 + 1)[1:])
+    return np.array(fiyat)
+
+
+def test_b_bacagin_en_dusugu_degilse_sinyal_yok():
+    # A, X'ten 6 gün sonra; A'dan 3 gün sonraki dip (12,95) B'den (13,77) düşük ama X 15 gün içinde olduğu için pivot
+    # değil. Gerçek bacak ucuyla AB/XA 0,703, tolerans dışı; B'yle ölçülen 0,622 deseni yanlış geçirir.
+    x, a = 10.0, 20.0
+    b = a - 0.618 * (a - x)
+    c = b + 0.618 * (a - b)
+    d = a - 0.786 * (a - x)
+    duraklar = [(0, 15), (20, x), (26, a), (29, 13.0), (40, 16), (55, b), (75, c)]
+    gun = gun_tablosu(yol([*duraklar, (95, d - 0.1), (115, a)]))
+    assert not gartley.STRATEJI.sinyal(gun, P)["giris"].any()
+
+
+def test_x_esit_dip_desen_icinde_de_bozar():
+    # X'in düşüğüne eşit dip, C'den sonra olduğu gibi X ile C arasında da deseni bozar (stop X'e dokunuşla çalışır).
+    gun = gun_tablosu(gartley_yolu())
+    gun.iloc[21, gun.columns.get_loc("dusuk")] = gun["dusuk"].iat[20]
     assert not gartley.STRATEJI.sinyal(gun, P)["giris"].any()
 
 
