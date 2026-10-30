@@ -1,0 +1,27 @@
+{
+ "tarih": "2026-10-30",
+ "karar": "Levent 30.10.2026, \"Hepsine evet\": ileri izlemede dondurulmuş Gartley ve S3 birlikte; günlük güncelleme otomatik çalışsın.",
+ "adaylar": {
+  "gartley": {
+   "baslangic": "2026-10-01",
+   "kural": "dondurulmuş Gartley: kanit/gartley-para/ayar.json, yontem.py aday 'gartley' (limit D, stop X, iz 3 ATR, açılış stopu)"
+  },
+  "S3": {
+   "baslangic": "2026-10-01",
+   "kural": "Seo X3, kanit/gartley-yontem/pdf.py aday 'S3' (limit D = C - 1,272 BC, stop X, hedef D + 2,5 (D - X))"
+  }
+ },
+ "duzeltme": "D1t,T3,E2,S1s,S2s",
+ "dosyalar": {
+  "kanit/gartley-para/ayar.json": "118ad754930a67cb70f4ace06de0981142e1a5539dcdfe15ca6e2eb0d43e32e6",
+  "kanit/gartley-para/para.py": "95dfd8a9774e61a4be56087b3d106b7de56483c81ae67fb4a0e9dc51a130dd83",
+  "kanit/gartley-yontem/yontem.py": "f9d682a17676f36de2236b459b56f632dfba06040e8dc904e96ad0b230559bde",
+  "kanit/gartley-yontem/pdf.py": "3e8f2dc61aa124ba55c1eec781b13f691747ef4f1577601d277b96df570ab955",
+  "kanit/gartley-denetim/duzeltme.py": "be43cc0caab740a3c6831c28266ab5968a61a61133499b3c2430308a9627888c",
+  "kanit/gartley-takip/takip.py": "2e3eeacf5dfd83b161287aff580aeb72cdb452d59ce31c4272a864c36dbb4dff",
+  "kanit/gartley-takip/izle.py": "0459d2a4962485fa3f525aeb0a930416fc2ad715b89d06733a8ceff53538dc05"
+ },
+ "motor_agaclari": {
+  "3c15259d1f592b2f3eed26617764ae2688c815c4": "yeniden-kurulus 86cd0c2 (denetimin dokuz düzeltmesi: PR 250, 253-260)"
+ }
+}

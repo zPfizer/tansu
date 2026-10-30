@@ -99,3 +99,75 @@ Kayıt kapsam notları:
   için 2024 başı yeter; karantina penceresi (250 gün) 2024 başından kurulur.
 - Veri ve önbellek Git dışıdır (`veri/`); her koşu yeni bir anlık görüntü ekler (yaklaşık 28 MB). Eski görüntüleri
   silmek ayrı onay ister.
+
+## İleri izleme: Gartley ve S3, düzeltilmiş motor (30.10.2026)
+
+Karar (Levent, 30.10.2026, "Hepsine evet"): ileri izlemede dondurulmuş Gartley ve S3 birlikte izlenir; günlük
+güncelleme otomatik çalışır. Kod denetimi (`kanit/gartley-denetim.md`) motoru ve deneme betiklerini düzeltti; 2010-2014
+son sınavı koşmadı, kalan yol yalnız ileri izlemedir. Motor değiştiği için bu, yukarıdaki takibin devamı değil yeni bir
+iştir ("Kural: ayar değişmez"): `kayit/` klasörü ve `takip.py` olduğu gibi kalır; yeni kayıtlar `izleme/` altındadır.
+
+### Dondurulan kural seti
+
+`izleme/dondurma.json` (bu bölümle aynı commit'te, ilk izleme kaydından önce gönderildi). `izle.py` her koşuda
+denetler; biri uyuşmazsa hiçbir şey indirmeden durur.
+
+- Adaylar: dondurulmuş Gartley (`kanit/gartley-para/ayar.json`, SHA-256 `118ad754…`) ve S3 (Seo X3, `pdf.py`
+  `3e8f2dc6…`). İkisi de denetimin düzeltme koşusundaki yolla koşar: Gartley `yontem.kos`, S3 `pdf.kos`, para katmanı
+  `yontem.para_katmani` (100.000 TL, aynı maliyet ve boyut kuralları).
+- Betik düzeltmeleri: `D1t,T3,E2,S1s,S2s` (`kanit/gartley-denetim/duzeltme.py`, `be43cc0c…`), düzeltme koşusundaki
+  gibi. İleri izlemede sonucu `D1t` (S3 bacak ucu) ve `E2` (açılış stopu, iki aday) değiştirir; `T3`, `S1s`, `S2s`
+  bu iki adayda etkisizdir.
+- Motor: `yeniden-kurulus` 86cd0c2, `tansu/` ağacı `3c15259d…` (PR 250 ve 253-260). Her kayıt `tansu` commit'ini ve
+  ağacını yazar. İzinli ağaç listesi `dondurma.json`'dadır; yeni bir ağaç yalnız kayıtlı bir değişiklikle eklenir.
+- Evren: veri klasöründeki bütün BIST payları (motorun `uye` sütunu hepsinde doğru); veri 2024-01-01'den, ısınma.
+
+### Başlangıç günü
+
+İki aday da **01.10.2026**'da başlar, kasa 100.000 TL ile boş başlar.
+
+S3 kuralı: S3 için 01.01.2023 sonrasına ait hiçbir sonuç hesaplanmadıysa ve görülmediyse başlangıç 01.10.2026'dır;
+görüldüyse dondurma günüdür. Kontrol (30.10.2026):
+
+- `pdf.py` dönemi kodda 2015-01-01 - 2022-12-31'dir (`yontem.DONEM`); veri bu günde kesilir.
+- Depodaki bütün S3 çıktıları (`gartley-yontem/sinav-pdf/`, `gartley-yontem/yahoo/`) ve geçici klasördeki bütün S3
+  çıktıları (PDF ailesi, prova, Yahoo, denetim paneli ve düzeltme koşusu) 2022-12-30'da biter.
+- Bu projenin 151 oturum kaydında S3 ile birlikte 2023, 2024 ya da 2025 geçen satırların hiçbiri bir S3 sonucu değildir
+  (yalnız veri dosyasının adı ve Gartley'in 2023-2025 sınavı).
+- Önceki takip (`kayit/20261028`) yalnız Gartley'i koştu.
+
+Sonuç: S3 sonucu 01.01.2023 sonrası için hiç hesaplanmadı; S3 01.10.2026'da başlar.
+
+### Komut
+
+Depo kökünden, ana sanal ortamla: `python -X utf8 kanit/gartley-takip/izle.py`. Seçenekler: `--mevcut` (indirme yok),
+`--zamanli` (zamanlanmış görev kipi), `--cikti <klasör>` (deneme kaydı başka yere). Veri `takip.py`'nin yardımcılarıyla
+güncellenir (aynı veri klasörü, ana deponun `veri/takip-gartley`'i, Git dışı).
+
+Her koşu iki adayı başlangıç gününden son tam işlem gününe kadar baştan hesaplar ve `izleme/<son gün>-<motor ağacı>/`
+klasörünü yeni yazar. Aynı gün ve aynı motorla kayıt varsa hiçbir şey yazmaz ve 0 ile çıkar; motor değişirse aynı gün
+için yeni klasör açılır, eskisi kalır.
+
+- `ozet.json`: son gün, iki adayın özkaynağı, faiz geliri, işlem kârı, en iyi üç işlem hariç işlem kârı, yalnız nakit,
+  BIST 100 al-tut, sayılar, kasanın atladığı emirler; dondurma özeti, düzeltmeler, motor ağacı, `tansu` commit'i, veri
+  kimliği ve fiyat dosyası özeti, kaynak günü hataları.
+- `<aday>-sinyaller.csv` (her sinyal ve sonucu), `<aday>-islemler.csv` (dolan emirler, kasa kararı, adet, kâr),
+  `<aday>-gunluk-kasa.csv`.
+- `izleme/izleme.tsv`: her yeni kayıtta aday başına bir satır (yalnız eklenir).
+
+### Otomatik günlük güncelleme
+
+Görev Zamanlayıcı görevi `TansuGartleyIzleme` (bu bilgisayar): pazartesi-cuma 20:00 (İstanbul), bilgisayar kapalıysa
+açılınca. Eylem: ana sanal ortamın `pythonw.exe`'si `-X utf8 kanit\gartley-takip\izle.py --zamanli`, çalışma klasörü
+`gartley-takip` dalının worktree'si. Görev veriyi ve izleme kaydını günceller, yeni kaydı `gartley-takip` dalına yerel
+olarak commit eder; push etmez. Dal başkaysa hiçbir şey yapmaz (çıkış 2). Çıktı ana deponun
+`veri/takip-gartley/izleme-log/` klasöründedir. Görev yalnız kullanıcı oturumu açıkken çalışır.
+
+Durum: `Get-ScheduledTask -TaskName TansuGartleyIzleme | Get-ScheduledTaskInfo` (son çalışma ve sonuç kodu; 0 başarı).
+
+Durdurma:
+
+- Çalışan koşuyu kesmek: `Stop-ScheduledTask -TaskName TansuGartleyIzleme`
+- Görevi duraklatmak (tanım kalır): `Disable-ScheduledTask -TaskName TansuGartleyIzleme`
+- Yeniden başlatmak: `Enable-ScheduledTask -TaskName TansuGartleyIzleme`
+- Görevi silmek: `Unregister-ScheduledTask -TaskName TansuGartleyIzleme -Confirm:$false`
