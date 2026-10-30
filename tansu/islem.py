@@ -360,7 +360,8 @@ def _kayit(e: _Islem, g: Gun, cikis: Cikis, sembol, strateji, sinif) -> dict:
         "mae_yuzde": mae / giris * 100,
         "mfe_R": mfe / risk,
         "mae_R": mae / risk,
-        "risk_tabanli": giris - e.stop < e.risk_tabani,
+        # Dolumdaki riskten: risk = max(giriş - ilk stop, taban). İz stop `e.stop`u sonradan taşıyabilir (SPEC 5.5).
+        "risk_tabanli": risk <= e.risk_tabani,
         "dolumda_stop": son_neden == "stop (dolumda)",
         "acik": son_neden == "açık",
     }
