@@ -496,18 +496,32 @@ def _mc_bolumu(mc: montecarlo.MonteCarlo, sinif: str) -> str:
     )
 
 
-def yaz(s: Sinama, kok: Path = RAPOR_KOKU) -> Path:
+def _donem_sutunlari(s: Sinama) -> dict[str, dict[str, str | int]]:
+    b = sinama.BIRIM[s.strateji.olcu]
+    return {ad: _ozet_sutunu(o, b) for ad, o in sinama.donemler(s.gecmis).items()}
+
+
+def _bayraklar(s: Sinama) -> list[dict]:
+    y = s.yuruyus
+    olcum = bayrak_olc(s.mc, y.dis_ornek, s.sakli, s.gecmis, y.son)
+    return bayrak_satirlari(olcum, sinama.BIRIM[s.strateji.olcu])
+
+
+def _sakli_aralik(s: Sinama) -> str:
+    return f"{_tarih(sinama.SAKLI_BAS)}-{_tarih(s.sakli_son)}"
+
+
+def html_metni(s: Sinama) -> str:
+    """`sinama.html` metni; dosya yazmaz."""
     strateji, y = s.strateji, s.yuruyus
-    klasor = kok / strateji.ad
-    klasor.mkdir(parents=True, exist_ok=True)
     olcu = strateji.olcu
     b = sinama.BIRIM[olcu]
     islemler = s.gecmis.islemler
-    donem = {ad: _ozet_sutunu(o, b) for ad, o in sinama.donemler(s.gecmis).items()}
+    donem = _donem_sutunlari(s)
     hedefler = tuple(h for h, _ in strateji.cikis.hedef)
     nedenler = [{"Neden": k, "Adet": v} for k, v in sorted(s.gecmis.sayac.items()) if v]
     semboller = sinama.sembol_tablosu(islemler, olcu)
-    sakli_tarih = f"{_tarih(sinama.SAKLI_BAS)}-{_tarih(s.sakli_son)}"
+    sakli_tarih = _sakli_aralik(s)
     yillar = {str(yil): s.gecmis.yil(yil) for yil in sinama.YILLAR}
 
     def ileri(kosular: dict[str, sinama.Kosu]) -> str:
@@ -519,14 +533,11 @@ def yaz(s: Sinama, kok: Path = RAPOR_KOKU) -> Path:
     if hedefler:
         isabet = [_isabet_satiri(i) for i in sinama.isabet(islemler, hedefler)]
         isabet_bolumu = f"<h2>Seviyelerin isabeti</h2>{_tablo(isabet)}"
-    islemler.to_csv(
-        klasor / "islemler.csv", index=False, encoding="utf-8", lineterminator="\n"
-    )
     mc = s.mc
-    bayrak = bayrak_satirlari(bayrak_olc(mc, y.dis_ornek, s.sakli, s.gecmis, y.son), b)
+    bayrak = _bayraklar(s)
     sinif = "a (tam seviye)" if strateji.sinif == "a" else "b (giriş taraması)"
     sakli_notu = "" if s.sakli_var else " Veri saklı döneme ulaşmıyor."
-    govde = f"""<!doctype html><html lang="tr"><meta charset="utf-8">
+    return f"""<!doctype html><html lang="tr"><meta charset="utf-8">
 <title>{html.escape(strateji.ad)} sınama</title>
 <style>body{{font-family:sans-serif;max-width:1100px;margin:auto}}table{{border-collapse:collapse;margin:8px 0}}
 td,th{{border:1px solid #ccc;padding:3px 6px;font-size:13px;text-align:right}}th{{background:#eee}}</style>
@@ -555,7 +566,16 @@ td,th{{border:1px solid #ccc;padding:3px 6px;font-size:13px;text-align:right}}th
 <h2>Sembol tablosu</h2>{_tablo(semboller)}
 <p>İşlem kaydı: islemler.csv ({len(islemler)} satır).</p>
 </html>"""
-    (klasor / "sinama.html").write_text(govde, encoding="utf-8", newline="\n")
+
+
+def md_metni(s: Sinama) -> str:
+    """`ozet.md` metni; dosya yazmaz."""
+    strateji, y = s.strateji, s.yuruyus
+    b = sinama.BIRIM[strateji.olcu]
+    donem = _donem_sutunlari(s)
+    sakli_tarih = _sakli_aralik(s)
+    mc = s.mc
+    bayrak = _bayraklar(s)
     tum = donem["Bütün yıllar"]
     son = y.son
     secim = (
@@ -616,5 +636,15 @@ td,th{{border:1px solid #ccc;padding:3px 6px;font-size:13px;text-align:right}}th
         VARSAYIM,
         "",
     ]
-    (klasor / "ozet.md").write_text("\n".join(satirlar), encoding="utf-8", newline="\n")
+    return "\n".join(satirlar)
+
+
+def yaz(s: Sinama, kok: Path = RAPOR_KOKU) -> Path:
+    klasor = kok / s.strateji.ad
+    klasor.mkdir(parents=True, exist_ok=True)
+    s.gecmis.islemler.to_csv(
+        klasor / "islemler.csv", index=False, encoding="utf-8", lineterminator="\n"
+    )
+    (klasor / "sinama.html").write_text(html_metni(s), encoding="utf-8", newline="\n")
+    (klasor / "ozet.md").write_text(md_metni(s), encoding="utf-8", newline="\n")
     return klasor / "sinama.html"
