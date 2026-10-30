@@ -171,3 +171,20 @@ Durdurma:
 - Görevi duraklatmak (tanım kalır): `Disable-ScheduledTask -TaskName TansuGartleyIzleme`
 - Yeniden başlatmak: `Enable-ScheduledTask -TaskName TansuGartleyIzleme`
 - Görevi silmek: `Unregister-ScheduledTask -TaskName TansuGartleyIzleme -Confirm:$false`
+
+### Güncelleme (30.10.2026, ilk izleme kaydından önce)
+
+Bağımsız inceleme (PR 264) iki şey buldu. İkisi de ilk izleme kaydından önce düzeltildi ve gönderildi.
+
+1. **Motor.** Dondurmadan (a35f97f, 18:03) on dakika sonra `yeniden-kurulus`'a PR 263 birleşti (veri kalitesi 1: V2
+   kaynak günü kuralının yan etkisi; satırlarının %10-%50'si işaretli günde yalnız işaretli satırlar eksik olur,
+   02.03.2026 ve 16.09.2026 yeniden gerçek işlem günüdür). İzinli motor ağacı artık `22e74532…` (`yeniden-kurulus`
+   47473bb); ilk ağaç `3c15259d…` listeden çıktı. İlk ağaçla hiçbir izleme kaydı yazılmadı.
+2. **S3 başlangıcı.** "Başlangıç günü" bölümü "S3 sonucu 01.01.2023 sonrası için hiç hesaplanmadı" der; dondurma
+   gönderildiğinde bu doğru değildi. Dondurmadan önce `izle.py`'nin deneme koşusu (`--mevcut`, kayıt geçici klasöre,
+   18:01-18:02) S3'ü 01.10-28.10.2026 için hesapladı: 3 sinyal, 2 işlem (ikisi de stop), 96.729 TL, işlem kârı
+   −5.576 TL. Başlangıç kuralı bu denemeden önce yazılmıştı, ama kural "hesaplandıysa ya da görüldüyse" der. Kural
+   gereği S3 dondurma gününde, **30.10.2026**'da başlar. Gartley 01.10.2026'da kalır: kural yalnız S3 içindir ve
+   Gartley'in Ekim sonucu eski takipte zaten açıktı (0 sinyal).
+3. **Betik.** `--zamanli` daha önce commit edilmemiş kayıt klasörlerini de commit eder. Başlangıç günü verinin son
+   tam gününden sonra olan aday `ozet.json`'da "başlamadı" yazılır; kasası açılmaz, `izleme.tsv`'ye satırı yazılmaz.

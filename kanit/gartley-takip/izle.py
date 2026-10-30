@@ -163,6 +163,11 @@ def calis(mevcut: bool, cikti: Path = IZLEME) -> tuple[Path, str] | None:
     tansu_commit = git("rev-parse", "HEAD")
     for ad, a in DONDURMA["adaylar"].items():
         bas = pd.Timestamp(a["baslangic"])
+        if (
+            bas > son
+        ):  # başlangıç günü verinin son tam gününden sonra: kasa henüz açılmadı
+            adaylar[ad] = {"baslangic": str(bas.date()), "durum": "başlamadı"}
+            continue
         sin, isl, gun, o = aday_kos(ad, gunler, bas, son)
         u = o["uc_parca"]
         alinan = isl[isl["kasa_durumu"] == "alındı"] if len(isl) else isl
@@ -251,17 +256,18 @@ def calis(mevcut: bool, cikti: Path = IZLEME) -> tuple[Path, str] | None:
     return hedef, kimlik
 
 
-def commit_et(hedef: Path, kimlik: str) -> None:
-    """Yalnız yeni kayıt klasörü ve izleme.tsv; push yok."""
-    yollar = [str(hedef.relative_to(REPO)), str(TSV.relative_to(REPO))]
+def commit_et(mesaj: str) -> None:
+    """Yalnız kayıt klasörleri ve izleme.tsv; daha önce commit edilmemiş kayıt da girer. Push yok."""
+    yollar = [
+        str(p.relative_to(REPO))
+        for p in [*sorted(IZLEME.glob("2*-*")), TSV]
+        if p.exists()
+    ]
+    if not yollar or not git("status", "--porcelain", "--", *yollar):
+        print("commit edilecek kayıt yok")
+        return
     git("add", "--", *yollar)
-    git(
-        "commit",
-        "-m",
-        f"İzleme: {hedef.name} kaydı (veri {kimlik})",
-        "--",
-        *yollar,
-    )
+    git("commit", "-m", mesaj, "--", *yollar)
     print(f"commit: {git('rev-parse', '--short', 'HEAD')}")
 
 
@@ -277,8 +283,12 @@ def zamanli() -> int:
                 print(f"dal {dal}; izleme yalnız {DAL} dalında commit eder")
                 return 2
             sonuc = calis(mevcut=False)
-            if sonuc:
-                commit_et(*sonuc)
+            hedef, kimlik = sonuc or (None, None)
+            commit_et(
+                f"İzleme: {hedef.name} kaydı (veri {kimlik})"
+                if hedef
+                else "İzleme: önceki koşudan commit edilmemiş kayıt"
+            )
             return 0
         except BaseException:  # noqa: BLE001  görevin sonucu log dosyasında kalsın
             traceback.print_exc()
