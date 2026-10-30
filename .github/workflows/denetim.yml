@@ -1,0 +1,39 @@
+name: denetim
+
+# Her PR'da ve her gövde düzenlemesinde koşar; ci.yml'deki .md atlaması bunları atlamaz.
+# Tarama pytest'i (requirements.lock.txt sürümü) içe aktarır; PR iddia denetimi yalnız standart kütüphane kullanır.
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+  push:
+    branches: [yeniden-kurulus]
+
+permissions:
+  contents: read
+  pull-requests: read
+  actions: read
+
+jobs:
+  acik-depo:
+    runs-on: windows-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - run: python -m pip install pytest==9.1.1
+      - run: python -X utf8 tests/test_acik_depo.py
+
+  pr-iddia:
+    if: github.event_name == 'pull_request'
+    runs-on: windows-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - run: python -X utf8 kurulum/pr_iddia_kontrol.py ${{ github.event.pull_request.number }}
+        env:
+          GH_TOKEN: ${{ github.token }}

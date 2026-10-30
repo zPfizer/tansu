@@ -120,8 +120,8 @@ FAILED tests/test_gelecek_kesim.py::test_yukleyiciden_kesilen_ya_da_bozulan_gele
 
 ```
 $ .venv\Scripts\python.exe -X utf8 kurulum/esdeger.py --deneme
-tamam: 15 senaryo -> C:\Users\levent\AppData\Local\Temp\esdeger-deneme-w7cuvys0\1
-tamam: 15 senaryo -> C:\Users\levent\AppData\Local\Temp\esdeger-deneme-w7cuvys0\2
+tamam: 15 senaryo -> %TEMP%\esdeger-deneme-w7cuvys0\1
+tamam: 15 senaryo -> %TEMP%\esdeger-deneme-w7cuvys0\2
 deneme: iki koşu aynı (74 dosya)
 ```
 
