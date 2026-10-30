@@ -647,12 +647,15 @@ def _gunler(fiyat, olaylar, takvim):
     limit = pd.Series(
         np.where((f.index >= LIMIT_DEGISIM) | iki_seans, 0.10, 0.20), index=f.index
     )
-    ref = onceki * carpan
-    tavan, taban, kapanis = ref * (1 + limit), ref * (1 - limit), f["ham_kapanis"]
-    # İki seansta ilk seansın bazı önceki AOF'dir: sınır önceki kapanış ve AOF'nin dışından ölçülür. İkinci seansın sınırı
-    # birincinin sınırından ölçülür; her sınır en çok bir adım dışa yuvarlanır.
+    ref, kapanis = onceki * carpan, f["ham_kapanis"]
+    # İki seansta ilk seansın bazı önceki AOF'dir (BISTECH 2.1.1); günlük veride baz önceki kapanış ya da AOF sayılır.
+    # Kilit yakın sınırdan, aşım uzak sınırdan ölçülür. İkinci seansın sınırı birincinin sınırından ölçülür; her sınır en
+    # çok bir adım dışa yuvarlanır.
     onceki_aof = f["ham_aof"].where(ok).ffill().shift(1) * carpan
-    b_ust, b_alt = np.fmax(ref, onceki_aof) * 1.1, np.fmin(ref, onceki_aof) * 0.9
+    alt_baz = ref.where(~iki_seans, np.fmin(ref, onceki_aof))
+    ust_baz = ref.where(~iki_seans, np.fmax(ref, onceki_aof))
+    tavan, taban = alt_baz * (1 + limit), ust_baz * (1 - limit)
+    b_ust, b_alt = ust_baz * 1.1, alt_baz * 0.9
     s1, s2 = b_ust + adim(b_ust, f.index), b_alt - adim(b_alt, f.index)
     gun_tavan = tavan.where(~iki_seans, s1 * 1.1 + adim(s1 * 1.1, f.index))
     gun_taban = taban.where(~iki_seans, s2 * 0.9 - adim(s2 * 0.9, f.index))
