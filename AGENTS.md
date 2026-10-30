@@ -8,7 +8,7 @@ The specification is `docs/SPEC.md` (local file, Git-ignored until the public-re
 
 - Reply in plain Turkish. Start with "Patron,". Give the result first and name the remaining work.
 - Ask Levent only about money, scope, direction, taste, and product decisions that the spec does not settle. Never wait for him: record the open question in `kanit/acik-sorular.md` and continue with the next independent step.
-- A question from Levent gets an answer, not an action. Closing a PR, deleting a branch, or a download longer than 10 minutes needs his yes for that item.
+- A question from Levent gets an answer, not an action. Closing a PR without a merge, deleting a branch, or a download longer than 10 minutes needs his yes for that item.
 - The final message to Levent is plain Turkish, with no English report.
 
 ## Layout
@@ -54,5 +54,5 @@ The specification is `docs/SPEC.md` (local file, Git-ignored until the public-re
 - Read a file over 15,000 characters with the `okuyucu` agent, or in parts with Read `offset` and `limit`.
 - PR body: name every changed file in backticks. Copy every number from command output, or write "ölçülmedi". `python -X utf8 kurulum/pr_iddia_kontrol.py <n>` compares the files, the `+/-` counts and the pytest total with GitHub. The `denetim` job runs it on each PR change; run it again after CI is green, before the review. The reviewer checks every other number against its output.
 - Wait for CI with one call: `gh pr checks <n> --watch --interval 20`. Do not poll.
-- Merge a PR into `yeniden-kurulus` without asking Levent when its CI is green and an independent review comment is on the PR (standing approval, Levent 30.10.2026). The comment gives the verdict (GEÇTİ or NOTLU GEÇTİ), the reviewed commit SHA and the review report. The SHA must be the PR head. Merge only with `gh pr merge <n> --squash --match-head-commit <sha>`. A merge commit brings every branch commit into the public history. This approval does not cover `main`.
+- Merge a PR into `yeniden-kurulus` without asking Levent when every check in `gh pr checks <n>` passes on the PR head and an independent review comment is on the PR (standing approval, Levent 30.10.2026). Independent means a separate agent or session that did not write the change. The comment gives the verdict (GEÇTİ or NOTLU GEÇTİ), the reviewed commit SHA and the review report. The SHA must be the PR head. Merge only with `gh pr merge <n> --squash --match-head-commit <sha>`. A merge commit brings every branch commit into the public history. This approval does not cover `main`.
 - Denied commands (`.claude/settings.json`): `git rebase`, `--amend`, `git checkout .`, `git restore .`, `git add .`, `git add -- .`, `git add -A`, `git add --all`, and `sed -i` in Bash. A denied part stops the whole command line, also after `;`, `&&` or `|` and inside `$(...)`. Use Edit for file changes, `git add <files>` and `git commit -F <file>`. The global settings deny more; the global `CLAUDE.md` lists them.
