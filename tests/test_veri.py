@@ -145,6 +145,29 @@ def test_yarisi_karantinada_olan_kaynak_gunu_eksik_sayilir(tmp_path):
     assert s19["eksik"] and not s19["islem"] and not s19["karantina"]
 
 
+@pytest.mark.parametrize("bozuk, kaynak", [(2, True), (1, False)])
+def test_kaynak_gunu_esigi_satirlarin_yuzde_onu(tmp_path, bozuk, kaynak):
+    # 30.04.2018: 411 hissenin 73'ünde (%17,8) düzeltilmiş düşük 0; %50 eşiği kaçırıyordu. Eşik %10
+    # (SPEC 3.9 istisnası, Levent 30.10.2026). 20 satırın 2'si bozuksa kaynak günüdür, 1'i ise değil.
+    semboller = [f"S{i:02}" for i in range(20)]
+    fiyatlar = {
+        s: [
+            satir("2024-01-02", 100.0, 100.0),
+            satir("2024-01-03", *([130.0] * 2 if i < bozuk else [100.0] * 2)),
+        ]
+        for i, s in enumerate(semboller)
+    }
+    kimlik = veri.indir(
+        semboller,
+        tmp_path,
+        SahteKaynak(fiyatlar, dict.fromkeys(semboller, [])),
+        simdi=SIMDI,
+    )
+    g = veri.oku(kimlik, tmp_path).gun_tablosu.set_index(["sembol", "tarih"])
+    s00 = g.loc[("S00", pd.Timestamp("2024-01-03"))]
+    assert s00["eksik"] == kaynak and s00["karantina"] != kaynak
+
+
 def anlik(tmp_path, fiyat=CCOLA_FIYAT, olay=CCOLA_OLAY):
     k = SahteKaynak({"CCOLA": fiyat}, {"CCOLA": olay})
     kimlik = veri.indir(["CCOLA"], tmp_path, k, simdi=SIMDI)
