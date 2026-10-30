@@ -1,0 +1,84 @@
+{
+ "aday": "gartley",
+ "grup": "ayrik",
+ "gecme": {
+  "1_ortR_pozitif_ve_p": false,
+  "2_en_iyi_uc_olmadan_islem_kari_pozitif": false,
+  "3_son_kasa_nakit_ustu": true,
+  "k": 3,
+  "baraj_p": 0.016666666666666666,
+  "EVET": false
+ },
+ "sinyal": {
+  "aday": "gartley",
+  "grup": "ayrik",
+  "sembol": 185,
+  "huni": {},
+  "sinyal": 106,
+  "sonuc": {
+   "dolum": 12,
+   "emir süresi doldu": 72,
+   "kalite kuralı (karantina)": 22
+  },
+  "n": 12,
+  "hafta": 12,
+  "ort_R": 0.3410474201633371,
+  "ortanca_R": 0.20929924374080744,
+  "p_tek_yonlu": 0.2386,
+  "ort_R_yuzde_5_95": [
+   -0.37140549929228905,
+   1.1498040484539949
+  ],
+  "cikis_nedeni": {
+   "stop": 11,
+   "stop (açılış)": 1
+  },
+  "taban_bagladi": 1,
+  "ort_R_ham": 0.3373652642215077,
+  "ort_R_motor_kaymasiz": 0.46876775172440044,
+  "sure_sn": 2.1,
+  "defter": "sinyal 106, dolum 12, ort R 0.341, ortanca 0.209, p 0.2386"
+ },
+ "para": {
+  "aday": "gartley",
+  "grup": "ayrik",
+  "sembol": 185,
+  "son": 264771,
+  "yillik_bilesik_yuzde": 12.95,
+  "en_kotu_dusus_yuzde": -5.11,
+  "dusus_tepe": "2022-09-15",
+  "dusus_dip": "2022-09-29",
+  "islem": 12,
+  "kazanan_yuzde": 58.3,
+  "islem_kari_tl": 35628,
+  "kaybeden_islemler_tl": -6002,
+  "faiz_geliri_tl": 129143,
+  "atlanan": {},
+  "acik_gun_payi_yuzde": 12.0,
+  "ort_hissede_pay_yuzde": 3.7,
+  "yillik_getiri_yuzde": {
+   "2015": 6.02,
+   "2016": 6.83,
+   "2017": 10.61,
+   "2018": 9.77,
+   "2019": 19.59,
+   "2020": 9.05,
+   "2021": 21.45,
+   "2022": 21.54
+  },
+  "uc_parca": {
+   "faiz_geliri_tl": 129142.59,
+   "islem_kari_tl": 35628.37,
+   "en_iyi_uc_olmadan_islem_kari_tl": -496.82,
+   "son_kasa_tl": 264770.96,
+   "yalniz_nakit_kasasi_tl": 234178.97,
+   "fark_tl": 30591.99
+  },
+  "motor": {
+   "dolum": 12,
+   "ortalama_R": 0.469
+  },
+  "sure_sn": 2.2,
+  "defter": "son 264770.96, nakit 234178.97, fark 30591.99, faiz 129142.59, işlem kârı 35628.37, en iyi 3 hariç -496.82, işlem 12"
+ }
+}
