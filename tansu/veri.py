@@ -27,6 +27,8 @@ LIMIT_DEGISIM = pd.Timestamp("2020-03-13")  # ±%20 → ±%10
 # Tek seans: öncesi iki seans, seans başına ±%10, sınırlar dışa yuvarlı (BİST duyurusu 11699; BISTECH 2.1.2).
 # SPEC 3.9 istisnası, Levent 30.10.2026.
 TEK_SEANS = pd.Timestamp("2015-11-30")
+# İki seans döneminde baz önceki seansın AOF'siydi (BISTECH 2.1.1); seans verisi olmadığından aşım payı daha geniş.
+IKI_SEANS_TOLERANS = 0.01
 ADIM_DEGISIM = pd.Timestamp("2023-11-06")  # fiyat adımı tablosu değişti
 ADIM_ESIK = [20, 50, 100, 250, 500, 1000, 2500]  # TASARIM 5.1 tablosu, alt sınır dahil
 ADIM_ESKI = [0.01, 0.02, 0.05, 0.1, 0.1, 0.1, 0.1, 0.1]
@@ -647,13 +649,15 @@ def _gunler(fiyat, olaylar, takvim):
     )
     ref = onceki * carpan
     tavan, taban, kapanis = ref * (1 + limit), ref * (1 - limit), f["ham_kapanis"]
-    # İki seansta ikinci seansın sınırı birincinin sınırından ölçülür; her sınır en çok bir adım dışa yuvarlanır.
-    s1, s2 = tavan + adim(tavan, f.index), taban - adim(taban, f.index)
+    # İki seansta ilk seansın bazı önceki AOF'dir: sınır önceki kapanış ve AOF'nin dışından ölçülür. İkinci seansın sınırı
+    # birincinin sınırından ölçülür; her sınır en çok bir adım dışa yuvarlanır.
+    onceki_aof = f["ham_aof"].where(ok).ffill().shift(1) * carpan
+    b_ust, b_alt = np.fmax(ref, onceki_aof) * 1.1, np.fmin(ref, onceki_aof) * 0.9
+    s1, s2 = b_ust + adim(b_ust, f.index), b_alt - adim(b_alt, f.index)
     gun_tavan = tavan.where(~iki_seans, s1 * 1.1 + adim(s1 * 1.1, f.index))
     gun_taban = taban.where(~iki_seans, s2 * 0.9 - adim(s2 * 0.9, f.index))
-    asim = (kapanis > gun_tavan * (1 + LIMIT_TOLERANS)) | (
-        kapanis < gun_taban * (1 - LIMIT_TOLERANS)
-    )
+    pay = np.where(iki_seans, IKI_SEANS_TOLERANS, LIMIT_TOLERANS)
+    asim = (kapanis > gun_tavan * (1 + pay)) | (kapanis < gun_taban * (1 - pay))
     karantina = bozuk | (ok & asim)
     temiz = ok & ~karantina
     kilit_tavan = temiz & (kapanis >= tavan - adim(tavan, f.index) - 1e-9)
