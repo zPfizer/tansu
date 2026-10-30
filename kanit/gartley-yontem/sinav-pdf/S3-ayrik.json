@@ -1,0 +1,75 @@
+{
+ "aday": "S3",
+ "grup": "ayrik",
+ "sembol": 185,
+ "huni": {
+  "desen": 662,
+  "onayda 100 mum": 55,
+  "onaydan önce X ya da C aşıldı": 22
+ },
+ "sinyal": 548,
+ "sonuc": {
+  "dolumdan önce yüksek > C (emir düştü)": 188,
+  "dolum": 180,
+  "kalite kuralı (karantina)": 131,
+  "X'ten 100 mumdan fazla (emir düştü)": 45,
+  "veri sonunda bekleyen emir": 4
+ },
+ "n": 180,
+ "hafta": 105,
+ "ort_R": 0.38728142292644285,
+ "ortanca_R": -1.0555798321450491,
+ "p_tek_yonlu": 0.0183,
+ "ort_R_yuzde_5_95": [
+  0.08371147395909376,
+  0.6857419338020194
+ ],
+ "cikis_nedeni": {
+  "hedef1": 76,
+  "stop": 74,
+  "stop (açılış)": 30
+ },
+ "taban_bagladi": 6,
+ "ort_R_ham": 0.3734423429491896,
+ "ort_R_motor_kaymasiz": 0.46439354658116544,
+ "para": {
+  "son": 254956,
+  "yillik_bilesik_yuzde": 12.42,
+  "en_kotu_dusus_yuzde": -33.1,
+  "dusus_tepe": "2017-09-07",
+  "dusus_dip": "2018-08-13",
+  "islem": 145,
+  "kazanan_yuzde": 40.7,
+  "islem_kari_tl": 104351,
+  "kaybeden_islemler_tl": -188518,
+  "faiz_geliri_tl": 50605,
+  "atlanan": {
+   "atlandı: adet 0": "28"
+  },
+  "acik_gun_payi_yuzde": 86.4,
+  "ort_hissede_pay_yuzde": 40.8,
+  "yillik_getiri_yuzde": {
+   "2015": -19.06,
+   "2016": 0.8,
+   "2017": 15.39,
+   "2018": -19.98,
+   "2019": 82.43,
+   "2020": 6.58,
+   "2021": -11.46,
+   "2022": 96.59
+  },
+  "uc_parca": {
+   "faiz_geliri_tl": 50605.06,
+   "islem_kari_tl": 104351.36,
+   "en_iyi_uc_olmadan_islem_kari_tl": 54648.26,
+   "son_kasa_tl": 254956.43,
+   "yalniz_nakit_kasasi_tl": 234178.97,
+   "fark_tl": 20777.45
+  },
+  "motor": {
+   "dolum": 173,
+   "ortalama_R": 0.451
+  }
+ },
+ "sure_sn": 2.4
+}

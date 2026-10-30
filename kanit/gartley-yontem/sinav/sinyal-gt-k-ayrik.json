@@ -1,0 +1,32 @@
+{
+ "aday": "gt-k",
+ "grup": "ayrik",
+ "sembol": 185,
+ "huni": {
+  "kurulum": 123,
+  "dokundu": 20,
+  "teyit": 3,
+  "teyitten_once_bozuldu": 4
+ },
+ "sinyal": 3,
+ "sonuc": {
+  "dolum": 2,
+  "kalite kuralı (karantina)": 1
+ },
+ "n": 2,
+ "hafta": 2,
+ "ort_R": -0.20839714748847185,
+ "ortanca_R": -0.20839714748847185,
+ "p_tek_yonlu": 1.0,
+ "ort_R_yuzde_5_95": [
+  -0.4069665865123041,
+  -0.009827708464639593
+ ],
+ "cikis_nedeni": {
+  "stop": 2
+ },
+ "taban_bagladi": 0,
+ "ort_R_ham": -0.20839714748847185,
+ "ort_R_motor_kaymasiz": -0.195051243441938,
+ "sure_sn": 2.1
+}

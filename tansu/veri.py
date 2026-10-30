@@ -46,8 +46,9 @@ FIYAT_SUTUNLARI = [
 ]
 KARANTINA_ESIK, DENETIM_ESIK, INMEYEN_ESIK = 0.01, 0.02, 5  # TASARIM 5.13
 KAYNAK_GUNU_EN_AZ = 20  # TASARIM 5.13: kaynak günü hatası için en az satır
-# Günün satırlarının en az %10'u bozuksa kaynak günüdür (SPEC 3.9 istisnası, Levent 30.10.2026;
-# 30.04.2018'de 73/411 hissede düzeltilmiş düşük 0 geldi, %50 eşiği bunu hisse hatası sayıyordu).
+# Günün satırlarının en az %10'u işaretliyse (karantina) bu satırlar kaynak hatasıdır: eksik gün olur, karantina açmaz.
+# En az yarısı işaretliyse bütün gün eksiktir (kaynak günü). SPEC 3.9 istisnası, Levent 30.10.2026; 30.04.2018'de
+# 73/411 hissede düzeltilmiş düşük 0 geldi, %50 eşiği bunu hisse hatası sayıyordu.
 KAYNAK_GUNU_PAYI = 0.10
 LIMIT_OLAY_KODLARI = frozenset(
     {"01", "02", "03", "04", "05", "06", "08", "09", "78"}
@@ -214,8 +215,9 @@ class Anlik:
         g = pd.concat(parcalar).rename_axis("tarih").reset_index()
         d = g[~g["eksik"]].groupby("tarih")["karantina"].agg(["sum", "size"])
         en_az = d["size"] >= KAYNAK_GUNU_EN_AZ
-        # Yarısı bozuk gün bütünüyle eksiktir. Daha azı bozuksa yalnız bozuk satırlar eksik olur: aynı günün tutarlı
-        # satırları gerçek piyasadır (16.09.2026 düşüş günü; SPEC 3.9 istisnası, Levent 30.10.2026).
+        # Satırlarının en az yarısı işaretli gün bütünüyle eksiktir. %10 ile %50 arasıysa yalnız işaretli (karantina)
+        # satırlar eksik olur: aynı günün tutarlı satırları gerçek piyasadır (16.09.2026 düşüş günü; SPEC 3.9
+        # istisnası, Levent 30.10.2026).
         kaynak = g["tarih"].isin(d.index[en_az & (d["sum"] * 2 >= d["size"])]) | (
             g["tarih"].isin(d.index[en_az & (d["sum"] >= KAYNAK_GUNU_PAYI * d["size"])])
             & g["karantina"]
