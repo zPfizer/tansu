@@ -106,7 +106,7 @@ def konsol(s: Sinama) -> list[str]:
         else "saklı dönem: veri saklı döneme ulaşmıyor"
     )
     rastgele = (
-        f"n/a (N = {mc.n})" if mc.rastgele is None else f"{mc.rastgele.yuzdelik:.1f}"
+        _rastgele_yok(mc.n) if mc.rastgele is None else f"{mc.rastgele.yuzdelik:.1f}"
     )
     return [
         f"{ad}: {len(s.gecmis.sinyaller)} sinyal, {len(s.gecmis.islemler)} dolum, "
