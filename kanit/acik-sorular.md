@@ -52,6 +52,12 @@ Retro 30.10.2026 (2), Levent: "12 bulgunun hepsinin çözülmesini ve bir daha y
 - `ci` yalnız `.md` değişen PR'da adımlarını atlar ve başarılı biter; iş yine her PR'da başlar, çünkü `testler` `yeniden-kurulus`'ta zorunlu durum denetimidir ("Verilen kararlar", Levent 30.10.2026). PR 270'teki ilk sürüm `paths-ignore` kullanıyordu; zorunlu denetimin iş akışı başlamazsa denetim "Expected" kalır ve belge PR'ı birleşemez. Açık depo taraması ve PR iddia denetimi `denetim` iş akışında her PR'da koşar. `main`'e bu atlama eklenmedi: orada `tests/` altında 17 dosya `.md` adını anar (`grep -l`, 30.10.2026) ve `test_sahipler.py`, `test_atif.py`, `test_havuz.py` belgeleri okuyup denetler.
 - `main`'in eski belgeleri 1.877 eski havuz adı taşır (kasa 30.10.2026'da notları başlığa göre yeniden adlandırdı). `main` testleri bu adları beynin yeniden adlandırma kaydıyla çözer; belge metni değişmedi, çünkü `main` eski projedir ve eski belge kanıt değildir (Evidence rules 2).
 
+## Retro kapanışı 31.10.2026 kayıtları (karar gerekmez)
+
+Levent 31.10.2026: "37 bulguyu bağımlılık sırasına göre sıralayıp hepsini tekrarlamayacak şekilde kapat". Ajan kararları:
+
+- Birleştirme yöntemi (retro 31.10 bulgu 4): PR 273 çıplak `gh pr merge` ile merge commit'iyle birleşti. Artık tek yol `kurulum/birlestir.py`; yöntemi taban ve baştan kendisi seçer, `.claude/settings.json` çıplak `gh pr merge`'ü ve birleştirme API çağrısını yasaklar. Seçilen tasarım birleştirmeden önce durdurur. Sınır: yasak yalnız Claude oturumlarını bağlar; GitHub sayfasından yapılan birleştirmeyi durdurmaz. Depo ayarı (`allow_merge_commit`) kapatılamaz, çünkü `main`'i getiren PR merge commit ister.
+
 ## Verilen kararlar
 
 - `main` her zaman `yeniden-kurulus`'un içinde, Levent 30.10.2026: "Commitlerim hiçbir zaman geride kalmasın sonra ajanlar yanlış okuıyor durumu". `origin/main`'in bu dalda olmayan iki commit'i (4d90eeb #251, da7aed5 #252) bir birleştirme commit'iyle geldi; PR `--merge` ile birleşir (`AGENTS.md` "Ortam ve teslim"). `docs/TASARIM.md` ve `CHANGELOG.md` bu dalda yok; çatışmada silinmiş kaldılar. TASARIM 5.13 kararı (düzeltilmiş seride 4 ondalık yuvarlamanın mutlak yarım birimi) bu dalda yerel `docs/SPEC.md` 3.9 istisna (1) ve `tansu/veri.py` `YARIM_BIRIM = 5e-5` içinde. Durum: uygulandı.

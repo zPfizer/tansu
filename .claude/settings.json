@@ -23,6 +23,10 @@
       "PowerShell(*git add -- .)",
       "PowerShell(*git add -A*)",
       "PowerShell(*git add --all*)",
+      "Bash(*gh pr merge*)",
+      "Bash(*pulls/*/merge*)",
+      "PowerShell(*gh pr merge*)",
+      "PowerShell(*pulls/*/merge*)",
       "Bash(sed -i*)"
     ]
   },
