@@ -11,18 +11,18 @@ from tests.sentetik import gun_tablosu
 from tests.test_islem import CIKIS, maliyetli, sinyal
 
 
-def tablo(gunler=(0,), uye_degil=()):
+def tablo(gunler=(0,), karantinali=()):
     g = gun_tablosu(
         [11, 10.2, 12.2, 13.2, 13.2, 11, 11, 11],
         yuksek=[11.1, 10.5, 12.5, 13.5, 13.3, 11.05, 11.05, 11.05],
         dusuk=[10.9, 9.8, 10.3, 12.3, 13.1, 10.95, 10.95, 10.95],
     )
-    g.iloc[list(uye_degil), g.columns.get_loc("uye")] = False
+    g.iloc[list(karantinali), g.columns.get_loc("karantina")] = True
     return g, sinyal(g, gunler=gunler)
 
 
 def test_simule_red_nedenini_ve_oynayi_modul_adiyla_sirayla_cagirir(monkeypatch):
-    g, s = tablo(gunler=(0, 5), uye_degil=(5,))
+    g, s = tablo(gunler=(0, 5), karantinali=(5,))
     cagrilar = []
     gercek_red, gercek_oyna = islem._red_nedeni, islem.oyna
 
@@ -57,7 +57,7 @@ def test_simule_red_nedenini_ve_oynayi_modul_adiyla_sirayla_cagirir(monkeypatch)
     assert isinstance(satir, pd.Series) and satir["giris"]
     assert taban == pytest.approx(islem.RISK_TABANI * 0.1)
     assert oyna_sayac is sayac and len(kayitlar) == 1
-    assert sayac[islem.UYE_DEGIL] == 1
+    assert sayac[islem.KALITE] == 1
 
 
 @pytest.mark.parametrize(
