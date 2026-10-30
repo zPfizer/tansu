@@ -501,6 +501,20 @@ def test_tek_seans_oncesi_baz_onceki_aof_kilitli_taban_gunu_asim_degil(tmp_path)
     assert g["kilit_taban_duyarli"].tolist() == [False, True]
 
 
+@pytest.mark.parametrize("ilk_gun", ["2015-06-29", "2021-06-28"])
+def test_kurusluk_hissede_kapanis_baza_esitse_kilit_degildir(tmp_path, ilk_gun):
+    # 0,10 TL'de ±%10 bant bir fiyat adımıdır (0,09-0,11); "sınıra bir adım yakın" payı baza ulaşır ve hareketsiz günü hem
+    # tavan hem taban kilidi sayıyordu (MEMSA 01.07.2015: önceki 0,10, H = L = kapanış 0,10). Kilit için kapanış bazdan
+    # yarım adımdan çok uzaklaşmalıdır. 0,10 → 0,11 tavan, 0,11 → 0,10 (taban 0,099) taban kilididir.
+    tarihler = pd.bdate_range(ilk_gun, periods=4)
+    fiyat = [
+        satir(t, p, p) for t, p in zip(tarihler, [0.10, 0.10, 0.11, 0.10], strict=True)
+    ]
+    g = anlik(tmp_path, fiyat=fiyat, olay=[]).gun_tablosu
+    assert g["kilit_tavan_duyarli"].tolist() == [False, False, True, False]
+    assert g["kilit_taban_duyarli"].tolist() == [False, False, False, True]
+
+
 def test_dort_ondaliga_yuvarli_dusuk_fiyatli_kapanis_bozuk_sayilmaz(tmp_path):
     # TASARIM 5.13: HGDG_KAPANIS 4 ondalığa yuvarlı, HGDG_MIN ve HGDG_MAX değil. Gerçek veri AKFGY 17.01.2014: ham
     # kapanış = ham düşük = 1,19; düzeltilmiş kapanış 0,4082 < düzeltilmiş düşük 0,408246 (fark 0,000046). Bağıl
