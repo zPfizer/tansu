@@ -130,16 +130,26 @@ def baska_programda_acik(monkeypatch, hedef):
     monkeypatch.setattr(pd.DataFrame, "to_csv", to_csv)
 
 
+RAPOR_KLASORU = Path("rapor", "gartley")
+AYAR_JSON = Path("stratejiler", "ayarlar", "gartley.json")
+
+
 @pytest.mark.parametrize(
-    ("komut_adi", "baslangic", "yol"),
+    ("komut_adi", "baslangic", "yol", "yazilan"),
     [
-        ("sina", "taslak", Path("stratejiler", "durum.csv")),
-        ("sina", "taslak", Path("rapor", "gartley", "islemler.csv")),
-        ("ayarla", "sinandi", Path("stratejiler", "ayarlar", "gartley.json")),
+        ("sina", "taslak", Path("stratejiler", "durum.csv"), (RAPOR_KLASORU,)),
+        ("sina", "taslak", RAPOR_KLASORU / "islemler.csv", ()),
+        ("ayarla", "sinandi", AYAR_JSON, (RAPOR_KLASORU,)),
+        (
+            "ayarla",
+            "sinyalde",
+            Path("stratejiler", "durum.csv"),
+            (RAPOR_KLASORU, AYAR_JSON),
+        ),
     ],
 )
 def test_yazilacak_dosya_baska_programda_aciksa_acik_mesaj_ve_cikis_1(
-    ortam, tmp_path, monkeypatch, capsys, komut_adi, baslangic, yol
+    ortam, tmp_path, monkeypatch, capsys, komut_adi, baslangic, yol, yazilan
 ):
     ortam("gartley", durum=baslangic)
     once = (tmp_path / "stratejiler" / "durum.csv").read_bytes()
@@ -147,8 +157,28 @@ def test_yazilacak_dosya_baska_programda_aciksa_acik_mesaj_ve_cikis_1(
     assert main([komut_adi, "gartley"]) == 1
     hata = capsys.readouterr().err
     assert f"tansu {komut_adi}: {yol} " in hata and "durum.csv değişmedi" in hata
+    assert all(str(p) in hata for p in yazilan)
+    assert yazilan or "yazdıkları" not in hata
+    assert all((tmp_path / p).exists() for p in yazilan)
     assert (tmp_path / "stratejiler" / "durum.csv").read_bytes() == once
     assert not list(tmp_path.rglob("*.tmp"))
+
+
+def test_ayar_json_bozuksa_ayarla_yazilan_rapor_klasorunu_soyler(
+    ortam, tmp_path, capsys
+):
+    ortam("gartley", durum="sinandi")
+    json_yolu = tmp_path / AYAR_JSON
+    json_yolu.parent.mkdir(parents=True)
+    json_yolu.write_text("{bozuk", encoding="utf-8")
+    once = (tmp_path / "stratejiler" / "durum.csv").read_bytes()
+    assert main(["ayarla", "gartley"]) == 1
+    hata = capsys.readouterr().err
+    assert f"tansu ayarla: {AYAR_JSON}: geçersiz JSON" in hata
+    assert str(RAPOR_KLASORU) in hata
+    assert (tmp_path / RAPOR_KLASORU / "sinama.html").exists()
+    assert json_yolu.read_text(encoding="utf-8") == "{bozuk"
+    assert (tmp_path / "stratejiler" / "durum.csv").read_bytes() == once
 
 
 def test_okunacak_durum_dosyasi_kilitliyse_yazilamadi_demez(
