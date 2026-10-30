@@ -597,6 +597,11 @@ def _gunler(fiyat, olaylar, takvim):
     f = fiyat.sort_values("tarih").set_index("tarih")
     f = f.reindex(takvim[(takvim >= f.index[0]) & (takvim <= f.index[-1])])
     var = f["ham_kapanis"].notna()  # eksik gün NaN kalır, doldurulmaz
+    # İşlemsiz gün: hacim 0 ve ham AOF, yüksek, düşük 0; kaynak kapanışı önceki günden taşır. Fiyatsız gündür, bozuk değil
+    # (TASARIM 5.13 "sıfır hacim sıradan işlemsiz gündür"; SPEC 3.9 istisnası, Levent 30.10.2026).
+    var &= ~(
+        (f["hacim"] == 0) & (f[["ham_aof", "ham_yuksek", "ham_dusuk"]] <= 0).all(axis=1)
+    )
     islem = var & (f["hacim"] > 0)
     alt = f["dusuk"] * (1 - YUVARLAMA) - YARIM_BIRIM
     ust = f["yuksek"] * (1 + YUVARLAMA) + YARIM_BIRIM
