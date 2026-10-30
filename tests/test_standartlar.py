@@ -98,7 +98,7 @@ def test_settings_yalniz_yazan_kabugu_engeller_kodlu_kanca_tasimaz():
 
 
 def test_eski_akis_skilleri_kapsamlarini_yazar():
-    # Retro 30.10.2026: yeniden-kurulus çalışma ağacında docs/agents/ yok; skill bunu ilk satırda söyler.
+    # Retro 30.10.2026: yeniden-kurulus çalışma ağacında docs/agents/ yok; skill kapsam satırını yazar.
     satir = (
         "Scope: the main checkout. The `yeniden-kurulus` worktree has no `docs/agents/`"
     )

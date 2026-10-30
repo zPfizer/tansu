@@ -6,8 +6,11 @@ Depo yolları vardır (git'e girmeyen yerel dosyalar CI'da yoksa atlanır, yerel
 Çalışma çıktısı adları (`durum.txt`, `manifest.json`, `kartlar.jsonl`) yol sayılmaz: tablo onları içermez.
 """
 
+import json
+
 import pytest
 
+import atif_araclari
 from atif_araclari import (
     BEYIN,
     HAVUZ,
@@ -205,6 +208,41 @@ def test_tablodaki_dosyalarin_bolum_atiflari_var_olana_gider():
 def test_tablodaki_yerel_dosyanin_bolum_atiflari_var_olana_gider(yol):
     _yerel_yoksa_atla(yol)
     assert atif_kirikleri(KOK, sahip_dosyalari(KOK, [yol])) == []
+
+
+def test_yeniden_adlandirilan_havuz_adi_beynin_kaydiyla_cozulur(tmp_path, monkeypatch):
+    # Kasa 30.10.2026'da havuzu yeniden adlandırdı; eski ad kayıtla yeni nota, eski klasör yeni klasöre gider.
+    beyin = tmp_path / "beyin"
+    kok = "kisisel/300-Projects/Tansu X Veri Havuzu"
+    havuz = beyin / kok
+    (havuz / "assets" / "Yeni klasör").mkdir(parents=True)
+    (havuz / "assets" / "Yeni klasör" / "g.png").write_text("g", encoding="utf-8")
+    (havuz / "Yeni ad.md").write_text("n", encoding="utf-8")
+    kayit = beyin / "arsiv" / "yeniden-adlandirma-20261030.json"
+    kayit.parent.mkdir()
+    kayitlar = [
+        {"eski_yol": f"{kok}/tweet-eski-1.md", "yeni_yol": f"{kok}/Yeni ad.md"},
+        {"eski_yol": f"{kok}/x/tweet-alt-2.md", "yeni_yol": f"{kok}/x/Alt.md"},
+    ]
+    klasorler = [
+        {"eski": f"{kok}/assets/gorsel-paket-01", "yeni": f"{kok}/assets/Yeni klasör"}
+    ]
+    kayit.write_text(
+        json.dumps({"kayitlar": kayitlar, "resim_klasorleri": klasorler}),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(atif_araclari, "BEYIN", beyin)
+    monkeypatch.setattr(atif_araclari, "HAVUZ", havuz)
+    monkeypatch.setattr(atif_araclari, "ADLANDIRMA", kayit)
+    belge = _yaz(
+        tmp_path / "depo",
+        "not.md",
+        "`tweet-eski-1.md:3` `assets/gorsel-paket-01/g.png` `tweet-alt-2` `tweet-uydurma`",
+    )
+    assert beyin_kirikleri(tmp_path / "depo", [belge], havuz) == [
+        "not.md:1: tweet-alt-2",
+        "not.md:1: tweet-uydurma",
+    ]
 
 
 def test_tablodaki_dosyalarin_beyin_yollari_havuzda_var():

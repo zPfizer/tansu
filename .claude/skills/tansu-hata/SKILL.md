@@ -5,7 +5,7 @@ description: "Use for a Tansu defect, including a bug, error, failing test, cras
 
 # Bug fix (Hata düzeltme), flow B
 
-Scope: the main checkout. The `yeniden-kurulus` worktree has no `docs/agents/`; there, follow its `AGENTS.md`.
+Scope: the main checkout. The `yeniden-kurulus` worktree has no `docs/agents/`. There, follow its `AGENTS.md`.
 
 Use AGENTS.md "Work flow" for diagnosis methods and required agent roles. This flow keeps the TANSU fault evidence.
 Apply [Scope](../../../docs/agents/is-kurallari.md#scope) before delivery. Run the applicable steps in order.

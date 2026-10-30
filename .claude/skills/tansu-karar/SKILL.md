@@ -5,7 +5,7 @@ description: "Use when the user asks to plan, compare options, or decide somethi
 
 # Plan or decision (flow D)
 
-Scope: the main checkout. The `yeniden-kurulus` worktree has no `docs/agents/`; there, follow its `AGENTS.md`.
+Scope: the main checkout. The `yeniden-kurulus` worktree has no `docs/agents/`. There, follow its `AGENTS.md`.
 
 Use AGENTS.md "Work flow" for the decision method. This flow adds source authority and the decision record.
 Before creating an issue, follow [Issue body](../../../docs/agents/issue-tracker.md#issue-body).
