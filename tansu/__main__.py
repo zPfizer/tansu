@@ -67,7 +67,6 @@ def _veri(a) -> int:
 
 
 def _yazilanlar(yol, json_yolu) -> str:
-    """Hata iletisine eklenen cümle: bu koşunun yerine koyduğu çıktılar (rapor klasörü, ayar json'u)."""
     yazilan = [str(p) for p in (yol and yol.parent, json_yolu) if p]
     return f" Bu koşunun yeni yazdıkları: {', '.join(yazilan)}." if yazilan else ""
 
