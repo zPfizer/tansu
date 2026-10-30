@@ -294,7 +294,7 @@ def test_artimli_kaynak_olay_alinamazsa_fiyat_onbellegi_eskide_kalir(tmp_path):
     b.fiyat("AKBNK", BAS, SON)
     assert b.sayac == {"tam": 1}  # bölünme olayı yeniden istenir, eski olay kalmaz
     assert b.olaylar("AKBNK") == [{"SHT_KODU": "02", "n": 1}]
-    assert not list(tmp_path.glob("*.gecici"))
+    assert not list(tmp_path.glob("*.tmp"))
 
 
 def test_kapanan_tablo_yalniz_pay_kodlarini_2010_ve_sonrasini_alir():

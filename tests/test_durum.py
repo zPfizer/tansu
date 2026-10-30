@@ -117,6 +117,7 @@ def test_gec_yazim_yarida_kesilirse_dosya_ayni_kalir(tmp_path, monkeypatch):
     with pytest.raises(OSError, match="disk dolu"):
         durum.gec("a", "sina", puanli=False, yol=yol)
     assert yol.read_bytes() == baytlar
+    assert not list(tmp_path.glob("*.tmp"))
 
 
 def test_gec_olmayan_adi_veri_hatasi_ile_reddeder(tmp_path):
