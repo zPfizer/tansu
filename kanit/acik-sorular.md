@@ -5,6 +5,10 @@ Ajan bu dosyaya yazar; Levent'in kararı gereken sorular "Levent" ile işaretlid
 ## Levent kararı bekleyenler
 
 1. Levent, Ek B #12 (kamu deposu içeriği): kural kartları, Tansu alıntıları, tweet kimlikleri ve `docs/SPEC.md` yerelde kalıyor. Seçenekler: (a) yerelde kalsın, (b) depo gizli olsun ve bunlar commit edilsin.
+2. Levent, ATR(14) = 0 olan sinyal günü (mimari 2. tur, D5, 30.10.2026): stopun altında dolumda risk tabanı 0 olur, `islem` sıfıra böler ve koşu durur. 2014-2025 görüntüsünde 1.357.316 günün 4'ü böyle (hepsi MEMSA); Gartley takip verisinde hiç yok. Seçenekler: (a) ATR 0 "ATR tanımsız" sayılsın, sinyal düşsün (öneri); (b) olduğu gibi kalsın.
+3. Levent, `stop = "X-2ATR"` iken ATR tanımsız (D6): stop NaN olur, kurulum stopsuz sayılır. Bugünkü ızgara yalnız `X`'e izin verdiği için bu yol bugün çalışmaz. Seçenekler: (a) şimdilik kalsın (öneri); (b) sinyal "ATR tanımsız" diye düşsün.
+4. Levent, saklı dönemin sonu (D7): `sakli_son` iş ayı sonunu kullanır, BIST tatil takvimini bilmez. Ayın son iş günü tatilse ay, ertesi ayın verisi gelene kadar birkaç gün "tamamlanmamış" sayılır. Seçenekler: (a) şimdilik kalsın (öneri); (b) bir tatil takvimi kaynağı eklensin.
+5. Levent, mimari 2. turun kapsamı: "hepsini yap" dendi; iki aday varsayılanla değişti. C2 (sinyal satırından tipli emir) yapılmadı: Gartley betikleri (`para`, `yontem`, `takip`) motorun sinyal satırını ve iç adlarını doğrudan kullanır; tipli emir satırın ikinci kopyası olurdu. C4 küçüldü: yalnız `MonteCarlo.olcu` silindi; dar `hesapla` girdisi tek üretim çağrısını uzatırdı, tabloları gruplamak hiçbir boş değer denetimini kaldırmazdı. Seçenekler: (a) böyle kalsın (öneri); (b) C2 ve C4'ün tamamı yine yapılsın.
 
 ## Gece 1 kayıtları (karar gerekmez)
 
@@ -18,6 +22,13 @@ Ajan bu dosyaya yazar; Levent'in kararı gereken sorular "Levent" ile işaretlid
 - İleri yürüme pencereleri sinyal tarihine göredir. SPEC 5.7 "giriş tarihi" der ama terimi tanımlamaz; SPEC 5.5 yalnız sinyal ve dolum tarihini tanımlar. Tansu'nun kaynaklarında pencere ataması yok. Sinyal tarihi kaldı (28.10.2026).
 - 2021-2025 koşularında fiyat 31.12.2025'te kesilir; o gün açık kalan kurulum son kapanışta `açık` işaretlenir. SPEC 5.7 hem "kendi çıkışına kadar açık kalır" hem "saklı dönem ileri yürümede kullanılmaz" der; bu iki cümle 2025H2 için çelişir. Tansu'nun kaynaklarında dönem sonundaki açık işlem kuralı yok. Kesim kaldı (28.10.2026).
 - Al-tut referansları (SPEC 5.6) henüz yapılmadı; SPEC 12'de bunlara sahip bir faz yok.
+
+## Mimari turları kayıtları (karar gerekmez)
+
+- Mimari 2. tur, 30.10.2026: Gartley betiklerinin kullandığı motor adları (`simule`, `_red_nedeni`, `oyna`, `_acik_gun`, `_kapat`, `Gun`, `_Islem` alanları) `tests/test_motor_yuzeyi.py` ile sabitlendi. Bu adları değiştiren bir değişiklik CI'da kırmızı olur.
+- `kaynak.Borsapy` Gartley takibinde faiz için kullanılır; kullanılmayan eski kod değildir.
+- `tansu sina` ve `tansu ayarla`, yazılacak dosya başka bir programda açıksa açık bir mesajla 1 koduyla çıkar; `durum.csv` değişmez. Eksik `durum.csv` hâlâ hata dökümü verir; bu iş D8'in dışındadır.
+- Piyasa emrinin dolum günü kuralı iki biçimde yazılı: `islem._emir_gunu` döngüsü ve `islem.Gun.dolum_gunu`. Bir test ikisini eşit tutar. Tek sahibe indirmek her `simule` çağrısına ek hesap getirir; 3. turda bakılacak.
 
 ## Verilen kararlar
 

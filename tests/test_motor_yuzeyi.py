@@ -58,6 +58,19 @@ def test_simule_red_nedenini_ve_oynayi_modul_adiyla_sirayla_cagirir(monkeypatch)
     assert taban == pytest.approx(islem.RISK_TABANI * 0.1)
     assert oyna_sayac is sayac and len(kayitlar) == 1
     assert sayac[islem.KALITE] == 1
+    kayit = kayitlar[0]
+    assert kayit["sinyal_tarihi"] == g.index[0]
+    assert (kayit["stop"], kayit["dolum_fiyati"], kayit["seviye"]) == (9.0, 10.0, 10.0)
+
+
+def test_red_nedeni_dogrudan_cagrida_str_ya_da_none_verir():
+    g, s = tablo(gunler=(0, 5), karantinali=(5,))
+    temiz = islem._red_nedeni(s.iloc[0], g.iloc[0], False, CIKIS)
+    karantina = islem._red_nedeni(s.iloc[5], g.iloc[5], False, CIKIS)
+    acik = islem._red_nedeni(s.iloc[0], g.iloc[0], True, CIKIS)
+    assert temiz is None
+    assert karantina == islem.KALITE and isinstance(karantina, str)
+    assert acik == islem.ACIK_VAR and isinstance(acik, str)
 
 
 @pytest.mark.parametrize(
@@ -69,8 +82,8 @@ def test_oyna_emir_dusunce_tam_bir_sayac_artar(gecerlilik, neden):
     g = gun_tablosu([11, 10.5, 10.6, 10.7, 10.7])
     s = sinyal(g, gecerlilik=gecerlilik)
     sayac = Counter()
-    e, _ = islem.oyna(islem.Gun(g, s), 0, s.iloc[0], CIKIS, 0.05, sayac)
-    assert e is None
+    e, son = islem.oyna(islem.Gun(g, s), 0, s.iloc[0], CIKIS, 0.05, sayac)
+    assert e is None and isinstance(son, int)
     assert sum(sayac.values()) == 1 and sayac[neden] == 1
 
 
@@ -100,6 +113,34 @@ def test_acik_gun_kancasi_satiri_yazilabilir_alanlari_ve_kapatmayi_gorur(monkeyp
     assert k["cikis_fiyati"] == 10.5
     assert k["R"] == pytest.approx(maliyetli(10.0, 10.5) / 2.0)
     assert islem.sonuc(islemler[0]).R == pytest.approx(k["R"])
+
+
+def test_acik_gun_kancasi_islem_alanlarini_ve_parcalari_gorur(monkeypatch):
+    g, s = tablo()
+    gercek = islem._acik_gun
+    gorulen = []
+
+    def kanca(e, i, gun, cikis):
+        once = list(e.parcalar)
+        kapandi = gercek(e, i, gun, cikis)
+        gorulen.append((i, e.dolum_i, e.giris, e.risk_tabani, once, list(e.parcalar)))
+        return kapandi
+
+    monkeypatch.setattr(islem, "_acik_gun", kanca)
+    taban = islem.RISK_TABANI * 0.1
+    e, son = islem.oyna(islem.Gun(g, s), 0, s.iloc[0], CIKIS, taban, Counter())
+
+    assert isinstance(e, islem._Islem) and isinstance(son, int)
+    hedef1, hedef2 = (2, 12.0, 0.5, "hedef1"), (3, 13.0, 0.5, "hedef2")
+    assert [(i, once, sonra) for i, *_, once, sonra in gorulen] == [
+        (1, [], []),
+        (2, [], [hedef1]),
+        (3, [hedef1], [hedef1, hedef2]),
+    ]
+    assert all(
+        (dolum_i, giris, risk_tabani) == (1, 10.0, taban)
+        for _, dolum_i, giris, risk_tabani, *_ in gorulen
+    )
 
 
 def test_gun_motor_dizilerini_gun_basina_bir_ogeyle_verir():
