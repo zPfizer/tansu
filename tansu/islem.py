@@ -102,7 +102,6 @@ def simule(
     sembol: str,
     strateji: str,
     sinif: str,
-    risk_tabani: float = RISK_TABANI,
 ) -> tuple[list[dict], Counter]:
     """Bir sembolün sinyallerini SPEC 5.1 ve 5.4 kurallarıyla işletir.
 
@@ -123,7 +122,7 @@ def simule(
         if satir["giris_tur"] not in ("limit", "piyasa"):
             raise ValueError(f"giriş türü henüz yok: {satir['giris_tur']}")
         e, serbest_gun = oyna(
-            g, int(i), satir, cikis, risk_tabani * float(g.atr[i]), sayac
+            g, int(i), satir, cikis, RISK_TABANI * float(g.atr[i]), sayac
         )
         if e is not None:
             kayitlar.append(_kayit(e, g, cikis, sembol, strateji, sinif))
