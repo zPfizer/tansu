@@ -148,7 +148,8 @@ def test_yarisi_karantinada_olan_kaynak_gunu_eksik_sayilir(tmp_path):
 @pytest.mark.parametrize("bozuk, kaynak", [(2, True), (1, False)])
 def test_kaynak_gunu_esigi_satirlarin_yuzde_onu(tmp_path, bozuk, kaynak):
     # 30.04.2018: 411 hissenin 73'ünde (%17,8) düzeltilmiş düşük 0; %50 eşiği kaçırıyordu. Eşik %10
-    # (SPEC 3.9 istisnası, Levent 30.10.2026). 20 satırın 2'si bozuksa kaynak günüdür, 1'i ise değil.
+    # (SPEC 3.9 istisnası, Levent 30.10.2026). 20 satırın 2'si işaretliyse o satırlar kaynak hatasıdır (eksik,
+    # karantinasız); 1'i ise satır karantinaya girer.
     semboller = [f"S{i:02}" for i in range(20)]
     fiyatlar = {
         s: [
@@ -166,6 +167,40 @@ def test_kaynak_gunu_esigi_satirlarin_yuzde_onu(tmp_path, bozuk, kaynak):
     g = veri.oku(kimlik, tmp_path).gun_tablosu.set_index(["sembol", "tarih"])
     s00 = g.loc[("S00", pd.Timestamp("2024-01-03"))]
     assert s00["eksik"] == kaynak and s00["karantina"] != kaynak
+
+
+@pytest.mark.parametrize("bozuk", [2, 9])
+def test_yarisindan_azi_bozuk_kaynak_gununde_tutarli_satir_fiyatini_korur(
+    tmp_path, bozuk
+):
+    # 16.09.2026: 623 satırın 126'sında (%20) ham AOF [düşük, yüksek] dışında; kalan 497 hisse gerçek düşüş günüdür
+    # (ortanca −%5). Yalnız bozuk satırlar eksik gün olur ve karantina açmaz; tutarlı satırlar fiyatını korur
+    # (SPEC 3.9 istisnası, Levent 30.10.2026). 20 satırın 2'si ya da 9'u (%45, yarının altı) bozuk: S00 eksik, S19
+    # 90'da kapanır, fiyatı kalır.
+    semboller = [f"S{i:02}" for i in range(20)]
+    fiyatlar = {
+        s: [
+            satir("2024-01-02", 100.0, 100.0),
+            {**satir("2024-01-03", 90.0, 90.0), "ham_yuksek": 91.0, "yuksek": 91.0}
+            | ({"ham_aof": 95.0, "aof": 95.0} if i < bozuk else {}),
+        ]
+        for i, s in enumerate(semboller)
+    }
+    kimlik = veri.indir(
+        semboller,
+        tmp_path,
+        SahteKaynak(fiyatlar, dict.fromkeys(semboller, [])),
+        simdi=SIMDI,
+    )
+    a = veri.oku(kimlik, tmp_path)
+    g = a.gun_tablosu.set_index(["sembol", "tarih"])
+    gun = pd.Timestamp("2024-01-03")
+    assert g.loc[("S00", gun), "eksik"] and not g.loc[("S00", gun), "karantina"]
+    s19 = g.loc[("S19", gun)]
+    assert not s19["eksik"] and s19["islem"] and not s19["karantina"]
+    f = a.hesap_fiyati.set_index(["sembol", "tarih"])
+    assert f.loc[("S19", gun), "kapanis"] == 90.0
+    assert pd.isna(f.loc[("S00", gun), "kapanis"])
 
 
 def anlik(tmp_path, fiyat=CCOLA_FIYAT, olay=CCOLA_OLAY):
