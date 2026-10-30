@@ -458,6 +458,33 @@ def test_dort_ondaliga_yuvarli_dusuk_fiyatli_kapanis_bozuk_sayilmaz(tmp_path):
     assert _karantina(a) == [False, False, True, False]
 
 
+def test_islemsiz_gun_fiyatsiz_gundur_karantina_acmaz(tmp_path):
+    # Kaynak işlemsiz günü hacim 0, ham AOF = yüksek = düşük = 0 ve önceki kapanışla verir (CLKHO 13.10.2015). TASARIM
+    # 5.13 "sıfır hacim sıradan işlemsiz gündür"; SPEC 3.9 istisnası (Levent 30.10.2026). Aynı satır hacimliyse bozuktur.
+    def islemsiz(tarih, hacim):
+        sifir = dict.fromkeys(
+            ["ham_aof", "ham_yuksek", "ham_dusuk", "aof", "yuksek", "dusuk"], 0.0
+        )
+        return {**satir(tarih, 10.0, 10.0), **sifir, "hacim": hacim}
+
+    def tablo(hacim):
+        fiyat = [satir("2024-01-02", 10.0, 10.0), islemsiz("2024-01-03", hacim)]
+        g = anlik(
+            tmp_path / str(hacim),
+            fiyat=[*fiyat, satir("2024-01-04", 10.5, 10.5)],
+            olay=[],
+        )
+        return g.gun_tablosu, g.hesap_fiyati
+
+    g, f = tablo(0.0)
+    assert g["eksik"].tolist() == [False, True, False]
+    assert not g["bozuk"].any() and not g["karantina"].any()
+    assert f["kapanis"].isna().tolist() == [False, True, False]
+    g, _ = tablo(500.0)
+    assert g["bozuk"].tolist() == [False, True, False]
+    assert g["karantina"].tolist() == [False, True, False]
+
+
 # Ham 100, 101, 102, 51, 52; düzeltilmiş 50, 50,5, 51, 51, 52 (çarpan 0,5 gerçekte 05.01.2024'te işler).
 BOLUNME = [
     satir("2024-01-02", 100.0, 50.0),
