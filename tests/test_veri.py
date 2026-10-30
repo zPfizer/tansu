@@ -425,7 +425,8 @@ def test_indirme_her_25_sembolde_hiz_ve_kalan_sureyi_yazar(
                 raise KaynakHatasi(sembol)
             return super().fiyat(sembol, bas, son)
 
-    semboller = [f"S{i:02}" for i in range(58)] + ["BOS", "HATA"]
+    # Boş ve inmeyen sembol de sayılır: 48 inen sembolle 50/50 satırı ancak böyle gelir.
+    semboller = ["BOS", "HATA"] + [f"S{i:02}" for i in range(48)]
     k = Kaynak(
         {**dict.fromkeys(semboller, CCOLA_FIYAT), "BOS": []},
         dict.fromkeys(semboller, CCOLA_OLAY),
@@ -434,8 +435,8 @@ def test_indirme_her_25_sembolde_hiz_ve_kalan_sureyi_yazar(
     monkeypatch.setattr(veri, "time", SimpleNamespace(monotonic=lambda: next(saat)))
     veri.indir(semboller, tmp_path, k, simdi=SIMDI)
     assert capsys.readouterr().out.splitlines() == [
-        "indirme: 25/60 sembol, 4.0 sn/sembol, kalan ~2 dk",
-        "indirme: 50/60 sembol, 3.2 sn/sembol, kalan ~1 dk",
+        "indirme: 25/50 sembol, 4.0 sn/sembol, kalan ~2 dk",
+        "indirme: 50/50 sembol, 3.2 sn/sembol, kalan ~0 dk",
     ]
 
 

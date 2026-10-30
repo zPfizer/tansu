@@ -340,14 +340,14 @@ class Anlik:
         return pd.concat(parcalar, ignore_index=True) if parcalar else pd.DataFrame()
 
 
-def _ilerleme(semboller, adim=25):
-    """Sembolleri verir; her `adim` sembolden sonra ölçülen hızı ve kalan süreyi yazar.
+def _ilerleme(semboller):
+    """Sembolleri verir; her 25 sembolden sonra ölçülen hızı ve kalan süreyi yazar.
 
     Üreteç olarak yazıldı: döngü gövdesindeki `continue` (inmeyen, boş) de sayılır."""
     bas, toplam = time.monotonic(), len(semboller)
     for n, s in enumerate(semboller, 1):
         yield s
-        if n % adim == 0:
+        if n % 25 == 0:
             sn = (time.monotonic() - bas) / n
             print(
                 f"indirme: {n}/{toplam} sembol, {sn:.1f} sn/sembol, "
