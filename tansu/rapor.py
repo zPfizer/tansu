@@ -10,7 +10,7 @@ from typing import NamedTuple, assert_never
 import numpy as np
 import pandas as pd
 
-from tansu import ayar, montecarlo, sinama
+from tansu import ayar, montecarlo, sinama, veri
 from tansu.strateji import Strateji
 
 RAPOR_KOKU = Path("rapor")
@@ -40,6 +40,7 @@ class Sinama:
     parametre: dict[str, float | str]
     ayar_tarihi: str | None
     kimlik: str
+    kapi: sinama.VeriKapisi
     gecmis: sinama.Kosu
     yuruyus: ayar.Yuruyus
     sakli: sinama.Kosu
@@ -57,6 +58,7 @@ def hazirla(
     gunler: sinama.Gunler,
     *,
     kimlik: str,
+    kapi: sinama.VeriKapisi,
     sinanan: int,
     ayarla: bool,
     okunan: ayar.Okunan | None,
@@ -80,6 +82,7 @@ def hazirla(
         parametre=p,
         ayar_tarihi=ayar_tarihi,
         kimlik=kimlik,
+        kapi=kapi,
         gecmis=gecmis,
         yuruyus=yuruyus,
         sakli=sakli,
@@ -116,7 +119,21 @@ def konsol(s: Sinama) -> list[str]:
         f"ortalama verim {verim} ({y.verim_adim}/{len(y.adimlar)} adım)",
         sakli,
         f"Monte Carlo: tohum {mc.tohum}, N = {mc.n}, rastgele giriş yüzdeliği {rastgele}",
+        kapi_satiri(s.kapi),
     ]
+
+
+def kapi_satiri(k: sinama.VeriKapisi) -> str:
+    """Konsol, html ve ozet.md aynı satırı yazar; kapı kalırsa satır SORUNLU ile başlar (TASARIM 5.13)."""
+    durum = f"SORUNLU ({'; '.join(k.sorunlar)})" if k.sorunlar else "temiz"
+    satir = (
+        f"Veri kapısı: {durum}. Karantina oranı {k.karantina:.2%} (eşik {veri.KARANTINA_ESIK:.0%}), "
+        f"olay denetimi farkı oranı {k.olay:.2%} (eşik {veri.DENETIM_ESIK:.0%}); "
+        f"{sinama.ILK_GIRIS:%d.%m.%Y} ve sonrası {k.n} hisse-gün."
+    )
+    if k.kaynak_gunleri:
+        satir += f" Eksik gün olarak işlenen {'; '.join(k.kaynak_gunleri)}."
+    return satir
 
 
 def _tablo(satirlar: list[dict] | pd.DataFrame) -> str:
@@ -541,6 +558,7 @@ def html_metni(s: Sinama) -> str:
 td,th{{border:1px solid #ccc;padding:3px 6px;font-size:13px;text-align:right}}th{{background:#eee}}</style>
 <h1>{html.escape(strateji.ad)}: geçmiş sınama</h1>
 <p><b>{UYARI}</b></p>
+<p><b>{html.escape(kapi_satiri(s.kapi))}</b></p>
 <p>Sınıf: {sinif}. Zaman: {strateji.zaman}. Kural kartı: {", ".join(strateji.kaynaklar)} (yerel). Veri görüntüsü: {html.escape(s.kimlik)}.</p>
 <p>{html.escape(parametre_satiri(s))}</p>
 <p>{VARSAYIM}</p>
@@ -587,6 +605,8 @@ def md_metni(s: Sinama) -> str:
         UYARI,
         "",
         f"Veri görüntüsü: {s.kimlik}. Dönem: 2021-2025. {parametre_satiri(s)}",
+        "",
+        kapi_satiri(s.kapi),
         "",
         f"| Dönem | Sinyal | Dolum | Beklenti {b} | Toplam {b} | Kazanma |",
         "|---|---|---|---|---|---|",
