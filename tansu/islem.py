@@ -83,7 +83,7 @@ class Gun:
         """t'den sonraki ilk fiyatlı gün (kapanış ve AOF var), yoksa len(kap)."""
         yok = len(self.kap)
         fiyatli = np.append(
-            np.flatnonzero(~np.isnan(self.kap) & ~np.isnan(self.aof)), yok
+            np.flatnonzero(np.isfinite(self.kap) & ~np.isnan(self.aof)), yok
         )
         return fiyatli[np.searchsorted(fiyatli, np.arange(yok), side="right")]
 
@@ -180,14 +180,16 @@ def _emir_gunu(e: _Islem, i: int, g: Gun, sayac: Counter) -> _Islem | None:
     if not piyasa and i - e.sinyal_i > int(e.satir["gecerlilik"]):
         sayac[SURE_DOLDU] += 1
         return None
-    if not np.isfinite(g.kap[i]) or (piyasa and np.isnan(g.aof[i])):
-        return e
     if piyasa:
+        if i < g.dolum_gunu[e.sinyal_i]:
+            return e
         if g.tavan_kilit[i]:
             sayac[TAVAN_KILIDI] += 1
             return None
         dolum = g.aof[i]
     else:
+        if not np.isfinite(g.kap[i]):
+            return e
         seviye = float(e.satir["seviye"])
         dolum = np.nan
         if not g.tavan_kilit[i]:
