@@ -213,11 +213,12 @@ class Anlik:
         ]
         g = pd.concat(parcalar).rename_axis("tarih").reset_index()
         d = g[~g["eksik"]].groupby("tarih")["karantina"].agg(["sum", "size"])
-        kaynak = g["tarih"].isin(
-            d.index[
-                (d["size"] >= KAYNAK_GUNU_EN_AZ)
-                & (d["sum"] >= KAYNAK_GUNU_PAYI * d["size"])
-            ]
+        en_az = d["size"] >= KAYNAK_GUNU_EN_AZ
+        # Yarısı bozuk gün bütünüyle eksiktir. Daha azı bozuksa yalnız bozuk satırlar eksik olur: aynı günün tutarlı
+        # satırları gerçek piyasadır (16.09.2026 düşüş günü; SPEC 3.9 istisnası, Levent 30.10.2026).
+        kaynak = g["tarih"].isin(d.index[en_az & (d["sum"] * 2 >= d["size"])]) | (
+            g["tarih"].isin(d.index[en_az & (d["sum"] >= KAYNAK_GUNU_PAYI * d["size"])])
+            & g["karantina"]
         )
         g.loc[kaynak, ["eksik", "karantina"]] = [
             True,
