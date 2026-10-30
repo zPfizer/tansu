@@ -57,7 +57,7 @@ def hazirla(
     ayarla: bool,
     okunan: ayar.Okunan | None,
 ) -> Sinama:
-    """Izgara, Monte Carlo, parametre seçimi, geçmiş ve saklı dönem koşusu. Dosya yazmaz."""
+    """Dosya yazmaz."""
     yuruyus = ayar.yuru(strateji, gunler)
     mc = montecarlo.hesapla(strateji, gunler, yuruyus)
     if ayarla:

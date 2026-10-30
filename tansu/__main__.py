@@ -122,7 +122,7 @@ def _kos(a, *, ayarla: bool) -> int:
                 f"tansu ayarla: {a.ad} beklemede; önce taslak olmalı", file=sys.stderr
             )
             return 1
-        okunan = None if ayarla else ayar.oku(strateji)  # bozuk json ızgaradan önce
+        okunan = None if ayarla else ayar.oku(strateji)
         anlik = son_anlik(a.kok)
         s = rapor.hazirla(
             strateji,
