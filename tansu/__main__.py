@@ -93,6 +93,7 @@ def _kos(a, *, ayarla: bool) -> int:
             strateji,
             sinama.gunler(anlik),
             kimlik=anlik.kimlik,
+            kapi=sinama.veri_kapisi(anlik),
             sinanan=durum.sinanan(satirlar, a.ad),
             ayarla=ayarla,
             okunan=okunan,

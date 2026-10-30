@@ -89,6 +89,27 @@ class Kosu(NamedTuple):
         return ozet(self.islemler, len(self.sinyaller), self.olcu)
 
 
+class VeriKapisi(NamedTuple):
+    """Veri kapıları sınamaya giren hisse-günlerde (TASARIM 5.13). `sorunlar` doluysa koşu yine yazılır, rapor
+    SORUNLU der. Kaynak günü eksik gün olarak işlenir; koşuyu sorunlu yapmaz, tarihle yazılır."""
+
+    karantina: float
+    olay: float
+    n: int
+    sorunlar: tuple[str, ...]
+    kaynak_gunleri: tuple[str, ...]
+
+
+def veri_kapisi(anlik: veri.Anlik) -> VeriKapisi:
+    """Payda `ILK_GIRIS`ten sonraki bütün fiyat satırlarıdır: evren bütün BIST, pay işlem gördüğü gün evrendedir."""
+    f = anlik.fiyat
+    uye = f.loc[f["tarih"] >= ILK_GIRIS, ["sembol", "tarih"]]
+    hepsi = anlik.sorunlar_uye(uye)
+    kaynak = tuple(x for x in hepsi if x.startswith("kaynak günü hatası"))
+    sorunlar = tuple(x for x in hepsi if x not in kaynak)
+    return VeriKapisi(*anlik.oranlar(uye), sorunlar, kaynak)
+
+
 def gunler(anlik: veri.Anlik) -> dict[str, pd.DataFrame]:
     """Anlık görüntüdeki her sembolün (bütün BIST evreni) günlük tablosu ve `atr`'si; komut başına bir kez."""
     sonuc = {}
