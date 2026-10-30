@@ -1,6 +1,7 @@
 from collections import Counter
 
 import numpy as np
+import pandas as pd
 import pytest
 
 from tansu import islem
@@ -328,7 +329,7 @@ def test_bekleyen_piyasa_emri_varken_gelen_ikinci_sinyal_acik_var_sayilir():
     assert sayac[islem.ACIK_VAR] == 1
 
 
-def test_rastgele_ayni_piyasa_kurulumunda_simule_ile_ayni():
+def test_sablon_oyna_gercek_kurulumun_sablonuyla_simule_ile_ayni():
     g = gun_tablosu(
         [11, 11, 11.5, 12, 12.6, 13.2, 13.2], aof=[11, 11.1, 11.5, 12, 12.6, 13.2, 13.2]
     )
@@ -336,13 +337,36 @@ def test_rastgele_ayni_piyasa_kurulumunda_simule_ile_ayni():
     s.iloc[0, s.columns.get_indexer(["hedef1", "hedef2"])] = [12.5, 13.0]
     (k,), _ = kos(g, s)
     assert k["kismi"] and k["cikis_nedeni"] == "hedef2"
-    hedefler = (12.5, 13.0, np.nan, np.nan)
-    assert islem.rastgele(islem.Gun(g, s), 0, 10.0, hedefler, CIKIS) == (
-        k["R"],
-        k["net_yuzde"],
-    )
+    (sablon,) = islem.sablonlar(pd.DataFrame([k]), g["atr"].to_numpy()[:1])
+    uygun, dolum_gunu = islem.piyasa_gunleri(g)
+    assert uygun[0] and dolum_gunu[0] == 1
+    for olcu in ("R", "net_yuzde"):
+        assert islem.sablon_oyna(
+            islem.Gun(g, s), 0, 1, sablon, CIKIS, olcu
+        ) == pytest.approx(k[olcu])
     g.iloc[1, g.columns.get_loc("kilit_tavan")] = True
-    assert islem.rastgele(islem.Gun(g, s), 0, 10.0, hedefler, CIKIS) is None
+    assert not islem.piyasa_gunleri(g)[0][0]
+
+
+def test_piyasa_gunleri_motorun_piyasa_dolum_kuraliyla_ayni():
+    rng = np.random.default_rng(7)
+    for _ in range(50):
+        n = 12
+        kapanis = np.where(rng.random(n) < 0.25, np.nan, 11.0)
+        g = gun_tablosu(kapanis, aof=np.where(rng.random(n) < 0.2, np.nan, 11.0))
+        g["kilit_tavan"] = rng.random(n) < 0.25
+        g["karantina"] = rng.random(n) < 0.15
+        g["uye"] = rng.random(n) < 0.85
+        g["atr"] = rng.choice([0.1, 0.0, np.nan], n, p=[0.8, 0.1, 0.1])
+        s = piyasa(g, giris=range(n))
+        motor = islem.Gun(g, s)
+        uygun, dolum_gunu = islem.piyasa_gunleri(g)
+        for t in range(n):
+            e, _ = islem.oyna(motor, t, s.iloc[t], CIKIS_B, 0.0, Counter())
+            red = islem._red_nedeni(s.iloc[t], g.iloc[t], False, CIKIS_B)
+            assert uygun[t] == (red is None and g["atr"].iat[t] > 0 and e is not None)
+            if uygun[t]:
+                assert e.dolum_i == dolum_gunu[t]
 
 
 def test_hedef_yok_yalniz_hedef_listesi_doluysa_sayilir():

@@ -118,40 +118,24 @@ def oyna(
     Dönen: dolan işlem (yoksa None) ve son gün; veri biterse `len(g.kap)`, yani sonraki her sinyali kapatır.
     Veri sonunda açık işlem son fiyatlı kapanışta `açık` işaretlenir (SPEC 5.4)."""
     e: _Islem | None = _Islem(i, satir, float(satir["stop"]), taban)
+    for j in range(i + 1, len(g.kap)):
+        e = _emir_gunu(e, j, g, sayac)
+        if e is None:
+            return None, j
+        if e.dolum_i >= 0:
+            return _tut(e, g, cikis)
+    sayac[VERI_SONU] += 1
+    return None, len(g.kap)
+
+
+def _tut(e: _Islem, g: Gun, cikis: Cikis) -> tuple[_Islem, int]:
     n = len(g.kap)
-    for j in range(i + 1, n):
-        if e.dolum_i < 0:
-            e = _emir_gunu(e, j, g, sayac)
-            if e is None:
-                return None, j
-        if e.dolum_i >= 0 and np.isfinite(g.kap[j]) and _acik_gun(e, j, g, cikis):
+    for j in range(e.dolum_i, n):
+        if np.isfinite(g.kap[j]) and _acik_gun(e, j, g, cikis):
             return e, j
-    if e.dolum_i < 0:
-        sayac[VERI_SONU] += 1
-        return None, n
     son = int(np.flatnonzero(np.isfinite(g.kap))[-1])
     e.parcalar.append((son, g.kap[son], e.kalan, "açık"))
     return e, n
-
-
-def rastgele(
-    g: Gun,
-    t: int,
-    stop: float,
-    hedefler: tuple[float, float, float, float],
-    cikis: Cikis,
-    risk_tabani: float = RISK_TABANI,
-) -> Sonuc | None:
-    """Rastgele giriş kıyası (SPEC 5.8 madde 3): t günü sinyal veren `piyasa` kurulumunun (R, net %) değeri.
-
-    Seviyeler mutlak, NaN = yok; sinyal anı reddi ve çakışma kuralı yok. Dolmazsa None."""
-    satir = {
-        "giris_tur": "piyasa",
-        "stop": stop,
-        **dict(zip(HEDEFLER, hedefler, strict=True)),
-    }
-    e, _ = oyna(g, t, satir, cikis, risk_tabani * float(g.atr[t]), Counter())
-    return None if e is None else sonuc(e)
 
 
 def _red_nedeni(satir, gun_satiri, acik_var: bool, cikis: Cikis) -> str | None:
@@ -199,9 +183,60 @@ def _emir_gunu(e: _Islem, i: int, g: Gun, sayac: Counter) -> _Islem | None:
                 sayac[STOP_KAPANISI] += 1
                 return None
             return e
-    e.dolum_i, e.giris = i, float(dolum)
+    return _doldur(e, i, dolum)
+
+
+def _doldur(e: _Islem, i: int, fiyat: float) -> _Islem:
+    e.dolum_i, e.giris = i, float(fiyat)
     e.risk = np.nan if np.isnan(e.stop) else max(e.giris - e.stop, e.risk_tabani)
     return e
+
+
+def piyasa_gunleri(gun: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
+    """(uygun, dolum_gunu): t rastgele `piyasa` sinyal günü olabilir mi; t'den sonraki ilk fiyatlı gün, yoksa len(gun).
+
+    `_emir_gunu` piyasa kuralının vektörel kopyası."""
+    yok = len(gun)
+    fiyatli = np.append(
+        np.flatnonzero(gun["kapanis"].notna() & gun["aof"].notna()), yok
+    )
+    dolum_gunu = fiyatli[np.searchsorted(fiyatli, np.arange(yok), side="right")]
+    kilit = np.append(gun["kilit_tavan"].to_numpy(bool), True)
+    uygun = (
+        gun["uye"].to_numpy(bool)
+        & ~gun["karantina"].to_numpy(bool)
+        & (gun["atr"].to_numpy(float) > 0)
+        & ~kilit[dolum_gunu]
+    )
+    return uygun, dolum_gunu
+
+
+def sablonlar(kurulumlar: pd.DataFrame, atr: np.ndarray) -> np.ndarray:
+    """(m, 5) ATR katı uzaklıklar [stop, hedef1..hedef4], satır sırasıyla; `atr` satırların sinyal günü ATR'si. NaN hedef = yok."""
+    dolum = kurulumlar["dolum_fiyati"].to_numpy(float)
+    return np.column_stack(
+        [
+            (dolum - kurulumlar["stop"].to_numpy(float)) / atr,
+            *((kurulumlar[h].to_numpy(float) - dolum) / atr for h in HEDEFLER),
+        ]
+    )
+
+
+def sablon_oyna(
+    g: Gun, t: int, j: int, sablon: np.ndarray, cikis: Cikis, olcu: str
+) -> float:
+    """Rastgele giriş kıyası (SPEC 5.8 madde 3): t günü sinyal veren, j günü AOF'den dolan `piyasa` kurulumunun `olcu` değeri.
+
+    Stop ve hedefler dolumdan `sablon` x ATR(t) uzakta. Ön koşul: `piyasa_gunleri` t'yi uygun bulur, j onun dolum günüdür."""
+    d = sablon * g.atr[t]
+    dolum = g.aof[j]
+    satir = {
+        "giris_tur": "piyasa",
+        "stop": dolum - d[0],
+        **dict(zip(HEDEFLER, dolum + d[1:], strict=True)),
+    }
+    e = _Islem(t, satir, float(satir["stop"]), RISK_TABANI * float(g.atr[t]))
+    return getattr(sonuc(_tut(_doldur(e, j, dolum), g, cikis)[0]), olcu)
 
 
 def _kapanis_nedeni(e: _Islem, i: int, g: Gun, cikis: Cikis) -> str | None:
