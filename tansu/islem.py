@@ -64,7 +64,7 @@ class _Islem:
 
 
 class Gun:
-    """Bir sembolün motor dizileri; sembol başına bir kez kurulur. Motor gün tablosunun sütunlarını yalnız burada okur (`_red_nedeni` gün satırını alır)."""
+    """Bir sembolün motor dizileri; sembol başına bir kez kurulur."""
 
     def __init__(self, gun: pd.DataFrame, sinyal: pd.DataFrame):
         self.tarih = gun.index
@@ -80,7 +80,7 @@ class Gun:
 
     @cached_property
     def dolum_gunu(self) -> np.ndarray:
-        """t'den sonraki ilk fiyatlı gün (kapanış ve AOF var), yoksa len(kap). `_emir_gunu` piyasa kuralının vektörel kopyası."""
+        """t'den sonraki ilk fiyatlı gün (kapanış ve AOF var), yoksa len(kap)."""
         yok = len(self.kap)
         fiyatli = np.append(
             np.flatnonzero(~np.isnan(self.kap) & ~np.isnan(self.aof)), yok
@@ -89,7 +89,7 @@ class Gun:
 
     @cached_property
     def uygun(self) -> np.ndarray:
-        """t rastgele `piyasa` sinyal günü olabilir mi (SPEC 5.8 madde 3): üye, karantinasız, ATR > 0, dolum günü kilitsiz."""
+        """t rastgele `piyasa` sinyal günü olabilir mi (SPEC 5.8 madde 3)."""
         kilit = np.append(self.tavan_kilit, True)
         return self._uye & ~self._karantina & (self.atr > 0) & ~kilit[self.dolum_gunu]
 
