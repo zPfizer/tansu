@@ -218,6 +218,7 @@ def test_ayarla_puanli_nokta_yoksa_varsayilanlari_yazar_suzgeci_korur(
     assert "ayar: " in capsys.readouterr().out
 
 
+@pytest.mark.slow
 def test_ayarla_puanli_secimle_ayarlandi_yapar_sinyaldeyse_onay_ister(
     ortam, tmp_path, monkeypatch, capsys
 ):
@@ -249,6 +250,7 @@ def test_ayarla_puanli_secimle_ayarlandi_yapar_sinyaldeyse_onay_ister(
     assert "rastgele giriş yüzdeliği n/a" not in capsys.readouterr().out
 
 
+@pytest.mark.slow
 def test_hazirla_parametreyi_kaynagina_gore_secer_ve_dosya_yazmaz(
     tmp_path, monkeypatch
 ):
@@ -298,6 +300,7 @@ def kesisim_sinamasi(tmp_path, monkeypatch):
     )
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize(
     ("n", "beklenen"),
     [
@@ -313,6 +316,7 @@ def test_konsol_rastgele_giris_yoksa_raporla_ayni_nedeni_yazar(
     assert rapor.konsol(s)[4].endswith(f"rastgele giriş yüzdeliği {beklenen}")
 
 
+@pytest.mark.slow
 def test_konsol_olcu_satirlarini_sinamadan_uretir(tmp_path, monkeypatch):
     s = kesisim_sinamasi(tmp_path, monkeypatch)
     satirlar = rapor.konsol(s)
@@ -325,6 +329,7 @@ def test_konsol_olcu_satirlarini_sinamadan_uretir(tmp_path, monkeypatch):
     assert rapor.konsol(erken)[3] == "saklı dönem: veri saklı döneme ulaşmıyor"
 
 
+@pytest.mark.slow
 def test_yaz_metin_islevlerinin_metnini_oldugu_gibi_yazar(tmp_path, monkeypatch):
     s = kesisim_sinamasi(tmp_path, monkeypatch)
     html, md = rapor.html_metni(s), rapor.md_metni(s)

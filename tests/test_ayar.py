@@ -117,6 +117,7 @@ def test_az_kurulumlu_pazarda_her_adim_varsayilan_ve_verim_yok():
     assert y.verim is None and y.verim_adim == 0
 
 
+@pytest.mark.slow
 def test_her_ileri_yurume_penceresinde_en_az_30_kurulum(yuruyus):
     assert len(yuruyus.izgara) == 12
     assert (
@@ -136,6 +137,7 @@ def test_her_ileri_yurume_penceresinde_en_az_30_kurulum(yuruyus):
     assert yuruyus.son.puanli
 
 
+@pytest.mark.slow
 def test_2026_fiyati_ayari_ve_orneklem_disini_degistirmez(yuruyus):
     rng = np.random.default_rng(3)
     bozuk = {}
@@ -159,6 +161,7 @@ def test_2026_fiyati_ayari_ve_orneklem_disini_degistirmez(yuruyus):
     pd.testing.assert_frame_equal(y.dis_ornek.islemler, yuruyus.dis_ornek.islemler)
 
 
+@pytest.mark.slow
 def test_iki_isci_tek_isciyle_ayni_sonucu_verir():
     kucuk = dataclasses.replace(KESISIM, aralik={"teyit_gun": (0, 2)})
     gunler = piyasa(sembol=2, son="2023-12-31")

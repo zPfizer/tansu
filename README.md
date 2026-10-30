@@ -30,4 +30,7 @@ Komutlar `python -X utf8 -m tansu <komut>` biçiminde de çalışır.
 .venv\Scripts\python.exe -X utf8 -m pytest -q
 ```
 
+Hızlı iç döngü için (13 yavaş test hariç): `.venv\Scripts\python.exe -X utf8 -m pytest -q -m "not slow"`.
+Teslimden önce ve CI'da `-m` olmadan tam komut çalışır. Yavaş testleri listelemek için: `-m slow --collect-only -q`.
+
 Testler yalnız yapay fiyat serisi kullanır. İş Yatırım verisi depoya girmez.

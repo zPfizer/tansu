@@ -28,6 +28,7 @@ tansu = ["referans/*/*.csv", "referans/*/*.md"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
+markers = ["slow: test of about 1.5 s or more; skip it in the inner loop with -m \"not slow\""]
 
 [tool.ruff.lint]
 select = ["F", "E9", "ERA001", "BLE001", "S110", "B017", "B905", "B023", "PLW1514", "PLC0415"]

@@ -64,6 +64,7 @@ def boz(a: veri.Anlik, k, tohum) -> veri.Anlik:
     return veri.Anlik(a.kimlik, f, a.olaylar)
 
 
+@pytest.mark.slow
 def test_yukleyici_kesilen_ya_da_bozulan_gelecekte_gecmis_gun_tablosunu_degistirmez():
     # Olay karşılaştırması kilit, tavan kapanışı ve ATR sütunlarını ancak bir işlem o güne denk gelirse görür.
     tablolar = {f"R{j}": rastgele_tablo(j, n=400, bas=BAS) for j in (1, 2)}
@@ -104,6 +105,7 @@ def olaylar(kosu: sinama.Kosu, k) -> tuple[list, set]:
     return sinyaller, sonuc
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize("ad", sorted(STRATEJILER))
 def test_yukleyiciden_kesilen_ya_da_bozulan_gelecek_gecmis_olaylari_degistirmez(ad):
     strateji, p = STRATEJILER[ad], SABIT[ad]
