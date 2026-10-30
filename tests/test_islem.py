@@ -109,10 +109,15 @@ def test_islemin_kapandigi_gun_yeni_sinyal_kabul_edilir():
 
 
 def test_emrin_dustugu_gun_yeni_sinyal_kabul_edilir():
+    # SPEC 5.1: limit emri t+gecerlilik gününün sonunda düşer. 0. günün emri 1. ve 2. gün geçerli: 2. günün sinyali kabul
+    # edilir. Onun emri 3. ve 4. gün geçerli; 4. gün verinin son günü olsa da süresi dolar. 3. günün sinyali düşer.
     g = gun_tablosu([11, 10.5, 10.6, 10.7, 10.7])
     kayit, sayac = kos(g, sinyal(g, gunler=(0, 2, 3), gecerlilik=2))
-    assert kayit == [] and sayac[islem.SURE_DOLDU] == 1
-    assert sayac[islem.ACIK_VAR] == 1 and sayac[islem.VERI_SONU] == 1
+    assert kayit == [] and sayac[islem.SURE_DOLDU] == 2
+    assert sayac[islem.ACIK_VAR] == 1 and not sayac[islem.VERI_SONU]
+    # Geçerlilik verinin ötesine taşan emir bekliyor sayılır.
+    _, sayac = kos(g, sinyal(g, gunler=(3,), gecerlilik=2))
+    assert sayac[islem.VERI_SONU] == 1 and not sayac[islem.SURE_DOLDU]
 
 
 def test_seviyenin_altinda_acilan_gun_aofdan_dolar():
