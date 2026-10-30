@@ -1,3 +1,4 @@
+import csv
 import datetime as dt
 
 import pytest
@@ -100,6 +101,22 @@ def test_gec_ayarlandiyi_yeniden_ayarlayinca_tarihi_yeniler(tmp_path):
     assert yol.read_bytes().endswith(
         f"a,yetersiz-ornek,{dt.date.today().isoformat()},\n".encode()
     )
+
+
+def test_gec_yazim_yarida_kesilirse_dosya_ayni_kalir(tmp_path, monkeypatch):
+    yol = tmp_path / "durum.csv"
+    baytlar = b"ad,durum,tarih,not\na,taslak,2026-10-26,\nb,beklemede,2026-10-25,\n"
+    yol.write_bytes(baytlar)
+    yaz = csv.DictWriter.writerows
+
+    def yarida_kes(self, satirlar):
+        yaz(self, satirlar[:1])
+        raise OSError("disk dolu")
+
+    monkeypatch.setattr(csv.DictWriter, "writerows", yarida_kes)
+    with pytest.raises(OSError, match="disk dolu"):
+        durum.gec("a", "sina", puanli=False, yol=yol)
+    assert yol.read_bytes() == baytlar
 
 
 def test_gec_olmayan_adi_veri_hatasi_ile_reddeder(tmp_path):

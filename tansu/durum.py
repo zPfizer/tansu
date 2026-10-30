@@ -1,5 +1,6 @@
 import csv
 import datetime as dt
+import os
 from pathlib import Path
 from typing import Literal, assert_never, get_args
 
@@ -64,6 +65,7 @@ def durumu(satirlar: list[dict[str, str]], ad: str) -> str:
 
 
 def gec(ad: str, komut: Komut, *, puanli: bool, yol: Path = DOSYA) -> str:
+    """Dosyayı yeniden okur: ızgara sürerken başka koşu satırları değiştirmiş olabilir."""
     satirlar = oku(yol)
     satir = _satir(satirlar, ad)
     eski = satir["durum"]
@@ -71,8 +73,10 @@ def gec(ad: str, komut: Komut, *, puanli: bool, yol: Path = DOSYA) -> str:
         satir.update(
             durum=sonraki(komut, eski, puanli), tarih=dt.date.today().isoformat()
         )
-        with yol.open("w", encoding="utf-8", newline="") as f:
+        gecici = yol.with_name(yol.name + ".tmp")
+        with gecici.open("w", encoding="utf-8", newline="") as f:
             yazici = csv.DictWriter(f, SUTUNLAR, lineterminator="\n")
             yazici.writeheader()
             yazici.writerows(satirlar)
+        os.replace(gecici, yol)
     return satir["durum"]
