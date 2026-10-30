@@ -46,6 +46,7 @@ def uyar(ab: float, bc: float, cd: float, tol: float) -> bool:
 def hesapla(gun: pd.DataFrame, p: Mapping[str, float | str]) -> pd.DataFrame:
     """`gun`, `stop == "X-2ATR"` iken `sinama.gunler`in `atr` sütununu taşımalıdır."""
     s = bos_sinyal(gun.index)
+    yuksek = gun["yuksek"].to_numpy(float)
     dusuk = gun["dusuk"].to_numpy(float)
     tarih = gun.index
     tol = float(p["tolerans"])
@@ -60,10 +61,10 @@ def hesapla(gun: pd.DataFrame, p: Mapping[str, float | str]) -> pd.DataFrame:
         if not uyar(ab, bc, cd, tol):
             continue
         t = C.onay_gun
+        if not yapi.bacak_uclari(yuksek, dusuk, (X, A, B, C), t):
+            continue  # bacak ucu değil ya da onaydan önce X kırıldı (BOZULDU)
         sonra = dusuk[C.pivot_gun + 1 : t + 1]
         en_dusuk = np.nanmin(sonra) if np.isfinite(sonra).any() else np.inf
-        if en_dusuk <= X.fiyat:  # BOZULDU: onaydan önce X kırıldı
-            continue
         stop = X.fiyat if p["stop"] == "X" else X.fiyat - 2 * float(gun["atr"].iat[t])
         h1, h2 = (d + r * (A.fiyat - d) for r in HEDEF_ORAN)
         if p["rr_min"] != "kapali" and (h1 - d) / (d - stop) < float(p["rr_min"]):
