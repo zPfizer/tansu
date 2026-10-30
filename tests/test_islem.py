@@ -118,6 +118,14 @@ def test_emrin_dustugu_gun_yeni_sinyal_kabul_edilir():
     # Geçerlilik verinin ötesine taşan emir bekliyor sayılır.
     _, sayac = kos(g, sinyal(g, gunler=(3,), gecerlilik=2))
     assert sayac[islem.VERI_SONU] == 1 and not sayac[islem.SURE_DOLDU]
+    # Son geçerli gün (t+gecerlilik) hâlâ emir günüdür: seviyeye o gün değen emir dolar.
+    g = gun_tablosu(
+        [11, 10.5, 10.2, 11, 11],
+        yuksek=[11.1, 10.6, 10.4, 11.1, 11.1],
+        dusuk=[10.9, 10.4, 9.9, 10.9, 10.9],
+    )
+    (k,), _ = kos(g, sinyal(g, gecerlilik=2))
+    assert k["dolum_tarihi"] == g.index[2] and k["dolum_fiyati"] == 10.0
 
 
 def test_seviyenin_altinda_acilan_gun_aofdan_dolar():

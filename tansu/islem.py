@@ -134,8 +134,8 @@ def oyna(
 ) -> tuple[_Islem | None, int]:
     """i. gün sinyal veren tek kurulumu i+1'den kapanana, emir düşene ya da veri bitene dek işletir.
 
-    Dönen: dolan işlem (yoksa None) ve son gün; veri biterse `len(g.kap)`, yani sonraki her sinyali kapatır.
-    Veri sonunda açık işlem son fiyatlı kapanışta `açık` işaretlenir (SPEC 5.4)."""
+    Dönen: dolan işlem (yoksa None) ve son gün; süresi dolan emirde son geçerli gün; veri biterse `len(g.kap)`, yani
+    sonraki her sinyali kapatır. Veri sonunda açık işlem son fiyatlı kapanışta `açık` işaretlenir (SPEC 5.4)."""
     e: _Islem | None = _Islem(i, satir, float(satir["stop"]), taban)
     son = len(g.kap)
     if satir["giris_tur"] != "piyasa":
@@ -146,9 +146,8 @@ def oyna(
             return None, j
         if e.dolum_i >= 0:
             return _tut(e, g, cikis)
-    if son < len(
-        g.kap
-    ):  # emir son gününün sonunda düşer; o günün sinyali serbesttir (SPEC 5.1)
+    # Emir son gününün sonunda düşer; o günün sinyali serbesttir (SPEC 5.1).
+    if son < len(g.kap):
         sayac[SURE_DOLDU] += 1
         return None, son
     sayac[VERI_SONU] += 1
