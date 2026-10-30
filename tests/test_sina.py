@@ -8,8 +8,9 @@ import pandas as pd
 import pytest
 
 from tansu import __main__ as komut
-from tansu import ayar, montecarlo, rapor, sinama, veri
+from tansu import ayar, islem, montecarlo, rapor, sinama, veri
 from tansu.__main__ import main
+from tansu.strateji import bos_sinyal
 from tansu.stratejiler import STRATEJILER
 from tests.sentetik import gartley_yolu, gun_tablosu, ortalama_yolu, piyasa
 
@@ -94,6 +95,20 @@ def test_sina_sinif_b_ileri_getiri_tablosu_ve_yuzde_birimi_yazar(
     assert islemler.loc[0, "cikis_nedeni"] == "çıkış sinyali"
     assert pd.isna(islemler.loc[0, "R"])
     assert "Toplam %" in (klasor / "ozet.md").read_text(encoding="utf-8")
+
+
+def test_sina_islem_yoksa_islemler_csv_sutun_basligini_yazar(ortam, tmp_path):
+    g = STRATEJILER["gartley"]
+    bos = dataclasses.replace(
+        g,
+        hesapla=lambda gun, p: bos_sinyal(gun.index),
+        aralik={k: (g.varsayilan[k],) for k in g.aralik},
+    )
+    ortam("gartley", strateji=bos)
+    assert main(["sina", "gartley"]) == 0
+    tablo = pd.read_csv(tmp_path / "rapor" / "gartley" / "islemler.csv")
+    assert tablo.empty
+    assert list(tablo.columns) == list(islem.kayit_sutunlari(g.cikis))
 
 
 def test_ayarla_puanli_nokta_yoksa_varsayilanlari_yazar_suzgeci_korur(

@@ -519,8 +519,7 @@ def yaz(s: Sinama, kok: Path = RAPOR_KOKU) -> Path:
     if hedefler:
         isabet = [_isabet_satiri(i) for i in sinama.isabet(islemler, hedefler)]
         isabet_bolumu = f"<h2>Seviyelerin isabeti</h2>{_tablo(isabet)}"
-    # Sütunlu boş kayıt başlık satırı yazardı; kurulumsuz koşunun dosyası tek satır sonu kalır.
-    (islemler if len(islemler) else pd.DataFrame()).to_csv(
+    islemler.to_csv(
         klasor / "islemler.csv", index=False, encoding="utf-8", lineterminator="\n"
     )
     mc = s.mc
