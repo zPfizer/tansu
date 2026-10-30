@@ -33,13 +33,25 @@ jobs:
             echo "kod=evet" >> "$GITHUB_OUTPUT"
           fi
       - uses: actions/setup-python@v5
+        id: python
         if: steps.degisen.outputs.kod == 'evet'
         with:
           python-version: "3.14"
-          cache: pip
-          cache-dependency-path: requirements.lock.txt
+      # Kurulu ortam önbellekte: anahtar işletim sistemi, tam Python sürümü, kilit dosyası ve pyproject.toml.
+      # Biri değişince ortam baştan kurulur. Önbellek PR'a ve tabana göre ayrı tutulur (GitHub kuralı).
+      - uses: actions/cache@v4
+        id: ortam
+        if: steps.degisen.outputs.kod == 'evet'
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{ hashFiles('requirements.lock.txt', 'pyproject.toml') }}
+      - name: Ortamı kur
+        if: steps.degisen.outputs.kod == 'evet' && steps.ortam.outputs.cache-hit != 'true'
+        run: |
+          python -m venv .venv
+          .venv\Scripts\python -m pip install -r requirements.lock.txt -e ".[dev]"
       - if: steps.degisen.outputs.kod == 'evet'
-        run: python -m pip install -r requirements.lock.txt -e ".[dev]"
+        run: Add-Content -Path $env:GITHUB_PATH -Value "$env:GITHUB_WORKSPACE\.venv\Scripts"
       - if: steps.degisen.outputs.kod == 'evet'
         run: ruff check tansu tests kurulum
       - if: steps.degisen.outputs.kod == 'evet'
