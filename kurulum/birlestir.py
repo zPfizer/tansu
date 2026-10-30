@@ -1,8 +1,9 @@
 """`yeniden-kurulus` dalına tek birleştirme yolu: AGENTS.md birleştirme kuralını denetler, yöntemi kendisi seçer.
 
-Kural (AGENTS.md, kalıcı onay Levent 30.10.2026): PR başındaki her denetim geçer, yorumlardan biri baş SHA'yı ve
-GEÇTİ ya da NOTLU GEÇTİ kararını taşır. `main`'i getiren PR `--merge` ile, öbürleri `--squash` ile birleşir;
-squash atalığı düşürür, merge commit dalın bütün commit'lerini açık geçmişe taşır. `main`'e birleştirme Levent'indir.
+Kural (AGENTS.md, kalıcı onay Levent 30.10.2026): PR başındaki her denetim geçer ve o baş için son inceleme yorumu
+olumludur: satır başında `İncelenen commit: <baş SHA>` ve `Sonuç: GEÇTİ` ya da `Sonuç: NOTLU GEÇTİ`. `main`'i getiren
+PR `--merge` ile, öbürleri `--squash` ile birleşir; squash atalığı düşürür, merge commit dalın bütün commit'lerini açık
+geçmişe taşır. `main`'e birleştirme Levent'indir.
 `.claude/settings.json` çıplak `gh pr merge`'ü yasaklar; yöntemi bu dosya seçer.
 
 Kullanım: python -X utf8 kurulum/birlestir.py <PR> [--repo sahip/ad]
@@ -17,12 +18,16 @@ import sys
 
 TABAN = "yeniden-kurulus"
 GECEN = {"SUCCESS", "SKIPPED", "NEUTRAL"}
-KARAR = re.compile(r"(?<!\w)(?:NOTLU )?GEÇTİ(?!\w)")
+SONUC = re.compile(r"^Sonuç: (NOTLU GEÇTİ|GEÇTİ|GEÇMEDİ)(?!\w)", re.M)
 
 
-def yontem(main_basta: bool, main_tabanda: bool) -> str:
-    """`main`'in ucu PR başında var, tabanda yoksa PR `main`'i getirir."""
-    return "--merge" if main_basta and not main_tabanda else "--squash"
+def karar(govde: str, sha: str) -> str | None:
+    """Yorum `sha` için inceleme kararı mı: satır başında `İncelenen commit: <sha>` ve `Sonuç: <karar>`.
+    Yorumun başka yerindeki karar sözcüğü sayılmaz ("pytest GEÇTİ" maddesi olumsuz yorumu onaya çevirmesin)."""
+    if not re.search(rf"^İncelenen commit: {sha}(?!\w)", govde, re.M):
+        return None
+    m = SONUC.search(govde)
+    return m and m.group(1)
 
 
 def engeller(pr: dict) -> list[str]:
@@ -39,8 +44,11 @@ def engeller(pr: dict) -> list[str]:
         if durum not in GECEN:
             sonuc.append(f"denetim {ad}: {durum or d.get('status')}")
     sha = pr["headRefOid"]
-    if not any(sha in y["body"] and KARAR.search(y["body"]) for y in pr["comments"]):
-        sonuc.append(f"baş SHA {sha} ve GEÇTİ kararı taşıyan inceleme yorumu yok")
+    kararlar = [k for y in pr["comments"] if (k := karar(y["body"], sha))]
+    if not kararlar:
+        sonuc.append(f"baş SHA {sha} için Sonuç satırlı inceleme yorumu yok")
+    elif kararlar[-1] == "GEÇMEDİ":
+        sonuc.append(f"baş SHA {sha} için son inceleme kararı GEÇMEDİ")
     return sonuc
 
 
@@ -50,10 +58,16 @@ def _gh(*arglar):
     ).stdout
 
 
-def _main_icinde(depo, ref):
-    """`main`'in ucu `ref`'in atası mı (GitHub karşılaştırması: `main` geride ya da aynı)."""
-    durum = _gh("api", f"repos/{depo}/compare/{ref}...main", "--jq", ".status")
-    return durum.strip() in {"behind", "identical"}
+def main_getiriyor(depo: str, bas: str, taban: str) -> bool:
+    """Baş, tabanda olmayan bir `main` commit'i taşıyor mu: başın `main` ile ortak atası tabanın atası değilse taşır.
+    Uçları karşılaştırmak yetmez: eşitleme dalı açıldıktan sonra `main` ilerlerse baş da geride kalır (PR 277)."""
+    ortak = _gh(
+        "api", f"repos/{depo}/compare/{bas}...main", "--jq", ".merge_base_commit.sha"
+    )
+    durum = _gh(
+        "api", f"repos/{depo}/compare/{taban}...{ortak.strip()}", "--jq", ".status"
+    )
+    return durum.strip() in {"ahead", "diverged"}
 
 
 def main():
@@ -71,10 +85,8 @@ def main():
             print(f"ENGEL: {satir}")
         if sorunlar:
             return 1
-        secilen = yontem(
-            _main_icinde(arg.repo, pr["headRefOid"]),
-            _main_icinde(arg.repo, pr["baseRefName"]),
-        )
+        getiriyor = main_getiriyor(arg.repo, pr["headRefOid"], pr["baseRefName"])
+        secilen = "--merge" if getiriyor else "--squash"
         print(f"PR {arg.pr}: {pr['headRefName']} → {TABAN}, {secilen}")
         _gh(
             "pr",

@@ -56,7 +56,7 @@ Retro 30.10.2026 (2), Levent: "12 bulgunun hepsinin çözülmesini ve bir daha y
 
 Levent 31.10.2026: "37 bulguyu bağımlılık sırasına göre sıralayıp hepsini tekrarlamayacak şekilde kapat". Ajan kararları:
 
-- Birleştirme yöntemi (retro 31.10 bulgu 4): PR 273 çıplak `gh pr merge` ile merge commit'iyle birleşti. Artık tek yol `kurulum/birlestir.py`; yöntemi taban ve baştan kendisi seçer, `.claude/settings.json` çıplak `gh pr merge`'ü ve birleştirme API çağrısını yasaklar. Seçilen tasarım birleştirmeden önce durdurur. Sınır: yasak yalnız Claude oturumlarını bağlar; GitHub sayfasından yapılan birleştirmeyi durdurmaz. Depo ayarı (`allow_merge_commit`) kapatılamaz, çünkü `main`'i getiren PR merge commit ister.
+- Birleştirme yöntemi (retro 31.10 bulgu 4): PR 273 çıplak `gh pr merge` ile merge commit'iyle birleşti. Artık tek yol `kurulum/birlestir.py`; yöntemi taban ve baştan kendisi seçer, `.claude/settings.json` çıplak `gh pr merge`'ü ve birleştirme API çağrısını yasaklar. Seçilen tasarım birleştirmeden önce durdurur. Sınır: yasak yalnız Claude oturumlarını bağlar; GitHub sayfasından yapılan birleştirmeyi durdurmaz. Depo ayarı (`allow_merge_commit`) kapatılamaz, çünkü `main`'i getiren PR merge commit ister. İnceleme turu 1 (PR 279) iki kusur buldu ve ikisi düzeldi: karar artık yalnız satır başındaki `Sonuç:` satırından okunur, o baş için son karar geçerlidir; `main`'i getirme, başın `main` ile ortak atasının tabanda olup olmamasına bakar, çünkü dal açıldıktan sonra `main` ilerlerse uç karşılaştırması PR 277'ye `--squash` veriyordu. Yasak listesi `gh pr -R <depo> merge` ve GraphQL `mergePullRequest` biçimlerini de kapsar. Açık sınır: yorumu yazanın bağımsızlığını yardımcı denetlemez; bütün yorumlar aynı GitHub hesabından gelir.
 
 ## Verilen kararlar
 
