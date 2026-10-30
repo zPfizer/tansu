@@ -1,0 +1,35 @@
+{
+ "aday": "abcd-k",
+ "grup": "ayrik",
+ "sembol": 185,
+ "huni": {
+  "kurulum": 2512,
+  "dokundu": 402,
+  "teyit": 83,
+  "teyitten_once_bozuldu": 128
+ },
+ "sinyal": 77,
+ "sonuc": {
+  "kalite kuralı (karantina)": 23,
+  "dolum": 54
+ },
+ "n": 54,
+ "hafta": 42,
+ "ort_R": 0.19991853786489736,
+ "ortanca_R": -0.18199074517841998,
+ "p_tek_yonlu": 0.2194,
+ "ort_R_yuzde_5_95": [
+  -0.16757015995746802,
+  0.6381681470880384
+ ],
+ "cikis_nedeni": {
+  "stop": 16,
+  "süre stopu": 23,
+  "stop (açılış)": 14,
+  "açık": 1
+ },
+ "taban_bagladi": 0,
+ "ort_R_ham": 0.19991853786489736,
+ "ort_R_motor_kaymasiz": 0.24653752876335752,
+ "sure_sn": 2.1
+}

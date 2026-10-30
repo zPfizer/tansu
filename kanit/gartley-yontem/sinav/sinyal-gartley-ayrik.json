@@ -1,0 +1,29 @@
+{
+ "aday": "gartley",
+ "grup": "ayrik",
+ "sembol": 185,
+ "huni": {},
+ "sinyal": 106,
+ "sonuc": {
+  "dolum": 12,
+  "emir süresi doldu": 72,
+  "kalite kuralı (karantina)": 22
+ },
+ "n": 12,
+ "hafta": 12,
+ "ort_R": 0.3410474201633371,
+ "ortanca_R": 0.20929924374080744,
+ "p_tek_yonlu": 0.2386,
+ "ort_R_yuzde_5_95": [
+  -0.37140549929228905,
+  1.1498040484539949
+ ],
+ "cikis_nedeni": {
+  "stop": 11,
+  "stop (açılış)": 1
+ },
+ "taban_bagladi": 1,
+ "ort_R_ham": 0.3373652642215077,
+ "ort_R_motor_kaymasiz": 0.46876775172440044,
+ "sure_sn": 2.1
+}
