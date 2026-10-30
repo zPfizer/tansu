@@ -116,7 +116,7 @@ def _ozet(k: sinama.Kosu, olcu: str) -> dict:
 
 
 def _toplam(k: sinama.Kosu, olcu: str) -> float:
-    return float(k.islemler[olcu].sum()) if len(k.islemler) else 0.0
+    return float(k.islemler[olcu].sum())
 
 
 def parametre_satiri(s: Sinama) -> str:
@@ -218,7 +218,7 @@ def bayraklar(
     `gecmis`: yıl tablolarının koşusu (işlem kayıtları); `son`: 31.12.2025 ayar seçimi."""
     olcu = mc.olcu
     b = sinama.BIRIM[olcu]
-    x = dis[olcu] if len(dis) else pd.Series(dtype=float)
+    x = dis[olcu]
     n = len(x)
 
     def oran(kosul: bool, deger: str) -> str:
@@ -226,8 +226,8 @@ def bayraklar(
 
     yok = f"n/a (N = {mc.n})"
     r, bt = mc.rastgele, mc.bootstrap_toplam
-    kazanma = (x > 0).mean() if n else np.nan
-    sakli_toplam = float(sakli[olcu].sum()) if len(sakli) else 0.0
+    kazanma = (x > 0).mean()
+    sakli_toplam = float(sakli[olcu].sum())
     puan = son.puan[son.nokta]
     semboller = sinama.sembol_tablosu(gecmis, olcu)
     if semboller["pay"].isna().all():
@@ -366,7 +366,8 @@ def yaz(s: Sinama, kok: Path = RAPOR_KOKU) -> Path:
         isabet_bolumu = (
             f"<h2>Seviyelerin isabeti</h2>{_tablo(sinama.isabet(islemler, hedefler))}"
         )
-    islemler.to_csv(
+    # Sütunlu boş kayıt başlık satırı yazardı; kurulumsuz koşunun dosyası tek satır sonu kalır.
+    (islemler if len(islemler) else pd.DataFrame()).to_csv(
         klasor / "islemler.csv", index=False, encoding="utf-8", lineterminator="\n"
     )
     mc = s.mc

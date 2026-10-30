@@ -45,9 +45,11 @@ class Kosu(NamedTuple):
         """Sinyal tarihi [bas, son] içinde olan kurulumlar ve sinyaller; kurulum kendi çıkışını korur.
         Sayaçlar tarihsiz olduğu için dilimde boştur."""
         i, s = self.islemler, self.sinyaller
-        if len(i):
-            i = i[i["sinyal_tarihi"].between(bas, son)]
-        return Kosu(i, s[s["tarih"].between(bas, son)], Counter())
+        return Kosu(
+            i[i["sinyal_tarihi"].between(bas, son)],
+            s[s["tarih"].between(bas, son)],
+            Counter(),
+        )
 
 
 def gunler(anlik: veri.Anlik) -> dict[str, pd.DataFrame]:
@@ -91,7 +93,7 @@ def calistir(
         )
         kayitlar += k
         sayac += c
-    islemler = pd.DataFrame(kayitlar)
+    islemler = islem.kayit_tablosu(kayitlar, strateji.cikis)
     sinyaller = pd.DataFrame(sinyal_gunleri, columns=["sembol", "tarih"])
     return Kosu(islemler, sinyaller, sayac)
 
@@ -130,9 +132,9 @@ def donem_ozeti(islemler: pd.DataFrame, sinyal_n: int, olcu: str) -> dict:
     """SPEC 5.6 ölçüleri, yalnız `olcu` sütunundan ("R" ya da "net_yuzde"); 30 kurulumun altında oranlar `n/a (N = x)`."""
     b = BIRIM[olcu]
     n = len(islemler)
-    r = sirala(islemler)[olcu] if n else pd.Series(dtype=float)
+    r = sirala(islemler)[olcu]
     kazanc, kayip = r[r > 0], r[r <= 0]
-    asagi = np.sqrt((np.minimum(r, 0) ** 2).mean()) if n else np.nan
+    asagi = np.sqrt((np.minimum(r, 0) ** 2).mean())
     dd = dusus(r)
     toplam = float(r.sum())
     return {
@@ -156,9 +158,9 @@ def donem_ozeti(islemler: pd.DataFrame, sinyal_n: int, olcu: str) -> dict:
         "Toplam / düşüş": _oran(toplam / dd if dd else np.nan, n),
         "Ortalama tutma günü": f"{islemler['tutma_gun'].mean():.1f}" if n else "-",
         "En uzun kayıp serisi": str(en_uzun_kayip(r)),
-        "Açık işlem": int(islemler["acik"].sum()) if n else 0,
-        "Dolumda stop": int(islemler["dolumda_stop"].sum()) if n else 0,
-        "Risk tabanı uygulanan": int(islemler["risk_tabanli"].sum()) if n else 0,
+        "Açık işlem": int(islemler["acik"].sum()),
+        "Dolumda stop": int(islemler["dolumda_stop"].sum()),
+        "Risk tabanı uygulanan": int(islemler["risk_tabanli"].sum()),
     }
 
 
@@ -166,11 +168,7 @@ def donemler(
     islemler: pd.DataFrame, sinyaller: pd.DataFrame, olcu: str
 ) -> dict[str, dict]:
     """Her yıl ve bütün yıllar; yıl sinyal tarihine göre (`GECMIS` koşusu)."""
-    yil_i = (
-        pd.DatetimeIndex(islemler["sinyal_tarihi"]).year
-        if len(islemler)
-        else pd.Index([])
-    )
+    yil_i = pd.DatetimeIndex(islemler["sinyal_tarihi"]).year
     yil_s = pd.DatetimeIndex(sinyaller["tarih"]).year
     sonuc = {
         str(y): donem_ozeti(islemler[yil_i == y], int((yil_s == y).sum()), olcu)
@@ -190,22 +188,18 @@ def isabet(islemler: pd.DataFrame, hedefler: tuple[str, ...]) -> list[dict]:
     n = len(islemler)
     satirlar = []
     for h in hedefler:
-        ulasti = islemler[f"{h}_gun"].notna() if n else pd.Series(dtype=bool)
-        stop_once = (
-            islemler["stop_gun"].notna() & ~ulasti if n else pd.Series(dtype=bool)
-        )
+        ulasti = islemler[f"{h}_gun"].notna()
+        stop_once = islemler["stop_gun"].notna() & ~ulasti
         satirlar.append(
             {
                 "Hedef": h,
-                "Stoptan önce ulaştı": _oran(
-                    ulasti.mean() if n else np.nan, n, "{:.0%}"
-                ),
-                "Önce stop": _oran(stop_once.mean() if n else np.nan, n, "{:.0%}"),
+                "Stoptan önce ulaştı": _oran(ulasti.mean(), n, "{:.0%}"),
+                "Önce stop": _oran(stop_once.mean(), n, "{:.0%}"),
                 "Medyan gün (hedef)": f"{islemler.loc[ulasti, f'{h}_gun'].median():.0f}"
-                if n and ulasti.any()
+                if ulasti.any()
                 else "-",
                 "Medyan gün (stop)": f"{islemler.loc[stop_once, 'stop_gun'].median():.0f}"
-                if n and stop_once.any()
+                if stop_once.any()
                 else "-",
             }
         )
@@ -215,8 +209,6 @@ def isabet(islemler: pd.DataFrame, hedefler: tuple[str, ...]) -> list[dict]:
 def sembol_tablosu(islemler: pd.DataFrame, olcu: str) -> pd.DataFrame:
     """Sembol başına kurulum ve toplam `olcu`; toplamın %40'ından fazlası işaretlenir (varsayım)."""
     sutun = f"toplam_{olcu}"
-    if not len(islemler):
-        return pd.DataFrame(columns=["sembol", "kurulum", sutun, "pay", "isaret"])
     t = (
         islemler.groupby("sembol")[olcu]
         .agg(kurulum="size", **{sutun: "sum"})
@@ -231,13 +223,9 @@ def sembol_tablosu(islemler: pd.DataFrame, olcu: str) -> pd.DataFrame:
 def ileri_tablo(islemler: pd.DataFrame) -> list[dict]:
     """Sınıf (b) ileri getiri tablosu (SPEC 5.2, 5.6): 1, 3, 5, 10 gün net % ve 10 günlük MFE/MAE medyanı.
     Her ufuk kendi N'siyle sayılır (veri sonuna yakın dolumların ufku boştur); 30'un altında oranlar `n/a (N = x)`."""
-
-    def sutun(ad: str) -> pd.Series:
-        return islemler[ad].dropna() if len(islemler) else pd.Series(dtype=float)
-
     satirlar = []
     for gun in islem.ILERI_GUNLER:
-        x = sutun(f"getiri_{gun}")
+        x = islemler[f"getiri_{gun}"].dropna()
         n = len(x)
         satirlar.append(
             {
@@ -249,7 +237,7 @@ def ileri_tablo(islemler: pd.DataFrame) -> list[dict]:
             }
         )
     for ad, etiket in (("mfe_yuzde", "Medyan MFE %"), ("mae_yuzde", "Medyan MAE %")):
-        x = sutun(ad)
+        x = islemler[ad].dropna()
         satirlar.append(
             {
                 "Ufuk (gün)": f"{etiket} (10 gün)",

@@ -69,6 +69,20 @@ def test_limit_seviyede_dolar_iki_hedef_paylariyla_kapanir():
     assert not sayac[islem.SURE_DOLDU]
 
 
+@pytest.mark.parametrize("cikis", [CIKIS, islem.Cikis()], ids=["hedefli", "hedefsiz"])
+def test_kayit_tablosu_dolu_ve_bos_kayitta_ayni_sutunlar(cikis):
+    g = gun_tablosu(
+        [11, 10.2, 12.2, 13.2, 13.2],
+        yuksek=[11.1, 10.5, 12.5, 13.5, 13.3],
+        dusuk=[10.9, 9.8, 10.3, 12.3, 13.1],
+    )
+    kayitlar, _ = kos(g, sinyal(g), cikis)
+    sutunlar = list(islem.kayit_sutunlari(cikis))
+    assert len(kayitlar) == 1
+    assert list(islem.kayit_tablosu(kayitlar, cikis).columns) == sutunlar
+    assert list(islem.kayit_tablosu([], cikis).columns) == sutunlar
+
+
 def test_oyna_tek_sinyalde_simule_ile_ayni_islemi_verir():
     g = gun_tablosu(
         [11, 10.2, 12.2, 13.2, 13.2],

@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from tansu import sinama
+from tansu import islem, sinama
 
 
 @pytest.mark.parametrize(
@@ -66,7 +66,7 @@ def test_ileri_tablo_ufuk_basina_ortalama_medyan_pozitif_pay_ve_n():
 def test_ileri_tablo_30_kurulumun_altinda_oranlar_n_a():
     satir = sinama.ileri_tablo(kayitlar(5))
     assert satir[0]["N"] == 5 and satir[0]["Ortalama net %"] == "n/a (N = 5)"
-    assert sinama.ileri_tablo(pd.DataFrame())[0]["N"] == 0
+    assert sinama.ileri_tablo(islem.kayit_tablosu([], islem.Cikis()))[0]["N"] == 0
 
 
 def test_donem_ozeti_yalniz_olcu_sutununu_okur_ve_birimi_etikete_koyar():
