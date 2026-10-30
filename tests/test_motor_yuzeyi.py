@@ -37,6 +37,7 @@ BETIK_CAGRILARI = [
     ("kaynak.Borsapy.faiz", 1, ()),
     ("strateji.bos_sinyal", 1, ()),
     ("gostergeler.rsi", 2, ()),
+    ("gostergeler.rsi_basit", 2, ()),
     ("gostergeler.sma", 2, ()),
     ("gostergeler.atr_basit", 3, ()),
     ("yapi.sag_bar_pivotlari", 3, ()),

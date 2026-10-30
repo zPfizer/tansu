@@ -108,6 +108,16 @@ def rsi(kapanis: pd.Series, n: int = 14) -> pd.Series:
     return 100 * kazanc / (kazanc + kayip)
 
 
+def rsi_basit(kapanis: pd.Series, n: int = 14) -> pd.Series:
+    """Tansu'nun RSI'ı: kazanç ve kayıp ortalamaları son n değişimin basit ortalaması (SPEC 3.12). Wilder için `rsi`.
+
+    Eksik gün atlanır (o günün kendisi NaN): değişim önceki fiyatlı güne göredir, `atr_basit` gibi."""
+    d = kapanis.dropna().diff()
+    kazanc = d.clip(lower=0).rolling(n).mean()
+    kayip = (-d).clip(lower=0).rolling(n).mean()
+    return (100 * kazanc / (kazanc + kayip)).reindex(kapanis.index)
+
+
 def adx(
     yuksek: pd.Series, dusuk: pd.Series, kapanis: pd.Series, n: int = 14
 ) -> pd.Series:
