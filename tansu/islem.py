@@ -134,15 +134,22 @@ def oyna(
 ) -> tuple[_Islem | None, int]:
     """i. gün sinyal veren tek kurulumu i+1'den kapanana, emir düşene ya da veri bitene dek işletir.
 
-    Dönen: dolan işlem (yoksa None) ve son gün; veri biterse `len(g.kap)`, yani sonraki her sinyali kapatır.
-    Veri sonunda açık işlem son fiyatlı kapanışta `açık` işaretlenir (SPEC 5.4)."""
+    Dönen: dolan işlem (yoksa None) ve son gün; süresi dolan emirde son geçerli gün; veri biterse `len(g.kap)`, yani
+    sonraki her sinyali kapatır. Veri sonunda açık işlem son fiyatlı kapanışta `açık` işaretlenir (SPEC 5.4)."""
     e: _Islem | None = _Islem(i, satir, float(satir["stop"]), taban)
-    for j in range(i + 1, len(g.kap)):
+    son = len(g.kap)
+    if satir["giris_tur"] != "piyasa":
+        son = i + int(satir["gecerlilik"])  # limit emrinin son geçerli günü
+    for j in range(i + 1, min(son + 1, len(g.kap))):
         e = _emir_gunu(e, j, g, sayac)
         if e is None:
             return None, j
         if e.dolum_i >= 0:
             return _tut(e, g, cikis)
+    # Emir son gününün sonunda düşer; o günün sinyali serbesttir (SPEC 5.1).
+    if son < len(g.kap):
+        sayac[SURE_DOLDU] += 1
+        return None, son
     sayac[VERI_SONU] += 1
     return None, len(g.kap)
 
@@ -175,12 +182,9 @@ def _red_nedeni(satir, gun_satiri, acik_var: bool, cikis: Cikis) -> str | None:
 
 
 def _emir_gunu(e: _Islem, i: int, g: Gun, sayac: Counter) -> _Islem | None:
-    """Bekleyen emir (SPEC 5.1): `limit` t+1'den `gecerlilik` gün; `piyasa` t+1'den sonraki ilk fiyatlı gün."""
-    piyasa = e.satir["giris_tur"] == "piyasa"
-    if not piyasa and i - e.sinyal_i > int(e.satir["gecerlilik"]):
-        sayac[SURE_DOLDU] += 1
-        return None
-    if piyasa:
+    """Bekleyen emir (SPEC 5.1): `limit` t+1'den `gecerlilik` gün (süreyi `oyna` sınırlar); `piyasa` t+1'den sonraki
+    ilk fiyatlı gün."""
+    if e.satir["giris_tur"] == "piyasa":
         if i < g.dolum_gunu[e.sinyal_i]:
             return e
         if g.tavan_kilit[i]:
