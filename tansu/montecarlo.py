@@ -60,7 +60,6 @@ class MonteCarlo:
     tohum: int
     tekrar: int
     n: int
-    olcu: str
     bootstrap_toplam: Yuzdelik | None
     bootstrap_dusus: Yuzdelik | None
     # düşüşü >= BATMA_R olan bootstrap koşularının payı; sınıf (b) için None
@@ -81,14 +80,13 @@ def hesapla(
     islemler = yuruyus.dis_ornek.islemler
     n = len(islemler)
     if n < sinama.EN_AZ:
-        return MonteCarlo(TOHUM, tekrar, n, olcu, None, None, None, None, None)
+        return MonteCarlo(TOHUM, tekrar, n, None, None, None, None, None)
     x = sinama.sirala(islemler)[olcu].to_numpy(float)
     toplam, dusus = bootstrap(x, akis(0), tekrar)
     return MonteCarlo(
         TOHUM,
         tekrar,
         n,
-        olcu,
         bootstrap_toplam=yuzdelik(toplam),
         bootstrap_dusus=yuzdelik(dusus),
         batma=float((dusus >= BATMA_R).mean()) if strateji.sinif == "a" else None,

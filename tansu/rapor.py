@@ -462,8 +462,7 @@ def _mc_tablosu(mc: montecarlo.MonteCarlo, sutunlar: dict) -> str:
     )
 
 
-def _mc_bolumu(mc: montecarlo.MonteCarlo, sinif: str) -> str:
-    b = sinama.BIRIM[mc.olcu]
+def _mc_bolumu(mc: montecarlo.MonteCarlo, sinif: str, b: str) -> str:
     r = mc.rastgele
     metin = (
         f"<p>Tohum: {mc.tohum}. Koşu: {mc.tekrar}. Girdi: dikişli örneklem dışı kurulumlar, "
@@ -558,7 +557,7 @@ td,th{{border:1px solid #ccc;padding:3px 6px;font-size:13px;text-align:right}}th
 <h2>Saklı dönem</h2><p>Sinyal tarihi {sakli_tarih}, yukarıdaki parametrelerle tek kesintisiz koşu.{sakli_notu}</p>
 {_donem_tablosu({"Saklı dönem": _ozet_sutunu(s.sakli.ozet(), b)})}
 {ileri({"Saklı dönem": s.sakli})}
-<h2>Monte Carlo</h2>{_mc_bolumu(mc, strateji.sinif)}
+<h2>Monte Carlo</h2>{_mc_bolumu(mc, strateji.sinif, b)}
 <h2>Bayraklar</h2><p><b>{ONAY_YOK}</b></p>{_tablo(bayrak)}
 <h2>Kümülatif {b}</h2>{egri_svg(islemler, olcu)}
 <h2>Düşen sinyaller</h2>{_tablo(nedenler)}

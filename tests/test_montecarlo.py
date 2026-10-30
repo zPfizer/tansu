@@ -74,7 +74,7 @@ def test_piyasada_uc_tablo_yuzdelik_0_100_ayni_tohum_ayni_sonuc(pazar):
     gunler, y = pazar
     a = mc.hesapla(KESISIM, gunler, y, tekrar=TEKRAR)
     assert a.n == len(y.dis_ornek.islemler) >= sinama.EN_AZ
-    assert a.tohum == mc.TOHUM and a.olcu == "net_yuzde" and a.batma is None
+    assert a.tohum == mc.TOHUM and a.batma is None
     for tablo in (a.bootstrap_toplam, a.bootstrap_dusus, a.karistirma_dusus):
         assert tablo[0] <= tablo[1] <= tablo[2]
     assert 0 <= a.rastgele.yuzdelik <= 100
