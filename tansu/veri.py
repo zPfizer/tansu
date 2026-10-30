@@ -684,10 +684,11 @@ def _gunler(fiyat, olaylar, takvim):
     temiz = ok & ~karantina
     kilit_tavan = temiz & (kapanis >= tavan - adim(tavan, f.index) - 1e-9)
     kilit_taban = temiz & (kapanis <= taban + adim(taban, f.index) + 1e-9)
-    # 0,10 TL'de bant bir adımdır; bir adımlık pay baza ulaşmasın: kilitte kapanış bazdan yarım adımdan çok uzaktır
-    # (MEMSA 2015: hareketsiz gün hem tavan hem taban kilidi sayılıyordu; SPEC 3.9 istisnası, Levent 30.10.2026).
-    kilit_tavan &= kapanis > alt_baz + adim(alt_baz, f.index) / 2
-    kilit_taban &= kapanis < ust_baz - adim(ust_baz, f.index) / 2
+    # 0,10 TL'de bant bir adımdır; bir adımlık pay baza ulaşmasın: kilitte kapanış bazdan en az yarım adım uzaktır
+    # (MEMSA 2015: hareketsiz gün hem tavan hem taban kilidi sayılıyordu; olay günü bazı yarım adımda olabilir;
+    # SPEC 3.9 istisnası, Levent 30.10.2026).
+    kilit_tavan &= kapanis >= alt_baz + adim(alt_baz, f.index) / 2 - 1e-9
+    kilit_taban &= kapanis <= ust_baz - adim(ust_baz, f.index) / 2 + 1e-9
     duyarli = f["ham_dusuk"] == f["ham_yuksek"]
     return pd.DataFrame(
         {
