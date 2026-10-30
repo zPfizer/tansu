@@ -1,6 +1,7 @@
 # TANSU agent instructions
 
 This file owns the shared entry for Codex and Claude. Read the relevant owner documents below before work.
+The live rebuild runs on branch `yeniden-kurulus`. That branch owns its rules in its own `AGENTS.md`. In that worktree, follow that file, not this one.
 
 ## Every job
 

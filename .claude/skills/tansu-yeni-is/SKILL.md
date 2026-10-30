@@ -5,6 +5,8 @@ description: "Use for new Tansu work, including a feature, rule, data source, mo
 
 # New work (Yeni geliştirme), flow A
 
+Scope: the main checkout. The `yeniden-kurulus` worktree has no `docs/agents/`. There, follow its `AGENTS.md`.
+
 Use AGENTS.md "Work flow" for the method and required agent roles. This flow adds the TANSU source and delivery gates.
 Apply [Scope](../../../docs/agents/is-kurallari.md#scope) before the steps. Branch, PR, and merge steps apply only to authorized delivery.
 Before creating an issue, follow [Issue body](../../../docs/agents/issue-tracker.md#issue-body).

@@ -87,11 +87,28 @@ def test_coding_standards_atif_ve_tansu_kurallari():
     assert "Define the boundary before the code" in tansu
 
 
-def test_settings_deny_okuma_kabuklarini_engeller():
-    ayar = json.loads((KOK / ".claude" / "settings.json").read_text(encoding="utf-8"))
-    deny = ayar["permissions"]["deny"]
-    for kural in ("Bash(cat *)", "Bash(sed -n*)", "Bash(sed -i*)"):
-        assert kural in deny
+def test_settings_yalniz_yazan_kabugu_engeller_kodlu_kanca_tasimaz():
+    # Retro 30.10.2026: cat ve sed -n yalnız okur, alt ajanları durdurur; PowerShell Get-Content onları aşar.
+    # Beyin kancaları genel ayarda durur; kodlu proje kopyası açık depoda kullanıcı ve kasa yolunu gösteriyordu.
+    metin = (KOK / ".claude" / "settings.json").read_text(encoding="utf-8")
+    deny = json.loads(metin)["permissions"]["deny"]
+    assert "Bash(sed -i*)" in deny
+    assert [k for k in ("Bash(cat *)", "Bash(sed -n*)") if k in deny] == []
+    assert "EncodedCommand" not in metin
+
+
+def test_eski_akis_skilleri_kapsamlarini_yazar():
+    # Retro 30.10.2026: yeniden-kurulus çalışma ağacında docs/agents/ yok; skill kapsam satırını yazar.
+    satir = (
+        "Scope: the main checkout. The `yeniden-kurulus` worktree has no `docs/agents/`"
+    )
+    eksik = [
+        yol.parent.name
+        for yol in sorted((KOK / ".claude" / "skills").glob("*/SKILL.md"))
+        if "docs/agents/" in (metin := yol.read_text(encoding="utf-8"))
+        and satir not in metin
+    ]
+    assert eksik == []
 
 
 def test_okuyucu_araclari_yalniz_okur():
