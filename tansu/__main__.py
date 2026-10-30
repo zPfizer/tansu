@@ -99,7 +99,7 @@ def _kos(a, *, ayarla: bool) -> int:
     except veri.VeriHatasi as hata:
         print(f"tansu {komut}: {hata}", file=sys.stderr)
         return 1
-    except PermissionError as hata:  # Windows: dosya başka bir programda açık
+    except PermissionError as hata:
         hedef = hata.filename2 or hata.filename or hata
         print(
             f"tansu {komut}: {hedef} yazılamadı; dosya başka bir programda açıksa kapatıp yeniden çalıştır. durum.csv değişmedi.",
