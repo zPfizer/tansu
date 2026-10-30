@@ -195,7 +195,7 @@ Sayı, formül ve işleyiş atıf verilen bölümdedir: TASARIM = `docs/TASARIM.
 | Deneme / Kâğıt / Canlı | Deneme, resmi kabul almamış; Kâğıt, geçmiş sınamayı geçmiş; Canlı, kâğıt üstü dönemi de geçmiş aile durumudur (TASARIM §5.12, §6). |
 | Kâğıt üstü dönem | Kâğıt ailenin para konmadan izlendiği dönem. Canlı durumundan ayrıdır (TASARIM §5.8). |
 | Tansu sınaması | Tansu'nun kendi sınama yöntemi: her hissede ayrı ızgara, sağlam bölge, al-tut kıyası, kendi ölçü tablosu. Kabul kararına girmez (TASARIM §5.14). |
-| Sağlam bölge | Yakın ayarlarda da kârlılık görülen ızgara alanı. Eski kesin komşuluk TASARIM §5.14'te, yeni yöntem kapısı §5.15'tedir (Tansu, Ham, `tweet-sma-optimizasyon-saglam-bolge-asiri-uyum-1986899794032304554.md:51`, 07.11.2025: "İyi optimizasyon, \"sağlam\" (robust) bir bölge bulmaktır."). |
+| Sağlam bölge | Yakın ayarlarda da kârlılık görülen ızgara alanı. Eski kesin komşuluk TASARIM §5.14'te, yeni yöntem kapısı §5.15'tedir (Tansu, Ham, `SMA optimizasyonu, sağlam bölge ve aşırı uyum.md:51`, 07.11.2025: "İyi optimizasyon, \"sağlam\" (robust) bir bölge bulmaktır."). |
 | Para çıkmaz | En iyi ayarın bile masraf sonrası kazandırmadığı sonuç etiketi (TASARIM §5.14). |
 | Al-tut | Aynı hissenin aynı dönemde bir kez alınıp tutulması; kıyas çizgisidir (TASARIM §5.14). |
 | Geçerli fiyat günü | Tansu sınamasında fiyatı al-tut, değerleme ve gün sayımında kullanılabilen gün (TASARIM §5.14). |

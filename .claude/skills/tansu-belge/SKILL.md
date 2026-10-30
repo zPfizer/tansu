@@ -5,6 +5,8 @@ description: "Use when the user asks to write, change, or translate a Tansu rule
 
 # Rule, document, instruction (flow C)
 
+Scope: the main checkout. The `yeniden-kurulus` worktree has no `docs/agents/`; there, follow its `AGENTS.md`.
+
 Use AGENTS.md "Work flow" for the writing method. Run the applicable steps below in order.
 Use [Scope](../../../docs/agents/is-kurallari.md#scope) to distinguish local work from publication.
 Use [Check and evidence](../../../docs/agents/is-kurallari.md#check-and-evidence) for every change and the later delivery steps when applicable.

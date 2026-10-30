@@ -14,11 +14,12 @@ Komut satırı: `python tests/atif_araclari.py alinti <jsonl...>`, `entegre <tar
 Eksik argümanda çıkış kodu 2, sorunda 1 olur.
 """
 
+import functools
 import json
 import re
 import subprocess
 import sys
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 KOK = Path(__file__).resolve().parents[1]
 
@@ -263,6 +264,35 @@ _NOT_ADI = re.compile(
     r"(gorsel-paket-\d[\w-]*|kaynak-[a-z0-9][\w-]*|tweet-[a-z0-9][\w-]*?)(\.md)?"
 )
 _ASSETS = re.compile(r"assets[/\\]([^/\\]+)(?:[/\\]([^/\\]+))?")
+# Kasa 30.10.2026'da havuz notlarını ve görsel klasörlerini başlığa göre yeniden adlandırdı; belgeler eski adı anar.
+# Beynin kendi kaydı eski adı yenisine çözer. Kayıt yoksa (CI) ya da havuz gerçek havuz değilse eşleme boştur.
+ADLANDIRMA = BEYIN / "arsiv" / "yeniden-adlandirma-20261030.json"
+
+
+@functools.cache
+def _eski_yeni(havuz):
+    """(not, görsel klasörü) eşlemeleri: eski ad -> yeni ad, yalnız gerçek havuzun doğrudan içindekiler."""
+    if havuz != HAVUZ or not ADLANDIRMA.is_file():
+        return {}, {}
+    kayit = json.loads(ADLANDIRMA.read_text(encoding="utf-8"))
+    kok = HAVUZ.relative_to(BEYIN).as_posix()
+    notlar = {}
+    for k in kayit["kayitlar"]:
+        eski, yeni = PurePosixPath(k["eski_yol"]), PurePosixPath(k["yeni_yol"])
+        if eski.parent.as_posix() == kok and eski != yeni:
+            notlar[eski.stem] = yeni.stem
+    klasorler = {
+        PurePosixPath(k["eski"]).name: PurePosixPath(k["yeni"]).name
+        for k in kayit["resim_klasorleri"]
+        if PurePosixPath(k["eski"]).parent.as_posix() == f"{kok}/assets"
+    }
+    return notlar, klasorler
+
+
+def havuz_adlari(havuz):
+    """Havuzdaki not adları; yeniden adlandırılan not, belgelerin andığı eski adıyla."""
+    geri = {yeni: eski for eski, yeni in _eski_yeni(havuz)[0].items()}
+    return {geri.get(yol.stem, yol.stem) for yol in havuz.glob("*.md")}
 
 
 def sahip_tablosu(agents):
@@ -313,7 +343,8 @@ def beyin_kirikleri(kok, dosyalar, havuz):
 
     Kısa ad (`gorsel-paket-45`) not adının başıdır (tire sınırında). `...`, `…`, `<`, `*`, `NN` içeren belirteç şablondur.
     """
-    notlar = {yol.stem for yol in havuz.glob("*.md")}
+    notlar = havuz_adlari(havuz)
+    klasorler = _eski_yeni(havuz)[1]
     kirik = []
     for yol in dosyalar:
         goreli = yol.relative_to(kok).as_posix()
@@ -332,7 +363,9 @@ def beyin_kirikleri(kok, dosyalar, havuz):
                     n == ad.group(1) or n.startswith(ad.group(1) + "-") for n in notlar
                 )
             elif varlik := _ASSETS.fullmatch(belirtec):
-                klasor = havuz / "assets" / varlik.group(1)
+                klasor = (
+                    havuz / "assets" / klasorler.get(varlik.group(1), varlik.group(1))
+                )
                 var = klasor.is_dir() and (
                     not varlik.group(2) or (klasor / varlik.group(2)).exists()
                 )
@@ -386,7 +419,7 @@ def havuz_sorunlari(kok, havuz):
     o numaralı notu sayar.
     """
     metin = _havuz_metni(kok)
-    notlar = sorted(yol.stem for yol in havuz.glob("*.md"))
+    notlar = sorted(havuz_adlari(havuz))
     kapsanan, sorunlar = set(), []
 
     def coz(belirtec, adaylar):
@@ -607,10 +640,11 @@ def _not_adlari(metin):
 def _kaynak_onbellegi(havuz):
     """ad -> notun normalleştirilmiş birinci el metni; not dosyası yoksa None."""
     onbellek = {}
+    yeni = _eski_yeni(havuz)[0]
 
     def kaynak(ad):
         if ad not in onbellek:
-            yol = havuz / f"{ad}.md"
+            yol = havuz / f"{yeni.get(ad, ad)}.md"
             onbellek[ad] = _kaynak_metni(yol) if yol.is_file() else None
         return onbellek[ad]
 
@@ -754,7 +788,7 @@ def parti_sorunlari(kok, havuz, parti_dosyalari):
     sonucunda düz not adı olan (belirsiz atıf satırı olmayan) not.
     """
     acik = {s for s in havuz_sorunlari(kok, havuz) if not s.startswith("belirsiz atıf")}
-    notlar = {yol.stem for yol in havuz.glob("*.md")}
+    notlar = havuz_adlari(havuz)
     sorunlar = []
     for dosya in map(Path, parti_dosyalari):
         for ad in map(str.strip, dosya.read_text(encoding="utf-8-sig").split("\n")):

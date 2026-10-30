@@ -3,6 +3,8 @@ name: tansu-grill
 description: An interview that questions an idea or a design against Tansu sources and decisions. Use it when a discussion in Tansu is about a new rule, parameter, data source, or behavior change.
 ---
 
+Scope: the main checkout. The `yeniden-kurulus` worktree has no `docs/agents/`; there, follow its `AGENTS.md`.
+
 Question the assumptions, alternatives, risks, and acceptance criteria of the proposal. Check the terms in GLOSSARY and the decisions in TASARIM.
 Apply the three criteria below. Record settled terms and decisions as `tansu-yeni-is` "Document first" says.
 The text of the rules is in their owner files. This skill only tells when to check them.
