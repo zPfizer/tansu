@@ -8,21 +8,23 @@ import pandas as pd
 import pytest
 
 from tansu import __main__ as komut
-from tansu import ayar, islem, montecarlo, rapor, sinama, veri
+from tansu import ayar, islem, montecarlo, rapor, sinama
 from tansu.__main__ import main
 from tansu.strateji import bos_sinyal
 from tansu.stratejiler import STRATEJILER
-from tests.sentetik import gartley_yolu, gun_tablosu, ortalama_yolu, piyasa
+from tests.sentetik import (
+    SABIT,
+    anlik,
+    gartley_yolu,
+    gun_tablosu,
+    ortalama_yolu,
+    piyasa,
+)
 
 
 def sentetik_anlik(yol=None):
-    g = gun_tablosu(gartley_yolu() if yol is None else yol, bas="2022-01-03")
-    fiyat = g[["aof", "yuksek", "dusuk", "kapanis", "hacim", "xu100"]].copy()
-    fiyat["ham_aof"], fiyat["ham_yuksek"] = g["aof"], g["yuksek"]
-    fiyat["ham_dusuk"], fiyat["ham_kapanis"] = g["dusuk"], g["kapanis"]
-    fiyat = fiyat.reset_index().assign(sembol="AKBNK")
-    olaylar = pd.DataFrame(columns=["sembol", "tarih", "kod", "carpan"])
-    return veri.Anlik("20260101-0000", fiyat, olaylar)
+    yol = gartley_yolu() if yol is None else yol
+    return anlik({"AKBNK": gun_tablosu(yol, bas="2022-01-03")})
 
 
 @pytest.fixture
@@ -31,8 +33,11 @@ def ortam(monkeypatch, tmp_path):
     (tmp_path / "stratejiler").mkdir()
 
     def kur(ad, durum="taslak", yol=None, strateji=None):
-        s = STRATEJILER[ad]
-        tek = dataclasses.replace(s, aralik={k: (s.varsayilan[k],) for k in s.aralik})
+        """Kurulan strateji `SABIT`i varsayılan ve tek noktalı aralık olarak taşır."""
+        s, v = STRATEJILER[ad], SABIT[ad]
+        tek = dataclasses.replace(
+            s, varsayilan=v, aralik={k: (v[k],) for k in s.aralik}
+        )
         monkeypatch.setitem(komut.STRATEJILER, ad, strateji or tek)
         monkeypatch.setattr(komut, "son_anlik", lambda kok: sentetik_anlik(yol))
         (tmp_path / "stratejiler" / "durum.csv").write_text(
@@ -47,14 +52,7 @@ def durum(tmp_path):
 
 
 def test_sina_raporu_yazar_ve_durumu_sinandi_yapar(ortam, tmp_path, capsys):
-    g = STRATEJILER["gartley"]
-    v = {**g.varsayilan, "rr_min": "kapali"}
-    ortam(
-        "gartley",
-        strateji=dataclasses.replace(
-            g, varsayilan=v, aralik={k: (v[k],) for k in g.aralik}
-        ),
-    )
+    ortam("gartley")
     assert main(["sina", "gartley"]) == 0
     assert "1 sinyal, 1 dolum" in capsys.readouterr().out
     html = (tmp_path / "rapor" / "gartley" / "sinama.html").read_text(encoding="utf-8")
@@ -212,7 +210,7 @@ def test_ayarla_puanli_nokta_yoksa_varsayilanlari_yazar_suzgeci_korur(
     )
     assert main(["ayarla", "gartley"]) == 0
     icerik = json.loads((ayarlar / "gartley.json").read_text(encoding="utf-8"))
-    assert icerik["parametreler"] == dict(STRATEJILER["gartley"].varsayilan)
+    assert icerik["parametreler"] == dict(komut.STRATEJILER["gartley"].varsayilan)
     assert icerik["puanli"] is False and icerik["suzgecler"] == ["nabiz"]
     assert "gartley,yetersiz-ornek," in durum(tmp_path)
     html = (tmp_path / "rapor" / "gartley" / "sinama.html").read_text(encoding="utf-8")
