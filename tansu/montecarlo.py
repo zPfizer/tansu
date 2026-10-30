@@ -106,7 +106,6 @@ def _rastgele(
     Kurulumu olan bir adımda uygun gün ya da şablon yoksa kıyas yapılamaz: None."""
     kesik = {s: g.loc[: sinama.KESIM] for s, g in sorted(gunler.items())}
     kesik = {s: g for s, g in kesik.items() if not g.empty}
-    uygunluk = {s: islem.piyasa_gunleri(g) for s, g in kesik.items()}
     motor: dict[tuple, islem.Gun] = {}
     plan = []
     for a in yuruyus.adimlar:
@@ -119,12 +118,9 @@ def _rastgele(
             anahtar = (s, frozenset(p.items()))
             if anahtar not in motor:
                 motor[anahtar] = islem.Gun(g, strateji.sinyal(g, p))
-            uygun, dolum_gunu = uygunluk[s]
+            m = motor[anahtar]
             pencere = (g.index >= a.pencere.test_bas) & (g.index <= a.pencere.test_son)
-            secenekler += [
-                (motor[anahtar], int(t), int(dolum_gunu[t]))
-                for t in np.flatnonzero(uygun & pencere)
-            ]
+            secenekler += [(m, int(t)) for t in np.flatnonzero(m.uygun & pencere)]
         atr = np.array(
             [
                 gunler[s].at[t, "atr"]
@@ -147,9 +143,9 @@ def _rastgele(
                 rng.integers(0, len(sablonlar), m),
                 strict=True,
             ):
-                g, t, dolum_i = secenekler[i]
+                g, t = secenekler[i]
                 toplam += islem.sablon_oyna(
-                    g, t, dolum_i, sablonlar[j], strateji.cikis, strateji.olcu
+                    g, t, sablonlar[j], strateji.cikis, strateji.olcu
                 )
         ortalamalar[kosu] = toplam / n
     alti = (ortalamalar < strateji_ort).sum() + 0.5 * (
