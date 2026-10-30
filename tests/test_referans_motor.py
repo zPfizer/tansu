@@ -311,6 +311,7 @@ YAKIN_ALANLAR = [
 ]
 
 
+@pytest.mark.slow
 def test_motor_bagimsiz_dolum_referansiyla_ayni_islemleri_ve_red_sayilarini_verir():
     nedenler, redler, kapsam = Counter(), Counter(), Counter()
     for ad, cikis in CIKISLAR.items():
