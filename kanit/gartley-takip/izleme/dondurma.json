@@ -23,7 +23,7 @@
   "kanit/gartley-takip/izle.py": "03e12dd8f854a6161e88bcb39e7e76012db7ba769bbf186af5ffa34b6b07a424"
  },
  "motor_agaclari": {
-  "22e745326fa300da53c0f2fc1089484f57627aa0": "yeniden-kurulus 47473bb: denetimin dokuz düzeltmesi (PR 250, 253-260) ve veri kalitesi 1 (PR 263, V2 yan etkisi)"
+  "0ca361a5f7ea657fe7b84ad03a90fd8ef06372bd": "yeniden-kurulus 7cbb85f: denetimin dokuz düzeltmesi (PR 250, 253-260) ve veri kalitesi 1 (PR 263, PR 266)"
  },
- "guncelleme": "2026-10-30: motor ağacı PR 263 ile güncellendi; S3 başlangıcı kural gereği dondurma gününe alındı (kanit/gartley-takip.md, İleri izleme, Güncelleme)."
+ "guncelleme": "2026-10-30: motor ağacı PR 263 ve PR 266 ile güncellendi; S3 başlangıcı kural gereği dondurma gününe alındı (kanit/gartley-takip.md, İleri izleme, Güncelleme)."
 }

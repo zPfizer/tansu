@@ -188,3 +188,8 @@ Bağımsız inceleme (PR 264) iki şey buldu. İkisi de ilk izleme kaydından ö
    Gartley'in Ekim sonucu eski takipte zaten açıktı (0 sinyal).
 3. **Betik.** `--zamanli` daha önce commit edilmemiş kayıt klasörlerini de commit eder. Başlangıç günü verinin son
    tam gününden sonra olan aday `ozet.json`'da "başlamadı" yazılır; kasası açılmaz, `izleme.tsv`'ye satırı yazılmaz.
+4. **Motor, ikinci adım.** Veri kalitesi oturumu 18:30'da PR 266'nın birleştiğini bildirdi (veri kalitesi 1, ikinci
+   parça: ham kapanışı tutarlı bozuk satır ertesi günün fiyat sınırı bazıdır, sahte aşım olmaz) ve izlemenin bu motorla
+   01.10.2026'dan yeniden hesaplanmasını istedi. İzinli motor ağacı artık `0ca361a5…` (`yeniden-kurulus` 7cbb85f);
+   `22e74532…` listeden çıktı. İkisiyle de izleme kaydı yazılmadı; ilk kayıt bu motorla yazılır ve her kayıt gibi
+   başlangıç gününden baştan hesaplanır.
