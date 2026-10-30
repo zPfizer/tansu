@@ -157,7 +157,7 @@ def test_s09_dusuk_fiyatta_yarim_birim_yuvarlama_payi(kapanis, gecerli):
     # TASARIM 5.13 (#267): düşük 0,408246, kapanış 0,4082 (4 ondalık, fark 4,6e-5 < 5e-5) geçerlidir; bağıl 1e-4
     # pay yalnız 4,1e-5 tanır. 0,4076 (düşükten %0,16 aşağı) gerçek ihlaldir.
     m = s09_mumlar([r(0.408246, 0.421968, 0.408246, 0.408246)] * 2)
-    m["tavan"], m["taban"] = 1.0, 0.1
+    m["tavan"], m["taban"], m["atr"], m["sma250"] = 1.0, 0.1, 0.01, 0.2
     m.at[m.index[1], "kapanis"] = kapanis
     if not gecerli:
         with pytest.raises(ValueError, match="mum fiyat sırası geçersiz"):
