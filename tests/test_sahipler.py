@@ -218,6 +218,8 @@ def test_yeniden_adlandirilan_havuz_adi_beynin_kaydiyla_cozulur(tmp_path, monkey
     (havuz / "assets" / "Yeni klasör").mkdir(parents=True)
     (havuz / "assets" / "Yeni klasör" / "g.png").write_text("g", encoding="utf-8")
     (havuz / "Yeni ad.md").write_text("n", encoding="utf-8")
+    # Alt klasör kaydının yeni adı havuz kökünde de var: kayıt yine de havuz notunu adlandırmaz.
+    (havuz / "Alt.md").write_text("n", encoding="utf-8")
     kayit = beyin / "arsiv" / "yeniden-adlandirma-20261030.json"
     kayit.parent.mkdir()
     kayitlar = [
