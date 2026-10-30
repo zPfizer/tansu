@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from typing import NamedTuple
 
 import numpy as np
-import pandas as pd
 from numpy.typing import ArrayLike
 
 from tansu import ayar, islem, sinama
@@ -61,7 +60,6 @@ class MonteCarlo:
     tohum: int
     tekrar: int
     n: int
-    olcu: str
     bootstrap_toplam: Yuzdelik | None
     bootstrap_dusus: Yuzdelik | None
     # düşüşü >= BATMA_R olan bootstrap koşularının payı; sınıf (b) için None
@@ -82,37 +80,19 @@ def hesapla(
     islemler = yuruyus.dis_ornek.islemler
     n = len(islemler)
     if n < sinama.EN_AZ:
-        return MonteCarlo(TOHUM, tekrar, n, olcu, None, None, None, None, None)
+        return MonteCarlo(TOHUM, tekrar, n, None, None, None, None, None)
     x = sinama.sirala(islemler)[olcu].to_numpy(float)
     toplam, dusus = bootstrap(x, akis(0), tekrar)
     return MonteCarlo(
         TOHUM,
         tekrar,
         n,
-        olcu,
         bootstrap_toplam=yuzdelik(toplam),
         bootstrap_dusus=yuzdelik(dusus),
         batma=float((dusus >= BATMA_R).mean()) if strateji.sinif == "a" else None,
         karistirma_dusus=yuzdelik(karistir(x, akis(1), tekrar)),
         rastgele=_rastgele(strateji, gunler, yuruyus, float(x.mean()), tekrar),
     )
-
-
-def _uygun_gunler(gun: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
-    """(uygun, sonraki): t sinyal günü olabilir mi; t'den sonraki ilk fiyatlı gün (`islem._emir_gunu` piyasa kuralı)."""
-    yok = len(gun)
-    fiyatli = np.append(
-        np.flatnonzero(gun["kapanis"].notna() & gun["aof"].notna()), yok
-    )
-    sonraki = fiyatli[np.searchsorted(fiyatli, np.arange(yok), side="right")]
-    kilit = np.append(gun["kilit_tavan"].to_numpy(bool), True)
-    uygun = (
-        gun["uye"].to_numpy(bool)
-        & ~gun["karantina"].to_numpy(bool)
-        & (gun["atr"].to_numpy(float) > 0)
-        & ~kilit[sonraki]
-    )
-    return uygun, sonraki
 
 
 def _rastgele(
@@ -124,9 +104,8 @@ def _rastgele(
 ) -> Rastgele | None:
     """Rastgele giriş kıyası (SPEC 5.8 madde 3). Şablon, sinyal günü ATR'si 0'dan büyük gerçek kurulumdur.
     Kurulumu olan bir adımda uygun gün ya da şablon yoksa kıyas yapılamaz: None."""
-    kesik = {s: g.loc[: sinama.KESIM] for s, g in sorted(gunler.items())}
-    kesik = {s: g for s, g in kesik.items() if not g.empty}
-    uygunluk = {s: _uygun_gunler(g) for s, g in kesik.items()}
+    kesik = {s: gun.loc[: sinama.KESIM] for s, gun in sorted(gunler.items())}
+    kesik = {s: gun for s, gun in kesik.items() if not gun.empty}
     motor: dict[tuple, islem.Gun] = {}
     plan = []
     for a in yuruyus.adimlar:
@@ -135,16 +114,15 @@ def _rastgele(
             continue
         p = a.secim.parametre
         secenekler = []
-        for s, g in kesik.items():
+        for s, gun in kesik.items():
             anahtar = (s, frozenset(p.items()))
             if anahtar not in motor:
-                motor[anahtar] = islem.Gun(g, strateji.sinyal(g, p))
-            uygun, sonraki = uygunluk[s]
-            pencere = (g.index >= a.pencere.test_bas) & (g.index <= a.pencere.test_son)
-            secenekler += [
-                (motor[anahtar], int(t), float(g["aof"].iat[sonraki[t]]))
-                for t in np.flatnonzero(uygun & pencere)
-            ]
+                motor[anahtar] = islem.Gun(gun, strateji.sinyal(gun, p))
+            g = motor[anahtar]
+            pencere = (gun.index >= a.pencere.test_bas) & (
+                gun.index <= a.pencere.test_son
+            )
+            secenekler += [(g, int(t)) for t in np.flatnonzero(g.uygun & pencere)]
         atr = np.array(
             [
                 gunler[s].at[t, "atr"]
@@ -152,35 +130,24 @@ def _rastgele(
             ],
             float,
         )
-        sablon, atr = test[atr > 0], atr[atr > 0]
-        if not secenekler or sablon.empty:
+        sablonlar = islem.sablonlar(test[atr > 0], atr[atr > 0])
+        if not secenekler or not len(sablonlar):
             return None
-        dolum = sablon["dolum_fiyati"].to_numpy(float)
-        sablonlar = np.column_stack(
-            [
-                (dolum - sablon["stop"].to_numpy(float)) / atr,
-                *((sablon[h].to_numpy(float) - dolum) / atr for h in islem.HEDEFLER),
-            ]
-        )
         plan.append((secenekler, sablonlar, len(test)))
-    n = sum(m for *_, m in plan)
+    n = sum(adet for *_, adet in plan)
     ortalamalar = np.empty(tekrar)
     for kosu in range(tekrar):
         rng = akis(2, kosu)
         toplam = 0.0
-        for secenekler, sablonlar, m in plan:
-            for i, j in zip(
-                rng.integers(0, len(secenekler), m),
-                rng.integers(0, len(sablonlar), m),
+        for secenekler, sablonlar, adet in plan:
+            for gun_no, sablon_no in zip(
+                rng.integers(0, len(secenekler), adet),
+                rng.integers(0, len(sablonlar), adet),
                 strict=True,
             ):
-                g, t, dolum = secenekler[i]
-                d = sablonlar[j] * g.atr[t]
-                toplam += getattr(
-                    islem.rastgele(
-                        g, t, dolum - d[0], tuple(dolum + d[1:]), strateji.cikis
-                    ),
-                    strateji.olcu,
+                g, t = secenekler[gun_no]
+                toplam += islem.sablon_oyna(
+                    g, t, sablonlar[sablon_no], strateji.cikis, strateji.olcu
                 )
         ortalamalar[kosu] = toplam / n
     alti = (ortalamalar < strateji_ort).sum() + 0.5 * (

@@ -38,7 +38,9 @@ def kosu(puan: float) -> sinama.Kosu:
             "net_yuzde": [0.0 if np.isnan(puan) else puan] * n,
         }
     )
-    return sinama.Kosu(islemler, pd.DataFrame(columns=["sembol", "tarih"]), Counter())
+    return sinama.Kosu(
+        islemler, pd.DataFrame(columns=["sembol", "tarih"]), Counter(), "net_yuzde"
+    )
 
 
 def sec(strateji, puanlar) -> ayar.Secim:

@@ -4,15 +4,18 @@ import datetime as dt
 import io
 import json
 import logging
-import os
 import re
 import time
 from collections import Counter
 from pathlib import Path
 
+import borsapy
 import numpy as np
 import pandas as pd
 import requests
+from borsapy._providers.kap import get_kap_provider
+
+from tansu import dosya
 
 KOK = "https://www.isyatirim.com.tr"
 FIYAT_URL = KOK + "/_layouts/15/Isyatirim.Website/Common/Data.aspx/HisseTekil"
@@ -217,9 +220,12 @@ def kapanan_tablo(ham) -> pd.DataFrame:
 def kapanan_kodlar(oturum=None) -> pd.DataFrame:
     """İşlemi kapanmış pay kodları (Borsa İstanbul, birincil kaynak; `Data/DataFilePaths` listesinde)."""
     oturum = oturum or requests.Session()
-    yanit = oturum.get(
-        KAPANAN_URL, timeout=(5, 120), headers={"User-Agent": USER_AGENT}
-    )
+    try:
+        yanit = oturum.get(
+            KAPANAN_URL, timeout=(5, 120), headers={"User-Agent": USER_AGENT}
+        )
+    except requests.RequestException as hata:
+        raise KaynakHatasi(f"{KAPANAN_URL}: {hata}") from hata
     if yanit.status_code != 200:
         raise KaynakHatasi(f"{KAPANAN_URL}: HTTP {yanit.status_code}")
     return kapanan_tablo(
@@ -229,8 +235,6 @@ def kapanan_kodlar(oturum=None) -> pd.DataFrame:
 
 def sirket_kodlari() -> pd.Series:
     """Bugünkü bütün pay kodları (borsapy `companies`, KAP şirket listesi). Ağa çıkan tek yer burasıdır (TASARIM 4)."""
-    import borsapy
-
     return borsapy.companies()["ticker"]
 
 
@@ -316,12 +320,11 @@ class Artimli:
 
 def _yaz(yol: Path, icerik) -> None:
     """Önbelleğe yarım dosya bırakmaz: geçici dosyaya yazar, sonra yerine koyar."""
-    gecici = yol.with_name(yol.name + ".gecici")
-    if isinstance(icerik, pd.DataFrame):
-        icerik.to_parquet(gecici, index=False)
-    else:
-        gecici.write_text(icerik, encoding="utf-8")
-    os.replace(gecici, yol)
+    with dosya.atomik(yol) as gecici:
+        if isinstance(icerik, pd.DataFrame):
+            icerik.to_parquet(gecici, index=False)
+        else:
+            gecici.write_text(icerik, encoding="utf-8")
 
 
 class KapSektor:
@@ -377,10 +380,7 @@ class Borsapy:
     borsapy kaynak kodundan doğrulandı (`_providers/tcmb_rates.py`, `_providers/kap.py`)."""
 
     def __init__(self, tcmb=None, kap=None):
-        if tcmb is None or kap is None:  # sahte nesne verilmezse borsapy'yi geç yükle
-            import borsapy
-            from borsapy._providers.kap import get_kap_provider
-
+        if tcmb is None or kap is None:
             tcmb, kap = tcmb or borsapy.TCMB(), kap or get_kap_provider()
         self._tcmb, self._kap = tcmb, kap
 

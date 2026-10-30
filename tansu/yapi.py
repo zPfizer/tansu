@@ -17,15 +17,21 @@ class Pivot:
 
 
 def sag_bar_pivotlari(yuksek: pd.Series, dusuk: pd.Series, k: int) -> list[Pivot]:
-    """Tepe: yüksek, [i-k, i+k] penceresinin en büyüğü (eşitlikte ilki); dip ayna. Onay günü i+k."""
-    y = np.nan_to_num(yuksek.to_numpy(float), nan=-np.inf)
-    d = np.nan_to_num(dusuk.to_numpy(float), nan=np.inf)
+    """Tepe: yüksek, fiyatlı günlerde i'nin solundaki ve sağındaki k barla birlikte en büyük (eşitlikte ilki); dip ayna.
+    Fiyatsız gün (yüksek ya da düşük NaN) bar sayılmaz. Onay günü i'den sonraki k. fiyatlı gün."""
+    y, d = yuksek.to_numpy(float), dusuk.to_numpy(float)
+    fiyatli = np.flatnonzero(np.isfinite(y) & np.isfinite(d))
+    y, d = y[fiyatli], d[fiyatli]
     if len(y) < 2 * k + 1:
         return []
     tepe = np.flatnonzero(sliding_window_view(y, 2 * k + 1).argmax(axis=1) == k) + k
     dip = np.flatnonzero(sliding_window_view(d, 2 * k + 1).argmin(axis=1) == k) + k
-    pivotlar = [Pivot("T", int(i), int(i) + k, float(y[i])) for i in tepe]
-    pivotlar += [Pivot("D", int(i), int(i) + k, float(d[i])) for i in dip]
+    pivotlar = [
+        Pivot("T", int(fiyatli[i]), int(fiyatli[i + k]), float(y[i])) for i in tepe
+    ]
+    pivotlar += [
+        Pivot("D", int(fiyatli[i]), int(fiyatli[i + k]), float(d[i])) for i in dip
+    ]
     return sorted(pivotlar, key=lambda p: (p.onay_gun, p.pivot_gun, p.tur))
 
 
@@ -49,6 +55,28 @@ def zigzag_pivotlari(yuksek: pd.Series, dusuk: pd.Series, yuzde: float) -> list[
             pivotlar.append(Pivot("D", dip_i, i, float(d[dip_i])))
             yon, tepe_i = 1, dip_i + 1 + int(np.nanargmax(y[dip_i + 1 : i + 1]))
     return pivotlar
+
+
+def bacak_uclari(
+    yuksek: np.ndarray, dusuk: np.ndarray, sira: tuple[Pivot, ...], t: int
+) -> bool:
+    """Her pivot kendi bacağının ucu mu: tepe, komşu pivotlar arasındaki (sonuncusunda t'ye dek) en yüksek, dip en düşük.
+    İlk pivotun penceresi kendisinden t'ye dektir: öte bir değer deseni bozar (X kırılması: X'in altına inmek). Eşit değer
+    bozmaz. Komşu pivot günlerinin barları pencereye girmez, çünkü gün içi sıra bilinmez. Pencere sabit olduğu için pivot
+    olamayan bir uç (komşusu daha uç) bacağı yanlış ölçtürür; bu kontrol onu yakalar."""
+    for k, p in enumerate(sira):
+        if k == 0:
+            pencere = slice(p.pivot_gun + 1, t + 1)
+        else:
+            son = sira[k + 1].pivot_gun if k + 1 < len(sira) else t + 1
+            pencere = slice(sira[k - 1].pivot_gun + 1, son)
+        if p.tur == "T":
+            gecti = yuksek[pencere] > p.fiyat
+        else:
+            gecti = dusuk[pencere] < p.fiyat
+        if gecti.any():
+            return False
+    return True
 
 
 def ardisik(pivotlar: list[Pivot]) -> Iterator[tuple[Pivot, ...]]:

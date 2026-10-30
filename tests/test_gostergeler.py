@@ -106,9 +106,7 @@ def test_atr_bas_nan_satirlar_tohum_n_1_konumunda_nan_atlanarak():
 
 def test_piyasa_durumu_kapanis_sma_ustunde_mi():
     # SMA(2): [nan, 1,5, 2,5, 2,5, 1,5]; 2 > 1,5 evet; 3 > 2,5 evet; 2 > 2,5 hayır; 1 > 1,5 hayır; ilk gün SMA yok -> hayır.
-    from tansu.gostergeler import piyasa_durumu
-
-    assert list(piyasa_durumu(pd.Series([1.0, 2.0, 3.0, 2.0, 1.0]), 2)) == [
+    assert list(gostergeler.piyasa_durumu(pd.Series([1.0, 2.0, 3.0, 2.0, 1.0]), 2)) == [
         False,
         True,
         True,
@@ -138,6 +136,18 @@ def test_rsi_wilder_ilk_deger_ilk_n_degisimin_ortalamasi():
     assert sonuc.iloc[3:].tolist() == pytest.approx(
         [75.0, 54.54545454545455, 75.0], abs=1e-9
     )
+
+
+def test_rsi_basit_son_n_degisimin_basit_ortalamasi_eksik_gunu_atlar():
+    # SPEC 3.12: Tansu'nun RSI'ı basit ortalama. n=3, kapanış [10; 11; 10; 12; 11; 13], değişimler +1; -1; +2; -1; +2.
+    # Gün 3: kazanç (1+0+2)/3 = 1, kayıp 1/3 → 75. Gün 4: (-1; +2; -1) → 2/3 ve 2/3 → 50. Gün 5: (+2; -1; +2) → 80.
+    sonuc = gostergeler.rsi_basit(pd.Series([10.0, 11, 10, 12, 11, 13]), 3)
+    assert sonuc.isna().tolist() == [True, True, True, False, False, False]
+    assert sonuc.iloc[3:].tolist() == pytest.approx([75.0, 50.0, 80.0], abs=1e-9)
+    # Eksik gün çubuk değildir (`atr_basit` gibi): değişim önceki fiyatlı güne göredir, sonraki günler tanımlı kalır.
+    sonuc = gostergeler.rsi_basit(pd.Series([10.0, 11, float("nan"), 10, 12, 11]), 3)
+    assert sonuc.isna().tolist() == [True, True, True, True, False, False]
+    assert sonuc.iloc[4:].tolist() == pytest.approx([75.0, 50.0], abs=1e-9)
 
 
 def test_momentum_squeeze_linreg_son_nokta():

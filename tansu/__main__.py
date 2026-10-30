@@ -1,32 +1,20 @@
 """Komut girişi: `python -m tansu <komut>` (docs/SPEC.md bölüm 7)."""
 
 import argparse
-import csv
 import datetime as dt
 import shutil
 import sys
 import webbrowser
-from collections.abc import Collection
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 
-from tansu import ayar, kaynak, montecarlo, rapor, sinama, veri
+from tansu import ayar, durum, kaynak, rapor, sinama, veri
 from tansu.stratejiler import STRATEJILER
 
 VERI_KOKU = Path("veri")
 VERI_BASLANGIC = dt.date(2019, 1, 1)  # 2019-2020 yalnız ısınma (SPEC 3.4)
 SAKLANAN_GORUNTU = 10
-DURUM_DOSYASI = Path("stratejiler/durum.csv")
-DURUMLAR = (
-    "taslak",
-    "beklemede",
-    "sinandi",
-    "ayarlandi",
-    "yetersiz-ornek",
-    "sinyalde",
-)
 
 
 def son_anlik(kok: Path = VERI_KOKU) -> veri.Anlik:
@@ -78,130 +66,57 @@ def _veri(a) -> int:
     return 0
 
 
-def _durum_satirlari(yol: Path = DURUM_DOSYASI) -> list[dict]:
-    with yol.open(encoding="utf-8", newline="") as f:
-        return list(csv.DictReader(f))
-
-
-def _satir(satirlar: list[dict], ad: str) -> dict:
-    satir = next((r for r in satirlar if r["ad"] == ad), None)
-    if satir is None:
-        raise veri.VeriHatasi(f"{ad}: durum.csv içinde yok")
-    return satir
-
-
-def durum_gecisi(
-    ad: str, eski: Collection[str], yeni: str, yol: Path = DURUM_DOSYASI
-) -> str:
-    """`durum.csv` satırını durumu `eski` içindeyse `yeni` yapar; son durumu döndürür (SPEC 4)."""
-    satirlar = _durum_satirlari(yol)
-    satir = _satir(satirlar, ad)
-    if satir["durum"] in eski:
-        satir.update(durum=yeni, tarih=dt.date.today().isoformat())
-        with yol.open("w", encoding="utf-8", newline="") as f:
-            yazici = csv.DictWriter(
-                f, ["ad", "durum", "tarih", "not"], lineterminator="\n"
-            )
-            yazici.writeheader()
-            yazici.writerows(satirlar)
-    return satir["durum"]
+def _yazilanlar(yol, json_yolu) -> str:
+    yazilan = [str(p) for p in (yol and yol.parent, json_yolu) if p]
+    return f" Bu koşunun yeni yazdıkları: {', '.join(yazilan)}." if yazilan else ""
 
 
 def _kos(a, *, ayarla: bool) -> int:
     """`sina` ve `ayarla` için tek akış; farkları json yazımı ve durum geçişi (SPEC 4, 5.7)."""
-    komut = "ayarla" if ayarla else "sina"
+    komut: durum.Komut = "ayarla" if ayarla else "sina"
     strateji = STRATEJILER.get(a.ad)
     if strateji is None:
         print(f"tansu {komut}: bilinmeyen strateji {a.ad}", file=sys.stderr)
         return 2
+    yol = json_yolu = None
     try:
-        satirlar = _durum_satirlari()
-        onceki = _satir(satirlar, a.ad)["durum"]
-        if ayarla and onceki == "beklemede":
+        satirlar = durum.oku()
+        onceki = durum.durumu(satirlar, a.ad)
+        if durum.reddeder(komut, onceki):
             print(
-                f"tansu ayarla: {a.ad} beklemede; önce taslak olmalı", file=sys.stderr
+                f"tansu {komut}: {a.ad} {onceki}; önce taslak olmalı", file=sys.stderr
             )
             return 1
-        okunan = None if ayarla else ayar.oku(strateji)  # bozuk json ızgaradan önce
+        okunan = None if ayarla else ayar.oku(strateji)
         anlik = son_anlik(a.kok)
-        gunler = sinama.gunler(anlik)
-        yuruyus = ayar.yuru(strateji, gunler)
-        mc = montecarlo.hesapla(strateji, gunler, yuruyus)
-        if ayarla:
-            p, ayar_tarihi = yuruyus.son.parametre, dt.date.today().isoformat()
-        elif okunan:
-            p, ayar_tarihi = okunan.parametreler, okunan.tarih
-        else:
-            p, ayar_tarihi = dict(strateji.varsayilan), None
-        gecmis = sinama.calistir(strateji, gunler, p, sinama.GECMIS)
-        sakli_son = sinama.sakli_son(gunler)
-        sakli = sinama.calistir(
-            strateji, gunler, p, sinama.Donem(sinama.ILK_GIRIS, sakli_son)
-        ).kes(sinama.SAKLI_BAS, sakli_son)
-        yol = rapor.yaz(
-            rapor.Sinama(
-                strateji=strateji,
-                parametre=p,
-                ayar_tarihi=ayar_tarihi,
-                kimlik=anlik.kimlik,
-                gecmis=gecmis,
-                yuruyus=yuruyus,
-                sakli=sakli,
-                sakli_son=sakli_son,
-                sinanan=sum(
-                    r["durum"] not in ("taslak", "beklemede") or r["ad"] == a.ad
-                    for r in satirlar
-                ),
-                mc=mc,
-            )
+        s = rapor.hazirla(
+            strateji,
+            sinama.gunler(anlik),
+            kimlik=anlik.kimlik,
+            sinanan=durum.sinanan(satirlar, a.ad),
+            ayarla=ayarla,
+            okunan=okunan,
         )
-        json_yolu = None
+        yol = rapor.yaz(s)
         if ayarla:  # json rapordan sonra: yarıda kalan koşu onaysız parametre bırakmaz
-            json_yolu = ayar.yaz(strateji, yuruyus.son, veri_kimligi=anlik.kimlik)
-            yeni = "ayarlandi" if yuruyus.son.puanli else "yetersiz-ornek"
-            durum = durum_gecisi(a.ad, set(DURUMLAR) - {"beklemede"}, yeni)
-        else:
-            durum = durum_gecisi(a.ad, {"taslak"}, "sinandi")
+            json_yolu = ayar.yaz(strateji, s.yuruyus.son, veri_kimligi=s.kimlik)
+        yeni_durum = durum.gec(a.ad, komut, puanli=s.yuruyus.son.puanli)
     except veri.VeriHatasi as hata:
-        print(f"tansu {komut}: {hata}", file=sys.stderr)
+        print(f"tansu {komut}: {hata}{_yazilanlar(yol, json_yolu)}", file=sys.stderr)
         return 1
-    olcu = strateji.olcu
-    b = sinama.BIRIM[olcu]
-    son, iz = yuruyus.son, yuruyus.izgara
-    toplam = gecmis.islemler[olcu].sum() if len(gecmis.islemler) else 0.0
-    secim = (
-        f"seçim {' '.join(f'{k}={v}' for k, v in iz.eksenler(son.nokta).items())} "
-        f"(sağlam {son.saglam[son.nokta]:.2f} {b}, N = {son.n[son.nokta]})"
-        if son.puanli
-        else "puanlı nokta yok, varsayılanlar"
-    )
-    verim = "n/a" if yuruyus.verim is None else f"{yuruyus.verim:.2f}"
-    print(
-        f"{a.ad}: {len(gecmis.sinyaller)} sinyal, {len(gecmis.islemler)} dolum, "
-        f"toplam {toplam:.2f} {b}"
-    )
-    print(
-        f"{a.ad}: ızgara {len(iz)} nokta, puanlı {int(np.isfinite(son.puan).sum())}; {secim}"
-    )
-    print(
-        f"ileri yürüme: örneklem dışı N = {len(yuruyus.dis_ornek.islemler)}, "
-        f"ortalama verim {verim} ({yuruyus.verim_adim}/{len(yuruyus.adimlar)} adım)"
-    )
-    print(
-        f"saklı dönem {sinama.SAKLI_BAS:%d.%m.%Y}-{sakli_son:%d.%m.%Y}: N = {len(sakli.islemler)}"
-        if sakli_son >= sinama.SAKLI_BAS
-        else "saklı dönem: veri saklı döneme ulaşmıyor"
-    )
-    rastgele = (
-        f"n/a (N = {mc.n})" if mc.rastgele is None else f"{mc.rastgele.yuzdelik:.1f}"
-    )
-    print(
-        f"Monte Carlo: tohum {mc.tohum}, N = {mc.n}, rastgele giriş yüzdeliği {rastgele}"
-    )
+    except PermissionError as hata:
+        hedef = hata.filename2 or hata.filename or hata
+        print(
+            f"tansu {komut}: {hedef} için erişim engellendi; dosya başka bir programda açıksa kapatıp yeniden çalıştır. durum.csv değişmedi.{_yazilanlar(yol, json_yolu)}",
+            file=sys.stderr,
+        )
+        return 1
+    for satir in rapor.konsol(s):
+        print(satir)
     if json_yolu:
         print(f"ayar: {json_yolu}")
-    print(f"rapor: {yol}; durum: {durum}")
-    if ayarla and onceki == "sinyalde":
+    print(f"rapor: {yol}; durum: {yeni_durum}")
+    if durum.yeniden_onay(komut, onceki):
         print(f"Levent yeniden onaylamalı: tansu onayla {a.ad}")
     if a.ac:
         webbrowser.open(yol.resolve().as_uri())

@@ -9,6 +9,7 @@ __pycache__/
 .claude/worktrees/
 /.scratch/
 /arsiv/
+*.tmp
 
 # Raporlar: yalnız rapor/<ad>/ozet.md Git'te (docs/SPEC.md bölüm 4).
 /rapor/*

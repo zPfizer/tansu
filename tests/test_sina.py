@@ -1,13 +1,16 @@
 import dataclasses
+import datetime as dt
 import json
+import os
+from pathlib import Path
 
-import numpy as np
 import pandas as pd
 import pytest
 
 from tansu import __main__ as komut
-from tansu import ayar, montecarlo, rapor, sinama, veri
+from tansu import ayar, islem, montecarlo, rapor, sinama, veri
 from tansu.__main__ import main
+from tansu.strateji import bos_sinyal
 from tansu.stratejiler import STRATEJILER
 from tests.sentetik import gartley_yolu, gun_tablosu, ortalama_yolu, piyasa
 
@@ -94,6 +97,110 @@ def test_sina_sinif_b_ileri_getiri_tablosu_ve_yuzde_birimi_yazar(
     assert "Toplam %" in (klasor / "ozet.md").read_text(encoding="utf-8")
 
 
+def test_sina_islem_yoksa_islemler_csv_sutun_basligini_yazar(ortam, tmp_path):
+    g = STRATEJILER["gartley"]
+    bos = dataclasses.replace(
+        g,
+        hesapla=lambda gun, p: bos_sinyal(gun.index),
+        aralik={k: (g.varsayilan[k],) for k in g.aralik},
+    )
+    ortam("gartley", strateji=bos)
+    assert main(["sina", "gartley"]) == 0
+    tablo = pd.read_csv(tmp_path / "rapor" / "gartley" / "islemler.csv")
+    assert tablo.empty
+    assert list(tablo.columns) == list(islem.kayit_sutunlari(g.cikis))
+
+
+def baska_programda_acik(monkeypatch, hedef):
+    gercek_replace, gercek_csv = os.replace, pd.DataFrame.to_csv
+
+    def replace(src, dst, *a, **k):
+        if Path(dst).name == hedef:
+            raise PermissionError(13, "Erişim engellendi", str(src), None, str(dst))
+        return gercek_replace(src, dst, *a, **k)
+
+    def to_csv(self, yol=None, *a, **k):
+        if yol is not None and Path(yol).name == hedef:
+            raise PermissionError(13, "Erişim engellendi", str(yol))
+        return gercek_csv(self, yol, *a, **k)
+
+    monkeypatch.setattr(os, "replace", replace)
+    monkeypatch.setattr(pd.DataFrame, "to_csv", to_csv)
+
+
+RAPOR_KLASORU = Path("rapor", "gartley")
+AYAR_JSON = Path("stratejiler", "ayarlar", "gartley.json")
+
+
+@pytest.mark.parametrize(
+    ("komut_adi", "baslangic", "yol", "yazilan"),
+    [
+        ("sina", "taslak", Path("stratejiler", "durum.csv"), (RAPOR_KLASORU,)),
+        ("sina", "taslak", RAPOR_KLASORU / "islemler.csv", ()),
+        ("ayarla", "sinandi", AYAR_JSON, (RAPOR_KLASORU,)),
+        (
+            "ayarla",
+            "sinyalde",
+            Path("stratejiler", "durum.csv"),
+            (RAPOR_KLASORU, AYAR_JSON),
+        ),
+    ],
+)
+def test_yazilacak_dosya_baska_programda_aciksa_acik_mesaj_ve_cikis_1(
+    ortam, tmp_path, monkeypatch, capsys, komut_adi, baslangic, yol, yazilan
+):
+    ortam("gartley", durum=baslangic)
+    once = (tmp_path / "stratejiler" / "durum.csv").read_bytes()
+    baska_programda_acik(monkeypatch, yol.name)
+    assert main([komut_adi, "gartley"]) == 1
+    hata = capsys.readouterr().err
+    assert f"tansu {komut_adi}: {yol} " in hata and "durum.csv değişmedi" in hata
+    assert all(str(p) in hata for p in yazilan)
+    assert yazilan or "yazdıkları" not in hata
+    assert all((tmp_path / p).exists() for p in yazilan)
+    assert (tmp_path / "stratejiler" / "durum.csv").read_bytes() == once
+    assert not list(tmp_path.rglob("*.tmp"))
+
+
+def test_ayar_json_bozuksa_ayarla_yazilan_rapor_klasorunu_soyler(
+    ortam, tmp_path, capsys
+):
+    ortam("gartley", durum="sinandi")
+    json_yolu = tmp_path / AYAR_JSON
+    json_yolu.parent.mkdir(parents=True)
+    json_yolu.write_text("{bozuk", encoding="utf-8")
+    once = (tmp_path / "stratejiler" / "durum.csv").read_bytes()
+    assert main(["ayarla", "gartley"]) == 1
+    hata = capsys.readouterr().err
+    assert f"tansu ayarla: {AYAR_JSON}: geçersiz JSON" in hata
+    assert str(RAPOR_KLASORU) in hata
+    assert (tmp_path / RAPOR_KLASORU / "sinama.html").exists()
+    assert json_yolu.read_text(encoding="utf-8") == "{bozuk"
+    assert (tmp_path / "stratejiler" / "durum.csv").read_bytes() == once
+
+
+def test_okunacak_durum_dosyasi_kilitliyse_yazilamadi_demez(
+    ortam, tmp_path, monkeypatch, capsys
+):
+    ortam("gartley")
+    yol = Path("stratejiler", "durum.csv")
+    once = (tmp_path / yol).read_bytes()
+    gercek_open = Path.open
+
+    def open_(self, mode="r", *a, **k):
+        if mode == "r" and self.name == yol.name:
+            raise PermissionError(13, "Erişim engellendi", str(self))
+        return gercek_open(self, mode, *a, **k)
+
+    monkeypatch.setattr(Path, "open", open_)
+    assert main(["sina", "gartley"]) == 1
+    hata = capsys.readouterr().err
+    assert f"tansu sina: {yol} " in hata and "durum.csv değişmedi" in hata
+    assert "yazılamadı" not in hata
+    assert (tmp_path / yol).read_bytes() == once
+    assert not (tmp_path / "rapor").exists()
+
+
 def test_ayarla_puanli_nokta_yoksa_varsayilanlari_yazar_suzgeci_korur(
     ortam, tmp_path, capsys
 ):
@@ -144,6 +251,93 @@ def test_ayarla_puanli_secimle_ayarlandi_yapar_sinyaldeyse_onay_ister(
     assert "rastgele giriş yüzdeliği n/a" not in capsys.readouterr().out
 
 
+def test_hazirla_parametreyi_kaynagina_gore_secer_ve_dosya_yazmaz(
+    tmp_path, monkeypatch
+):
+    monkeypatch.chdir(tmp_path)
+    kesisim = dataclasses.replace(
+        STRATEJILER["ortalama-kesisim"],
+        varsayilan={"ortalama": "SMA", "cift": "9/21", "teyit_gun": 0},
+        aralik={"teyit_gun": (0, 2)},
+    )
+    gunler = piyasa(sembol=2)
+    ortak = {"kimlik": "t", "sinanan": 1}
+
+    ayarli = rapor.hazirla(kesisim, gunler, ayarla=True, okunan=None, **ortak)
+    assert ayarli.parametre == ayarli.yuruyus.son.parametre
+    assert ayarli.ayar_tarihi == dt.date.today().isoformat()
+    assert (ayarli.kimlik, ayarli.sinanan) == ("t", 1)
+
+    okunan = ayar.Okunan(
+        {"ortalama": "SMA", "cift": "9/21", "teyit_gun": 2}, "2026-01-02"
+    )
+    kayitli = rapor.hazirla(kesisim, gunler, ayarla=False, okunan=okunan, **ortak)
+    assert (kayitli.parametre, kayitli.ayar_tarihi) == (
+        okunan.parametreler,
+        "2026-01-02",
+    )
+
+    varsayilan = rapor.hazirla(kesisim, gunler, ayarla=False, okunan=None, **ortak)
+    assert varsayilan.parametre == kesisim.varsayilan
+    assert varsayilan.ayar_tarihi is None
+    assert not list(tmp_path.iterdir())
+
+
+def kesisim_sinamasi(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    kesisim = dataclasses.replace(
+        STRATEJILER["ortalama-kesisim"],
+        varsayilan={"ortalama": "SMA", "cift": "9/21", "teyit_gun": 0},
+        aralik={"teyit_gun": (0, 2)},
+    )
+    return rapor.hazirla(
+        kesisim,
+        piyasa(sembol=2),
+        kimlik="t",
+        sinanan=1,
+        ayarla=True,
+        okunan=None,
+    )
+
+
+@pytest.mark.parametrize(
+    ("n", "beklenen"),
+    [
+        (sinama.EN_AZ, "n/a (uygun rastgele gün ya da şablon yok)"),
+        (5, "n/a (N = 5)"),
+    ],
+)
+def test_konsol_rastgele_giris_yoksa_raporla_ayni_nedeni_yazar(
+    tmp_path, monkeypatch, n, beklenen
+):
+    s = kesisim_sinamasi(tmp_path, monkeypatch)
+    s = dataclasses.replace(s, mc=dataclasses.replace(s.mc, n=n, rastgele=None))
+    assert rapor.konsol(s)[4].endswith(f"rastgele giriş yüzdeliği {beklenen}")
+
+
+def test_konsol_olcu_satirlarini_sinamadan_uretir(tmp_path, monkeypatch):
+    s = kesisim_sinamasi(tmp_path, monkeypatch)
+    satirlar = rapor.konsol(s)
+    assert len(satirlar) == 5
+    assert "ızgara 2 nokta, puanlı 2" in satirlar[1]
+    assert s.sakli_var and satirlar[3].startswith("saklı dönem ")
+    assert satirlar[4].startswith("Monte Carlo: tohum ")
+    erken = dataclasses.replace(s, sakli_son=sinama.SAKLI_BAS - pd.Timedelta(days=1))
+    assert not erken.sakli_var
+    assert rapor.konsol(erken)[3] == "saklı dönem: veri saklı döneme ulaşmıyor"
+
+
+def test_yaz_metin_islevlerinin_metnini_oldugu_gibi_yazar(tmp_path, monkeypatch):
+    s = kesisim_sinamasi(tmp_path, monkeypatch)
+    html, md = rapor.html_metni(s), rapor.md_metni(s)
+    assert not list(tmp_path.iterdir())
+    assert "Dönem tablosu" in html and md.startswith("# ortalama-kesisim: sınama özeti")
+    klasor = rapor.yaz(s, tmp_path / "r").parent
+    assert (klasor / "sinama.html").read_bytes() == html.encode("utf-8")
+    assert (klasor / "ozet.md").read_bytes() == md.encode("utf-8")
+    assert (klasor / "islemler.csv").exists()
+
+
 def test_sina_bozuk_jsonu_izgaradan_once_reddeder(ortam, tmp_path, monkeypatch):
     ortam("gartley")
     (tmp_path / "stratejiler" / "ayarlar").mkdir()
@@ -167,85 +361,3 @@ def test_ayarla_beklemedeki_stratejiyi_reddeder(ortam, tmp_path):
     assert main(["ayarla", "gartley"]) == 1
     assert not (tmp_path / "stratejiler" / "ayarlar").exists()
     assert "gartley,beklemede," in durum(tmp_path)
-
-
-def bayrak_tablosu(r, *, rastgele=None, p5=None, sakli=(), puan=None, semboller):
-    """Elle kurulmuş girdilerle `rapor.bayraklar`; {bayrak: (değer, N)}."""
-    n = len(r)
-    mc = montecarlo.MonteCarlo(
-        montecarlo.TOHUM,
-        montecarlo.TEKRAR,
-        n,
-        "R",
-        None if p5 is None else (p5, p5 + 1, p5 + 2),
-        None,
-        None,
-        None,
-        None if rastgele is None else montecarlo.Rastgele(0.0, (0, 0, 0), rastgele),
-    )
-    p = np.array([np.nan if puan is None else puan])
-    secim = ayar.Secim(0, {}, p, p, np.array([77]), puan is not None)
-    gecmis = pd.DataFrame({"sembol": list(semboller), "R": list(semboller.values())})
-    satirlar = rapor.bayraklar(
-        mc, pd.DataFrame({"R": r}), pd.DataFrame({"R": list(sakli)}), gecmis, secim
-    )
-    return [(r["Değer"], r["N"]) for r in satirlar]
-
-
-def test_bayraklar_olumlu_strateji():
-    assert bayrak_tablosu(
-        [2.0] * 22 + [-1.0] * 18,
-        rastgele=97.0,
-        p5=3.0,
-        sakli=(1.0, -0.5),
-        puan=0.4,
-        semboller={"S0": 3.0, "S1": 3.0, "S2": 4.0},
-    ) == [
-        ("evet (0.65 R)", 40),
-        ("evet (yüzdelik 97.0)", 40),
-        ("evet (3.00 R)", 40),
-        ("evet (0.50 R)", 2),
-        ("hayır (55%)", 40),
-        ("hayır (55%)", 40),
-        ("hayır (0.40 R)", 77),
-        ("hayır (S2 40%)", 3),
-    ]
-
-
-def test_bayraklar_uyarilari():
-    assert bayrak_tablosu(
-        [1.0] * 38 + [-1.0] * 2,
-        rastgele=50.0,
-        p5=-1.0,
-        sakli=(-0.5,),
-        puan=-0.2,
-        semboller={"S0": 5.0, "S1": 1.0},
-    ) == [
-        ("evet (0.90 R)", 40),
-        ("hayır (yüzdelik 50.0)", 40),
-        ("hayır (-1.00 R)", 40),
-        ("hayır (-0.50 R)", 1),
-        ("evet (95%)", 40),
-        ("evet (95%)", 40),
-        ("evet (-0.20 R)", 77),
-        ("evet (S0 83%)", 2),
-    ]
-
-
-def test_bayraklar_ornek_az_ve_tanimsiz_degerler():
-    az = ("örnek az (N = 10)", 10)
-    assert bayrak_tablosu([1.0] * 10, semboller={"S0": -1.0}) == [
-        az,
-        ("n/a (N = 10)", 10),
-        ("n/a (N = 10)", 10),
-        ("n/a (N = 0)", 0),
-        az,
-        az,
-        ("puanlı nokta yok", 77),
-        ("n/a (toplam 0 ya da altında, pay tanımsız)", 1),
-    ]
-
-
-def test_bayrak_rastgele_kiyas_yapilamadiysa_nedeni_yazar():
-    satir = bayrak_tablosu([1.0] * 40, p5=1.0, semboller={"S0": 1.0})[1]
-    assert satir == ("n/a (uygun rastgele gün ya da şablon yok)", 40)

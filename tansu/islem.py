@@ -3,6 +3,7 @@
 from collections import Counter
 from collections.abc import Mapping
 from dataclasses import dataclass, field
+from functools import cached_property
 from typing import Literal, NamedTuple
 
 import numpy as np
@@ -15,7 +16,6 @@ ILERI_GUNLER = (1, 3, 5, 10)
 HEDEFLER = ("hedef1", "hedef2", "hedef3", "hedef4")
 
 # Düşen sinyal nedenleri (SPEC 5.5).
-UYE_DEGIL = "evren dışı"
 KALITE = "kalite kuralı (karantina)"
 ACIK_VAR = "açık işlem veya bekleyen emir"
 STOP_USTTE = "stop girişin altında değil"
@@ -67,12 +67,31 @@ class Gun:
     """Bir sembolün motor dizileri; sembol başına bir kez kurulur."""
 
     def __init__(self, gun: pd.DataFrame, sinyal: pd.DataFrame):
+        self.tarih = gun.index
         self.aof, self.yuk, self.dus, self.kap, self.atr = (
             gun[a].to_numpy(float) for a in ("aof", "yuksek", "dusuk", "kapanis", "atr")
         )
         self.tavan_kilit = gun["kilit_tavan"].to_numpy(bool)
         self.taban_kilit = gun["kilit_taban"].to_numpy(bool)
+        self.tavan_kapanis = gun["tavan_kapanis"].to_numpy(bool)
+        self._uye = gun["uye"].to_numpy(bool)
+        self._karantina = gun["karantina"].to_numpy(bool)
         self.cikis_sinyali = sinyal["cikis_sinyali"].to_numpy(bool)
+
+    @cached_property
+    def dolum_gunu(self) -> np.ndarray:
+        """t'den sonraki ilk fiyatlı gün (sonlu kapanış ve AOF var), yoksa len(kap)."""
+        yok = len(self.kap)
+        fiyatli = np.append(
+            np.flatnonzero(np.isfinite(self.kap) & ~np.isnan(self.aof)), yok
+        )
+        return fiyatli[np.searchsorted(fiyatli, np.arange(yok), side="right")]
+
+    @cached_property
+    def uygun(self) -> np.ndarray:
+        """t rastgele `piyasa` sinyal günü olabilir mi (SPEC 5.8 madde 3)."""
+        kilit = np.append(self.tavan_kilit, True)
+        return self._uye & ~self._karantina & (self.atr > 0) & ~kilit[self.dolum_gunu]
 
 
 def simule(
@@ -83,11 +102,11 @@ def simule(
     sembol: str,
     strateji: str,
     sinif: str,
-    risk_tabani: float = RISK_TABANI,
 ) -> tuple[list[dict], Counter]:
     """Bir sembolün sinyallerini SPEC 5.1 ve 5.4 kurallarıyla işletir.
 
-    `gun`: `veri.gunluk` ve `atr` sütunu. `sinyal`: stratejinin çıktısı, aynı indeks.
+    `gun`: `veri.gunluk` ve `atr` sütunu. `sinyal`: stratejinin çıktısı, aynı indeks;
+    evren ve dönem dışındaki günlerde `giris` ile `tekrar`ı çağıran temizler (`sinama.calistir` yapar).
     Dönen: işlem kayıtları ve düşen sinyal sayaçları."""
     g = Gun(gun, sinyal)
     sayac: Counter = Counter()
@@ -103,10 +122,10 @@ def simule(
         if satir["giris_tur"] not in ("limit", "piyasa"):
             raise ValueError(f"giriş türü henüz yok: {satir['giris_tur']}")
         e, serbest_gun = oyna(
-            g, int(i), satir, cikis, risk_tabani * float(g.atr[i]), sayac
+            g, int(i), satir, cikis, RISK_TABANI * float(g.atr[i]), sayac
         )
         if e is not None:
-            kayitlar.append(_kayit(e, gun, cikis, sembol, strateji, sinif))
+            kayitlar.append(_kayit(e, g, cikis, sembol, strateji, sinif))
     return kayitlar, sayac
 
 
@@ -115,48 +134,37 @@ def oyna(
 ) -> tuple[_Islem | None, int]:
     """i. gün sinyal veren tek kurulumu i+1'den kapanana, emir düşene ya da veri bitene dek işletir.
 
-    Dönen: dolan işlem (yoksa None) ve son gün; veri biterse `len(g.kap)`, yani sonraki her sinyali kapatır.
-    Veri sonunda açık işlem son fiyatlı kapanışta `açık` işaretlenir (SPEC 5.4)."""
+    Dönen: dolan işlem (yoksa None) ve son gün; süresi dolan emirde son geçerli gün; veri biterse `len(g.kap)`, yani
+    sonraki her sinyali kapatır. Veri sonunda açık işlem son fiyatlı kapanışta `açık` işaretlenir (SPEC 5.4)."""
     e: _Islem | None = _Islem(i, satir, float(satir["stop"]), taban)
+    son = len(g.kap)
+    if satir["giris_tur"] != "piyasa":
+        son = i + int(satir["gecerlilik"])  # limit emrinin son geçerli günü
+    for j in range(i + 1, min(son + 1, len(g.kap))):
+        e = _emir_gunu(e, j, g, sayac)
+        if e is None:
+            return None, j
+        if e.dolum_i >= 0:
+            return _tut(e, g, cikis)
+    # Emir son gününün sonunda düşer; o günün sinyali serbesttir (SPEC 5.1).
+    if son < len(g.kap):
+        sayac[SURE_DOLDU] += 1
+        return None, son
+    sayac[VERI_SONU] += 1
+    return None, len(g.kap)
+
+
+def _tut(e: _Islem, g: Gun, cikis: Cikis) -> tuple[_Islem, int]:
     n = len(g.kap)
-    for j in range(i + 1, n):
-        if e.dolum_i < 0:
-            e = _emir_gunu(e, j, g, sayac)
-            if e is None:
-                return None, j
-        if e.dolum_i >= 0 and np.isfinite(g.kap[j]) and _acik_gun(e, j, g, cikis):
+    for j in range(e.dolum_i, n):
+        if np.isfinite(g.kap[j]) and _acik_gun(e, j, g, cikis):
             return e, j
-    if e.dolum_i < 0:
-        sayac[VERI_SONU] += 1
-        return None, n
     son = int(np.flatnonzero(np.isfinite(g.kap))[-1])
     e.parcalar.append((son, g.kap[son], e.kalan, "açık"))
     return e, n
 
 
-def rastgele(
-    g: Gun,
-    t: int,
-    stop: float,
-    hedefler: tuple[float, float, float, float],
-    cikis: Cikis,
-    risk_tabani: float = RISK_TABANI,
-) -> Sonuc | None:
-    """Rastgele giriş kıyası (SPEC 5.8 madde 3): t günü sinyal veren `piyasa` kurulumunun (R, net %) değeri.
-
-    Seviyeler mutlak, NaN = yok; sinyal anı reddi ve çakışma kuralı yok. Dolmazsa None."""
-    satir = {
-        "giris_tur": "piyasa",
-        "stop": stop,
-        **dict(zip(HEDEFLER, hedefler, strict=True)),
-    }
-    e, _ = oyna(g, t, satir, cikis, risk_tabani * float(g.atr[t]), Counter())
-    return None if e is None else sonuc(e)
-
-
 def _red_nedeni(satir, gun_satiri, acik_var: bool, cikis: Cikis) -> str | None:
-    if not gun_satiri["uye"]:
-        return UYE_DEGIL
     if gun_satiri["karantina"]:
         return KALITE
     if acik_var:
@@ -166,7 +174,7 @@ def _red_nedeni(satir, gun_satiri, acik_var: bool, cikis: Cikis) -> str | None:
     )
     if not np.isnan(satir["stop"]) and not satir["stop"] < referans:
         return STOP_USTTE
-    if not np.isnan(satir["stop"]) and np.isnan(gun_satiri["atr"]):  # SPEC 5.2 taban
+    if not np.isnan(satir["stop"]) and not gun_satiri["atr"] > 0:
         return ATR_YOK
     if cikis.hedef and all(np.isnan(satir[h]) for h, _ in cikis.hedef):
         return HEDEF_YOK
@@ -174,19 +182,18 @@ def _red_nedeni(satir, gun_satiri, acik_var: bool, cikis: Cikis) -> str | None:
 
 
 def _emir_gunu(e: _Islem, i: int, g: Gun, sayac: Counter) -> _Islem | None:
-    """Bekleyen emir (SPEC 5.1): `limit` t+1'den `gecerlilik` gün; `piyasa` t+1'den sonraki ilk fiyatlı gün."""
-    piyasa = e.satir["giris_tur"] == "piyasa"
-    if not piyasa and i - e.sinyal_i > int(e.satir["gecerlilik"]):
-        sayac[SURE_DOLDU] += 1
-        return None
-    if not np.isfinite(g.kap[i]) or (piyasa and np.isnan(g.aof[i])):
-        return e
-    if piyasa:
+    """Bekleyen emir (SPEC 5.1): `limit` t+1'den `gecerlilik` gün (süreyi `oyna` sınırlar); `piyasa` t+1'den sonraki
+    ilk fiyatlı gün."""
+    if e.satir["giris_tur"] == "piyasa":
+        if i < g.dolum_gunu[e.sinyal_i]:
+            return e
         if g.tavan_kilit[i]:
             sayac[TAVAN_KILIDI] += 1
             return None
         dolum = g.aof[i]
     else:
+        if not np.isfinite(g.kap[i]):
+            return e
         seviye = float(e.satir["seviye"])
         dolum = np.nan
         if not g.tavan_kilit[i]:
@@ -199,9 +206,40 @@ def _emir_gunu(e: _Islem, i: int, g: Gun, sayac: Counter) -> _Islem | None:
                 sayac[STOP_KAPANISI] += 1
                 return None
             return e
-    e.dolum_i, e.giris = i, float(dolum)
+    return _doldur(e, i, dolum)
+
+
+def _doldur(e: _Islem, i: int, fiyat: float) -> _Islem:
+    e.dolum_i, e.giris = i, float(fiyat)
     e.risk = np.nan if np.isnan(e.stop) else max(e.giris - e.stop, e.risk_tabani)
     return e
+
+
+def sablonlar(kurulumlar: pd.DataFrame, atr: np.ndarray) -> np.ndarray:
+    """(m, 5) ATR katı uzaklıklar [stop, hedef1..hedef4], satır sırasıyla; `atr` satırların sinyal günü ATR'si. NaN hedef = yok."""
+    dolum = kurulumlar["dolum_fiyati"].to_numpy(float)
+    return np.column_stack(
+        [
+            (dolum - kurulumlar["stop"].to_numpy(float)) / atr,
+            *((kurulumlar[h].to_numpy(float) - dolum) / atr for h in HEDEFLER),
+        ]
+    )
+
+
+def sablon_oyna(g: Gun, t: int, sablon: np.ndarray, cikis: Cikis, olcu: str) -> float:
+    """Rastgele giriş kıyası (SPEC 5.8 madde 3): t günü sinyal veren, dolum gününün AOF'sinden dolan `piyasa` kurulumunun `olcu` değeri.
+
+    Stop ve hedefler dolumdan `sablon` x ATR(t) uzakta. Ön koşul: `g.uygun[t]`."""
+    j = int(g.dolum_gunu[t])
+    d = sablon * g.atr[t]
+    dolum = g.aof[j]
+    satir = {
+        "giris_tur": "piyasa",
+        "stop": dolum - d[0],
+        **dict(zip(HEDEFLER, dolum + d[1:], strict=True)),
+    }
+    e = _Islem(t, satir, float(satir["stop"]), RISK_TABANI * float(g.atr[t]))
+    return getattr(sonuc(_tut(_doldur(e, j, dolum), g, cikis)[0]), olcu)
 
 
 def _kapanis_nedeni(e: _Islem, i: int, g: Gun, cikis: Cikis) -> str | None:
@@ -270,11 +308,11 @@ def sonuc(e: _Islem) -> Sonuc:
     return Sonuc(r, yuzde * 100)
 
 
-def _kayit(e: _Islem, gun: pd.DataFrame, cikis: Cikis, sembol, strateji, sinif) -> dict:
-    tarih, giris, risk, p = gun.index, e.giris, e.risk, e.parcalar
+def _kayit(e: _Islem, g: Gun, cikis: Cikis, sembol, strateji, sinif) -> dict:
+    tarih, giris, risk, p = g.tarih, e.giris, e.risk, e.parcalar
     r, net_yuzde = sonuc(e)
     son_i, son_fiyat, _, son_neden = p[-1]
-    kap = gun["kapanis"].to_numpy(float)
+    kap = g.kap
     ileri = {
         f"getiri_{n}": (kap[j] - giris - maliyet(giris, kap[j])) / giris * 100
         if (j := e.dolum_i + n) < len(kap)
@@ -284,10 +322,7 @@ def _kayit(e: _Islem, gun: pd.DataFrame, cikis: Cikis, sembol, strateji, sinif) 
     pencere = slice(
         e.dolum_i + 1, e.dolum_i + 11
     )  # dolum günü yüksek/düşük dolumdan önce olabilir
-    yuk, dus = (
-        gun["yuksek"].to_numpy(float)[pencere],
-        gun["dusuk"].to_numpy(float)[pencere],
-    )
+    yuk, dus = g.yuk[pencere], g.dus[pencere]
     tam = e.dolum_i + 10 < len(kap)  # veri sonunda yarım pencere ölçülmez
     mfe = np.nanmax(yuk) - giris if tam and np.isfinite(yuk).any() else np.nan
     mae = giris - np.nanmin(dus) if tam and np.isfinite(dus).any() else np.nan
@@ -303,7 +338,7 @@ def _kayit(e: _Islem, gun: pd.DataFrame, cikis: Cikis, sembol, strateji, sinif) 
         "dolum_fiyati": giris,
         "durum": s["durum"],
         "kural_durumu": s["kural_durumu"],
-        "tavan_kapanis": bool(gun["tavan_kapanis"].iloc[e.sinyal_i]),
+        "tavan_kapanis": bool(g.tavan_kapanis[e.sinyal_i]),
         "stop": e.stop,
         **{h: s[h] for h in HEDEFLER},
         "kismi": "; ".join(
@@ -325,7 +360,54 @@ def _kayit(e: _Islem, gun: pd.DataFrame, cikis: Cikis, sembol, strateji, sinif) 
         "mae_yuzde": mae / giris * 100,
         "mfe_R": mfe / risk,
         "mae_R": mae / risk,
-        "risk_tabanli": giris - e.stop < e.risk_tabani,
+        # Dolumdaki riskten: risk = max(giriş - ilk stop, taban). İz stop `e.stop`u sonradan taşıyabilir (SPEC 5.5).
+        "risk_tabanli": risk <= e.risk_tabani,
         "dolumda_stop": son_neden == "stop (dolumda)",
         "acik": son_neden == "açık",
     }
+
+
+def kayit_sutunlari(cikis: Cikis) -> dict[str, str]:
+    """Boş işlem kaydının sütunları ve dtype'ları."""
+    yazi, tarih, sayi, mantik = "str", "datetime64[us]", "float64", "bool"
+    return {
+        "strateji": yazi,
+        "sinif": yazi,
+        "sembol": yazi,
+        "sinyal_tarihi": tarih,
+        "giris_tur": yazi,
+        "seviye": sayi,
+        "dolum_tarihi": tarih,
+        "dolum_fiyati": sayi,
+        "durum": yazi,
+        "kural_durumu": yazi,
+        "tavan_kapanis": mantik,
+        "stop": sayi,
+        **dict.fromkeys(HEDEFLER, sayi),
+        "kismi": yazi,
+        **{f"{ad}_gun": sayi for ad, _ in cikis.hedef},
+        "stop_gun": sayi,
+        "cikis_tarihi": tarih,
+        "cikis_fiyati": sayi,
+        "cikis_nedeni": yazi,
+        "net_yuzde": sayi,
+        "R": sayi,
+        "tutma_gun": "int64",
+        **{f"getiri_{n}": sayi for n in ILERI_GUNLER},
+        "mfe_yuzde": sayi,
+        "mae_yuzde": sayi,
+        "mfe_R": sayi,
+        "mae_R": sayi,
+        "risk_tabanli": mantik,
+        "dolumda_stop": mantik,
+        "acik": mantik,
+    }
+
+
+def kayit_tablosu(kayitlar: list[dict], cikis: Cikis) -> pd.DataFrame:
+    """İşlem kaydı; kayıt yokken de `kayit_sutunlari(cikis)` sütunlarıyla."""
+    if kayitlar:
+        return pd.DataFrame(kayitlar)
+    return pd.DataFrame(
+        {c: pd.Series(dtype=t) for c, t in kayit_sutunlari(cikis).items()}
+    )
