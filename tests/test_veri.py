@@ -471,6 +471,11 @@ def test_tek_seans_oncesi_baz_onceki_aof_kilitli_taban_gunu_asim_degil(tmp_path)
     g = yol("tavan", 10.0, 12.10)
     assert g["karantina"].tolist() == [False, False]
     assert g["kilit_tavan_duyarli"].tolist() == [False, True]
+    # Kilit de iki bazdan ölçülür: önceki AOF'nin ±%10'unda H = L kapanış kilittir (kapanışın ±%10'una varmasa da).
+    g = yol("aof_tavan", 10.0, 10.45, ek(aof=9.50, dusuk=9.50))
+    assert g["kilit_tavan_duyarli"].tolist() == [False, True]
+    g = yol("aof_taban", 10.0, 9.45, ek(aof=10.50, yuksek=10.50))
+    assert g["kilit_taban_duyarli"].tolist() == [False, True]
 
 
 def test_dort_ondaliga_yuvarli_dusuk_fiyatli_kapanis_bozuk_sayilmaz(tmp_path):
