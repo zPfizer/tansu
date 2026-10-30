@@ -230,6 +230,16 @@ def test_emir_suresi_ve_stop_alti_kapanis_emri_dusurur():
     assert kayit == [] and sayac[islem.STOP_KAPANISI] == 1
 
 
+def test_limit_emri_kapanisi_olmayan_gunde_dolmaz_ilk_fiyatli_dokunusta_dolar():
+    g = gun_tablosu(
+        [11, np.nan, 10.2, 12.2, 13.2, 13.2],
+        yuksek=[11.1, 10.5, 10.5, 12.5, 13.5, 13.3],
+        dusuk=[10.9, 9.8, 9.8, 10.3, 12.3, 13.1],
+    )
+    (k,), _ = kos(g, sinyal(g))
+    assert k["dolum_tarihi"] == g.index[2] and k["dolum_fiyati"] == 10.0
+
+
 def test_red_nedenleri_sayilir():
     g = gun_tablosu([11, 10.6, 10.7, 10.8, 10.9, 11.0])
     g.iloc[4, g.columns.get_loc("karantina")] = True
