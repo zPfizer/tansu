@@ -39,7 +39,7 @@ def test_sag_bar_fiyatsiz_gunlu_seride_gelecege_bakmaz():
     # Onay günü t olan her pivot, yalnız t'ye kadarki veriyle de aynı bulunur (baş ve sondaki boşluk dahil).
     r = np.random.default_rng(7)
     y = np.round(r.normal(0, 1, 120).cumsum(), 1)
-    y[r.random(120) < 0.15] = np.nan
+    y[(r.random(120) < 0.15) | np.isin(np.arange(120), [0, 1, 119])] = np.nan
     s = pd.Series(y)
     tam = yapi.sag_bar_pivotlari(s, s, 3)
     for t in range(len(s)):
