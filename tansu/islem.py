@@ -80,7 +80,7 @@ class Gun:
 
     @cached_property
     def dolum_gunu(self) -> np.ndarray:
-        """t'den sonraki ilk fiyatlı gün (kapanış ve AOF var), yoksa len(kap)."""
+        """t'den sonraki ilk fiyatlı gün (sonlu kapanış ve AOF var), yoksa len(kap)."""
         yok = len(self.kap)
         fiyatli = np.append(
             np.flatnonzero(np.isfinite(self.kap) & ~np.isnan(self.aof)), yok
