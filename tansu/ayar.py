@@ -13,7 +13,7 @@ from typing import NamedTuple
 import numpy as np
 import pandas as pd
 
-from tansu import sinama, veri
+from tansu import dosya, sinama, veri
 from tansu.strateji import Strateji
 
 ISCI = min(16, os.cpu_count() or 1)
@@ -108,6 +108,10 @@ class Secim:
     n: np.ndarray
     puanli: bool
 
+    @property
+    def puanli_sayisi(self) -> int:
+        return int(np.isfinite(self.puan).sum())
+
 
 @dataclass(frozen=True)
 class Adim:
@@ -132,8 +136,6 @@ class Yuruyus:
 
 def egitim(islemler: pd.DataFrame, son: pd.Timestamp) -> pd.DataFrame:
     """İçeride kapanan kurulumlar (SPEC 5.7): sinyal ve çıkış `son`a kadar ve `acik` değil."""
-    if not len(islemler):
-        return islemler
     return islemler[
         (islemler["sinyal_tarihi"] <= son)
         & ~islemler["acik"].astype(bool)
@@ -179,9 +181,8 @@ def _adim(
     kosu = kosular[secim.nokta]
     ic = egitim(kosu.islemler, pencere.egitim_son)
     test = kosu.kes(pencere.test_bas, pencere.test_son)
-    ic_yillik = float(ic[olcu].sum()) / pencere.egitim_yil if len(ic) else 0.0
-    dis = test.islemler
-    dis_yillik = float(dis[olcu].sum()) / TEST_YIL if len(dis) else 0.0
+    ic_yillik = float(ic[olcu].sum()) / pencere.egitim_yil
+    dis_yillik = test.toplam / TEST_YIL
     verim = dis_yillik / ic_yillik if secim.puanli and ic_yillik > 0 else None
     return Adim(pencere, secim, len(ic), ic_yillik, test, dis_yillik, verim)
 
@@ -224,6 +225,7 @@ def yuru(strateji: Strateji, gunler: sinama.Gunler, isci: int | None = None) -> 
         ),
         pd.concat([a.test.sinyaller for a in adimlar], ignore_index=True),
         Counter(),
+        olcu,
     )
     verimler = [a.verim for a in adimlar if a.verim is not None]
     return Yuruyus(
@@ -310,11 +312,10 @@ def yaz(
         "suzgecler": eski.get("suzgecler", []),
         "liste_cikisi": eski.get("liste_cikisi", False),
     }
-    gecici = yol.with_name(yol.name + ".tmp")
-    gecici.write_text(
-        json.dumps(icerik, ensure_ascii=False, sort_keys=True, indent=2) + "\n",
-        encoding="utf-8",
-        newline="\n",
-    )
-    os.replace(gecici, yol)
+    with dosya.atomik(yol) as gecici:
+        gecici.write_text(
+            json.dumps(icerik, ensure_ascii=False, sort_keys=True, indent=2) + "\n",
+            encoding="utf-8",
+            newline="\n",
+        )
     return yol

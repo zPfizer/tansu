@@ -1,6 +1,7 @@
 from collections import Counter
 
 import numpy as np
+import pandas as pd
 import pytest
 
 from tansu import islem
@@ -68,6 +69,20 @@ def test_limit_seviyede_dolar_iki_hedef_paylariyla_kapanir():
     assert not sayac[islem.SURE_DOLDU]
 
 
+@pytest.mark.parametrize("cikis", [CIKIS, islem.Cikis()], ids=["hedefli", "hedefsiz"])
+def test_kayit_tablosu_dolu_ve_bos_kayitta_ayni_sutunlar(cikis):
+    g = gun_tablosu(
+        [11, 10.2, 12.2, 13.2, 13.2],
+        yuksek=[11.1, 10.5, 12.5, 13.5, 13.3],
+        dusuk=[10.9, 9.8, 10.3, 12.3, 13.1],
+    )
+    kayitlar, _ = kos(g, sinyal(g), cikis)
+    sutunlar = list(islem.kayit_sutunlari(cikis))
+    assert len(kayitlar) == 1
+    assert list(islem.kayit_tablosu(kayitlar, cikis).columns) == sutunlar
+    assert list(islem.kayit_tablosu([], cikis).columns) == sutunlar
+
+
 def test_oyna_tek_sinyalde_simule_ile_ayni_islemi_verir():
     g = gun_tablosu(
         [11, 10.2, 12.2, 13.2, 13.2],
@@ -82,6 +97,23 @@ def test_oyna_tek_sinyalde_simule_ile_ayni_islemi_verir():
     assert islem.sonuc(e) == (k["R"], k["net_yuzde"])
 
 
+def test_risk_tabani_etiketi_dolumdaki_riskten_iz_stopu_degistirmez():
+    # SPEC 5.5: taban R'nin riskidir, max(giriş - ilk stop, 0,5 ATR). Dolum 10, stop 9, taban 0,05: risk 1, tabansız.
+    # Sarmalayıcı stopu dolumun üstüne taşısa da (iz stop 10,5) etiket değişmez. Stop 9,99 iken risk tabandır.
+    g = gun_tablosu(
+        [11, 10.2, 12.2, 13.2, 13.2],
+        yuksek=[11.1, 10.5, 12.5, 13.5, 13.3],
+        dusuk=[10.9, 9.8, 10.3, 12.3, 13.1],
+    )
+    for stop, tabanli in [(9.0, False), (9.99, True)]:
+        s = sinyal(g, stop=stop)
+        gun = islem.Gun(g, s)
+        taban = islem.RISK_TABANI * 0.1
+        e, _ = islem.oyna(gun, 0, s.iloc[0], CIKIS, taban, Counter())
+        e.stop = 10.5
+        assert islem._kayit(e, gun, CIKIS, "AAA", "t", "a")["risk_tabanli"] == tabanli
+
+
 def test_islemin_kapandigi_gun_yeni_sinyal_kabul_edilir():
     g = gun_tablosu(
         [11, 10.2, 12.2, 13.2, 13.2],
@@ -94,10 +126,23 @@ def test_islemin_kapandigi_gun_yeni_sinyal_kabul_edilir():
 
 
 def test_emrin_dustugu_gun_yeni_sinyal_kabul_edilir():
+    # SPEC 5.1: limit emri t+gecerlilik gününün sonunda düşer. 0. günün emri 1. ve 2. gün geçerli: 2. günün sinyali kabul
+    # edilir. Onun emri 3. ve 4. gün geçerli; 4. gün verinin son günü olsa da süresi dolar. 3. günün sinyali düşer.
     g = gun_tablosu([11, 10.5, 10.6, 10.7, 10.7])
     kayit, sayac = kos(g, sinyal(g, gunler=(0, 2, 3), gecerlilik=2))
-    assert kayit == [] and sayac[islem.SURE_DOLDU] == 1
-    assert sayac[islem.ACIK_VAR] == 1 and sayac[islem.VERI_SONU] == 1
+    assert kayit == [] and sayac[islem.SURE_DOLDU] == 2
+    assert sayac[islem.ACIK_VAR] == 1 and not sayac[islem.VERI_SONU]
+    # Geçerlilik verinin ötesine taşan emir bekliyor sayılır.
+    _, sayac = kos(g, sinyal(g, gunler=(3,), gecerlilik=2))
+    assert sayac[islem.VERI_SONU] == 1 and not sayac[islem.SURE_DOLDU]
+    # Son geçerli gün (t+gecerlilik) hâlâ emir günüdür: seviyeye o gün değen emir dolar.
+    g = gun_tablosu(
+        [11, 10.5, 10.2, 11, 11],
+        yuksek=[11.1, 10.6, 10.4, 11.1, 11.1],
+        dusuk=[10.9, 10.4, 9.9, 10.9, 10.9],
+    )
+    (k,), _ = kos(g, sinyal(g, gecerlilik=2))
+    assert k["dolum_tarihi"] == g.index[2] and k["dolum_fiyati"] == 10.0
 
 
 def test_seviyenin_altinda_acilan_gun_aofdan_dolar():
@@ -215,9 +260,19 @@ def test_emir_suresi_ve_stop_alti_kapanis_emri_dusurur():
     assert kayit == [] and sayac[islem.STOP_KAPANISI] == 1
 
 
+def test_limit_emri_kapanisi_olmayan_gunde_dolmaz_ilk_fiyatli_dokunusta_dolar():
+    g = gun_tablosu(
+        [11, np.nan, 10.2, 12.2, 13.2, 13.2],
+        yuksek=[11.1, 10.5, 10.5, 12.5, 13.5, 13.3],
+        dusuk=[10.9, 9.8, 9.8, 10.3, 12.3, 13.1],
+    )
+    (k,), _ = kos(g, sinyal(g))
+    assert k["dolum_tarihi"] == g.index[2] and k["dolum_fiyati"] == 10.0
+
+
 def test_red_nedenleri_sayilir():
     g = gun_tablosu([11, 10.6, 10.7, 10.8, 10.9, 11.0])
-    g.iloc[4, g.columns.get_loc("uye")] = False
+    g.iloc[4, g.columns.get_loc("karantina")] = True
     s = sinyal(g, gunler=(0, 1, 4), gecerlilik=2)
     s.iloc[5, s.columns.get_indexer(["giris", "giris_tur", "seviye", "stop"])] = [
         True,
@@ -227,20 +282,27 @@ def test_red_nedenleri_sayilir():
     ]
     _, sayac = kos(g, s)
     assert sayac[islem.ACIK_VAR] == 1
-    assert sayac[islem.UYE_DEGIL] == 1
+    assert sayac[islem.KALITE] == 1
     assert sayac[islem.STOP_USTTE] == 1
     s = sinyal(g, h1=np.nan, h2=np.nan)
     assert kos(g, s)[1][islem.HEDEF_YOK] == 1
 
 
-def test_atr_tanimsizsa_stoplu_kurulum_reddedilir_stopsuz_kurulum_kalir():
-    # Risk tabanı sinyal gününün ATR'sidir (SPEC 5.2); NaN ATR tabanı sessizce düşürüyordu.
+@pytest.mark.parametrize("atr", [np.nan, 0.0], ids=["nan", "sifir"])
+def test_atr_tanimsizsa_stoplu_kurulum_reddedilir_stopsuz_kurulum_kalir(atr):
     g = gun_tablosu([11, 10.2, 12.2, 13.2, 13.2], dusuk=[10.9, 9.8, 12.1, 13.1, 13.1])
-    g.iloc[0, g.columns.get_loc("atr")] = np.nan
+    g.iloc[0, g.columns.get_loc("atr")] = atr
     kayit, sayac = kos(g, sinyal(g))
     assert kayit == [] and sayac[islem.ATR_YOK] == 1
     kayit, sayac = kos(g, sinyal(g, stop=np.nan))
     assert len(kayit) == 1 and not sayac[islem.ATR_YOK]
+
+
+def test_sifir_atrli_gunde_stopun_altinda_dolum_sifira_bolmez_kurulum_reddedilir():
+    g = gun_tablosu([11, 8.8, 8.8], yuksek=[11.1, 8.9, 8.9], dusuk=[10.9, 8.7, 8.7])
+    g.iloc[0, g.columns.get_loc("atr")] = 0.0
+    kayit, sayac = kos(g, sinyal(g))
+    assert kayit == [] and sayac[islem.ATR_YOK] == 1
 
 
 def test_taban_kilidinde_kapanis_stopu_ilk_kilitsiz_gune_kalir():
@@ -328,7 +390,7 @@ def test_bekleyen_piyasa_emri_varken_gelen_ikinci_sinyal_acik_var_sayilir():
     assert sayac[islem.ACIK_VAR] == 1
 
 
-def test_rastgele_ayni_piyasa_kurulumunda_simule_ile_ayni():
+def test_sablon_oyna_gercek_kurulumun_sablonuyla_simule_ile_ayni():
     g = gun_tablosu(
         [11, 11, 11.5, 12, 12.6, 13.2, 13.2], aof=[11, 11.1, 11.5, 12, 12.6, 13.2, 13.2]
     )
@@ -336,13 +398,78 @@ def test_rastgele_ayni_piyasa_kurulumunda_simule_ile_ayni():
     s.iloc[0, s.columns.get_indexer(["hedef1", "hedef2"])] = [12.5, 13.0]
     (k,), _ = kos(g, s)
     assert k["kismi"] and k["cikis_nedeni"] == "hedef2"
-    hedefler = (12.5, 13.0, np.nan, np.nan)
-    assert islem.rastgele(islem.Gun(g, s), 0, 10.0, hedefler, CIKIS) == (
-        k["R"],
-        k["net_yuzde"],
-    )
+    (sablon,) = islem.sablonlar(pd.DataFrame([k]), g["atr"].to_numpy()[:1])
+    motor = islem.Gun(g, s)
+    assert motor.uygun[0] and motor.dolum_gunu[0] == 1
+    for olcu in ("R", "net_yuzde"):
+        assert islem.sablon_oyna(motor, 0, sablon, CIKIS, olcu) == pytest.approx(
+            k[olcu]
+        )
     g.iloc[1, g.columns.get_loc("kilit_tavan")] = True
-    assert islem.rastgele(islem.Gun(g, s), 0, 10.0, hedefler, CIKIS) is None
+    assert not islem.Gun(g, s).uygun[0]
+
+
+@pytest.mark.parametrize("bos", ["kapanis", "aof"])
+def test_sablon_oyna_fiyatsiz_ertesi_gun_atlanir_ilk_fiyatli_gunun_aofundan_dolar(bos):
+    g = gun_tablosu(
+        [11, 11, 11.5, 12, 12.6, 13.2, 13.2], aof=[11, 11, 11.5, 12, 12.6, 13.2, 13.2]
+    )
+    g.iloc[1, g.columns.get_loc(bos)] = np.nan
+    s = piyasa(g, stop=10.0)
+    s.iloc[0, s.columns.get_indexer(["hedef1", "hedef2"])] = [12.5, 13.0]
+    (k,), _ = kos(g, s)
+    assert k["dolum_tarihi"] == g.index[2] and k["dolum_fiyati"] == 11.5
+    (sablon,) = islem.sablonlar(pd.DataFrame([k]), g["atr"].to_numpy()[:1])
+    motor = islem.Gun(g, s)
+    assert motor.uygun[0] and motor.dolum_gunu[0] == 2
+    for olcu in ("R", "net_yuzde"):
+        assert islem.sablon_oyna(motor, 0, sablon, CIKIS, olcu) == pytest.approx(
+            k[olcu]
+        )
+
+
+@pytest.mark.parametrize(
+    ("kapanis", "aof", "beklenen"),
+    [
+        (
+            [11, np.nan, 11, 11, np.nan, 11],
+            [11, 11, np.nan, 11, 11, 11],
+            [3, 3, 3, 5, 5, 6],
+        ),
+        ([11, np.inf, 11], [11, 11, 11], [2, 2, 3]),
+    ],
+    ids=["nan", "inf"],
+)
+def test_dolum_gunu_sonraki_ilk_sonlu_kapanisli_ve_aofli_gun(kapanis, aof, beklenen):
+    g = gun_tablosu(kapanis, aof=aof)
+    s = piyasa(g)
+    assert islem.Gun(g, s).dolum_gunu.tolist() == beklenen
+    (k,), _ = kos_b(g, s)
+    assert k["dolum_tarihi"] == g.index[beklenen[0]]
+
+
+def test_gun_uygun_motorun_piyasa_dolum_kuraliyla_ayni():
+    rng = np.random.default_rng(7)
+    for _ in range(50):
+        n = 12
+        kapanis = np.where(rng.random(n) < 0.25, np.nan, 11.0)
+        g = gun_tablosu(kapanis, aof=np.where(rng.random(n) < 0.2, np.nan, 11.0))
+        g["kilit_tavan"] = rng.random(n) < 0.25
+        g["karantina"] = rng.random(n) < 0.15
+        g["uye"] = rng.random(n) < 0.85
+        g["atr"] = rng.choice([0.1, 0.0, np.nan], n, p=[0.8, 0.1, 0.1])
+        s = piyasa(g, giris=range(n))
+        motor = islem.Gun(g, s)
+        uygun = motor.uygun
+        for t in range(n):
+            e, _ = islem.oyna(motor, t, s.iloc[t], CIKIS_B, 0.0, Counter())
+            red = islem._red_nedeni(s.iloc[t], g.iloc[t], False, CIKIS_B)
+            assert uygun[t] == (
+                red is None
+                and g["uye"].iat[t]
+                and g["atr"].iat[t] > 0
+                and e is not None
+            )
 
 
 def test_hedef_yok_yalniz_hedef_listesi_doluysa_sayilir():
