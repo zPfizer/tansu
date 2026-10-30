@@ -1,5 +1,3 @@
-"""Strateji durumu: `durum.csv` satırları ve geçiş kuralları (SPEC 4)."""
-
 import csv
 import datetime as dt
 from pathlib import Path
@@ -15,7 +13,6 @@ DURUMLAR: tuple[Durum, ...] = get_args(Durum)
 DOSYA = Path("stratejiler/durum.csv")
 SUTUNLAR = ("ad", "durum", "tarih", "not")
 
-# Komutun durumu değiştirdiği eski durumlar; dışındakiler olduğu gibi kalır.
 GECIS: dict[Komut, frozenset[str]] = {
     "sina": frozenset({"taslak"}),
     "ayarla": frozenset(DURUMLAR) - {"beklemede"},
@@ -45,7 +42,6 @@ def yeniden_onay(komut: Komut, eski: str) -> bool:
 
 
 def sinanan(satirlar: list[dict[str, str]], ad: str) -> int:
-    """Sınanmış satır sayısı; `ad` bu koşuyla sınanmış sayılır."""
     return sum(
         r["durum"] not in ("taslak", "beklemede") or r["ad"] == ad for r in satirlar
     )
@@ -68,7 +64,6 @@ def durumu(satirlar: list[dict[str, str]], ad: str) -> str:
 
 
 def gec(ad: str, komut: Komut, *, puanli: bool, yol: Path = DOSYA) -> str:
-    """Yazmadan hemen önce dosyayı yeniden okur: uzun koşu başka koşunun satırını ezmez."""
     satirlar = oku(yol)
     satir = _satir(satirlar, ad)
     eski = satir["durum"]
