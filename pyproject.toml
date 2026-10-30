@@ -30,7 +30,7 @@ tansu = ["referans/*/*.csv", "referans/*/*.md"]
 pythonpath = ["."]
 
 [tool.ruff.lint]
-select = ["F", "E9", "ERA001", "BLE001", "S110", "B017", "B905", "B023", "PLW1514"]
+select = ["F", "E9", "ERA001", "BLE001", "S110", "B017", "B905", "B023", "PLW1514", "PLC0415"]
 # PLW1514 is a preview rule. With explicit-preview-rules, only the selected preview rules turn on.
 preview = true
 explicit-preview-rules = true

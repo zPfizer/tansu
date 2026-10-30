@@ -5,7 +5,12 @@ Fiyatlar CCOLA'nın İş Yatırım'daki gerçek değerleridir (08–15.08.2024).
 """
 
 import datetime as dt
+import hashlib
 import json
+from copy import deepcopy
+from dataclasses import dataclass, replace
+from hashlib import sha256
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -104,8 +109,6 @@ def test_cift_kalite_politikalari_sonsuz_fiyati_esitlemez():
 
 
 def test_e1_kayitli_goruntu_referansi_eksik_deger_ve_degismezlik(tmp_path):
-    import hashlib
-
     a = anlik(tmp_path)
     klasor = tmp_path / "ag" / a.kimlik
     once = {
@@ -177,8 +180,6 @@ def _eski_cift_hazirligi(gunler, C, A, F, tansu):
 def test_kayitli_sentetik_goruntu_eski_hazirlamayla_ayni(
     tmp_path, monkeypatch, politika
 ):
-    import hashlib
-
     fiyatlar = [dict(r) for i, r in enumerate(CCOLA_FIYAT) if i != 1]
     fiyatlar[3]["kapanis"] = -1.0  # 14.08 bozuk; 09.08 eksik.
     b = [satir(r["tarih"], 100.0, 100.0) for r in CCOLA_FIYAT]
@@ -310,8 +311,6 @@ def test_e1_alt_kume_kaynak_gunu_kararini_degistirmez(tmp_path):
     ],
 )
 def test_e1_cozulmemis_istegi_kabul_etmez(tmp_path, alan, deger, mesaj):
-    from dataclasses import replace
-
     a = anlik(tmp_path)
     istek = veri.VeriIstegi(
         ("CCOLA",),
@@ -816,9 +815,6 @@ def pay_kimlikli_goruntu(
     semboller=("TRMET", "TRALT", "AKBNK"),
 ):
     """E1 dış girdisi: mühürlü sentetik fiyatlar ve o görüntüye bağlı tablo."""
-    from hashlib import sha256
-    from pathlib import Path
-
     tarihler = tarihler or [
         "2021-01-04",
         "2025-11-20",
@@ -868,8 +864,6 @@ def pay_kimlikli_goruntu(
 
 
 def pay_istegi(semboller, secim, *, bas="2025-11-21", son="2025-11-25"):
-    from dataclasses import replace
-
     istek = veri.VeriIstegi(
         tuple(semboller),
         bas,
@@ -886,8 +880,6 @@ def pay_istegi(semboller, secim, *, bas="2025-11-21", son="2025-11-25"):
 
 
 def test_e1_pay_kimligi_eski_kodun_tum_gecmisini_tek_payda_korur(tmp_path, monkeypatch):
-    from hashlib import sha256
-
     a, secim = pay_kimlikli_goruntu(tmp_path, monkeypatch)
     klasor = tmp_path / "ag" / a.kimlik
     once = {p.name: sha256(p.read_bytes()).hexdigest() for p in klasor.iterdir()}
@@ -959,8 +951,6 @@ def test_e1_pay_kimligi_iki_etiketi_iki_pay_saymaz(tmp_path, monkeypatch):
 
 @pytest.mark.parametrize("boz", ["cakisma", "bosluk", "iki_pay", "yanlis_kaynak"])
 def test_e1_pay_kimligi_gecersiz_tabloyu_reddeder(tmp_path, monkeypatch, boz):
-    from hashlib import sha256
-
     a, secim = pay_kimlikli_goruntu(tmp_path, monkeypatch)
     yol = veri.PAY_KIMLIGI_KOKU / secim["surum"] / "eslemeler.csv"
     tablo = pd.read_csv(yol, encoding="utf-8", dtype=str, keep_default_na=False)
@@ -977,8 +967,6 @@ def test_e1_pay_kimligi_gecersiz_tabloyu_reddeder(tmp_path, monkeypatch, boz):
 
 
 def test_e1_pay_kimligi_olayin_yanlis_kaynak_etiketini_reddeder(tmp_path, monkeypatch):
-    from dataclasses import replace
-
     a, secim = pay_kimlikli_goruntu(tmp_path, monkeypatch)
     politika = veri.pay_kimligi_hazirla(
         secim,
@@ -993,8 +981,6 @@ def test_e1_pay_kimligi_olayin_yanlis_kaynak_etiketini_reddeder(tmp_path, monkey
 
 
 def test_e1_pay_kimligi_secimsiz_etiket_anlamini_korur(tmp_path, monkeypatch):
-    from dataclasses import replace
-
     a, secim = pay_kimlikli_goruntu(tmp_path, monkeypatch)
     istek = pay_istegi(["KOZAL"], secim)
     eski = veri.veri_hazirla(replace(istek, pay_kimligi=None), a.kimlik, tmp_path)
@@ -1045,8 +1031,6 @@ def test_pay_uyeligi_otuz_ayri_pay_ve_ozgun_kanit_ister(tmp_path, monkeypatch, b
 def test_e1_pay_kimligi_ilk_gozlemden_once_fiyat_uretmez_ve_isinmayi_otelemez(
     tmp_path, monkeypatch
 ):
-    from dataclasses import replace
-
     tarihler = [
         "2010-01-04",
         "2010-02-12",
@@ -1076,8 +1060,6 @@ def test_e1_pay_kimligi_ilk_gozlemden_once_fiyat_uretmez_ve_isinmayi_otelemez(
 
 @pytest.mark.parametrize("ad", ["eslemeler.csv", "kaynaklar.md"])
 def test_pay_kimligi_depo_basvurusu_kanonik_lf_olmalidir(ad):
-    from pathlib import Path
-
     yol = Path(veri.__file__).parent / "referans" / "pay_kimligi_v1" / ad
     raw = yol.read_bytes()
     assert b"\r" not in raw and raw.endswith(b"\n"), (
@@ -1111,9 +1093,6 @@ def test_pay_kimligi_gercek_depo_tablosu_sabit_bagi_cozer():
 
 
 def ilk_islemli_goruntu(tmp_path, monkeypatch):
-    from dataclasses import dataclass
-    from hashlib import sha256
-
     a = anlik(tmp_path)
     manifest = sha256(
         (tmp_path / "ag" / a.kimlik / "manifest.json").read_bytes()
@@ -1157,8 +1136,6 @@ def ilk_islemli_goruntu(tmp_path, monkeypatch):
 
 
 def test_e1_ilk_islem_kaynakli_tam_gecmisi_basvuruya_baglar(tmp_path, monkeypatch):
-    from hashlib import sha256
-
     a, istek, _ = ilk_islemli_goruntu(tmp_path, monkeypatch)
     paket = veri.veri_hazirla(istek, a.kimlik, tmp_path)
     assert paket["referans"].get("ilk_islem") == istek.ilk_islem, (
@@ -1179,9 +1156,6 @@ def test_e1_ilk_islem_kaynakli_tam_gecmisi_basvuruya_baglar(tmp_path, monkeypatc
     "boz", ["surum", "ozet", "kaynak", "goruntu", "manifest", "fazla", "null"]
 )
 def test_e1_ilk_islem_bozuk_secim_reddedilir(tmp_path, monkeypatch, boz):
-    from copy import deepcopy
-    from dataclasses import replace
-
     a, istek, _ = ilk_islemli_goruntu(tmp_path, monkeypatch)
     secim = deepcopy(istek.ilk_islem)
     alan = {
@@ -1205,8 +1179,6 @@ def test_e1_ilk_islem_bozuk_secim_reddedilir(tmp_path, monkeypatch, boz):
     "boz", ["ilk_satir", "ic_bosluk", "null", "takvim_oneki", "kirilmis_istek"]
 )
 def test_e1_ilk_islem_dogal_bekleyis_eksik_gecmisi_gizlemez(tmp_path, monkeypatch, boz):
-    from dataclasses import replace
-
     a, istek, _ = ilk_islemli_goruntu(tmp_path, monkeypatch)
     fiyat = a.fiyat.copy()
     if boz in ("ilk_satir", "ic_bosluk"):
@@ -1232,9 +1204,6 @@ def test_e1_ilk_islem_dogal_bekleyis_eksik_gecmisi_gizlemez(tmp_path, monkeypatc
 
 
 def test_ilk_islem_gercek_kaynak_lf_ve_yayimlanmis_ozete_baglidir():
-    from hashlib import sha256
-    from pathlib import Path
-
     yol = Path(veri.__file__).parent / "referans" / "ilk_islem_v1" / "ilk_islem.csv"
     bayt = yol.read_bytes()
     assert b"\r" not in bayt and bayt.endswith(b"\n")

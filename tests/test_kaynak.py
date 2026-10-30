@@ -6,11 +6,13 @@ import logging
 import re
 from pathlib import Path
 
+import borsapy
 import pandas as pd
 import pytest
 import requests
 
 from tansu import kaynak
+from tansu.__main__ import main
 
 HAM = {
     "HGDG_TARIH": "13-08-2024",
@@ -332,6 +334,37 @@ def test_kapanan_tablo_yalniz_pay_kodlarini_2010_ve_sonrasini_alir():
     assert list(t["aciklama"].fillna("")) == ["", "birleşmiştir", ""]
 
 
+class KopukOturum:
+    def __init__(self, hata):
+        self.hata = hata
+
+    def get(self, url, timeout=None, headers=None):
+        raise self.hata
+
+
+@pytest.mark.parametrize(
+    "hata",
+    [requests.ConnectionError("bağlantı koptu"), requests.Timeout("zaman aşımı")],
+)
+def test_kapanan_kodlar_ag_hatasini_kaynak_hatasina_cevirir(hata):
+    with pytest.raises(
+        kaynak.KaynakHatasi, match=re.escape(kaynak.KAPANAN_URL)
+    ) as bilgi:
+        kaynak.kapanan_kodlar(KopukOturum(hata))
+    assert bilgi.value.__cause__ is hata
+
+
+def test_veri_komutu_kapanan_kodlarda_ag_hatasi_mesaj_ve_cikis_1_verir(
+    monkeypatch, tmp_path, capsys
+):
+    monkeypatch.setattr(
+        requests, "Session", lambda: KopukOturum(requests.ConnectionError("yok"))
+    )
+    assert main(["veri", "--kok", str(tmp_path)]) == 1
+    assert capsys.readouterr().err.startswith("tansu veri: ")
+    assert list(tmp_path.iterdir()) == []
+
+
 def test_fiyat_kaynak_sirasi_bozuksa_tarihe_gore_siralanir():
     sonra, once = dict(HAM, HGDG_TARIH="14-08-2024"), dict(HAM, HGDG_TARIH="13-08-2024")
     k = kaynak.IsYatirim(
@@ -487,8 +520,6 @@ def test_hicbir_modul_yahoo_yfinance_tradingview_ithal_etmez_ve_cagirmaz():
 def test_sirket_kodlari_borsapy_sirket_listesinden_ticker_sutununu_dondurur(
     monkeypatch,
 ):
-    import borsapy
-
     monkeypatch.setattr(
         borsapy, "companies", lambda: pd.DataFrame({"ticker": ["AAA", "BBB"]})
     )
