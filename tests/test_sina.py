@@ -1,7 +1,9 @@
 import dataclasses
 import datetime as dt
 import json
+import os
 from collections import Counter
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -109,6 +111,45 @@ def test_sina_islem_yoksa_islemler_csv_sutun_basligini_yazar(ortam, tmp_path):
     tablo = pd.read_csv(tmp_path / "rapor" / "gartley" / "islemler.csv")
     assert tablo.empty
     assert list(tablo.columns) == list(islem.kayit_sutunlari(g.cikis))
+
+
+def baska_programda_acik(monkeypatch, hedef):
+    gercek_replace, gercek_csv = os.replace, pd.DataFrame.to_csv
+
+    def replace(src, dst, *a, **k):
+        if Path(dst).name == hedef:
+            raise PermissionError(13, "Erişim engellendi", str(src), None, str(dst))
+        return gercek_replace(src, dst, *a, **k)
+
+    def to_csv(self, yol=None, *a, **k):
+        if yol is not None and Path(yol).name == hedef:
+            raise PermissionError(13, "Erişim engellendi", str(yol))
+        return gercek_csv(self, yol, *a, **k)
+
+    monkeypatch.setattr(os, "replace", replace)
+    monkeypatch.setattr(pd.DataFrame, "to_csv", to_csv)
+
+
+@pytest.mark.parametrize(
+    ("komut_adi", "baslangic", "hedef"),
+    [
+        ("sina", "taslak", "durum.csv"),
+        ("sina", "taslak", "islemler.csv"),
+        ("ayarla", "sinandi", "gartley.json"),
+    ],
+)
+def test_yazilacak_dosya_baska_programda_aciksa_acik_mesaj_ve_cikis_1(
+    ortam, tmp_path, monkeypatch, capsys, komut_adi, baslangic, hedef
+):
+    ortam("gartley", durum=baslangic)
+    once = (tmp_path / "stratejiler" / "durum.csv").read_bytes()
+    baska_programda_acik(monkeypatch, hedef)
+    assert main([komut_adi, "gartley"]) == 1
+    hata = capsys.readouterr().err
+    assert f"tansu {komut_adi}: " in hata
+    assert hedef in hata and "durum.csv değişmedi" in hata
+    assert (tmp_path / "stratejiler" / "durum.csv").read_bytes() == once
+    assert not list(tmp_path.rglob("*.tmp"))
 
 
 def test_ayarla_puanli_nokta_yoksa_varsayilanlari_yazar_suzgeci_korur(
