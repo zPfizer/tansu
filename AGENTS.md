@@ -13,7 +13,7 @@ The specification is `docs/SPEC.md` (local file, Git-ignored until the public-re
 
 | Path | Content |
 |---|---|
-| `tansu/` | Code: `veri`, `kaynak`, `gostergeler`, `cift`, `yapi`, `islem`, `sinama`, `rapor`, `__main__`. |
+| `tansu/` | Code: `veri`, `kaynak`, `gostergeler`, `cift`, `yapi`, `islem`, `sinama`, `rapor`, `durum`, `__main__`. |
 | `tansu/stratejiler/` | One file per strategy, registered in `__init__.py`. |
 | `tansu/referans/` | Point-in-time BIST 30 membership and code maps, with official sources. |
 | `stratejiler/` | Rule cards (local), `durum.csv`, `sahip-kararlari.md`, `ayarlar/`. |

@@ -1,32 +1,21 @@
 """Komut girişi: `python -m tansu <komut>` (docs/SPEC.md bölüm 7)."""
 
 import argparse
-import csv
 import datetime as dt
 import shutil
 import sys
 import webbrowser
-from collections.abc import Collection
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
-from tansu import ayar, kaynak, rapor, sinama, veri
+from tansu import ayar, durum, kaynak, rapor, sinama, veri
 from tansu.stratejiler import STRATEJILER
 
 VERI_KOKU = Path("veri")
 VERI_BASLANGIC = dt.date(2019, 1, 1)  # 2019-2020 yalnız ısınma (SPEC 3.4)
 SAKLANAN_GORUNTU = 10
-DURUM_DOSYASI = Path("stratejiler/durum.csv")
-DURUMLAR = (
-    "taslak",
-    "beklemede",
-    "sinandi",
-    "ayarlandi",
-    "yetersiz-ornek",
-    "sinyalde",
-)
 
 
 def son_anlik(kok: Path = VERI_KOKU) -> veri.Anlik:
@@ -78,48 +67,19 @@ def _veri(a) -> int:
     return 0
 
 
-def _durum_satirlari(yol: Path = DURUM_DOSYASI) -> list[dict]:
-    with yol.open(encoding="utf-8", newline="") as f:
-        return list(csv.DictReader(f))
-
-
-def _satir(satirlar: list[dict], ad: str) -> dict:
-    satir = next((r for r in satirlar if r["ad"] == ad), None)
-    if satir is None:
-        raise veri.VeriHatasi(f"{ad}: durum.csv içinde yok")
-    return satir
-
-
-def durum_gecisi(
-    ad: str, eski: Collection[str], yeni: str, yol: Path = DURUM_DOSYASI
-) -> str:
-    """`durum.csv` satırını durumu `eski` içindeyse `yeni` yapar; son durumu döndürür (SPEC 4)."""
-    satirlar = _durum_satirlari(yol)
-    satir = _satir(satirlar, ad)
-    if satir["durum"] in eski:
-        satir.update(durum=yeni, tarih=dt.date.today().isoformat())
-        with yol.open("w", encoding="utf-8", newline="") as f:
-            yazici = csv.DictWriter(
-                f, ["ad", "durum", "tarih", "not"], lineterminator="\n"
-            )
-            yazici.writeheader()
-            yazici.writerows(satirlar)
-    return satir["durum"]
-
-
 def _kos(a, *, ayarla: bool) -> int:
     """`sina` ve `ayarla` için tek akış; farkları json yazımı ve durum geçişi (SPEC 4, 5.7)."""
-    komut = "ayarla" if ayarla else "sina"
+    komut: durum.Komut = "ayarla" if ayarla else "sina"
     strateji = STRATEJILER.get(a.ad)
     if strateji is None:
         print(f"tansu {komut}: bilinmeyen strateji {a.ad}", file=sys.stderr)
         return 2
     try:
-        satirlar = _durum_satirlari()
-        onceki = _satir(satirlar, a.ad)["durum"]
-        if ayarla and onceki == "beklemede":
+        satirlar = durum.oku()
+        onceki = durum.durumu(satirlar, a.ad)
+        if durum.reddeder(komut, onceki):
             print(
-                f"tansu ayarla: {a.ad} beklemede; önce taslak olmalı", file=sys.stderr
+                f"tansu {komut}: {a.ad} {onceki}; önce taslak olmalı", file=sys.stderr
             )
             return 1
         okunan = None if ayarla else ayar.oku(strateji)
@@ -128,10 +88,7 @@ def _kos(a, *, ayarla: bool) -> int:
             strateji,
             sinama.gunler(anlik),
             kimlik=anlik.kimlik,
-            sinanan=sum(
-                r["durum"] not in ("taslak", "beklemede") or r["ad"] == a.ad
-                for r in satirlar
-            ),
+            sinanan=durum.sinanan(satirlar, a.ad),
             ayarla=ayarla,
             okunan=okunan,
         )
@@ -139,10 +96,7 @@ def _kos(a, *, ayarla: bool) -> int:
         json_yolu = None
         if ayarla:  # json rapordan sonra: yarıda kalan koşu onaysız parametre bırakmaz
             json_yolu = ayar.yaz(strateji, s.yuruyus.son, veri_kimligi=s.kimlik)
-            yeni = "ayarlandi" if s.yuruyus.son.puanli else "yetersiz-ornek"
-            durum = durum_gecisi(a.ad, set(DURUMLAR) - {"beklemede"}, yeni)
-        else:
-            durum = durum_gecisi(a.ad, {"taslak"}, "sinandi")
+        yeni_durum = durum.gec(a.ad, komut, puanli=s.yuruyus.son.puanli)
     except veri.VeriHatasi as hata:
         print(f"tansu {komut}: {hata}", file=sys.stderr)
         return 1
@@ -188,8 +142,8 @@ def _kos(a, *, ayarla: bool) -> int:
     )
     if json_yolu:
         print(f"ayar: {json_yolu}")
-    print(f"rapor: {yol}; durum: {durum}")
-    if ayarla and onceki == "sinyalde":
+    print(f"rapor: {yol}; durum: {yeni_durum}")
+    if durum.yeniden_onay(komut, onceki):
         print(f"Levent yeniden onaylamalı: tansu onayla {a.ad}")
     if a.ac:
         webbrowser.open(yol.resolve().as_uri())
