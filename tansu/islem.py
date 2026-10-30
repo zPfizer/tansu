@@ -15,7 +15,6 @@ ILERI_GUNLER = (1, 3, 5, 10)
 HEDEFLER = ("hedef1", "hedef2", "hedef3", "hedef4")
 
 # Düşen sinyal nedenleri (SPEC 5.5).
-UYE_DEGIL = "evren dışı"
 KALITE = "kalite kuralı (karantina)"
 ACIK_VAR = "açık işlem veya bekleyen emir"
 STOP_USTTE = "stop girişin altında değil"
@@ -87,7 +86,8 @@ def simule(
 ) -> tuple[list[dict], Counter]:
     """Bir sembolün sinyallerini SPEC 5.1 ve 5.4 kurallarıyla işletir.
 
-    `gun`: `veri.gunluk` ve `atr` sütunu. `sinyal`: stratejinin çıktısı, aynı indeks.
+    `gun`: `veri.gunluk` ve `atr` sütunu. `sinyal`: stratejinin çıktısı, aynı indeks;
+    evren ve dönem dışındaki günlerde `giris` ile `tekrar`ı çağıran temizler (`sinama.calistir` yapar).
     Dönen: işlem kayıtları ve düşen sinyal sayaçları."""
     g = Gun(gun, sinyal)
     sayac: Counter = Counter()
@@ -139,8 +139,6 @@ def _tut(e: _Islem, g: Gun, cikis: Cikis) -> tuple[_Islem, int]:
 
 
 def _red_nedeni(satir, gun_satiri, acik_var: bool, cikis: Cikis) -> str | None:
-    if not gun_satiri["uye"]:
-        return UYE_DEGIL
     if gun_satiri["karantina"]:
         return KALITE
     if acik_var:
