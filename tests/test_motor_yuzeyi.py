@@ -1,14 +1,54 @@
-"""`kanit/` altındaki Gartley betikleri motorun bu adlarını kullanır."""
+"""`kanit/` altındaki Gartley betikleri tansu'nun bu adlarını kullanır."""
 
+import inspect
 from collections import Counter
+from datetime import tzinfo
+from functools import reduce
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import pytest
 
-from tansu import islem
-from tests.sentetik import gun_tablosu
+from tansu import gostergeler, islem, kaynak, sinama, strateji, veri, yapi
+from tansu.stratejiler import gartley
+from tests.sentetik import gartley_yolu, gun_tablosu
 from tests.test_islem import CIKIS, maliyetli, sinyal
+from tests.test_veri_gunluk import sentetik_anlik
+
+MODULLER = {
+    m.__name__.rsplit(".", 1)[-1]: m
+    for m in (gostergeler, islem, kaynak, sinama, strateji, veri, yapi, gartley)
+}
+OZETLENEN_MODULLER = (gostergeler, islem, sinama, strateji, veri, yapi, gartley)
+BETIK_CAGRILARI = [
+    ("veri.indir", 3, ("bas", "kapanan")),
+    ("veri.oku", 2, ()),
+    ("sinama.gunler", 1, ()),
+    ("sinama.Donem", 2, ()),
+    ("kaynak.kapanan_kodlar", 1, ()),
+    ("kaynak.sirket_kodlari", 0, ()),
+    ("kaynak.IsYatirim", 0, ()),
+    ("kaynak.IsYatirim.fiyat", 4, ()),
+    ("kaynak.IsYatirim.olaylar", 2, ()),
+    ("kaynak.Artimli", 2, ()),
+    ("kaynak.Borsapy", 0, ()),
+    ("kaynak.Borsapy.faiz", 1, ()),
+    ("strateji.bos_sinyal", 1, ()),
+    ("gostergeler.rsi", 2, ()),
+    ("gostergeler.sma", 2, ()),
+    ("gostergeler.atr_basit", 3, ()),
+    ("yapi.sag_bar_pivotlari", 3, ()),
+    ("yapi.ardisik", 1, ()),
+    ("gartley.STRATEJI.sinyal", 2, ()),
+    ("gartley.uyar", 4, ()),
+]
+GARTLEY_P = {**gartley.STRATEJI.varsayilan, "rr_min": "kapali"}
+
+
+def nesne(ad):
+    ilk, *kalan = ad.split(".")
+    return reduce(getattr, kalan, MODULLER[ilk])
 
 
 def tablo(gunler=(0,), karantinali=()):
@@ -162,3 +202,81 @@ def test_betiklerin_okudugu_sabitler_ve_cikis_kurucusu_var():
     assert (cikis.stop_mod, cikis.hedef) == ("dokunus", hedef)
     assert islem.RISK_TABANI > 0 and islem.MALIYET > 0
     assert isinstance(islem.VERI_SONU, str)
+
+
+@pytest.mark.parametrize(
+    ("ad", "konumsal", "anahtar"),
+    BETIK_CAGRILARI,
+    ids=[c[0] for c in BETIK_CAGRILARI],
+)
+def test_betiklerin_cagri_bicimi_imzaya_uyar(ad, konumsal, anahtar):
+    inspect.signature(nesne(ad)).bind(*[None] * konumsal, **dict.fromkeys(anahtar))
+
+
+@pytest.mark.parametrize("modul", OZETLENEN_MODULLER, ids=lambda m: m.__name__)
+def test_ozetlenen_modul_kendi_adli_duz_dosyadir(modul):
+    assert Path(modul.__file__).name == modul.__name__.rsplit(".", 1)[-1] + ".py"
+
+
+def test_betiklerin_okudugu_sabitler_var_ve_adim_tablolari_tutarli():
+    assert isinstance(veri.ISTANBUL, tzinfo)
+    assert isinstance(veri.ADIM_DEGISIM, pd.Timestamp)
+    assert len(veri.ADIM_YENI) == len(veri.ADIM_ESKI) == len(veri.ADIM_ESIK) + 1
+    assert isinstance(sinama.ILK_GIRIS, pd.Timestamp)
+    assert isinstance(sinama.KESIM, pd.Timestamp) and sinama.ILK_GIRIS < sinama.KESIM
+    assert isinstance(gartley.AB_XA, float) and isinstance(gartley.D_XA, float)
+    assert len(gartley.BC_AB) == len(gartley.CD_BC) == 2
+
+
+def test_gartley_modul_degiskenlerini_cagri_aninda_okur(monkeypatch):
+    gun = gun_tablosu(gartley_yolu())
+    monkeypatch.setattr(gartley, "D_XA", 0.8)
+    (seviye,) = gartley.STRATEJI.sinyal(gun, GARTLEY_P).query("giris")["seviye"]
+    assert seviye == pytest.approx(20.05 - 0.8 * (20.05 - 9.95))
+
+
+@pytest.mark.parametrize(
+    ("ad", "deger"),
+    [("uyar", lambda ab, bc, cd, tol: False), ("AB_XA", 0.9)],
+    ids=["uyar", "AB_XA"],
+)
+def test_gartley_yer_degistiren_ad_ve_sabit_sinyali_etkiler(monkeypatch, ad, deger):
+    gun = gun_tablosu(gartley_yolu())
+    assert gartley.STRATEJI.sinyal(gun, GARTLEY_P)["giris"].any()
+    monkeypatch.setattr(gartley, ad, deger)
+    assert not gartley.STRATEJI.sinyal(gun, GARTLEY_P)["giris"].any()
+
+
+def test_gosterge_ve_pivot_ciktilari_betigin_okudugu_biciminde():
+    g = gun_tablosu(gartley_yolu())
+    for seri in (
+        gostergeler.rsi(g["kapanis"], 14),
+        gostergeler.sma(g["kapanis"], 50),
+        gostergeler.atr_basit(g["yuksek"], g["dusuk"], g["kapanis"]),
+    ):
+        assert isinstance(seri, pd.Series) and seri.index.equals(g.index)
+    siralar = list(yapi.ardisik(yapi.sag_bar_pivotlari(g["yuksek"], g["dusuk"], 15)))
+    assert siralar
+    for sira in siralar:
+        assert isinstance(sira, tuple)
+        for p in sira:
+            assert isinstance(p, yapi.Pivot)
+            assert p.tur in ("T", "D") and p.onay_gun >= p.pivot_gun
+            assert isinstance(p.fiyat, float)
+
+
+def test_anlik_ve_gun_tablolari_betiklerin_okudugu_alanlari_verir():
+    a = sentetik_anlik()
+    assert isinstance(a.kimlik, str) and isinstance(a.gunler, pd.DatetimeIndex)
+    assert "tarih" in a.fiyat and len(a.fiyat.groupby("tarih").size()) == len(a.gunler)
+    assert len(a.inmeyen) == len(a.bos) == 0
+    assert isinstance(a.kaynak_gunleri, list)
+    tablolar = sinama.gunler(a)
+    assert set(tablolar) == {"AAA", "TRALT"}
+    son = a.gunler[1]
+    for t in tablolar.values():
+        assert {"atr", "uye", "kapanis"} <= set(t.columns)
+        assert t.loc[:son].index[-1] == son
+        assert np.isscalar(t.at[son, "atr"])
+    donem = sinama.Donem(a.gunler[0], son)
+    assert (donem.bas, donem.son) == (a.gunler[0], son)
