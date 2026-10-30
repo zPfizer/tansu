@@ -187,7 +187,9 @@ metnin dayanağı bilinmiyor.
 
 ## Levent'e sorular
 
-Hepsi veri kuralı seçimidir (SPEC 3.9 kalite kurallarını kilitler); öneri ilk seçenektir.
+Hepsi veri kuralı seçimidir (SPEC 3.9 kalite kurallarını kilitler); öneri ilk seçenektir. Dört soru 30.10.2026'da
+beyin oturumu aracılığıyla Levent'e soruldu; cevaplar bekleniyor. Gartley oturumu ilk ileri izleme kaydını bu cevaplara
+kadar bekletir (AOF ve likidite cevabı dondurulmuş motoru değiştirir).
 
 1. **T1, 30.11.2015 öncesi düzeltilmiş yüksek/düşük/AOF.** (a) Ham × kapanış çarpanından kurulsun: Yahoo ham aralıkla
    %97,7 aynı; 2015'in ilk 11 ayı ve 2010-2014 değişir. (b) Olduğu gibi kalsın, kayıtta bilinen sınır olarak dursun.
