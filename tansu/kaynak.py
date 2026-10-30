@@ -218,9 +218,12 @@ def kapanan_tablo(ham) -> pd.DataFrame:
 def kapanan_kodlar(oturum=None) -> pd.DataFrame:
     """İşlemi kapanmış pay kodları (Borsa İstanbul, birincil kaynak; `Data/DataFilePaths` listesinde)."""
     oturum = oturum or requests.Session()
-    yanit = oturum.get(
-        KAPANAN_URL, timeout=(5, 120), headers={"User-Agent": USER_AGENT}
-    )
+    try:
+        yanit = oturum.get(
+            KAPANAN_URL, timeout=(5, 120), headers={"User-Agent": USER_AGENT}
+        )
+    except requests.RequestException as hata:
+        raise KaynakHatasi(f"{KAPANAN_URL}: {hata}") from hata
     if yanit.status_code != 200:
         raise KaynakHatasi(f"{KAPANAN_URL}: HTTP {yanit.status_code}")
     return kapanan_tablo(
