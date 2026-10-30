@@ -21,6 +21,10 @@ def test_2026_uyeligi_donem_degisimleriyle_30_uye_doner():
     assert "DSTKF" in uyeler("2026-09-30")
 
 
+def test_2021_2025_uyeligi_30_uye_doner():
+    assert len(uyeler("2025-11-21", "bist30_2021_2025_v1")) == 30
+
+
 @pytest.mark.parametrize(
     "tarih,surum",
     [("2027-01-04", "bist30_2026_v1"), ("2026-01-02", "bist30_2021_2025_v1")],
