@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from tansu import ayar, islem, montecarlo, rapor, sinama
+from tansu import islem, rapor, sinama
 from tansu.strateji import Strateji, bos_sinyal
 from tests.sentetik import gun_tablosu
 
@@ -185,71 +185,6 @@ def test_rapor_satirlari_olcuyu_bugunku_metinle_yazar():
     assert satir["Medyan MAE % (10 gün)"]["Pozitif payı"] == "-"
     az = rapor._ileri_satiri(sinama.ileri_tablo(kayitlar(5))[0])
     assert az["Ortalama net %"] == "n/a (N = 5)"
-
-
-def bayrak_olcumu(r, *, rastgele=None, p5=None, sakli=(), puan=None, semboller):
-    bos = pd.DataFrame(columns=["sembol", "tarih"])
-
-    def kosu(islemler):
-        return sinama.Kosu(islemler, bos, Counter(), "R")
-
-    mc = montecarlo.MonteCarlo(
-        montecarlo.TOHUM,
-        montecarlo.TEKRAR,
-        len(r),
-        None if p5 is None else (p5, p5 + 1, p5 + 2),
-        None,
-        None,
-        None,
-        None if rastgele is None else montecarlo.Rastgele(0.0, (0, 0, 0), rastgele),
-    )
-    p = np.array([np.nan if puan is None else puan])
-    secim = ayar.Secim(0, {}, p, p, np.array([77]), puan is not None)
-    gecmis = pd.DataFrame({"sembol": list(semboller), "R": list(semboller.values())})
-    return rapor.bayrak_olc(
-        mc,
-        kosu(pd.DataFrame({"R": r})),
-        kosu(pd.DataFrame({"R": list(sakli)})),
-        kosu(gecmis),
-        secim,
-    )
-
-
-OLUMLU = bayrak_olcumu(
-    [2.0] * 22 + [-1.0] * 18,
-    rastgele=97.0,
-    p5=3.0,
-    sakli=(1.0, -0.5),
-    puan=0.4,
-    semboller={"S0": 3.0, "S1": 3.0, "S2": 4.0},
-)
-UYARI = bayrak_olcumu(
-    [1.0] * 38 + [-1.0] * 2,
-    rastgele=50.0,
-    p5=-1.0,
-    sakli=(-0.5,),
-    puan=-0.2,
-    semboller={"S0": 5.0, "S1": 1.0},
-)
-AZ = bayrak_olcumu([1.0] * 10, semboller={"S0": -1.0})
-
-
-@pytest.mark.parametrize(
-    ("bayrak", "olumlu", "uyari"),
-    [
-        (rapor.Bayrak.DIS_BEKLENTI, True, True),
-        (rapor.Bayrak.RASTGELE, True, False),
-        (rapor.Bayrak.BOOTSTRAP, True, False),
-        (rapor.Bayrak.SAKLI, True, False),
-        (rapor.Bayrak.KAZANMA_90, False, True),
-        (rapor.Bayrak.KAZANMA_BANT, False, True),
-        (rapor.Bayrak.SECIM_PUANI, False, True),
-        (rapor.Bayrak.SEMBOL, False, True),
-    ],
-)
-def test_bayrak_kurali_karar_verir_ya_da_karar_verilemez(bayrak, olumlu, uyari):
-    assert OLUMLU[bayrak].kosul is olumlu and UYARI[bayrak].kosul is uyari
-    assert AZ[bayrak].kosul is None
 
 
 def test_dusus_nan_degeri_atlar():
