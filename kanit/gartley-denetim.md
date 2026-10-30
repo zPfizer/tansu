@@ -31,3 +31,24 @@ Veri "temiz" sayılır, ancak aşağıdaki şartların hepsi tutarsa:
 
 Bir şart tutmazsa 2010-2014 son sınavı yapılmaz; Levent'in kararı gereği yalnız ileri izleme kalır ve ayrık
 grup üçüncü kez kullanılmaz.
+
+## Referans paneli
+
+Her düzeltmeden sonra aynı panel koşar: ayar grubu (371 hisse), 2015-2022, eski deneme betikleri değişmeden
+(`yontem.py` f9d682a1…, `pdf.py` 3e8f2dc6…), dondurulmuş 29.10 ayarı. Adaylar: `gartley` (dondurulmuş), `gt-k`
+(Tansu yöntemi Gartley), `abcd-k` (AB=CD), `S2-Z`, `S3`. Veri: eski denemelerin ham görüntüsü (20260101-0000 artı
+INTEK, LRSHO, LYDHO), her satırda o satırın motoruyla yeniden kurulur. Defter yazılmaz. Düzenek
+`%TEMP%\tansu-denetim-panel\` (`kur.py`, `panel.py`, `panel.tsv`).
+
+Düzenek doğrulaması: denemelerin motoru b9f6107 ile ve `yeniden-kurulus` f4ca87d ile panel, eski kayıtlardaki
+ayar grubu sayılarını birebir verdi (ör. `gartley` 39 dolum, ort. 1,129 R, p 0,0478, kasa 538.249; `S3` 295 dolum,
+0,411 R, p 0,0038, işlem kârı 393.743). Yeniden kurulan veri, eski veri dosyasıyla 673 hissenin hepsinde aynıdır.
+
+## Düzeltme ve değişim tablosu
+
+Her hücre: dolum / ort. R / p (sinyal düzeyi) ve son kasa TL (para katmanı). Yalnız nakit kasası 234.179 TL.
+
+| Satır | Değişiklik | gartley | gt-k | abcd-k | S2-Z | S3 |
+|---|---|---|---|---|---|---|
+| 0 | Taban (f4ca87d, eski karantina) | 39 / 1,129 / 0,048; 538.249 | 12 / −0,127 / 0,83; 225.802 | 102 / 0,046 / 0,39; 171.842 | 136 / 0,525 / 0,044; 316.265 | 295 / 0,411 / 0,004; 541.409 |
+| 1 | PR 250 karantina yuvarlaması (5736335) | 52 / 0,705 / 0,110; 440.462 | 12 / −0,127 / 0,83; 225.802 | 140 / 0,050 / 0,35; 177.537 | 170 / 0,451 / 0,054; 299.959 | 375 / 0,308 / 0,014; 594.951 |
