@@ -54,11 +54,16 @@ def test_b_bacagin_en_dusugu_degilse_sinyal_yok():
     assert not gartley.STRATEJI.sinyal(gun, P)["giris"].any()
 
 
-def test_x_esit_dip_desen_icinde_de_bozar():
-    # X'in düşüğüne eşit dip, C'den sonra olduğu gibi X ile C arasında da deseni bozar (stop X'e dokunuşla çalışır).
-    gun = gun_tablosu(gartley_yolu())
-    gun.iloc[21, gun.columns.get_loc("dusuk")] = gun["dusuk"].iat[20]
-    assert not gartley.STRATEJI.sinyal(gun, P)["giris"].any()
+def test_x_kirilmasi_altina_inmektir_esit_dip_bozmaz():
+    # Kural kartı: X'in altına inen fiyat deseni bozar. Eşit dip ne X ile C arasında ne C'den sonra bozar.
+    def sinyal_var(gun_no, fark):
+        gun = gun_tablosu(gartley_yolu())
+        gun.iloc[gun_no, gun.columns.get_loc("dusuk")] = gun["dusuk"].iat[20] + fark
+        return gartley.STRATEJI.sinyal(gun, P)["giris"].any()
+
+    # X 20. gün, C 80. gün, onay 95. gün.
+    assert sinyal_var(21, 0.0) and sinyal_var(90, 0.0)
+    assert not sinyal_var(90, -0.01)
 
 
 def test_stop_secenegi_x_eksi_iki_atr():

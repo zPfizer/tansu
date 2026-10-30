@@ -55,8 +55,9 @@ def bacak_uclari(
     yuksek: np.ndarray, dusuk: np.ndarray, sira: tuple[Pivot, ...], t: int
 ) -> bool:
     """Her pivot kendi bacağının ucu mu: tepe, komşu pivotlar arasındaki (sonuncusunda t'ye dek) en yüksek, dip en düşük.
-    Eşit değer bozmaz. İlk pivot, kendisinden t'ye dek eşit ya da öte bir değer görülünce bozulur (X kırılması).
-    Pencere sabit olduğu için pivot olamayan bir uç (komşusu daha uç) bacağı yanlış ölçtürür."""
+    İlk pivotun penceresi kendisinden t'ye dektir: öte bir değer deseni bozar (X kırılması: X'in altına inmek). Eşit değer
+    bozmaz. Komşu pivot günlerinin barları pencereye girmez, çünkü gün içi sıra bilinmez. Pencere sabit olduğu için pivot
+    olamayan bir uç (komşusu daha uç) bacağı yanlış ölçtürür; bu kontrol onu yakalar."""
     for k, p in enumerate(sira):
         if k == 0:
             pencere = slice(p.pivot_gun + 1, t + 1)
@@ -64,11 +65,9 @@ def bacak_uclari(
             son = sira[k + 1].pivot_gun if k + 1 < len(sira) else t + 1
             pencere = slice(sira[k - 1].pivot_gun + 1, son)
         if p.tur == "T":
-            x = yuksek[pencere]
-            gecti = x >= p.fiyat if k == 0 else x > p.fiyat
+            gecti = yuksek[pencere] > p.fiyat
         else:
-            x = dusuk[pencere]
-            gecti = x <= p.fiyat if k == 0 else x < p.fiyat
+            gecti = dusuk[pencere] < p.fiyat
         if gecti.any():
             return False
     return True

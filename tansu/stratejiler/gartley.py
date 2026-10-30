@@ -62,7 +62,7 @@ def hesapla(gun: pd.DataFrame, p: Mapping[str, float | str]) -> pd.DataFrame:
             continue
         t = C.onay_gun
         if not yapi.bacak_uclari(yuksek, dusuk, (X, A, B, C), t):
-            continue  # bacak ucu değil ya da onaydan önce X kırıldı (BOZULDU)
+            continue  # bacak ucu değil ya da onaydan önce X'in altına inildi (BOZULDU)
         sonra = dusuk[C.pivot_gun + 1 : t + 1]
         en_dusuk = np.nanmin(sonra) if np.isfinite(sonra).any() else np.inf
         stop = X.fiyat if p["stop"] == "X" else X.fiyat - 2 * float(gun["atr"].iat[t])
