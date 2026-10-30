@@ -119,7 +119,8 @@ def calistir(
         s = strateji.sinyal(gun, p)
         disarida = (gun.index < donem.bas) | ~gun["uye"]
         s.loc[disarida, ["giris", "tekrar"]] = [False, 0]
-        sinyal_gunleri += [(sembol, t) for t in s.index[s["giris"]]]
+        tavan = gun["tavan_kapanis"]
+        sinyal_gunleri += [(sembol, t, bool(tavan.at[t])) for t in s.index[s["giris"]]]
         k, c = islem.simule(
             gun,
             s,
@@ -131,7 +132,9 @@ def calistir(
         kayitlar += k
         sayac += c
     islemler = islem.kayit_tablosu(kayitlar, strateji.cikis)
-    sinyaller = pd.DataFrame(sinyal_gunleri, columns=["sembol", "tarih"])
+    sinyaller = pd.DataFrame(
+        sinyal_gunleri, columns=["sembol", "tarih", "tavan_kapanis"]
+    )
     return Kosu(islemler, sinyaller, sayac, strateji.olcu)
 
 
@@ -193,12 +196,11 @@ def donemler(k: Kosu) -> dict[str, Ozet]:
     """Her yıl ve bütün yıllar; yıl sinyal tarihine göre (`GECMIS` koşusu)."""
     sonuc = {str(y): k.yil(y).ozet() for y in YILLAR}
     sonuc["Bütün yıllar"] = k.ozet()
-    if len(k.islemler):  # tavanda kapanan sinyal günleri çıkarılmış hali (SPEC 5.1)
+    if len(k.islemler):
         tavansiz = k.islemler[~k.islemler["tavan_kapanis"].astype(bool)]
+        tavansiz_sinyal = (~k.sinyaller["tavan_kapanis"]).sum()
         sonuc["Bütün yıllar, tavan kapanışsız"] = ozet(
-            tavansiz,
-            len(k.sinyaller) - (len(k.islemler) - len(tavansiz)),
-            k.olcu,
+            tavansiz, int(tavansiz_sinyal), k.olcu
         )
     return sonuc
 
