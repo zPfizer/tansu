@@ -362,6 +362,25 @@ def test_sablon_oyna_gercek_kurulumun_sablonuyla_simule_ile_ayni():
     assert not islem.Gun(g, s).uygun[0]
 
 
+@pytest.mark.parametrize("bos", ["kapanis", "aof"])
+def test_sablon_oyna_fiyatsiz_ertesi_gun_atlanir_ilk_fiyatli_gunun_aofundan_dolar(bos):
+    g = gun_tablosu(
+        [11, 11, 11.5, 12, 12.6, 13.2, 13.2], aof=[11, 11, 11.5, 12, 12.6, 13.2, 13.2]
+    )
+    g.iloc[1, g.columns.get_loc(bos)] = np.nan
+    s = piyasa(g, stop=10.0)
+    s.iloc[0, s.columns.get_indexer(["hedef1", "hedef2"])] = [12.5, 13.0]
+    (k,), _ = kos(g, s)
+    assert k["dolum_tarihi"] == g.index[2] and k["dolum_fiyati"] == 11.5
+    (sablon,) = islem.sablonlar(pd.DataFrame([k]), g["atr"].to_numpy()[:1])
+    motor = islem.Gun(g, s)
+    assert motor.uygun[0] and motor.dolum_gunu[0] == 2
+    for olcu in ("R", "net_yuzde"):
+        assert islem.sablon_oyna(motor, 0, sablon, CIKIS, olcu) == pytest.approx(
+            k[olcu]
+        )
+
+
 def test_gun_uygun_ve_dolum_gunu_motorun_piyasa_dolum_kuraliyla_ayni():
     rng = np.random.default_rng(7)
     for _ in range(50):
