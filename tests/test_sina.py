@@ -279,7 +279,6 @@ def bayrak_tablosu(r, *, rastgele=None, p5=None, sakli=(), puan=None, semboller)
         montecarlo.TOHUM,
         montecarlo.TEKRAR,
         n,
-        "R",
         None if p5 is None else (p5, p5 + 1, p5 + 2),
         None,
         None,
