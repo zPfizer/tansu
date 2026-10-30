@@ -19,15 +19,40 @@ import sys
 TABAN = "yeniden-kurulus"
 GECEN = {"SUCCESS", "SKIPPED", "NEUTRAL"}
 SONUC = re.compile(r"^Sonuç: (NOTLU GEÇTİ|GEÇTİ|GEÇMEDİ)(?!\w)", re.M)
+BLOK = re.compile(r"^(?=İncelenen commit: )", re.M)
 
 
-def karar(govde: str, sha: str) -> str | None:
-    """Yorum `sha` için inceleme kararı mı: satır başında `İncelenen commit: <sha>` ve `Sonuç: <karar>`.
-    Yorumun başka yerindeki karar sözcüğü sayılmaz ("pytest GEÇTİ" maddesi olumsuz yorumu onaya çevirmesin)."""
-    if not re.search(rf"^İncelenen commit: {sha}(?!\w)", govde, re.M):
-        return None
-    m = SONUC.search(govde)
-    return m and m.group(1)
+def kararlar(govde: str, sha: str) -> list[str]:
+    """Yorumdaki `sha` kararları, sırayla. Blok `İncelenen commit: <sha>` satırıyla başlar, sonraki `İncelenen commit:`
+    satırında biter; karar bloğun `Sonuç:` satırıdır. Başka yerdeki karar sözcüğü ve başka SHA'nın bloğu sayılmaz
+    (PR 279 inceleme turları 1 ve 2). `Sonuç:` satırı okunamayan blok "okunamadı" verir: olumsuz karar yazım
+    hatasıyla onaya dönmesin."""
+    sonuc = []
+    for blok in BLOK.split(govde):
+        if re.match(rf"İncelenen commit: {sha}(?!\w)", blok):
+            m = SONUC.search(blok)
+            sonuc.append(m.group(1) if m else "okunamadı")
+    return sonuc
+
+
+def denetim_engelleri(denetimler: list[dict]) -> list[str]:
+    """Bitmemiş koşu her zaman durdurur; bitmiş koşulardan her denetimin sonuncusu geçmelidir. Aynı başta yeniden
+    koşan iş eskisinin yerini alır: PR gövdesi düzelince `pr-iddia` yeniden koşar (PR 279 inceleme turu 2)."""
+    if not denetimler:
+        return ["PR başında denetim yok"]
+    bitmis = sorted(
+        (d for d in denetimler if d.get("status", "COMPLETED") == "COMPLETED"),
+        key=lambda d: d.get("startedAt") or "",
+    )
+    son = {
+        (d.get("workflowName"), d.get("name") or d.get("context")): d for d in bitmis
+    }
+    sayilan = [d for d in denetimler if d not in bitmis] + list(son.values())
+    return [
+        f"denetim {d.get('name') or d.get('context')}: {durum or d.get('status')}"
+        for d in sayilan
+        if (durum := d.get("conclusion") or d.get("state")) not in GECEN
+    ]
 
 
 def engeller(pr: dict) -> list[str]:
@@ -35,20 +60,13 @@ def engeller(pr: dict) -> list[str]:
     if pr["baseRefName"] != TABAN:
         return [f"taban {pr['baseRefName']}: kalıcı onay yalnız {TABAN} içindir"]
     sonuc = [] if pr["state"] == "OPEN" else [f"PR durumu {pr['state']}"]
-    denetimler = pr["statusCheckRollup"]
-    if not denetimler:
-        sonuc.append("PR başında denetim yok")
-    for d in denetimler:
-        ad = d.get("name") or d.get("context")
-        durum = d.get("conclusion") or d.get("state")
-        if durum not in GECEN:
-            sonuc.append(f"denetim {ad}: {durum or d.get('status')}")
+    sonuc += denetim_engelleri(pr["statusCheckRollup"])
     sha = pr["headRefOid"]
-    kararlar = [k for y in pr["comments"] if (k := karar(y["body"], sha))]
-    if not kararlar:
+    hepsi = [k for y in pr["comments"] for k in kararlar(y["body"], sha)]
+    if not hepsi:
         sonuc.append(f"baş SHA {sha} için Sonuç satırlı inceleme yorumu yok")
-    elif kararlar[-1] == "GEÇMEDİ":
-        sonuc.append(f"baş SHA {sha} için son inceleme kararı GEÇMEDİ")
+    elif hepsi[-1] not in {"GEÇTİ", "NOTLU GEÇTİ"}:
+        sonuc.append(f"baş SHA {sha} için son inceleme kararı {hepsi[-1]}")
     return sonuc
 
 

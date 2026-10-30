@@ -56,6 +56,22 @@ def test_kural_saglaninca_engel_yok():
     assert engeller(PR) == []
 
 
+def test_yeniden_kosan_denetimin_yalniz_sonuncusu_sayilir():
+    """PR 279 inceleme turu 2: gövde düzelince `pr-iddia` yeniden koştu; eski FAILURE engel değildir."""
+    eski, yeni = (
+        {**DENETIMLER[2], "workflowName": "denetim", "conclusion": c, "startedAt": t}
+        for c, t in (
+            ("FAILURE", "2026-10-30T22:56:13Z"),
+            ("SUCCESS", "2026-10-30T22:56:36Z"),
+        )
+    )
+    assert engeller({**PR, "statusCheckRollup": [*DENETIMLER[:2], yeni, eski]}) == []
+    tersi = [{**eski, "conclusion": "SUCCESS"}, {**yeni, "conclusion": "FAILURE"}]
+    assert engeller({**PR, "statusCheckRollup": [*DENETIMLER[:2], *tersi]}) == [
+        "denetim pr-iddia: FAILURE"
+    ]
+
+
 @pytest.mark.parametrize(
     ("degisiklik", "engel"),
     [
@@ -109,6 +125,36 @@ def test_kural_saglaninca_engel_yok():
             {"comments": [{"body": "İncelenen commit: 366c578\nSonuç: GEÇTİ"}]},
             "inceleme yorumu yok",
         ),
+        (  # PR 279 inceleme turu 2: karar yalnız baş SHA bloğundan okunur
+            {
+                "comments": [
+                    {
+                        "body": "İncelenen commit: 366c578\nSonuç: GEÇTİ\n\n"
+                        f"İncelenen commit: {SHA}\nSonuç: GEÇMEDİ"
+                    }
+                ]
+            },
+            "son inceleme kararı GEÇMEDİ",
+        ),
+        (
+            {
+                "comments": [
+                    {
+                        "body": f"Tur 1:\nSonuç: GEÇTİ\n\nİncelenen commit: {SHA}\nSonuç: GEÇMEDİ"
+                    }
+                ]
+            },
+            "son inceleme kararı GEÇMEDİ",
+        ),
+        (
+            {
+                "comments": [
+                    *PR["comments"],
+                    {"body": f"İncelenen commit: {SHA}\n**Sonuç:** GEÇMEDİ"},
+                ]
+            },
+            "son inceleme kararı okunamadı",
+        ),
     ],
 )
 def test_kural_bozulunca_birlestirmez(degisiklik, engel):
@@ -126,6 +172,9 @@ def test_kural_bozulunca_birlestirmez(degisiklik, engel):
         "gh pr -R zPfizer/tansu merge 279",
         "gh pr --repo zPfizer/tansu merge",
         "gh api graphql -f query='mutation{mergePullRequest(input:{}){clientMutationId}}'",
+        "gh -R zPfizer/tansu pr merge 279",
+        "gh.exe pr merge 279",
+        "gh  pr merge 279",
     ],
 )
 def test_ciplak_birlestirme_komutu_yasak(arac, komut):
@@ -137,5 +186,6 @@ def test_ciplak_birlestirme_komutu_yasak(arac, komut):
         "python -X utf8 kurulum/birlestir.py 278",
         "gh pr view 278 --repo zPfizer/tansu --json state,mergedAt",
         "gh pr view 278 --json mergedAt,mergeable",
+        "gh -R zPfizer/tansu pr view 279 --json state,mergedAt",
     ):
         assert not any(fnmatch.fnmatchcase(izinli, d) for d in desenler), izinli
