@@ -11,6 +11,7 @@ import pytest
 import requests
 
 from tansu import kaynak
+from tansu.__main__ import main
 
 HAM = {
     "HGDG_TARIH": "13-08-2024",
@@ -330,6 +331,37 @@ def test_kapanan_tablo_yalniz_pay_kodlarini_2010_ve_sonrasini_alir():
     t = kaynak.kapanan_tablo(ham)
     assert list(t["kod"]) == ["ROYAL", "OLMK", "TARIHSIZ"]
     assert list(t["aciklama"].fillna("")) == ["", "birleşmiştir", ""]
+
+
+class KopukOturum:
+    def __init__(self, hata):
+        self.hata = hata
+
+    def get(self, url, timeout=None, headers=None):
+        raise self.hata
+
+
+@pytest.mark.parametrize(
+    "hata",
+    [requests.ConnectionError("bağlantı koptu"), requests.Timeout("zaman aşımı")],
+)
+def test_kapanan_kodlar_ag_hatasini_kaynak_hatasina_cevirir(hata):
+    with pytest.raises(
+        kaynak.KaynakHatasi, match=re.escape(kaynak.KAPANAN_URL)
+    ) as bilgi:
+        kaynak.kapanan_kodlar(KopukOturum(hata))
+    assert bilgi.value.__cause__ is hata
+
+
+def test_veri_komutu_kapanan_kodlarda_ag_hatasi_mesaj_ve_cikis_1_verir(
+    monkeypatch, tmp_path, capsys
+):
+    monkeypatch.setattr(
+        requests, "Session", lambda: KopukOturum(requests.ConnectionError("yok"))
+    )
+    assert main(["veri", "--kok", str(tmp_path)]) == 1
+    assert capsys.readouterr().err.startswith("tansu veri: ")
+    assert list(tmp_path.iterdir()) == []
 
 
 def test_fiyat_kaynak_sirasi_bozuksa_tarihe_gore_siralanir():
