@@ -7,7 +7,6 @@ import sys
 import webbrowser
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 
 from tansu import ayar, durum, kaynak, rapor, sinama, veri
@@ -100,46 +99,8 @@ def _kos(a, *, ayarla: bool) -> int:
     except veri.VeriHatasi as hata:
         print(f"tansu {komut}: {hata}", file=sys.stderr)
         return 1
-    gecmis, yuruyus, sakli, sakli_son, mc = (
-        s.gecmis,
-        s.yuruyus,
-        s.sakli,
-        s.sakli_son,
-        s.mc,
-    )
-    olcu = strateji.olcu
-    b = sinama.BIRIM[olcu]
-    son, iz = yuruyus.son, yuruyus.izgara
-    toplam = gecmis.toplam
-    secim = (
-        f"seçim {' '.join(f'{k}={v}' for k, v in iz.eksenler(son.nokta).items())} "
-        f"(sağlam {son.saglam[son.nokta]:.2f} {b}, N = {son.n[son.nokta]})"
-        if son.puanli
-        else "puanlı nokta yok, varsayılanlar"
-    )
-    verim = "n/a" if yuruyus.verim is None else f"{yuruyus.verim:.2f}"
-    print(
-        f"{a.ad}: {len(gecmis.sinyaller)} sinyal, {len(gecmis.islemler)} dolum, "
-        f"toplam {toplam:.2f} {b}"
-    )
-    print(
-        f"{a.ad}: ızgara {len(iz)} nokta, puanlı {int(np.isfinite(son.puan).sum())}; {secim}"
-    )
-    print(
-        f"ileri yürüme: örneklem dışı N = {len(yuruyus.dis_ornek.islemler)}, "
-        f"ortalama verim {verim} ({yuruyus.verim_adim}/{len(yuruyus.adimlar)} adım)"
-    )
-    print(
-        f"saklı dönem {sinama.SAKLI_BAS:%d.%m.%Y}-{sakli_son:%d.%m.%Y}: N = {len(sakli.islemler)}"
-        if sakli_son >= sinama.SAKLI_BAS
-        else "saklı dönem: veri saklı döneme ulaşmıyor"
-    )
-    rastgele = (
-        f"n/a (N = {mc.n})" if mc.rastgele is None else f"{mc.rastgele.yuzdelik:.1f}"
-    )
-    print(
-        f"Monte Carlo: tohum {mc.tohum}, N = {mc.n}, rastgele giriş yüzdeliği {rastgele}"
-    )
+    for satir in rapor.konsol(s):
+        print(satir)
     if json_yolu:
         print(f"ayar: {json_yolu}")
     print(f"rapor: {yol}; durum: {yeni_durum}")

@@ -108,6 +108,10 @@ class Secim:
     n: np.ndarray
     puanli: bool
 
+    @property
+    def puanli_sayisi(self) -> int:
+        return int(np.isfinite(self.puan).sum())
+
 
 @dataclass(frozen=True)
 class Adim:

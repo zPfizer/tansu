@@ -47,6 +47,10 @@ class Sinama:
     sinanan: int
     mc: montecarlo.MonteCarlo
 
+    @property
+    def sakli_var(self) -> bool:
+        return self.sakli_son >= sinama.SAKLI_BAS
+
 
 def hazirla(
     strateji: Strateji,
@@ -83,6 +87,36 @@ def hazirla(
         sinanan=sinanan,
         mc=mc,
     )
+
+
+def konsol(s: Sinama) -> list[str]:
+    ad, b = s.strateji.ad, sinama.BIRIM[s.strateji.olcu]
+    y, mc = s.yuruyus, s.mc
+    son, iz = y.son, y.izgara
+    secim = (
+        f"seçim {' '.join(f'{k}={v}' for k, v in iz.eksenler(son.nokta).items())} "
+        f"(sağlam {son.saglam[son.nokta]:.2f} {b}, N = {son.n[son.nokta]})"
+        if son.puanli
+        else "puanlı nokta yok, varsayılanlar"
+    )
+    verim = "n/a" if y.verim is None else f"{y.verim:.2f}"
+    sakli = (
+        f"saklı dönem {sinama.SAKLI_BAS:%d.%m.%Y}-{s.sakli_son:%d.%m.%Y}: N = {len(s.sakli.islemler)}"
+        if s.sakli_var
+        else "saklı dönem: veri saklı döneme ulaşmıyor"
+    )
+    rastgele = (
+        f"n/a (N = {mc.n})" if mc.rastgele is None else f"{mc.rastgele.yuzdelik:.1f}"
+    )
+    return [
+        f"{ad}: {len(s.gecmis.sinyaller)} sinyal, {len(s.gecmis.islemler)} dolum, "
+        f"toplam {s.gecmis.toplam:.2f} {b}",
+        f"{ad}: ızgara {len(iz)} nokta, puanlı {son.puanli_sayisi}; {secim}",
+        f"ileri yürüme: örneklem dışı N = {len(y.dis_ornek.islemler)}, "
+        f"ortalama verim {verim} ({y.verim_adim}/{len(y.adimlar)} adım)",
+        sakli,
+        f"Monte Carlo: tohum {mc.tohum}, N = {mc.n}, rastgele giriş yüzdeliği {rastgele}",
+    ]
 
 
 def _tablo(satirlar: list[dict] | pd.DataFrame) -> str:
@@ -243,7 +277,7 @@ def _izgara_bolumu(y: ayar.Yuruyus, b: str) -> str:
     iz, son = y.izgara, y.son
     metin = (
         f"<p>Denenen nokta: {len(iz)}. 31.12.2025 eğitim sonunda puanlı nokta: "
-        f"{int(np.isfinite(son.puan).sum())}.</p>"
+        f"{son.puanli_sayisi}.</p>"
     )
     if son.puanli:
         i = son.nokta
@@ -492,9 +526,7 @@ def yaz(s: Sinama, kok: Path = RAPOR_KOKU) -> Path:
     mc = s.mc
     bayrak = bayrak_satirlari(bayrak_olc(mc, y.dis_ornek, s.sakli, s.gecmis, y.son), b)
     sinif = "a (tam seviye)" if strateji.sinif == "a" else "b (giriş taraması)"
-    sakli_notu = (
-        "" if s.sakli_son >= sinama.SAKLI_BAS else " Veri saklı döneme ulaşmıyor."
-    )
+    sakli_notu = "" if s.sakli_var else " Veri saklı döneme ulaşmıyor."
     govde = f"""<!doctype html><html lang="tr"><meta charset="utf-8">
 <title>{html.escape(strateji.ad)} sınama</title>
 <style>body{{font-family:sans-serif;max-width:1100px;margin:auto}}table{{border-collapse:collapse;margin:8px 0}}
@@ -557,7 +589,7 @@ td,th{{border:1px solid #ccc;padding:3px 6px;font-size:13px;text-align:right}}th
         "",
         f"Saklı dönem {sakli_tarih}: N = {len(s.sakli.islemler)}, "
         f"toplam {s.sakli.toplam:.2f} {b}."
-        if s.sakli_son >= sinama.SAKLI_BAS
+        if s.sakli_var
         else "Saklı dönem: veri saklı döneme ulaşmıyor.",
         "",
         f"Monte Carlo (tohum {mc.tohum}, {mc.tekrar} koşu, örneklem dışı N = {mc.n}), p5 / p50 / p95:",
