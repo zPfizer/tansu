@@ -24,6 +24,8 @@ python -m venv .venv
 
 Komutlar `python -X utf8 -m tansu <komut>` biçiminde de çalışır.
 
+Yerel veri, görüntüler ve yeniden indirme zamanı: `docs/veri-envanteri.md`.
+
 ## Testler
 
 ```
