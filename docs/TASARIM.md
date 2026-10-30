@@ -913,8 +913,8 @@ Getiri görülmeden yazılır; kural kaydına girer. (B-7, İ: 19-015)
   düzeltilmiş fiyatı ≤ 0 olan satır da bozuktur. Düzeltilmiş seride bağıl 1e-4 payına ek olarak 4 ondalık
   yuvarlamanın mutlak yarım birimi (5e-5) tanınır (gerçek veride düzeltilmiş kapanış 4 ondalığa yuvarlı, düşük ve
   yüksek yuvarlı değil: 637 satırda en çok 4,5e-5 fark; gerçek ihlaller ≥ 1,5e-3; 0,5 TL altındaki fiyatta bağıl pay
-  bu farkı karşılamaz). Uygulama: `yeniden-kurulus` dalında PR 250 (30.10.2026, #251); `main` kodu (veri ve motor)
-  henüz yalnız bağıl payı uygular.
+  bu farkı karşılamaz). Uygulama: `yeniden-kurulus` dalında PR 250 (30.10.2026, #251); `main` kodunda veri kapısı ve
+  motorun dolum öncesi denetimi aynı payı uygular (#267).
 - **Yapısal ihlal:** bozuk sıra ya da tekrar eden gün koşuyu durdurur. Satır içindeki NaN durdurmaz:
   kısmi NaN'li satır bozuk satırdır, karantinaya girer (bilet 07, ~900 sembolde tek satır, örn. IZINV
   13.11.2013 yüksek 634210 / hacim NaN, bütün indirmeyi saatler sonra düşürüyordu; oran eşiği zaten

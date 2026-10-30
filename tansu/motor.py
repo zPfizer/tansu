@@ -13,7 +13,13 @@ import math
 import pandas as pd
 
 from tansu import aileler, gostergeler, islem_riski
-from tansu.veri import KARANTINA_GUN, YUVARLAMA, UyelikKapsamHatasi, VeriHatasi
+from tansu.veri import (
+    KARANTINA_GUN,
+    YARIM_BIRIM,
+    YUVARLAMA,
+    UyelikKapsamHatasi,
+    VeriHatasi,
+)
 
 STOP_ATR = 2.0  # TASARIM 5.5: acil stop = giriş - 2 ATR
 ETKIN_ATR = 1.5  # `dip` kuralı giriş + 1,5 ATR görülünce etkin olur
@@ -440,11 +446,10 @@ def _fiyat_engeli(m):
         return "islem_yok"
     if not all(_pozitif_sayi(m.get(k)) for k in ("aof", "yuksek", "dusuk", "kapanis")):
         return "gecersiz_fiyat"
-    if not (  # TASARIM 5.13: düzeltilmiş serinin mevcut yuvarlama payı
-        m["dusuk"] * (1 - YUVARLAMA) <= m["aof"]
-        and m["aof"] <= m["yuksek"] * (1 + YUVARLAMA)
-        and m["dusuk"] * (1 - YUVARLAMA) <= m["kapanis"]
-        and m["kapanis"] <= m["yuksek"] * (1 + YUVARLAMA)
+    alt = m["dusuk"] * (1 - YUVARLAMA) - YARIM_BIRIM
+    ust = m["yuksek"] * (1 + YUVARLAMA) + YARIM_BIRIM
+    if not (  # TASARIM 5.13: düzeltilmiş serinin yuvarlama payı, veri kapısıyla aynı
+        alt <= m["aof"] <= ust and alt <= m["kapanis"] <= ust
     ):
         raise ValueError("mum fiyat sırası geçersiz")
     return None
