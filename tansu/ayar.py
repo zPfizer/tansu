@@ -13,7 +13,7 @@ from typing import NamedTuple
 import numpy as np
 import pandas as pd
 
-from tansu import sinama, veri
+from tansu import dosya, sinama, veri
 from tansu.strateji import Strateji
 
 ISCI = min(16, os.cpu_count() or 1)
@@ -312,11 +312,10 @@ def yaz(
         "suzgecler": eski.get("suzgecler", []),
         "liste_cikisi": eski.get("liste_cikisi", False),
     }
-    gecici = yol.with_name(yol.name + ".tmp")
-    gecici.write_text(
-        json.dumps(icerik, ensure_ascii=False, sort_keys=True, indent=2) + "\n",
-        encoding="utf-8",
-        newline="\n",
-    )
-    os.replace(gecici, yol)
+    with dosya.atomik(yol) as gecici:
+        gecici.write_text(
+            json.dumps(icerik, ensure_ascii=False, sort_keys=True, indent=2) + "\n",
+            encoding="utf-8",
+            newline="\n",
+        )
     return yol

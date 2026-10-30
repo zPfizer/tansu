@@ -4,7 +4,6 @@ import datetime as dt
 import io
 import json
 import logging
-import os
 import re
 import time
 from collections import Counter
@@ -13,6 +12,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import requests
+
+from tansu import dosya
 
 KOK = "https://www.isyatirim.com.tr"
 FIYAT_URL = KOK + "/_layouts/15/Isyatirim.Website/Common/Data.aspx/HisseTekil"
@@ -316,12 +317,11 @@ class Artimli:
 
 def _yaz(yol: Path, icerik) -> None:
     """Önbelleğe yarım dosya bırakmaz: geçici dosyaya yazar, sonra yerine koyar."""
-    gecici = yol.with_name(yol.name + ".gecici")
-    if isinstance(icerik, pd.DataFrame):
-        icerik.to_parquet(gecici, index=False)
-    else:
-        gecici.write_text(icerik, encoding="utf-8")
-    os.replace(gecici, yol)
+    with dosya.atomik(yol) as gecici:
+        if isinstance(icerik, pd.DataFrame):
+            icerik.to_parquet(gecici, index=False)
+        else:
+            gecici.write_text(icerik, encoding="utf-8")
 
 
 class KapSektor:
