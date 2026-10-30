@@ -178,14 +178,14 @@ def test_hazirla_parametreyi_kaynagina_gore_secer_ve_dosya_yazmaz(
     assert not list(tmp_path.iterdir())
 
 
-def test_konsol_olcu_satirlarini_sinamadan_uretir(tmp_path, monkeypatch):
+def kesisim_sinamasi(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     kesisim = dataclasses.replace(
         STRATEJILER["ortalama-kesisim"],
         varsayilan={"ortalama": "SMA", "cift": "9/21", "teyit_gun": 0},
         aralik={"teyit_gun": (0, 2)},
     )
-    s = rapor.hazirla(
+    return rapor.hazirla(
         kesisim,
         piyasa(sembol=2),
         kimlik="t",
@@ -193,6 +193,25 @@ def test_konsol_olcu_satirlarini_sinamadan_uretir(tmp_path, monkeypatch):
         ayarla=True,
         okunan=None,
     )
+
+
+@pytest.mark.parametrize(
+    ("n", "beklenen"),
+    [
+        (sinama.EN_AZ, "n/a (uygun rastgele gün ya da şablon yok)"),
+        (5, "n/a (N = 5)"),
+    ],
+)
+def test_konsol_rastgele_giris_yoksa_raporla_ayni_nedeni_yazar(
+    tmp_path, monkeypatch, n, beklenen
+):
+    s = kesisim_sinamasi(tmp_path, monkeypatch)
+    s = dataclasses.replace(s, mc=dataclasses.replace(s.mc, n=n, rastgele=None))
+    assert rapor.konsol(s)[4].endswith(f"rastgele giriş yüzdeliği {beklenen}")
+
+
+def test_konsol_olcu_satirlarini_sinamadan_uretir(tmp_path, monkeypatch):
+    s = kesisim_sinamasi(tmp_path, monkeypatch)
     satirlar = rapor.konsol(s)
     assert len(satirlar) == 5
     assert "ızgara 2 nokta, puanlı 2" in satirlar[1]
