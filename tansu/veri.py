@@ -23,6 +23,7 @@ OLAY_TOLERANS = 0.005  # TASARIM 5.1: olay denetiminde %0,5
 LIMIT_TOLERANS = 0.005  # TASARIM 5.1: karantina için limit aşımı payı
 KARANTINA_GUN = 250  # TASARIM 5.1: karantinadan sonra yeni sinyal yok
 YUVARLAMA = 1e-4  # TASARIM 5.13: düzeltilmiş seri 4 ondalığa yuvarlı
+YARIM_BIRIM = 5e-5  # TASARIM 5.13 (#267): 4 ondalık yuvarlamanın mutlak payı; 0,5 TL altında bağıl pay bunu karşılamaz
 LIMIT_DEGISIM = pd.Timestamp("2020-03-13")  # ±%20 → ±%10
 ADIM_DEGISIM = pd.Timestamp("2023-11-06")  # fiyat adımı tablosu değişti
 ADIM_ESIK = [20, 50, 100, 250, 500, 1000, 2500]  # TASARIM 5.1 tablosu, alt sınır dahil
@@ -1248,10 +1249,10 @@ def _gunler(fiyat, olaylar, takvim):
         & (f["ham_aof"] <= f["ham_yuksek"])
         & (f["ham_dusuk"] <= f["ham_kapanis"])
         & (f["ham_kapanis"] <= f["ham_yuksek"])
-        & (f["dusuk"] * (1 - YUVARLAMA) <= f["aof"])
-        & (f["aof"] <= f["yuksek"] * (1 + YUVARLAMA))
-        & (f["dusuk"] * (1 - YUVARLAMA) <= f["kapanis"])
-        & (f["kapanis"] <= f["yuksek"] * (1 + YUVARLAMA))
+        & (f["dusuk"] * (1 - YUVARLAMA) - YARIM_BIRIM <= f["aof"])
+        & (f["aof"] <= f["yuksek"] * (1 + YUVARLAMA) + YARIM_BIRIM)
+        & (f["dusuk"] * (1 - YUVARLAMA) - YARIM_BIRIM <= f["kapanis"])
+        & (f["kapanis"] <= f["yuksek"] * (1 + YUVARLAMA) + YARIM_BIRIM)
     )
     ok = islem & ~bozuk
     onceki = f["ham_kapanis"].where(ok).ffill().shift(1)
