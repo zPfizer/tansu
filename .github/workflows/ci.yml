@@ -1,13 +1,11 @@
 name: ci
 
-# Yalnız .md değişen PR'da atlanır; açık depo taraması ve PR iddia denetimi denetim.yml'de her PR'da koşar.
-# testler hiçbir dalda zorunlu durum denetimi değil (gh api .../branches/<dal>/protection, 30.10.2026).
+# testler yeniden-kurulus dalında zorunlu durum denetimidir (Levent 30.10.2026). Bu yüzden iş her PR'da başlar:
+# yalnız .md değişince adımlar atlanır ve iş başarılı biter. Açık depo taraması ve PR iddia denetimi denetim.yml'de.
 on:
   pull_request:
-    paths-ignore: ["**.md"]
   push:
     branches: [main, yeniden-kurulus]
-    paths-ignore: ["**.md"]
 
 jobs:
   # Yalnız Windows: TANSU Levent'in Windows bilgisayarında çalışır.
@@ -16,12 +14,35 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      # HEAD^1: PR'da tabanın ucu, dalda bir önceki commit. Fark okunamazsa adım düşer; boş fark testleri koşar.
+      - name: Yalnız .md mi değişti
+        id: degisen
+        shell: bash
+        run: |
+          set -euo pipefail
+          # --no-renames: .py'den .md'ye adı değişen dosya eski adıyla da görünür.
+          dosyalar=$(git diff --name-only --no-renames HEAD^1 HEAD)
+          printf '%s\n' "$dosyalar"
+          # Boru yok: grep -q erken çıkınca büyük listede printf SIGPIPE alır ve pipefail sonucu tersine çevirir.
+          if [ -n "$dosyalar" ] && ! grep -qv '\.md$' <<< "$dosyalar"; then
+            echo "Yalnız .md değişti; testler atlanır."
+            echo "kod=hayir" >> "$GITHUB_OUTPUT"
+          else
+            echo "kod=evet" >> "$GITHUB_OUTPUT"
+          fi
       - uses: actions/setup-python@v5
+        if: steps.degisen.outputs.kod == 'evet'
         with:
           python-version: "3.14"
           cache: pip
           cache-dependency-path: requirements.lock.txt
-      - run: python -m pip install -r requirements.lock.txt -e ".[dev]"
-      - run: ruff check tansu tests kurulum
-      - run: ruff format --check tansu tests kurulum
-      - run: python -X utf8 -m pytest -q
+      - if: steps.degisen.outputs.kod == 'evet'
+        run: python -m pip install -r requirements.lock.txt -e ".[dev]"
+      - if: steps.degisen.outputs.kod == 'evet'
+        run: ruff check tansu tests kurulum
+      - if: steps.degisen.outputs.kod == 'evet'
+        run: ruff format --check tansu tests kurulum
+      - if: steps.degisen.outputs.kod == 'evet'
+        run: python -X utf8 -m pytest -q
