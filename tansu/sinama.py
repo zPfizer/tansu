@@ -3,7 +3,7 @@
 from collections import Counter
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import NamedTuple
+from typing import Literal, NamedTuple
 
 import numpy as np
 import pandas as pd
@@ -35,11 +35,12 @@ GECMIS = Donem(ILK_GIRIS, KESIM)
 
 
 class Kosu(NamedTuple):
-    """Bir parametre setinin bir koşusu: işlem kaydı, sinyal günleri, düşen sinyal sayaçları."""
+    """Bir parametre setinin bir koşusu: işlem kaydı, sinyal günleri, düşen sinyal sayaçları ve ölçü sütunu."""
 
     islemler: pd.DataFrame
     sinyaller: pd.DataFrame
     sayac: Counter
+    olcu: Literal["R", "net_yuzde"]
 
     def kes(self, bas: pd.Timestamp, son: pd.Timestamp) -> "Kosu":
         """Sinyal tarihi [bas, son] içinde olan kurulumlar ve sinyaller; kurulum kendi çıkışını korur.
@@ -49,7 +50,20 @@ class Kosu(NamedTuple):
             i[i["sinyal_tarihi"].between(bas, son)],
             s[s["tarih"].between(bas, son)],
             Counter(),
+            self.olcu,
         )
+
+    def yil(self, y: int) -> "Kosu":
+        """Sinyal günü `y` takvim yılında olan dilim."""
+        return self.kes(pd.Timestamp(y, 1, 1), pd.Timestamp(y, 12, 31))
+
+    @property
+    def toplam(self) -> float:
+        """`olcu` toplamı; boş koşuda 0.0."""
+        return float(self.islemler[self.olcu].sum())
+
+    def ozet(self) -> dict:
+        return donem_ozeti(self.islemler, len(self.sinyaller), self.olcu)
 
 
 def gunler(anlik: veri.Anlik) -> dict[str, pd.DataFrame]:
@@ -95,7 +109,7 @@ def calistir(
         sayac += c
     islemler = islem.kayit_tablosu(kayitlar, strateji.cikis)
     sinyaller = pd.DataFrame(sinyal_gunleri, columns=["sembol", "tarih"])
-    return Kosu(islemler, sinyaller, sayac)
+    return Kosu(islemler, sinyaller, sayac, strateji.olcu)
 
 
 def sirala(islemler: pd.DataFrame) -> pd.DataFrame:
@@ -164,21 +178,16 @@ def donem_ozeti(islemler: pd.DataFrame, sinyal_n: int, olcu: str) -> dict:
     }
 
 
-def donemler(
-    islemler: pd.DataFrame, sinyaller: pd.DataFrame, olcu: str
-) -> dict[str, dict]:
+def donemler(k: Kosu) -> dict[str, dict]:
     """Her yıl ve bütün yıllar; yıl sinyal tarihine göre (`GECMIS` koşusu)."""
-    yil_i = pd.DatetimeIndex(islemler["sinyal_tarihi"]).year
-    yil_s = pd.DatetimeIndex(sinyaller["tarih"]).year
-    sonuc = {
-        str(y): donem_ozeti(islemler[yil_i == y], int((yil_s == y).sum()), olcu)
-        for y in YILLAR
-    }
-    sonuc["Bütün yıllar"] = donem_ozeti(islemler, len(sinyaller), olcu)
-    if len(islemler):  # tavanda kapanan sinyal günleri çıkarılmış hali (SPEC 5.1)
-        tavansiz = islemler[~islemler["tavan_kapanis"].astype(bool)]
+    sonuc = {str(y): k.yil(y).ozet() for y in YILLAR}
+    sonuc["Bütün yıllar"] = k.ozet()
+    if len(k.islemler):  # tavanda kapanan sinyal günleri çıkarılmış hali (SPEC 5.1)
+        tavansiz = k.islemler[~k.islemler["tavan_kapanis"].astype(bool)]
         sonuc["Bütün yıllar, tavan kapanışsız"] = donem_ozeti(
-            tavansiz, len(sinyaller) - (len(islemler) - len(tavansiz)), olcu
+            tavansiz,
+            len(k.sinyaller) - (len(k.islemler) - len(tavansiz)),
+            k.olcu,
         )
     return sonuc
 

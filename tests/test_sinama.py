@@ -31,11 +31,30 @@ def test_kes_sinyal_tarihine_gore_dilimler_kurulum_kendi_cikisini_korur():
         }
     )
     sinyaller = pd.DataFrame({"sembol": ["A", "A"], "tarih": islemler["sinyal_tarihi"]})
-    dilim = sinama.Kosu(islemler, sinyaller, Counter(a=1)).kes(
+    dilim = sinama.Kosu(islemler, sinyaller, Counter(a=1), "R").kes(
         pd.Timestamp("2023-01-01"), pd.Timestamp("2023-06-30")
     )
     assert list(dilim.islemler["cikis_tarihi"]) == [pd.Timestamp("2023-08-15")]
     assert len(dilim.sinyaller) == 1 and dilim.sayac == Counter()
+    assert dilim.olcu == "R"
+
+
+def test_yil_takvim_yilinin_ilk_ve_son_gununu_icerir_komsu_yillari_dislar():
+    gunler = pd.to_datetime(["2022-12-31", "2023-01-01", "2023-12-31", "2024-01-01"])
+    islemler = pd.DataFrame({"sinyal_tarihi": gunler, "R": [1.0, 2.0, 4.0, 8.0]})
+    sinyaller = pd.DataFrame({"sembol": "A", "tarih": gunler})
+    yil = sinama.Kosu(islemler, sinyaller, Counter(), "R").yil(2023)
+    assert list(yil.islemler["R"]) == [2.0, 4.0]
+    assert list(yil.sinyaller["tarih"]) == list(gunler[1:3])
+    assert yil.olcu == "R"
+
+
+def test_toplam_olcu_sutununun_toplami_bos_kosuda_sifir():
+    islemler = pd.DataFrame({"R": [1.0, 2.5], "net_yuzde": [10.0, 20.0]})
+    bos = pd.DataFrame(columns=["sembol", "tarih"])
+    assert sinama.Kosu(islemler, bos, Counter(), "net_yuzde").toplam == 30.0
+    kayit = islem.kayit_tablosu([], islem.Cikis())
+    assert sinama.Kosu(kayit, bos, Counter(), "R").toplam == 0.0
 
 
 def kayitlar(n):
