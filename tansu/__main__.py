@@ -66,6 +66,11 @@ def _veri(a) -> int:
     return 0
 
 
+def _yazilanlar(yol, json_yolu) -> str:
+    yazilan = [str(p) for p in (yol and yol.parent, json_yolu) if p]
+    return f" Bu koşunun yeni yazdıkları: {', '.join(yazilan)}." if yazilan else ""
+
+
 def _kos(a, *, ayarla: bool) -> int:
     """`sina` ve `ayarla` için tek akış; farkları json yazımı ve durum geçişi (SPEC 4, 5.7)."""
     komut: durum.Komut = "ayarla" if ayarla else "sina"
@@ -73,6 +78,7 @@ def _kos(a, *, ayarla: bool) -> int:
     if strateji is None:
         print(f"tansu {komut}: bilinmeyen strateji {a.ad}", file=sys.stderr)
         return 2
+    yol = json_yolu = None
     try:
         satirlar = durum.oku()
         onceki = durum.durumu(satirlar, a.ad)
@@ -92,17 +98,16 @@ def _kos(a, *, ayarla: bool) -> int:
             okunan=okunan,
         )
         yol = rapor.yaz(s)
-        json_yolu = None
         if ayarla:  # json rapordan sonra: yarıda kalan koşu onaysız parametre bırakmaz
             json_yolu = ayar.yaz(strateji, s.yuruyus.son, veri_kimligi=s.kimlik)
         yeni_durum = durum.gec(a.ad, komut, puanli=s.yuruyus.son.puanli)
     except veri.VeriHatasi as hata:
-        print(f"tansu {komut}: {hata}", file=sys.stderr)
+        print(f"tansu {komut}: {hata}{_yazilanlar(yol, json_yolu)}", file=sys.stderr)
         return 1
     except PermissionError as hata:
         hedef = hata.filename2 or hata.filename or hata
         print(
-            f"tansu {komut}: {hedef} için erişim engellendi; dosya başka bir programda açıksa kapatıp yeniden çalıştır. durum.csv değişmedi.",
+            f"tansu {komut}: {hedef} için erişim engellendi; dosya başka bir programda açıksa kapatıp yeniden çalıştır. durum.csv değişmedi.{_yazilanlar(yol, json_yolu)}",
             file=sys.stderr,
         )
         return 1
