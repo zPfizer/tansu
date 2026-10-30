@@ -6,7 +6,25 @@ import pytest
 
 from tansu import islem, rapor, sinama
 from tansu.strateji import Strateji, bos_sinyal
-from tests.sentetik import gun_tablosu
+from tests.sentetik import anlik, gun_tablosu, piyasa
+
+
+def test_veri_kapisi_kaynak_gununu_ve_ilk_giris_oncesini_sorun_saymaz():
+    """TASARIM 5.13: kaynak günü eksik gündür, koşuyu SORUNLU yapmaz, tarihle yazılır; payda `ILK_GIRIS`'ten başlar.
+    Yerel görüntülerin hepsinde 2026-05-21 kaynak günüdür: süzgeç olmasa her gerçek koşu SORUNLU derdi (PR 280 incelemesi)."""
+    tablolar = piyasa(sembol=20, bas="2020-11-02", son="2021-03-31")
+    for g in tablolar.values():  # o gün 20 satırın hepsi bozuk: kaynak günü
+        g.loc["2021-02-01", "kapanis"] = g.loc["2021-02-01", "yuksek"] + 1
+    s00 = tablolar["S00"]
+    eski = s00.index[:30]  # sayılsa karantina oranı %1'i aşardı
+    s00.loc[eski, "kapanis"] = s00.loc[eski, "yuksek"] + 1
+    k = sinama.veri_kapisi(anlik(tablolar))
+    assert (k.sorunlar, k.karantina) == ((), 0)
+    assert k.n == 20 * len(pd.bdate_range(sinama.ILK_GIRIS, "2021-03-31"))
+    assert rapor.kapi_satiri(k).startswith("Veri kapısı: temiz.")
+    assert rapor.kapi_satiri(k).endswith(
+        "Eksik gün olarak işlenen kaynak günü hatası: 2021-02-01."
+    )
 
 
 @pytest.mark.parametrize(

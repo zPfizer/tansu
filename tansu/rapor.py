@@ -129,7 +129,7 @@ def kapi_satiri(k: sinama.VeriKapisi) -> str:
     satir = (
         f"Veri kapısı: {durum}. Karantina oranı {k.karantina:.2%} (eşik {veri.KARANTINA_ESIK:.0%}), "
         f"olay denetimi farkı oranı {k.olay:.2%} (eşik {veri.DENETIM_ESIK:.0%}); "
-        f"{sinama.ILK_GIRIS:%d.%m.%Y} sonrası {k.n} hisse-gün."
+        f"{sinama.ILK_GIRIS:%d.%m.%Y} ve sonrası {k.n} hisse-gün."
     )
     if k.kaynak_gunleri:
         satir += f" Eksik gün olarak işlenen {'; '.join(k.kaynak_gunleri)}."
