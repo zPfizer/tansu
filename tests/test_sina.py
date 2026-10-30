@@ -237,6 +237,17 @@ def test_konsol_olcu_satirlarini_sinamadan_uretir(tmp_path, monkeypatch):
     assert rapor.konsol(erken)[3] == "saklı dönem: veri saklı döneme ulaşmıyor"
 
 
+def test_yaz_metin_islevlerinin_metnini_oldugu_gibi_yazar(tmp_path, monkeypatch):
+    s = kesisim_sinamasi(tmp_path, monkeypatch)
+    html, md = rapor.html_metni(s), rapor.md_metni(s)
+    assert not list(tmp_path.iterdir())
+    assert "Dönem tablosu" in html and md.startswith("# ortalama-kesisim: sınama özeti")
+    klasor = rapor.yaz(s, tmp_path / "r").parent
+    assert (klasor / "sinama.html").read_bytes() == html.encode("utf-8")
+    assert (klasor / "ozet.md").read_bytes() == md.encode("utf-8")
+    assert (klasor / "islemler.csv").exists()
+
+
 def test_sina_bozuk_jsonu_izgaradan_once_reddeder(ortam, tmp_path, monkeypatch):
     ortam("gartley")
     (tmp_path / "stratejiler" / "ayarlar").mkdir()
