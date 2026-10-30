@@ -24,6 +24,9 @@ KARANTINA_GUN = 250  # TASARIM 5.1: karantinadan sonra yeni sinyal yok
 YUVARLAMA = 1e-4  # TASARIM 5.13: düzeltilmiş seri 4 ondalığa yuvarlı
 YARIM_BIRIM = 5e-5  # 4 ondalık yuvarlamanın mutlak farkı; 0,5 TL altındaki fiyatta bağıl pay bunu karşılamaz
 LIMIT_DEGISIM = pd.Timestamp("2020-03-13")  # ±%20 → ±%10
+# Tek seans: öncesi iki seans, seans başına ±%10, sınırlar dışa yuvarlı (BİST duyurusu 11699; BISTECH 2.1.2).
+# SPEC 3.9 istisnası, Levent 30.10.2026.
+TEK_SEANS = pd.Timestamp("2015-11-30")
 ADIM_DEGISIM = pd.Timestamp("2023-11-06")  # fiyat adımı tablosu değişti
 ADIM_ESIK = [20, 50, 100, 250, 500, 1000, 2500]  # TASARIM 5.1 tablosu, alt sınır dahil
 ADIM_ESKI = [0.01, 0.02, 0.05, 0.1, 0.1, 0.1, 0.1, 0.1]
@@ -638,11 +641,18 @@ def _gunler(fiyat, olaylar, takvim):
                     adim_mi = abs(np.log(getiri[k] / c)) < abs(np.log(getiri[k]))
                 if adim_mi:  # NaN (önceki gün yok) karşılaştırması yanlıştır
                     carpan.iloc[k] *= c
-    limit = pd.Series(np.where(f.index >= LIMIT_DEGISIM, 0.10, 0.20), index=f.index)
+    iki_seans = f.index < TEK_SEANS
+    limit = pd.Series(
+        np.where((f.index >= LIMIT_DEGISIM) | iki_seans, 0.10, 0.20), index=f.index
+    )
     ref = onceki * carpan
     tavan, taban, kapanis = ref * (1 + limit), ref * (1 - limit), f["ham_kapanis"]
-    asim = (kapanis > tavan * (1 + LIMIT_TOLERANS)) | (
-        kapanis < taban * (1 - LIMIT_TOLERANS)
+    # İki seansta ikinci seansın sınırı birincinin sınırından ölçülür; her sınır en çok bir adım dışa yuvarlanır.
+    s1, s2 = tavan + adim(tavan, f.index), taban - adim(taban, f.index)
+    gun_tavan = tavan.where(~iki_seans, s1 * 1.1 + adim(s1 * 1.1, f.index))
+    gun_taban = taban.where(~iki_seans, s2 * 0.9 - adim(s2 * 0.9, f.index))
+    asim = (kapanis > gun_tavan * (1 + LIMIT_TOLERANS)) | (
+        kapanis < gun_taban * (1 - LIMIT_TOLERANS)
     )
     karantina = bozuk | (ok & asim)
     temiz = ok & ~karantina
