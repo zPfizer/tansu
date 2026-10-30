@@ -454,6 +454,53 @@ def test_limit_bazi_onceki_gunun_ham_kapanisidir_karantinali_gun_de_baz_olur(tmp
     assert a.gun_tablosu["tavan"].iloc[2] == pytest.approx(165.0)
 
 
+@pytest.mark.parametrize(
+    "ilk_gun, iki_seans", [("2015-11-23", True), ("2015-11-30", False)]
+)
+def test_tek_seans_oncesi_seans_basina_yuzde_on(tmp_path, ilk_gun, iki_seans):
+    # 30.11.2015 öncesi iki seans, seans başına ±%10 (BİST duyurusu 11699; SPEC 3.9 istisnası, Levent 30.10.2026).
+    # 11 → 13,31 (+%21: ilk seans 12,10 tavanında, ikinci seans onun +%10'unda) aşım değildir; ±%10'da H = L kapanış
+    # kilittir; +%25 yine aşımdır. Tek seansta (±%20) aynı yol: +%21 aşım, ±%10 kilit değil.
+    tarihler = pd.bdate_range(ilk_gun, periods=5)
+    fiyat = [
+        satir(t, p, p)
+        for t, p in zip(tarihler, [10.0, 11.0, 13.31, 11.98, 14.975], strict=True)
+    ]
+    fiyat[2] |= {"ham_dusuk": 12.10, "dusuk": 12.10}
+    g = anlik(tmp_path, fiyat=fiyat, olay=[]).gun_tablosu
+    assert g["karantina"].tolist() == [False, False, not iki_seans, False, True]
+    assert g["kilit_tavan_duyarli"].tolist() == [False, iki_seans, False, False, False]
+    assert g["kilit_taban_duyarli"].tolist() == [False, False, False, iki_seans, False]
+
+
+def test_tek_seans_oncesi_baz_onceki_aof_kilitli_taban_gunu_asim_degil(tmp_path):
+    # Eski rejimde baz önceki seansın AOF'siydi (BISTECH 2.1.1); seans verisi olmadığından sınır, önceki kapanış ve
+    # AOF'nin dışından ölçülür ve pay %1'dir. Gerçek veri: ASLAN 04.10.2010 560 → 450, H = L (−%19,6); DENIZ 25.05.2012
+    # kapanış 17,75, AOF 16,39 → 14,20 (−%20). İkisi de kilitli taban günüdür, aşım değil. H = L +%21 gün de kilittir.
+    def ek(**alan):  # ham ve düzeltilmiş alan aynı (çarpan 1)
+        return {on + a: v for a, v in alan.items() for on in ("ham_", "")}
+
+    def yol(ad, onceki, gun, onceki_ek=None, gun_ek=None):
+        o = satir("2012-05-24", onceki, onceki) | (onceki_ek or {})
+        s = satir("2012-05-25", gun, gun) | (gun_ek or {})
+        return anlik(tmp_path / ad, fiyat=[o, s], olay=[]).gun_tablosu
+
+    g = yol("aslan", 560.0, 450.0)
+    assert g["karantina"].tolist() == [False, False]
+    assert g["kilit_taban_duyarli"].tolist() == [False, True]
+    deniz = ek(aof=16.39, dusuk=16.39), ek(aof=14.38, yuksek=15.95)
+    g = yol("deniz", 17.75, 14.20, *deniz)
+    assert g["karantina"].tolist() == [False, False]
+    g = yol("tavan", 10.0, 12.10)
+    assert g["karantina"].tolist() == [False, False]
+    assert g["kilit_tavan_duyarli"].tolist() == [False, True]
+    # Kilit de iki bazdan ölçülür: önceki AOF'nin ±%10'unda H = L kapanış kilittir (kapanışın ±%10'una varmasa da).
+    g = yol("aof_tavan", 10.0, 10.45, ek(aof=9.50, dusuk=9.50))
+    assert g["kilit_tavan_duyarli"].tolist() == [False, True]
+    g = yol("aof_taban", 10.0, 9.45, ek(aof=10.50, yuksek=10.50))
+    assert g["kilit_taban_duyarli"].tolist() == [False, True]
+
+
 def test_dort_ondaliga_yuvarli_dusuk_fiyatli_kapanis_bozuk_sayilmaz(tmp_path):
     # TASARIM 5.13: HGDG_KAPANIS 4 ondalığa yuvarlı, HGDG_MIN ve HGDG_MAX değil. Gerçek veri AKFGY 17.01.2014: ham
     # kapanış = ham düşük = 1,19; düzeltilmiş kapanış 0,4082 < düzeltilmiş düşük 0,408246 (fark 0,000046). Bağıl
