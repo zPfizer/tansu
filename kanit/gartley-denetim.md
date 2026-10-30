@@ -43,25 +43,25 @@ etiket ya da etkisiz.
 | Kimlik | Katman | Önem | Hata | Durum |
 |---|---|---|---|---|
 | PR 250 | Veri | S1 | Düzeltilmiş fiyat 0,5 TL altında 4 ondalık yuvarlama yüzünden tutarlı satır bozuk sayılıyor, 250 gün karantina | Birleşti (5736335) |
-| V1 | Veri | S1 | İşlemsiz gün (hacim 0, ham AOF, yüksek, düşük 0) bozuk sayılıp 250 gün karantina açıyor; kalan karantinanın %97,7'si | Levent onayı (SPEC 3.9 istisnası), PR |
-| V2 | Veri | S2 | 30.04.2018'de 73/411 hissede düzeltilmiş düşük 0; %50 kaynak günü eşiği yakalamıyor | Levent onayı, PR |
-| V3 | Veri | S2 | 30.11.2015 öncesi iki seans, seans başına ±%10; kod ±%20 günlük sanıyor: kilit günleri kaçıyor, +%21 günler bozuk sayılıyor | Levent onayı, PR |
+| V1 | Veri | S1 | İşlemsiz gün (hacim 0, ham AOF, yüksek, düşük 0) bozuk sayılıp 250 gün karantina açıyor; kalan karantinanın %97,7'si | Levent onayı (SPEC 3.9 istisnası); PR 254 birleşti (499f925) |
+| V2 | Veri | S2 | 30.04.2018'de 73/411 hissede düzeltilmiş düşük 0; %50 kaynak günü eşiği yakalamıyor | Levent onayı; PR 255 birleşti (2000e45). Yan etki: 2015-2022 dışında 8 gün daha bütün hisselerde eksik gün olur |
+| V3 | Veri | S2 | 30.11.2015 öncesi iki seans, seans başına ±%10; kod ±%20 günlük sanıyor: kilit günleri kaçıyor, +%21 günler bozuk sayılıyor | Levent onayı; PR 256 (baz önceki kapanış ve AOF'nin dışı, pay %1) |
 | T1 | Veri | S2 | Düzeltilmiş yüksek/düşük, günlerin %3,9'unda ham × gün çarpanından hep daha geniş; etki < 0,02 R | Düzeltilmedi: veri kuralı (SPEC 3.9), açık soru |
-| D1 | Desen | S1 | X, A, B, C kendi bacağının ucu değil (sabit pivot penceresi, PDF'te eşit uçlar pivot olmuyor); oranlar yanlış noktadan | Motor: PR 253; betikler: `D1t` |
+| D1 | Desen | S1 | X, A, B, C kendi bacağının ucu değil (sabit pivot penceresi, PDF'te eşit uçlar pivot olmuyor); oranlar yanlış noktadan | Motor: PR 253 birleşti (bd7193a); betikler: `D1t` |
 | D2 | Desen | S2 | PDF betiğinde X kırılmasına yalnız C'den sonra bakılıyor | `D1t` |
 | D3 | Desen | S2 | X'e eşit dip C'den önce bozmuyor, C'den sonra bozuyor; kural kartı "X'in altına inmek" der | Motor: PR 253; betikler: `D1t` |
-| D4 | Desen | S3 | `sag_bar_pivotlari` fiyatsız günü bar sayıyor | Motor PR |
+| D4 | Desen | S3 | `sag_bar_pivotlari` fiyatsız günü bar sayıyor | PR 257 birleşti (19a4334) |
 | D5 | Desen | S3 | S1 "Behle-Conway testi" diye etiketli ama makalenin metnini izler; Tablo 1'i üreten Wealth-Lab kodunda pivot gücü yok, 7 bar zaman çıkışıdır | Kayıt; 7 bar çıkışlı S1: ort. 0,058 R, p 0,33 |
 | D6 | Desen | S3 | Hiç eleyemeyen kontroller (`d < B`, `rr_min` 1,4 stop X iken) | Kayıt |
 | E2 | Emir | S2 | Açılış stopu AOF < stop olunca AOF'den çıkıyor; AOF günün ortalaması, gerçek stop emrinden hep kötü | `E2` |
-| E1 | Emir | S3 | Süresi dolan limit emri yeni sinyali bir gün fazla kapatıyor; 0 işlem değişti | Motor PR |
-| E3 | Emir | S3 | `risk_tabanli` etiketi iz stopun son hâliyle ölçülüyor; R değişmez | Motor PR |
+| E1 | Emir | S3 | Süresi dolan limit emri yeni sinyali bir gün fazla kapatıyor; 0 işlem değişti | PR 259 |
+| E3 | Emir | S3 | `risk_tabanli` etiketi iz stopun son hâliyle ölçülüyor; R değişmez | PR 260 |
 | P1-P8 | Para | S3 | `atla` kararı dolum fiyatıyla; SPEC 5.6'nın eşit ağırlıklı al-tut ve %40 sembol işareti yok; 2018 öncesi politika faizi düşük olabilir; düz %15 stopaj; önbellek anahtarı yol; takip betiği eski kararları kilitlemiyor | Kayıt |
 | S1 | İstatistik | S1 | Haftalık kümeli p, ortak piyasa hareketini bağımsız sayıyor; 2022 dolumları toplam R'nin %79-98'i (BIST 100 o yıl +%197) | `S1s`: çeyrek küme |
 | S2 | İstatistik | S2 | Geçme şartı 1'de en az örnek yok; 2 dolumla p = 0 | `S2s`: en az 30 dolum |
 | S3 | İstatistik | S2 | Sahte oran sınamasında 30 dolum eşiği boş hipotezi kaydırıyor; karar değişmez (yüzdelik 83,9-88,2) | Kayıt |
 | S4-S7 | İstatistik | S3 | `plan-pdf.md` k = 4 ve k = 5 çelişkisi; DSR yalnız S2-Z için; R tanımında risk tabanı; Sortino NaN | Kayıt |
-| T3 | İşlem | S2 | Teyitli girişlerin RSI'ı Wilder; SPEC 3.12 Tansu'nun basit ortalamalı RSI'ını ister | `T3` ve motor PR (`rsi_basit`) |
+| T3 | İşlem | S2 | Teyitli girişlerin RSI'ı Wilder; SPEC 3.12 Tansu'nun basit ortalamalı RSI'ını ister | `T3`; motor: PR 258 (`rsi_basit`) |
 | T4-T5 | İşlem | S3 | AOF açılışın yerine kullanılıyor; dolumlar fiyat adımında değil; özet ortalama R kaymasız | Kayıt |
 
 Ayrıntı, her hatanın kanıtı ve el hesabı: denetim raporları (yerel, Git dışında; oturum not klasörü
@@ -98,7 +98,51 @@ Her hücre: dolum / ort. R / p (sinyal düzeyi) ve son kasa TL (para katmanı). 
 | 7 | S1s çeyrek kümeli p | 0,063 | 0,71 | 0,49 | 0,057 | 0,081 |
 | 8 | V1 işlemsiz gün fiyatsız gün | 51 / 0,916 / 0,069; 476.317 | aynı | 111 / 0,000 / 0,53; 186.516 | 157 / 0,808 / 0,018; 328.185 | 324 / 0,348 / 0,037; 481.030 |
 | 9 | V2 kaynak günü eşiği %10 | aynı | aynı | 110 / 0,014 / 0,48; 179.114 | 161 / 0,790 / 0,019; 339.506 | 337 / 0,352 / 0,027; 572.238 |
+| 10 | V3 iki seans, baz önceki kapanış ve AOF'nin dışı, pay %1 (PR 256) | aynı | aynı | 111 / 0,009 / 0,50; 179.071 | 163 / 0,769 / 0,021; 349.160 | 343 / 0,350 / 0,027; 562.519 |
+| 11 | T3 motor sürümü: `rsi_basit` eksik günü atlar (PR 258) | aynı | aynı | aynı | aynı | aynı |
+| 12 | E1 limit emri son geçerli gününün sonunda düşer (PR 259) | aynı | aynı | aynı | aynı | aynı |
+| 13 | Son motor: bütün PR'lar ve `S2s` birlikte (E3, PR 260, yalnız etiket) | aynı | aynı | aynı | aynı | aynı |
 
 Satırlar birikimlidir: her satır öncekilerin hepsini içerir. "aynı" bir önceki satırla aynı demektir. Satır 7 yalnız p
 değerini değiştirir; 7'den sonraki p'ler çeyrek kümelidir. `S2s` (en az 30 dolum) yalnız geçme şartını değiştirir,
 panelde sayı değiştirmez.
+
+V3'ün ilk hâli (baz yalnız önceki kapanış, pay %0,5) `S3`'te 342 / 0,354 / 0,025; 567.071 verdi; inceleme bu hâlin 2010-2015'te
+22 gerçek kilitli taban gününü karantinaya soktuğunu buldu ve PR son hâline geçti (satır 10). Ayar grubu 2015-2022
+karantina payı: PR 250 sonrası %11,59; V1 %4,69; V2 %2,93; V3 %1,30.
+
+Satır 13'ün motoru, açık PR'ların (256, 258, 259, 260) `yeniden-kurulus` 19a4334 üstüne geçici birleşimidir
+(a456dc1, dal ya da ref yok); bu ağaçta bütün testler geçti (358 geçti, 1 atlandı).
+
+### Tansu-tam Gartley (ön kayıtlı yeni aday, ayar grubu)
+
+Ön kayıt ce9499d'de, hiçbir koşudan önce gönderildi. Satır 13 motoruyla, ayar grubu 2015-2022:
+
+| Aday | Sinyal | Dolum | Ort. R | p | Faiz | İşlem kârı | En iyi 3 hariç | Son kasa | Nakit |
+|---|---|---|---|---|---|---|---|---|---|
+| `tg` | 52 | 6 | −0,797 | 0,943 | 119.311 | −17.196 | −14.764 | 202.116 | 234.179 |
+
+Altı dolum, geçme şartının en az 30 dolumunun çok altındadır. Tansu'nun yazdığı kurallar birlikte uygulanınca desen çok
+seyrek çıkar.
+
+## Düzeltme koşusu: eski HAYIR geçerli mi (yeni sınav değil)
+
+Eski ayrık grup sınavları, aynı dondurulmuş adaylar, aynı ayrık grup (185 hisse, 2015-2022) ve aynı geçme şartıyla
+(`yontem` adayları k = 3, PDF adayları k = 5) satır 13 motoruyla yeniden koştu. Seçim yok, ayar yok, defter yok. Bu bir
+düzeltme koşusudur; yeni bir sınav değildir ve ayrık grubu yeni bir seçim için kullanmaz. Düzenek önce eski kodla eski
+sınav sayılarını birebir verdi (satır "eski kod").
+
+Şartlar: (1) ort. R > 0 ve tek yönlü p < 0,05/k (düzeltmede çeyrek kümeli, en az 30 dolum); (2) en iyi 3 işlem hariç
+işlem kârı > 0; (3) son kasa > yalnız nakit kasası (234.179 TL).
+
+| Aday | Eski kod: dolum / ort. R / p; kasa | Şart 1-2-3 | Düzeltilmiş: dolum / ort. R / p; kasa | Şart 1-2-3 | Karar |
+|---|---|---|---|---|---|
+| `gt-k` | 2 / −0,208 / 1,00; 227.168 | − − − | 2 / −0,210 / 1,00; 228.074 | − − − | HAYIR geçerli |
+| `abcd-k` | 54 / 0,200 / 0,219; 347.022 | − − + | 58 / −0,009 / 0,545; 249.899 | − − + | HAYIR geçerli |
+| `gartley` | 12 / 0,341 / 0,239; 264.771 | − − + | 14 / 0,082 / 0,449; 248.536 | − − + | HAYIR geçerli |
+| `S2-Z` | 101 / 0,790 / 0,0076; 217.314 | + − − | 116 / 0,768 / 0,0141; 347.090 | − + + | HAYIR geçerli |
+| `S3` | 180 / 0,387 / 0,0183; 254.956 | − + + | 195 / 0,384 / 0,0264; 300.087 | − + + | HAYIR geçerli |
+
+Sonuç: eski beş HAYIR'ın hepsi düzeltilmiş kodla da HAYIR'dır. Hiçbir aday üç şartı birlikte geçmedi.
+`S2-Z`'nin gerekçesi değişti: eski kodda 1. şartı geçip 2. ve 3. şartta kalıyordu; düzeltilmiş kodda 2. ve 3. şartı
+geçiyor, 1. şartta kalıyor (p 0,0141 > 0,01). Eski p haftalık kümeliydi; düzeltilmiş p çeyrek kümelidir (S1).
