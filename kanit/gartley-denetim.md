@@ -149,3 +149,43 @@ işlem kârı > 0; (3) son kasa > yalnız nakit kasası (234.179 TL).
 Sonuç: eski beş HAYIR'ın hepsi düzeltilmiş kodla da HAYIR'dır. Hiçbir aday üç şartı birlikte geçmedi.
 `S2-Z`'nin gerekçesi değişti: eski kodda 1. şartı geçip 2. ve 3. şartta kalıyordu; düzeltilmiş kodda 2. ve 3. şartı
 geçiyor, 1. şartta kalıyor (p 0,0141 > 0,01). Eski p haftalık kümeliydi; düzeltilmiş p çeyrek kümelidir (S1).
+
+## 2010-2014 veri kontrolü
+
+Ölçütler yukarıda, veriye bakmadan önce yazıldı. Kontrolü ayrı bir alt ajan yaptı; yalnız veri kalitesi ölçüldü, bu
+yıllarda hiçbir strateji, sinyal ya da getiri hesaplanmadı. Anlık `20141231-0000` (İş Yatırım, 2009-07-01 - 2014-12-31;
+444 kod indi, 231 kod boş döndü, 475.423 hisse-gün 2010-2014'te). Ayrıntılı rapor yereldir.
+
+| Ölçüt | Sonuç | Karar |
+|---|---|---|
+| 1. Kapanan hisseler | Borsa İstanbul "İşlem Sırası Kapanan Şirketler" listesinde 2010-2014 tarihli 32 kod; 20'si indi (%62,5; eşik %90). 12'si İş Yatırım'dan boş döner. Tarihsiz 5 kod da boş. Liste 2010-2013 için seyrek (4 yılda 17 kod, yalnız 2014'te 15) | TUTMADI |
+| 2. Kapsam | 453 çekirdek kodun 441'i (%97,4); tarihsiz kapananlar eklenince %95,5 | Tuttu |
+| 3. Eksik gün | %0,155 (motorun kaynak günü kuralıyla %0,37); kaynak günü 3 | Tuttu |
+| 4. Kurumsal olay farkı | Hisse-günlerin %10,55'inde (eşik %2). Bayraklı satırların %96'sında olay kaydı yok. Aynı ölçü 2015-2022'de %3,02 | TUTMADI |
+| 5. Karantina | O günkü kurallarla %1,243; aynı motorla 2015-2022 %1,083 (oran 1,15). Son kurallarla yeniden hesaplanmadı: 1. ve 4. ölçüt kararı zaten verdi | Karara gerek kalmadı |
+| 6. Alanlar | İşlem olan günlerde %100 | Tuttu |
+| 7. Faiz | Seri 20.05.2010'da başlar; öncesi TCMB gecelik oran kararlarından eklenebilir | Şartlı tuttu |
+
+Sonuç: veri temiz değil (1. ve 4. ölçüt). Kural gereği 2010-2014 son sınavı yapılmadı. Levent'in kararı (30.10.2026):
+veri temiz değilse yalnız ileri izleme kalır, ayrık grup üçüncü kez kullanılmaz. Ayrık grup yeni bir sınav için
+kullanılmadı.
+
+Not: 4. ölçüt 2015-2022'de de %3,02 ile eşiğin üstündedir. Eski denemelerin verisinde de olay listesi ile düzeltilmiş
+seri arasında fark vardır; nedeni (eksik olay listesi ya da başka bir düzeltme) bulunmadı. Açık sorudur.
+
+## Son sınav
+
+Koşmadı (yukarıdaki veri kontrolü). Düzenek (`son_sinav.py`) hazır ve ayar grubunda doğrulandı; ön kayıt metni
+gönderilmedi, çünkü koşu şartı tutmadı. 2010-2014 anlığında hiçbir aday koşulmadı.
+
+## Sonuç
+
+- Kod denetimi: 9 düzeltme PR'ı `yeniden-kurulus`'a birleşti (250, 253, 254, 255, 256, 257, 258, 259, 260). Her birinde
+  kırmızı test, en küçük düzeltme, bağımsız inceleme ve yeşil CI var. Betik hataları (`D1t`, `D2`, `E2`, `S1s`, `S2s`)
+  eski betiklere dokunmadan `duzeltme.py`'de düzeltildi.
+- En büyük etkiler: karantina yuvarlaması (PR 250) ve işlemsiz gün (V1) karantina payını %35,6'dan %4,7'ye indirdi;
+  çeyrek kümeli p (S1) bütün p değerlerini büyüttü; Gartley noktalarının bacak ucu olması (D1) dondurulmuş Gartley'i
+  ve AB=CD'yi değiştirdi.
+- Eski HAYIR'lar geçerli: beş eski sınavın düzeltme koşusunda hiçbir aday üç şartı birlikte geçmedi.
+- Tansu-tam Gartley ayar grubunda 6 dolum verdi; sınanacak kadar sinyal üretmez.
+- Son sınav: 2010-2014 verisi temiz değil; koşmadı. Kalan yol yalnız ileri izlemedir.

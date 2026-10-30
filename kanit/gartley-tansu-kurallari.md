@@ -59,3 +59,25 @@ yoktur; aday, 2010-2014 son sınavının aday listesine girer (veri temizse). Ay
 
 Tansu-tam AB=CD aday değildir: kurallarının çoğu gönderi kimliği olmayan yapıştırılmış metinlerden gelir ve AGENTS.md
 kanıt kuralı 3'e göre bir seviyenin tek kaynağı olamaz.
+
+### Sonuç (ayar grubu, son motor)
+
+Ayar grubunda 2015-2022: 52 sinyal, 6 dolum, ortalama −0,797 R, p 0,94; son kasa 202.116 TL, yalnız nakit kasası
+234.179 TL. Altı dolum, geçme şartının en az 30 dolumunun çok altındadır. 2010-2014 son sınavı veri temiz olmadığı için
+koşmadı (`kanit/gartley-denetim.md`); Tansu-tam aday başka bir veride sınanmadı.
+
+## Tansu'nun örnekleri ve bulucular
+
+Tansu'nun fiyatlı ve hisse adlı yedi Gartley örneği (ALCAR, PGSUS, SUWEN, KUYAS, SOKE, LUKSK, ICBCT) ürün bulucusuyla ve
+Tansu yöntemi bulucusuyla (`gt-k` desen adımı) sınandı. Ayrıntılı tablo yereldir (Git dışında).
+
+- Ürün bulucusu, varsayılan ve dondurulmuş 29.10 ayarı: 7'de 1 (SOKE). Denenen ayarların en iyisi yüksek/düşük
+  verisinde 7'de 2 (SOKE; ICBCT tolerans 0,10 ile). PGSUS, SUWEN ve KUYAS yalnız kapanış fiyatıyla bulunur: Tansu bu
+  örneklerde noktaları kapanıştan okur, ürün yüksek/düşükten. LUKSK kısmen, ALCAR hiç bulunmaz.
+- Tansu yöntemi bulucusu: 7'de 1 (SOKE). Fiyat D'nin üstünde kaldığı için giriş yok.
+- AB=CD alış örnekleri (`abcd-k` bulucusu, dondurulmuş ayar): sınanabilen 14 örneğin 10'unda bulucunun D'si
+  Tansu'nun D hedeflerinden birine %3 içinde yakın. Tansu A, B, C fiyatı vermediği için yalnız D karşılaştırıldı; 3-4
+  hedefli gönderilerde rastlantı payı var. Bulunmayan 4 örneğin 2'sinde hedefler satış yönlüdür; ürün yalnız alış
+  yönüdür. Öbür 2'sinin nedeni belirsizdir.
+- Daha önceki "5'te 0 bulundu" kontrolü yeniden üretilemedi: bulucu SOKE'yi varsayılan ve dondurulmuş ayarla bulur;
+  altın test `tests/test_altin_gartley.py` de bunu bekler. Önceki kontrolün "bulundu" tanımı açık sorudur.
