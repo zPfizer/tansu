@@ -148,7 +148,8 @@ def test_yarisi_karantinada_olan_kaynak_gunu_eksik_sayilir(tmp_path):
 @pytest.mark.parametrize("bozuk, kaynak", [(2, True), (1, False)])
 def test_kaynak_gunu_esigi_satirlarin_yuzde_onu(tmp_path, bozuk, kaynak):
     # 30.04.2018: 411 hissenin 73'ünde (%17,8) düzeltilmiş düşük 0; %50 eşiği kaçırıyordu. Eşik %10
-    # (SPEC 3.9 istisnası, Levent 30.10.2026). 20 satırın 2'si bozuksa kaynak günüdür, 1'i ise değil.
+    # (SPEC 3.9 istisnası, Levent 30.10.2026). 20 satırın 2'si işaretliyse o satırlar kaynak hatasıdır (eksik,
+    # karantinasız); 1'i ise satır karantinaya girer.
     semboller = [f"S{i:02}" for i in range(20)]
     fiyatlar = {
         s: [
@@ -166,6 +167,40 @@ def test_kaynak_gunu_esigi_satirlarin_yuzde_onu(tmp_path, bozuk, kaynak):
     g = veri.oku(kimlik, tmp_path).gun_tablosu.set_index(["sembol", "tarih"])
     s00 = g.loc[("S00", pd.Timestamp("2024-01-03"))]
     assert s00["eksik"] == kaynak and s00["karantina"] != kaynak
+
+
+@pytest.mark.parametrize("bozuk", [2, 9])
+def test_yarisindan_azi_bozuk_kaynak_gununde_tutarli_satir_fiyatini_korur(
+    tmp_path, bozuk
+):
+    # 16.09.2026: 623 satırın 126'sında (%20) ham AOF [düşük, yüksek] dışında; kalan 497 hisse gerçek düşüş günüdür
+    # (ortanca −%5). Yalnız bozuk satırlar eksik gün olur ve karantina açmaz; tutarlı satırlar fiyatını korur
+    # (SPEC 3.9 istisnası, Levent 30.10.2026). 20 satırın 2'si ya da 9'u (%45, yarının altı) bozuk: S00 eksik, S19
+    # 90'da kapanır, fiyatı kalır.
+    semboller = [f"S{i:02}" for i in range(20)]
+    fiyatlar = {
+        s: [
+            satir("2024-01-02", 100.0, 100.0),
+            {**satir("2024-01-03", 90.0, 90.0), "ham_yuksek": 91.0, "yuksek": 91.0}
+            | ({"ham_aof": 95.0, "aof": 95.0} if i < bozuk else {}),
+        ]
+        for i, s in enumerate(semboller)
+    }
+    kimlik = veri.indir(
+        semboller,
+        tmp_path,
+        SahteKaynak(fiyatlar, dict.fromkeys(semboller, [])),
+        simdi=SIMDI,
+    )
+    a = veri.oku(kimlik, tmp_path)
+    g = a.gun_tablosu.set_index(["sembol", "tarih"])
+    gun = pd.Timestamp("2024-01-03")
+    assert g.loc[("S00", gun), "eksik"] and not g.loc[("S00", gun), "karantina"]
+    s19 = g.loc[("S19", gun)]
+    assert not s19["eksik"] and s19["islem"] and not s19["karantina"]
+    f = a.hesap_fiyati.set_index(["sembol", "tarih"])
+    assert f.loc[("S19", gun), "kapanis"] == 90.0
+    assert pd.isna(f.loc[("S00", gun), "kapanis"])
 
 
 def anlik(tmp_path, fiyat=CCOLA_FIYAT, olay=CCOLA_OLAY):
@@ -616,6 +651,45 @@ def test_bozuk_satir_baz_fiyat_olmaz_baz_onceki_tutarli_gunun_ham_kapanisidir(tm
         fiyat=[
             satir("2024-01-02", 100.0, 100.0),
             bozuk,
+            satir("2024-01-04", 160.0, 160.0),
+        ],
+        olay=[],
+    )
+    assert _karantina(a) == [False, True, True]
+    assert a.gun_tablosu["tavan"].iloc[2] == pytest.approx(110.0)
+
+
+def test_yalniz_aofsi_bozuk_satirin_kapanisi_ertesi_gunun_limit_bazidir(tmp_path):
+    # 16.09.2026'da 126 satırın ham AOF'si [düşük, yüksek] dışında, kapanışı tutarlı; 17.09'da bunların 55'i iki günlük
+    # hareketle (54 düşüş, 1 yükseliş) sahte aşım oldu. d2 bozuk (AOF 95 > yüksek 93) ama ham kapanış 92 düşük-yüksek aralığında: d3 tabanı
+    # 92 × 0,90 = 82,8; d3 kapanışı 84 limit içinde, karantina yok (d1'den ölçülse taban 90 olur, 84 aşım sayılırdı).
+    bozuk = {**satir("2024-01-03", 92.0, 92.0), "ham_aof": 95.0, "aof": 95.0}
+    bozuk |= {"ham_yuksek": 93.0, "yuksek": 93.0, "ham_dusuk": 91.0, "dusuk": 91.0}
+    a = anlik(
+        tmp_path,
+        fiyat=[
+            satir("2024-01-02", 100.0, 100.0),
+            bozuk,
+            satir("2024-01-04", 84.0, 84.0),
+        ],
+        olay=[],
+    )
+    assert a.gun_tablosu["bozuk"].tolist() == [False, True, False]
+    assert _karantina(a) == [False, True, False]
+    assert a.gun_tablosu["taban"].iloc[2] == pytest.approx(82.8)
+
+
+@pytest.mark.parametrize(
+    "ihlal", [{"ham_yuksek": 140.0}, {"ham_dusuk": 0.0, "dusuk": 0.0}]
+)
+def test_ham_kapanisi_tutarsiz_bozuk_satir_limit_bazi_olmaz(tmp_path, ihlal):
+    # Ham kapanış yüksekten büyük (150 > 140) ya da ham düşük 0: kapanış güvenilmez, baz d1'in 100'üdür. d3 tavanı
+    # 100 × 1,10 = 110; d3 kapanışı 160 > 110 × 1,005, karantina (d2 baz olsaydı tavan 165 olur, 160 temiz kalırdı).
+    a = anlik(
+        tmp_path,
+        fiyat=[
+            satir("2024-01-02", 100.0, 100.0),
+            {**satir("2024-01-03", 150.0, 150.0), **ihlal},
             satir("2024-01-04", 160.0, 160.0),
         ],
         olay=[],

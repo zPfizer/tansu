@@ -46,8 +46,9 @@ FIYAT_SUTUNLARI = [
 ]
 KARANTINA_ESIK, DENETIM_ESIK, INMEYEN_ESIK = 0.01, 0.02, 5  # TASARIM 5.13
 KAYNAK_GUNU_EN_AZ = 20  # TASARIM 5.13: kaynak günü hatası için en az satır
-# Günün satırlarının en az %10'u bozuksa kaynak günüdür (SPEC 3.9 istisnası, Levent 30.10.2026;
-# 30.04.2018'de 73/411 hissede düzeltilmiş düşük 0 geldi, %50 eşiği bunu hisse hatası sayıyordu).
+# Günün satırlarının en az %10'u işaretliyse (karantina) bu satırlar kaynak hatasıdır: eksik gün olur, karantina açmaz.
+# En az yarısı işaretliyse bütün gün eksiktir (kaynak günü). SPEC 3.9 istisnası, Levent 30.10.2026; 30.04.2018'de
+# 73/411 hissede düzeltilmiş düşük 0 geldi, %50 eşiği bunu hisse hatası sayıyordu.
 KAYNAK_GUNU_PAYI = 0.10
 LIMIT_OLAY_KODLARI = frozenset(
     {"01", "02", "03", "04", "05", "06", "08", "09", "78"}
@@ -213,11 +214,13 @@ class Anlik:
         ]
         g = pd.concat(parcalar).rename_axis("tarih").reset_index()
         d = g[~g["eksik"]].groupby("tarih")["karantina"].agg(["sum", "size"])
-        kaynak = g["tarih"].isin(
-            d.index[
-                (d["size"] >= KAYNAK_GUNU_EN_AZ)
-                & (d["sum"] >= KAYNAK_GUNU_PAYI * d["size"])
-            ]
+        en_az = d["size"] >= KAYNAK_GUNU_EN_AZ
+        # Satırlarının en az yarısı işaretli gün bütünüyle eksiktir. %10 ile %50 arasıysa yalnız işaretli (karantina)
+        # satırlar eksik olur: aynı günün tutarlı satırları gerçek piyasadır (16.09.2026 düşüş günü; SPEC 3.9
+        # istisnası, Levent 30.10.2026).
+        kaynak = g["tarih"].isin(d.index[en_az & (d["sum"] * 2 >= d["size"])]) | (
+            g["tarih"].isin(d.index[en_az & (d["sum"] >= KAYNAK_GUNU_PAYI * d["size"])])
+            & g["karantina"]
         )
         g.loc[kaynak, ["eksik", "karantina"]] = [
             True,
@@ -631,7 +634,12 @@ def _gunler(fiyat, olaylar, takvim):
         & (f["kapanis"] <= ust)
     )
     ok = islem & ~bozuk
-    onceki = f["ham_kapanis"].where(ok).ffill().shift(1)
+    # Limit bazı son işlem gününün ham kapanışıdır. AOF'si ya da düzeltilmiş alanı bozuk satırın kapanışı ham düşük-yüksek
+    # aralığındaysa gerçektir; borsa ertesi günün sınırını ondan hesaplar (17.09.2026: 55 sahte aşım; SPEC 3.9 istisnası,
+    # Levent 30.10.2026). Ham kapanışı tutarsız satır baz olmaz.
+    baz = islem & (f["ham_dusuk"] > 0)
+    baz &= (f["ham_dusuk"] <= f["ham_kapanis"]) & (f["ham_kapanis"] <= f["ham_yuksek"])
+    onceki = f["ham_kapanis"].where(baz).ffill().shift(1)
     carpan = pd.Series(1.0, index=f.index)
     gunler = f.index[islem.to_numpy()]
     getiri = (
