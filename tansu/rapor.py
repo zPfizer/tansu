@@ -512,7 +512,6 @@ def _sakli_aralik(s: Sinama) -> str:
 
 
 def html_metni(s: Sinama) -> str:
-    """`sinama.html` metni; dosya yazmaz."""
     strateji, y = s.strateji, s.yuruyus
     olcu = strateji.olcu
     b = sinama.BIRIM[olcu]
@@ -569,7 +568,6 @@ td,th{{border:1px solid #ccc;padding:3px 6px;font-size:13px;text-align:right}}th
 
 
 def md_metni(s: Sinama) -> str:
-    """`ozet.md` metni; dosya yazmaz."""
     strateji, y = s.strateji, s.yuruyus
     b = sinama.BIRIM[strateji.olcu]
     donem = _donem_sutunlari(s)
