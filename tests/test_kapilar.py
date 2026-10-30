@@ -289,6 +289,25 @@ def test_duzeltilmis_seride_yuvarlama_farki_bozuk_sayilmaz(tmp_path):
     assert list(anlik(tmp_path, fiyat).gun_tablosu["karantina"]) == [False, False, True]
 
 
+def test_dort_ondaliga_yuvarli_dusuk_fiyatli_kapanis_bozuk_sayilmaz(tmp_path):
+    # TASARIM 5.13: düzeltilmiş kapanış 4 ondalığa yuvarlı, düşük ve yüksek değil; bağıl 1e-4 paya ek olarak mutlak yarım
+    # birim (5e-5) tanınır (#267). Gerçek veri AKFGY 17.01.2014: ham kapanış = ham düşük = 1,19; düzeltilmiş kapanış
+    # 0,4082 < düzeltilmiş düşük 0,408246 (fark 4,6e-5; bağıl 1,13e-4 > 1e-4). Gerçek ihlal (0,4076) bozuk kalır.
+    def gun(tarih, kapanis):
+        return {
+            **satir(tarih, 1.19, dusuk=1.19, yuksek=1.23),
+            "aof": 0.408246,
+            "dusuk": 0.408246,
+            "yuksek": 0.421968,
+            "kapanis": kapanis,
+        }
+
+    fiyat = [gun("2024-01-02", 0.408246), gun("2024-01-03", 0.4082)]
+    fiyat += [gun("2024-01-04", 0.4076), gun("2024-01-05", 0.408246)]
+    g = anlik(tmp_path, fiyat).gun_tablosu
+    assert list(g["karantina"]) == [False, False, True, False]
+
+
 def test_satirdaki_kismi_nan_bozuk_satirdir_indirmeyi_durdurmaz(tmp_path):
     # Gerçek IZINV 13.11.2013: yüksek 634210 (saçma), AOF ve hacim NaN. Satır karantinaya girer.
     bozuk = {

@@ -152,6 +152,22 @@ def test_s09_duzeltilmis_fiyat_yuvarlama_siniri(alan, fiyat, gecerli):
     assert son["degerleme"]["fiyat"] == (fiyat if alan == "kapanis" else 100.0)
 
 
+@pytest.mark.parametrize("kapanis,gecerli", [(0.4082, True), (0.4076, False)])
+def test_s09_dusuk_fiyatta_yarim_birim_yuvarlama_payi(kapanis, gecerli):
+    # TASARIM 5.13 (#267): düşük 0,408246, kapanış 0,4082 (4 ondalık, fark 4,6e-5 < 5e-5) geçerlidir; bağıl 1e-4
+    # pay yalnız 4,1e-5 tanır. 0,4076 (düşükten %0,16 aşağı) gerçek ihlaldir.
+    m = s09_mumlar([r(0.408246, 0.421968, 0.408246, 0.408246)] * 2)
+    m["tavan"], m["taban"] = 1.0, 0.1
+    m.at[m.index[1], "kapanis"] = kapanis
+    if not gecerli:
+        with pytest.raises(ValueError, match="mum fiyat sırası geçersiz"):
+            motor.tara(m, {m.index[0]: "sinyal-1"}, yurutme=s09_istek())
+        return
+    son = motor.tara(m, {m.index[0]: "sinyal-1"}, yurutme=s09_istek())
+    assert [d["fiyat"] for d in son["dolumlar"]] == [0.408246]
+    assert son["degerleme"]["fiyat"] == 0.4082
+
+
 @pytest.mark.parametrize("secim", [{}, {"kilit_politikasi": "ham_aralik_v1"}])
 def test_s09_ham_limit_sirasina_yuvarlama_payi_uygulanmaz(secim):
     m = s09_mumlar()
