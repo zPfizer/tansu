@@ -55,11 +55,16 @@ def _tek_yazar(kok: Path):
             yol.unlink()
 
 
+def _goruntuler(kok: Path) -> list[Path]:
+    """`ag/` altındaki görüntüler, eskiden yeniye; adı geçerli kimlik olmayan klasör (`2019-arsiv`) görüntü değildir."""
+    return sorted(p for p in (kok / "ag").glob("2*") if veri.kimlik_gecerli(p.name))
+
+
 def _son_kimlik(kok: Path) -> str:
-    kimlik = max((p.name for p in (kok / "ag").glob("2*")), default=None)
-    if kimlik is None:
+    goruntuler = _goruntuler(kok)
+    if not goruntuler:
         raise veri.VeriHatasi("anlık görüntü yok: önce `tansu veri` çalıştır")
-    return kimlik
+    return goruntuler[-1].name
 
 
 def son_anlik(kok: Path) -> veri.Anlik:
@@ -75,9 +80,7 @@ def goruntuleri_buda(
     `veri` kilidi altında çalışır. Silinen görüntülerin adlarını döndürür."""
     for yarim in (kok / "ag").glob("_gecici-*"):
         shutil.rmtree(yarim)
-    eskiler = [
-        p for p in sorted((kok / "ag").glob("2*"))[:-saklanan] if p.name not in korunan
-    ]
+    eskiler = [p for p in _goruntuler(kok)[:-saklanan] if p.name not in korunan]
     for klasor in eskiler:
         shutil.rmtree(klasor)
     return [p.name for p in eskiler]
@@ -278,14 +281,13 @@ def ayristirici() -> argparse.ArgumentParser:
 
 
 class _Yansi:
-    """stderr'e yazılanı geçirir; kayıt için ilk satırı tutar."""
+    """stderr'e yazılanı geçirir; kayıt için metni tutar."""
 
     def __init__(self, hedef):
-        self.hedef, self.ilk = hedef, ""
+        self.hedef, self.metin = hedef, ""
 
     def write(self, metin: str) -> int:
-        if "\n" not in self.ilk:
-            self.ilk += metin
+        self.metin += metin
         return self.hedef.write(metin)
 
     def __getattr__(self, ad):
@@ -320,7 +322,13 @@ def main(argv=None) -> int:
     except BaseException as hata:
         _kaydet(argv, a, "istisna", f"{type(hata).__name__}: {hata}")
         raise
-    _kaydet(argv, a, rc, yansi.ilk.split("\n")[0] if rc else "")
+    # Hata satırı `tansu <komut>: ` ile başlar; önündeki uyarı satırları (ör. FutureWarning) kayda girmez.
+    onek = f"tansu {a.komut}: "
+    satirlar = yansi.metin.splitlines()
+    hata = next(
+        (s for s in satirlar if s.startswith(onek)), satirlar[0] if satirlar else ""
+    )
+    _kaydet(argv, a, rc, hata if rc else "")
     return rc
 
 

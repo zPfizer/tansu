@@ -51,7 +51,7 @@ The project has one Python environment: the `.venv` of the main checkout (Python
 - Change no GitHub issue, label, milestone or setting other than the run's own PRs.
 - CI on Windows: the `testler` job of `ci` runs the `ruff` lint, the `ruff` format check and `pytest`. `testler` is a required check on `yeniden-kurulus`. On a PR that changes only `.md` files, its steps skip and the check passes. `denetim` runs the public-repository scan and the PR claim check on every PR.
 - If a literal Tansu rule gives zero setups on real data, put the count in the first line and offer a tuning range. Do not merge a default that gives zero setups.
-- Committed tests use synthetic price series only. Never commit İş Yatırım data. Golden tests read the data folder (section "Ortam ve teslim") and skip when it holds no snapshot.
+- Committed tests use synthetic price series only. Never commit İş Yatırım data. A test writes only in its temporary folders (`tmp_path`), never in the working copy: not even one line in `kayit/tansu.log`. Golden tests read the data folder (section "Ortam ve teslim") and skip when it holds no snapshot.
 - Keep Tansu quotes, tweet ids, brain paths and local paths out of Git until Appendix B #12 is decided. `tests/test_acik_depo.py` scans every tracked file, also encoded PowerShell commands.
 - No new package without Levent's approval. Python 3.14, UTF-8, `-X utf8`, the existing `.venv`.
 - A blocked step (two different fixes failed): record cause and evidence in `kanit/acik-sorular.md`, skip the dependent work, continue.

@@ -75,6 +75,7 @@ Levent 31.10.2026: "37 bulguyu bağımlılık sırasına göre sıralayıp hepsi
 - T-7, yapılmamış komutlar (31.10.2026): `onayla`, `tara` ve `durum` 2 koduyla "henüz yapılmadı" der. Kusur değil, SPEC 12 sırasıdır; bu işte kod değişmedi, `README.md` ve `AGENTS.md` bunları "henüz yapılmadı" diye işaretler.
 - T-8, eski belgeler (31.10.2026): `README.md` yapılmamış komutları çalışıyor gösteriyordu ve `TANSU_VERI`'yi anmıyordu; bu dosyanın eski bir satırı SPEC 3.8'in "`veri/` altında" dediğini yazıyordu. Durum: düzeltildi.
 - Bilinen, düzeltilmeyen maddeler (Levent yetkisiyle beyin kararı 7, 01.11.2026): `requirements.lock.txt` paket özeti (hash) taşımaz, `pip` indirilen dosyayı denetlemez; yerel depoda `git filter-branch`'ten kalan `refs/original` ve `refs/original-2` durur (denetimin gizli taraması onlarda 0 bulgu verdi). İkisi de bu işte değişmedi. `sina` ve `ayarla` kilit tutmaz; `durum.gec` yazmadan hemen önce `durum.csv`'yi yeniden okur, kayıp güncelleme penceresi kısadır.
+- PR 285 inceleme notları (01.11.2026, bağımsız inceleme `NOTLU GEÇTİ`): (a) `tests/test_baska_klasor.py` her pytest koşusunda deponun `kayit/tansu.log`una bir satır ekliyordu; (b) UTF-8 olmayan ya da okunamayan ayar dosyası hata dökümü veriyordu; (c) `veri_kimligi`nin biçimi denetlenmiyordu (`../disari`, `20261028`, boş değer, sayı); (d) koşu kaydı ilk hata satırını değil ilk stderr satırını yazıyordu, bu bir uyarı olabilir; (e) `veri.yedekle` eski yedeği yeni kopyayı adlandırmadan önce siliyordu, arada kesilen koşu o görüntüyü yedeksiz bırakıyordu. Durum: düzeltildi (karar "Verilen kararlar", kanıt `kanit/denetim-duzeltme.md` "Takip"). Bilinen, düzeltilmeyen: `--help` koşusu kayda girmez (argparse yardımı yazıp çıkar); zorla kapatılan bir koşu `dosya.atomik`'in rastgele adlı `.tmp` dosyasını hedefin yanında bırakabilir.
 
 ## Verilen kararlar
 
@@ -87,6 +88,15 @@ Denetim 31.10.2026 düzeltmeleri, 01.11.2026, Levent yetkisiyle beyin kararı. L
 5. T-6: her koşu `kayit/tansu.log`'a (Git'te değil) bir satır yazar. Durum: uygulandı.
 6. T-7: bu işte yeni `onayla`, `tara` ya da `durum` yok (SPEC 12 sırası). `README.md` onları "henüz yapılmadı" diye işaretler. Satır 99'daki kullanılmayan eski kod, ancak bu dosya onu ajan kararı olarak kaydetmişse ve `git grep` `tansu/`, `tests/` ya da `kanit/` içinde kullanıcı bulmazsa silinir. Durum: uygulandı; yalnız `gostergeler.deger_kaydi` silindi (ayrıntı "Mimari turlarının açık soruları").
 7. Ek: `dosya.atomik` aynı klasörde benzersiz bir geçici ad kullanır (iki eşzamanlı `sina` aynı `<dosya>.tmp`'yi paylaşmaz); `tansu veri` kilidini tutarken çöken koşuların eski `_gecici-*` klasörlerini siler. Paket özeti eklenmez, `refs/original*` silinmez; ikisi bilinen madde olarak kaydedildi. Durum: uygulandı.
+
+Denetim takibi (PR 285 inceleme notları), 01.11.2026, Levent yetkisiyle beyin kararı; ajan uyguladı:
+
+- (a) Test yalnız geçici klasörlere yazar. `tests/test_baska_klasor.py` `-m tansu` koşusunu deponun geçici bir kopyasında yapar; deponun `kayit/tansu.log`u değişmez. Durum: uygulandı.
+- (b) Okunamayan ya da bozuk ayar dosyası (geçersiz JSON, nesne değil, UTF-8 değil, okunamıyor) `tansu <komut>:` ile başlayan, dosyayı söyleyen tek satır ve 1 kodu verir. Durum: uygulandı.
+- (c) `veri_kimligi` `YYYYMMDD-HHMM` biçiminde olmalıdır (`veri.kimlik_gecerli`); başka değer dosyayı söyleyen tek satırla `veri` ve `yedekle`yi durdurur. Budama ve `yedekle` yalnız geçerli kimlikleri kullanır: `ag/` altında adı geçerli kimlik olmayan klasör (`2019-arsiv`, `<kimlik> - Kopya`) görüntü sayılmaz, budanmaz ve en yeni görüntü seçilmez (PR 286 incelemesi not 1). Durum: uygulandı.
+- (d) Koşu kaydı ilk hata satırını (`tansu <komut>: `) yazar; önündeki uyarı satırı kayda girmez. Böyle satır yoksa ilk stderr satırını yazar (PR 286 incelemesi not 2). Durum: uygulandı.
+- (e) `veri.yedekle` eski yedeği önce `_eski-<kimlik>` adıyla kenara alır, denetlenen yeni kopya yerine geçince siler; kesilen koşudan sonra sonraki koşu eskiyi yerine geri koyar. UTF-8 olmayan ya da yapısı bozuk `manifest.json` (nesne değil, `dosyalar` yok) döküm vermez, "manifest bozuk" `VeriHatasi`'dır: yedekteki bozuk kopya yeniden kopyalanır (PR 286 incelemesi not 3). Durum: uygulandı.
+- Yerel SPEC yaması bu işin birleşmesinden sonra `yeniden-kurulus` ağacındaki bir oturumda uygulanır. Durum: bekliyor (sonraki paragraf).
 
 Yerel SPEC yaması: bu iş başka bir çalışma ağacında koştu ve bir kanca o oturumun `yeniden-kurulus` ağacındaki `docs/SPEC.md`'ye yazmasını durdurdu (01.11.2026). SPEC 3.8, satır 167 ve bölüm 7 değişiklikleri yama olarak hazırlandı; başlık satırları değişmez. Durum: Levent ya da `yeniden-kurulus` klasöründeki bir oturum uygulayacak.
 

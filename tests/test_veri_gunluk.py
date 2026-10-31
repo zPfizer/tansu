@@ -157,26 +157,38 @@ def test_veri_budamasi_ayarin_goruntusunu_korur_yarim_gecicileri_siler(
     monkeypatch, tmp_path, capsys
 ):
     for i in range(11):
-        (tmp_path / "ag" / f"2020010{i // 10}-00{i:02d}").mkdir(parents=True)
-    (tmp_path / "ag" / "_gecici-20200102-0000").mkdir()
+        (tmp_path / "ag" / f"2020010{i // 10 + 1}-00{i:02d}").mkdir(parents=True)
+    (tmp_path / "ag" / "_gecici-20200103-0000").mkdir()
     ayarlar = tmp_path / "stratejiler" / "ayarlar"
     ayarlar.mkdir(parents=True)
     (ayarlar / "gartley.json").write_text(
-        '{"veri_kimligi": "20200100-0000"}', encoding="utf-8"
+        '{"veri_kimligi": "20200101-0000"}', encoding="utf-8"
     )
     sahte_evren(monkeypatch)
     assert main(["veri", "--kok", str(tmp_path)]) == 0
     assert "silinen eski görüntü: 1" in capsys.readouterr().out
-    assert (tmp_path / "ag" / "20200100-0000").is_dir()
+    assert (tmp_path / "ag" / "20200101-0000").is_dir()
     assert len(list((tmp_path / "ag").glob("2*"))) == 11
     assert not list((tmp_path / "ag").glob("_gecici-*"))
+
+
+def test_budama_ve_son_goruntu_yalniz_gecerli_kimlikleri_gorur(tmp_path):
+    ag = tmp_path / "ag"
+    for gun in range(1, 12):
+        (ag / f"202001{gun:02d}-1800").mkdir(parents=True)
+    yabancilar = ["2019-arsiv", "20200111-1800 - Kopya"]
+    for ad in yabancilar:
+        (ag / ad).mkdir()
+    assert komut.goruntuleri_buda(tmp_path) == ["20200101-1800"]
+    assert all((ag / ad).is_dir() for ad in yabancilar)
+    assert komut._son_kimlik(tmp_path) == "20200111-1800"
 
 
 def test_veri_komutu_sembol_tablosu_yazar_ve_on_goruntu_tutar(
     monkeypatch, tmp_path, capsys
 ):
     for i in range(11):
-        (tmp_path / "ag" / f"2020010{i // 10}-00{i:02d}").mkdir(parents=True)
+        (tmp_path / "ag" / f"2020010{i // 10 + 1}-00{i:02d}").mkdir(parents=True)
     monkeypatch.setattr(kaynak, "IsYatirim", SahteKaynak)
     monkeypatch.setattr(
         kaynak, "sirket_kodlari", lambda: pd.Series(["AKBNK", "GARAN", "SOKE", "TRALT"])

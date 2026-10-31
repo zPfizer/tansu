@@ -18,6 +18,7 @@ import pandas as pd
 from tansu.kaynak import KaynakHatasi
 
 ISTANBUL = ZoneInfo("Europe/Istanbul")
+KIMLIK_BICIMI = "%Y%m%d-%H%M"  # anlık görüntü klasörünün adı
 BASLANGIC = dt.date(2010, 1, 1)
 OLAY_TOLERANS = 0.005  # TASARIM 5.1: olay denetiminde %0,5
 LIMIT_TOLERANS = 0.005  # TASARIM 5.1: karantina için limit aşımı payı
@@ -371,7 +372,7 @@ def indir(
     `borsapy` verilirse faiz ve sektör tabloları da anlık görüntüye girer; boş faiz serisi hatadır.
     `kapanan` verilirse kanıt yayın öncesinde manifeste girer (TASARIM 4)."""
     simdi = simdi or dt.datetime.now(ISTANBUL)
-    kimlik = simdi.strftime("%Y%m%d-%H%M")
+    kimlik = simdi.strftime(KIMLIK_BICIMI)
     ag = Path(kok) / "ag"
     hedef, gecici = ag / kimlik, ag / f"_gecici-{kimlik}"
     if hedef.exists():
@@ -443,17 +444,18 @@ def indir(
 def denetle(klasor: Path, kimlik: str) -> dict:
     """Görüntü klasörünü manifestine göre doğrular, manifesti döndürür; eksik ya da uyuşmayan dosya VeriHatasi'dır."""
     try:
-        metin = (klasor / "manifest.json").read_text(encoding="utf-8")
+        ham = (klasor / "manifest.json").read_bytes()
     except FileNotFoundError:
         raise VeriHatasi(
             f"manifest yok: {kimlik}; görüntüyü yedekten geri yükle (`tansu yedekle <veri kökü> --kok <yedek>`, "
             "docs/veri-envanteri.md) ya da `tansu veri` çalıştır"
         ) from None
     try:
-        manifest = json.loads(metin)
-    except json.JSONDecodeError as hata:
+        manifest = json.loads(ham.decode("utf-8"))
+        dosyalar = manifest["dosyalar"].items()
+    except (ValueError, TypeError, KeyError, AttributeError) as hata:
         raise VeriHatasi(f"manifest bozuk: {kimlik} ({hata})") from hata
-    for ad, ozet in manifest["dosyalar"].items():
+    for ad, ozet in dosyalar:
         try:
             gercek_ozet = _sha256(klasor / ad)
         except FileNotFoundError as hata:
@@ -466,29 +468,50 @@ def denetle(klasor: Path, kimlik: str) -> dict:
 def yedekle(kimlik: str, kok: Path, hedef: Path) -> str:
     """`kok/ag/<kimlik>`i `hedef/ag/<kimlik>`e kopyalar; sağlam yedek varsa dokunmaz.
 
-    Kopya geçici klasörde doğrulanır, sonra eski yedeğin yerine geçer: bozuk kaynak yedeği silmez."""
+    Kopya geçici klasörde doğrulanır, sonra eski yedeğin yerine geçer: bozuk kaynak yedeği silmez. Eski yedek, yeni
+    kopya yerine geçene kadar `_eski-<kimlik>` adıyla kenarda durur; kesilen koşudan sonra yerine geri konur."""
     kaynak = Path(kok) / "ag" / kimlik
     if not kaynak.is_dir():
         raise VeriHatasi(f"kaynak görüntü yok: {kaynak}")
     yer = Path(hedef) / "ag" / kimlik
+    gecici, eski = yer.with_name(f"_gecici-{kimlik}"), yer.with_name(f"_eski-{kimlik}")
+
+    def eskiyi_geri_koy():
+        if eski.exists() and not yer.exists():
+            os.replace(eski, yer)
+
+    eskiyi_geri_koy()
+    shutil.rmtree(gecici, ignore_errors=True)
+    shutil.rmtree(eski, ignore_errors=True)
     try:
         denetle(yer, kimlik)
     except VeriHatasi:
         pass
     else:
         return "yedekte aynı"
-    gecici = yer.with_name(f"_gecici-{kimlik}")
-    shutil.rmtree(gecici, ignore_errors=True)
     try:
         shutil.copytree(kaynak, gecici)
         denetle(gecici, kimlik)
         if yer.exists():
-            shutil.rmtree(yer)
+            os.replace(yer, eski)
         os.replace(gecici, yer)
     except BaseException:
         shutil.rmtree(gecici, ignore_errors=True)
+        eskiyi_geri_koy()
         raise
+    shutil.rmtree(eski, ignore_errors=True)
     return "kopyalandı"
+
+
+def kimlik_gecerli(kimlik) -> bool:
+    """`kimlik`, `indir`in yazdığı görüntü adı biçiminde mi (`KIMLIK_BICIMI`)."""
+    try:
+        return (
+            dt.datetime.strptime(kimlik, KIMLIK_BICIMI).strftime(KIMLIK_BICIMI)
+            == kimlik
+        )
+    except TypeError, ValueError:
+        return False
 
 
 def oku(kimlik, kok) -> Anlik:
