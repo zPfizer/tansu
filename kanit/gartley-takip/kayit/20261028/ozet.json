@@ -1,0 +1,46 @@
+{
+ "son_gun": "2026-10-28",
+ "baslangic": "2026-10-01",
+ "sermaye_tl": 100000.0,
+ "ozkaynak_tl": 102428,
+ "getiri_yuzde": 2.43,
+ "faiz_geliri_tl": 2428,
+ "islem_kari_tl": 0,
+ "en_iyi_uc_haric_islem_kari_tl": 0,
+ "yalniz_nakit_ozkaynak_tl": 102428,
+ "en_kotu_dusus_yuzde": 0.0,
+ "sinyal": 0,
+ "dolan_emir": 0,
+ "alinan_islem": 0,
+ "bekleyen_emir": 0,
+ "acik_pozisyon": 0,
+ "kasanin_atladigi": {},
+ "kiyas": {
+  "xu100_son": 93457,
+  "faiz_son": 102862,
+  "xu100_dusus_yuzde": -10.66
+ },
+ "faiz_son_degisim": {
+  "tarih": "2026-10-23",
+  "yuzde": 36.0
+ },
+ "ayar_sha256": "118ad754930a67cb70f4ace06de0981142e1a5539dcdfe15ca6e2eb0d43e32e6",
+ "para_py_sha256": "95dfd8a9774e61a4be56087b3d106b7de56483c81ae67fb4a0e9dc51a130dd83",
+ "tansu_commit": "29f06d721039b51e184bd221f36fffa2925d5139",
+ "tansu_ve_para_dosyalari_temiz": true,
+ "veri_kimligi": "20261030-0106",
+ "veri_fiyat_sha256": "b6394c25d2690249c57f1dd72aee5523038976814df9dd6e4160f4ad1186cf5d",
+ "veri_baslangici": "2024-01-01",
+ "inmeyen_sembol": 0,
+ "bos_sembol": 179,
+ "kaynak_gunu_hatasi": [
+  "2026-05-21"
+ ],
+ "atlanan_kaynak_gunleri": {
+  "CITAS": [
+   "2026-08-18",
+   "2026-08-19",
+   "2026-08-20"
+  ]
+ }
+}
