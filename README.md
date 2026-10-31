@@ -22,9 +22,9 @@ python -m venv .venv
 | `tansu tara` | Akşam taraması: `rapor/sinyal/<tarih>.md`. |
 | `tansu durum` | Stratejilerin sınıfı ve durumu. |
 
-Komutlar PowerShell ve Bash'te her klasörden `~\Desktop\TANSU\.venv\Scripts\python.exe -X utf8 -m tansu <komut>`
+Komutlar PowerShell ve Bash'te her klasörden `~/Desktop/TANSU/.venv/Scripts/python.exe -X utf8 -m tansu <komut>`
 biçiminde çalışır. `tansu`, `stratejiler/` ve `rapor/` klasörlerini kendi kökünde okur ve yazar. Kökte kısa
-yorumlayıcı yolu `.venv\Scripts\python.exe`, çalışma ağacında `..\..\..\.venv\Scripts\python.exe`'dir (`AGENTS.md`, "Commands").
+yorumlayıcı yolu `.venv/Scripts/python.exe`, çalışma ağacında `../../../.venv/Scripts/python.exe`'dir (`AGENTS.md`, "Commands").
 
 Yerel veri, görüntüler ve yeniden indirme zamanı: `docs/veri-envanteri.md`.
 
