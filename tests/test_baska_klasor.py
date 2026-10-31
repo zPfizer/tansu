@@ -2,7 +2,7 @@
 
 Komut proje dosyalarını kendi kökünden okur ve çalışılan klasöre dosya yazmaz. Yalnız `sina --help` satırı kurulu
 (editable) kopyayı yükler: kurulum eski projeyi gösterirse `sina` komutu yoktur. Öteki `-m tansu` satırı bu
-kopyayı `PYTHONPATH` ile yükler.
+kopyayı `PYTHONPATH` ile yükler; veri kökü olmadığı için proje dosyalarını okur ve yazmadan durur.
 """
 
 import os
@@ -29,9 +29,9 @@ KOK = Path(__file__).resolve().parents[1]
         ),
         (
             ["-m", "tansu", "sina", "gartley"],
-            {"PYTHONPATH": str(KOK)},
+            {"PYTHONPATH": str(KOK), "TANSU_VERI": "veri-yok"},
             1,
-            "anlık görüntü yok",
+            "veri kökü yok",
         ),
         pytest.param(
             ["-m", "pytest", f"{KOK}/tests/test_durum.py", "-q"],
