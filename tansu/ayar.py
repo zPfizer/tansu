@@ -253,6 +253,10 @@ def _json(yol: Path) -> dict:
         icerik = json.loads(yol.read_text(encoding="utf-8"))
     except json.JSONDecodeError as hata:
         raise veri.VeriHatasi(f"{yol}: geçersiz JSON ({hata})") from hata
+    except UnicodeDecodeError as hata:
+        raise veri.VeriHatasi(f"{yol}: UTF-8 değil ({hata})") from hata
+    except OSError as hata:
+        raise veri.VeriHatasi(f"{yol}: okunamadı ({hata.strerror})") from hata
     if not isinstance(icerik, dict):
         raise veri.VeriHatasi(f"{yol}: JSON nesnesi değil")
     return icerik
@@ -284,10 +288,20 @@ def oku(strateji: Strateji, kok: Path, *, gerekli: bool = False) -> Okunan | Non
 
 
 def veri_kimlikleri(kok: Path) -> frozenset[str]:
-    """`<kok>/*.json` ayarlarının `veri_kimligi` değerleri: budama bunları silmez, yedek bunları alır."""
-    return frozenset(
-        k for yol in kok.glob("*.json") if (k := _json(yol).get("veri_kimligi"))
-    )
+    """`<kok>/*.json` ayarlarının `veri_kimligi` değerleri: budama bunları silmez, yedek bunları alır.
+
+    Değer `veri.indir`in yazdığı biçimde olmalı; başkası, dosyayı söyleyen VeriHatasi'dır."""
+    kimlikler = set()
+    for yol in kok.glob("*.json"):
+        k = _json(yol).get("veri_kimligi")
+        if k is None:
+            continue
+        if not veri.kimlik_gecerli(k):
+            raise veri.VeriHatasi(
+                f"{yol}: veri_kimligi = {k!r} geçersiz; biçim YYYYMMDD-HHMM"
+            )
+        kimlikler.add(k)
+    return frozenset(kimlikler)
 
 
 def kod_surumu() -> str:

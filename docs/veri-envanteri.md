@@ -20,7 +20,8 @@
   artımlıdır.
 - `tansu veri` en yeni 10 görüntüyü ve `stratejiler/ayarlar/*.json` dosyalarındaki `veri_kimligi`nin andığı her
   görüntüyü tutar; ötekileri ve çöken koşuların `ag/_gecici-*` klasörlerini siler (SPEC 3.8, `SAKLANAN_GORUNTU`).
-  Korunan kimlikler indirmeden önce okunur. Sınır: yalnız komutun yüklediği kopyanın ayar dosyaları okunur; başka
+  Korunan kimlikler indirmeden önce okunur. Bir ayar dosyası okunamazsa ya da `veri_kimligi`si `YYYYMMDD-HHMM`
+  biçiminde değilse komut dosyayı söyleyen tek satırlık hatayla durur; hiçbir şey indirmez ve silmez. Sınır: yalnız komutun yüklediği kopyanın ayar dosyaları okunur; başka
   bir çalışma kopyasının andığı görüntü korunmaz (denetim 31.10.2026 T-1).
 - Artımlı önbellek: `onbellek/fiyat-20190101/`, sembol başına `<SEMBOL>.fiyat.parquet` ve `<SEMBOL>.olaylar.json`.
   `kaynak.Artimli` kaynaktan önbellekteki sondan 10. işlem gününden bugüne kadarını ister: son koşudan beri gelen günler
@@ -67,7 +68,9 @@ dışında bir kopyası tutulur.
 - Yedek: `<py> -X utf8 -m tansu yedekle <hedef>`. Komut, ayar dosyalarındaki her `veri_kimligi` görüntüsünü ve en
   yeni görüntüyü `TANSU-veri/ag/`'den `<hedef>/ag/`'ye kopyalar. Her kopya önce `<hedef>/ag/_gecici-<kimlik>`
   klasörüne yazılır, `manifest.json`'daki SHA-256 özetleriyle denetlenir, sonra adını alır. Bozuk bir kaynak iyi bir
-  yedeğin yerine geçmez. Yedekte denetimden geçen kopya varsa komut onu yeniden kopyalamaz. Her görüntü için bir satır
+  yedeğin yerine geçmez. Eski yedek, yeni kopya yerine geçene kadar `<hedef>/ag/_eski-<kimlik>` adıyla kenarda durur
+  ve ancak sonra silinir; koşu bu arada kesilirse sonraki koşu onu yerine geri koyar. Ayar dosyası okunamazsa ya da
+  `veri_kimligi` geçersizse komut hiçbir şey kopyalamadan tek satırlık hatayla durur. Yedekte denetimden geçen kopya varsa komut onu yeniden kopyalamaz. Her görüntü için bir satır
   yazar; bir görüntü kopyalanamazsa hata satırı yazar, ötekilere devam eder ve 1 koduyla çıkar.
 - `<hedef>` var olan bir klasör olmalıdır. Komut onu açmaz: takılı olmayan bir disk ya da yanlış yazılmış bir yol
   başka bir yerde klasör açmaz, hata verir.

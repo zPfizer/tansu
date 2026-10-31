@@ -1,6 +1,8 @@
 import hashlib
 import json
+import os
 import shutil
+from pathlib import Path
 
 import pytest
 
@@ -101,3 +103,34 @@ def test_geri_yukleme_ayni_komutla_roller_degisince_olur(kurulum, capsys):
     assert yedekle(yedek, kaynak) == 0
     assert f"{KORUNAN}: kopyalandı" in capsys.readouterr().out
     assert veri.denetle(kaynak / "ag" / KORUNAN, KORUNAN)["kimlik"] == KORUNAN
+
+
+def test_kesilen_yer_degistirme_eski_yedegi_silmez(kurulum, monkeypatch, capsys):
+    kaynak, yedek = kurulum
+    assert yedekle(kaynak, yedek) == 0
+    eski = yedek / "ag" / SON / "fiyat.parquet"
+    eski.write_bytes(b"eski bozuk yedek")
+    replace = os.replace
+
+    def kesik(nereden, nereye):
+        if Path(nereden).name.startswith("_gecici-"):
+            raise OSError("elektrik kesildi")
+        replace(nereden, nereye)
+
+    monkeypatch.setattr(os, "replace", kesik)
+    assert yedekle(kaynak, yedek) == 1
+    assert "elektrik kesildi" in capsys.readouterr().err
+    assert eski.read_bytes() == b"eski bozuk yedek"
+    assert sorted(p.name for p in (yedek / "ag").iterdir()) == [KORUNAN, SON]
+
+
+def test_kesilen_onceki_kosunun_artiklarini_toparlar(kurulum, capsys):
+    kaynak, yedek = kurulum
+    assert yedekle(kaynak, yedek) == 0
+    ag = yedek / "ag"
+    os.replace(ag / SON, ag / f"_eski-{SON}")
+    shutil.copytree(kaynak / "ag" / SON, ag / f"_gecici-{SON}")
+    capsys.readouterr()
+    assert yedekle(kaynak, yedek) == 0
+    assert f"{SON}: yedekte aynı" in capsys.readouterr().out
+    assert sorted(p.name for p in ag.iterdir()) == [KORUNAN, SON]

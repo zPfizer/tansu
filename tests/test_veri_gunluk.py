@@ -157,17 +157,17 @@ def test_veri_budamasi_ayarin_goruntusunu_korur_yarim_gecicileri_siler(
     monkeypatch, tmp_path, capsys
 ):
     for i in range(11):
-        (tmp_path / "ag" / f"2020010{i // 10}-00{i:02d}").mkdir(parents=True)
-    (tmp_path / "ag" / "_gecici-20200102-0000").mkdir()
+        (tmp_path / "ag" / f"2020010{i // 10 + 1}-00{i:02d}").mkdir(parents=True)
+    (tmp_path / "ag" / "_gecici-20200103-0000").mkdir()
     ayarlar = tmp_path / "stratejiler" / "ayarlar"
     ayarlar.mkdir(parents=True)
     (ayarlar / "gartley.json").write_text(
-        '{"veri_kimligi": "20200100-0000"}', encoding="utf-8"
+        '{"veri_kimligi": "20200101-0000"}', encoding="utf-8"
     )
     sahte_evren(monkeypatch)
     assert main(["veri", "--kok", str(tmp_path)]) == 0
     assert "silinen eski görüntü: 1" in capsys.readouterr().out
-    assert (tmp_path / "ag" / "20200100-0000").is_dir()
+    assert (tmp_path / "ag" / "20200101-0000").is_dir()
     assert len(list((tmp_path / "ag").glob("2*"))) == 11
     assert not list((tmp_path / "ag").glob("_gecici-*"))
 

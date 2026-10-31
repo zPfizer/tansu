@@ -146,6 +146,53 @@ $ <py> -m ruff format --check --no-cache tansu tests kurulum
 Atlanan tek test `tests/test_altin_gartley.py:19` "yerel altın olgu veya veri yok": altın olgular yalnız
 `yeniden-kurulus` ağacındadır. Yavaş test sayısı 16 (`README.md`).
 
+## Takip: PR 285 inceleme notları (01.11.2026)
+
+Dal: `claude/denetim-notlari-66a71f` → `yeniden-kurulus`, taban `bcaf723`. Kararlar: `kanit/acik-sorular.md` "Denetim
+takibi". Çıktı dosyaları `%TEMP%\tansu-denetim-notlar\` altındadır (Git'te değil).
+
+| Not | Değişiklik | Test |
+|---|---|---|
+| (a) | `tests/test_baska_klasor.py` `-m tansu sina` koşusunu deponun geçici kopyasında yapar. | `test_tansu_kendi_kokunu_okur_ve_kaydini_oraya_yazar` |
+| (b) | `ayar._json` UTF-8 olmayan ve okunamayan dosyayı `VeriHatasi` yapar. | `test_okunamayan_ayar_dosyasi_tek_satir_hata_verir` (6) |
+| (c) | `veri.kimlik_gecerli`; `ayar.veri_kimlikleri` geçersiz kimlikte dosyayı söyleyerek durur. | `test_gecersiz_veri_kimligi_dosyayi_soyler_ve_kopyalamaz` (8) |
+| (d) | `main` kayda ilk `tansu <komut>: ` satırını yazar. | `test_kayit_uyari_satirini_degil_hata_satirini_yazar` |
+| (e) | `veri.yedekle` eski yedeği `_eski-<kimlik>` adıyla kenara alır, sonra siler. | `test_kesilen_yer_degistirme_eski_yedegi_silmez`, `test_kesilen_onceki_kosunun_artiklarini_toparlar` |
+
+Değişen var olan test: `test_veri_budamasi_ayarin_goruntusunu_korur_yarim_gecicileri_siler` takvimde olmayan
+`20200100-*` kimlikleri yerine `20200101-*` kullanır; (c) denetimi ayar dosyasındaki `20200100-0000`'ı reddeder.
+
+Kırmızı: `bcaf723`'ün `git archive` kopyasında, yeni test dosyalarıyla:
+
+```
+$ <py> -X utf8 -m pytest tests/test_komut.py tests/test_yedekle.py "tests/test_baska_klasor.py::test_tansu_kendi_kokunu_okur_ve_kaydini_oraya_yazar" -p no:cacheprovider -q
+16 failed, 8 passed in 2.36s
+```
+
+Geçen 8: `test_yardim_alti_komutu_listeler`, PR 285'in 5 yedek testi, (a) testi ve
+`test_okunamayan_ayar_dosyasi_tek_satir_hata_verir[klasor-sina]` (`sina`'nın eski `PermissionError` kolu bunu zaten
+tek satır yapıyordu). (a)'nın düzeltmesi testin kendisindedir; kanıtı gerçek kayıttaki satır sayısıdır:
+
+```
+bcaf723 kopyası, eski tests/test_baska_klasor.py:  kayit/tansu.log yok -> 8 passed -> 1 satır
+                                                   ("sina gartley rc=1 goruntu=- tansu sina: veri kökü yok: ...")
+bu dal, yeni tests/test_baska_klasor.py:           kayit/tansu.log 9 satır -> 8 passed -> 9 satır
+```
+
+Gerçek ayar dosyaları yeni denetimden geçer: `ayar.veri_kimlikleri(Path('stratejiler/ayarlar'))` →
+`['20261028-2353']`.
+
+Yeşil, çalışma ağacının kökünde:
+
+```
+$ <py> -X utf8 -m pytest -p no:cacheprovider -q
+523 passed, 1 skipped, 2 warnings in 103.92s (0:01:43)
+$ <py> -m ruff check --no-cache tansu tests kurulum
+All checks passed!
+$ <py> -m ruff format --check --no-cache tansu tests kurulum
+58 files already formatted
+```
+
 ## Yapılmayanlar
 
 - Yerel `docs/SPEC.md` (3.8, satır 167, bölüm 7) bu ağaçtan yazılamadı; yama hazır, `yeniden-kurulus` ağacında

@@ -278,14 +278,13 @@ def ayristirici() -> argparse.ArgumentParser:
 
 
 class _Yansi:
-    """stderr'e yazılanı geçirir; kayıt için ilk satırı tutar."""
+    """stderr'e yazılanı geçirir; kayıt için metni tutar."""
 
     def __init__(self, hedef):
-        self.hedef, self.ilk = hedef, ""
+        self.hedef, self.metin = hedef, ""
 
     def write(self, metin: str) -> int:
-        if "\n" not in self.ilk:
-            self.ilk += metin
+        self.metin += metin
         return self.hedef.write(metin)
 
     def __getattr__(self, ad):
@@ -320,7 +319,10 @@ def main(argv=None) -> int:
     except BaseException as hata:
         _kaydet(argv, a, "istisna", f"{type(hata).__name__}: {hata}")
         raise
-    _kaydet(argv, a, rc, yansi.ilk.split("\n")[0] if rc else "")
+    # Hata satırı `tansu <komut>: ` ile başlar; önündeki uyarı satırları (ör. FutureWarning) kayda girmez.
+    onek = f"tansu {a.komut}: "
+    hata = next((s for s in yansi.metin.splitlines() if s.startswith(onek)), "")
+    _kaydet(argv, a, rc, hata if rc else "")
     return rc
 
 
