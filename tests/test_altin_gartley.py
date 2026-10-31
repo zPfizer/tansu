@@ -11,16 +11,15 @@ from tansu.stratejiler import gartley
 from tests.sentetik import SABIT
 
 ALTIN = Path("tests/altin/gartley.csv")
-VERI = Path("veri")
 TOLERANS = 0.01  # yfinance ile İş Yatırım farkı için göreli pay
 
 
-def test_soke_gartley_seviyeleri_yerel_veride_bulunur():
-    if not ALTIN.exists() or not list((VERI / "ag").glob("2*")):
+def test_soke_gartley_seviyeleri_yerel_veride_bulunur(gercek_veri):
+    if not ALTIN.exists() or not list((gercek_veri / "ag").glob("2*")):
         pytest.skip("yerel altın olgu veya veri yok")
     olgu = pd.read_csv(ALTIN).set_index("nokta")["fiyat"]
     gonderi = pd.Timestamp(pd.read_csv(ALTIN)["gonderi_tarihi"].iloc[0])
-    gun = veri.gunluk(son_anlik(VERI), "SOKE")
+    gun = veri.gunluk(son_anlik(gercek_veri), "SOKE")
     s = gartley.STRATEJI.sinyal(gun, SABIT["gartley"])  # seviye olgusu; kapı ayrı
     once = s[s["giris"] & (s.index <= gonderi)]
     assert len(once), "gönderi tarihine kadar SOKE kurulumu yok"
