@@ -10,7 +10,7 @@ from typing import NamedTuple, assert_never
 import numpy as np
 import pandas as pd
 
-from tansu import ayar, montecarlo, sinama, veri
+from tansu import ayar, dosya, montecarlo, sinama, veri
 from tansu.strateji import Strateji
 
 RAPOR_KOKU = Path("rapor")
@@ -657,11 +657,20 @@ def md_metni(s: Sinama) -> str:
 
 
 def yaz(s: Sinama, kok: Path) -> Path:
+    """Metinler önce bellekte; salt okunur ya da başka programda açık hedef, hiçbir dosya değişmeden PermissionError verir."""
     klasor = kok / s.strateji.ad
+    metinler = {
+        klasor / "islemler.csv": s.gecmis.islemler.to_csv(
+            index=False, lineterminator="\n"
+        ),
+        klasor / "sinama.html": html_metni(s),
+        klasor / "ozet.md": md_metni(s),
+    }
     klasor.mkdir(parents=True, exist_ok=True)
-    s.gecmis.islemler.to_csv(
-        klasor / "islemler.csv", index=False, encoding="utf-8", lineterminator="\n"
-    )
-    (klasor / "sinama.html").write_text(html_metni(s), encoding="utf-8", newline="\n")
-    (klasor / "ozet.md").write_text(md_metni(s), encoding="utf-8", newline="\n")
+    for yol in metinler:
+        if yol.exists():
+            yol.open("r+b").close()
+    for yol, metin in metinler.items():
+        with dosya.atomik(yol) as gecici:
+            gecici.write_text(metin, encoding="utf-8", newline="\n")
     return klasor / "sinama.html"

@@ -41,3 +41,13 @@ def test_atomik_degistirme_reddedilirse_gecici_dosya_kalmaz_hata_gecer(
         gecici.write_bytes(b"yeni")
     assert yol.read_bytes() == b"eski"
     assert not list(tmp_path.glob("*.tmp"))
+
+
+def test_atomik_es_zamanli_yazanlar_ayri_gecici_dosya_kullanir(tmp_path):
+    yol = tmp_path / "a.txt"
+    with dosya.atomik(yol) as dis, dosya.atomik(yol) as ic:
+        assert dis != ic
+        dis.write_bytes(b"dis")
+        ic.write_bytes(b"ic")
+    assert yol.read_bytes() == b"dis"
+    assert not list(tmp_path.glob("*.tmp"))

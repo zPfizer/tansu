@@ -440,10 +440,19 @@ def indir(
     return kimlik
 
 
-def oku(kimlik, kok) -> Anlik:
-    """Manifesti doğrular; uyuşmazlık VeriHatasi'dır."""
-    klasor = Path(kok) / "ag" / kimlik
-    manifest = json.loads((klasor / "manifest.json").read_text(encoding="utf-8"))
+def denetle(klasor: Path, kimlik: str) -> dict:
+    """Görüntü klasörünü manifestine göre doğrular, manifesti döndürür; eksik ya da uyuşmayan dosya VeriHatasi'dır."""
+    try:
+        metin = (klasor / "manifest.json").read_text(encoding="utf-8")
+    except FileNotFoundError:
+        raise VeriHatasi(
+            f"manifest yok: {kimlik}; görüntüyü yedekten geri yükle (`tansu yedekle <veri kökü> --kok <yedek>`, "
+            "docs/veri-envanteri.md) ya da `tansu veri` çalıştır"
+        ) from None
+    try:
+        manifest = json.loads(metin)
+    except json.JSONDecodeError as hata:
+        raise VeriHatasi(f"manifest bozuk: {kimlik} ({hata})") from hata
     for ad, ozet in manifest["dosyalar"].items():
         try:
             gercek_ozet = _sha256(klasor / ad)
@@ -451,6 +460,41 @@ def oku(kimlik, kok) -> Anlik:
             raise VeriHatasi(f"manifest dosyası eksik: {kimlik}/{ad}") from hata
         if gercek_ozet != ozet:
             raise VeriHatasi(f"manifest uyuşmuyor: {kimlik}/{ad}")
+    return manifest
+
+
+def yedekle(kimlik: str, kok: Path, hedef: Path) -> str:
+    """`kok/ag/<kimlik>`i `hedef/ag/<kimlik>`e kopyalar; sağlam yedek varsa dokunmaz.
+
+    Kopya geçici klasörde doğrulanır, sonra eski yedeğin yerine geçer: bozuk kaynak yedeği silmez."""
+    kaynak = Path(kok) / "ag" / kimlik
+    if not kaynak.is_dir():
+        raise VeriHatasi(f"kaynak görüntü yok: {kaynak}")
+    yer = Path(hedef) / "ag" / kimlik
+    try:
+        denetle(yer, kimlik)
+    except VeriHatasi:
+        pass
+    else:
+        return "yedekte aynı"
+    gecici = yer.with_name(f"_gecici-{kimlik}")
+    shutil.rmtree(gecici, ignore_errors=True)
+    try:
+        shutil.copytree(kaynak, gecici)
+        denetle(gecici, kimlik)
+        if yer.exists():
+            shutil.rmtree(yer)
+        os.replace(gecici, yer)
+    except BaseException:
+        shutil.rmtree(gecici, ignore_errors=True)
+        raise
+    return "kopyalandı"
+
+
+def oku(kimlik, kok) -> Anlik:
+    """Manifesti doğrular; uyuşmazlık VeriHatasi'dır."""
+    klasor = Path(kok) / "ag" / kimlik
+    manifest = denetle(klasor, kimlik)
     ham = json.loads((klasor / "olaylar.json").read_text(encoding="utf-8"))
     olaylar = pd.DataFrame(
         [

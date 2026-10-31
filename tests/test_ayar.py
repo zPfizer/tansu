@@ -1,7 +1,11 @@
 import dataclasses
 import json
+import subprocess
+import sys
+import time
 from collections import Counter
 from itertools import pairwise
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -180,9 +184,91 @@ def test_izgara_disi_varsayilan_reddedilir():
         ayar.Izgara(dataclasses.replace(OYUNCAK, varsayilan={"a": 4, "b": 1}))
 
 
-def json_yaz(kok, icerik):
+@pytest.mark.parametrize("ad", sorted(STRATEJILER))
+def test_her_varsayilan_anahtarin_izinli_deger_kumesi_var(ad):
+    s = STRATEJILER[ad]
+    for k, v in s.varsayilan.items():
+        kume = s.aralik.get(k, s.secenek.get(k))
+        assert kume is not None and v in kume, k
+
+
+def json_yaz(kok, icerik, ad=KESISIM.ad):
     kok.mkdir(parents=True, exist_ok=True)
-    (kok / f"{KESISIM.ad}.json").write_text(json.dumps(icerik), encoding="utf-8")
+    (kok / f"{ad}.json").write_text(json.dumps(icerik), encoding="utf-8")
+
+
+@pytest.mark.parametrize("deger", ["abc", 7, True])
+def test_oku_secenek_disi_el_degerini_reddeder(tmp_path, deger):
+    json_yaz(tmp_path, {"parametreler": {"rr_min": deger}}, ad="gartley")
+    with pytest.raises(veri.VeriHatasi) as hata:
+        ayar.oku(STRATEJILER["gartley"], tmp_path)
+    assert str(tmp_path / "gartley.json") in str(hata.value)
+    assert "rr_min" in str(hata.value) and "kapali" in str(hata.value)
+
+
+@pytest.mark.parametrize("deger", ["kapali", 1.4, 2])
+def test_oku_secenekteki_el_degerini_kabul_eder(tmp_path, deger):
+    json_yaz(tmp_path, {"parametreler": {"rr_min": deger}}, ad="gartley")
+    assert ayar.oku(STRATEJILER["gartley"], tmp_path).parametreler["rr_min"] == deger
+
+
+def test_oku_izgara_ekseninde_bool_degeri_reddeder(tmp_path):
+    json_yaz(tmp_path, {"parametreler": {"teyit_gun": False}})
+    with pytest.raises(veri.VeriHatasi):
+        ayar.oku(KESISIM, tmp_path)
+
+
+def surec_var(pid: int) -> bool:
+    cikti = subprocess.run(
+        ["tasklist", "/FI", f"PID eq {pid}", "/FO", "CSV", "/NH"],
+        capture_output=True,
+        text=True,
+        errors="replace",
+    ).stdout
+    return f'"{pid}"' in cikti
+
+
+ISCI_BETIGI = """
+import os, time
+from concurrent.futures import ProcessPoolExecutor
+from tansu import ayar
+ex = ProcessPoolExecutor(1, initializer=ayar._hazirla, initargs=(None,))
+print(ex.submit(os.getpid).result(), flush=True)
+time.sleep(60)
+"""
+
+
+@pytest.mark.slow
+def test_ebeveyn_zorla_kapaninca_havuz_iscisi_de_kapanir():
+    ebeveyn = subprocess.Popen(
+        [sys.executable, "-X", "utf8", "-c", ISCI_BETIGI],
+        cwd=Path(__file__).resolve().parents[1],
+        stdout=subprocess.PIPE,
+        text=True,
+    )
+    pid = None
+    try:
+        pid = int(ebeveyn.stdout.readline())
+        ebeveyn.kill()
+        ebeveyn.wait()
+        bitis = time.monotonic() + 10
+        while surec_var(pid) and time.monotonic() < bitis:
+            time.sleep(0.2)
+        assert not surec_var(pid), "işçi yetim kaldı"
+    finally:
+        ebeveyn.kill()
+        ebeveyn.stdout.close()
+        if pid is not None and surec_var(pid):
+            subprocess.run(["taskkill", "/F", "/PID", str(pid)], capture_output=True)
+
+
+def test_ayar_dosyalarinin_veri_goruntusu_veri_kokunde_var(gercek_veri):
+    if not (gercek_veri / "ag").exists():
+        pytest.skip("yerel veri yok")
+    ayarlar = Path(__file__).resolve().parents[1] / "stratejiler" / "ayarlar"
+    for yol in sorted(ayarlar.glob("*.json")):
+        kimlik = json.loads(yol.read_text(encoding="utf-8"))["veri_kimligi"]
+        assert (gercek_veri / "ag" / kimlik).is_dir(), f"{yol.name}: {kimlik} yok"
 
 
 @pytest.mark.parametrize(

@@ -55,16 +55,29 @@ def _tek_yazar(kok: Path):
             yol.unlink()
 
 
+def _son_kimlik(kok: Path) -> str:
+    kimlik = max((p.name for p in (kok / "ag").glob("2*")), default=None)
+    if kimlik is None:
+        raise veri.VeriHatasi("anlık görüntü yok: önce `tansu veri` çalıştır")
+    return kimlik
+
+
 def son_anlik(kok: Path) -> veri.Anlik:
     _kok_var(kok)
-    klasorler = sorted(p.name for p in (kok / "ag").glob("2*"))
-    if not klasorler:
-        raise veri.VeriHatasi("anlık görüntü yok: önce `tansu veri` çalıştır")
-    return veri.oku(klasorler[-1], kok)
+    return veri.oku(_son_kimlik(kok), kok)
 
 
-def goruntuleri_buda(kok: Path, saklanan: int = SAKLANAN_GORUNTU) -> list[str]:
-    eskiler = sorted((kok / "ag").glob("2*"))[:-saklanan]
+def goruntuleri_buda(
+    kok: Path, korunan: frozenset[str] = frozenset(), saklanan: int = SAKLANAN_GORUNTU
+) -> list[str]:
+    """En yeni `saklanan` görüntüyü ve ayarların gösterdiklerini (`korunan`) tutar; yarım kalmış `_gecici-*` klasörlerini siler.
+
+    `veri` kilidi altında çalışır. Silinen görüntülerin adlarını döndürür."""
+    for yarim in (kok / "ag").glob("_gecici-*"):
+        shutil.rmtree(yarim)
+    eskiler = [
+        p for p in sorted((kok / "ag").glob("2*"))[:-saklanan] if p.name not in korunan
+    ]
     for klasor in eskiler:
         shutil.rmtree(klasor)
     return [p.name for p in eskiler]
@@ -82,6 +95,8 @@ def _veri(a) -> int:
 
 
 def _indir_ve_yaz(kok: Path) -> None:
+    # Ayarların görüntüleri budanmaz; bozuk ayar dosyası indirmeden önce durdurur.
+    korunan = ayar.veri_kimlikleri(PROJE / ayar.AYAR_KOKU)
     # Evren bütün BIST: bugünkü KAP listesi ve veri başlangıcından beri kapanan kodlar (SPEC 2, 3.4)
     kapanan = kaynak.kapanan_kodlar()
     kapanan = kapanan[~(kapanan["tarih"] < pd.Timestamp(VERI_BASLANGIC))]
@@ -92,7 +107,7 @@ def _indir_ve_yaz(kok: Path) -> None:
         kaynak.IsYatirim(), kok / "onbellek" / f"fiyat-{VERI_BASLANGIC:%Y%m%d}"
     )
     kimlik = veri.indir(semboller, kok, k, bas=VERI_BASLANGIC, kapanan=kapanan)
-    silinen = goruntuleri_buda(kok)
+    silinen = goruntuleri_buda(kok, korunan)
     anlik = veri.oku(kimlik, kok)
     son_seans = anlik.gunler[-1]
     print(
@@ -133,7 +148,11 @@ def _kos(a, *, ayarla: bool) -> int:
                 f"tansu {komut}: {a.ad} {onceki}; önce taslak olmalı", file=sys.stderr
             )
             return 1
-        okunan = None if ayarla else ayar.oku(strateji, ayarlar)
+        okunan = (
+            None
+            if ayarla
+            else ayar.oku(strateji, ayarlar, gerekli=onceki in durum.AYARLI)
+        )
         anlik = son_anlik(a.kok)
         s = rapor.hazirla(
             strateji,
@@ -180,6 +199,31 @@ def _ayarla(a) -> int:
     return _kos(a, ayarla=True)
 
 
+def _yedekle(a) -> int:
+    """Ayarların gösterdiği ve en yeni görüntüyü `hedef`e kopyalar; geri yükleme rollerin yer değiştirmesidir."""
+    try:
+        _kok_var(a.kok)
+        # Klasör açılmaz: takılmamış sürücü ya da yazım hatası başka yerde yedek bırakmasın.
+        if not a.hedef.is_dir():
+            raise veri.VeriHatasi(
+                f"hedef klasör yok: {a.hedef}; sürücüyü tak ya da var olan bir klasör ver"
+            )
+        kimlikler = ayar.veri_kimlikleri(PROJE / ayar.AYAR_KOKU) | {_son_kimlik(a.kok)}
+    except veri.VeriHatasi as hata:
+        print(f"tansu yedekle: {hata}", file=sys.stderr)
+        return 1
+    rc = 0
+    for kimlik in sorted(kimlikler):
+        try:
+            sonuc = veri.yedekle(kimlik, a.kok, a.hedef)
+        except (veri.VeriHatasi, OSError) as hata:
+            print(f"tansu yedekle: {kimlik}: {hata}", file=sys.stderr)
+            rc = 1
+        else:
+            print(f"{kimlik}: {sonuc} ({a.hedef / 'ag' / kimlik})")
+    return rc
+
+
 def _henuz_yok(a) -> int:
     print(f"tansu {a.komut}: henüz yapılmadı (docs/SPEC.md bölüm 12).", file=sys.stderr)
     return 2
@@ -222,12 +266,62 @@ def ayristirici() -> argparse.ArgumentParser:
 
     p = alt.add_parser("durum", help="stratejilerin sınıfı ve durumu")
     p.set_defaults(calistir=_henuz_yok)
+
+    p = alt.add_parser(
+        "yedekle",
+        help="ayarların ve en yeni veri görüntüsünü hedef klasöre kopyala",
+    )
+    p.add_argument("hedef", type=Path, help="var olan klasör, örneğin yedek sürücü")
+    p.add_argument("--kok", type=Path, default=kok, help=argparse.SUPPRESS)
+    p.set_defaults(calistir=_yedekle)
     return ap
 
 
+class _Yansi:
+    """stderr'e yazılanı geçirir; kayıt için ilk satırı tutar."""
+
+    def __init__(self, hedef):
+        self.hedef, self.ilk = hedef, ""
+
+    def write(self, metin: str) -> int:
+        if "\n" not in self.ilk:
+            self.ilk += metin
+        return self.hedef.write(metin)
+
+    def __getattr__(self, ad):
+        return getattr(self.hedef, ad)
+
+
+def _kaydet(argv: list[str], a, rc: int | str, hata: str) -> None:
+    """`kayit/tansu.log`a bir satır: zaman, argümanlar, rc, veri kökündeki en yeni görüntü, ilk hata satırı."""
+    try:
+        goruntu = _son_kimlik(getattr(a, "kok", None) or veri_koku())
+    except veri.VeriHatasi, OSError:
+        goruntu = "-"
+    zaman = dt.datetime.now().isoformat(timespec="seconds")
+    satir = f"{zaman} {' '.join(argv)} rc={rc} goruntu={goruntu} {hata}"
+    try:
+        (PROJE / "kayit").mkdir(exist_ok=True)
+        with (PROJE / "kayit" / "tansu.log").open(
+            "a", encoding="utf-8", newline="\n"
+        ) as f:
+            f.write(satir.replace("\n", " ").rstrip() + "\n")
+    except OSError as hata:
+        print(f"tansu: koşu kaydı yazılamadı: {hata}", file=sys.stderr)
+
+
 def main(argv=None) -> int:
+    argv = sys.argv[1:] if argv is None else list(argv)
     a = ayristirici().parse_args(argv)
-    return a.calistir(a)
+    yansi = _Yansi(sys.stderr)
+    try:
+        with contextlib.redirect_stderr(yansi):
+            rc = a.calistir(a)
+    except BaseException as hata:
+        _kaydet(argv, a, "istisna", f"{type(hata).__name__}: {hata}")
+        raise
+    _kaydet(argv, a, rc, yansi.ilk.split("\n")[0] if rc else "")
+    return rc
 
 
 if __name__ == "__main__":

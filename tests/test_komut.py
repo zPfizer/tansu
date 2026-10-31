@@ -8,5 +8,5 @@ def test_yardim_alti_komutu_listeler(capsys):
         main(["--help"])
     assert cikis.value.code == 0
     yardim = capsys.readouterr().out
-    for komut in ("veri", "sina", "ayarla", "onayla", "tara", "durum"):
+    for komut in ("veri", "sina", "ayarla", "onayla", "tara", "durum", "yedekle"):
         assert komut in yardim

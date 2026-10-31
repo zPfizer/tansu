@@ -19,6 +19,7 @@ __pycache__/
 /rapor/sinyal/
 /kayit/sinyaller.csv
 /kayit/tara.log
+/kayit/tansu.log
 
 # Tansu kaynak içeriği yalnız yerelde. Kamu deposu kararı açık (docs/SPEC.md Ek B #12); geri alınabilir ara kural.
 /docs/SPEC.md
