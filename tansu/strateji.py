@@ -1,7 +1,7 @@
 """Strateji arayüzü (SPEC 4)."""
 
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Literal
 
 import numpy as np
@@ -25,6 +25,8 @@ class Strateji:
     seviye_param: tuple[str, ...]
     cikis: Cikis | None
     hesapla: Callable[[pd.DataFrame, Mapping[str, float | str]], pd.DataFrame]
+    # Izgara ekseni olmayan parametrenin elle verilebilecek değerleri; ayar dosyası bunların dışını reddeder.
+    secenek: Mapping[str, tuple[float | str, ...]] = field(default_factory=dict)
 
     def sinyal(self, gun: pd.DataFrame, p: Mapping[str, float | str]) -> pd.DataFrame:
         return self.hesapla(gun, {**self.varsayilan, **p})

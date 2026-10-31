@@ -115,4 +115,5 @@ STRATEJI = Strateji(
     seviye_param=("stop",),
     cikis=Cikis("dokunus", (("hedef1", 0.5), ("hedef2", 0.5))),
     hesapla=hesapla,
+    secenek={"rr_min": ("kapali", 1.4, 1.5, 2)},  # Ek B #13
 )

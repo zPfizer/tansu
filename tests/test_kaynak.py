@@ -360,9 +360,11 @@ def test_veri_komutu_kapanan_kodlarda_ag_hatasi_mesaj_ve_cikis_1_verir(
     monkeypatch.setattr(
         requests, "Session", lambda: KopukOturum(requests.ConnectionError("yok"))
     )
-    assert main(["veri", "--kok", str(tmp_path)]) == 1
+    kok = tmp_path / "veri"  # tmp_path PROJE'dir; kayit/ oraya yazılır
+    kok.mkdir()
+    assert main(["veri", "--kok", str(kok)]) == 1
     assert capsys.readouterr().err.startswith("tansu veri: ")
-    assert list(tmp_path.iterdir()) == []
+    assert list(kok.iterdir()) == []
 
 
 def test_fiyat_kaynak_sirasi_bozuksa_tarihe_gore_siralanir():

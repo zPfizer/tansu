@@ -10,6 +10,8 @@ Durum = Literal[
 ]
 Komut = Literal["sina", "ayarla"]
 DURUMLAR: tuple[Durum, ...] = get_args(Durum)
+# Bu durumlara `ayarla` ayar dosyasını yazarak gelinir; dosya kaybolursa `sina` varsayılana düşmez.
+AYARLI: frozenset[Durum] = frozenset({"ayarlandi", "yetersiz-ornek", "sinyalde"})
 DOSYA = Path("stratejiler/durum.csv")
 SUTUNLAR = ("ad", "durum", "tarih", "not")
 
@@ -48,8 +50,17 @@ def sinanan(satirlar: list[dict[str, str]], ad: str) -> int:
 
 
 def oku(yol: Path) -> list[dict[str, str]]:
-    with yol.open(encoding="utf-8", newline="") as f:
-        return list(csv.DictReader(f))
+    try:
+        with yol.open(encoding="utf-8", newline="") as f:
+            okuyucu = csv.DictReader(f)
+            satirlar = list(okuyucu)
+    except FileNotFoundError:
+        raise veri.VeriHatasi(f"durum dosyası yok: {yol}") from None
+    if tuple(okuyucu.fieldnames or ()) != SUTUNLAR:
+        raise veri.VeriHatasi(
+            f"{yol}: başlık satırı bozuk; beklenen: {','.join(SUTUNLAR)}"
+        )
+    return satirlar
 
 
 def _satir(satirlar: list[dict[str, str]], ad: str) -> dict[str, str]:

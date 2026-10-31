@@ -2,8 +2,10 @@
 
 import datetime as dt
 import json
+import multiprocessing
 import os
 import subprocess
+import threading
 from collections import Counter
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
@@ -193,6 +195,9 @@ _GUNLER: sinama.Gunler | None = None
 def _hazirla(gunler: sinama.Gunler) -> None:
     global _GUNLER
     _GUNLER = gunler
+    # Ebeveyn ölünce işçi kendini kapatır; yoksa Windows'ta yetim kalır (denetim 31.10.2026).
+    ebeveyn = multiprocessing.parent_process()
+    threading.Thread(target=lambda: (ebeveyn.join(), os._exit(1)), daemon=True).start()
 
 
 def _nokta(arg: tuple[Strateji, dict]) -> sinama.Kosu:
@@ -253,21 +258,36 @@ def _json(yol: Path) -> dict:
     return icerik
 
 
-def oku(strateji: Strateji, kok: Path) -> Okunan | None:
-    """`<kok>/<ad>.json`; dosya yoksa None. Bilinmeyen anahtar ya da ızgara dışı eksen değeri VeriHatasi."""
+def oku(strateji: Strateji, kok: Path, *, gerekli: bool = False) -> Okunan | None:
+    """`<kok>/<ad>.json`; dosya yoksa None, `gerekli` ise VeriHatasi.
+
+    Her değer kendi anahtarının `aralik` ya da `secenek` kümesinde olmalı (bool değil); dışı VeriHatasi."""
     yol = kok / f"{strateji.ad}.json"
     if not yol.exists():
+        if gerekli:
+            raise veri.VeriHatasi(
+                f"ayar dosyası yok: {yol}; dosyayı Git'ten geri al ya da `tansu ayarla {strateji.ad}` çalıştır"
+            )
         return None
     icerik = _json(yol)
     p = icerik.get("parametreler")
     if not isinstance(p, dict):
         raise veri.VeriHatasi(f"{yol}: parametreler yok")
-    if bilinmeyen := sorted(set(p) - set(strateji.varsayilan)):
-        raise veri.VeriHatasi(f"{yol}: bilinmeyen anahtar {', '.join(bilinmeyen)}")
     for k, v in p.items():
-        if k in strateji.aralik and v not in strateji.aralik[k]:
-            raise veri.VeriHatasi(f"{yol}: {k} = {v} ızgarada yok")
+        kume = strateji.aralik.get(k, strateji.secenek.get(k))
+        if kume is None:
+            raise veri.VeriHatasi(f"{yol}: bilinmeyen anahtar {k}")
+        if isinstance(v, bool) or v not in kume:
+            izinli = ", ".join(map(str, kume))
+            raise veri.VeriHatasi(f"{yol}: {k} = {v!r} izinli değil ({izinli})")
     return Okunan({**strateji.varsayilan, **p}, str(icerik.get("tarih", "")))
+
+
+def veri_kimlikleri(kok: Path) -> frozenset[str]:
+    """`<kok>/*.json` ayarlarının `veri_kimligi` değerleri: budama bunları silmez, yedek bunları alır."""
+    return frozenset(
+        k for yol in kok.glob("*.json") if (k := _json(yol).get("veri_kimligi"))
+    )
 
 
 def kod_surumu() -> str:
