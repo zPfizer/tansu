@@ -1,7 +1,10 @@
 """Komut girişi: `python -m tansu <komut>` (docs/SPEC.md bölüm 7)."""
 
 import argparse
+import contextlib
 import datetime as dt
+import msvcrt
+import os
 import shutil
 import sys
 import webbrowser
@@ -12,12 +15,51 @@ import pandas as pd
 from tansu import ayar, durum, kaynak, rapor, sinama, veri
 from tansu.stratejiler import STRATEJILER
 
-VERI_KOKU = Path("veri")
 VERI_BASLANGIC = dt.date(2019, 1, 1)  # 2019-2020 yalnız ısınma (SPEC 3.4)
 SAKLANAN_GORUNTU = 10
+KILIT = "tansu-veri.kilit"
 
 
-def son_anlik(kok: Path = VERI_KOKU) -> veri.Anlik:
+def veri_koku() -> Path:
+    """Bütün çalışma kopyalarının ortak, git dışındaki veri kökü; `git worktree remove` silmez."""
+    return Path(os.environ.get("TANSU_VERI") or Path.home() / "Desktop" / "TANSU-veri")
+
+
+def _kok_var(kok: Path) -> None:
+    if not kok.is_dir():
+        raise veri.VeriHatasi(
+            f"veri kökü yok: {kok}; klasörü oluştur ya da TANSU_VERI ile var olan bir klasörü göster"
+        )
+
+
+@contextlib.contextmanager
+def _tek_yazar(kok: Path):
+    """Önbellek ve görüntü budaması (SPEC 3.8) bütün oturumlarda ortak: bir kökte tek yazar.
+
+    Kilidi işletim sistemi tutar, süreç ölünce kalkar. Okuyucu kilitsiz okur: `veri.indir`
+    görüntüyü `os.replace` ile yayımlar, `son_anlik` yalnız `2*` klasörlerine bakar."""
+    yol = kok / KILIT
+    tutamak = os.open(yol, os.O_RDWR | os.O_CREAT)
+    try:
+        try:
+            msvcrt.locking(tutamak, msvcrt.LK_NBLCK, 1)
+        except OSError:
+            raise veri.VeriHatasi(
+                f"başka bir `tansu veri` koşusu sürüyor: {kok}"
+            ) from None
+        try:
+            yield
+        finally:
+            msvcrt.locking(tutamak, msvcrt.LK_UNLCK, 1)
+    finally:
+        os.close(tutamak)
+        # Kök koşudan önceki gibi kalır. Başka tutamak açıkken Windows silmez, kilit tek kalır.
+        with contextlib.suppress(OSError):
+            yol.unlink()
+
+
+def son_anlik(kok: Path) -> veri.Anlik:
+    _kok_var(kok)
     klasorler = sorted(p.name for p in (kok / "ag").glob("2*"))
     if not klasorler:
         raise veri.VeriHatasi("anlık görüntü yok: önce `tansu veri` çalıştır")
@@ -33,21 +75,28 @@ def goruntuleri_buda(kok: Path, saklanan: int = SAKLANAN_GORUNTU) -> list[str]:
 
 def _veri(a) -> int:
     try:
-        # Evren bütün BIST: bugünkü KAP listesi ve veri başlangıcından beri kapanan kodlar (SPEC 2, 3.4)
-        kapanan = kaynak.kapanan_kodlar()
-        kapanan = kapanan[~(kapanan["tarih"] < pd.Timestamp(VERI_BASLANGIC))]
-        semboller = sorted(
-            {*kaynak.sirket_kodlari().astype(str).str.strip(), *kapanan["kod"]}
-        )
-        k = kaynak.Artimli(
-            kaynak.IsYatirim(), a.kok / "onbellek" / f"fiyat-{VERI_BASLANGIC:%Y%m%d}"
-        )
-        kimlik = veri.indir(semboller, a.kok, k, bas=VERI_BASLANGIC, kapanan=kapanan)
+        _kok_var(a.kok)
+        with _tek_yazar(a.kok):
+            _indir_ve_yaz(a.kok)
     except (veri.VeriHatasi, kaynak.KaynakHatasi) as hata:
         print(f"tansu veri: {hata}", file=sys.stderr)
         return 1
-    silinen = goruntuleri_buda(a.kok)
-    anlik = veri.oku(kimlik, a.kok)
+    return 0
+
+
+def _indir_ve_yaz(kok: Path) -> None:
+    # Evren bütün BIST: bugünkü KAP listesi ve veri başlangıcından beri kapanan kodlar (SPEC 2, 3.4)
+    kapanan = kaynak.kapanan_kodlar()
+    kapanan = kapanan[~(kapanan["tarih"] < pd.Timestamp(VERI_BASLANGIC))]
+    semboller = sorted(
+        {*kaynak.sirket_kodlari().astype(str).str.strip(), *kapanan["kod"]}
+    )
+    k = kaynak.Artimli(
+        kaynak.IsYatirim(), kok / "onbellek" / f"fiyat-{VERI_BASLANGIC:%Y%m%d}"
+    )
+    kimlik = veri.indir(semboller, kok, k, bas=VERI_BASLANGIC, kapanan=kapanan)
+    silinen = goruntuleri_buda(kok)
+    anlik = veri.oku(kimlik, kok)
     son_seans = anlik.gunler[-1]
     print(
         f"anlık görüntü {kimlik}; silinen eski görüntü: {len(silinen)}; "
@@ -63,7 +112,6 @@ def _veri(a) -> int:
         else:
             durum = "inmedi" if s in anlik.inmeyen else "kaynak boş"
             print(f"{s:<7} {'-':<10}  {'-':<10}  {0:>5}  {durum}")
-    return 0
 
 
 def _yazilanlar(yol, json_yolu) -> str:
@@ -143,20 +191,21 @@ def ayristirici() -> argparse.ArgumentParser:
         description="Tansu stratejilerinin giriş, stop ve hedef seviyeleri. Alım-satım talimatı vermez.",
     )
     alt = ap.add_subparsers(dest="komut", required=True, metavar="komut")
+    kok = veri_koku()
 
     p = alt.add_parser("veri", help="veriyi indir veya güncelle")
-    p.add_argument("--kok", type=Path, default=VERI_KOKU, help=argparse.SUPPRESS)
+    p.add_argument("--kok", type=Path, default=kok, help=argparse.SUPPRESS)
     p.set_defaults(calistir=_veri)
 
     p = alt.add_parser("sina", help="stratejiyi geçmiş veride sına, rapor yaz")
     p.add_argument("ad")
     p.add_argument("--ac", action="store_true", help="raporu tarayıcıda aç")
-    p.add_argument("--kok", type=Path, default=VERI_KOKU, help=argparse.SUPPRESS)
+    p.add_argument("--kok", type=Path, default=kok, help=argparse.SUPPRESS)
     p.set_defaults(calistir=_sina)
 
     p = alt.add_parser("ayarla", help="2021-2025 üzerinde parametre ayarla")
     p.add_argument("ad")
-    p.add_argument("--kok", type=Path, default=VERI_KOKU, help=argparse.SUPPRESS)
+    p.add_argument("--kok", type=Path, default=kok, help=argparse.SUPPRESS)
     p.set_defaults(calistir=_ayarla, ac=False)
 
     p = alt.add_parser("onayla", help="stratejiyi akşam sinyaline al (yalnız Levent)")
