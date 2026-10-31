@@ -1,11 +1,12 @@
 import datetime as dt
 import msvcrt
 import os
+from pathlib import Path
 
 import pytest
 
 from tansu import kaynak, veri
-from tansu.__main__ import ayristirici, main, son_anlik
+from tansu.__main__ import ayristirici, main, son_anlik, veri_koku
 from tests.test_veri_gunluk import SahteKaynak
 
 
@@ -66,6 +67,12 @@ def test_kok_verilmeyen_komut_ortak_kokteki_en_yeni_goruntuyu_okur(
         veri.indir(["AKBNK"], tmp_path, SahteKaynak(), simdi=gun)
     a = ayristirici().parse_args(["sina", "gartley"])
     assert son_anlik(a.kok).kimlik == "20240201-1800"
+
+
+def test_ortam_degiskeni_yoksa_kok_masaustundeki_tansu_veri(monkeypatch, tmp_path):
+    monkeypatch.delenv("TANSU_VERI")
+    monkeypatch.setattr(Path, "home", lambda: tmp_path)
+    assert veri_koku() == tmp_path / "Desktop" / "TANSU-veri"
 
 
 def test_suren_veri_kosusunun_yarim_goruntusu_okunmaz(tmp_path):

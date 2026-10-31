@@ -49,7 +49,8 @@
 - `arsiv/intelligent-herschel-d2835e/rapor/`: o kopyanın dört koşu çıktısı (`gartley` ve `ortalama-kesisim`,
   `islemler.csv` ve `sinama.html`). Başka hiçbir kopyada aynıları yoktu.
 - Veri 31.10.2026'da kopyalandı, taşınmadı; kaynak kopyalar yerinde duruyor. Her dosya SHA-256 ile denetlendi:
-  görüntü dosyaları manifeste ve kaynağa, önbellek ve arşiv dosyaları kaynağa karşı; 1.699 denetim, 0 uyuşmazlık.
+  görüntü dosyaları manifeste ve kaynağa, önbellek ve arşiv dosyaları kaynağa karşı; 1.699 denetim (9 manifest özeti,
+  1.689 dosya kaynağa, 1 önbellek dosya listesi), 0 uyuşmazlık.
 - Ana kopyadaki `veri/` (623 MB) eski projenin klasörüdür (05.10.2026 görüntüleri); bu envanter onu sınamadı ve
   kopyalamadı.
 
