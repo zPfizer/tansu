@@ -18,15 +18,18 @@ python -m venv .venv
 | `tansu veri` | Veriyi indirir veya günceller. |
 | `tansu sina <ad> [--ac]` | Stratejiyi yıllara göre sınar ve `rapor/<ad>/sinama.html` yazar. |
 | `tansu ayarla <ad>` | 2021-2025 üzerinde parametre ayarlar. |
-| `tansu onayla <ad>` | Stratejiyi akşam seviye listesine alır (yalnız Levent). |
-| `tansu tara` | Akşam taraması: `rapor/sinyal/<tarih>.md`. |
-| `tansu durum` | Stratejilerin sınıfı ve durumu. |
+| `tansu yedekle <hedef>` | Ayar dosyalarının andığı veri görüntülerini ve en yenisini `<hedef>/ag/` altına kopyalar ve denetler. |
+| `tansu onayla <ad>` | Stratejiyi akşam seviye listesine alır (yalnız Levent). Henüz yapılmadı (SPEC bölüm 12). |
+| `tansu tara` | Akşam taraması: `rapor/sinyal/<tarih>.md`. Henüz yapılmadı (SPEC bölüm 12). |
+| `tansu durum` | Stratejilerin sınıfı ve durumu. Henüz yapılmadı (SPEC bölüm 12). |
 
 Komutlar PowerShell ve Bash'te her klasörden `~/Desktop/TANSU/.venv/Scripts/python.exe -X utf8 -m tansu <komut>`
 biçiminde çalışır. `tansu`, `stratejiler/` ve `rapor/` klasörlerini kendi kökünde okur ve yazar. Kökte kısa
 yorumlayıcı yolu `.venv/Scripts/python.exe`, çalışma ağacında `../../../.venv/Scripts/python.exe`'dir (`AGENTS.md`, "Commands").
 
-Yerel veri, görüntüler ve yeniden indirme zamanı: `docs/veri-envanteri.md`.
+Veri depoda değildir: masaüstündeki `TANSU-veri` klasöründedir; `TANSU_VERI` ortam değişkeni başka bir klasör seçer.
+Görüntüler, yedek ve geri yükleme, yeniden indirme zamanı: `docs/veri-envanteri.md`. Her komut koşusu
+`kayit/tansu.log` dosyasına bir satır ekler (Git'te değil).
 
 ## Testler
 
@@ -34,7 +37,7 @@ Yerel veri, görüntüler ve yeniden indirme zamanı: `docs/veri-envanteri.md`.
 .venv\Scripts\python.exe -X utf8 -m pytest -q
 ```
 
-Hızlı iç döngü için (15 yavaş test hariç): `.venv\Scripts\python.exe -X utf8 -m pytest -q -m "not slow"`.
+Hızlı iç döngü için (16 yavaş test hariç): `.venv\Scripts\python.exe -X utf8 -m pytest -q -m "not slow"`.
 Teslimden önce ve CI'da `-m` olmadan tam komut çalışır. Yavaş testleri listelemek için: `-m slow --collect-only -q`.
 
 Testler yalnız yapay fiyat serisi kullanır. İş Yatırım verisi depoya girmez.

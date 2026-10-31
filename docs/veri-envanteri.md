@@ -10,7 +10,7 @@
 - Anlık görüntü: `ag/<YYYYMMDD-HHMM>/`. `fiyat.parquet` kaynağın düzeltilmiş ve ham fiyatlarını, `olaylar.json`
   bölünme ve temettü olaylarını taşır. `manifest.json` sembolleri, inmeyen ve boş sembolleri ve her dosyanın SHA-256
   özetini yazar. Bütün BIST indirmesinde `kapanan.csv` (işlemi kapanan kodlar) da vardır. `veri.oku` özetleri
-  doğrular; uyuşmazlık `VeriHatasi` verir.
+  doğrular; uyuşmazlık, eksik dosya ya da eksik `manifest.json` tek satırlık `VeriHatasi` verir.
 - Dönem: 02.01.2019'dan indirme gününün son seansına. `VERI_BASLANGIC` 01.01.2019'dur; 2019-2020 yalnız ısınmadır
   (SPEC 3.4).
 - Okuma anındaki kalite kuralları (karantina, olay denetimi, kaynak günü) `veri.Anlik` içinde uygulanır, görüntüye
@@ -18,7 +18,10 @@
   düşer, fiyatı ve hacmi 0 ya da boş satır düşer, `_yapi_denetimi` bozuk sırayı ve tekrar eden günü durdurur. Bunlardan
   biri değişince yeni görüntü gerekir. Önbellek kaynağın yanıtını bu süzgeçlerden önce tutar; önbellekli klasörde koşu
   artımlıdır.
-- `tansu veri` en yeni 10 görüntüyü tutar, eskilerini siler (SPEC 3.8, `SAKLANAN_GORUNTU`).
+- `tansu veri` en yeni 10 görüntüyü ve `stratejiler/ayarlar/*.json` dosyalarındaki `veri_kimligi`nin andığı her
+  görüntüyü tutar; ötekileri ve çöken koşuların `ag/_gecici-*` klasörlerini siler (SPEC 3.8, `SAKLANAN_GORUNTU`).
+  Korunan kimlikler indirmeden önce okunur. Sınır: yalnız komutun yüklediği kopyanın ayar dosyaları okunur; başka
+  bir çalışma kopyasının andığı görüntü korunmaz (denetim 31.10.2026 T-1).
 - Artımlı önbellek: `onbellek/fiyat-20190101/`, sembol başına `<SEMBOL>.fiyat.parquet` ve `<SEMBOL>.olaylar.json`.
   `kaynak.Artimli` kaynaktan önbellekteki sondan 10. işlem gününden bugüne kadarını ister: son koşudan beri gelen günler
   ve 10 günlük örtüşme. Örtüşen günler önbellekle aynı değilse (yeni bölünme ya da temettü geçmişi değiştirir) o
@@ -43,7 +46,7 @@
 | `ag/20261028-2353` | 20261028-2353 | 655 | 964.070 | 28.10.2026 | 3 | 181 | 57 MB | `.claude/worktrees/intelligent-herschel-d2835e` |
 
 - Bütün görüntüler 02.01.2019'da başlar. En yenisi bütün BIST görüntüsü 20261028-2353'tür; `tansu sina` her
-  kopyada onu kullanır.
+  kopyada onu kullanır. İki ayar dosyası da 01.11.2026'dan beri onu anar, bu yüzden budama onu silmez.
 - Üç 20261026 görüntüsü, bütün BIST kararından (28.10.2026) önceki BIST 30 evrenidir.
 - Önbellek `onbellek/fiyat-20190101/`: 836 sembol, 1.672 dosya, 91 MB; `intelligent-herschel-d2835e` kopyasından.
 - `arsiv/intelligent-herschel-d2835e/rapor/`: o kopyanın dört koşu çıktısı (`gartley` ve `ortalama-kesisim`,
@@ -53,6 +56,31 @@
   1.689 dosya kaynağa, 1 önbellek dosya listesi), 0 uyuşmazlık.
 - Ana kopyadaki `veri/` (623 MB) eski projenin klasörüdür (05.10.2026 görüntüleri); bu envanter onu sınamadı ve
   kopyalamadı.
+
+## Yedek ve geri yükleme
+
+Bir görüntü bir kez silinirse aynısı yeniden indirilemez: kaynak geçmişi değiştirir ve yeni koşu yeni bir kimlik
+alır. 31.10.2026 denetimi bunu gördü: iki ayar dosyası `20261028-1723` görüntüsünü anıyordu, görüntü hiçbir yerde
+yoktu ve Git'teki raporlar yeniden üretilemiyordu (T-1). Bu yüzden ayar dosyalarının andığı görüntülerin bilgisayar
+dışında bir kopyası tutulur.
+
+- Yedek: `<py> -X utf8 -m tansu yedekle <hedef>`. Komut, ayar dosyalarındaki her `veri_kimligi` görüntüsünü ve en
+  yeni görüntüyü `TANSU-veri/ag/`'den `<hedef>/ag/`'ye kopyalar. Her kopya önce `<hedef>/ag/_gecici-<kimlik>`
+  klasörüne yazılır, `manifest.json`'daki SHA-256 özetleriyle denetlenir, sonra adını alır. Bozuk bir kaynak iyi bir
+  yedeğin yerine geçmez. Yedekte denetimden geçen kopya varsa komut onu yeniden kopyalamaz. Her görüntü için bir satır
+  yazar; bir görüntü kopyalanamazsa hata satırı yazar, ötekilere devam eder ve 1 koduyla çıkar.
+- `<hedef>` var olan bir klasör olmalıdır. Komut onu açmaz: takılı olmayan bir disk ya da yanlış yazılmış bir yol
+  başka bir yerde klasör açmaz, hata verir.
+- Ne zaman: her `tansu veri` koşusundan sonra ve `veri_kimligi`ni değiştiren her `tansu ayarla` koşusundan sonra.
+- Nereye: bilgisayar dışında bir yer (dış disk ya da bulut klasörü). Yeri Levent seçer; seçilene kadar yedek alınmadı
+  (`kanit/acik-sorular.md`, "Levent kararı bekleyenler").
+- Boyut: bütün BIST görüntüsü yaklaşık 57 MB'dir (tablo aşağıda). Önbellek (`onbellek/`) yedeklenmez; o yalnız
+  indirmeyi kısaltır, sonuçları değiştirmez.
+- Geri yükleme: `<hedef>/ag/<kimlik>` klasörünü `TANSU-veri/ag/<kimlik>` olarak geri kopyala. `veri.oku` sonraki
+  `tansu sina` ya da `tansu ayarla` koşusunda manifesti denetler; uyuşmazlık tek satırlık hata verir. Denetimli yol
+  aynı komutun rolleri değişmiş hâlidir: `<py> -X utf8 -m tansu yedekle <TANSU-veri klasörü> --kok <yedek klasörü>`
+  korunan ve en yeni görüntüleri yedekten geri kopyalar ve denetler. Eksik `manifest.json` hatası bu komutu söyler.
+- `tests/test_yedekle.py` yedeği ve geri yüklemeyi yapay görüntülerle sınar.
 
 ## Ne zaman yeniden indirilir
 
