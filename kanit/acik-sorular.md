@@ -93,9 +93,9 @@ Denetim takibi (PR 285 inceleme notları), 01.11.2026, Levent yetkisiyle beyin k
 
 - (a) Test yalnız geçici klasörlere yazar. `tests/test_baska_klasor.py` `-m tansu` koşusunu deponun geçici bir kopyasında yapar; deponun `kayit/tansu.log`u değişmez. Durum: uygulandı.
 - (b) Okunamayan ya da bozuk ayar dosyası (geçersiz JSON, nesne değil, UTF-8 değil, okunamıyor) `tansu <komut>:` ile başlayan, dosyayı söyleyen tek satır ve 1 kodu verir. Durum: uygulandı.
-- (c) `veri_kimligi` `YYYYMMDD-HHMM` biçiminde olmalıdır (`veri.kimlik_gecerli`); başka değer dosyayı söyleyen tek satırla `veri` ve `yedekle`yi durdurur. Budama ve `yedekle` yalnız geçerli kimlikleri kullanır. Durum: uygulandı.
-- (d) Koşu kaydı ilk hata satırını (`tansu <komut>: `) yazar; önündeki uyarı satırı kayda girmez. Durum: uygulandı.
-- (e) `veri.yedekle` eski yedeği önce `_eski-<kimlik>` adıyla kenara alır, denetlenen yeni kopya yerine geçince siler; kesilen koşudan sonra sonraki koşu eskiyi yerine geri koyar. Durum: uygulandı.
+- (c) `veri_kimligi` `YYYYMMDD-HHMM` biçiminde olmalıdır (`veri.kimlik_gecerli`); başka değer dosyayı söyleyen tek satırla `veri` ve `yedekle`yi durdurur. Budama ve `yedekle` yalnız geçerli kimlikleri kullanır: `ag/` altında adı geçerli kimlik olmayan klasör (`2019-arsiv`, `<kimlik> - Kopya`) görüntü sayılmaz, budanmaz ve en yeni görüntü seçilmez (PR 286 incelemesi not 1). Durum: uygulandı.
+- (d) Koşu kaydı ilk hata satırını (`tansu <komut>: `) yazar; önündeki uyarı satırı kayda girmez. Böyle satır yoksa ilk stderr satırını yazar (PR 286 incelemesi not 2). Durum: uygulandı.
+- (e) `veri.yedekle` eski yedeği önce `_eski-<kimlik>` adıyla kenara alır, denetlenen yeni kopya yerine geçince siler; kesilen koşudan sonra sonraki koşu eskiyi yerine geri koyar. UTF-8 olmayan ya da yapısı bozuk `manifest.json` (nesne değil, `dosyalar` yok) döküm vermez, "manifest bozuk" `VeriHatasi`'dır: yedekteki bozuk kopya yeniden kopyalanır (PR 286 incelemesi not 3). Durum: uygulandı.
 - Yerel SPEC yaması bu işin birleşmesinden sonra `yeniden-kurulus` ağacındaki bir oturumda uygulanır. Durum: bekliyor (sonraki paragraf).
 
 Yerel SPEC yaması: bu iş başka bir çalışma ağacında koştu ve bir kanca o oturumun `yeniden-kurulus` ağacındaki `docs/SPEC.md`'ye yazmasını durdurdu (01.11.2026). SPEC 3.8, satır 167 ve bölüm 7 değişiklikleri yama olarak hazırlandı; başlık satırları değişmez. Durum: Levent ya da `yeniden-kurulus` klasöründeki bir oturum uygulayacak.

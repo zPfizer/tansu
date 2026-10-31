@@ -444,17 +444,18 @@ def indir(
 def denetle(klasor: Path, kimlik: str) -> dict:
     """Görüntü klasörünü manifestine göre doğrular, manifesti döndürür; eksik ya da uyuşmayan dosya VeriHatasi'dır."""
     try:
-        metin = (klasor / "manifest.json").read_text(encoding="utf-8")
+        ham = (klasor / "manifest.json").read_bytes()
     except FileNotFoundError:
         raise VeriHatasi(
             f"manifest yok: {kimlik}; görüntüyü yedekten geri yükle (`tansu yedekle <veri kökü> --kok <yedek>`, "
             "docs/veri-envanteri.md) ya da `tansu veri` çalıştır"
         ) from None
     try:
-        manifest = json.loads(metin)
-    except json.JSONDecodeError as hata:
+        manifest = json.loads(ham.decode("utf-8"))
+        dosyalar = manifest["dosyalar"].items()
+    except (ValueError, TypeError, KeyError, AttributeError) as hata:
         raise VeriHatasi(f"manifest bozuk: {kimlik} ({hata})") from hata
-    for ad, ozet in manifest["dosyalar"].items():
+    for ad, ozet in dosyalar:
         try:
             gercek_ozet = _sha256(klasor / ad)
         except FileNotFoundError as hata:

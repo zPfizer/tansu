@@ -193,6 +193,39 @@ $ <py> -m ruff format --check --no-cache tansu tests kurulum
 58 files already formatted
 ```
 
+### PR 286 bağımsız incelemesinin notları
+
+İnceleme `ecd80b7` için `NOTLU GEÇTİ` verdi ve üç düşük not yazdı. Üçü de ikinci commit'te düzeltildi:
+
+| Not | Değişiklik | Test |
+|---|---|---|
+| 1 | `__main__._goruntuler`: `ag/` altında yalnız adı geçerli kimlik olan klasör görüntüdür; budama ve en yeni görüntü bunu kullanır. | `test_budama_ve_son_goruntu_yalniz_gecerli_kimlikleri_gorur` |
+| 2 | Önekli satır yoksa kayıt ilk stderr satırını yazar. | `test_kayit_onekli_satir_yoksa_ilk_stderr_satirini_yazar` |
+| 3 | `veri.denetle`: UTF-8 olmayan ya da yapısı bozuk manifest "manifest bozuk" `VeriHatasi`'dır. | `test_yedekteki_bozuk_manifest_yeniden_kopyalanir` (3) |
+
+Değişen var olan test: `test_veri_komutu_sembol_tablosu_yazar_ve_on_goruntu_tutar` de takvimde olmayan `20200100-*`
+kimlikleri yerine `20200101-*` kullanır; not 1'den sonra budama o klasörleri görüntü saymaz.
+
+Kırmızı, `ecd80b7` kodunda:
+
+```
+$ <py> -X utf8 -m pytest tests/test_komut.py tests/test_yedekle.py tests/test_veri_gunluk.py -p no:cacheprovider -q
+5 failed, 33 passed in 1.31s
+```
+
+Not 2'nin testi `bcaf723`'te geçer: eski kod ilk stderr satırını yazıyordu; test bu davranışı korur.
+
+Yeşil, çalışma ağacının kökünde:
+
+```
+$ <py> -X utf8 -m pytest -p no:cacheprovider -q
+528 passed, 1 skipped, 2 warnings in 85.20s (0:01:25)
+$ <py> -m ruff check --no-cache tansu tests kurulum
+All checks passed!
+$ <py> -m ruff format --check --no-cache tansu tests kurulum
+58 files already formatted
+```
+
 ## Yapılmayanlar
 
 - Yerel `docs/SPEC.md` (3.8, satır 167, bölüm 7) bu ağaçtan yazılamadı; yama hazır, `yeniden-kurulus` ağacında

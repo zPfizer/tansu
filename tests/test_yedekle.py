@@ -124,6 +124,21 @@ def test_kesilen_yer_degistirme_eski_yedegi_silmez(kurulum, monkeypatch, capsys)
     assert sorted(p.name for p in (yedek / "ag").iterdir()) == [KORUNAN, SON]
 
 
+@pytest.mark.parametrize(
+    "bozuk",
+    [b'{"dosyalar": "\xff"}', b"[]", b"{}"],
+    ids=["utf8 degil", "liste", "dosyalarsiz"],
+)
+def test_yedekteki_bozuk_manifest_yeniden_kopyalanir(kurulum, capsys, bozuk):
+    kaynak, yedek = kurulum
+    assert yedekle(kaynak, yedek) == 0
+    (yedek / "ag" / SON / "manifest.json").write_bytes(bozuk)
+    capsys.readouterr()
+    assert yedekle(kaynak, yedek) == 0
+    assert f"{SON}: kopyalandı" in capsys.readouterr().out
+    veri.denetle(yedek / "ag" / SON, SON)
+
+
 def test_kesilen_onceki_kosunun_artiklarini_toparlar(kurulum, capsys):
     kaynak, yedek = kurulum
     assert yedekle(kaynak, yedek) == 0

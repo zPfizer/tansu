@@ -21,7 +21,9 @@
 - `tansu veri` en yeni 10 görüntüyü ve `stratejiler/ayarlar/*.json` dosyalarındaki `veri_kimligi`nin andığı her
   görüntüyü tutar; ötekileri ve çöken koşuların `ag/_gecici-*` klasörlerini siler (SPEC 3.8, `SAKLANAN_GORUNTU`).
   Korunan kimlikler indirmeden önce okunur. Bir ayar dosyası okunamazsa ya da `veri_kimligi`si `YYYYMMDD-HHMM`
-  biçiminde değilse komut dosyayı söyleyen tek satırlık hatayla durur; hiçbir şey indirmez ve silmez. Sınır: yalnız komutun yüklediği kopyanın ayar dosyaları okunur; başka
+  biçiminde değilse komut dosyayı söyleyen tek satırlık hatayla durur; hiçbir şey indirmez ve silmez. `ag/` altında
+  adı bu biçimde olmayan bir klasör (`2019-arsiv`, `<kimlik> - Kopya`) görüntü sayılmaz: budanmaz, en yeni görüntü
+  olarak okunmaz. Sınır: yalnız komutun yüklediği kopyanın ayar dosyaları okunur; başka
   bir çalışma kopyasının andığı görüntü korunmaz (denetim 31.10.2026 T-1).
 - Artımlı önbellek: `onbellek/fiyat-20190101/`, sembol başına `<SEMBOL>.fiyat.parquet` ve `<SEMBOL>.olaylar.json`.
   `kaynak.Artimli` kaynaktan önbellekteki sondan 10. işlem gününden bugüne kadarını ister: son koşudan beri gelen günler

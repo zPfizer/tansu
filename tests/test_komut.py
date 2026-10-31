@@ -91,3 +91,16 @@ def test_kayit_uyari_satirini_degil_hata_satirini_yazar(
         (tmp_path / "kayit" / "tansu.log").read_text(encoding="utf-8").splitlines()
     )
     assert satir.endswith(hata)
+
+
+def test_kayit_onekli_satir_yoksa_ilk_stderr_satirini_yazar(tmp_path, monkeypatch):
+    def oneksiz(a):
+        print("beklenmeyen hata", file=sys.stderr)
+        return 1
+
+    monkeypatch.setattr("tansu.__main__._sina", oneksiz)
+    assert main(["sina", "gartley"]) == 1
+    (satir,) = (
+        (tmp_path / "kayit" / "tansu.log").read_text(encoding="utf-8").splitlines()
+    )
+    assert satir.endswith(" rc=1 goruntu=- beklenmeyen hata")
