@@ -5,13 +5,10 @@ import pytest
 from tansu import ayar
 from tansu.__main__ import veri_koku
 
-# Yamalardan önce okunur: testler gerçek veri köküne yalnız bu yoldan bakar.
-GERCEK_VERI = veri_koku()
 
-
-@pytest.fixture
+@pytest.fixture(scope="session")
 def gercek_veri():
-    return GERCEK_VERI
+    return veri_koku()
 
 
 @pytest.fixture(autouse=True)

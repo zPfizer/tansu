@@ -21,7 +21,6 @@ KILIT = "tansu-veri.kilit"
 
 
 def veri_koku() -> Path:
-    """Bütün çalışma kopyalarının ortak, git dışındaki veri kökü; `git worktree remove` silmez."""
     return Path(os.environ.get("TANSU_VERI") or Path.home() / "Desktop" / "TANSU-veri")
 
 
@@ -34,10 +33,6 @@ def _kok_var(kok: Path) -> None:
 
 @contextlib.contextmanager
 def _tek_yazar(kok: Path):
-    """Önbellek ve görüntü budaması (SPEC 3.8) bütün oturumlarda ortak: bir kökte tek yazar.
-
-    Kilidi işletim sistemi tutar, süreç ölünce kalkar. Okuyucu kilitsiz okur: `veri.indir`
-    görüntüyü `os.replace` ile yayımlar, `son_anlik` yalnız `2*` klasörlerine bakar."""
     yol = kok / KILIT
     tutamak = os.open(yol, os.O_RDWR | os.O_CREAT)
     try:
@@ -53,7 +48,7 @@ def _tek_yazar(kok: Path):
             msvcrt.locking(tutamak, msvcrt.LK_UNLCK, 1)
     finally:
         os.close(tutamak)
-        # Kök koşudan önceki gibi kalır. Başka tutamak açıkken Windows silmez, kilit tek kalır.
+        # Başka tutamak açıkken Windows silmez, kilit tek kalır.
         with contextlib.suppress(OSError):
             yol.unlink()
 

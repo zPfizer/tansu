@@ -1,5 +1,3 @@
-"""Veri kökü: git dışındaki tek klasör, yoksa açık hata, tek yazar (Levent kararı 31.10.2026)."""
-
 import datetime as dt
 import msvcrt
 import os
@@ -68,3 +66,11 @@ def test_kok_verilmeyen_komut_ortak_kokteki_en_yeni_goruntuyu_okur(
         veri.indir(["AKBNK"], tmp_path, SahteKaynak(), simdi=gun)
     a = ayristirici().parse_args(["sina", "gartley"])
     assert son_anlik(a.kok).kimlik == "20240201-1800"
+
+
+def test_suren_veri_kosusunun_yarim_goruntusu_okunmaz(tmp_path):
+    veri.indir(["AKBNK"], tmp_path, SahteKaynak(), simdi=dt.datetime(2024, 1, 1, 18, 0))
+    yarim = tmp_path / "ag" / "_gecici-20990101-0000"
+    yarim.mkdir()
+    (yarim / "fiyat.parquet").write_bytes(b"yarim")
+    assert son_anlik(tmp_path).kimlik == "20240101-1800"
