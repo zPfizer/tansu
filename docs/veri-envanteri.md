@@ -68,4 +68,4 @@
 ## Denetim
 
 `tests/test_ice_aktarma.py`, `tansu` paketinin testi koşan kopyadan geldiğini denetler. Ana `.venv`'deki düzenlenebilir
-kurulum ana kopyayı gösterir; `pyproject.toml` `pythonpath = ["."]` olmazsa testler başka kopyanın kodunu sınar.
+kurulum tek bir kopyayı gösterir (31.10.2026'dan beri `yeniden-kurulus` ağacı); `pyproject.toml` `pythonpath = ["."]` olmazsa testler başka kopyanın kodunu sınar.

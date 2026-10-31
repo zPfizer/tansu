@@ -656,7 +656,7 @@ def md_metni(s: Sinama) -> str:
     return "\n".join(satirlar)
 
 
-def yaz(s: Sinama, kok: Path = RAPOR_KOKU) -> Path:
+def yaz(s: Sinama, kok: Path) -> Path:
     klasor = kok / s.strateji.ad
     klasor.mkdir(parents=True, exist_ok=True)
     s.gecmis.islemler.to_csv(

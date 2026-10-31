@@ -47,7 +47,7 @@ def sinanan(satirlar: list[dict[str, str]], ad: str) -> int:
     )
 
 
-def oku(yol: Path = DOSYA) -> list[dict[str, str]]:
+def oku(yol: Path) -> list[dict[str, str]]:
     with yol.open(encoding="utf-8", newline="") as f:
         return list(csv.DictReader(f))
 
@@ -63,7 +63,7 @@ def durumu(satirlar: list[dict[str, str]], ad: str) -> str:
     return _satir(satirlar, ad)["durum"]
 
 
-def gec(ad: str, komut: Komut, *, puanli: bool, yol: Path = DOSYA) -> str:
+def gec(ad: str, komut: Komut, *, puanli: bool, yol: Path) -> str:
     """Dosyayı yeniden okur: ızgara sürerken başka koşu satırları değiştirmiş olabilir."""
     satirlar = oku(yol)
     satir = _satir(satirlar, ad)

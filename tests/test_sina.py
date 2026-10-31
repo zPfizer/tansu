@@ -33,7 +33,6 @@ def sentetik_anlik(yol=None):
 
 @pytest.fixture
 def ortam(monkeypatch, tmp_path):
-    monkeypatch.chdir(tmp_path)
     (tmp_path / "stratejiler").mkdir()
 
     def kur(ad, durum="taslak", yol=None, strateji=None):
@@ -181,7 +180,10 @@ def test_yazilacak_dosya_baska_programda_aciksa_acik_mesaj_ve_cikis_1(
     baska_programda_acik(monkeypatch, yol.name)
     assert main([komut_adi, "gartley"]) == 1
     hata = capsys.readouterr().err
-    assert f"tansu {komut_adi}: {yol} " in hata and "durum.csv değişmedi" in hata
+    assert (
+        f"tansu {komut_adi}: {tmp_path / yol} " in hata
+        and "durum.csv değişmedi" in hata
+    )
     assert all(str(p) in hata for p in yazilan)
     assert yazilan or "yazdıkları" not in hata
     assert all((tmp_path / p).exists() for p in yazilan)
@@ -199,7 +201,7 @@ def test_ayar_json_bozuksa_ayarla_yazilan_rapor_klasorunu_soyler(
     once = (tmp_path / "stratejiler" / "durum.csv").read_bytes()
     assert main(["ayarla", "gartley"]) == 1
     hata = capsys.readouterr().err
-    assert f"tansu ayarla: {AYAR_JSON}: geçersiz JSON" in hata
+    assert f"tansu ayarla: {tmp_path / AYAR_JSON}: geçersiz JSON" in hata
     assert str(RAPOR_KLASORU) in hata
     assert (tmp_path / RAPOR_KLASORU / "sinama.html").exists()
     assert json_yolu.read_text(encoding="utf-8") == "{bozuk"
@@ -222,7 +224,7 @@ def test_okunacak_durum_dosyasi_kilitliyse_yazilamadi_demez(
     monkeypatch.setattr(Path, "open", open_)
     assert main(["sina", "gartley"]) == 1
     hata = capsys.readouterr().err
-    assert f"tansu sina: {yol} " in hata and "durum.csv değişmedi" in hata
+    assert f"tansu sina: {tmp_path / yol} " in hata and "durum.csv değişmedi" in hata
     assert "yazılamadı" not in hata
     assert (tmp_path / yol).read_bytes() == once
     assert not (tmp_path / "rapor").exists()

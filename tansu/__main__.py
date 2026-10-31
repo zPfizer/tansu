@@ -18,6 +18,8 @@ from tansu.stratejiler import STRATEJILER
 VERI_BASLANGIC = dt.date(2019, 1, 1)  # 2019-2020 yalnız ısınma (SPEC 3.4)
 SAKLANAN_GORUNTU = 10
 KILIT = "tansu-veri.kilit"
+# Proje dosyaları (durum.csv, ayarlar, rapor) bu kökte: komut her klasörden aynı çalışır (31.10.2026).
+PROJE = Path(__file__).resolve().parents[1]
 
 
 def veri_koku() -> Path:
@@ -122,15 +124,16 @@ def _kos(a, *, ayarla: bool) -> int:
         print(f"tansu {komut}: bilinmeyen strateji {a.ad}", file=sys.stderr)
         return 2
     yol = json_yolu = None
+    durum_csv, ayarlar = PROJE / durum.DOSYA, PROJE / ayar.AYAR_KOKU
     try:
-        satirlar = durum.oku()
+        satirlar = durum.oku(durum_csv)
         onceki = durum.durumu(satirlar, a.ad)
         if durum.reddeder(komut, onceki):
             print(
                 f"tansu {komut}: {a.ad} {onceki}; önce taslak olmalı", file=sys.stderr
             )
             return 1
-        okunan = None if ayarla else ayar.oku(strateji)
+        okunan = None if ayarla else ayar.oku(strateji, ayarlar)
         anlik = son_anlik(a.kok)
         s = rapor.hazirla(
             strateji,
@@ -141,10 +144,12 @@ def _kos(a, *, ayarla: bool) -> int:
             ayarla=ayarla,
             okunan=okunan,
         )
-        yol = rapor.yaz(s)
+        yol = rapor.yaz(s, PROJE / rapor.RAPOR_KOKU)
         if ayarla:  # json rapordan sonra: yarıda kalan koşu onaysız parametre bırakmaz
-            json_yolu = ayar.yaz(strateji, s.yuruyus.son, veri_kimligi=s.kimlik)
-        yeni_durum = durum.gec(a.ad, komut, puanli=s.yuruyus.son.puanli)
+            json_yolu = ayar.yaz(
+                strateji, s.yuruyus.son, veri_kimligi=s.kimlik, kok=ayarlar
+            )
+        yeni_durum = durum.gec(a.ad, komut, puanli=s.yuruyus.son.puanli, yol=durum_csv)
     except veri.VeriHatasi as hata:
         print(f"tansu {komut}: {hata}{_yazilanlar(yol, json_yolu)}", file=sys.stderr)
         return 1

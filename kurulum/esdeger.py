@@ -166,6 +166,7 @@ def kos(kok: Path, hedef: Path) -> int:
         cikti.mkdir(parents=True)
         with tempfile.TemporaryDirectory(prefix="esdeger-") as gecici:
             klasor = Path(gecici)
+            komut.PROJE = klasor  # eski taban kökü bilmez, chdir ile aynı klasörü okur
             (klasor / "stratejiler").mkdir()
             (klasor / "stratejiler" / "durum.csv").write_text(
                 f"ad,durum,tarih,not\n{sad},{durum},2026-10-26,\n{ek}", encoding="utf-8"

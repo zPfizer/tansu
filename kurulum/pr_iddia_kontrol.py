@@ -10,7 +10,7 @@ Denetim:
   sayısıdır (yerelde koşan altın test CI'da atlanır). Satırda `tests/`, `test_x`, `::` ya da `-k` varsa
   kısmi koşudur, denetlenmez. CI bitmediyse ya da günlüğü okunamadıysa test sayısı denetlenmez.
 
-Kullanım: python -X utf8 kurulum/pr_iddia_kontrol.py <PR> [--repo sahip/ad]
+Kullanım: python -X utf8 kurulum/pr_iddia_kontrol.py <PR> [--repo sahip/ad]  (varsayılan zPfizer/tansu)
 Çıkış kodu: 0 iddialar uyuşuyor, 1 uyuşmazlık var.
 """
 
@@ -165,9 +165,9 @@ def ci_sayilari(sha, depo):
 def main():
     ayrac = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ayrac.add_argument("pr")
-    ayrac.add_argument("--repo")
+    ayrac.add_argument("--repo", default="zPfizer/tansu")
     arg = ayrac.parse_args()
-    depo = ["--repo", arg.repo] if arg.repo else []
+    depo = ["--repo", arg.repo]
     alanlar = "body,files,additions,deletions,changedFiles,headRefOid"
     pr = json.loads(_gh("pr", "view", arg.pr, "--json", alanlar, *depo))
     sorunlar, notlar = denetle(pr["body"], pr, ci_sayilari(pr["headRefOid"], depo))
