@@ -22,7 +22,8 @@ python -m venv .venv
 | `tansu tara` | Akşam taraması: `rapor/sinyal/<tarih>.md`. |
 | `tansu durum` | Stratejilerin sınıfı ve durumu. |
 
-Komutlar `python -X utf8 -m tansu <komut>` biçiminde de çalışır.
+Komutlar `.venv\Scripts\python.exe -X utf8 -m tansu <komut>` biçiminde çalışır. Çalışma ağacında yorumlayıcı
+`..\..\..\.venv\Scripts\python.exe`'dir (`AGENTS.md`, "Commands").
 
 Yerel veri, görüntüler ve yeniden indirme zamanı: `docs/veri-envanteri.md`.
 
