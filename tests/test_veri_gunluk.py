@@ -141,6 +141,37 @@ class SahteKaynak:
         return []
 
 
+def sahte_evren(monkeypatch):
+    monkeypatch.setattr(kaynak, "IsYatirim", SahteKaynak)
+    monkeypatch.setattr(kaynak, "sirket_kodlari", lambda: pd.Series(["AKBNK"]))
+    monkeypatch.setattr(
+        kaynak,
+        "kapanan_kodlar",
+        lambda: pd.DataFrame(columns=["kod", "ad", "tarih", "aciklama"]).astype(
+            {"tarih": "datetime64[ns]"}
+        ),
+    )
+
+
+def test_veri_budamasi_ayarin_goruntusunu_korur_yarim_gecicileri_siler(
+    monkeypatch, tmp_path, capsys
+):
+    for i in range(11):
+        (tmp_path / "ag" / f"2020010{i // 10}-00{i:02d}").mkdir(parents=True)
+    (tmp_path / "ag" / "_gecici-20200102-0000").mkdir()
+    ayarlar = tmp_path / "stratejiler" / "ayarlar"
+    ayarlar.mkdir(parents=True)
+    (ayarlar / "gartley.json").write_text(
+        '{"veri_kimligi": "20200100-0000"}', encoding="utf-8"
+    )
+    sahte_evren(monkeypatch)
+    assert main(["veri", "--kok", str(tmp_path)]) == 0
+    assert "silinen eski görüntü: 1" in capsys.readouterr().out
+    assert (tmp_path / "ag" / "20200100-0000").is_dir()
+    assert len(list((tmp_path / "ag").glob("2*"))) == 11
+    assert not list((tmp_path / "ag").glob("_gecici-*"))
+
+
 def test_veri_komutu_sembol_tablosu_yazar_ve_on_goruntu_tutar(
     monkeypatch, tmp_path, capsys
 ):

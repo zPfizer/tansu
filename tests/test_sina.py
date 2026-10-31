@@ -2,6 +2,7 @@ import dataclasses
 import datetime as dt
 import json
 import os
+import stat
 from html import escape as html_kacis
 from pathlib import Path
 
@@ -191,6 +192,102 @@ def test_yazilacak_dosya_baska_programda_aciksa_acik_mesaj_ve_cikis_1(
     assert not list(tmp_path.rglob("*.tmp"))
 
 
+def test_rapor_dosyasi_yazilamiyorsa_eski_rapor_karisik_kalmaz(ortam, tmp_path, capsys):
+    ortam("gartley")
+    klasor = tmp_path / RAPOR_KLASORU
+    klasor.mkdir(parents=True)
+    for ad in ("islemler.csv", "sinama.html", "ozet.md"):
+        (klasor / ad).write_bytes(f"eski {ad}".encode())
+    ozet = klasor / "ozet.md"
+    once = (tmp_path / "stratejiler" / "durum.csv").read_bytes()
+    os.chmod(ozet, stat.S_IREAD)
+    try:
+        assert main(["sina", "gartley"]) == 1
+    finally:
+        os.chmod(ozet, stat.S_IREAD | stat.S_IWRITE)
+    assert "ozet.md" in capsys.readouterr().err
+    for ad in ("islemler.csv", "sinama.html", "ozet.md"):
+        assert (klasor / ad).read_bytes() == f"eski {ad}".encode()
+    assert (tmp_path / "stratejiler" / "durum.csv").read_bytes() == once
+    assert not list(tmp_path.rglob("*.tmp"))
+
+
+def tek_hata_satiri(capsys, *parcalar):
+    hata = capsys.readouterr().err
+    assert len(hata.splitlines()) == 1 and hata.startswith("tansu sina: "), hata
+    assert "Traceback" not in hata
+    assert all(str(p) in hata for p in parcalar), hata
+
+
+@pytest.mark.parametrize("onceki", ["ayarlandi", "yetersiz-ornek", "sinyalde"])
+def test_ayarli_stratejinin_ayar_dosyasi_yoksa_varsayilanla_sinamaz(
+    ortam, tmp_path, capsys, onceki
+):
+    ortam("gartley", durum=onceki)
+    assert main(["sina", "gartley"]) == 1
+    tek_hata_satiri(capsys, tmp_path / AYAR_JSON)
+    assert not (tmp_path / "rapor").exists()
+
+
+def test_sina_secenek_disi_ayar_degerini_reddeder(ortam, tmp_path, capsys):
+    ortam("gartley", durum="ayarlandi")
+    (tmp_path / AYAR_JSON).parent.mkdir(parents=True)
+    (tmp_path / AYAR_JSON).write_text(
+        '{"parametreler": {"rr_min": "abc"}}', encoding="utf-8"
+    )
+    assert main(["sina", "gartley"]) == 1
+    tek_hata_satiri(capsys, tmp_path / AYAR_JSON, "rr_min")
+    assert not (tmp_path / "rapor").exists()
+
+
+def test_durum_dosyasi_yoksa_tek_satir_hata(ortam, tmp_path, capsys):
+    ortam("gartley")
+    (tmp_path / "stratejiler" / "durum.csv").unlink()
+    assert main(["sina", "gartley"]) == 1
+    tek_hata_satiri(capsys, tmp_path / "stratejiler" / "durum.csv")
+
+
+def test_durum_dosyasi_basligi_bozuksa_tek_satir_hata(ortam, tmp_path, capsys):
+    ortam("gartley")
+    (tmp_path / "stratejiler" / "durum.csv").write_text(
+        "ad;durum;tarih;not\ngartley;taslak;2026-10-26;\n", encoding="utf-8"
+    )
+    assert main(["sina", "gartley"]) == 1
+    tek_hata_satiri(capsys, tmp_path / "stratejiler" / "durum.csv", "ad,durum")
+
+
+def test_goruntunun_manifesti_yoksa_tek_satir_hata(tmp_path, capsys):
+    (tmp_path / "stratejiler").mkdir()
+    (tmp_path / "stratejiler" / "durum.csv").write_text(
+        "ad,durum,tarih,not\ngartley,taslak,2026-10-26,\n", encoding="utf-8"
+    )
+    veri_koku = tmp_path / "veri"
+    (veri_koku / "ag" / "20260101-1800").mkdir(parents=True)
+    assert main(["sina", "gartley", "--kok", str(veri_koku)]) == 1
+    tek_hata_satiri(capsys, "manifest yok: 20260101-1800")
+
+
+def kayit_satirlari(tmp_path):
+    return (tmp_path / "kayit" / "tansu.log").read_text(encoding="utf-8").splitlines()
+
+
+def test_her_kosu_kayda_bir_satir_ekler(ortam, tmp_path):
+    ortam("gartley")
+    assert main(["sina", "gartley"]) == 0
+    (satir,) = kayit_satirlari(tmp_path)
+    assert " sina gartley rc=0 goruntu=" in satir
+    assert dt.datetime.fromisoformat(satir.split()[0])
+
+
+def test_basarisiz_kosu_kayda_ilk_hata_satirini_yazar(ortam, tmp_path, capsys):
+    ortam("gartley")
+    (tmp_path / "stratejiler" / "durum.csv").unlink()
+    assert main(["sina", "gartley"]) == 1
+    ilk = capsys.readouterr().err.splitlines()[0]
+    (satir,) = kayit_satirlari(tmp_path)
+    assert " sina gartley rc=1 " in satir and satir.endswith(ilk)
+
+
 def test_ayar_json_bozuksa_ayarla_yazilan_rapor_klasorunu_soyler(
     ortam, tmp_path, capsys
 ):
@@ -257,6 +354,7 @@ def test_ayarla_puanli_secimle_ayarlandi_yapar_sinyaldeyse_onay_ister(
         STRATEJILER["ortalama-kesisim"],
         varsayilan={"ortalama": "SMA", "cift": "9/21", "teyit_gun": 0},
         aralik={"teyit_gun": (0, 2)},
+        secenek={"ortalama": ("SMA",), "cift": ("9/21",)},
     )
     ortam("ortalama-kesisim", durum="sinyalde", strateji=kesisim)
     monkeypatch.setattr(sinama, "gunler", lambda anlik: piyasa(sembol=2))
