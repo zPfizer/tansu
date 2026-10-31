@@ -4,7 +4,8 @@ import tansu
 
 
 def test_tansu_testi_kosan_kopyadan_gelir():
-    """Ana `.venv`'deki düzenlenebilir kurulum ana kopyayı gösterir; `tansu` oradan gelirse testler bu kopyanın değil
-    eski projenin kodunu sınar (retro 31.10.2026). `pyproject.toml` `pythonpath = ["."]` bu kopyayı öne koyar."""
+    """Ana `.venv`'deki düzenlenebilir kurulum tek bir kopyayı gösterir (31.10.2026'dan beri `yeniden-kurulus`);
+    `tansu` oradan gelirse testler bu kopyanın değil o kopyanın kodunu sınar (retro 31.10.2026).
+    `pyproject.toml` `pythonpath = ["."]` bu kopyayı öne koyar."""
     kok = Path(__file__).resolve().parents[1]
     assert Path(tansu.__file__).resolve().is_relative_to(kok), tansu.__file__

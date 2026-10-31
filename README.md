@@ -22,8 +22,9 @@ python -m venv .venv
 | `tansu tara` | Akşam taraması: `rapor/sinyal/<tarih>.md`. |
 | `tansu durum` | Stratejilerin sınıfı ve durumu. |
 
-Komutlar `.venv\Scripts\python.exe -X utf8 -m tansu <komut>` biçiminde çalışır. Çalışma ağacında yorumlayıcı
-`..\..\..\.venv\Scripts\python.exe`'dir (`AGENTS.md`, "Commands").
+Komutlar her klasörden `~\Desktop\TANSU\.venv\Scripts\python.exe -X utf8 -m tansu <komut>` biçiminde çalışır.
+`tansu`, `stratejiler/` ve `rapor/` klasörlerini kendi kökünde okur ve yazar. Kökte kısa yorumlayıcı yolu
+`.venv\Scripts\python.exe`, çalışma ağacında `..\..\..\.venv\Scripts\python.exe`'dir (`AGENTS.md`, "Commands").
 
 Yerel veri, görüntüler ve yeniden indirme zamanı: `docs/veri-envanteri.md`.
 
@@ -33,7 +34,7 @@ Yerel veri, görüntüler ve yeniden indirme zamanı: `docs/veri-envanteri.md`.
 .venv\Scripts\python.exe -X utf8 -m pytest -q
 ```
 
-Hızlı iç döngü için (13 yavaş test hariç): `.venv\Scripts\python.exe -X utf8 -m pytest -q -m "not slow"`.
+Hızlı iç döngü için (15 yavaş test hariç): `.venv\Scripts\python.exe -X utf8 -m pytest -q -m "not slow"`.
 Teslimden önce ve CI'da `-m` olmadan tam komut çalışır. Yavaş testleri listelemek için: `-m slow --collect-only -q`.
 
 Testler yalnız yapay fiyat serisi kullanır. İş Yatırım verisi depoya girmez.

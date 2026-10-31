@@ -25,12 +25,15 @@ The specification is `docs/SPEC.md` (local file, Git-ignored until the public-re
 
 ## Commands
 
-The project has one Python environment: the `.venv` of the main checkout (Python 3.14.7). A worktree in `.claude/worktrees/<ad>/` has no `.venv`. Below, `<py>` is `.venv/Scripts/python.exe` from the main checkout root and `../../../.venv/Scripts/python.exe` from a worktree root. Both forms work in Bash and PowerShell.
+The project has one Python environment: the `.venv` of the main checkout (Python 3.14.7). A worktree in `.claude/worktrees/<ad>/` has no `.venv`. Below, `<py>` is `~/Desktop/TANSU/.venv/Scripts/python.exe` and `<kök>` is the root of a working copy, for example `~/Desktop/TANSU/.claude/worktrees/yeniden-kurulus`. These forms work from every folder, in Bash and PowerShell. At a root, the short forms also work: `<py>` is `.venv/Scripts/python.exe` in the main checkout and `../../../.venv/Scripts/python.exe` in a worktree, and `<kök>` is `.`.
 
 `<py> -X utf8 -m tansu <komut>`: `veri`, `sina <ad> [--ac]`, `ayarla <ad>`, `onayla <ad>`, `tara`, `durum`. Run `--help` for options.
 
+- Each command works the same from every folder, also from the brain folder (Levent, 31.10.2026). `tests/test_baska_klasor.py` runs them from a temporary folder and checks that they write nothing there:
+  - `<py> -X utf8 -m tansu` loads the `tansu` of the current folder when the current folder is a working-copy root. From every other folder, it loads the installed copy: the editable install in `.venv` points to the `yeniden-kurulus` worktree. `tansu` reads and writes `stratejiler/` and `rapor/` in the root of the copy that it loads, never in the current folder. Its messages give absolute paths.
+  - `<py> -X utf8 -m pytest <kök>/tests`, `<py> -X utf8 <kök>/kurulum/<betik>.py`, and `<py> -m ruff check --no-cache` and `<py> -m ruff format --check --no-cache` with the CI paths `<kök>/tansu <kök>/tests <kök>/kurulum`. Without `--no-cache`, ruff writes `.ruff_cache` into the current folder. `kurulum/pr_iddia_kontrol.py` and `kurulum/birlestir.py` use `--repo zPfizer/tansu` when you give no `--repo`.
 - Run each tool through `<py>`: `-m tansu`, `-m pytest`, `-m ruff`, `kurulum/<betik>.py`. A bare `python`, `py`, `ruff` or `pytest` finds the global Python, which has no project packages (`No module named 'pandas'`), or finds no command. `tests/test_komut_yolu.py` keeps bare tool commands out of this file and `README.md`.
-- Do not use `-I` with project code. It removes the current folder from the import path, so a worktree imports the `tansu` of the main checkout (editable install).
+- Do not use `-I` with project code. It removes the current folder from the import path, so a worktree imports the `tansu` of the `yeniden-kurulus` worktree (editable install).
 - Pillow, pre-commit and uv are not in the project. `gartley-pdf` and `gartley-takip` are branch names, not commands. To crop and zoom an image at pixel coordinates, use pymupdf (borsapy installs it): `<py> -X utf8 -c "import pymupdf as f,sys; p=f.open(sys.argv[1])[0]; k=p.rect.width/f.Pixmap(sys.argv[1]).width; p.get_pixmap(clip=f.Rect(x0,y0,x1,y1)*k, matrix=f.Matrix(4/k,4/k)).save(sys.argv[2])" in.png out.png`.
 - Bash runs a backtick span in a double-quoted string as a command (`bash: gartley-pdf: command not found`, 30.10.2026). Write a commit message or a PR body to a file: `git commit -F <file>`, `gh pr create --body-file <file>`.
 

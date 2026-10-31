@@ -253,7 +253,7 @@ def _json(yol: Path) -> dict:
     return icerik
 
 
-def oku(strateji: Strateji, kok: Path = AYAR_KOKU) -> Okunan | None:
+def oku(strateji: Strateji, kok: Path) -> Okunan | None:
     """`<kok>/<ad>.json`; dosya yoksa None. Bilinmeyen anahtar ya da ızgara dışı eksen değeri VeriHatasi."""
     yol = kok / f"{strateji.ad}.json"
     if not yol.exists():
@@ -293,9 +293,7 @@ def _sayi(x) -> float | None:
     return float(x) if np.isfinite(x) else None
 
 
-def yaz(
-    strateji: Strateji, secim: Secim, *, veri_kimligi: str, kok: Path = AYAR_KOKU
-) -> Path:
+def yaz(strateji: Strateji, secim: Secim, *, veri_kimligi: str, kok: Path) -> Path:
     """Parametre dosyası (SPEC 4). `suzgecler` ve `liste_cikisi` `onayla`nındır; var olan değer korunur."""
     kok.mkdir(parents=True, exist_ok=True)
     yol = kok / f"{strateji.ad}.json"

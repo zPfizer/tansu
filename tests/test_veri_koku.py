@@ -21,9 +21,8 @@ def olmayan_kok(monkeypatch, tmp_path):
 
 
 def test_sina_kok_yoksa_klasoru_adlandirip_1_doner_ve_klasor_acmaz(
-    olmayan_kok, monkeypatch, tmp_path, capsys
+    olmayan_kok, tmp_path, capsys
 ):
-    monkeypatch.chdir(tmp_path)
     (tmp_path / "stratejiler").mkdir()
     (tmp_path / "stratejiler" / "durum.csv").write_text(
         "ad,durum,tarih,not\ngartley,taslak,2026-10-26,\n", encoding="utf-8"

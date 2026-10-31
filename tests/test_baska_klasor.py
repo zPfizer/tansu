@@ -15,7 +15,6 @@ import pytest
 from kurulum import pr_iddia_kontrol
 
 KOK = Path(__file__).resolve().parents[1]
-K = str(KOK)
 
 
 @pytest.mark.parametrize(
@@ -28,28 +27,33 @@ K = str(KOK)
             "tansu sina",
             marks=pytest.mark.slow,
         ),
-        (["-m", "tansu", "sina", "gartley"], {"PYTHONPATH": K}, 1, "anlık görüntü yok"),
+        (
+            ["-m", "tansu", "sina", "gartley"],
+            {"PYTHONPATH": str(KOK)},
+            1,
+            "anlık görüntü yok",
+        ),
         pytest.param(
-            ["-m", "pytest", f"{K}/tests/test_durum.py", "-q"],
+            ["-m", "pytest", f"{KOK}/tests/test_durum.py", "-q"],
             {},
             0,
             "passed",
             marks=pytest.mark.slow,
         ),
         (
-            ["-m", "ruff", "check", "--no-cache", f"{K}/tansu"],
+            ["-m", "ruff", "check", "--no-cache", f"{KOK}/tansu"],
             {},
             0,
             "All checks passed",
         ),
         (
-            ["-m", "ruff", "format", "--check", "--no-cache", f"{K}/tansu"],
+            ["-m", "ruff", "format", "--check", "--no-cache", f"{KOK}/tansu"],
             {},
             0,
             "formatted",
         ),
-        ([f"{K}/kurulum/pr_iddia_kontrol.py", "--help"], {}, 0, "--repo"),
-        ([f"{K}/kurulum/birlestir.py", "--help"], {}, 0, "--repo"),
+        ([f"{KOK}/kurulum/pr_iddia_kontrol.py", "--help"], {}, 0, "--repo"),
+        ([f"{KOK}/kurulum/birlestir.py", "--help"], {}, 0, "--repo"),
     ],
 )
 def test_komut_baska_klasorden_calisir_ve_oraya_yazmaz(
