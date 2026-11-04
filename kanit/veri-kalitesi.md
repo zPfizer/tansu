@@ -149,6 +149,8 @@ Ayar grubu (368 fiyatlı hisse), 2015-2022, 553.456 fiyatlı hisse-gün; panel m
 
 L3 işlemsiz günleri doğrudan sayar; V1'den önce işlemsiz gün her seferinde 250 gün karantina açıyordu (bağımsız veri
 denetimi: ayar grubunda %7,63 puan). Betik: `likidite.py`.
+Son sütunda gartley (50) ve S3 (335) bölenleri, sonuç tablosundaki dolum sayılarından (51 ve 343) farklıdır. Farkın
+nedeni bu kayıtta açıklanmadı.
 
 ## Madde 5: kuruşluk kilit
 
@@ -193,7 +195,7 @@ kadar bekletir (AOF ve likidite cevabı dondurulmuş motoru değiştirir).
 
 1. **T1, 30.11.2015 öncesi düzeltilmiş yüksek/düşük/AOF.** (a) Ham × kapanış çarpanından kurulsun: Yahoo ham aralıkla
    %97,7 aynı; 2015'in ilk 11 ayı ve 2010-2014 değişir. (b) Olduğu gibi kalsın, kayıtta bilinen sınır olarak dursun.
-   (c) 2015-11-30 öncesi denemelerden çıkarılsın.
+   (c) 30.11.2015 öncesi denemelerden çıkarılsın.
 2. **Olay kaydı olmayan kapanmış hisseler (39 hisse).** (a) Olay kaydı hiç olmayan hissede, düzeltilmiş serideki adım
    (düzeltilmiş/ham oranının sıçraması) limit bazında olay sayılsın: 2015-2022'de 14 sahte karantina kalkar; veri kapısı
    (%2) yalnız kaydı olan hisselerde ölçülsün (%0,26). (b) Bu hisseler deneme evreninden çıkarılsın (kapanan hisse
@@ -228,7 +230,7 @@ kadar bekletir (AOF ve likidite cevabı dondurulmuş motoru değiştirir).
   bir kanca bu oturumun başka çalışma ağacına yazmasını engeller. Önerilen metin PR 263, 266, 265 gövdelerinde ve oturum
   not klasöründe (`veri-kalitesi-spec-3-9.md`). Dosya sahibi yazmalı.
 - `main` TASARIM 5.1 ("Bozuk satır baz fiyat olmaz") ve 5.13 ("en az yarısı") `yeniden-kurulus` kurallarının gerisinde;
-  bu iş `main` belgesini yalnız #267 uygulama notu için değiştirdi.
+  bu iş `main` belgesi için yalnız #267 uygulama notunu önerdi. Öneri PR 268'dedir; PR açıktır ve `main` değişmedi.
 - Ayrık grup, 2010-2014 strateji sonuçları ve `kanit/gartley-takip/` hiç koşulmadı ve değişmedi. İleri izleme günlüğünü
   Gartley oturumu yeniden hesaplar.
 - Yerel test koşuları yalnız değişen modüllerin testleridir; tam takımı CI koşar.
